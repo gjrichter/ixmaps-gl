@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ISTAT incidenti — ixmaps-engine demo</title>
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
+<script src="https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js"></script>
+<script src="https://unpkg.com/mustache@4.2.0/mustache.min.js"></script>
+<script src="ixmaps-engine.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; }
+  #map_div { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+  #status { position: absolute; top: 1em; left: 1em; z-index: 10; background: rgba(255,255,255,0.9);
+             padding: 0.4em 0.8em; border-radius: 4px; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<div id="map_div"></div>
+<div id="status">caricando ...</div>
+
+<!--
+  This is a MINIMAL page: only the map/theme definition below is meant to
+  demonstrate the API. It is copied VERBATIM (identifiers, structure,
+  string values) from the original ixmaps page
+  (index_embed_ISTAT_incidenti_NATURA_2019_2022_simple_VT_KDE.html) —
+  the only thing that changed is which JS file provides `ixmaps.layer`
+  and `ixmaps.Map` (ixmaps-engine.js here, the real ixmaps framework
+  there). No sidebar/facets chrome is reproduced — this page exists to
+  prove the config format, not to restyle the whole original page.
+-->
+<script>
+  // ---------------------------------------------------
+  // color function — same convention the original uses: passed to
+  // style.colorscheme as a stringified function, called by the engine
+  // with { szLabelA, colorScheme } and expected to fill colorScheme by index
+  // ---------------------------------------------------
+  __setColors = objTheme => {
+    for (i = 0; i < objTheme.szLabelA.length; i++) {
+      if (objTheme.szLabelA[i].match(/investimento/i)) {
+        objTheme.colorScheme[i] = "#ff0088";
+      } else
+      if (objTheme.szLabelA[i].match(/tamponamento/i)) {
+        objTheme.colorScheme[i] = "#0066cc";
+      } else
+      if (objTheme.szLabelA[i].match(/scontro/i)) {
+        objTheme.colorScheme[i] = "#ddbb22";
+      } else {
+        objTheme.colorScheme[i] = "#00aaaa";
+      }
+    }
+  };
+
+  var __georef_reg =
+    ixmaps.layer("ITALIA_Regioni_2022", layer => layer
+      .data({
+        url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/regioni_2022/Reg01012022_s_WGS84.topojson.gz",
+        type: "topojson"
+      })
+      .binding({
+        id: "COD_REG",
+        position: "geometry"
+      })
+      .filter("WHERE DEN_REG = Lombardia")
+      .type("FEATURES|NOLEGEND")
+      .style({
+        colorscheme: ["none"],
+        linecolor: "gray",
+        linewidth: "2",
+        sizefield: "Shape_Area"
+      })
+    );
+
+  var __incidenti_natura =
+    ixmaps.layer("AREU", layer => layer
+      .data({
+        url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz",
+        type: "topojson"
+      })
+      .type("CHART|SYMBOL|GLOW|SEQUENCE|STAR|SORT|DOWN|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES|COMPACTLEGEND|RECT|CLIPTOGEOBOUNDS")
+      .binding({
+        position: "geometry",
+        value: "NATURA_INC",
+        size: "FERITI"
+      })
+      .style({
+        colorscheme: __setColors.toString(),
+        opacity: "1",
+        fillopacity: "0.9",
+        shadow: "false",
+        showdata: "true",
+        units: "feriti",
+        refreshtimeout: "0",
+        scale: "1",
+        normalsizevalue: "50",
+        valuescale: "1",
+        valuedecimals: "0",
+        valuecolor: "white",
+        sizepow: "1.5",
+        aggregation: [
+          "1:1", "3px",
+          "1:500000", "1px"],
+        clipupper: "1:1000000",
+        valueupper: "1:200000",
+        name: "chart"
+      })
+      .meta({
+        title: "Numero dei feriti per natura dell'incidente",
+        tooltip: "<h3><b>{{theme.title}}</h3></b><br>{{theme.item.chart}}",
+        splash: "scaricando dati ..."
+      })
+    );
+
+  var __lat = 45.47, __lon = 9.19, __zoom = 10;
+
+  var _mapPromise = ixmaps.Map("map_div", {
+      mapService: "leaflet_vt",
+      mapType: "VT_BRIGHT_LIGHT",
+      name: "SIF_2022",
+      mode: "pan",
+      width: "100%",
+      height: "100%",
+      legend: "true",
+      tools: "true",
+      search: "Italy",
+      about: "test"
+    },
+    map => map
+    .view([__lat, __lon], __zoom)
+    .options({
+      featurescaling: "true",
+      objectscaling: "dynamic",
+      normalSizeScale: "250000",
+      dynamicScalePow: "3",
+      flushChartDraw: "100000",
+      basemapopacity: "0.8",
+      panhidden: "false"
+    })
+    .local("loading data ...", "...")
+    .attribution("ISTAT / GEOMIS Regione Lombardia via AREU")
+    .legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>ISTAT - Microdati Incidenti 2019 - 2021</div>")
+    .layer(__georef_reg)
+    .layer(__incidenti_natura)
+  );
+
+  _mapPromise
+    .then(() => { document.getElementById('status').remove(); })
+    .catch(err => { document.getElementById('status').textContent = 'errore: ' + err.message; console.error(err); });
+</script>
+
+</body>
+</html>

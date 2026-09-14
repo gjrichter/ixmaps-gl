@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ixmaps-engine — chart type &amp; classification examples</title>
+<style>
+  html, body { margin: 0; font-family: -apple-system, sans-serif; background: #F5F5F4; color: #222; }
+  body { padding: 2em; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.4em; margin-bottom: 0.2em; }
+  p.intro { color: #555; margin-top: 0; }
+  h2 { font-size: 1em; color: #666; margin: 2em 0 0.6em; text-transform: uppercase; letter-spacing: 0.03em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1em; }
+  .card {
+    display: block; text-decoration: none; color: inherit; background: #fff;
+    border: 1px solid #e2e0da; border-radius: 8px; padding: 1em 1.2em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
+  .card b { display: block; font-size: 1.02em; margin-bottom: 0.3em; }
+  .card span { font-size: 0.88em; color: #666; }
+</style>
+</head>
+<body>
+
+<h1>ixmaps-engine — chart type &amp; classification examples</h1>
+<p class="intro">Small, isolated demos of each base symbol type and coloring/classification method implemented so far, all against the real AREU (ISTAT road-accident) dataset.</p>
+
+<h2>Base symbol types</h2>
+<div class="grid">
+  <a class="card" href="dot_categorical.html">
+    <b>DOT · CATEGORICAL</b>
+    <span>Fixed-size dot per record, no clustering, colored by exact-match category (NATURA_INC).</span>
+  </a>
+  <a class="card" href="bubble_categorical.html">
+    <b>BUBBLE (CHART|SYMBOL) · CATEGORICAL</b>
+    <span>Full pipeline: value-scaled size, clustering, multi-bubble grouping, glow, VALUES labels.</span>
+  </a>
+</div>
+
+<h2>Numeric range/class coloring (partsA)</h2>
+<p class="intro" style="margin-top:-0.4em">Same FERITI field, three classification methods — compare how differently each splits the same skewed data.</p>
+<div class="grid">
+  <a class="card" href="dot_range_equidistant.html">
+    <b>DOT · equal-interval</b>
+    <span>Default classification on a fixed-size dot — no CATEGORICAL, no QUANTILE/NATURAL flag.</span>
+  </a>
+  <a class="card" href="bubble_range_equidistant.html">
+    <b>BUBBLE · equal-interval (default)</b>
+    <span>5 equal-WIDTH buckets across the data's min-max. Most bubbles land in the lowest bucket.</span>
+  </a>
+  <a class="card" href="bubble_range_quantile.html">
+    <b>BUBBLE · QUANTILE</b>
+    <span>5 equal-COUNT buckets. Several collapse to the same range on this skewed data — a real quirk, not a bug.</span>
+  </a>
+  <a class="card" href="bubble_range_natural.html">
+    <b>BUBBLE · NATURAL (Jenks)</b>
+    <span>Finds actual gaps in the data. Visibly better color discrimination than the other two methods here.</span>
+  </a>
+</div>
+
+<h2>Spatial grid + small-multiples chart</h2>
+<div class="grid">
+  <a class="card" href="plot_curves.html">
+    <b>PLOT · per-year curves (GRIDSIZE)</b>
+    <span>Verbatim config from the original page's "incidenti/feriti per anno" toggle — a mini line+area chart per grid cell, plus its grid-mesh companion layer.</span>
+  </a>
+</div>
+
+</body>
+</html>
