@@ -10,9 +10,11 @@
 // FEATURE/FEATURES (polygon/line rendering, singular is the real engine's
 // own keyword, plural this port's earlier convention — both accepted),
 // CHOROPLETH (polygon fill classed by a bound value — single-field numeric
-// range via QUANTILE/NATURAL/equal-interval, or multi-field DOMINANT|
-// PERCENTOFMEAN's per-polygon argmax across piped fields; CATEGORICAL
-// choropleths aren't implemented, see _buildChoroplethLayers), and the CHART|SYMBOL|
+// range via QUANTILE/NATURAL/equal-interval, or multi-field DOMINANT's
+// per-polygon argmax across piped fields, plain (highest raw value) or
+// |PERCENTOFMEAN (highest deviation from that field's own cross-record
+// mean); CATEGORICAL choropleths aren't implemented, see
+// _buildChoroplethLayers), and the CHART|SYMBOL|
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
@@ -1469,21 +1471,18 @@
       }
 
       if (this.flags.has('DOMINANT') && this.binding.value) {
-        // .type("CHOROPLETH|DOMINANT|PERCENTOFMEAN") — a MULTI-field bound
-        // value (binding.value is a pipe-joined field list, e.g. one CSV
-        // column per age band for the same year/sex — same pipe convention
+        // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
+        // (binding.value is a pipe-joined field list, e.g. one CSV column
+        // per age band for the same year/sex — same pipe convention
         // csvRowsToFeatureCollection's binding.position already uses).
-        // Only PERCENTOFMEAN's relevance formula is ported (see
-        // _prepareDominant/_resolveDominantClass, maptheme.js:13086-13531
-        // confirmed by direct source read) — plain DOMINANT (no
-        // PERCENTOFMEAN) selects a class some other, unconfirmed way in
-        // the real engine and is deliberately left unimplemented rather
-        // than guessed.
-        if (this.flags.has('PERCENTOFMEAN')) {
-          this._prepareDominant();
-        } else {
-          console.warn(`[ixmaps-engine] layer "${this.name}": CHOROPLETH|DOMINANT without PERCENTOFMEAN is not implemented (only the PERCENTOFMEAN relevance formula is ported)`);
-        }
+        // Two relevance formulas, both handled by _resolveDominantClass:
+        // PERCENTOFMEAN (maptheme.js:13086-13531, confirmed by direct
+        // source read) picks the field deviating most from ITS OWN
+        // cross-record mean; plain DOMINANT (no PERCENTOFMEAN) instead
+        // picks whichever field simply has the highest raw value for
+        // that one record — "which band dominates this comune's own
+        // local profile", per explicit correction.
+        this._prepareDominant();
       } else if (this.flags.has('CATEGORICAL') && this.binding.value) {
         // .style({values: [...]}) (or .xaxis, same list in practice — see
         // the PLOT curves-chart config) is an EXPLICIT, ORDERED category
@@ -1559,16 +1558,19 @@
       }
     }
 
-    // .type("CHOROPLETH|DOMINANT|PERCENTOFMEAN") prep — computes, once per
-    // theme build, each piped field's own cross-record MEAN and MIN (over
-    // this.features, i.e. every polygon this CHOROPLETH's join produced —
-    // real source: maptheme.js:13086-13126, distributeValues' DOMINANT
-    // block; nMinA doubles as the default nFilterA below). Skips NaN
-    // values per field rather than poisoning the sum/min (real source has
-    // no such guard, but it also doesn't join heterogeneous CSV rows the
-    // way this port's joinChoroplethFeatures does — unmatched polygons
-    // here have empty properties, which would otherwise NaN out every
-    // field's mean).
+    // .type("CHOROPLETH|DOMINANT") prep — computes, once per theme build,
+    // each piped field's own cross-record MEAN and MIN (over this.features,
+    // i.e. every polygon this CHOROPLETH's join produced — real source:
+    // maptheme.js:13086-13126, distributeValues' DOMINANT block; nMinA
+    // doubles as the default nFilterA in _resolveDominantClass). Computed
+    // unconditionally even though plain DOMINANT (no PERCENTOFMEAN) only
+    // ends up using neither — the pass is cheap, and keeping one prep path
+    // for both relevance formulas avoids duplicating the field-parsing
+    // loop. Skips NaN values per field rather than poisoning the sum/min
+    // (real source has no such guard, but it also doesn't join
+    // heterogeneous CSV rows the way this port's joinChoroplethFeatures
+    // does — unmatched polygons here have empty properties, which would
+    // otherwise NaN out every field's mean).
     _prepareDominant() {
       const fields = this.binding.value.split('|');
       this._dominantFields = fields;
@@ -1598,26 +1600,36 @@
       this.categoryColorsRgb = resolveClassColors(this.style.colorscheme, this.categoryLabels);
     }
 
-    // Which piped field "wins" for one joined polygon's properties — real
-    // formula (maptheme.js:13491/13505, confirmed by direct source read):
-    // nPercentOfMean = 100 * value / mean[i], and the argmax is FILTERED —
-    // a field can only win if its own value is strictly greater than that
-    // field's own dataset-wide MIN (the real engine's default
-    // nFilterA[i] = nMinA[i]; szDominantFilter "mean"/"median" variants
-    // aren't implemented, not used by any config ported here). Ties go to
-    // the first (lowest-index) field, matching the real source's strict
-    // `>` comparison. Deliberately unguarded (no isNaN/mean-zero check) —
-    // matching the real source exactly: parseFloat(undefined)=NaN fails
-    // the `> min` filter test on its own, and mean=0 naturally yields
-    // Infinity/NaN through plain division, same as maptheme.js's own
-    // unguarded line 13491.
+    // Which piped field "wins" for one joined polygon's properties — two
+    // relevance formulas:
+    //
+    // PERCENTOFMEAN (real formula, maptheme.js:13491/13505, confirmed by
+    // direct source read): nPercentOfMean = 100 * value / mean[i], and the
+    // argmax is FILTERED — a field can only win if its own value is
+    // strictly greater than that field's own dataset-wide MIN (the real
+    // engine's default nFilterA[i] = nMinA[i]; szDominantFilter
+    // "mean"/"median" variants aren't implemented, not used by any config
+    // ported here). Deliberately unguarded (no mean-zero check) — matching
+    // the real source exactly: mean=0 naturally yields Infinity/NaN
+    // through plain division, same as maptheme.js's own unguarded
+    // line 13491, and NaN can never win the `>` comparison below.
+    //
+    // Plain DOMINANT (no PERCENTOFMEAN, per explicit correction): the
+    // field with the highest raw value wins outright — no mean/min
+    // comparison, no filter. "Which band dominates this comune's own
+    // local profile," not a cross-record comparison.
+    //
+    // Both: ties go to the first (lowest-index) field (strict `>`), and a
+    // non-numeric field value can't win either way (NaN fails both the
+    // filter check and the plain `>` comparison on its own).
     _resolveDominantClass(props) {
       const fields = this._dominantFields;
+      const usePercentOfMean = this.flags.has('PERCENTOFMEAN');
       let bestIndex = -1, bestRelevance = -Infinity, bestValue = null;
       for (let i = 0; i < fields.length; i++) {
         const v = parseFloat(props[fields[i]]);
-        if (!(v > this._dominantMins[i])) continue;
-        const relevance = 100 * v / this._dominantMeans[i];
+        if (usePercentOfMean && !(v > this._dominantMins[i])) continue;
+        const relevance = usePercentOfMean ? 100 * v / this._dominantMeans[i] : v;
         if (relevance > bestRelevance) { bestRelevance = relevance; bestIndex = i; bestValue = v; }
       }
       return bestIndex === -1 ? null : { index: bestIndex, value: bestValue };
@@ -2300,10 +2312,11 @@
 
     // .type("CHOROPLETH") — a polygon fill classed by a bound value:
     // numeric range (QUANTILE/NATURAL/equal-interval, _buildPartsA/
-    // _resolveClassIndex, single-field binding.value) or, when DOMINANT|
-    // PERCENTOFMEAN prepared _dominantFields (see _prepareDominant), a
-    // per-polygon argmax across MULTIPLE piped fields
-    // (_resolveDominantClass). CATEGORICAL choropleths (exact-match,
+    // _resolveClassIndex, single-field binding.value) or, when DOMINANT
+    // prepared _dominantFields (see _prepareDominant), a per-polygon
+    // argmax across MULTIPLE piped fields (_resolveDominantClass — either
+    // PERCENTOFMEAN's own-mean-deviation formula, or plain DOMINANT's
+    // highest-raw-value formula). CATEGORICAL choropleths (exact-match,
     // single field) aren't implemented — no ported config uses that
     // combination yet. Geometry + properties are already the joined
     // FeatureCollection from joinChoroplethFeatures — this only needs to

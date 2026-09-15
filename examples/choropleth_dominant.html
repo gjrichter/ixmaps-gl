@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CHOROPLETH · DOMINANT</title>
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
+<script src="https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js"></script>
+<script src="https://unpkg.com/mustache@4.2.0/mustache.min.js"></script>
+<script src="../ixmaps-engine.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>CHOROPLETH · DOMINANT (no PERCENTOFMEAN)</b>
+  <span>Same 21 piped fields as the PERCENTOFMEAN example, but here each comune is colored by whichever age band simply has the HIGHEST raw share in that comune's own profile — no cross-record mean comparison. Compare against the PERCENTOFMEAN example: this one should skew heavily toward whatever age band is nationally largest (older bands), since it ignores local deviation entirely.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  var GEO_URL  = "https://raw.githubusercontent.com/gjrichter/geo/0153a0e14da5dae877b8c94d6deb11f210d4660a/italy/boundaries/italy_istat_municipalities_4326_500m.topojson";
+  var DATA_URL = "https://raw.githubusercontent.com/gjrichter/ixmaps-data/main/by-project/italy-comuni-demographics/comuni_population_by_age_sex_v3.csv";
+
+  var AGE_BANDS = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44",
+                   "45-49","50-54","55-59","60-64","65-69","70-74","75-79","80-84",
+                   "85-89","90-94","95-99","100+"];
+
+  var DOMINANT_COLORS = ["21", "#CFFF33", "#9A5195", "3colors", "#94CCC8"];
+
+  var base = ixmaps.layer("comuni", layer => layer
+    .data({ url: GEO_URL, type: "topojson" })
+    .binding({ geo: "geometry", id: "com_istat_code_num", title: "name" })
+    .type("FEATURE")
+    .style({ colorscheme: ["#e9e9e9"], fillopacity: 0.4, linecolor: "#aaaaaa", linewidth: 0.15 })
+  );
+
+  var choropleth = ixmaps.layer("comuni", layer => layer
+    .data({ url: DATA_URL, type: "csv", name: "popData", cache: "true" })
+    .binding({ lookup: "comune_code", value: AGE_BANDS.map(a => "2024_" + a + "_male").join("|") })
+    .type("CHOROPLETH|DOMINANT")
+    .style({
+      colorscheme: DOMINANT_COLORS,
+      values: AGE_BANDS,
+      fillopacity: 0.85,
+      linecolor: "#ffffff",
+      linewidth: 0.08,
+      units: "%",
+      valuedecimals: 2
+    })
+    .meta({
+      title: "Biggest local age band",
+      tooltip: "<b>{{comune_name}}</b> ({{provincia}})<br>{{theme.item.chart}}"
+    })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([42.5, 12.5], 6).layer(base).layer(choropleth)
+  );
+</script>
+</body>
+</html>
