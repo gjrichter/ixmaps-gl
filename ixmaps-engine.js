@@ -1079,21 +1079,27 @@
   // source (checked mapapi.js/mapquery.js/mapselect.js, htmlgui_flat.js).
   //
   // This is deliberately NOT a bit-exact port, unlike this engine's other
-  // ported formulas — it reproduces the real formula's SHAPE (same 0.3
-  // floor, 1.0 ceiling, same 0.3+0.7/max(1,ln(x)) falloff curve: full
-  // opacity at/below the configured "normal" view, decaying toward the
-  // floor as you zoom in past it) using THIS engine's own already-
-  // established zoom-reference concept (resolveZoomReference /
-  // .options({normalSizeScale}), the same "how far zoomed in past the
-  // configured normal view" reference BUBBLE's dynamic sizing already
-  // uses) as the input to that curve, in place of the real engine's own
-  // untranslatable physical-scale ratio. Deliberately does NOT divide by
-  // dynamicScalePow — confirmed the real autoOpacity formula doesn't
-  // reference it at all, unlike doDynamicObjectScaling above.
+  // ported formulas — the real formula's own physical-scale inputs
+  // (nTrueMapScale) have no equivalent here and the zoom-level bridging
+  // formula couldn't be located in the source, so this reproduces the
+  // real behavior's INTENT (full opacity at/below the configured "normal"
+  // view, fading toward a floor as you zoom in past it, using THIS
+  // engine's own already-established zoom-reference concept —
+  // resolveZoomReference / .options({normalSizeScale}), the same
+  // reference BUBBLE's dynamic sizing already uses) rather than its exact
+  // curve. Tuned to fade aggressively — a smooth exponential half-life
+  // decay (halves every AUTO_OPACITY_HALF_LIFE_ZOOM zoom levels past the
+  // normal view) down to a low floor, per explicit correction that the
+  // real formula's own much gentler log-based falloff (ported first,
+  // still visible ~0.47 opacity six zoom levels past the reference) faded
+  // out too slowly to usefully reveal the basemap.
+  const AUTO_OPACITY_FLOOR = 0.08;
+  const AUTO_OPACITY_HALF_LIFE_ZOOM = 2;
   function resolveAutoFillOpacity(zoom, mapOptions) {
     const zoomReference = resolveZoomReference(mapOptions);
-    const zoomFactor = Math.pow(2, (zoom == null ? zoomReference : zoom) - zoomReference);
-    return Math.max(0.3, Math.min(1, 0.3 + 0.7 / Math.max(1, Math.log(zoomFactor))));
+    const z = zoom == null ? zoomReference : zoom;
+    const zoomsPastNormal = Math.max(0, z - zoomReference);
+    return AUTO_OPACITY_FLOOR + (1 - AUTO_OPACITY_FLOOR) * Math.pow(0.5, zoomsPastNormal / AUTO_OPACITY_HALF_LIFE_ZOOM);
   }
 
   // Shared by every renderer's `opacity` prop: resolves style.fillopacity,
