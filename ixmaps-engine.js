@@ -16,10 +16,12 @@
 // |DEVIATION (highest z-score above that field's own mean); or multi-field
 // COMPOSECOLOR's per-polygon color BLEND across the same piped fields,
 // additive or |SUBTRACTIVE; and DOPACITY/DOPACITYMIN/DOPACITYMAX/
-// DOPACITYMINMAX, which drive per-polygon fill OPACITY (not color) from
-// the same bound value — see _resolveDopacityAlpha. CATEGORICAL
-// choropleths aren't implemented, see _buildChoroplethLayers), and the
-// CHART|SYMBOL|
+// DOPACITYMINMAX, which drive per-polygon fill OPACITY (not color) —
+// from the same bound value by default, or from .binding({alpha,
+// alpha100}) when set (alpha100:"$density$" divides by the polygon's
+// own geodesic area — see _prepareAlphaField/_resolveDopacityAlpha).
+// CATEGORICAL choropleths aren't implemented, see
+// _buildChoroplethLayers), and the CHART|SYMBOL|
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
@@ -1328,6 +1330,42 @@
     return { lng: x / scale * 360 - 180, lat: 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))) };
   }
 
+  // .binding({alpha, alpha100: "$density$"}) — real engine's population-
+  // density opacity mode (maptheme.js:9134-9143/9273, __getGeodesicRingArea
+  // at 16239-16258, confirmed by direct source read): divides the alpha
+  // field's own value by the polygon's own GEODESIC area in km². The real
+  // engine caches this as an SVG node attribute, but the area algorithm
+  // itself has zero SVG dependency — pure spherical-excess (Chamberlain &
+  // Duquette) computed directly from ring coordinates, so it ports cleanly.
+  // Same well-known algorithm shape used by turf.js/@mapbox/geojson-area
+  // (not an ixmaps-specific formula), using the real source's own
+  // confirmed authalic Earth radius constant (6371008.8 m) rather than a
+  // library default that might differ slightly. Signed per-ring area is
+  // summed directly (not exterior-plus/holes-minus by position) — a valid
+  // GeoJSON polygon's holes wind opposite to its exterior, so their signed
+  // areas already cancel correctly; MultiPolygon sums every part.
+  const EARTH_RADIUS_M = 6371008.8;
+  function geodesicRingSignedArea(ring) {
+    let area = 0;
+    const n = ring.length;
+    if (n < 3) return 0;
+    for (let i = 0; i < n; i++) {
+      const p1 = ring[i === 0 ? n - 1 : i - 1];
+      const p2 = ring[i];
+      const p3 = ring[(i + 1) % n];
+      area += (p3[0] - p1[0]) * Math.PI / 180 * Math.sin(p2[1] * Math.PI / 180);
+    }
+    return area * EARTH_RADIUS_M * EARTH_RADIUS_M / 2;
+  }
+  function geodesicPolygonAreaKm2(geometry) {
+    if (!geometry) return 0;
+    const ringsArea = rings => rings.reduce((sum, ring) => sum + geodesicRingSignedArea(ring), 0);
+    let area = 0;
+    if (geometry.type === 'Polygon') area = ringsArea(geometry.coordinates);
+    else if (geometry.type === 'MultiPolygon') area = geometry.coordinates.reduce((sum, poly) => sum + ringsArea(poly), 0);
+    return Math.abs(area) / 1e6;
+  }
+
   // Real ixmaps engine's AGGREGATE spatial-grid binning (maptheme.js
   // ~line 10564, confirmed by direct source read) — the SAME shared
   // mechanism the real engine uses for both per-record aggregation
@@ -1656,6 +1694,49 @@
       if (this.flags.has('AGGREGATE') && !this.flags.has('GRIDSIZE')) {
         this._buildAggregationIndex(this.features);
       }
+
+      this._prepareAlphaField();
+    }
+
+    // .binding({alpha, alpha100}) prep — orthogonal to classification (real
+    // source confirms this combines with CHOROPLETH's own DOMINANT mode,
+    // not just plain range-classed themes), computed once per theme build.
+    // Cheap no-op unless binding.alpha is actually set. Three modes, real
+    // source confirmed (maptheme.js:9834-9852/9134-9143):
+    //  - alpha100 is the literal string "$density$": per-feature value =
+    //    (alpha field's own value) / (that polygon's own geodesic area in
+    //    km²) — see geodesicPolygonAreaKm2.
+    //  - alpha100 is any OTHER (real field) name: percent-normalize,
+    //    100/alpha100Value*alphaValue.
+    //  - alpha100 unset: the alpha field's raw value, unchanged.
+    // _alphaMax (the max nAlpha across every feature) is the ramp's own
+    // denominator in _resolveDopacityAlpha — a SEPARATE stats pass from
+    // the main bound value's min/max/median, real source confirmed.
+    // Keyed by feature object identity (WeakMap), not written into
+    // properties — this is a derived rendering input, not real CSV data,
+    // and keeping it out of `properties` keeps it out of the tooltip's
+    // bare-field/`raw` mustache expansion too.
+    _prepareAlphaField() {
+      if (!this.binding.alpha) return;
+      const alpha100 = this.binding.alpha100;
+      const isDensity = alpha100 === '$density$';
+      this._alphaByFeature = new WeakMap();
+      let maxAlpha = -Infinity;
+      this.features.forEach(f => {
+        let v = parseFloat(f.properties[this.binding.alpha]);
+        if (isNaN(v)) return;
+        if (isDensity) {
+          const areaKm2 = geodesicPolygonAreaKm2(f.geometry);
+          if (!areaKm2) return;
+          v = v / areaKm2;
+        } else if (alpha100) {
+          const v100 = parseFloat(f.properties[alpha100]);
+          if (!isNaN(v100) && v100) v = 100 / v100 * v;
+        }
+        this._alphaByFeature.set(f, v);
+        if (v > maxAlpha) maxAlpha = v;
+      });
+      this._alphaMax = isFinite(maxAlpha) ? maxAlpha : 0;
     }
 
     // Shared setup for every MULTI-field CHOROPLETH mode (DOMINANT's three
@@ -2065,42 +2146,60 @@
       return 0;
     }
 
-    // .type("CHOROPLETH|DOPACITY") family — per-RECORD fill opacity driven
-    // by the SAME bound value already used for classification (not a
-    // separate field — real source: maptheme.js paintMap ~13635-13800,
-    // confirmed by direct source read; szAlphaField/.style({alphafield})
-    // is a separate, opt-in override this port doesn't implement, only
-    // used if explicitly set in the real source too). Four variants,
-    // returned as a 0-1 fraction (already scaled by the theme's own base
-    // fillopacity, matching the real engine writing this value directly
-    // as the shape's final fill-opacity — NOT multiplied again by a
-    // separate layer-level opacity, see _buildChoroplethLayers):
+    // .type("CHOROPLETH|DOPACITY") family — per-RECORD fill opacity, two
+    // entirely different real formulas depending on whether
+    // .binding({alpha}) is set (real source: all three DOPACITY call
+    // sites in paintMap are `if (this.szAlphaField) {...} else {...}`,
+    // confirmed by direct source read — alphafield doesn't just tweak the
+    // value/min/max ramps below, it REPLACES them outright):
     //
-    // DOPACITYMINMAX (or real source's own auto-trigger: an unflagged
-    // theme whose data straddles zero, this._valueMin<0<this._valueMax —
-    // "BIPOLAR" data): ramps from the dataset MEDIAN toward nMax above it
-    // and toward nMin below it — two independent half-ramps.
-    // DOPACITYMIN: inverted ramp — HIGHER value -> LOWER opacity.
-    // DOPACITYMAX: direct ramp — higher value -> higher opacity.
-    // Plain DOPACITY: (value-min)/(median-min), capped at a 0.5 ceiling
-    // BEFORE the fillopacity/scale multiply — real source's own formula,
-    // not a rounding choice of this port's.
+    // WITH binding.alpha (maptheme.js:13456-13471 etc., ~line "if
+    // (this.szAlphaField)"): nOpacity = dopacityscale / nAlphaMax^(1/pow)
+    // * nAlpha^(1/pow) — nAlpha/nAlphaMax from _prepareAlphaField's OWN
+    // separate stats pass (never the main value's min/max/median), and
+    // — per the literal source quoted — NOT multiplied by the theme's
+    // base fillopacity here (unlike every other variant below). DOPACITY*
+    // flag choice (MIN/MAX/MINMAX) is irrelevant once alpha is set — only
+    // the bare DOPACITY-family gate in buildDeckLayers matters.
     //
-    // dopacitypow (real nDopacityPow, default 1) is applied as the
-    // exponent 1/dopacitypow on both numerator and denominator of the
-    // MIN/MAX/MINMAX ramps (not plain DOPACITY, which has no pow term in
-    // the real source either). dopacityscale (real nDopacityScale,
-    // default 1) is a flat multiplier on the final result, all variants.
-    // Clamped: <0.0001 snaps to 0 (real source's own near-zero cutoff);
-    // capped at the theme's own base opacity (real source caps at
-    // `this.nOpacity||0.9`, a distinct "opacity" style property this port
-    // doesn't separately model — using the already-resolved base
-    // fillopacity as the cap instead, a minor documented deviation).
-    _resolveDopacityAlpha(value, baseOpacity) {
-      if (isNaN(value) || this._valueMin == null) return null;
-      const nMin = this._valueMin, nMax = this._valueMax, nMedian = this._valueMedian;
+    // WITHOUT binding.alpha (the bound value drives opacity directly,
+    // maptheme.js paintMap ~13635-13800): returned as a 0-1 fraction
+    // already scaled by the theme's own base fillopacity, matching the
+    // real engine writing this value directly as the shape's final
+    // fill-opacity:
+    //   DOPACITYMINMAX (or real source's own auto-trigger: an unflagged
+    //   theme whose data straddles zero, _valueMin<0<_valueMax —
+    //   "BIPOLAR" data): ramps from the dataset MEDIAN toward nMax above
+    //   it and toward nMin below it — two independent half-ramps.
+    //   DOPACITYMIN: inverted ramp — HIGHER value -> LOWER opacity.
+    //   DOPACITYMAX: direct ramp — higher value -> higher opacity.
+    //   Plain DOPACITY: (value-min)/(median-min), capped at a 0.5
+    //   ceiling BEFORE the fillopacity/scale multiply — real source's own
+    //   formula, not a rounding choice of this port's.
+    //
+    // dopacitypow (real nDopacityPow, default 1) is the exponent
+    // 1/dopacitypow — on the alpha ramp always, on the value ramp only
+    // for MIN/MAX/MINMAX (plain DOPACITY has no pow term in the real
+    // source either). dopacityscale (real nDopacityScale, default 1) is
+    // a flat multiplier on the final result, every variant. Clamped:
+    // <0.0001 snaps to 0 (real source's own near-zero cutoff); capped at
+    // the theme's own base opacity (real source caps at a separate
+    // `this.nOpacity||0.9` style property this port doesn't model
+    // separately — using the already-resolved base fillopacity as the
+    // cap instead, a minor documented deviation).
+    _resolveDopacityAlpha(f, value, baseOpacity) {
       const scale = parseFloat(this.style.dopacityscale) || 1;
       const pow = 1 / (parseFloat(this.style.dopacitypow) || 1);
+      if (this.binding.alpha) {
+        if (!this._alphaByFeature) return null;
+        const nAlpha = this._alphaByFeature.get(f);
+        if (nAlpha == null) return null;
+        let nOpacity = scale / Math.pow(this._alphaMax || 1, pow) * Math.pow(nAlpha, pow);
+        if (nOpacity < 0.0001) nOpacity = 0;
+        return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
+      }
+      if (isNaN(value) || this._valueMin == null) return null;
+      const nMin = this._valueMin, nMax = this._valueMax, nMedian = this._valueMedian;
       const bipolar = this.flags.has('DOPACITYMINMAX') || this.flags.has('BIPOLAR') || (nMin < 0 && nMax > 0);
       let nOpacity;
       if (bipolar) {
@@ -2628,7 +2727,7 @@
             geometry: f.geometry,
             properties: {
               value, raw: f.properties, cat: dom ? dom.index : null,
-              dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(value, baseOpacity) : null
+              dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(f, value, baseOpacity) : null
             }
           };
         }
@@ -2639,7 +2738,7 @@
           geometry: f.geometry,
           properties: {
             value, raw: f.properties, cat,
-            dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(value, baseOpacity) : null
+            dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(f, value, baseOpacity) : null
           }
         };
       });
