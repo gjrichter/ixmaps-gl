@@ -6,32 +6,40 @@
 // ixmaps' own SVG/Leaflet engine.
 //
 // Scope note (read this before assuming a keyword "works"): this engine
-// fully implements the theme-type grammar our two real layers exercise —
-// FEATURES (polygon/line rendering) and the CHART|SYMBOL|GLOW|CATEGORICAL|
-// AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical clustering + sizing +
-// glow + multi-bubble grouping + on-bubble value labels, generalized to
-// however many distinct category values the DATA actually contains — never
-// hardcoded), plus DOT, the real engine's simplest base symbol type (a
-// fixed-radius, unclustered point — see DOT_RADIUS_PX/_buildDotLayers).
-// Both BUBBLE and DOT support the real engine's two coloring modes for a
-// bound value: CATEGORICAL (exact-match classes) and numeric range/class
-// coloring (_buildPartsA — equal-interval by default, or QUANTILE, or
-// NATURAL/Jenks; see _equalIntervalBreaks/_quantileBreaks/_naturalBreaks).
-// HEADTAIL/LOG/POW2/POW3 are recognized type flags but not implemented,
-// see KNOWN_INERT_FLAGS. These base types (FEATURES/CHART|SYMBOL/DOT) are
-// dispatched by buildDeckLayers in the real engine's own precedence order
-// — DOT is checked first because the real engine's DOT bypasses the whole
-// drawChart/modifier pipeline rather than being "BUBBLE with the size
-// locked." Other real base types (QUAD, BEZIER, VECTOR, PIE/DONUT, WAFFLE,
-// BAR, and SYMBOL's own shape variants) are NOT implemented yet — adding
-// one means a new _buildXLayers() method plus a dispatch line, not a
-// rewrite, but each should be added deliberately (checking, per real
-// source, which modifiers it actually shares with BUBBLE) rather than
-// forced through a shared "modifier pipeline" abstraction that doesn't
-// exist yet. Flags with no distinct rendering behavior yet (see
-// KNOWN_INERT_FLAGS) are recognized and stored, not silently dropped, but
-// produce a one-time console note rather than a fabricated
-// effect — this is not full coverage of ixmaps' entire theme grammar.
+// fully implements the theme-type grammar our real layers exercise —
+// FEATURE/FEATURES (polygon/line rendering, singular is the real engine's
+// own keyword, plural this port's earlier convention — both accepted),
+// CHOROPLETH (polygon fill classed by a bound numeric value — QUANTILE/
+// NATURAL/equal-interval only so far; CATEGORICAL/DOMINANT choropleths are
+// not implemented yet, see _buildChoroplethLayers), and the CHART|SYMBOL|
+// GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
+// clustering + sizing + glow + multi-bubble grouping + on-bubble value
+// labels, generalized to however many distinct category values the DATA
+// actually contains — never hardcoded), plus DOT, the real engine's
+// simplest base symbol type (a fixed-radius, unclustered point — see
+// DOT_RADIUS_PX/_buildDotLayers). BUBBLE, DOT, and CHOROPLETH all share
+// the real engine's two coloring modes for a bound value: CATEGORICAL
+// (exact-match classes) and numeric range/class coloring (_buildPartsA —
+// equal-interval by default, or QUANTILE, or NATURAL/Jenks; see
+// _equalIntervalBreaks/_quantileBreaks/_naturalBreaks). A CHOROPLETH
+// layer's geometry is borrowed from a FEATURE base layer sharing the same
+// .layer() name (the real engine's own convention), joined via
+// binding.lookup — see joinChoroplethFeatures. HEADTAIL/LOG/POW2/POW3 are
+// recognized type flags but not implemented, see KNOWN_INERT_FLAGS. These
+// base types are dispatched by buildDeckLayers in the real engine's own
+// precedence order — DOT is checked first because the real engine's DOT
+// bypasses the whole drawChart/modifier pipeline rather than being
+// "BUBBLE with the size locked." Other real base types (QUAD, BEZIER,
+// VECTOR, PIE/DONUT, WAFFLE, BAR, and SYMBOL's own shape variants) are NOT
+// implemented yet — adding one means a new _buildXLayers() method plus a
+// dispatch line, not a rewrite, but each should be added deliberately
+// (checking, per real source, which modifiers it actually shares with
+// BUBBLE) rather than forced through a shared "modifier pipeline"
+// abstraction that doesn't exist yet. Flags with no distinct rendering
+// behavior yet (see KNOWN_INERT_FLAGS) are recognized and stored, not
+// silently dropped, but produce a one-time console note rather than a
+// fabricated effect — this is not full coverage of ixmaps' entire theme
+// grammar.
 // =======================================================================
 
 (function (global) {
@@ -110,14 +118,21 @@
   // these specific government exports, so a plain split is enough — this
   // is NOT a general RFC4180 parser (no quoted-field support), matching
   // only what this real data source actually needs.
+  //
+  // Delimiter is sniffed from the header line, not hardcoded — confirmed
+  // live that not every real CSV source uses ';': the ixmaps-data comuni
+  // demographics export (italy-comuni-demographics-ixmaps.html) is plain
+  // comma-delimited, decimal-DOT (no European-locale comma parsing
+  // needed for that source, unlike the semicolon-delimited German one).
   function parseCsvText(text) {
     if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
     const lines = text.split(/\r\n|\n/).filter(l => l.length);
     if (!lines.length) return [];
-    const headers = lines[0].split(';');
+    const delimiter = lines[0].includes(';') ? ';' : ',';
+    const headers = lines[0].split(delimiter);
     const rows = new Array(lines.length - 1);
     for (let i = 1; i < lines.length; i++) {
-      const cells = lines[i].split(';');
+      const cells = lines[i].split(delimiter);
       const row = {};
       for (let c = 0; c < headers.length; c++) row[headers[c]] = cells[c];
       rows[i - 1] = row;
@@ -151,6 +166,19 @@
       features.push({ type: 'Feature', properties: row, geometry: { type: 'Point', coordinates: [lon, lat] } });
     }
     return { type: 'FeatureCollection', features };
+  }
+
+  // CHOROPLETH's own .data() (e.g. the comuni demographics CSV in
+  // italy-comuni-demographics-ixmaps.html) carries no point geometry at
+  // all — it's a plain lookup table joined against a FEATURE base layer's
+  // geometry by binding.lookup (see MapBuilder.build()'s
+  // joinChoroplethFeatures). binding.lookup with no binding.position is
+  // the signal for that shape; anything else still builds Point features
+  // as before (binding.position, or neither — the .position-required
+  // error path below).
+  function rowsResult(rows, binding) {
+    if (binding && binding.lookup && !binding.position) return { type: 'Table', rows };
+    return csvRowsToFeatureCollection(rows, binding && binding.position);
   }
 
   // Bridges the real ixmaps runtime's ixmaps.setExternalData(dataObj, opt)
@@ -222,7 +250,7 @@
         _pendingQueryResolve = resolve;
         queryFn({}, {});
       });
-      return csvRowsToFeatureCollection(dataObj.json(), binding && binding.position);
+      return rowsResult(dataObj.json(), binding);
     }
 
     if (dataConfig.type === 'csv') {
@@ -238,7 +266,7 @@
           rows.forEach(row => { if (row[field] in map) row[field] = map[row[field]]; });
         });
       }
-      return csvRowsToFeatureCollection(rows, binding && binding.position);
+      return rowsResult(rows, binding);
     }
 
     const resp = await fetch(dataConfig.url);
@@ -263,7 +291,48 @@
     }
     const [, field, rawValue] = m;
     const value = rawValue.replace(/^['"]|['"]$/g, '');
+    if (fc.type === 'Table') return { type: 'Table', rows: fc.rows.filter(row => String(row[field]) === value) };
     return { type: 'FeatureCollection', features: fc.features.filter(f => String(f.properties[field]) === value) };
+  }
+
+  // ---------------------------------------------------------------
+  // CHOROPLETH geometry join — a CHOROPLETH layer's own .data() is a
+  // lookup TABLE (see rowsResult above), not geometry. Its geometry is
+  // borrowed from a FEATURE base layer sharing the same .layer() NAME
+  // (the real engine's own convention — see italy-comuni-demographics-
+  // ixmaps.html's "same layer name as FEATURE base -> joins its
+  // geometry" comment), joined per-polygon via binding.lookup (the
+  // table's join-key field) against the FEATURE base's binding.id (the
+  // geometry's own join-key field — usually a differently-named field,
+  // e.g. comune_code vs. com_istat_code_num).
+  //
+  // Requires the FEATURE base to be .layer()'d BEFORE the CHOROPLETH
+  // layer using it — MapBuilder.build()'s runtime loop is sequential in
+  // .layer() call order, so `runtimes` already holds the base by the
+  // time this runs, same precondition the real engine's own
+  // same-name-join convention has.
+  function joinChoroplethFeatures(lb, table, runtimes) {
+    const geomRt = runtimes.find(r => r.name === lb.name && (r.flags.has('FEATURE') || r.flags.has('FEATURES')));
+    if (!geomRt) {
+      throw new Error(`[ixmaps-engine] CHOROPLETH layer "${lb.name}" needs a FEATURE base layer with the same name, .layer()'d earlier on the map`);
+    }
+    const idField = geomRt.binding.id;
+    const lookupField = lb._binding.lookup;
+    if (!idField || !lookupField) {
+      throw new Error(`[ixmaps-engine] CHOROPLETH layer "${lb.name}" needs .binding({lookup}), and its FEATURE base needs .binding({id})`);
+    }
+    const rowsByKey = new Map(table.rows.map(row => [String(row[lookupField]), row]));
+    // Unmatched polygons (no CSV row for that id) keep their geometry with
+    // empty properties — real-world data: not every comune necessarily has
+    // a row in every demographic source. Renders as "no data" (see
+    // _buildChoroplethLayers's fallback color), not silently dropped from
+    // the map.
+    const features = geomRt.features.map(f => ({
+      type: 'Feature',
+      geometry: f.geometry,
+      properties: rowsByKey.get(String(f.properties[idField])) || {}
+    }));
+    return { type: 'FeatureCollection', features };
   }
 
   // ---------------------------------------------------------------
@@ -389,7 +458,8 @@
         if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(lb._data, lb._binding));
         const raw = await dataCache.get(cacheKey);
         const filtered = applyWhereFilter(raw, lb._filterExpr);
-        const rt = new LayerRuntime(lb, filtered, this._engineOptions);
+        const fc = filtered.type === 'Table' ? joinChoroplethFeatures(lb, filtered, runtimes) : filtered;
+        const rt = new LayerRuntime(lb, fc, this._engineOptions);
         // tags which underlying data source this runtime came from — see
         // setFacetFilter/clearFacetFilter/clearAllFacetFilters below,
         // which use this to propagate a facet filter to every theme
@@ -410,22 +480,35 @@
       // Tooltip resolution is per-runtime (each theme's own meta.tooltip
       // template), not generic — a layer id exactly matches one of the
       // pickable ids a runtime's buildDeckLayers() produced (ix-points-/
-      // ix-cluster-/ix-dot-/ix-features- + that runtime's own name); the
-      // glow and values (label) layers are pickable:false so they never
-      // reach here.
+      // ix-cluster-/ix-dot-/ix-features-/ix-choropleth- + that runtime's
+      // own name); the glow and values (label) layers are pickable:false
+      // so they never reach here.
+      //
+      // Each id-pattern check is paired with the flag(s) that actually
+      // produce it, not matched by name alone — necessary now that a
+      // CHOROPLETH runtime and its FEATURE base runtime share the SAME
+      // .layer() name by design (joinChoroplethFeatures): matching by name
+      // alone would make `.find()` return whichever of the two happens to
+      // come FIRST in `runtimes` for every layer id, not the one that
+      // actually produced it.
       function findRuntimeForLayerId(layerId) {
         // icon-atlas-based layer ids (ix-cluster-/ix-cluster-glow-/
         // ix-points-glow-/ix-plot-/ix-grid-) carry a rotating "-gN"
         // generation suffix (see ICON_ATLAS_RESET_AFTER) — strip it before
         // matching so hover/click tooltip lookup keeps working across a
-        // rotation. Non-atlas layers (ix-points-/ix-dot-/ix-features-)
-        // never carry the suffix; stripping a pattern that isn't there is
-        // a no-op.
+        // rotation. Non-atlas layers (ix-points-/ix-dot-/ix-features-/
+        // ix-choropleth-) never carry the suffix; stripping a pattern
+        // that isn't there is a no-op.
         const base = layerId.replace(/-g\d+$/, '');
-        return runtimes.find(r =>
-          base === `ix-points-${r.name}` || base === `ix-cluster-${r.name}` ||
-          base === `ix-dot-${r.name}` || base === `ix-features-${r.name}` ||
-          base === `ix-plot-${r.name}` || base === `ix-grid-${r.name}`);
+        return runtimes.find(r => {
+          if (base === `ix-points-${r.name}` || base === `ix-cluster-${r.name}`) return r.flags.has('CHART') && r.flags.has('SYMBOL');
+          if (base === `ix-dot-${r.name}`) return r.flags.has('DOT');
+          if (base === `ix-choropleth-${r.name}`) return r.flags.has('CHOROPLETH');
+          if (base === `ix-features-${r.name}`) return r.flags.has('FEATURE') || r.flags.has('FEATURES');
+          if (base === `ix-plot-${r.name}`) return r.flags.has('GRIDSIZE') && r.flags.has('PLOT');
+          if (base === `ix-grid-${r.name}`) return r.flags.has('GRIDSIZE') && !r.flags.has('PLOT');
+          return false;
+        });
       }
 
       // Click-to-pin tooltip: matches the real ixmaps engine's own
@@ -2031,21 +2114,72 @@
       // engine either — confirmed, not a gap in this port).
       if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox);
       if (this.flags.has('GRIDSIZE')) return this._buildGridMeshLayers(zoom, bbox);
-      if (this.flags.has('FEATURES')) return this._buildFeaturesLayers();
+      // CHOROPLETH is checked before the generic FEATURE dispatch — a
+      // CHOROPLETH layer's own type string doesn't carry FEATURE/FEATURES
+      // (only its geometry-donor base layer does, see
+      // joinChoroplethFeatures); its data is already the joined
+      // {geometry, properties} FeatureCollection built in build().
+      if (this.flags.has('CHOROPLETH')) return this._buildChoroplethLayers();
+      // FEATURE is the real engine's own keyword (confirmed in maptheme.js
+      // — singular); FEATURES (plural) is this port's own prior
+      // convention, still used by demo_accidents.html/accidents_app.html —
+      // both accepted so a real config ported verbatim (singular) and this
+      // engine's existing pages (plural) both work.
+      if (this.flags.has('FEATURE') || this.flags.has('FEATURES')) return this._buildFeaturesLayers();
       if (this.flags.has('CHART') && this.flags.has('SYMBOL')) return this._buildChartLayers(zoom, bbox);
       console.warn(`[ixmaps-engine] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
       return [];
     }
 
     _buildFeaturesLayers() {
-      const filled = Array.isArray(this.style.colorscheme) ? this.style.colorscheme[0] !== 'none' : true;
+      const cs = this.style.colorscheme;
+      const raw = Array.isArray(cs) ? cs[0] : cs;
+      const filled = raw !== 'none';
       return [new GeoJsonLayer({
         id: `ix-features-${this.name}`,
         data: { type: 'FeatureCollection', features: this.features },
         stroked: true,
         filled,
+        // A FEATURES/FEATURE base layer has one flat fill color for every
+        // polygon (style.colorscheme[0], or plain style.colorscheme) —
+        // unlike CHOROPLETH, there's no per-feature classification here.
+        getFillColor: filled ? hexOrNamedToRgb(raw) : [0, 0, 0, 0],
         getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [130, 130, 130],
-        lineWidthMinPixels: parseFloat(this.style.linewidth) || 1
+        lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
+        opacity: parseFloat(this.style.fillopacity) || 1
+      })];
+    }
+
+    // .type("CHOROPLETH") — a polygon fill classed by a bound numeric
+    // value (QUANTILE/NATURAL/equal-interval, same _buildPartsA/
+    // _resolveClassIndex machinery every other classed theme already
+    // uses; CATEGORICAL/DOMINANT choropleths are a later phase, not
+    // implemented here). Geometry + properties are already the joined
+    // FeatureCollection from joinChoroplethFeatures — this only needs to
+    // resolve each polygon's own class/color and wrap it in the standard
+    // {value, raw, cat} tooltip shape (see _buildDotLayers for the same
+    // pattern on points).
+    _buildChoroplethLayers() {
+      const source = this._activeFeatures || this.features;
+      const fallbackRgb = [200, 200, 200]; // unclassified / no joined data for this polygon
+      const data = source.map(f => {
+        const cat = this._resolveClassIndex(f.properties[this.binding.value]);
+        return {
+          type: 'Feature',
+          geometry: f.geometry,
+          properties: { value: parseFloat(f.properties[this.binding.value]), raw: f.properties, cat }
+        };
+      });
+      return [new GeoJsonLayer({
+        id: `ix-choropleth-${this.name}`,
+        data: { type: 'FeatureCollection', features: data },
+        pickable: true,
+        stroked: true,
+        filled: true,
+        getFillColor: d => (d.properties.cat != null ? this.categoryColorsRgb[d.properties.cat] : null) || fallbackRgb,
+        getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [255, 255, 255],
+        lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
+        opacity: parseFloat(this.style.fillopacity) || 1
       })];
     }
 
