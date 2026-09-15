@@ -1102,19 +1102,28 @@
   // resolveZoomReference / .options({normalSizeScale}), the same
   // reference BUBBLE's dynamic sizing already uses) rather than its exact
   // curve. A smooth exponential half-life decay (halves every
-  // AUTO_OPACITY_HALF_LIFE_ZOOM zoom levels past the normal view) down to
-  // AUTO_OPACITY_FLOOR. Retuned twice per explicit correction: the
-  // original log-based falloff (mirroring the real formula's own shape)
-  // was still ~0.47 opacity six zoom levels past the reference, too
-  // gentle to reveal the basemap; the first half-life retuning (floor
-  // 0.08, half-life 2 zooms) was still ~0.2 at typical street-level zoom,
-  // still too opaque to read street labels through. Floor and half-life
-  // now land at ~0.1 (the floor itself) already by ~4-5 zoom levels past
-  // the normal view, comfortably inside typical street-level zoom.
+  // AUTO_OPACITY_HALF_LIFE_ZOOM zoom levels past the fade's own start
+  // point) down to AUTO_OPACITY_FLOOR. Retuned three times per explicit
+  // correction: the original log-based falloff (mirroring the real
+  // formula's own shape) was still ~0.47 opacity six zoom levels past the
+  // reference, too gentle to reveal the basemap; the first half-life
+  // retuning (floor 0.08, half-life 2 zooms) was still ~0.2 at typical
+  // street-level zoom, still too opaque to read street labels through;
+  // floor/half-life then landed at ~0.1 by ~4-5 zoom levels past the
+  // normal view — correct AT street level, but per the next correction
+  // ("could attack earlier") the fade didn't START until the configured
+  // normal-view zoom itself, so a page whose initial view sits below that
+  // (e.g. this engine's own demo, view zoom 6 against the default
+  // reference 10) saw full, unfading opacity across its whole starting
+  // zoom range. AUTO_OPACITY_EARLY_START_ZOOM shifts the fade's START
+  // point earlier than the normal-view zoom (not the floor or the decay
+  // rate, both already correct at street level) so it's already visibly
+  // underway well before reaching it.
   const AUTO_OPACITY_FLOOR = 0.1;
   const AUTO_OPACITY_HALF_LIFE_ZOOM = 1;
+  const AUTO_OPACITY_EARLY_START_ZOOM = 4;
   function resolveAutoFillOpacity(zoom, mapOptions) {
-    const zoomReference = resolveZoomReference(mapOptions);
+    const zoomReference = resolveZoomReference(mapOptions) - AUTO_OPACITY_EARLY_START_ZOOM;
     const z = zoom == null ? zoomReference : zoom;
     const zoomsPastNormal = Math.max(0, z - zoomReference);
     return AUTO_OPACITY_FLOOR + (1 - AUTO_OPACITY_FLOOR) * Math.pow(0.5, zoomsPastNormal / AUTO_OPACITY_HALF_LIFE_ZOOM);
