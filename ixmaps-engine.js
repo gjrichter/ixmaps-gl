@@ -321,6 +321,20 @@
     if (!geomRt) {
       throw new Error(`[ixmaps-engine] CHOROPLETH layer "${lb.name}" needs a FEATURE base layer with the same name, .layer()'d earlier on the map`);
     }
+    // A FEATURE base that's donating geometry to a same-named CHOROPLETH
+    // exists PURELY as a geometry template (per this join's own
+    // precondition) — its own visible fill would just stack a second,
+    // redundant translucent layer directly underneath the CHOROPLETH's
+    // (which already renders its own "no data" fallback color for any
+    // unmatched polygon, below), compounding opacity for no visual
+    // purpose. Confirmed as a real, reported bug: e.g. a CHOROPLETH at
+    // fillopacity 0.3 over this base's own default 0.4 gray fill
+    // compounds to ~0.58 effective coverage — never actually 0.3.
+    // Marked here (not decided inside _buildFeaturesLayers) since this is
+    // the one place that already knows a CHOROPLETH is consuming this
+    // specific FEATURE runtime as a donor, not just sharing its name
+    // coincidentally.
+    geomRt._isChoroplethGeometryDonor = true;
     const idField = geomRt.binding.id;
     const lookupField = lb._binding.lookup;
     if (!idField || !lookupField) {
@@ -2461,6 +2475,16 @@
       // convention, still used by demo_accidents.html/accidents_app.html —
       // both accepted so a real config ported verbatim (singular) and this
       // engine's existing pages (plural) both work.
+      //
+      // A FEATURE base donating geometry to a same-named CHOROPLETH (see
+      // joinChoroplethFeatures) renders nothing of its own — per explicit
+      // correction, its own visible fill was stacking underneath the
+      // CHOROPLETH's, compounding opacity (e.g. 0.4 gray base + 0.3
+      // CHOROPLETH fill never actually looked like 0.3). The CHOROPLETH
+      // already provides its own "no data" fallback color for any
+      // unmatched polygon, so the donor's fill serves no purpose once
+      // superseded.
+      if (this._isChoroplethGeometryDonor) return [];
       if (this.flags.has('FEATURE') || this.flags.has('FEATURES')) return this._buildFeaturesLayers();
       if (this.flags.has('CHART') && this.flags.has('SYMBOL')) return this._buildChartLayers(zoom, bbox);
       console.warn(`[ixmaps-engine] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
