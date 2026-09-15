@@ -72,6 +72,14 @@
     <b>CHOROPLETH · DOMINANT (no PERCENTOFMEAN)</b>
     <span>Same 21 piped fields, but classed by whichever field simply has the highest raw value per record — no cross-record mean comparison.</span>
   </a>
+  <a class="card" href="choropleth_dominant_deviation.html">
+    <b>CHOROPLETH · DOMINANT|DEVIATION</b>
+    <span>Winning band is the highest z-score — (value-mean)/stddev — above zero, weighing deviation against each band's own natural spread.</span>
+  </a>
+  <a class="card" href="choropleth_composecolor_subtractive.html">
+    <b>CHOROPLETH · COMPOSECOLOR|SUBTRACTIVE</b>
+    <span>No single winner — every field's class color blends into one, weighted by value, paint-style (subtractive) mixing.</span>
+  </a>
 </div>
 
 <h2>Spatial grid + small-multiples chart</h2>

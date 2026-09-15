@@ -9,12 +9,14 @@
 // fully implements the theme-type grammar our real layers exercise —
 // FEATURE/FEATURES (polygon/line rendering, singular is the real engine's
 // own keyword, plural this port's earlier convention — both accepted),
-// CHOROPLETH (polygon fill classed by a bound value — single-field numeric
-// range via QUANTILE/NATURAL/equal-interval, or multi-field DOMINANT's
-// per-polygon argmax across piped fields, plain (highest raw value) or
-// |PERCENTOFMEAN (highest deviation from that field's own cross-record
-// mean); CATEGORICAL choropleths aren't implemented, see
-// _buildChoroplethLayers), and the CHART|SYMBOL|
+// CHOROPLETH (polygon fill from a bound value — single-field numeric range
+// via QUANTILE/NATURAL/equal-interval; multi-field DOMINANT's per-polygon
+// argmax across piped fields, plain (highest raw value), |PERCENTOFMEAN
+// (highest % deviation from that field's own cross-record mean), or
+// |DEVIATION (highest z-score above that field's own mean); or multi-field
+// COMPOSECOLOR's per-polygon color BLEND across the same piped fields,
+// additive or |SUBTRACTIVE. CATEGORICAL choropleths aren't implemented,
+// see _buildChoroplethLayers), and the CHART|SYMBOL|
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
@@ -1475,14 +1477,23 @@
         // (binding.value is a pipe-joined field list, e.g. one CSV column
         // per age band for the same year/sex — same pipe convention
         // csvRowsToFeatureCollection's binding.position already uses).
-        // Two relevance formulas, both handled by _resolveDominantClass:
-        // PERCENTOFMEAN (maptheme.js:13086-13531, confirmed by direct
-        // source read) picks the field deviating most from ITS OWN
-        // cross-record mean; plain DOMINANT (no PERCENTOFMEAN) instead
-        // picks whichever field simply has the highest raw value for
-        // that one record — "which band dominates this comune's own
-        // local profile", per explicit correction.
+        // Three relevance formulas, all handled by _resolveDominantClass:
+        // PERCENTOFMEAN picks the field deviating most (as a %) from ITS
+        // OWN cross-record mean; DEVIATION picks the field with the
+        // highest z-score above its own mean; plain DOMINANT (neither
+        // flag) picks whichever field simply has the highest raw value —
+        // "which band dominates this comune's own local profile", per
+        // explicit correction.
         this._prepareDominant();
+      } else if (this.flags.has('COMPOSECOLOR') && this.binding.value) {
+        // .type("CHOROPLETH|COMPOSECOLOR") — real engine's OTHER
+        // multi-field mode (mutually exclusive with DOMINANT, not a
+        // modifier of it, confirmed by direct source read): blends every
+        // field's class color into one RGB triple weighted by value,
+        // rather than picking one winning field. |SUBTRACTIVE switches the
+        // blend formula (see _resolveComposedColor); plain COMPOSECOLOR is
+        // the real engine's own additive default.
+        this._prepareComposeColor();
       } else if (this.flags.has('CATEGORICAL') && this.binding.value) {
         // .style({values: [...]}) (or .xaxis, same list in practice — see
         // the PLOT curves-chart config) is an EXPLICIT, ORDERED category
@@ -1558,81 +1569,183 @@
       }
     }
 
-    // .type("CHOROPLETH|DOMINANT") prep — computes, once per theme build,
-    // each piped field's own cross-record MEAN and MIN (over this.features,
-    // i.e. every polygon this CHOROPLETH's join produced — real source:
-    // maptheme.js:13086-13126, distributeValues' DOMINANT block; nMinA
-    // doubles as the default nFilterA in _resolveDominantClass). Computed
-    // unconditionally even though plain DOMINANT (no PERCENTOFMEAN) only
-    // ends up using neither — the pass is cheap, and keeping one prep path
-    // for both relevance formulas avoids duplicating the field-parsing
-    // loop. Skips NaN values per field rather than poisoning the sum/min
-    // (real source has no such guard, but it also doesn't join
-    // heterogeneous CSV rows the way this port's joinChoroplethFeatures
-    // does — unmatched polygons here have empty properties, which would
-    // otherwise NaN out every field's mean).
-    _prepareDominant() {
+    // Shared setup for every MULTI-field CHOROPLETH mode (DOMINANT's three
+    // relevance formulas, and COMPOSECOLOR): parses binding.value's
+    // pipe-joined field list (same pipe convention
+    // csvRowsToFeatureCollection's binding.position already uses) and
+    // resolves one label/color per field — same .style({values:[...]})
+    // explicit-ordered-list convention as CATEGORICAL, positionally
+    // aligned with the piped fields (e.g. AGE_BANDS, built by mapping over
+    // the very same array that produced the pipe-joined binding.value). No
+    // raw-vs-display distinction needed here (unlike CATEGORICAL's
+    // categoryLabels/categoryDisplayLabels split) — there's no exact-match
+    // filtering against these labels, only field-index lookup.
+    _prepareMultiFieldChoropleth() {
       const fields = this.binding.value.split('|');
-      this._dominantFields = fields;
-      const sums = fields.map(() => 0), counts = fields.map(() => 0), mins = fields.map(() => Infinity);
-      this.features.forEach(f => {
-        fields.forEach((field, i) => {
-          const v = parseFloat(f.properties[field]);
-          if (isNaN(v)) return;
-          sums[i] += v; counts[i]++;
-          if (v < mins[i]) mins[i] = v;
-        });
-      });
-      this._dominantMeans = sums.map((s, i) => counts[i] ? s / counts[i] : 0);
-      this._dominantMins = mins.map(m => isFinite(m) ? m : 0);
-
-      // .style({values: [...]}) — same explicit-ordered-list convention as
-      // CATEGORICAL, positionally aligned with the piped fields (e.g.
-      // AGE_BANDS, built by mapping over the very same array that produced
-      // the pipe-joined binding.value). No raw-vs-display distinction
-      // needed here (unlike CATEGORICAL's categoryLabels/
-      // categoryDisplayLabels split) — there's no exact-match filtering
-      // against these labels, only field-index lookup.
+      this._multiFields = fields;
       const explicit = Array.isArray(this.style.values) && this.style.values.length === fields.length
         ? this.style.values.map(String) : fields;
       this.categoryLabels = explicit;
       this.categoryDisplayLabels = explicit;
       this.categoryColorsRgb = resolveClassColors(this.style.colorscheme, this.categoryLabels);
+      return fields;
     }
 
-    // Which piped field "wins" for one joined polygon's properties — two
-    // relevance formulas:
+    // .type("CHOROPLETH|DOMINANT") prep — computes, once per theme build,
+    // each piped field's own cross-record MEAN, MIN, and (population)
+    // STANDARD DEVIATION (over this.features, i.e. every polygon this
+    // CHOROPLETH's join produced — real source: maptheme.js:13086-13160,
+    // distributeValues' DOMINANT block, plus getDeviationOfArray at line
+    // 6198 for the stddev itself; nMinA doubles as the default nFilterA in
+    // _resolveDominantClass). All three are computed unconditionally even
+    // though a given theme only ends up using one relevance formula — the
+    // pass is cheap, and one prep path avoids duplicating the field-parsing
+    // loop per mode. Values are filtered by JS truthiness (skips NaN AND
+    // exactly 0), matching the real source's own `nValuesA[i]||0`-style
+    // pooling (maptheme.js:13154, confirmed by direct source read) — not
+    // merely a NaN guard.
+    _prepareDominant() {
+      const fields = this._prepareMultiFieldChoropleth();
+      const sums = fields.map(() => 0), counts = fields.map(() => 0), mins = fields.map(() => Infinity);
+      const valuesByField = fields.map(() => []);
+      this.features.forEach(f => {
+        fields.forEach((field, i) => {
+          const v = parseFloat(f.properties[field]);
+          if (!v) return; // skips NaN and 0 — real source's own truthy pooling, not just a NaN guard
+          sums[i] += v; counts[i]++;
+          if (v < mins[i]) mins[i] = v;
+          valuesByField[i].push(v);
+        });
+      });
+      this._dominantMeans = sums.map((s, i) => counts[i] ? s / counts[i] : 0);
+      this._dominantMins = mins.map(m => isFinite(m) ? m : 0);
+      // Population standard deviation (divide by N, no Bessel's
+      // correction) — matches getDeviationOfArray exactly.
+      this._dominantStdDevs = valuesByField.map((vals, i) => {
+        if (!vals.length) return 0;
+        const mean = this._dominantMeans[i];
+        const variance = vals.reduce((s, v) => s + (v - mean) * (v - mean), 0) / vals.length;
+        return Math.sqrt(variance);
+      });
+    }
+
+    // Which piped field "wins" for one joined polygon's properties — three
+    // relevance formulas, real engine confirmed by direct source read:
     //
-    // PERCENTOFMEAN (real formula, maptheme.js:13491/13505, confirmed by
-    // direct source read): nPercentOfMean = 100 * value / mean[i], and the
-    // argmax is FILTERED — a field can only win if its own value is
-    // strictly greater than that field's own dataset-wide MIN (the real
-    // engine's default nFilterA[i] = nMinA[i]; szDominantFilter
+    // PERCENTOFMEAN (maptheme.js:13491/13505): nRelevanz = 100 * value /
+    // mean[i].
+    // DEVIATION (maptheme.js:13493/13502-13503, stddev from
+    // getDeviationOfArray): nRelevanz = (value - mean[i]) / stddev[i] — a
+    // z-score. Both share the SAME filter: a field can only win if its own
+    // value is strictly greater than that field's own dataset-wide MIN
+    // (real default nFilterA[i] = nMinA[i]; szDominantFilter
     // "mean"/"median" variants aren't implemented, not used by any config
-    // ported here). Deliberately unguarded (no mean-zero check) — matching
-    // the real source exactly: mean=0 naturally yields Infinity/NaN
-    // through plain division, same as maptheme.js's own unguarded
-    // line 13491, and NaN can never win the `>` comparison below.
+    // ported here). Both deliberately unguarded against divide-by-zero
+    // (mean=0 or stddev=0) — matching the real source exactly: that
+    // naturally yields Infinity/NaN, and NaN can never win the `>`
+    // comparison below (though +Infinity CAN — a real, confirmed-unguarded
+    // quirk of the source itself, not introduced here).
     //
-    // Plain DOMINANT (no PERCENTOFMEAN, per explicit correction): the
-    // field with the highest raw value wins outright — no mean/min
-    // comparison, no filter. "Which band dominates this comune's own
-    // local profile," not a cross-record comparison.
+    // Plain DOMINANT (no PERCENTOFMEAN/DEVIATION, per explicit
+    // correction): nRelevanz = value itself — the field with the highest
+    // raw value wins outright, no mean/min filter. "Which band dominates
+    // this comune's own local profile," not a cross-record comparison.
     //
-    // Both: ties go to the first (lowest-index) field (strict `>`), and a
-    // non-numeric field value can't win either way (NaN fails both the
-    // filter check and the plain `>` comparison on its own).
+    // All three: the winning threshold starts at 0, not -Infinity (real
+    // source: maptheme.js:13440, nLastRelevant reset to 0 per record,
+    // shared by every relevance mode) — a field must have a STRICTLY
+    // POSITIVE relevance score to win at all, so DEVIATION in particular
+    // only ever picks a field ABOVE its own mean, never the most anomalous
+    // in either direction. Ties go to the first (lowest-index) field
+    // (strict `>`).
     _resolveDominantClass(props) {
-      const fields = this._dominantFields;
+      const fields = this._multiFields;
       const usePercentOfMean = this.flags.has('PERCENTOFMEAN');
-      let bestIndex = -1, bestRelevance = -Infinity, bestValue = null;
+      const useDeviation = this.flags.has('DEVIATION');
+      const needsFilter = usePercentOfMean || useDeviation;
+      let bestIndex = -1, bestRelevance = 0, bestValue = null;
       for (let i = 0; i < fields.length; i++) {
         const v = parseFloat(props[fields[i]]);
-        if (usePercentOfMean && !(v > this._dominantMins[i])) continue;
-        const relevance = usePercentOfMean ? 100 * v / this._dominantMeans[i] : v;
+        if (needsFilter && !(v > this._dominantMins[i])) continue;
+        const relevance = useDeviation ? (v - this._dominantMeans[i]) / this._dominantStdDevs[i]
+          : usePercentOfMean ? 100 * v / this._dominantMeans[i]
+          : v;
         if (relevance > bestRelevance) { bestRelevance = relevance; bestIndex = i; bestValue = v; }
       }
       return bestIndex === -1 ? null : { index: bestIndex, value: bestValue };
+    }
+
+    // .type("CHOROPLETH|COMPOSECOLOR") prep — unlike DOMINANT's argmax
+    // (exactly one field "wins"), COMPOSECOLOR blends EVERY field's own
+    // class color into one RGB triple, weighted by that field's value.
+    // Real source (maptheme.js:13267-13321, __maptheme_initComposedColor,
+    // confirmed by direct source read) precomputes, once, over the
+    // resolved class colors themselves (not the data): the mean channel-
+    // sum (R+G+B) and the mean per-color peak channel (max(R,G,B)) — used
+    // as brightness/normalization constants in _resolveComposedColor.
+    // Also precomputes nMax: the GLOBAL max value across every field AND
+    // every feature combined (not per-field, unlike DOMINANT's own
+    // per-field means) — confirmed real source computes one shared max,
+    // not one per field.
+    _prepareComposeColor() {
+      const fields = this._prepareMultiFieldChoropleth();
+      let nMax = 0;
+      this.features.forEach(f => fields.forEach(field => {
+        const v = parseFloat(f.properties[field]);
+        if (v > nMax) nMax = v;
+      }));
+      this._composeColorMax = nMax;
+      const rgbs = this.categoryColorsRgb;
+      this._composeColorSumIntensity = rgbs.reduce((s, c) => s + c[0] + c[1] + c[2], 0) / rgbs.length;
+      this._composeColorMeanMaxIntensity = rgbs.reduce((s, c) => s + Math.max(c[0], c[1], c[2]), 0) / rgbs.length;
+    }
+
+    // Blends every piped field's class color into one RGB triple for a
+    // single polygon — real source (maptheme.js:13442-13452 in paintMap's
+    // render loop, __maptheme_getComposedColor_additive/_subtractive,
+    // confirmed by direct source read). No nFilterA/min filter here
+    // (unlike DOMINANT) — every field's raw value (or 0) contributes.
+    //
+    // ADDITIVE (COMPOSECOLOR alone, the real engine's own default when
+    // SUBTRACTIVE isn't also set): per channel, sum each field's own
+    // channel value weighted by (fieldValue/nMax), then normalize by the
+    // sum's own peak channel and scale to a brightness constant.
+    //
+    // SUBTRACTIVE (COMPOSECOLOR|SUBTRACTIVE): the same weighted sum but
+    // over each color's COMPLEMENT (255-channel), then subtracted from a
+    // brightness ceiling — approximates paint-style mixing (more
+    // contributing colors -> darker result) without true CMY conversion,
+    // matching the real source's own per-channel-RGB approach exactly
+    // rather than a "more correct" but fabricated color-space conversion.
+    //
+    // Real source has no guard for nMax===0 (all-zero dataset) or for the
+    // weighted sum's own peak channel being 0 — both divide-by-zero to
+    // NaN there. This port guards both (`|| 1`) rather than faithfully
+    // reproducing a NaN fill color, since deck.gl has no equivalent of the
+    // real engine's own silent-failure-to-white-shape fallback to lean on.
+    _resolveComposedColor(props) {
+      const fields = this._multiFields;
+      const rgbs = this.categoryColorsRgb;
+      const nMax = this._composeColorMax || 1;
+      const subtractive = this.flags.has('SUBTRACTIVE');
+      let rr = 0, gg = 0, bb = 0;
+      for (let i = 0; i < fields.length; i++) {
+        const v = parseFloat(props[fields[i]]) || 0;
+        const weight = v / nMax;
+        const [r, g, b] = rgbs[i];
+        if (subtractive) { rr += (255 - r) * weight; gg += (255 - g) * weight; bb += (255 - b) * weight; }
+        else { rr += r * weight; gg += g * weight; bb += b * weight; }
+      }
+      const peak = Math.max(rr, gg, bb) || 1;
+      const styleBrightness = parseFloat(this.style.brightness);
+      if (subtractive) {
+        const brightness = !isNaN(styleBrightness) ? Math.floor(styleBrightness * 255)
+          : (Math.min(Math.floor(this._composeColorSumIntensity), 300) || 255);
+        return [rr, gg, bb].map(c => Math.max(0, Math.min(255,
+          brightness - Math.floor(c / peak * this._composeColorMeanMaxIntensity))));
+      }
+      const scale = !isNaN(styleBrightness) ? Math.floor(styleBrightness * 255) : this._composeColorMeanMaxIntensity;
+      return [rr, gg, bb].map(c => Math.max(0, Math.min(255, Math.floor(c / peak * scale))));
     }
 
     // .style({classes: N}) numeric range/class buckets — real engine's
@@ -2310,24 +2423,30 @@
       })];
     }
 
-    // .type("CHOROPLETH") — a polygon fill classed by a bound value:
+    // .type("CHOROPLETH") — a polygon fill from a bound value, three ways:
     // numeric range (QUANTILE/NATURAL/equal-interval, _buildPartsA/
-    // _resolveClassIndex, single-field binding.value) or, when DOMINANT
-    // prepared _dominantFields (see _prepareDominant), a per-polygon
-    // argmax across MULTIPLE piped fields (_resolveDominantClass — either
-    // PERCENTOFMEAN's own-mean-deviation formula, or plain DOMINANT's
-    // highest-raw-value formula). CATEGORICAL choropleths (exact-match,
+    // _resolveClassIndex, single-field binding.value); DOMINANT's
+    // per-polygon argmax across MULTIPLE piped fields (_resolveDominantClass
+    // — plain/PERCENTOFMEAN/DEVIATION); or COMPOSECOLOR's per-polygon
+    // BLEND across the same piped fields (_resolveComposedColor — no
+    // single winning class, so no `cat`/tooltip chart line, just the
+    // blended color directly). CATEGORICAL choropleths (exact-match,
     // single field) aren't implemented — no ported config uses that
     // combination yet. Geometry + properties are already the joined
-    // FeatureCollection from joinChoroplethFeatures — this only needs to
-    // resolve each polygon's own class/color and wrap it in the standard
-    // {value, raw, cat} tooltip shape (see _buildDotLayers for the same
-    // pattern on points).
+    // FeatureCollection from joinChoroplethFeatures.
     _buildChoroplethLayers() {
       const source = this._activeFeatures || this.features;
       const fallbackRgb = [200, 200, 200]; // unclassified / no joined data for this polygon
-      const isDominant = !!this._dominantFields;
+      const isDominant = this.flags.has('DOMINANT');
+      const isComposeColor = this.flags.has('COMPOSECOLOR');
       const data = source.map(f => {
+        if (isComposeColor) {
+          return {
+            type: 'Feature',
+            geometry: f.geometry,
+            properties: { raw: f.properties, composedColor: this._resolveComposedColor(f.properties) }
+          };
+        }
         if (isDominant) {
           const dom = this._resolveDominantClass(f.properties);
           return {
@@ -2349,7 +2468,8 @@
         pickable: true,
         stroked: true,
         filled: true,
-        getFillColor: d => (d.properties.cat != null ? this.categoryColorsRgb[d.properties.cat] : null) || fallbackRgb,
+        getFillColor: d => d.properties.composedColor
+          || (d.properties.cat != null ? this.categoryColorsRgb[d.properties.cat] : null) || fallbackRgb,
         getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [255, 255, 255],
         lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
         opacity: parseFloat(this.style.fillopacity) || 1
