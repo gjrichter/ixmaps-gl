@@ -55,15 +55,78 @@
 (function (global) {
   'use strict';
 
-  const { IconLayer, ScatterplotLayer, GeoJsonLayer, MapboxOverlay, TextLayer } = global.deck;
+  // ---------------------------------------------------------------
+  // Lazy-loaded dependencies — a page only needs to include THIS one
+  // script; MapLibre GL, deck.gl, Supercluster, and Mustache are fetched
+  // on first use, matching the real ixmaps-flat engine's own single-
+  // <script src="ixmaps.js"> convention instead of this port's earlier
+  // per-page 5-tag boilerplate (still harmless to include statically too
+  // — see ensureLibrariesLoaded's own already-loaded check below, which
+  // makes the fetch a no-op whenever a page's own tags got there first).
+  // Same CDN builds every example page already pinned; centralized here
+  // so bumping a version is a one-file edit, not a 13-file one.
+  // ---------------------------------------------------------------
+  const LIB_URLS = {
+    maplibreCss: 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
+    maplibreJs: 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js',
+    deck: 'https://unpkg.com/deck.gl@8.9.35/dist.min.js',
+    supercluster: 'https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js',
+    mustache: 'https://unpkg.com/mustache@4.2.0/mustache.min.js'
+  };
 
-  // Matches the real engine's own ui/js/tools/tooltip_mustache.js, which
-  // overrides Mustache.escape to identity: tooltip HTML (the template
-  // itself, and this engine's own chart/data-table fragments — see
-  // LayerRuntime.buildTooltipHtml) is trusted markup, not user input, so
-  // interpolated values are inserted raw rather than HTML-escaped.
-  if (global.Mustache) {
-    global.Mustache.escape = text => text;
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = src;
+      el.onload = () => resolve();
+      el.onerror = () => reject(new Error(`[ixmaps-engine] failed to load ${src}`));
+      document.head.appendChild(el);
+    });
+  }
+  function loadStylesheet(href) {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement('link');
+      el.rel = 'stylesheet';
+      el.href = href;
+      el.onload = () => resolve();
+      el.onerror = () => reject(new Error(`[ixmaps-engine] failed to load ${href}`));
+      document.head.appendChild(el);
+    });
+  }
+
+  // IconLayer/ScatterplotLayer/GeoJsonLayer/MapboxOverlay/TextLayer are
+  // bound once loading completes (see ensureLibrariesLoaded) — every
+  // _buildXLayers method reads these as closure variables, same as when
+  // they were a top-level `const` destructured synchronously; the only
+  // change is WHEN they're populated, not how they're used afterward.
+  let IconLayer, ScatterplotLayer, GeoJsonLayer, MapboxOverlay, TextLayer;
+
+  // Cached so multiple ixmaps.Map() calls on one page (or a page that
+  // still has its own static <script> tags for these libraries) only
+  // ever fetch once: `global.deck` (etc.) already existing is treated as
+  // "already loaded", so a page with the old 5-tag boilerplate still
+  // works unchanged — this is purely additive, not a breaking migration.
+  let _librariesPromise = null;
+  function ensureLibrariesLoaded() {
+    if (!_librariesPromise) {
+      _librariesPromise = Promise.all([
+        global.maplibregl ? Promise.resolve() : loadScript(LIB_URLS.maplibreJs),
+        global.deck ? Promise.resolve() : loadScript(LIB_URLS.deck),
+        global.Supercluster ? Promise.resolve() : loadScript(LIB_URLS.supercluster),
+        global.Mustache ? Promise.resolve() : loadScript(LIB_URLS.mustache),
+        [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
+      ]).then(() => {
+        ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapboxOverlay, TextLayer } = global.deck);
+        // Matches the real engine's own ui/js/tools/tooltip_mustache.js,
+        // which overrides Mustache.escape to identity: tooltip HTML (the
+        // template itself, and this engine's own chart/data-table
+        // fragments — see LayerRuntime.buildTooltipHtml) is trusted
+        // markup, not user input, so interpolated values are inserted
+        // raw rather than HTML-escaped.
+        global.Mustache.escape = text => text;
+      });
+    }
+    return _librariesPromise;
   }
 
   // ---------------------------------------------------------------
@@ -534,6 +597,12 @@
     async build() {
       const el = document.getElementById(this.containerId);
       if (!el) throw new Error(`[ixmaps-engine] container #${this.containerId} not found`);
+
+      // fast local check (missing container) before the network round
+      // trip — MapLibre/deck.gl/Supercluster/Mustache + MapLibre's own
+      // CSS, all in parallel; a no-op per-library for anything a page's
+      // own <script>/<link> tags already loaded (see ensureLibrariesLoaded).
+      await ensureLibrariesLoaded();
 
       // load + filter every attached layer's data up front. Multiple
       // layers pointing at the SAME source (real convention:
