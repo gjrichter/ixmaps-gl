@@ -15,8 +15,11 @@
 // (highest % deviation from that field's own cross-record mean), or
 // |DEVIATION (highest z-score above that field's own mean); or multi-field
 // COMPOSECOLOR's per-polygon color BLEND across the same piped fields,
-// additive or |SUBTRACTIVE. CATEGORICAL choropleths aren't implemented,
-// see _buildChoroplethLayers), and the CHART|SYMBOL|
+// additive or |SUBTRACTIVE; and DOPACITY/DOPACITYMIN/DOPACITYMAX/
+// DOPACITYMINMAX, which drive per-polygon fill OPACITY (not color) from
+// the same bound value — see _resolveDopacityAlpha. CATEGORICAL
+// choropleths aren't implemented, see _buildChoroplethLayers), and the
+// CHART|SYMBOL|
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
@@ -1870,6 +1873,15 @@
       // limits, which is why this never surfaced before).
       let nMin = Infinity, nMax = -Infinity;
       for (const v of values) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+      // Dataset min/max/median — real engine's own theme-level stats
+      // (this.nMin/this.nMax/this.nMedianA[0], distributeValues), stored
+      // here (not local to partsA) since .style({dopacity...}) reads them
+      // independently of which classification method produced partsA —
+      // see _resolveDopacityAlpha.
+      this._valueMin = nMin;
+      this._valueMax = nMax;
+      const sorted = values.slice().sort((a, b) => a - b);
+      this._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
       const nParts = parseInt(this.style.classes, 10) || DEFAULT_RANGE_CLASSES;
       const placeholders = new Array(nParts).fill('');
       const colorsRgb = resolveClassColors(this.style.colorscheme, placeholders);
@@ -2051,6 +2063,60 @@
       if (this.categoryIndexByLabel) return this.categoryIndexByLabel.get(rawValue);
       if (this.partsA) return this._resolvePartsClass(parseFloat(rawValue));
       return 0;
+    }
+
+    // .type("CHOROPLETH|DOPACITY") family — per-RECORD fill opacity driven
+    // by the SAME bound value already used for classification (not a
+    // separate field — real source: maptheme.js paintMap ~13635-13800,
+    // confirmed by direct source read; szAlphaField/.style({alphafield})
+    // is a separate, opt-in override this port doesn't implement, only
+    // used if explicitly set in the real source too). Four variants,
+    // returned as a 0-1 fraction (already scaled by the theme's own base
+    // fillopacity, matching the real engine writing this value directly
+    // as the shape's final fill-opacity — NOT multiplied again by a
+    // separate layer-level opacity, see _buildChoroplethLayers):
+    //
+    // DOPACITYMINMAX (or real source's own auto-trigger: an unflagged
+    // theme whose data straddles zero, this._valueMin<0<this._valueMax —
+    // "BIPOLAR" data): ramps from the dataset MEDIAN toward nMax above it
+    // and toward nMin below it — two independent half-ramps.
+    // DOPACITYMIN: inverted ramp — HIGHER value -> LOWER opacity.
+    // DOPACITYMAX: direct ramp — higher value -> higher opacity.
+    // Plain DOPACITY: (value-min)/(median-min), capped at a 0.5 ceiling
+    // BEFORE the fillopacity/scale multiply — real source's own formula,
+    // not a rounding choice of this port's.
+    //
+    // dopacitypow (real nDopacityPow, default 1) is applied as the
+    // exponent 1/dopacitypow on both numerator and denominator of the
+    // MIN/MAX/MINMAX ramps (not plain DOPACITY, which has no pow term in
+    // the real source either). dopacityscale (real nDopacityScale,
+    // default 1) is a flat multiplier on the final result, all variants.
+    // Clamped: <0.0001 snaps to 0 (real source's own near-zero cutoff);
+    // capped at the theme's own base opacity (real source caps at
+    // `this.nOpacity||0.9`, a distinct "opacity" style property this port
+    // doesn't separately model — using the already-resolved base
+    // fillopacity as the cap instead, a minor documented deviation).
+    _resolveDopacityAlpha(value, baseOpacity) {
+      if (isNaN(value) || this._valueMin == null) return null;
+      const nMin = this._valueMin, nMax = this._valueMax, nMedian = this._valueMedian;
+      const scale = parseFloat(this.style.dopacityscale) || 1;
+      const pow = 1 / (parseFloat(this.style.dopacitypow) || 1);
+      const bipolar = this.flags.has('DOPACITYMINMAX') || this.flags.has('BIPOLAR') || (nMin < 0 && nMax > 0);
+      let nOpacity;
+      if (bipolar) {
+        nOpacity = value >= nMedian
+          ? Math.pow(Math.abs(value - nMedian), pow) / Math.pow((nMax - nMedian) || 1, pow)
+          : Math.pow(Math.abs(value - nMedian), pow) / Math.pow((nMedian - nMin) || 1, pow);
+      } else if (this.flags.has('DOPACITYMIN')) {
+        nOpacity = Math.pow(nMax - value, pow) / Math.pow((nMax - nMin) || 1, pow);
+      } else if (this.flags.has('DOPACITYMAX')) {
+        nOpacity = Math.pow(value - nMin, pow) / Math.pow((nMax - nMin) || 1, pow);
+      } else {
+        nOpacity = (value - nMin) / ((nMedian - nMin) || 1) * 0.5;
+      }
+      nOpacity *= baseOpacity * scale;
+      if (nOpacity < 0.0001) nOpacity = 0;
+      return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
     }
 
     // group raw features by category — cheap, radius-independent. The
@@ -2537,6 +2603,15 @@
       const fallbackRgb = [200, 200, 200]; // unclassified / no joined data for this polygon
       const isDominant = this.flags.has('DOMINANT');
       const isComposeColor = this.flags.has('COMPOSECOLOR');
+      const baseOpacity = resolveFillOpacity(this.style, this.mapOptions, zoom);
+      // DOPACITY needs a PER-FEATURE opacity, which deck.gl only supports
+      // via getFillColor's own alpha channel (its layer-level `opacity`
+      // prop is one number for every feature) — see _resolveDopacityAlpha.
+      // Not meaningful combined with COMPOSECOLOR (no single driving value
+      // per polygon there), matching the real engine's own separate
+      // DOPACITY/COMPOSECOLOR branches.
+      const dopacityActive = !isComposeColor &&
+        (this.flags.has('DOPACITY') || this.flags.has('DOPACITYMIN') || this.flags.has('DOPACITYMAX') || this.flags.has('DOPACITYMINMAX'));
       const data = source.map(f => {
         if (isComposeColor) {
           return {
@@ -2547,17 +2622,25 @@
         }
         if (isDominant) {
           const dom = this._resolveDominantClass(f.properties);
+          const value = dom ? dom.value : undefined;
           return {
             type: 'Feature',
             geometry: f.geometry,
-            properties: { value: dom ? dom.value : undefined, raw: f.properties, cat: dom ? dom.index : null }
+            properties: {
+              value, raw: f.properties, cat: dom ? dom.index : null,
+              dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(value, baseOpacity) : null
+            }
           };
         }
+        const value = parseFloat(f.properties[this.binding.value]);
         const cat = this._resolveClassIndex(f.properties[this.binding.value]);
         return {
           type: 'Feature',
           geometry: f.geometry,
-          properties: { value: parseFloat(f.properties[this.binding.value]), raw: f.properties, cat }
+          properties: {
+            value, raw: f.properties, cat,
+            dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(value, baseOpacity) : null
+          }
         };
       });
       return [new GeoJsonLayer({
@@ -2566,11 +2649,17 @@
         pickable: true,
         stroked: true,
         filled: true,
-        getFillColor: d => d.properties.composedColor
-          || (d.properties.cat != null ? this.categoryColorsRgb[d.properties.cat] : null) || fallbackRgb,
+        getFillColor: d => {
+          const rgb = d.properties.composedColor
+            || (d.properties.cat != null ? this.categoryColorsRgb[d.properties.cat] : null) || fallbackRgb;
+          return d.properties.dopacityAlpha != null ? [...rgb, Math.round(d.properties.dopacityAlpha * 255)] : rgb;
+        },
         getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [255, 255, 255],
         lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
-        opacity: resolveFillOpacity(this.style, this.mapOptions, zoom)
+        // per-feature alpha (baked above) already carries the resolved
+        // base opacity — a layer-level opacity on TOP of that would
+        // multiply it a second time.
+        opacity: dopacityActive ? 1 : baseOpacity
       })];
     }
 
