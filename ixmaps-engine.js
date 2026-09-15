@@ -9,9 +9,10 @@
 // fully implements the theme-type grammar our real layers exercise —
 // FEATURE/FEATURES (polygon/line rendering, singular is the real engine's
 // own keyword, plural this port's earlier convention — both accepted),
-// CHOROPLETH (polygon fill classed by a bound numeric value — QUANTILE/
-// NATURAL/equal-interval only so far; CATEGORICAL/DOMINANT choropleths are
-// not implemented yet, see _buildChoroplethLayers), and the CHART|SYMBOL|
+// CHOROPLETH (polygon fill classed by a bound value — single-field numeric
+// range via QUANTILE/NATURAL/equal-interval, or multi-field DOMINANT|
+// PERCENTOFMEAN's per-polygon argmax across piped fields; CATEGORICAL
+// choropleths aren't implemented, see _buildChoroplethLayers), and the CHART|SYMBOL|
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
@@ -344,8 +345,67 @@
 
   const FALLBACK_PALETTE = ['#e6194b', '#3cb44b', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c'];
 
+  // .style({colorscheme: ["N", cc1, cc2, nParam1, nParam2]}) — the real
+  // engine's diverging N-step sweep (colorscheme.js:123 createColorScheme
+  // / _circ_createColorScheme, confirmed by direct source read against
+  // the dev tree): a 3-anchor cc1 -> cc3 -> cc2 sweep, where cc3 is taken
+  // from POSITION 5 (nParam2) and cc2 (position 3) is ALWAYS exact at the
+  // final step. nParam1 selects the split fraction between the two
+  // halves: "3colors"/"auto" (default) is a symmetric 50/50 split,
+  // "3high" is 23/77 (expands the cc3->cc2 half), "3low" is 75/25 (the
+  // mirror) — verified against colorscheme.js:394-457. A bare color in
+  // the nParam1 slot (no keyword) hits the exact same branch as
+  // "3colors"/"auto" in the real source — so ["N",cc1,cc2,cc3] and
+  // ["N",cc1,cc2,"3colors",cc3] are computationally identical there, not
+  // two different features; this port only implements the 5-element form
+  // actually used (values/DOMINANT_COLORS-style configs always pass
+  // nParam1 explicitly).
+  //
+  // Only this ONE real colorscheme.js code path is ported — not the rest
+  // of its API surface (2-anchor sweeps, other nParam1/nParam2 shapes),
+  // matching what real configs ported into this engine so far actually
+  // use.
+  function isDivergingColorScheme(colorscheme) {
+    return Array.isArray(colorscheme) && colorscheme.length === 5 && /^\d+$/.test(String(colorscheme[0]));
+  }
+
+  // Deliberate deviation from the real source: real colorscheme.js takes
+  // nSteps (the array's own leading "N") literally, which can silently
+  // drift out of sync with the theme's actual label count (confirmed:
+  // CATEGORICAL/SEQUENCE themes even overwrite their OWN nSteps before
+  // calling in, precisely because of this). This port always uses
+  // `labels.length` as the step count instead — the one value that
+  // actually has to match categoryColorsRgb's indexing in this engine —
+  // and only uses the array's leading element to DETECT this colorscheme
+  // shape (isDivergingColorScheme above), never as the real step count.
+  function divergingColorSweep(cc1Hex, cc2Hex, cc3Hex, nParam1, nSteps) {
+    const nPart1 = nParam1 === '3high' ? 0.23 : nParam1 === '3low' ? 0.75 : 0.5;
+    const nPart2 = 1 - nPart1;
+    const [r1, g1, b1] = hexToRgb(cc1Hex);
+    const [r2, g2, b2] = hexToRgb(cc2Hex);
+    const [r3, g3, b3] = hexToRgb(cc3Hex);
+    const denom1 = (nSteps - 1) * nPart1 || 1;
+    const denom2 = (nSteps - 1) * nPart2 || 1;
+    const dr1 = (r3 - r1) / denom1, dg1 = (g3 - g1) / denom1, db1 = (b3 - b1) / denom1;
+    const dr2 = (r3 - r2) / denom2, dg2 = (g3 - g2) / denom2, db2 = (b3 - b2) / denom2;
+    const threshold = (nSteps - 1) * nPart1;
+    const colors = [];
+    let rr = r1, gg = g1, bb = b1;
+    for (let i = 0; i < nSteps - 1; i++) {
+      colors.push([Math.round(rr), Math.round(gg), Math.round(bb)]);
+      if (i < threshold) { rr += dr1; gg += dg1; bb += db1; }
+      else { rr -= dr2; gg -= dg2; bb -= db2; }
+    }
+    colors.push([r2, g2, b2]); // forced exact final step, matching real source
+    return colors;
+  }
+
   function resolveColorScheme(colorscheme, labels) {
     if (!colorscheme) return labels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]);
+    if (isDivergingColorScheme(colorscheme)) {
+      const [, cc1, cc2, nParam1, nParam2] = colorscheme;
+      return divergingColorSweep(cc1, cc2, nParam2, nParam1, labels.length);
+    }
     if (Array.isArray(colorscheme)) {
       if (colorscheme.length === 1 && colorscheme[0] === 'none') return null; // no fill (FEATURES outline-only)
       return labels.map((_, i) => colorscheme[i % colorscheme.length]);
@@ -367,6 +427,19 @@
     const h = hex.replace('#', '');
     const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  // resolveColorScheme can now return either hex strings (plain array /
+  // colorscheme-function paths) or already-RGB triplets (the diverging
+  // sweep above) — every caller needs actual RGB arrays for deck.gl, so
+  // this is the one place that normalizes either shape, instead of each
+  // of the three call sites (_prepare's CATEGORICAL branch, _buildPartsA,
+  // _prepareDominant) doing its own `.map(hexToRgb)` that would break on
+  // the diverging sweep's own output.
+  function resolveClassColors(colorscheme, labels) {
+    const resolved = resolveColorScheme(colorscheme, labels);
+    return (resolved || labels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]))
+      .map(c => Array.isArray(c) ? c : hexToRgb(c));
   }
 
   // ---------------------------------------------------------------
@@ -1395,7 +1468,23 @@
         }, 0);
       }
 
-      if (this.flags.has('CATEGORICAL') && this.binding.value) {
+      if (this.flags.has('DOMINANT') && this.binding.value) {
+        // .type("CHOROPLETH|DOMINANT|PERCENTOFMEAN") — a MULTI-field bound
+        // value (binding.value is a pipe-joined field list, e.g. one CSV
+        // column per age band for the same year/sex — same pipe convention
+        // csvRowsToFeatureCollection's binding.position already uses).
+        // Only PERCENTOFMEAN's relevance formula is ported (see
+        // _prepareDominant/_resolveDominantClass, maptheme.js:13086-13531
+        // confirmed by direct source read) — plain DOMINANT (no
+        // PERCENTOFMEAN) selects a class some other, unconfirmed way in
+        // the real engine and is deliberately left unimplemented rather
+        // than guessed.
+        if (this.flags.has('PERCENTOFMEAN')) {
+          this._prepareDominant();
+        } else {
+          console.warn(`[ixmaps-engine] layer "${this.name}": CHOROPLETH|DOMINANT without PERCENTOFMEAN is not implemented (only the PERCENTOFMEAN relevance formula is ported)`);
+        }
+      } else if (this.flags.has('CATEGORICAL') && this.binding.value) {
         // .style({values: [...]}) (or .xaxis, same list in practice — see
         // the PLOT curves-chart config) is an EXPLICIT, ORDERED category
         // list — when present it's authoritative over auto-discovery from
@@ -1439,9 +1528,7 @@
         // a function like __setColors that pattern-matches category NAMES
         // ("investimento"/"tamponamento"/...) needs the display text, not
         // a raw numeric code it could never match against.
-        const resolved = resolveColorScheme(this.style.colorscheme, this.categoryDisplayLabels);
-        this.categoryColorsRgb = (resolved || this.categoryLabels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]))
-          .map(hexToRgb);
+        this.categoryColorsRgb = resolveClassColors(this.style.colorscheme, this.categoryDisplayLabels);
       } else if (this.binding.value) {
         // real engine's OTHER coloring mode (maptheme.js distributeValues,
         // partsA): a NUMERIC bound value, not CATEGORICAL, is classed into
@@ -1472,6 +1559,70 @@
       }
     }
 
+    // .type("CHOROPLETH|DOMINANT|PERCENTOFMEAN") prep — computes, once per
+    // theme build, each piped field's own cross-record MEAN and MIN (over
+    // this.features, i.e. every polygon this CHOROPLETH's join produced —
+    // real source: maptheme.js:13086-13126, distributeValues' DOMINANT
+    // block; nMinA doubles as the default nFilterA below). Skips NaN
+    // values per field rather than poisoning the sum/min (real source has
+    // no such guard, but it also doesn't join heterogeneous CSV rows the
+    // way this port's joinChoroplethFeatures does — unmatched polygons
+    // here have empty properties, which would otherwise NaN out every
+    // field's mean).
+    _prepareDominant() {
+      const fields = this.binding.value.split('|');
+      this._dominantFields = fields;
+      const sums = fields.map(() => 0), counts = fields.map(() => 0), mins = fields.map(() => Infinity);
+      this.features.forEach(f => {
+        fields.forEach((field, i) => {
+          const v = parseFloat(f.properties[field]);
+          if (isNaN(v)) return;
+          sums[i] += v; counts[i]++;
+          if (v < mins[i]) mins[i] = v;
+        });
+      });
+      this._dominantMeans = sums.map((s, i) => counts[i] ? s / counts[i] : 0);
+      this._dominantMins = mins.map(m => isFinite(m) ? m : 0);
+
+      // .style({values: [...]}) — same explicit-ordered-list convention as
+      // CATEGORICAL, positionally aligned with the piped fields (e.g.
+      // AGE_BANDS, built by mapping over the very same array that produced
+      // the pipe-joined binding.value). No raw-vs-display distinction
+      // needed here (unlike CATEGORICAL's categoryLabels/
+      // categoryDisplayLabels split) — there's no exact-match filtering
+      // against these labels, only field-index lookup.
+      const explicit = Array.isArray(this.style.values) && this.style.values.length === fields.length
+        ? this.style.values.map(String) : fields;
+      this.categoryLabels = explicit;
+      this.categoryDisplayLabels = explicit;
+      this.categoryColorsRgb = resolveClassColors(this.style.colorscheme, this.categoryLabels);
+    }
+
+    // Which piped field "wins" for one joined polygon's properties — real
+    // formula (maptheme.js:13491/13505, confirmed by direct source read):
+    // nPercentOfMean = 100 * value / mean[i], and the argmax is FILTERED —
+    // a field can only win if its own value is strictly greater than that
+    // field's own dataset-wide MIN (the real engine's default
+    // nFilterA[i] = nMinA[i]; szDominantFilter "mean"/"median" variants
+    // aren't implemented, not used by any config ported here). Ties go to
+    // the first (lowest-index) field, matching the real source's strict
+    // `>` comparison. Deliberately unguarded (no isNaN/mean-zero check) —
+    // matching the real source exactly: parseFloat(undefined)=NaN fails
+    // the `> min` filter test on its own, and mean=0 naturally yields
+    // Infinity/NaN through plain division, same as maptheme.js's own
+    // unguarded line 13491.
+    _resolveDominantClass(props) {
+      const fields = this._dominantFields;
+      let bestIndex = -1, bestRelevance = -Infinity, bestValue = null;
+      for (let i = 0; i < fields.length; i++) {
+        const v = parseFloat(props[fields[i]]);
+        if (!(v > this._dominantMins[i])) continue;
+        const relevance = 100 * v / this._dominantMeans[i];
+        if (relevance > bestRelevance) { bestRelevance = relevance; bestIndex = i; bestValue = v; }
+      }
+      return bestIndex === -1 ? null : { index: bestIndex, value: bestValue };
+    }
+
     // .style({classes: N}) numeric range/class buckets — real engine's
     // "distributeValues" (maptheme.js ~12817-13166). Three classification
     // methods implemented: equal-interval/"EQUIDISTANT" (the DEFAULT when
@@ -1482,10 +1633,8 @@
     // defaults to 5 (colorScheme.length in the real engine's own hardcoded
     // default palette), overridable via style.classes; colors resolve
     // through the SAME resolveColorScheme used for CATEGORICAL (literal
-    // array / "none" / stringified fn), sliced positionally per class —
-    // one color per class, no gradient interpolation between anchors (not
-    // needed for a plain N-color array, and this engine has no equivalent
-    // to the real engine's diverging 2/3-anchor sweep to begin with).
+    // array / "none" / stringified fn / the diverging N-step sweep — see
+    // resolveClassColors), sliced positionally per class.
     //
     // One deliberate correction vs. the literal source, shared by both
     // methods: the real engine's bucket test is `value >= min && value <
@@ -1512,8 +1661,7 @@
       for (const v of values) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
       const nParts = parseInt(this.style.classes, 10) || DEFAULT_RANGE_CLASSES;
       const placeholders = new Array(nParts).fill('');
-      const resolved = resolveColorScheme(this.style.colorscheme, placeholders);
-      const colorsRgb = (resolved || placeholders.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length])).map(hexToRgb);
+      const colorsRgb = resolveClassColors(this.style.colorscheme, placeholders);
 
       this.partsA = this.flags.has('QUANTILE') ? this._quantileBreaks(values, nParts)
         : this.flags.has('NATURAL') ? this._naturalBreaks(values, nParts)
@@ -2150,11 +2298,14 @@
       })];
     }
 
-    // .type("CHOROPLETH") — a polygon fill classed by a bound numeric
-    // value (QUANTILE/NATURAL/equal-interval, same _buildPartsA/
-    // _resolveClassIndex machinery every other classed theme already
-    // uses; CATEGORICAL/DOMINANT choropleths are a later phase, not
-    // implemented here). Geometry + properties are already the joined
+    // .type("CHOROPLETH") — a polygon fill classed by a bound value:
+    // numeric range (QUANTILE/NATURAL/equal-interval, _buildPartsA/
+    // _resolveClassIndex, single-field binding.value) or, when DOMINANT|
+    // PERCENTOFMEAN prepared _dominantFields (see _prepareDominant), a
+    // per-polygon argmax across MULTIPLE piped fields
+    // (_resolveDominantClass). CATEGORICAL choropleths (exact-match,
+    // single field) aren't implemented — no ported config uses that
+    // combination yet. Geometry + properties are already the joined
     // FeatureCollection from joinChoroplethFeatures — this only needs to
     // resolve each polygon's own class/color and wrap it in the standard
     // {value, raw, cat} tooltip shape (see _buildDotLayers for the same
@@ -2162,7 +2313,16 @@
     _buildChoroplethLayers() {
       const source = this._activeFeatures || this.features;
       const fallbackRgb = [200, 200, 200]; // unclassified / no joined data for this polygon
+      const isDominant = !!this._dominantFields;
       const data = source.map(f => {
+        if (isDominant) {
+          const dom = this._resolveDominantClass(f.properties);
+          return {
+            type: 'Feature',
+            geometry: f.geometry,
+            properties: { value: dom ? dom.value : undefined, raw: f.properties, cat: dom ? dom.index : null }
+          };
+        }
         const cat = this._resolveClassIndex(f.properties[this.binding.value]);
         return {
           type: 'Feature',
