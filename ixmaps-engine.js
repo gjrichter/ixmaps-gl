@@ -721,11 +721,19 @@
 
       // themes are addressed by either the layer()'s own name (e.g. "AREU")
       // or style.name (e.g. "chart") — the real engine's changeThemeStyle
-      // etc. address themes by style.name, so both need to resolve
+      // etc. address themes by style.name, so both need to resolve.
+      //
+      // A CHOROPLETH runtime and its FEATURE geometry-donor base
+      // intentionally share the SAME .layer() name (joinChoroplethFeatures)
+      // — when a name matches more than one runtime, prefer whichever
+      // ISN'T the FEATURE/FEATURES donor: "restyle layer X" always means
+      // the visible thematic layer, never its invisible backdrop geometry
+      // provider. Same disambiguation problem findRuntimeForLayerId
+      // already solves for hover/click picking, above.
       function findRuntime(themeId) {
-        const rt = runtimes.find(r => r.name === themeId || (r.style && r.style.name === themeId));
-        if (!rt) console.warn(`[ixmaps-engine] no layer named "${themeId}"`);
-        return rt;
+        const matches = runtimes.filter(r => r.name === themeId || (r.style && r.style.name === themeId));
+        if (!matches.length) { console.warn(`[ixmaps-engine] no layer named "${themeId}"`); return undefined; }
+        return matches.find(r => !r.flags.has('FEATURE') && !r.flags.has('FEATURES')) || matches[0];
       }
 
       // Every runtime loaded from the same .data() source (see build()'s
@@ -1050,6 +1058,51 @@
   function resolveDynamicScalePow(mapOptions) {
     const parsed = parseFloat(mapOptions && mapOptions.dynamicScalePow);
     return isNaN(parsed) ? DEFAULT_DYNAMIC_SCALE_POW : parsed;
+  }
+
+  // .style({fillopacity: "auto"}) — CHOROPLETH-only (real source dispatch:
+  // maptheme.js's realize_draw/realizeContinue route FEATURE/CHART themes
+  // through chartMap, whose OWN separate autoOpacity formula at
+  // maptheme.js:16436-16438 never applies to a plain polygon-fill
+  // CHOROPLETH; only paintMap's formula at maptheme.js:13379-13382 does):
+  //   dx = (nTrueMapScale * nZoomScale) / nNormalSizeScale
+  //   fill-opacity = clamp(0.3, 1, 0.3 + 0.7 / max(1, ln(nZoom / dx)))
+  // nZoom is the real engine's own "zooming factor (>=1) relative to the
+  // initial full-extent view" (mapscript2.js:395-420) — NOT a Leaflet/
+  // MapLibre 0-20 zoom level, and confirmed via direct source read that
+  // nZoomScale is itself ~1/nZoom in ordinary interactive use, making
+  // nZoom/dx roughly proportional to nZoom^2 * (nNormalSizeScale /
+  // nTrueMapScale). nTrueMapScale is a real, physical scale denominator
+  // this engine has no equivalent of (computed from print/embed DPI, no
+  // config surface at all) — and the exact formula bridging a MapLibre
+  // zoom level to the real engine's own nZoom could not be located in the
+  // source (checked mapapi.js/mapquery.js/mapselect.js, htmlgui_flat.js).
+  //
+  // This is deliberately NOT a bit-exact port, unlike this engine's other
+  // ported formulas — it reproduces the real formula's SHAPE (same 0.3
+  // floor, 1.0 ceiling, same 0.3+0.7/max(1,ln(x)) falloff curve: full
+  // opacity at/below the configured "normal" view, decaying toward the
+  // floor as you zoom in past it) using THIS engine's own already-
+  // established zoom-reference concept (resolveZoomReference /
+  // .options({normalSizeScale}), the same "how far zoomed in past the
+  // configured normal view" reference BUBBLE's dynamic sizing already
+  // uses) as the input to that curve, in place of the real engine's own
+  // untranslatable physical-scale ratio. Deliberately does NOT divide by
+  // dynamicScalePow — confirmed the real autoOpacity formula doesn't
+  // reference it at all, unlike doDynamicObjectScaling above.
+  function resolveAutoFillOpacity(zoom, mapOptions) {
+    const zoomReference = resolveZoomReference(mapOptions);
+    const zoomFactor = Math.pow(2, (zoom == null ? zoomReference : zoom) - zoomReference);
+    return Math.max(0.3, Math.min(1, 0.3 + 0.7 / Math.max(1, Math.log(zoomFactor))));
+  }
+
+  // Shared by every renderer's `opacity` prop: resolves style.fillopacity,
+  // including the "auto" special case above. `zoom` may be omitted by
+  // callers that don't have one in scope (auto then falls back to full
+  // opacity, same as being at/below the normal reference view).
+  function resolveFillOpacity(style, mapOptions, zoom) {
+    if (style.fillopacity === 'auto') return resolveAutoFillOpacity(zoom, mapOptions);
+    return parseFloat(style.fillopacity) || 1;
   }
 
   // .style({sizepow}) — power-law exponent applied to value BEFORE scaling:
@@ -2392,7 +2445,7 @@
       // (only its geometry-donor base layer does, see
       // joinChoroplethFeatures); its data is already the joined
       // {geometry, properties} FeatureCollection built in build().
-      if (this.flags.has('CHOROPLETH')) return this._buildChoroplethLayers();
+      if (this.flags.has('CHOROPLETH')) return this._buildChoroplethLayers(zoom);
       // FEATURE is the real engine's own keyword (confirmed in maptheme.js
       // — singular); FEATURES (plural) is this port's own prior
       // convention, still used by demo_accidents.html/accidents_app.html —
@@ -2433,8 +2486,10 @@
     // blended color directly). CATEGORICAL choropleths (exact-match,
     // single field) aren't implemented — no ported config uses that
     // combination yet. Geometry + properties are already the joined
-    // FeatureCollection from joinChoroplethFeatures.
-    _buildChoroplethLayers() {
+    // FeatureCollection from joinChoroplethFeatures. `zoom` is only used
+    // for style.fillopacity:"auto" (see resolveAutoFillOpacity) — every
+    // other branch here is zoom-independent.
+    _buildChoroplethLayers(zoom) {
       const source = this._activeFeatures || this.features;
       const fallbackRgb = [200, 200, 200]; // unclassified / no joined data for this polygon
       const isDominant = this.flags.has('DOMINANT');
@@ -2472,7 +2527,7 @@
           || (d.properties.cat != null ? this.categoryColorsRgb[d.properties.cat] : null) || fallbackRgb,
         getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [255, 255, 255],
         lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
-        opacity: parseFloat(this.style.fillopacity) || 1
+        opacity: resolveFillOpacity(this.style, this.mapOptions, zoom)
       })];
     }
 
