@@ -2,9 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Unfälle 2020-2024 — ixmaps-engine demo</title>
+<title>Unfälle 2020-2024 — ixmaps-gl demo</title>
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
-<script src="ixmaps-engine.js"></script>
+<script src="ixmaps-gl.js"></script>
 <style>
   html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F5F5F4; }
 
@@ -124,7 +124,7 @@
 
   <footer>
     Daten: Unfallatlas Deutschland (Statistisches Bundesamt).<br>
-    Prototipo ixmaps-engine — port di index_embed_Germania_Incidenti_2020_2024.
+    Prototipo ixmaps-gl — port di index_embed_Germania_Incidenti_2020_2024.
   </footer>
 </div>
 
@@ -138,7 +138,7 @@
   flat runtime APIs this standalone engine doesn't implement or load).
   This engine's own multi-source CSV idiom (.data({urls, type:'csv',
   remap})) achieves the same practical result — all 5 yearly CSVs merged,
-  UKATEGORIE/UTYP1 remapped to labels — see ixmaps-engine.js's
+  UKATEGORIE/UTYP1 remapped to labels — see ixmaps-gl.js's
   fetchLayerData for the exact mechanism.
 -->
 <script>
@@ -161,7 +161,7 @@
   // Verbatim from the real source page (index_embed_Germania_Incidenti_
   // 2020_2024_tipo_simple_years_curve_incidenti.html) — runs against the
   // REAL data.js (loaded above), not a reimplementation. Only
-  // ixmaps.setExternalData's hand-off is bridged by ixmaps-engine.js
+  // ixmaps.setExternalData's hand-off is bridged by ixmaps-gl.js
   // (see fetchLayerData / setExternalDataBridge there); everything else
   // here — Data.provider(), addSource(), subtable(), append(),
   // column().map() — is the real library doing real work.

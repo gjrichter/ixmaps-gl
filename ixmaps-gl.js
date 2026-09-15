@@ -1,5 +1,5 @@
 // =======================================================================
-// ixmaps-engine.js — a generic, config-driven map/theme engine exposing
+// ixmaps-gl.js — a generic, config-driven map/theme engine exposing
 // the SAME declarative builder API as the original ixmaps framework
 // (ixmaps.Map(...), ixmaps.layer(...).data().binding().filter().type()
 // .style().meta()), rendering through MapLibre GL + deck.gl instead of
@@ -79,7 +79,7 @@
       const el = document.createElement('script');
       el.src = src;
       el.onload = () => resolve();
-      el.onerror = () => reject(new Error(`[ixmaps-engine] failed to load ${src}`));
+      el.onerror = () => reject(new Error(`[ixmaps-gl] failed to load ${src}`));
       document.head.appendChild(el);
     });
   }
@@ -89,7 +89,7 @@
       el.rel = 'stylesheet';
       el.href = href;
       el.onload = () => resolve();
-      el.onerror = () => reject(new Error(`[ixmaps-engine] failed to load ${href}`));
+      el.onerror = () => reject(new Error(`[ixmaps-gl] failed to load ${href}`));
       document.head.appendChild(el);
     });
   }
@@ -230,7 +230,7 @@
   function csvRowsToFeatureCollection(rows, position) {
     const [yField, xField] = String(position || '').split('|');
     if (!yField || !xField) {
-      throw new Error('[ixmaps-engine] CSV .data() needs .binding({position: "YFIELD|XFIELD"}) — no embedded geometry to fall back to');
+      throw new Error('[ixmaps-gl] CSV .data() needs .binding({position: "YFIELD|XFIELD"}) — no embedded geometry to fall back to');
     }
     const features = [];
     for (const row of rows) {
@@ -273,7 +273,7 @@
   let _pendingQueryResolve = null;
   function setExternalDataBridge(dataObj) {
     if (!_pendingQueryResolve) {
-      console.warn('[ixmaps-engine] ixmaps.setExternalData called with no pending .data({query}) fetch — ignored');
+      console.warn('[ixmaps-gl] ixmaps.setExternalData called with no pending .data({query}) fetch — ignored');
       return;
     }
     const resolve = _pendingQueryResolve;
@@ -291,7 +291,7 @@
   // body verbatim (a stringified function, matching the real config's
   // own .data({query: queryData.toString()}) convention) against the
   // REAL data.js library (window.Data — must be loaded via <script
-  // src=".../data.js"> before ixmaps-engine.js, same as a real page) —
+  // src=".../data.js"> before ixmaps-gl.js, same as a real page) —
   // Data.provider()/.addSource()/.realize()/.subtable()/.append()/
   // .column().map() all run as their real implementations, not a
   // reimplementation. Only the FINAL hand-off (ixmaps.setExternalData)
@@ -310,13 +310,13 @@
 
   async function fetchLayerData(dataConfig, binding) {
     if (!dataConfig || (!dataConfig.url && !dataConfig.urls && !dataConfig.query)) {
-      throw new Error('[ixmaps-engine] layer .data() needs a url, urls, or query');
+      throw new Error('[ixmaps-gl] layer .data() needs a url, urls, or query');
     }
 
     if (dataConfig.query) {
       if (!global.Data) {
-        throw new Error('[ixmaps-engine] .data({query}) needs the real data.js loaded first — ' +
-          '<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"> before ixmaps-engine.js');
+        throw new Error('[ixmaps-gl] .data({query}) needs the real data.js loaded first — ' +
+          '<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"> before ixmaps-gl.js');
       }
       const queryFn = typeof dataConfig.query === 'function' ? dataConfig.query : new Function(`return (${dataConfig.query});`)();
       const dataObj = await new Promise(resolve => {
@@ -330,7 +330,7 @@
       const urls = dataConfig.urls || [dataConfig.url];
       const texts = await Promise.all(urls.map(async url => {
         const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`[ixmaps-engine] failed to fetch ${url}: ${resp.status}`);
+        if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${url}: ${resp.status}`);
         return resp.text();
       }));
       let rows = [].concat(...texts.map(parseCsvText));
@@ -343,10 +343,10 @@
     }
 
     const resp = await fetch(dataConfig.url);
-    if (!resp.ok) throw new Error(`[ixmaps-engine] failed to fetch ${dataConfig.url}: ${resp.status}`);
+    if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${dataConfig.url}: ${resp.status}`);
     if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(await resp.json());
     if (dataConfig.type === 'geojson') return resp.json();
-    throw new Error(`[ixmaps-engine] unsupported data type "${dataConfig.type}" (topojson/geojson/csv implemented)`);
+    throw new Error(`[ixmaps-gl] unsupported data type "${dataConfig.type}" (topojson/geojson/csv implemented)`);
   }
 
   // ---------------------------------------------------------------
@@ -359,7 +359,7 @@
     if (!filterExpr) return fc;
     const m = /^\s*WHERE\s+(\S+)\s*=\s*(.+?)\s*$/i.exec(filterExpr);
     if (!m) {
-      console.warn('[ixmaps-engine] unsupported filter expression, left unfiltered:', filterExpr);
+      console.warn('[ixmaps-gl] unsupported filter expression, left unfiltered:', filterExpr);
       return fc;
     }
     const [, field, rawValue] = m;
@@ -387,7 +387,7 @@
   function joinChoroplethFeatures(lb, table, runtimes) {
     const geomRt = runtimes.find(r => r.name === lb.name && (r.flags.has('FEATURE') || r.flags.has('FEATURES')));
     if (!geomRt) {
-      throw new Error(`[ixmaps-engine] CHOROPLETH layer "${lb.name}" needs a FEATURE base layer with the same name, .layer()'d earlier on the map`);
+      throw new Error(`[ixmaps-gl] CHOROPLETH layer "${lb.name}" needs a FEATURE base layer with the same name, .layer()'d earlier on the map`);
     }
     // A FEATURE base that's donating geometry to a same-named CHOROPLETH
     // exists PURELY as a geometry template (per this join's own
@@ -406,7 +406,7 @@
     const idField = geomRt.binding.id;
     const lookupField = lb._binding.lookup;
     if (!idField || !lookupField) {
-      throw new Error(`[ixmaps-engine] CHOROPLETH layer "${lb.name}" needs .binding({lookup}), and its FEATURE base needs .binding({id})`);
+      throw new Error(`[ixmaps-gl] CHOROPLETH layer "${lb.name}" needs .binding({lookup}), and its FEATURE base needs .binding({id})`);
     }
     const rowsByKey = new Map(table.rows.map(row => [String(row[lookupField]), row]));
     // Unmatched polygons (no CSV row for that id) keep their geometry with
@@ -503,7 +503,7 @@
         fn(objTheme);
         return objTheme.colorScheme;
       } catch (err) {
-        console.warn('[ixmaps-engine] colorscheme function failed to evaluate, using fallback palette:', err);
+        console.warn('[ixmaps-gl] colorscheme function failed to evaluate, using fallback palette:', err);
       }
     }
     return labels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]);
@@ -560,7 +560,7 @@
       this._flags.forEach(flag => {
         if (KNOWN_INERT_FLAGS.includes(flag) && !_warnedFlags.has(flag)) {
           _warnedFlags.add(flag);
-          console.info(`[ixmaps-engine] type flag "${flag}" recognized, no distinct rendering behavior implemented yet`);
+          console.info(`[ixmaps-gl] type flag "${flag}" recognized, no distinct rendering behavior implemented yet`);
         }
       });
       return this;
@@ -596,7 +596,7 @@
 
     async build() {
       const el = document.getElementById(this.containerId);
-      if (!el) throw new Error(`[ixmaps-engine] container #${this.containerId} not found`);
+      if (!el) throw new Error(`[ixmaps-gl] container #${this.containerId} not found`);
 
       // fast local check (missing container) before the network round
       // trip — MapLibre/deck.gl/Supercluster/Mustache + MapLibre's own
@@ -857,7 +857,7 @@
       // already solves for hover/click picking, above.
       function findRuntime(themeId) {
         const matches = runtimes.filter(r => r.name === themeId || (r.style && r.style.name === themeId));
-        if (!matches.length) { console.warn(`[ixmaps-engine] no layer named "${themeId}"`); return undefined; }
+        if (!matches.length) { console.warn(`[ixmaps-gl] no layer named "${themeId}"`); return undefined; }
         return matches.find(r => !r.flags.has('FEATURE') && !r.flags.has('FEATURES')) || matches[0];
       }
 
@@ -1017,7 +1017,7 @@
       });
 
       function notifyRedraw() {
-        redrawListeners.forEach(cb => { try { cb(); } catch (err) { console.error('[ixmaps-engine] onRedraw callback failed:', err); } });
+        redrawListeners.forEach(cb => { try { cb(); } catch (err) { console.error('[ixmaps-gl] onRedraw callback failed:', err); } });
       }
 
       // For explicit, discrete API calls (setFacetFilter, setSizeField,
@@ -2598,8 +2598,8 @@
     buildTooltipHtml(object) {
       if (!this.meta.tooltip) return null;
       if (!global.Mustache) {
-        console.warn('[ixmaps-engine] .meta({tooltip}) is set but Mustache.js is not loaded — ' +
-          'include https://unpkg.com/mustache@4.2.0/mustache.min.js before ixmaps-engine.js.');
+        console.warn('[ixmaps-gl] .meta({tooltip}) is set but Mustache.js is not loaded — ' +
+          'include https://unpkg.com/mustache@4.2.0/mustache.min.js before ixmaps-gl.js.');
         return null;
       }
       return global.Mustache.render(this.meta.tooltip, this._buildTooltipContext(object));
@@ -2767,7 +2767,7 @@
       if (this._isChoroplethGeometryDonor) return [];
       if (this.flags.has('FEATURE') || this.flags.has('FEATURES')) return this._buildFeaturesLayers();
       if (this.flags.has('CHART') && this.flags.has('SYMBOL')) return this._buildChartLayers(zoom, bbox);
-      console.warn(`[ixmaps-engine] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
+      console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
       return [];
     }
 
