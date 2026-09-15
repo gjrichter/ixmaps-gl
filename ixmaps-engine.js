@@ -697,6 +697,21 @@
         pinnedTooltipEl.style.transform = `translate(${pt.x + 10}px, ${pt.y - 10}px)`;
       }
 
+      // A stable per-geometry anchor coordinate for the identity check
+      // below — only a Point's OWN coordinates are an [lng,lat] pair;
+      // Polygon/MultiPolygon nest rings of them, so the first ring's
+      // first vertex stands in instead (stable across rebuilds for the
+      // same underlying feature, same as the Point case: this.features'
+      // geometry references don't change shape between
+      // _buildChoroplethLayers calls, only the wrapping properties do).
+      function anchorCoordOf(geometry) {
+        if (!geometry) return null;
+        if (geometry.type === 'Point') return geometry.coordinates;
+        if (geometry.type === 'Polygon') return geometry.coordinates[0] && geometry.coordinates[0][0];
+        if (geometry.type === 'MultiPolygon') return geometry.coordinates[0] && geometry.coordinates[0][0] && geometry.coordinates[0][0][0];
+        return null;
+      }
+
       // Identity check for "is this hovered object the same one that's
       // pinned" — object references are rebuilt from scratch on every
       // redraw (new individual/group arrays each buildDeckLayers call), so
@@ -706,8 +721,8 @@
       // clustering itself already treats "same position" as "same thing".
       function isSameAsPinned(layerId, object) {
         if (pinned.layerId !== layerId) return false;
-        const a = object.geometry && object.geometry.coordinates;
-        const b = pinned.object.geometry && pinned.object.geometry.coordinates;
+        const a = anchorCoordOf(object.geometry);
+        const b = anchorCoordOf(pinned.object.geometry);
         if (!a || !b) return false;
         return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9;
       }
@@ -777,7 +792,29 @@
           if (info && info.object && info.layer) {
             const rt = findRuntimeForLayerId(info.layer.id);
             if (rt) {
-              const lngLat = (info.object.geometry && info.object.geometry.coordinates) || info.coordinate;
+              // Only a Point geometry's own coordinates ARE an
+              // [lng,lat] pair (every point/bubble/dot/chart-cluster
+              // layer) — a CHOROPLETH polygon's geometry.coordinates is
+              // a nested array of RINGS, which map.project() below
+              // can't accept (confirmed live: threw MapLibre's own
+              // "LngLatLike argument must be..." error). The `||
+              // info.coordinate` fallback this used to lean on never
+              // actually ran for a polygon — a nested array is truthy,
+              // so the left side always "won" — which is the real bug
+              // this fixes: the pinned tooltip stuck at its default
+              // top:0/left:0 (never got a real position because
+              // updatePinnedTooltipPosition's map.project() threw
+              // before setting one), AND that same uncaught exception,
+              // thrown from inside deck.gl's own click-dispatch
+              // callback, left deck.gl's pointer-interaction state
+              // corrupted enough to block all further pan/zoom —
+              // confirmed live, both symptoms disappear together once
+              // this stops throwing. info.coordinate (the actual
+              // clicked map location, provided regardless of feature
+              // geometry type) anchors every non-Point case correctly.
+              const lngLat = (info.object.geometry && info.object.geometry.type === 'Point')
+                ? info.object.geometry.coordinates
+                : info.coordinate;
               pinned = { runtime: rt, object: info.object, lngLat, layerId: info.layer.id };
               renderPinnedTooltip();
               hideDefaultHoverTooltip();
