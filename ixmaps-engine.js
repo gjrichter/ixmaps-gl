@@ -1087,14 +1087,18 @@
   // engine's own already-established zoom-reference concept —
   // resolveZoomReference / .options({normalSizeScale}), the same
   // reference BUBBLE's dynamic sizing already uses) rather than its exact
-  // curve. Tuned to fade aggressively — a smooth exponential half-life
-  // decay (halves every AUTO_OPACITY_HALF_LIFE_ZOOM zoom levels past the
-  // normal view) down to a low floor, per explicit correction that the
-  // real formula's own much gentler log-based falloff (ported first,
-  // still visible ~0.47 opacity six zoom levels past the reference) faded
-  // out too slowly to usefully reveal the basemap.
-  const AUTO_OPACITY_FLOOR = 0.08;
-  const AUTO_OPACITY_HALF_LIFE_ZOOM = 2;
+  // curve. A smooth exponential half-life decay (halves every
+  // AUTO_OPACITY_HALF_LIFE_ZOOM zoom levels past the normal view) down to
+  // AUTO_OPACITY_FLOOR. Retuned twice per explicit correction: the
+  // original log-based falloff (mirroring the real formula's own shape)
+  // was still ~0.47 opacity six zoom levels past the reference, too
+  // gentle to reveal the basemap; the first half-life retuning (floor
+  // 0.08, half-life 2 zooms) was still ~0.2 at typical street-level zoom,
+  // still too opaque to read street labels through. Floor and half-life
+  // now land at ~0.1 (the floor itself) already by ~4-5 zoom levels past
+  // the normal view, comfortably inside typical street-level zoom.
+  const AUTO_OPACITY_FLOOR = 0.1;
+  const AUTO_OPACITY_HALF_LIFE_ZOOM = 1;
   function resolveAutoFillOpacity(zoom, mapOptions) {
     const zoomReference = resolveZoomReference(mapOptions);
     const z = zoom == null ? zoomReference : zoom;
