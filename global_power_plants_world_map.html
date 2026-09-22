@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Global Power Plants</title>
+<script src="./ixmaps-gl.js"></script>
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #0a1420; }
+  #map { width: 100%; height: 100%; }
+
+  #projection-toggle {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(10, 20, 32, 0.85);
+    border: 1px solid #2a3f4d;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-size: 12px;
+    color: #cfe3ee;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    user-select: none;
+  }
+  #projection-toggle .pt-label { white-space: nowrap; opacity: 0.85; }
+  #projection-toggle .pt-label.active { opacity: 1; color: #ffffff; font-weight: 600; }
+  #projection-toggle .pt-switch {
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background: #26c6da;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+  #projection-toggle .pt-switch.globe { background: #ff9800; }
+  #projection-toggle .pt-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: left 0.2s ease;
+  }
+  #projection-toggle .pt-switch.globe .pt-knob { left: 22px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="projection-toggle">
+  <span class="pt-label active" id="pt-label-flat">Equal Earth</span>
+  <div class="pt-switch" id="pt-switch"><div class="pt-knob"></div></div>
+  <span class="pt-label" id="pt-label-globe">Globe</span>
+</div>
+
+<script>
+(function () {
+
+  var DATA_URL = "https://raw.githubusercontent.com/wri/global-power-plant-database/master/output_database/global_power_plant_database.csv";
+
+  var FUEL_VALUES = [
+    "Solar", "Hydro", "Wind", "Gas", "Coal", "Oil", "Biomass", "Waste",
+    "Nuclear", "Geothermal", "Storage", "Other", "Cogeneration", "Petcoke", "Wave and Tidal"
+  ];
+  var FUEL_COLORS = [
+    "#ffd600", "#29b6f6", "#26c6da", "#ff9800", "#8d8d8d", "#8d6e63", "#c0ca33", "#6d4c41",
+    "#d7e600", "#ef5350", "#00e5ff", "#b0bec5", "#ff7043", "#4e342e", "#4dd0e1"
+  ];
+
+  // Dense-polygon world bounding box (Equal Earth has no native Sphere support)
+  function buildOceanGeoJSON() {
+    var step = 2, coords = [];
+    for (var lon = -180; lon <= 180; lon += step) coords.push([lon, 85]);
+    for (var lat = 85; lat >= -85; lat -= step) coords.push([180, lat]);
+    for (var lon2 = 180; lon2 >= -180; lon2 -= step) coords.push([lon2, -85]);
+    for (var lat2 = -85; lat2 <= 85; lat2 += step) coords.push([-180, lat2]);
+    coords.push(coords[0]);
+    return {
+      type: "FeatureCollection",
+      features: [{ type: "Feature", geometry: { type: "Polygon", coordinates: [coords] }, properties: {} }]
+    };
+  }
+
+  // 30°-spaced graticule, 2° interpolation for smooth curves under non-Mercator projections
+  function buildGraticuleGeoJSON() {
+    var step = 30, features = [];
+    for (var lon = -180; lon <= 180; lon += step) {
+      var c = [];
+      for (var lat = -90; lat <= 90; lat += 2) c.push([lon, lat]);
+      features.push({ type: "Feature", geometry: { type: "LineString", coordinates: c }, properties: {} });
+    }
+    for (var lat2 = -60; lat2 <= 60; lat2 += step) {
+      var c2 = [];
+      for (var lon2 = -180; lon2 <= 180; lon2 += 2) c2.push([lon2, lat2]);
+      features.push({ type: "Feature", geometry: { type: "LineString", coordinates: c2 }, properties: {} });
+    }
+    return { type: "FeatureCollection", features: features };
+  }
+
+  var myMap = ixmaps.Map("map", {
+      mapType:       "#0a1420",
+      mapProjection: "equalearth",
+      mode:          "info",
+      legend:        "open",
+      tools:         false
+    })
+    .view({ center: { lat: 0, lng: 0 }, zoom: 1.5 })
+    .options({
+      objectscaling:   "dynamic",
+      normalSizeScale: "170000000",
+      basemapopacity:  0,
+      flushChartDraw:  1000000
+    });
+
+  // Ocean backdrop (Equal Earth) — dense polygon, |SILENT|, drawn first
+  /*
+  myMap.layer("ocean")
+    .data({ obj: buildOceanGeoJSON(), type: "geojson" })
+    .binding({ geo: "geometry" })
+    .type("FEATURE|SILENT")
+    .style({ colorscheme: ["#0d1b2a"], fillopacity: "1", linecolor: "none", linewidth: "0", showdata: "true" })
+    .meta({ name: "ocean_flat", tooltip: "{{}}" })
+    .define();
+  */
+
+  // Graticule — before countries so it renders underneath the land fill
+  /*
+  myMap.layer("graticule")
+    .data({ obj: buildGraticuleGeoJSON(), type: "geojson" })
+    .binding({ geo: "geometry" })
+    .type("FEATURE|SILENT")
+    .style({ colorscheme: ["#152838"], linewidth: 0.6, showdata: "true" })
+    .meta({ name: "graticule_theme", tooltip: "{{}}" })
+    .define();
+  */
+  // Land / countries
+  myMap.layer("countries")
+    .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json", type: "topojson" })
+    .binding({ geo: "geometry", id: "CNTR_ID", title: "NAME_ENGL" })
+    .type("FEATURE|SILENT")
+    .style({ colorscheme: ["#1c2b36"], fillopacity: "1", linecolor: "#2a3f4d", linewidth: 0.5, showdata: "true" })
+    .meta({ name: "countries_theme", tooltip: "{{}}" })
+    .define();
+
+  // Power plants — bubble size = capacity_mw, color = primary_fuel (categorical)
+  myMap.layer("power_plants")
+    .data({ url: DATA_URL, type: "csv" })
+    .binding({ geo: "latitude|longitude", value: "primary_fuel", size: "capacity_mw", title: "name" })
+    .type("CHART|BUBBLE|SIZE|CATEGORICAL|GLOW|SUM|COMPACTLEGEND")
+    .style({
+      colorscheme:     FUEL_COLORS,
+      values:          FUEL_VALUES,
+      fillopacity:     0.85,
+      sizepow:         2,
+      scale:           1,
+      normalsizevalue: "50000",
+      valuefield:      "capacity_mw",
+      valuedecimals:   0,
+      legendfilter:    "country_long",
+      showdata:        "true"
+    })
+    .meta({
+      name:        "power_plants_theme",
+      tooltip:     "<b>{{name}}</b><br>{{country_long}}<br>{{primary_fuel}}<br>{{capacity_mw}} MW",
+      snippet:     "Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type",
+      description: "One bubble per power plant, sized by installed capacity and colored by primary fuel." +
+                    "<div style='margin-top:0.6em;padding-top:0.5em;border-top:1px solid #2a3f4d;font-size:0.8em;color:#8aa0ad'>" +
+                    "Source: World Resources Institute — Global Power Plant Database</div>"
+    })
+    .title("Global Power Plants")
+    .define();
+
+  myMap.then(function () {
+    try { ixmaps.setMapTool("info"); } catch (e) {}
+  });
+
+  // --- Projection toggle: Equal Earth <-> Orthographic (globe) ---
+
+  var switchEl = document.getElementById("pt-switch");
+  var labelFlat = document.getElementById("pt-label-flat");
+  var labelGlobe = document.getElementById("pt-label-globe");
+  var isGlobe = false;
+
+  function toGlobe() {
+    var project = JSON.parse(ixmaps.getProjectString());
+    project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/orthographic.svg";
+    project.map.center = { lat: 15, lng: 10 };
+    project.map.zoom = 2.2;
+    ixmaps.setProjectJSON(project);
+    // no myMap.view(...) call here — on this engine build it silently reverts the swap
+
+    myMap.then(function (api) {
+      try { api.removeTheme("ocean_flat"); } catch (e) {}
+      myMap.layer("ocean_globe")
+        .data({
+          obj: { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Sphere" }, properties: {} }] },
+          type: "geojson"
+        })
+        .binding({ geo: "geometry" })
+        .type("FEATURE|SILENT")
+        .style({ colorscheme: ["#0d1b2a"], fillopacity: "1", linecolor: "none", linewidth: "0", showdata: "true" })
+        .meta({ name: "ocean_globe_theme", tooltip: "{{}}" })
+        .define();
+    });
+
+    // setProjectJSON (and the theme redraw it triggers) resets the map's tool state,
+    // which silently kills hover tooltips (see ixMaps Hotspot #26) — re-arm it after
+    // the redraw settles, not synchronously right after setProjectJSON.
+    setTimeout(function () { try { ixmaps.setMapTool("info"); } catch (e) {} }, 400);
+
+    isGlobe = true;
+    switchEl.classList.add("globe");
+    labelFlat.classList.remove("active");
+    labelGlobe.classList.add("active");
+  }
+
+  function toEqualEarth() {
+    // Globe -> Equal Earth has a known stuck-SVG-transform bug on this engine with no live fix.
+    // Reloading cleanly resets to the default Equal Earth init.
+    location.reload();
+  }
+
+  switchEl.addEventListener("click", function () {
+    if (isGlobe) {
+      toEqualEarth();
+    } else {
+      toGlobe();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -25,7 +25,17 @@
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
-// actually contains — never hardcoded), plus DOT, the real engine's
+// actually contains — never hardcoded; NORMALIZE additionally rescales
+// every point's/group's aggregated value into [0,1] post-aggregation,
+// the one thing that keeps a SUM aggregation's per-cell total bounded
+// regardless of local record density — see the NORMALIZE block in
+// _buildChartLayers). A non-CATEGORICAL numeric-range bubble
+// (_buildPartsA's own coloring mode, not exact-match CATEGORICAL) run
+// through AGGREGATE colors from each cell's own AGGREGATED total, not
+// each record's raw value — see _rangeClassed/the reclassify block in
+// _buildChartLayers, matching the real engine's own order of operations
+// (maptheme.js classes color from nValuesA[0] AFTER binning). Plus DOT,
+// the real engine's
 // simplest base symbol type (a fixed-radius, unclustered point — see
 // DOT_RADIUS_PX/_buildDotLayers). BUBBLE, DOT, and CHOROPLETH all share
 // the real engine's two coloring modes for a bound value: CATEGORICAL
@@ -67,9 +77,28 @@
   // so bumping a version is a one-file edit, not a 13-file one.
   // ---------------------------------------------------------------
   const LIB_URLS = {
-    maplibreCss: 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
-    maplibreJs: 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js',
-    deck: 'https://unpkg.com/deck.gl@8.9.35/dist.min.js',
+    // Bumped 3.6.2 -> 5.x (2026-09-21, globe-projection compat fix): native
+    // globe projection (map.setProjection({type:'globe'})) needs >=5.0.1
+    // (5.0.0 shipped a style-spec regression, reverted in 5.0.1). Requires
+    // MapLibre GL JS v4.5.1, v5, or v6 on the deck.gl side (see `deck`
+    // below) — v5 satisfies that.
+    maplibreCss: 'https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css',
+    maplibreJs: 'https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js',
+    // Bumped 8.9.35 -> 9.4.0 (2026-09-21, globe-reprojection fix): v8's
+    // interleaving (MapboxOverlay) always computed flat Web-Mercator
+    // screen positions regardless of the map's actual projection —
+    // confirmed live, every theme layer (bubbles, country fill, even the
+    // graticule — whose dead-straight, non-converging lines were the
+    // giveaway: real meridians/parallels curve toward the poles under any
+    // spherical projection) stayed a flat, static, un-rotated rectangle
+    // while only MapLibre's own native basemap became a true sphere.
+    // Globe-aware interleaving camera sync landed in deck.gl v9.1; the
+    // dedicated @deck.gl/maplibre module (MapLibreOverlay, forked from
+    // @deck.gl/mapbox's MapboxOverlay specifically for MapLibre) shipped
+    // in v9.4 — see the MapLibreOverlay swap below. Needs a WebGL2
+    // context for interleaved mode (deck.gl v9's own requirement,
+    // supplied by MapLibre GL JS itself, nothing this engine manages).
+    deck: 'https://unpkg.com/deck.gl@9.4.0/dist.min.js',
     supercluster: 'https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js',
     mustache: 'https://unpkg.com/mustache@4.2.0/mustache.min.js'
   };
@@ -94,12 +123,20 @@
     });
   }
 
-  // IconLayer/ScatterplotLayer/GeoJsonLayer/MapboxOverlay/TextLayer are
+  // IconLayer/ScatterplotLayer/GeoJsonLayer/MapLibreOverlay/TextLayer are
   // bound once loading completes (see ensureLibrariesLoaded) — every
   // _buildXLayers method reads these as closure variables, same as when
   // they were a top-level `const` destructured synchronously; the only
   // change is WHEN they're populated, not how they're used afterward.
-  let IconLayer, ScatterplotLayer, GeoJsonLayer, MapboxOverlay, TextLayer;
+  //
+  // MapLibreOverlay (not MapboxOverlay) as of the deck.gl 9.4.0 bump —
+  // the dedicated @deck.gl/maplibre interleaving class, needed for the
+  // MapLibre-globe camera sync MapboxOverlay doesn't have. Both classes
+  // ship in the same UMD bundle; confirmed present via a direct
+  // byte-grep of the shipped file (deck.gl's own @deck.gl/maplibre
+  // overview page claims ES-modules-only, which the actual UMD bundle
+  // contradicts).
+  let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer;
 
   // Cached so multiple ixmaps.Map() calls on one page (or a page that
   // still has its own static <script> tags for these libraries) only
@@ -116,7 +153,7 @@
         global.Mustache ? Promise.resolve() : loadScript(LIB_URLS.mustache),
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
       ]).then(() => {
-        ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapboxOverlay, TextLayer } = global.deck);
+        ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer } = global.deck);
         // Matches the real engine's own ui/js/tools/tooltip_mustache.js,
         // which overrides Mustache.escape to identity: tooltip HTML (the
         // template itself, and this engine's own chart/data-table
@@ -241,6 +278,35 @@
     return { type: 'FeatureCollection', features };
   }
 
+  // GL-PORT COMPAT: a real ixmaps-flat page's inline/fetched GeoJSON can
+  // legitimately carry a geometry type this engine's own renderers don't
+  // draw — confirmed live with an Orthographic globe's native
+  // {type:"Sphere"} ocean backdrop (create-ixmap skill's own documented
+  // convention: a `{type:"Sphere"}` geometry, no `coordinates`, draws the
+  // full visible-globe disc and auto-recenters every redraw — a real
+  // engine feature, not a mistake in the page). Left unfiltered, this
+  // reached deck.gl's GeoJsonLayer directly and threw ("Unknown GeoJSON
+  // type Sphere"), same failure mode as an unrecognized type flag would
+  // if KNOWN_INERT_FLAGS didn't exist. Same fix here: recognize and warn
+  // ONCE per type rather than letting deck.gl's own harder failure
+  // surface — the feature is dropped (no renderer implemented for it
+  // yet), everything else in the same FeatureCollection still draws.
+  const KNOWN_GEOMETRY_TYPES = new Set(['Point', 'MultiPoint', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']);
+  const _warnedGeometryTypes = new Set();
+  function sanitizeGeoJSON(fc) {
+    if (!fc || !Array.isArray(fc.features)) return fc;
+    const features = fc.features.filter(f => {
+      const t = f && f.geometry && f.geometry.type;
+      if (!t || KNOWN_GEOMETRY_TYPES.has(t)) return true;
+      if (!_warnedGeometryTypes.has(t)) {
+        _warnedGeometryTypes.add(t);
+        console.info(`[ixmaps-gl] geometry type "${t}" recognized (real ixmaps-flat convention), no renderer implemented yet — features of this type are skipped`);
+      }
+      return false;
+    });
+    return features.length === fc.features.length ? fc : Object.assign({}, fc, { features });
+  }
+
   // CHOROPLETH's own .data() (e.g. the comuni demographics CSV in
   // italy-comuni-demographics-ixmaps.html) carries no point geometry at
   // all — it's a plain lookup table joined against a FEATURE base layer's
@@ -309,8 +375,38 @@
   // ---------------------------------------------------------------
 
   async function fetchLayerData(dataConfig, binding) {
-    if (!dataConfig || (!dataConfig.url && !dataConfig.urls && !dataConfig.query)) {
-      throw new Error('[ixmaps-gl] layer .data() needs a url, urls, or query');
+    if (!dataConfig || (!dataConfig.url && !dataConfig.urls && !dataConfig.query && !dataConfig.obj)) {
+      throw new Error('[ixmaps-gl] layer .data() needs a url, urls, query, or obj');
+    }
+
+    // .data({obj: table, type: 'jsondb'}) — an already-in-memory data.js
+    // Table (or plain row array) handed straight to the layer, matching
+    // the real engine's own jsondb data source. No network fetch at all;
+    // exists for callers (e.g. a wizard/loader UI) that already parsed
+    // the data themselves and would otherwise have to re-fetch/re-parse
+    // it a second time just to satisfy this function's url-based paths.
+    //
+    // GL-PORT COMPAT: .data({obj: ...}) must respect `type` exactly like
+    // the URL-based path below does (topojson/geojson vs csv-like rows) —
+    // real ixmaps-flat pages routinely inline an already-built GeoJSON
+    // FeatureCollection this way (dense-polygon ocean backdrops,
+    // graticules, an Orthographic {type:"Sphere"} globe background — see
+    // the create-ixmap skill's own Equal-Earth/Orthographic examples,
+    // always paired with .binding({geo:"geometry"})). Such an object
+    // already carries embedded geometry, not a "YFIELD|XFIELD" position
+    // pair to extract, so it must never reach rowsResult/
+    // csvRowsToFeatureCollection. Confirmed live: a real page's ocean
+    // layer (.data({obj: worldBBoxGeoJSON, type:"geojson"})) hit this
+    // branch unconditionally regardless of `type`, and its single-field
+    // binding.geo:"geometry" (correct for GeoJSON, no "|") then failed
+    // csvRowsToFeatureCollection's Y|X split — the exact same error a
+    // genuinely CSV-shaped .obj with a missing binding.position would
+    // throw, even though this .obj was never row data in the first place.
+    if (dataConfig.obj) {
+      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(dataConfig.obj);
+      if (dataConfig.type === 'geojson') return sanitizeGeoJSON(dataConfig.obj);
+      const rows = typeof dataConfig.obj.json === 'function' ? dataConfig.obj.json() : dataConfig.obj;
+      return rowsResult(rows, binding);
     }
 
     if (dataConfig.query) {
@@ -345,19 +441,27 @@
     const resp = await fetch(dataConfig.url);
     if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${dataConfig.url}: ${resp.status}`);
     if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(await resp.json());
-    if (dataConfig.type === 'geojson') return resp.json();
+    if (dataConfig.type === 'geojson') return sanitizeGeoJSON(await resp.json());
     throw new Error(`[ixmaps-gl] unsupported data type "${dataConfig.type}" (topojson/geojson/csv implemented)`);
   }
 
   // ---------------------------------------------------------------
   // .filter("WHERE field = value") — the one predicate form our real
   // layer config uses; unsupported expressions are left unfiltered with
-  // a warning rather than silently mis-filtering
+  // a warning rather than silently mis-filtering. Accepts "=" or "=="
+  // (both seen in ported configs) — "={1,2}" not "==?", so it still
+  // requires at least one: confirmed live as a real, silent bug when this
+  // only accepted a single "=": "WHERE s == \"3\"" matched the regex
+  // (greedy \S+ still found "s"), but only consumed ONE of the two "="
+  // characters, leaving the second "=" as part of the "value" capture —
+  // every row's stringified field was compared against the literal
+  // (garbage) value ‘= "3"’ instead of "3", so the filter matched nothing
+  // and looked like the theme quietly rendered zero features.
   // ---------------------------------------------------------------
 
   function applyWhereFilter(fc, filterExpr) {
     if (!filterExpr) return fc;
-    const m = /^\s*WHERE\s+(\S+)\s*=\s*(.+?)\s*$/i.exec(filterExpr);
+    const m = /^\s*WHERE\s+(\S+)\s*={1,2}\s*(.+?)\s*$/i.exec(filterExpr);
     if (!m) {
       console.warn('[ixmaps-gl] unsupported filter expression, left unfiltered:', filterExpr);
       return fc;
@@ -536,9 +640,34 @@
   // here — its own drawChart only checks /\bSORT\b/, which never matches
   // inside the substring "NOSORT" (a real self-inflicted no-op flag in the
   // source we're porting, per direct verification against it).
-  const KNOWN_INERT_FLAGS = ['SEQUENCE', 'STAR', 'SORT', 'DOWN', 'RECT', 'CLIPTOGEOBOUNDS', 'OUTLIER', 'NOOUTLIER',
+  // NOOUTLIER (drops values beyond outlierscale std-deviations from the
+  // mean — see the NOOUTLIER block in _buildChartLayers) has real
+  // behavior now; bare OUTLIER (the real source's "keep ONLY the
+  // outliers" inverse mode) stays unimplemented — no config here uses it.
+  const KNOWN_INERT_FLAGS = ['SEQUENCE', 'STAR', 'SORT', 'DOWN', 'RECT', 'CLIPTOGEOBOUNDS', 'OUTLIER',
     'HEADTAIL', 'LOG', 'POW2', 'POW3', 'NOSORT'];
   const _warnedFlags = new Set();
+
+  // GL-PORT COMPAT: real ixmaps-flat's global ixmaps.getThemeObj(szId) /
+  // ixmaps.data.getFacets(...) look up a theme by id from the ENGINE's own
+  // global registry, not from a per-map handle a page necessarily still
+  // has around — a page's own callback (e.g. a "layerdraw" handler) is
+  // often written to call these globals directly, real-engine style. This
+  // engine has no single global "the map"'s worth of state (a page can
+  // build more than one independent map), so this registry is a
+  // best-effort, LAST-DEFINITION-WINS map from theme name to its
+  // LayerRuntime — exactly matching a real page's own typical assumption
+  // that theme names are unique enough to look up this way. See
+  // build()'s main loop and defineLayer(), the two places a runtime is
+  // ever created, for where this gets populated.
+  const _globalThemeRegistry = new Map();
+
+  // Same LAST-DEFINITION-WINS rationale as _globalThemeRegistry above, for
+  // real ixmaps-flat's map-LEVEL globals (ixmaps.getProjectString/
+  // setProjectJSON/getZoom/getCenter/...) that a page calls without a
+  // per-map handle — most real pages only ever build one map anyway. Set
+  // once per successful build(), just before it returns engineApi below.
+  let _lastMapApi = null;
 
   class LayerBuilder {
     constructor(name) {
@@ -552,11 +681,32 @@
       this._meta = {};
     }
     data(d) { this._data = d; return this; }
-    binding(b) { this._binding = b; return this; }
+    // GL-PORT COMPAT: binding.geo is the real-ixmaps-flat field name for
+    // the bound geometry/position; this engine's own convention (used by
+    // every field that actually reads it — fetchLayerData/rowsResult/
+    // LayerRuntime) is binding.position. Normalized HERE, at the one
+    // point every caller's binding object passes through, so a real page
+    // using .binding({geo:...}) unmodified works exactly like one already
+    // using .binding({position:...}) — every downstream reader only ever
+    // needs to know about .position.
+    binding(b) {
+      if (b && b.geo != null && b.position == null) b.position = b.geo;
+      this._binding = b;
+      return this;
+    }
     filter(expr) { this._filterExpr = expr; return this; }
     type(t) {
       this._typeStr = t;
       this._flags = new Set(t.split('|'));
+      // GL-PORT COMPAT: real ixmaps-flat's actual base-chart flag is
+      // BUBBLE (confirmed against the real engine's own source and
+      // htmlgui_flat.js docs — SYMBOL is a DIFFERENT, still-unimplemented
+      // real type for non-circle marker shapes); this engine's CHART
+      // dispatch was built keying on SYMBOL specifically. Treating BUBBLE
+      // as implying SYMBOL here — once, at the source — means every real
+      // page's authentic "CHART|BUBBLE|..." type string just works,
+      // without rewriting it to this engine's own preferred spelling.
+      if (this._flags.has('BUBBLE')) this._flags.add('SYMBOL');
       this._flags.forEach(flag => {
         if (KNOWN_INERT_FLAGS.includes(flag) && !_warnedFlags.has(flag)) {
           _warnedFlags.add(flag);
@@ -567,12 +717,133 @@
     }
     style(s) { this._style = s; return this; }
     meta(m) { this._meta = m; return this; }
+    // Real-engine chain method setting the legend panel's own HEADING
+    // text (not a value-field label, despite the name reading that way at
+    // first glance — confirmed against real pages, e.g. the power-plants
+    // sample's .title("Global Power Plants") becomes that legend's title
+    // line). Stored separately (not merged into _meta here) since
+    // .meta() REPLACES this._meta wholesale, and callers can chain
+    // .title() before OR after .meta() — LayerRuntime's constructor
+    // applies it as a fallback (meta.title wins if a caller's own
+    // .meta({title:...}) already set one) once both are final. Consumed
+    // by the native legend renderer in build() via rt.meta.title.
+    title(fieldName) { this._titleField = fieldName; return this; }
+    // GL-PORT COMPAT: real ixmaps-flat's map.layer(name).data()...define()
+    // chain ends with an explicit .define() call that commits the theme.
+    // This engine's own build pipeline doesn't need an explicit commit —
+    // simply being attached via .layer() (see MapBuilder.layer, both the
+    // ixmaps.layer(name, cb) factory path and the real-flat map.layer(name)
+    // compat path) is already enough — so .define() is a harmless no-op,
+    // not a crash, for a page that calls it out of real-engine habit.
+    define() { return this; }
   }
 
   function layer(name, configFn) {
     const builder = new LayerBuilder(name);
     if (configFn) configFn(builder);
     return builder;
+  }
+
+  // ---------------------------------------------------------------
+  // Splash screen — shown the instant ixmaps.Map() is called (covering
+  // both library lazy-loading and this layer's own data fetch, real-
+  // world verified as the two slowest phases: a >1.2M-row CSV source
+  // alone took >15s in this engine's own German accidents demo), hidden
+  // once MapLibre's own 'load' event fires (by which point every
+  // layer's data has already finished loading too, since build()'s data
+  // loop runs and is awaited BEFORE the MapLibre map itself is even
+  // constructed — see MapBuilder.build()). One shared <style> tag
+  // injected once regardless of how many maps a page creates.
+  // ---------------------------------------------------------------
+  let _splashStyleInjected = false;
+  function ensureSplashStyle() {
+    if (_splashStyleInjected) return;
+    _splashStyleInjected = true;
+    const style = document.createElement('style');
+    style.textContent = `
+      .ixmaps-splash {
+        position: absolute; inset: 0; z-index: 2000;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 0.9em; background: #fafafa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        opacity: 1; transition: opacity 0.4s ease;
+      }
+      .ixmaps-splash.ixmaps-splash-hidden { opacity: 0; pointer-events: none; }
+      .ixmaps-splash-mark { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+      .ixmaps-splash-ping {
+        position: absolute; width: 16px; height: 16px; border-radius: 50%;
+        background: #0088dd; animation: ixmaps-splash-ping 1.6s cubic-bezier(0,0,0.3,1) infinite;
+      }
+      .ixmaps-splash-dot { position: relative; width: 16px; height: 16px; border-radius: 50%; background: #0088dd; }
+      .ixmaps-splash-word { font-size: 1.3em; font-weight: 600; letter-spacing: 0.01em; color: #222; }
+      .ixmaps-splash-word sup { font-size: 0.6em; font-weight: 500; color: #0088dd; margin-left: 0.05em; }
+      .ixmaps-splash-text { font-size: 0.8em; color: #888; min-height: 1.2em; }
+      @keyframes ixmaps-splash-ping {
+        0% { transform: scale(1); opacity: 0.7; }
+        100% { transform: scale(2.6); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  function showSplash(el, text) {
+    ensureSplashStyle();
+    // Checks the actual RENDERED position, not el.style (the inline
+    // attribute only) — every example page's own #map_div already sets
+    // position:absolute via a real stylesheet rule, not inline, so
+    // `el.style.position` reads as empty regardless and would always
+    // "win" the `||` fallback, overwriting that CSS rule with an inline
+    // position:relative. Confirmed live as a real, not hypothetical, bug:
+    // position:relative does NOT give top/bottom:0 the same "stretch to
+    // fill" meaning position:absolute does, so the container's computed
+    // height silently collapsed to 0 — invisible map, invisible splash,
+    // both zero-height. Only truly static (unpositioned) elements need
+    // this at all.
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    const splash = document.createElement('div');
+    splash.className = 'ixmaps-splash';
+    splash.innerHTML = '<div class="ixmaps-splash-mark"><span class="ixmaps-splash-ping"></span><span class="ixmaps-splash-dot"></span></div>' +
+      '<div class="ixmaps-splash-word">ixmaps<sup>gl</sup></div>' +
+      '<div class="ixmaps-splash-text"></div>';
+    splash.querySelector('.ixmaps-splash-text').textContent = text || '';
+    el.appendChild(splash);
+    return splash;
+  }
+  function hideSplash(splash) {
+    if (!splash || !splash.parentNode) return;
+    splash.classList.add('ixmaps-splash-hidden');
+    setTimeout(() => splash.parentNode && splash.parentNode.removeChild(splash), 500);
+  }
+
+  // GL-PORT COMPAT: real ixmaps-flat's `mapType` doubles as a real basemap
+  // NAME ("VT_TONER_LITE", "CartoDB - Dark matter", ...) or a literal
+  // background COLOR (any hex string, or "black"/"white"/"dark") — see
+  // create-ixmap skill: "Set mapType to the background/sea color instead
+  // of using CSS... Do not use mapType:'white' + CSS background — set it
+  // directly in mapType." A color mapType means the real engine draws NO
+  // tile layer at all (this is standard for every SVG-projection map —
+  // equalearth/orthographic/lambert/etc. — which have no Mercator tiles
+  // to show in the first place). This engine's own map surface is always
+  // a MapLibre GL instance, though, so "no tile layer" has to be built
+  // explicitly rather than just being the absence of a Leaflet tile
+  // layer: an empty-sources style with one plain `background` paint
+  // layer reproduces the same visual result (solid color, no network
+  // fetch, no basemap attribution) without special-casing every
+  // downstream deck.gl/picking/opacity code path that only knows how to
+  // talk to "the current MapLibre style".
+  const BLANK_BACKGROUND_LAYER_ID = '__ixmaps_gl_blank_background';
+  const NAMED_MAPTYPE_COLORS = { dark: '#1a1a1a', black: '#000000', white: '#ffffff' };
+  function resolveMapTypeColor(mapType) {
+    if (typeof mapType !== 'string') return null;
+    const t = mapType.trim();
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(t)) return t;
+    const named = NAMED_MAPTYPE_COLORS[t.toLowerCase()];
+    return named || null;
+  }
+  function buildBlankBackgroundStyle(color) {
+    return {
+      version: 8,
+      sources: {},
+      layers: [{ id: BLANK_BACKGROUND_LAYER_ID, type: 'background', paint: { 'background-color': color } }]
+    };
   }
 
   class MapBuilder {
@@ -587,16 +858,67 @@
       this._legendHtml = '';
       this._layerBuilders = [];
     }
-    view(latlon, zoom) { this._viewCenter = latlon; this._viewZoom = zoom; return this; }
+    // GL-PORT COMPAT: real ixmaps-flat's own .view() takes ONE argument —
+    // {center:{lat,lng}, zoom} — where this engine's own convention is TWO
+    // args, .view([lat,lng], zoom). Detected by shape (a plain array, this
+    // engine's own idiom, vs. an object carrying its own .center), so
+    // either calling convention works unmodified.
+    view(latlonOrOpts, zoom) {
+      if (latlonOrOpts && typeof latlonOrOpts === 'object' && !Array.isArray(latlonOrOpts) && latlonOrOpts.center) {
+        const c = latlonOrOpts.center;
+        this._viewCenter = Array.isArray(c) ? c : [c.lat, c.lng];
+        this._viewZoom = latlonOrOpts.zoom;
+      } else {
+        this._viewCenter = latlonOrOpts;
+        this._viewZoom = zoom;
+      }
+      return this;
+    }
     options(o) { this._engineOptions = o; return this; }
     local(...args) { this._locals.push(args); return this; }
     attribution(a) { this._attributionText = a; return this; }
     legend(html) { this._legendHtml = html; return this; }
-    layer(layerBuilder) { this._layerBuilders.push(layerBuilder); return this; }
+    // GL-PORT COMPAT: real ixmaps-flat's map.layer(name) returns a NEW
+    // per-layer builder for a .data()...define() chain on the LAYER
+    // itself. This engine's own established convention instead pre-builds
+    // a LayerBuilder via the global ixmaps.layer(name, configFn) factory
+    // and passes the finished OBJECT to map.layer(obj), which returns
+    // `this` (the MAP) for further .layer(a).layer(b) chaining. Both are
+    // supported, distinguished by argument type, so a real page's
+    // map.layer("name").data()...define() chain works unmodified.
+    layer(nameOrBuilder) {
+      if (typeof nameOrBuilder === 'string') {
+        const lb = new LayerBuilder(nameOrBuilder);
+        this._layerBuilders.push(lb);
+        return lb;
+      }
+      this._layerBuilders.push(nameOrBuilder);
+      return this;
+    }
+    // GL-PORT COMPAT: real ixmaps-flat's map.on("layerdraw", cb) — only
+    // "layerdraw" is actually wired up (see build()'s own note on how
+    // it's translated into onRedraw + a synthetic per-runtime event); any
+    // OTHER event name is accepted and stored but never fired —
+    // recognized rather than throwing, the same "known but inert" pattern
+    // KNOWN_INERT_FLAGS already uses for unimplemented type flags.
+    on(event, cb) {
+      this._pendingEvents = this._pendingEvents || [];
+      this._pendingEvents.push([event, cb]);
+      return this;
+    }
 
     async build() {
       const el = document.getElementById(this.containerId);
       if (!el) throw new Error(`[ixmaps-gl] container #${this.containerId} not found`);
+
+      // shown for the whole build() (library lazy-load + every layer's own
+      // data fetch, real-world verified as the two slowest phases) through
+      // to MapLibre's own 'load' event, below — .options({splashText:...})
+      // overrides the default message, .options({splash:false}) skips it
+      // entirely (e.g. for a map embedded somewhere a full-cover overlay
+      // would be wrong, or one that's expected to load near-instantly).
+      const splash = this._engineOptions.splash === false ? null
+        : showSplash(el, this._engineOptions.splashText || 'loading…');
 
       // fast local check (missing container) before the network round
       // trip — MapLibre/deck.gl/Supercluster/Mustache + MapLibre's own
@@ -619,9 +941,29 @@
       const dataCache = new Map();
       const runtimes = [];
       for (const lb of this._layerBuilders) {
-        const cacheKey = JSON.stringify({ url: lb._data && lb._data.url, urls: lb._data && lb._data.urls, type: lb._data && lb._data.type, query: lb._data && lb._data.query });
-        if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(lb._data, lb._binding));
-        const raw = await dataCache.get(cacheKey);
+        // .data({obj}) is already in-memory (no network cost to "re-
+        // fetch"), and its object identity can't be captured in a
+        // JSON.stringify key without serializing the whole table — skip
+        // the fetch cache entirely for it rather than risk two DIFFERENT
+        // .obj sources colliding on the same {url:undefined,...} key.
+        // BUG FIX: cacheKey used to be declared INSIDE the `else` branch
+        // below — block-scoped to it, so `rt._dataSourceKey = cacheKey`
+        // (needed regardless of which branch ran) threw "cacheKey is not
+        // defined" for every layer, the instant this function actually
+        // ran to completion. Confirmed live: introduced when the .obj
+        // branch was added, only now actually exercised end-to-end again.
+        // Declared here (still per-iteration, before the branch) so both
+        // arms can reach it, and .obj sources get a distinct identity tag
+        // instead of colliding with each other under one 'null' entry.
+        let raw, cacheKey;
+        if (lb._data && lb._data.obj) {
+          raw = await fetchLayerData(lb._data, lb._binding);
+          cacheKey = 'obj:' + lb.name;
+        } else {
+          cacheKey = JSON.stringify({ url: lb._data && lb._data.url, urls: lb._data && lb._data.urls, type: lb._data && lb._data.type, query: lb._data && lb._data.query });
+          if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(lb._data, lb._binding));
+          raw = await dataCache.get(cacheKey);
+        }
         const filtered = applyWhereFilter(raw, lb._filterExpr);
         const fc = filtered.type === 'Table' ? joinChoroplethFeatures(lb, filtered, runtimes) : filtered;
         const rt = new LayerRuntime(lb, fc, this._engineOptions);
@@ -632,22 +974,43 @@
         // against.
         rt._dataSourceKey = cacheKey;
         runtimes.push(rt);
+        _globalThemeRegistry.set(rt.name, rt);
       }
 
       const [lat, lon] = this._viewCenter || [45.5, 9.2];
+      const mapTypeColor = resolveMapTypeColor(this.mapOptions.mapType);
       const map = new maplibregl.Map({
         container: this.containerId,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        style: mapTypeColor ? buildBlankBackgroundStyle(mapTypeColor)
+                             : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
         center: [lon, lat],
-        zoom: this._viewZoom || 8
+        zoom: this._viewZoom || 8,
+        // .attribution(a) (MapBuilder, above) was stored but never read —
+        // unlike .legend()'s parallel _legendHtml, which the splash/legend
+        // block below actually renders. MapLibre's own AttributionControl
+        // is added automatically (not disabled anywhere in this file) and
+        // accepts extra text via customAttribution, appended alongside the
+        // basemap's own required CARTO/OpenStreetMap credit rather than
+        // replacing it.
+        //
+        // A color `mapType` (mapTypeColor truthy — see
+        // buildBlankBackgroundStyle above) has no real basemap at all, so
+        // there's no required CARTO/OSM credit to keep — only
+        // maplibre-gl's OWN default "MapLibre" attribution badge, which
+        // 5.x (unlike the 3.6.2 this was pinned to before) adds even for
+        // an empty-sources style. Disabled in exactly that one case;
+        // customAttribution's own required-credit behavior for a REAL
+        // basemap is left untouched.
+        ...(mapTypeColor ? { attributionControl: false } : {}),
+        ...(this._attributionText ? { customAttribution: this._attributionText } : {})
       });
 
       // Tooltip resolution is per-runtime (each theme's own meta.tooltip
       // template), not generic — a layer id exactly matches one of the
-      // pickable ids a runtime's buildDeckLayers() produced (ix-points-/
-      // ix-cluster-/ix-dot-/ix-features-/ix-choropleth- + that runtime's
-      // own name); the glow and values (label) layers are pickable:false
-      // so they never reach here.
+      // pickable ids a runtime's buildDeckLayers() produced (ix-bubbles-/
+      // ix-dot-/ix-features-/ix-choropleth- + that runtime's own name);
+      // the glow and values (label) layers are pickable:false so they
+      // never reach here.
       //
       // Each id-pattern check is paired with the flag(s) that actually
       // produce it, not matched by name alone — necessary now that a
@@ -657,16 +1020,16 @@
       // come FIRST in `runtimes` for every layer id, not the one that
       // actually produced it.
       function findRuntimeForLayerId(layerId) {
-        // icon-atlas-based layer ids (ix-cluster-/ix-cluster-glow-/
-        // ix-points-glow-/ix-plot-/ix-grid-) carry a rotating "-gN"
-        // generation suffix (see ICON_ATLAS_RESET_AFTER) — strip it before
-        // matching so hover/click tooltip lookup keeps working across a
-        // rotation. Non-atlas layers (ix-points-/ix-dot-/ix-features-/
-        // ix-choropleth-) never carry the suffix; stripping a pattern
-        // that isn't there is a no-op.
+        // icon-atlas-based layer ids (ix-bubbles-/ix-glow-/ix-plot-/
+        // ix-grid-) carry a rotating "-gN" generation suffix (see
+        // ICON_ATLAS_RESET_AFTER) — strip it before matching so
+        // hover/click tooltip lookup keeps working across a rotation.
+        // Non-atlas layers (ix-dot-/ix-features-/ix-choropleth-) never
+        // carry the suffix; stripping a pattern that isn't there is a
+        // no-op.
         const base = layerId.replace(/-g\d+$/, '');
         return runtimes.find(r => {
-          if (base === `ix-points-${r.name}` || base === `ix-cluster-${r.name}`) return r.flags.has('CHART') && r.flags.has('SYMBOL');
+          if (base === `ix-bubbles-${r.name}`) return r.flags.has('CHART') && r.flags.has('SYMBOL');
           if (base === `ix-dot-${r.name}`) return r.flags.has('DOT');
           if (base === `ix-choropleth-${r.name}`) return r.flags.has('CHOROPLETH');
           if (base === `ix-features-${r.name}`) return r.flags.has('FEATURE') || r.flags.has('FEATURES');
@@ -770,7 +1133,7 @@
         });
       }
 
-      const overlay = new MapboxOverlay({
+      const overlay = new MapLibreOverlay({
         interleaved: true,
         layers: [],
         // pointer becomes a hand over anything pickable (bubbles/points),
@@ -870,9 +1233,66 @@
 
       const redrawListeners = [];
 
+      // Basemap opacity fade — the real engine's ixmaps.setBasemapOpacity
+      // dims the WHOLE basemap container div via a single CSS `opacity`
+      // (htmlgui.js:1409-1420, confirmed by direct source read: real
+      // callers pass a stray extra leading arg the actual 2-param
+      // function silently ignores, making the real "relative" fade a
+      // dead no-op there — this port implements the INTENDED 2-arg
+      // behavior, not that bug). A single CSS opacity on the map
+      // container isn't available to us: this engine's deck.gl overlay
+      // is INTERLEAVED (see MapLibreOverlay above), so its bubble layers
+      // are injected as MapLibre style layers of type 'custom' sitting
+      // among the real basemap's own fill/line/background/symbol layers
+      // in the SAME style — dimming the container would dim the bubbles
+      // too. Instead this fades every NON-custom style layer's own
+      // opacity paint property, leaving deck.gl's 'custom'-type layers
+      // (the actual accident bubbles) untouched — the same practical
+      // result (basemap fades, thematic data doesn't) reached by a
+      // different, interleaving-safe mechanism.
+      let _basemapOpacity = 1;
+      const OPACITY_PAINT_PROPS = {
+        background: ['background-opacity'],
+        fill: ['fill-opacity'],
+        line: ['line-opacity'],
+        raster: ['raster-opacity'],
+        'fill-extrusion': ['fill-extrusion-opacity'],
+        circle: ['circle-opacity', 'circle-stroke-opacity'],
+        symbol: ['icon-opacity', 'text-opacity']
+      };
+      function applyBasemapOpacity() {
+        const style = map.getStyle && map.getStyle();
+        if (!style || !style.layers) return;
+        style.layers.forEach(layer => {
+          // the synthetic solid-color background substituted in for a
+          // color `mapType` (see buildBlankBackgroundStyle) IS the page's
+          // requested background, not a real basemap to fade — real
+          // ixmaps-flat has no basemapopacity concept at all for these
+          // (SVG-projection, tile-free) maps, so basemapopacity here would
+          // otherwise make the "no basemap" background itself vanish.
+          if (layer.id === BLANK_BACKGROUND_LAYER_ID) return;
+          const props = OPACITY_PAINT_PROPS[layer.type];
+          if (!props) return; // includes 'custom' (deck.gl's own interleaved layers) — left alone
+          props.forEach(prop => {
+            try { map.setPaintProperty(layer.id, prop, _basemapOpacity); } catch (e) { /* layer may not define this paint property */ }
+          });
+        });
+      }
+
       const engineApi = {
         map,
         overlay,
+        // delta: the new absolute opacity (0-1), or a +/- amount when
+        // mode==='relative' (matching the real page's own +/- button
+        // idiom, e.g. setBasemapOpacity(-0.1,'relative')/(0.1,'relative')).
+        // Clamped to [0,1] either way.
+        setBasemapOpacity: (delta, mode) => {
+          _basemapOpacity = mode === 'relative'
+            ? Math.max(0, Math.min(1, _basemapOpacity + (parseFloat(delta) || 0)))
+            : Math.max(0, Math.min(1, parseFloat(delta)));
+          applyBasemapOpacity();
+          return _basemapOpacity;
+        },
         runtimes,
         getThemes: () => runtimes.map(r => ({ szId: r.name, meta: r.meta, categoryLabels: r.categoryDisplayLabels || r.categoryLabels || null })),
         // facet browser API (see LayerRuntime.getFacets/setFacetFilter) —
@@ -941,7 +1361,63 @@
         // so a page can keep a facets sidebar in sync, mirroring the real
         // engine's htmlgui_onDrawTheme hook
         onRedraw: (cb) => { redrawListeners.push(cb); },
-        refresh: () => refresh()
+        refresh: () => refresh(),
+        // Adds ONE new layer/theme to an ALREADY-BUILT map — build()'s own
+        // loop above only ever runs once, at construction, so a caller
+        // that needs to add a theme dynamically after the map exists (a
+        // wizard/loader UI letting the user pick a dataset/viz AFTER the
+        // map is already on screen, rather than a page whose layers are
+        // all known upfront) previously had no way to do that at all.
+        // Deliberately PURELY ADDITIVE — it does not remove any existing
+        // runtime sharing the new one's name, even though the real
+        // engine's own convention is "defining a theme with the same name
+        // replaces the old one". Two real layers can legitimately share
+        // one name on purpose here (a CHOROPLETH's FEATURE geometry donor
+        // — see joinChoroplethFeatures — is looked up by exact name
+        // match), so silently auto-removing on name collision would
+        // delete a donor the very next line's overlay still needs. The
+        // caller (which knows whether a name collision means "replace"
+        // or "these are meant to coexist") is expected to call
+        // removeTheme() itself first when it actually wants a replace —
+        // exactly how this engine's own facet-filter/style setters below
+        // already push responsibility for "what should happen" to the
+        // caller rather than guessing.
+        defineLayer: async (layerBuilder) => {
+          // No cross-call fetch cache here (unlike build()'s own loop) —
+          // a dynamic add is a one-off call, not part of a batch of
+          // layers sharing one data source.
+          const raw = await fetchLayerData(layerBuilder._data, layerBuilder._binding);
+          const filtered = applyWhereFilter(raw, layerBuilder._filterExpr);
+          const fc = filtered.type === 'Table' ? joinChoroplethFeatures(layerBuilder, filtered, runtimes) : filtered;
+          const rt = new LayerRuntime(layerBuilder, fc, this._engineOptions);
+          rt._dataSourceKey = JSON.stringify({ url: layerBuilder._data && layerBuilder._data.url, urls: layerBuilder._data && layerBuilder._data.urls, type: layerBuilder._data && layerBuilder._data.type, query: layerBuilder._data && layerBuilder._data.query, obj: !!(layerBuilder._data && layerBuilder._data.obj) });
+          runtimes.push(rt);
+          _globalThemeRegistry.set(rt.name, rt);
+          refresh();
+          notifyRedraw();
+          return rt.name;
+        },
+        // Removes every runtime whose OWN .layer(name) matches — a theme
+        // may legitimately be split across more than one runtime sharing
+        // one name (the CHOROPLETH/FEATURE-donor pair above), so this
+        // removes all of them, not just the first match.
+        removeTheme: (name) => {
+          let removed = false;
+          const removedRuntimes = [];
+          for (let i = runtimes.length - 1; i >= 0; i--) {
+            if (runtimes[i].name === name) { removedRuntimes.push(runtimes[i]); runtimes.splice(i, 1); removed = true; }
+          }
+          // stale-registry guard: _globalThemeRegistry is a bare name->
+          // runtime map (see its own comment) that can hold at most one
+          // entry per name — only clear it if it's actually pointing at
+          // one of the runtime(s) just removed, not a DIFFERENT map's
+          // still-live runtime that happens to share the same name.
+          if (removedRuntimes.includes(_globalThemeRegistry.get(name))) {
+            _globalThemeRegistry.delete(name);
+          }
+          if (removed) { refresh(); notifyRedraw(); }
+          return removed;
+        }
       };
 
       // Rebuilds the deck.gl layers only — measured at ~5ms even fully
@@ -978,13 +1454,30 @@
       //     renders perfectly clean, confirming the accumulation, not any
       //     single frame, is the cause. Freezing clustering to one config
       //     for the gesture's duration (same as GRIDSIZE) bounds this.
+      //
+      // `liveZoom` (always the real current zoom, never frozen) is passed
+      // through alongside the frozen `zoom` — CHART/SYMBOL's
+      // objectscaling:"dynamic" symbol-size term uses it specifically
+      // (see _buildChartLayers), so bubbles keep growing/shrinking in
+      // real time as the user actively zooms, even though clustering
+      // itself stays frozen. Safe to do continuously: _getGlowIcon/
+      // _buildBubbleIcon cache their raster by color/proportions only,
+      // never by size, so resizing the SAME cached icon every frame
+      // creates no new atlas entries — none of the reclustering risk
+      // above applies to a pure size change.
       function refreshLayers() {
         const liveZoom = map.getZoom();
         const zoom = isZooming ? stableGridZoom : liveZoom;
         const bounds = map.getBounds();
         const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+        // Only meaningful under globe projection (see buildDeckLayers'
+        // own comment on the far-hemisphere bubble leak this fixes) —
+        // null under mercator, where every in-bbox point is always on
+        // the visible, flat surface and there's no "far side" to hide.
+        const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
+        const globeCenter = proj.type === 'globe' ? map.getCenter() : null;
         let layers = [];
-        runtimes.forEach(rt => layers.push(...rt.buildDeckLayers(zoom, bbox)));
+        runtimes.forEach(rt => layers.push(...rt.buildDeckLayers(zoom, bbox, liveZoom, globeCenter)));
         if (isZooming) layers = layers.filter(l => !(l.id.startsWith('ix-plot-') || l.id.startsWith('ix-grid-')));
         overlay.setProps({ layers });
       }
@@ -1013,7 +1506,53 @@
       map.on('zoomend', () => {
         isZooming = false;
         stableGridZoom = map.getZoom();
-        refreshLayers();
+        // Was: clearTimeout(refreshTimer); refreshLayers(); — a DIRECT,
+        // un-throttled rebuild on every single zoomend. That was fine
+        // while every runtime's per-tick cost was cheap (viewport-scoped
+        // rank only), but confirmed live as a real, severe regression
+        // once world-wide _ensureAggregateStats() started running
+        // unconditionally on every _buildChartLayers call (Z-LEVEL
+        // thresholds fix, see _ensureAggregateStats): a real trackpad/
+        // wheel pinch fires zoomstart/zoomend in many rapid MICRO-pairs
+        // (documented above — one per wheel tick, not one per whole
+        // gesture), so this direct call fired a ~15-20ms WORLD-WIDE
+        // reclustering pass on EVERY micro-tick — measured ~130 calls /
+        // ~500ms of cumulative blocking work for a single fast zoom
+        // gesture, main-thread-blocking severely enough to visibly
+        // flicker and to cascade into MapLibre tile-request cancel/retry
+        // storms (thousands of duplicate basemap tile fetches). Fixed by
+        // routing through the SAME 150ms trailing-call throttle already
+        // used for 'move' (scheduleRefresh) instead of bypassing it: a
+        // burst of rapid zoomend calls within one throttle window now
+        // collapses into a single trailing refresh, while an isolated
+        // zoom (no recent 'move'/'zoomend' activity) still refreshes
+        // immediately, since scheduleRefresh's own elapsed-time check
+        // fires it right away in that case. 'moveend' below remains the
+        // final unconditional correctness guarantee regardless of how
+        // many micro-pairs this collapses.
+        scheduleRefresh();
+      });
+      // Safety net: 'moveend' is MapLibre's own single, authoritative
+      // "interaction is now FULLY settled" signal — fires exactly once
+      // after ANY pan/zoom/pinch/wheel sequence ends, regardless of how
+      // many zoomstart/zoomend micro-pairs or throttled 'move' ticks
+      // happened along the way. Confirmed reproducible-in-spirit even
+      // though not pinned to an exact root cause: a user-reported "zoomed
+      // out with a trackpad, new area never got its own symbols, even
+      // after waiting" is exactly the symptom of some earlier refresh in
+      // the sequence being the last one that actually ran. This call is
+      // deliberately NOT throttled and always uses the CURRENT live zoom
+      // (not stableGridZoom) — by the time 'moveend' fires the gesture is
+      // over, so there's no reclustering-mid-gesture risk left to guard
+      // against, only a guarantee that whatever the final view is, it
+      // gets one last unconditional, correct render.
+      map.on('moveend', () => {
+        clearTimeout(refreshTimer);
+        // isZooming is already false here — 'zoomend' (if this gesture
+        // included any zooming at all) always fires before 'moveend' —
+        // so refreshLayers()'s own zoom = isZooming ? stableGridZoom :
+        // liveZoom resolves to the current live zoom, exactly as wanted.
+        refresh();
       });
 
       function notifyRedraw() {
@@ -1030,7 +1569,12 @@
         notifyRedraw();
       }
 
-      map.on('load', refresh);
+      map.on('load', () => {
+        refresh();
+        hideSplash(splash);
+        const initialOpacity = parseFloat(this._engineOptions.basemapopacity);
+        if (!isNaN(initialOpacity)) { _basemapOpacity = Math.max(0, Math.min(1, initialOpacity)); applyBasemapOpacity(); }
+      });
 
       // throttle with a trailing call, not a plain debounce — a pure
       // debounce resets on every 'move' event, which fires continuously
@@ -1075,6 +1619,387 @@
       map.on('move', scheduleRefresh);
       window.addEventListener('resize', () => map.resize());
 
+      // GL-PORT COMPAT: real ixmaps-flat's map.on("layerdraw", cb) fires
+      // once per THEME as it finishes drawing, handing the callback an
+      // event object carrying that theme's own id (e.constructor.id).
+      // This engine has no equivalent per-theme draw event — onRedraw
+      // fires once per REFRESH of the whole map (see its own comment,
+      // above) — so "layerdraw" is approximated by firing the registered
+      // callback once per CURRENT runtime, synthesizing {id: rt.name},
+      // every time onRedraw fires. A page reacting to "layerdraw" by
+      // reading THAT theme's own state (e.g. recomputing a stats sidebar
+      // via getThemeObj/getFacets — see the global compat shims, below)
+      // gets the same practical effect: fresh numbers after every redraw,
+      // for every theme, without needing the page rewritten around a
+      // finer-grained event this engine doesn't produce.
+      const layerdrawCbs = (this._pendingEvents || [])
+        .filter(([event]) => event === 'layerdraw')
+        .map(([, cb]) => cb);
+      if (layerdrawCbs.length) {
+        engineApi.onRedraw(() => {
+          runtimes.forEach(rt => {
+            layerdrawCbs.forEach(cb => {
+              try { cb({ id: rt.name }); } catch (err) { console.error('[ixmaps-gl] "layerdraw" callback failed:', err); }
+            });
+          });
+        });
+      }
+
+      // NATIVE INTERACTIVE LEGEND — real ixmaps-flat's legend.js
+      // (makeColorLegendHTMLLong) builds, per CATEGORICAL-ish theme: a
+      // title/snippet header, one row per category (color swatch + a bar
+      // proportional to that category's own total + right-aligned
+      // formatted value), a description/source footer, and a per-theme
+      // "Chart size" 25-200% slider — all read directly off source
+      // (ui/js/tools/legend.js:594-1037/3196-3393, ui/js/htmlgui.js:2196/
+      // 2208 for markThemeClass/unmarkThemeClass, ui/css/legend.css for
+      // the selected-row highlight) rather than guessed from the
+      // screenshot alone. Gated on `legend:"open"` — the one real map
+      // option this engine's own createMap already threads through as
+      // this.mapOptions (see mapOptions.legend below) — since there's no
+      // toolbar toggle button here to open/close it later the way the
+      // real engine's own chrome does.
+      //
+      // Deliberate divergences from the real implementation, both
+      // reasoned rather than accidental:
+      //   - Real legend.js does a full innerHTML rebuild on every single
+      //     theme redraw (even a bare click-toggle). renderRows() below
+      //     only rebuilds the ROWS (swatch/bar/value/highlight) — cheap,
+      //     and the only part that can actually change post-load (marks,
+      //     or an AGGREGATE theme's dataset-wide totals, which this port
+      //     doesn't yet let change post-load anyway) — rather than
+      //     tearing down and rebuilding title/snippet/description/slider
+      //     too, which never change. Same visible result, less DOM churn.
+      //   - Real "isolate_gray" mode dims non-marked SVG paths via a CSS
+      //     class; this engine dims via IconLayer's own getColor alpha
+      //     (see LayerRuntime#_iconAlpha) since these are deck.gl raster
+      //     icons, not DOM/SVG nodes a CSS rule could reach.
+      if (this.mapOptions.legend === 'open' && el.parentElement) {
+        el.parentElement.style.position = el.parentElement.style.position || 'relative';
+        runtimes
+          // .type("...|NOLEGEND") — the fourth real legend-related type()
+          // token: opts a theme OUT of the legend entirely (real engine's
+          // own per-layer "skip this one" flag, distinct from the map-
+          // level legend:"open"/"closed" option gating the whole panel).
+          // Same free-parsing story as SIMPLELEGEND/COMPACTLEGEND above —
+          // just one more flag to exclude on, no new plumbing.
+          .filter(rt => rt.categoryLabels && rt.categoryLabels.length && !rt.flags.has('FEATURE') && !rt.flags.has('FEATURES') && !rt.flags.has('NOLEGEND'))
+          .forEach((rt) => {
+            const panel = document.createElement('div');
+            panel.className = 'ix-native-legend';
+            // max-height:66% resolves against el.parentElement's own
+            // height (the map container, which always has a definite
+            // height for the map itself to render into) since this panel
+            // is absolutely positioned inside it — a plain percentage on
+            // an absolutely-positioned element's height IS legal CSS as
+            // long as its containing block has a definite height, which
+            // this one does. display:flex column + min-height:0 on the
+            // ROWS wrapper below (not this outer panel) is what makes
+            // only the row list scroll while the header/description/
+            // slider stay fixed in place — a flex child won't actually
+            // shrink to fit and scroll internally without min-height:0,
+            // it just overflows its flex parent instead.
+            panel.style.cssText = 'position:absolute;left:10px;bottom:10px;z-index:6;width:280px;'
+              + 'display:flex;flex-direction:column;max-height:66%;'
+              + 'background:rgba(28,30,34,0.92);color:#eee;font:12px/1.4 -apple-system,Arial,sans-serif;'
+              + 'border-radius:6px;padding:10px 12px 12px;pointer-events:auto;'
+              + 'box-shadow:0 2px 10px rgba(0,0,0,0.45);';
+            el.parentElement.appendChild(panel);
+
+            // SUM+valuefield mirrors the real engine's own "SUM style
+            // aggregation" reading (style.valuefield, falling back to
+            // the bound size field); anything else (plain CATEGORICAL,
+            // no SUM) falls back to a per-category record COUNT.
+            const useSum = rt.flags.has('SUM') && rt.style.valuefield;
+            const valueField = rt.style.valuefield || rt.binding.size;
+            // legendunits wins over the theme's general-purpose units
+            // (used elsewhere for tooltips, e.g. _renderItemChartHtml) —
+            // a page may want a different/no unit string specifically on
+            // the legend's own value column. Appended as-is (no extra
+            // space injected), matching how style.units/legendunits are
+            // themselves authored with their own leading space (e.g.
+            // " MW") in real pages.
+            const legendUnit = rt.style.legendunits || rt.style.units || '';
+            const labels = rt.categoryDisplayLabels || rt.categoryLabels;
+            // .type("...|TEXTLEGEND") — the FIFTH real legend-related
+            // type() token: title/snippet/description text only, no
+            // category rows at all (swatches, bars, chips — none of it),
+            // per explicit correction. Everything below that builds the
+            // rows/totals/onRedraw-recompute wiring is skipped outright
+            // rather than built-then-hidden — there is nothing for any of
+            // it to feed once no rows ever render. The country-filter
+            // dropdown and Chart-size slider stay: neither is a
+            // "categorical item" or "colorscheme swatch", both are
+            // independent controls unrelated to the row list.
+            const isTextOnly = rt.flags.has('TEXTLEGEND');
+
+            // Map-view-aware per explicit request: totals reflect only
+            // what's CURRENTLY on screen (the map's own bounds, plus the
+            // same far-hemisphere exclusion _buildChartLayers itself
+            // applies under globe projection — see isOnVisibleHemisphere)
+            // rather than the whole dataset — recomputed on every redraw
+            // (engineApi.onRedraw, below) so panning/zooming/rotating
+            // updates the bars and values live, the same way the actual
+            // rendered bubbles change. Same simple rectangular bbox
+            // membership test _computeAggregatedItems's own non-AGGREGATE
+            // branch uses (no antimeridian wraparound handling — matches
+            // that existing convention, not a new gap this introduces).
+            let totals, maxTotal, order, rowsScroll;
+            // No-op default: TEXTLEGEND never reassigns this (see below),
+            // so the LATER unconditional-looking `renderRows()` call
+            // safely does nothing rather than needing its own isTextOnly
+            // guard at every call site.
+            let renderRows = () => {};
+            if (!isTextOnly) {
+            function computeTotals() {
+              const bounds = map.getBounds();
+              const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+              const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
+              const globeCenter = proj.type === 'globe' ? map.getCenter() : null;
+              totals = new Array(rt.categoryLabels.length).fill(0);
+              // _activeFeatures (set by setFacetFilter/clearFacetFilter,
+              // e.g. the country-select dropdown below) is the facet-
+              // filtered subset when a filter is active, null otherwise —
+              // reading it here keeps the legend's own numbers consistent
+              // with whatever the country filter is currently narrowing
+              // the map down to, not just with the viewport/hemisphere.
+              (rt._activeFeatures || rt.features).forEach(f => {
+                const idx = rt.categoryIndexByLabel ? rt.categoryIndexByLabel.get(f.properties[rt.binding.value]) : null;
+                if (idx == null) return;
+                const [lng, lat] = f.geometry.coordinates;
+                if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
+                if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
+                totals[idx] += useSum ? (parseFloat(f.properties[valueField]) || 0) : 1;
+              });
+              maxTotal = Math.max(0, ...totals);
+              order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
+            }
+            computeTotals();
+
+            // Only THIS wrapper scrolls (flex:1 1 auto + min-height:0 lets
+            // it shrink to whatever's left of the panel's own 66%-height
+            // cap once the fixed header/description/slider take their
+            // share, then overflow-y:auto scrolls just the row list) —
+            // the header above and description/slider below stay put.
+            rowsScroll = document.createElement('div');
+            rowsScroll.style.cssText = 'flex:1 1 auto;min-height:0;overflow-y:auto;';
+            const rowsEl = document.createElement('div');
+            rowsEl.className = 'ix-legend-rows';
+            // .type("...|SIMPLELEGEND") — real ixmaps-flat's OTHER legend
+            // variant (confirmed against a real-engine screenshot, per
+            // explicit correction): swatch + label chips only, no bar, no
+            // value column. SIMPLELEGEND is just another pipe-delimited
+            // type() token — MapBuilder#type() already puts every token
+            // into this.flags regardless of whether anything reads it, so
+            // no new parsing was needed, only this render-mode branch.
+            // flex-wrap here (vs. the bar mode's block rows) — chips wrap
+            // to the panel's own width the same loose way the real
+            // engine's screenshot shows (an uneven number of chips per
+            // row, driven by each label's own text length, not a fixed
+            // column grid).
+            // .type("...|COMPACTLEGEND") — the THIRD real legend variant
+            // (again confirmed against a real-engine screenshot, per
+            // explicit correction): the bar-mode's own two-line label/bar/
+            // value row, but wrapped into a multi-column flex-wrap grid
+            // instead of one full-width row per category — each item's
+            // own width follows its content (a bigger value's longer bar
+            // makes its own item wider, so fewer fit per line; Coal alone
+            // filled its own row in the reference screenshot while the
+            // smaller categories packed 3-4 per row) rather than a fixed
+            // column count.
+            if (rt.flags.has('SIMPLELEGEND') || rt.flags.has('COMPACTLEGEND')) {
+              rowsEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+            }
+            rowsScroll.appendChild(rowsEl);
+
+            // Two lines per row — label on its own full-width line, then
+            // swatch+bar+value below — per explicit correction: a single
+            // shared line left too little room for the bar to read as
+            // proportional (it was squeezed between the label text and a
+            // fixed-width value column). The bar itself lives inside a
+            // flex:1 "track" div sized to whatever's left after the fixed
+            // swatch/value columns, and is a PERCENTAGE of that track's
+            // own width (not a pixel value) — real formula's per-unit-
+            // factor/cap (legend.js:980-984/946-950) collapses to a plain
+            // linear percentage-of-max once the bar's available width
+            // isn't a fixed constant this code has to guess at.
+            const isSimple = rt.flags.has('SIMPLELEGEND');
+            const isCompact = rt.flags.has('COMPACTLEGEND');
+            // Compact mode's bar can't use the full-width mode's
+            // percentage-of-flex-track trick (there's no full-width track
+            // to be a percentage OF once the row itself is content-sized,
+            // not stretched) — a plain pixel width, proportional to value
+            // and capped, same shape as the full-width formula just
+            // expressed in absolute px instead of a % of an elastic track.
+            const COMPACT_MAX_BAR_PX = 70;
+            renderRows = function() {
+              rowsEl.innerHTML = order.map(i => {
+                const rgb = rt.categoryColorsRgb[i];
+                const color = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+                const marked = rt._markedClasses.has(i);
+                const dimmed = rt._markedClasses.size > 0 && !marked;
+                const rowStyle = 'padding:4px 3px;border-radius:4px;cursor:pointer;opacity:' + (dimmed ? 0.4 : 1) + ';'
+                  + 'background:' + (marked ? 'rgba(255,255,255,0.14)' : 'transparent') + ';';
+                if (isSimple) {
+                  // Swatch + label only, no bar/value — see rowsEl's own
+                  // comment above for why (SIMPLELEGEND).
+                  return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle
+                    + 'display:inline-flex;align-items:center;gap:5px;padding:4px 8px;">'
+                    + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
+                    + '<span>' + labels[i] + '</span>'
+                    + '</div>';
+                }
+                const pct = maxTotal ? Math.max(0, Math.min(100, (totals[i] / maxTotal) * 100)) : 0;
+                if (isCompact) {
+                  // Same two-line label/bar/value shape as full-width bar
+                  // mode below, just content-sized (flex:0 0 auto, no
+                  // min-width:0 flex-1 track) so multiple items pack onto
+                  // one line inside rowsEl's own flex-wrap — see
+                  // COMPACTLEGEND's own comment on rowsEl above.
+                  const barPx = Math.max(2, (pct / 100) * COMPACT_MAX_BAR_PX);
+                  return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle + 'flex:0 0 auto;">'
+                    + '<div style="margin-bottom:3px;white-space:nowrap;">' + labels[i] + '</div>'
+                    + '<div style="display:flex;align-items:center;gap:6px;">'
+                    + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
+                    + '<span style="flex:0 0 auto;width:' + barPx + 'px;height:6px;background:' + color + ';border-radius:3px;"></span>'
+                    + '<span style="flex:0 0 auto;white-space:nowrap;">' + rt._formatTooltipValue(totals[i]) + legendUnit + '</span>'
+                    + '</div>'
+                    + '</div>';
+                }
+                return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle + '">'
+                  + '<div style="margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + labels[i] + '</div>'
+                  + '<div style="display:flex;align-items:center;gap:6px;">'
+                  + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
+                  + '<span style="flex:1 1 auto;min-width:0;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">'
+                  + '<span style="display:block;height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px;"></span>'
+                  + '</span>'
+                  + '<span style="flex:0 0 auto;text-align:right;min-width:60px;">' + rt._formatTooltipValue(totals[i]) + legendUnit + '</span>'
+                  + '</div>'
+                  + '</div>';
+              }).join('');
+              // GL-PORT COMPAT: real ixmaps-flat's row markup wires its
+              // click handler inline (onclick="ixmaps.markThemeClass(...)"
+              // — legend.js:817), toggle decided by the caller. Same
+              // split here: the toggle check lives in this click
+              // handler, the actual add/remove-and-redraw primitive is
+              // the module-level ixmaps.markThemeClass/unmarkThemeClass
+              // (see their own comment) — so a page's OWN custom UI
+              // calling those same two globals drives this exact legend
+              // too, not just these rows.
+              rowsEl.querySelectorAll('.ix-legend-row').forEach(rowEl => {
+                rowEl.addEventListener('click', () => {
+                  const idx = parseInt(rowEl.dataset.idx, 10);
+                  if (rt._markedClasses.has(idx)) window.ixmaps.unmarkThemeClass(rt.name, idx);
+                  else window.ixmaps.markThemeClass(rt.name, idx);
+                });
+              });
+            };
+
+            // Recompute+re-render on EVERY redraw, not just mark toggles —
+            // this is what makes the legend map-view-aware: a plain pan/
+            // zoom/rotate fires this too (via the map's own 'move'
+            // listener -> scheduleRefresh -> notifyRedraw, debounced the
+            // same 400ms as the facets sidebar's own onRedraw use), same
+            // signal already used elsewhere in this file for "the visible
+            // data just changed, recompute".
+            engineApi.onRedraw(() => { computeTotals(); renderRows(); });
+            }
+
+            // rt._triggerRedraw: see its own doc comment on LayerRuntime
+            // (set here rather than at construction time since refresh()
+            // doesn't exist yet when the runtime is built). Kept
+            // unconditional (even for TEXTLEGEND, which never registers
+            // the onRedraw recompute above) — a page can still call
+            // ixmaps.markThemeClass/unmarkThemeClass directly with no
+            // visual row list to click, and that should still redraw the
+            // MAP's own dim/isolate effect even without a legend UI for
+            // it, matching real-engine global-API availability regardless
+            // of legend style.
+            rt._triggerRedraw = () => { refresh(); };
+
+            const header = document.createElement('div');
+            let headerHtml = '';
+            if (rt.meta.title) headerHtml += '<div style="font-weight:600;font-size:13px;margin-bottom:2px;">' + rt.meta.title + '</div>';
+            if (rt.meta.snippet) headerHtml += '<div style="opacity:0.75;margin-bottom:8px;">' + rt.meta.snippet + '</div>';
+            header.innerHTML = headerHtml;
+            panel.appendChild(header);
+
+            // Selection/filter by field — opt-in via .style({legendfilter:
+            // "<field>"}), e.g. "country_long" on the power-plants sample.
+            // A NEW, ixmaps-gl-only convention: real ixmaps-flat's own
+            // style.filterfield names the DEFAULT field an unqualified
+            // .filter("text") search term matches against (maptheme.js:
+            // 1275-1276/7359-7362) — a different concept entirely, so this
+            // deliberately uses its own name rather than overloading that
+            // one. Options come from the FULL dataset (a world-spanning
+            // bbox, not the current viewport) and stay fixed regardless of
+            // pan/zoom — unlike the map-view-aware category totals below,
+            // a picker whose own choices kept shrinking as you panned
+            // would make it impossible to select a country not currently
+            // in view. Selecting a value reuses the engine's own existing
+            // facet-filter primitive (engineApi.setFacetFilter/
+            // clearFacetFilter — already propagates to sibling runtimes
+            // sharing the same data source and calls refresh()), so this
+            // is UI wiring only, no new filtering logic.
+            const filterField = rt.style.legendfilter;
+            if (filterField) {
+              const facet = engineApi.getFacets(rt.name, [filterField], { bbox: [-180, -85, 180, 85] })[0];
+              const values = (facet && facet.type === 'textual')
+                ? facet.values.slice().sort((a, b) => String(a).localeCompare(String(b)))
+                : [];
+              const filterEl = document.createElement('select');
+              filterEl.style.cssText = 'width:100%;margin-bottom:8px;background:rgba(255,255,255,0.08);'
+                + 'color:#eee;border:1px solid rgba(255,255,255,0.25);border-radius:4px;padding:4px 6px;font:inherit;';
+              filterEl.innerHTML = '<option value="">All (' + values.length + ')</option>'
+                + values.map(v => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join('');
+              filterEl.addEventListener('change', () => {
+                if (filterEl.value) engineApi.setFacetFilter(rt.name, filterField, filterEl.value);
+                else engineApi.clearFacetFilter(rt.name, filterField);
+              });
+              panel.appendChild(filterEl);
+            }
+
+            if (!isTextOnly) { panel.appendChild(rowsScroll); renderRows(); }
+
+            if (rt.meta.description) {
+              const desc = document.createElement('div');
+              desc.style.cssText = 'margin-top:8px;font-size:11px;opacity:0.8;';
+              // Raw HTML, matching the real engine's own description
+              // rendering and this engine's existing .legend(html)/
+              // tooltip conventions (e.g. _buildTooltipContext) — real
+              // pages already embed their own source-citation markup
+              // inside meta.description (see the power-plants sample).
+              desc.innerHTML = rt.meta.description;
+              panel.appendChild(desc);
+            }
+
+            // Chart-size slider — real engine's own range (legend.js:
+            // 3196-3202), 100% == scale:1, wired to changeThemeStyle(
+            // themeId,"scale:"+pct/100,"set")+redrawTheme there; this
+            // engine's equivalent is rt.setStyle({scale}) + refresh(),
+            // the same primitive engineApi.setThemeStyle uses above.
+            const sliderRow = document.createElement('div');
+            sliderRow.style.cssText = 'margin-top:10px;font-size:11px;opacity:0.8;';
+            const initialPct = Math.round((parseFloat(rt.style.scale) || 1) * 100);
+            sliderRow.innerHTML = 'Chart size: <span class="ix-legend-scale-val">' + initialPct + '</span>%';
+            panel.appendChild(sliderRow);
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.min = '25';
+            slider.max = '200';
+            slider.value = String(initialPct);
+            slider.style.cssText = 'width:100%;margin-top:2px;';
+            slider.addEventListener('input', () => {
+              const pct = parseInt(slider.value, 10);
+              sliderRow.querySelector('.ix-legend-scale-val').textContent = pct;
+              rt.setStyle({ scale: pct / 100 });
+              refresh();
+            });
+            panel.appendChild(slider);
+          });
+      }
+
+      _lastMapApi = engineApi;
       return engineApi;
     }
   }
@@ -1085,7 +2010,94 @@
   function createMap(containerId, options, mapFn) {
     const builder = new MapBuilder(containerId, options);
     if (mapFn) mapFn(builder);
-    return builder.build();
+    // If build() rejects (bad data URL, misconfigured CHOROPLETH join,
+    // etc.) before ever reaching MapLibre's own 'load' event, the splash
+    // showSplash() put up at the top of build() would otherwise never get
+    // its hideSplash() call and sit there forever, masking the error
+    // visually as "still loading". Re-thrown so the caller's own
+    // .catch()/await still sees the real failure — this only guarantees
+    // the splash doesn't outlive it.
+    const promise = builder.build().catch(err => {
+      const el = document.getElementById(containerId);
+      const splash = el && el.querySelector('.ixmaps-splash');
+      if (splash) hideSplash(splash);
+      throw err;
+    });
+
+    // GL-PORT COMPAT: real ixmaps-flat's ixmaps.Map(id, options) — no
+    // third mapFn argument — returns a SYNCHRONOUSLY CHAINABLE object:
+    // .view()/.options()/.on()/.layer(name).data()...define() are called
+    // directly on the return value, not inside a callback. This engine's
+    // OWN established convention (used by every example page built so
+    // far) is the mapFn callback above, kept completely unchanged when
+    // one is passed. When it's NOT passed, `promise` (already returned by
+    // build(), started above) gets these same chain methods attached
+    // directly, mutating the SAME `builder` build() is reading from.
+    // This works — not a race — because of plain JS run-to-completion:
+    // build() is an async function that only reads _viewCenter/
+    // _engineOptions/_layerBuilders AFTER its own first `await`
+    // (ensureLibrariesLoaded(), see build()'s own body), and nothing
+    // between here and the end of the CALLER's current synchronous
+    // script (its own .view()/.options()/.layer(...).define() chain)
+    // yields back to the event loop — so every one of those calls lands
+    // on `builder` before build() ever gets far enough to consume them,
+    // exactly as if they'd all been made inside a mapFn callback.
+    if (!mapFn) {
+      // Tracks whether build() has actually finished — needed by .layer()
+      // below, since a call BEFORE vs. AFTER that point needs two
+      // completely different mechanisms to actually take effect (see its
+      // own comment).
+      let resolvedApi = null;
+      promise.then(api => { resolvedApi = api; }, () => {});
+      promise.view = (...args) => { builder.view(...args); return promise; };
+      promise.options = (...args) => { builder.options(...args); return promise; };
+      promise.attribution = (...args) => { builder.attribution(...args); return promise; };
+      promise.legend = (...args) => { builder.legend(...args); return promise; };
+      promise.local = (...args) => { builder.local(...args); return promise; };
+      promise.on = (...args) => { builder.on(...args); return promise; };
+      promise.layer = (nameOrBuilder) => {
+        if (typeof nameOrBuilder !== 'string') {
+          // object form (a pre-built LayerBuilder, e.g. from the global
+          // ixmaps.layer(name, cb) factory): existing semantics, chain
+          // back on the MAP for further .layer(a).layer(b) calls.
+          builder.layer(nameOrBuilder);
+          return promise;
+        }
+        const lb = new LayerBuilder(nameOrBuilder);
+        if (!resolvedApi) {
+          // Still building (the common case: this whole chain runs
+          // synchronously right after ixmaps.Map(), see the run-to-
+          // completion note above) — queue into the pending builder,
+          // consumed by build()'s own FIRST (and only) pass over
+          // _layerBuilders. .define() stays LayerBuilder's default no-op;
+          // simply being queued here is already enough.
+          builder._layerBuilders.push(lb);
+        } else {
+          // GL-PORT COMPAT: map.layer(name).data()...define() called
+          // AFTER the map has ALREADY finished building — e.g. a real
+          // page's own year/dataset switcher re-running its layer-
+          // building function on a later user action. build()'s
+          // _layerBuilders consumption already happened once and never
+          // runs again, so queuing into it here would silently do
+          // nothing (confirmed live: exactly this, switching years on a
+          // real ported page — the map just kept showing the old data).
+          // Routed through defineLayer() instead, with any EXISTING
+          // theme of the SAME name removed first — matching real
+          // ixmaps-flat's own "defining a theme with the same name
+          // replaces it in place" convention. Scoped to only this
+          // specific calling pattern rather than changing defineLayer()
+          // itself, which stays purely additive for every other caller —
+          // see its own comment for why (the CHOROPLETH/FEATURE-donor
+          // pairing needs two runtimes sharing one name to coexist).
+          lb.define = () => {
+            resolvedApi.removeTheme(nameOrBuilder);
+            return resolvedApi.defineLayer(lb);
+          };
+        }
+        return lb;
+      };
+    }
+    return promise;
   }
 
   // ---------------------------------------------------------------
@@ -1436,6 +2448,27 @@
     return { lng: x / scale * 360 - 180, lat: 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))) };
   }
 
+  // .style({gridwidth}) — the real engine's own aggregation cell width
+  // (maptheme.js: nGridWidth, confirmed via direct source read as METERS,
+  // a fixed real-world size — NOT screen pixels like this port's own
+  // .style({aggregation: [...]}) idiom, and NOT the same thing as
+  // .style({gridwidthpx}) (the separate, already-pixel-based key the
+  // GRIDSIZE/PLOT pipeline uses — see _ensureGridIndex). A meters-based
+  // cell keeps the SAME real-world footprint at every zoom (more records
+  // fall into it as you zoom out, fewer as you zoom in), unlike a
+  // pixel-based radius, which keeps the same ON-SCREEN size and so
+  // covers a shrinking real-world area as you zoom in. Uses the same
+  // 512px-tile world-pixel space as lngLatToWorldPixel above, so a
+  // radius computed here round-trips correctly through the same
+  // aggregation/RELOCATE grid math that already consumes clusterRadiusPx
+  // in world-pixel terms.
+  function metersToWorldPixels(meters, lat, zoom) {
+    const scale = 512 * Math.pow(2, zoom);
+    const metersPerPixelAtEquator = (2 * Math.PI * EARTH_RADIUS_M) / scale;
+    const metersPerPixel = metersPerPixelAtEquator * Math.cos(lat * Math.PI / 180);
+    return meters / metersPerPixel;
+  }
+
   // .binding({alpha, alpha100: "$density$"}) — real engine's population-
   // density opacity mode (maptheme.js:9134-9143/9273, __getGeodesicRingArea
   // at 16239-16258, confirmed by direct source read): divides the alpha
@@ -1566,6 +2599,80 @@
 
   const BUBBLE_ICON_SIZE = 48;
 
+  // deck.gl@9.4's MapLibre-globe interleaving (see LIB_URLS `deck` comment)
+  // renders every IconLayer icon as a flat billboard quad in 3D space; the
+  // GPU's default back-face culling can hide that quad depending on which
+  // way it happens to face relative to the globe's curved surface at the
+  // point it's anchored to — confirmed live: bubble/glow icons were
+  // completely invisible on the globe (0 rendered, no console error) while
+  // the GeoJsonLayer country fill on the SAME globe correctly curved into
+  // view. `billboard: true` (deck.gl's own IconLayer default already, kept
+  // explicit here as documentation) keeps the quad screen-facing; disabling
+  // culling on top of that is still needed for it to actually draw. v9's
+  // `parameters` use luma.gl's WebGPU-style string constants, not v8's
+  // GL-constant object keys (e.g. `{[GL.CULL_FACE]: false}`) — confirmed
+  // live: `cullMode: 'none'` is accepted with no console warning and the
+  // icons render.
+  //
+  // `depthCompare: 'always'` (same fix, same reason, as the FEATURE/
+  // FEATURES GeoJsonLayer — see _buildFeaturesLayers) — confirmed live,
+  // separately, on a SECOND real bug on top of the culling one above:
+  // even once visible, every bubble/glow icon rendered as a half-moon/kite
+  // shape instead of a full circle, worse near the globe's limb and
+  // closer to correct near the view center. The icon's billboard quad
+  // extends a few pixels beyond its anchor point on the sphere surface in
+  // every direction; near the limb, the surface curves away from the
+  // camera fast enough that part of that quad falls "behind" the sphere's
+  // own depth from the GPU's point of view and gets clipped, even though
+  // the whole point of `billboard: true` is that the quad should always
+  // fully face the camera regardless of surface curvature at that point.
+  // Same underlying mechanism as the country-fill "holes" bug: two
+  // independently-rendered systems (deck.gl's icon quad, MapLibre's own
+  // globe-sphere mesh) competing for the same depth-buffer real estate.
+  const ICON_LAYER_GLOBE_PARAMETERS = { cullMode: 'none', depthCompare: 'always' };
+
+  // GLOBE_HORIZON_DEG / isOnVisibleHemisphere: `depthCompare: 'always'`
+  // above (needed to stop the near-surface z-fighting/half-moon bug —
+  // see ICON_LAYER_GLOBE_PARAMETERS' own comment) makes this icon layer
+  // ALWAYS pass the depth test, i.e. it never gets occluded by anything,
+  // including MapLibre's own near-side globe surface — combined with
+  // `cullMode:'none'` (also required, for billboards near the limb), a
+  // bubble anchored on the FAR hemisphere has literally nothing left to
+  // hide it. Confirmed live as a real, user-reported regression from
+  // that fix: rotating the globe showed bubbles from "the other side"
+  // bleeding straight through. The FEATURE/CHOROPLETH GeoJsonLayer polygon
+  // fill doesn't have this problem despite the same depthCompare override
+  // (see _buildFeaturesLayers' own comment) because ITS far-side culling
+  // comes from ordinary GPU back-face culling (orientation-based, keyed
+  // off the polygon winding order flipping on the sphere's far side) —
+  // untouched by depthCompare either way. A billboarded icon quad has no
+  // such orientation to cull by (it always faces the camera on purpose),
+  // so this engine culls by geography instead: a great-circle angular
+  // distance from the map's current center (globe projection's own
+  // "facing the camera" point) beyond ~90 degrees is, by definition, on
+  // the far hemisphere. 90 exactly (not padded smaller) since the goal is
+  // only to stop the far side bleeding through, not to hem in near-limb
+  // points that are still legitimately visible (if foreshortened).
+  const GLOBE_HORIZON_DEG = 90;
+  function isOnVisibleHemisphere(lng, lat, center) {
+    const toRad = d => d * Math.PI / 180;
+    const phi0 = toRad(center.lat), phi1 = toRad(lat);
+    const dLambda = toRad(lng - center.lng);
+    const cosAngle = Math.sin(phi0) * Math.sin(phi1) + Math.cos(phi0) * Math.cos(phi1) * Math.cos(dLambda);
+    return cosAngle > Math.cos(GLOBE_HORIZON_DEG * Math.PI / 180);
+  }
+
+  // Alpha (0-255) an icon renders at once ixmaps.markThemeClass has
+  // isolated at least one category on this theme and this particular icon
+  // ISN'T one of the marked ones — see LayerRuntime#_iconAlpha. Matches
+  // the real engine's "isolate_gray" evidence mode (dim, don't remove) —
+  // near-zero rather than a visible partial tint, per explicit correction
+  // (an earlier ~25% alpha read as too visible/not actually "dimmed").
+  // Kept just above 0 (not fully transparent) so a marked category's own
+  // position is still technically hit-testable/inspectable rather than
+  // functionally deleted.
+  const DIMMED_ICON_ALPHA = 8;
+
   // deck.gl 8.9.35's IconLayer auto-packing atlas (icon-manager.ts) has NO
   // eviction and NO cap of its own: its texture is 1024px wide (fixed) but
   // grows TALLER via power-of-two resize forever, for every distinct icon
@@ -1647,11 +2754,30 @@
       this.flags = builder._flags || new Set();
       this.style = builder._style || {};
       this.meta = builder._meta || {};
+      if (builder._titleField && !this.meta.title) this.meta.title = builder._titleField;
+      // GL-PORT COMPAT: retained only for ixmaps.getThemeObj()'s szFilter
+      // (real ixmaps-flat global compat shim, see _globalThemeRegistry) —
+      // this engine's own filtering is fully static/load-time (see
+      // applyWhereFilter in MapBuilder.build()), so nothing else here ever
+      // reads it back off the runtime.
+      this._filterExpr = builder._filterExpr || '';
       this.mapOptions = mapOptions || {};
       this.features = fc.features;
       this._iconCache = new Map();
       this._glowIconCache = new Map();
       this._clusterIndices = null;
+      // Categories isolated via ixmaps.markThemeClass/unmarkThemeClass
+      // (the native legend's own row clicks — see build()'s legend
+      // block). Empty = show every category at full opacity, the default.
+      // See _iconAlpha for how this dims (not removes) the rest once
+      // non-empty.
+      this._markedClasses = new Set();
+      // Set once per redraw cycle inside build()'s legend block, to
+      // `() => { refresh(); renderRows(); }` — lets the module-level
+      // ixmaps.markThemeClass/unmarkThemeClass (which only have a bare
+      // name -> runtime lookup, not a closure over this map's own
+      // refresh()) still trigger a live redraw + legend repaint.
+      this._triggerRedraw = null;
       // _iconGeneration is appended to every icon-atlas-based deck.gl
       // layer id this runtime produces (see e.g. _buildBubbleIcon's
       // caller) — bumping it forces deck.gl to build a genuinely new
@@ -1797,7 +2923,14 @@
       // spatial grid (_ensureGridIndex), not Supercluster's per-category
       // clustering — building _featuresByCategory for them would be wasted
       // work (up to the full dataset, never consumed by buildDeckLayers).
-      if (this.flags.has('AGGREGATE') && !this.flags.has('GRIDSIZE')) {
+      //
+      // GL-PORT COMPAT: see _usesAggregationIndex()'s own comment — also
+      // triggered by CHART+SYMBOL alone, without an explicit AGGREGATE
+      // flag, so a real-ixmaps-flat page's own "CHART|BUBBLE|SIZE|SHOW"
+      // (no AGGREGATE — the real engine's per-record BUBBLE rendering
+      // doesn't need it) doesn't silently render nothing once ported
+      // unmodified.
+      if (this._usesAggregationIndex()) {
         this._buildAggregationIndex(this.features);
       }
 
@@ -2079,6 +3212,13 @@
 
       this.categoryLabels = this.partsA.map(p => `${this._formatTooltipValue(p.min)} - ${this._formatTooltipValue(p.max)}`);
       this.categoryColorsRgb = colorsRgb;
+      // Marks "numeric range/class coloring" (as opposed to CATEGORICAL
+      // exact-match, or DOMINANT/COMPOSECOLOR, neither of which call
+      // _buildPartsA at all) — _buildAggregationIndex/_buildChartLayers
+      // use this to decide whether an AGGREGATE bubble's color must be
+      // resolved from the aggregated CELL TOTAL instead of each record's
+      // own raw value (see the reclassify step in _buildChartLayers).
+      this._rangeClassed = true;
     }
 
     _equalIntervalBreaks(nMin, nMax, nParts) {
@@ -2231,12 +3371,18 @@
       }));
     }
 
-    _resolvePartsClass(value) {
-      if (!this.partsA || isNaN(value)) return null;
-      for (let i = 0; i < this.partsA.length; i++) {
-        const isLast = i === this.partsA.length - 1;
-        const inLower = value >= this.partsA[i].min;
-        const inUpper = isLast ? value <= this.partsA[i].max : value < this.partsA[i].max;
+    // partsA override param: lets a caller classify against a DIFFERENT,
+    // dynamically-computed breaks array (e.g. the AGGREGATE reclassify
+    // step in _buildChartLayers, which needs to bucket a post-aggregation
+    // cell TOTAL, not this runtime's own static this.partsA built from
+    // raw per-record values) without disturbing this.partsA itself,
+    // which every other caller here still relies on unchanged.
+    _resolvePartsClass(value, partsA = this.partsA) {
+      if (!partsA || isNaN(value)) return null;
+      for (let i = 0; i < partsA.length; i++) {
+        const isLast = i === partsA.length - 1;
+        const inLower = value >= partsA[i].min;
+        const inUpper = isLast ? value <= partsA[i].max : value < partsA[i].max;
         if (inLower && inUpper) return i;
       }
       return null; // outside every class (e.g. explicit user ranges that don't cover the data) -> caller drops the feature
@@ -2332,7 +3478,51 @@
     // Re-run whenever the active feature set changes (facet filter, or
     // .binding.size rebound via setSizeField) so clustering always reflects
     // what's actually visible/bound right now.
+    // GL-PORT COMPAT: this engine's own idiom for "what to sum per cell" is
+    // a dedicated binding.size (independent of binding.value, which drives
+    // color/class) — but a real-ixmaps-flat page ported straight across,
+    // unmodified, often has only ONE field bound (binding.value) plus an
+    // explicit SUM flag, expecting THAT field to be summed (real engine
+    // semantics: AGGREGATE|SUM on the bound value sums it). Falling back to
+    // a per-record COUNT (this engine's default when binding.size is unset)
+    // would silently produce nonsense totals for such a page — this makes
+    // SUM without a separate size binding behave like the real source
+    // instead of requiring the page to be rewritten with an extra binding.
+    _resolveAggregateValue(props) {
+      if (this.binding.size) return parseFloat(props[this.binding.size]) || 0;
+      if (this.flags.has('SUM') && this.binding.value != null) {
+        const v = parseFloat(props[this.binding.value]);
+        if (!isNaN(v)) return v;
+      }
+      return 1;
+    }
+
     _buildAggregationIndex(sourceFeatures) {
+      // Range-classed (non-CATEGORICAL numeric) coloring: DON'T pre-split
+      // by class here — the real engine aggregates every record together
+      // first and classes color from the resulting CELL TOTAL afterward
+      // (see the reclassify step in _buildChartLayers), never from each
+      // record's own raw value. Splitting by pre-class here would do
+      // exactly that wrong thing (and would also keep same-cell,
+      // different-class records in separate Supercluster indices, so
+      // they'd never even cluster together in the first place). Every
+      // feature goes into ONE bucket; _buildChartLayers resolves the real
+      // 7-class color once it knows each cell's actual aggregated total.
+      if (this._rangeClassed) {
+        this._featuresByCategory = [sourceFeatures.map(f => ({
+          type: 'Feature',
+          geometry: f.geometry,
+          properties: {
+            value: this._resolveAggregateValue(f.properties),
+            raw: f.properties
+          }
+        }))];
+        this._clusterIndices = null;
+        this._clusterRadiusPx = null;
+        this._aggregateStatsCache = null;
+        return;
+      }
+
       const nCategories = this.categoryLabels ? this.categoryLabels.length : 1;
       this._featuresByCategory = new Array(nCategories).fill(null).map(() => []);
       sourceFeatures.forEach(f => {
@@ -2341,7 +3531,7 @@
         // no sizefield bound (style.name's sizeField toggled off) -> COUNT
         // aggregation, one unit per record, matching the real engine's
         // fallback when sizefield is empty
-        const value = this.binding.size ? (parseFloat(f.properties[this.binding.size]) || 0) : 1;
+        const value = this._resolveAggregateValue(f.properties);
         this._featuresByCategory[cat].push({
           type: 'Feature',
           geometry: f.geometry,
@@ -2350,6 +3540,7 @@
       });
       this._clusterIndices = null;
       this._clusterRadiusPx = null;
+      this._aggregateStatsCache = null;
     }
 
     // ---------------------------------------------------------------
@@ -2375,6 +3566,18 @@
       this._rebuildActiveFeatures();
     }
 
+    // `_featuresByCategory` (plain per-category bucketing — NOT yet
+    // Supercluster; that's a separate, later step gated by AGGREGATE
+    // alone, see _computeAggregatedItems) is needed whenever this runtime
+    // will dispatch to _buildChartLayers, i.e. explicit AGGREGATE or
+    // CHART+SYMBOL on its own — _buildChartLayers has no other data
+    // source to read from (a real page's un-AGGREGATE-flagged BUBBLE type
+    // still needs to render, just without any clustering — see
+    // _computeAggregatedItems's own AGGREGATE check for that half).
+    _usesAggregationIndex() {
+      return (this.flags.has('AGGREGATE') || (this.flags.has('CHART') && this.flags.has('SYMBOL'))) && !this.flags.has('GRIDSIZE');
+    }
+
     _rebuildActiveFeatures() {
       if (this.facetFilters.size === 0) {
         this._activeFeatures = null;
@@ -2383,7 +3586,7 @@
         this._activeFeatures = this.features.filter(f =>
           clauses.every(([field, clause]) => matchesFacetClause(f.properties[field], clause)));
       }
-      if (this.flags.has('AGGREGATE')) this._buildAggregationIndex(this._activeFeatures || this.features);
+      if (this._usesAggregationIndex()) this._buildAggregationIndex(this._activeFeatures || this.features);
       // GRIDSIZE (_ensureGridIndex) has its own separate cache, keyed only
       // by zoom/cellPx — a filter change doesn't touch either of those,
       // so without this it would keep showing the pre-filter grid/curves
@@ -2406,7 +3609,7 @@
           return isNaN(v) ? max : Math.max(max, v);
         }, 0)
         : 0;
-      if (this.flags.has('AGGREGATE')) this._buildAggregationIndex(this._activeFeatures || this.features);
+      if (this._usesAggregationIndex()) this._buildAggregationIndex(this._activeFeatures || this.features);
     }
 
     setStyle(patch) {
@@ -2490,8 +3693,33 @@
     // radius resolved for the given zoom, but only when that radius has
     // actually changed since the last build — rebuilding on every pan/zoom
     // tick would be wasteful when most moves don't cross a threshold.
-    _ensureClusterIndices(zoom) {
-      const radiusPx = resolveAggregationPx(this.style.aggregation, zoom, CLUSTER_RADIUS_PX_DEFAULT);
+    // .style({gridwidth}) (meters, see metersToWorldPixels) takes
+    // precedence over .style({aggregation}) (a fixed screen-pixel radius)
+    // when both are set — a real-world-sized cell needs a reference
+    // latitude, taken from the current viewport bbox's center (Mercator's
+    // meters-per-pixel varies by latitude); bbox is null on the very
+    // first build before any 'move' event has fired, in which case this
+    // falls back to the equator (0°) for that one call only.
+    _ensureClusterIndices(zoom, bbox) {
+      let radiusPx;
+      // GL-PORT COMPAT: a real-ixmaps-flat page's own gridwidth is
+      // sometimes a fixed SCREEN-PIXEL size (e.g. style.gridwidth:"3px",
+      // confirmed against a real ported page) rather than this engine's
+      // own real-world-METERS convention (metersToWorldPixels) — a bare
+      // "3" would mean 3 meters here, an absurdly tiny cell, while "3px"
+      // means "3 screen pixels regardless of zoom", exactly what
+      // style.aggregation already expresses. Detected by the "px" suffix
+      // so both conventions can coexist without the page needing to change.
+      const gridwidthPxMatch = typeof this.style.gridwidth === 'string' && /^\s*(\d+(?:\.\d+)?)\s*px\s*$/i.exec(this.style.gridwidth);
+      if (gridwidthPxMatch) {
+        radiusPx = parseFloat(gridwidthPxMatch[1]);
+      } else if (this.style.gridwidth != null) {
+        const meters = parseFloat(this.style.gridwidth);
+        const refLat = bbox ? (bbox[1] + bbox[3]) / 2 : 0;
+        radiusPx = metersToWorldPixels(meters, refLat, zoom);
+      } else {
+        radiusPx = resolveAggregationPx(this.style.aggregation, zoom, CLUSTER_RADIUS_PX_DEFAULT);
+      }
       if (this._clusterIndices && this._clusterRadiusPx === radiusPx) return;
       this._clusterRadiusPx = radiusPx;
       this._clusterIndices = this._featuresByCategory.map(feats => new global.Supercluster({
@@ -2567,6 +3795,30 @@
         ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
         ctx.lineWidth = 1; ctx.strokeStyle = '#fff'; ctx.stroke();
       });
+      const icon = { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key };
+      return this._cacheIcon(key, icon);
+    }
+
+    // Plain flat circle, no stroke — an individual point's icon, sharing
+    // the same IconLayer (and cache/atlas) as _buildBubbleIcon's cluster
+    // icons so both can be sorted and drawn together (see _buildChartLayers
+    // for why). Same visual as the ScatterplotLayer it replaces: opacity
+    // baked into the texture instead of applied as a layer-wide `opacity`,
+    // so it stays correct when combined into one layer with cluster icons
+    // (which already bake in their own fixed alpha).
+    _buildSingleIcon(colorRgb, opacity) {
+      const key = `single-${colorRgb.join(',')}-${opacity}`;
+      if (this._iconCache.has(key)) return this._iconCache.get(key);
+      const size = BUBBLE_ICON_SIZE;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const c = size / 2;
+      ctx.beginPath();
+      ctx.arc(c, c, c, 0, Math.PI * 2);
+      ctx.fillStyle = `rgb(${colorRgb.join(',')})`;
+      ctx.globalAlpha = opacity;
+      ctx.fill();
       const icon = { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key };
       return this._cacheIcon(key, icon);
     }
@@ -2672,7 +3924,22 @@
       }
 
       if (props.counts) {
-        return this.categoryDisplayLabels.map((label, i) => {
+        // categoryDisplayLabels is only ever set for CATEGORICAL runtimes
+        // (_prepare's CATEGORICAL branch) — a range-classed runtime
+        // (_buildPartsA, e.g. this port's own Roma pericolosità layer)
+        // never sets it, leaving it undefined. Calling .map() on it
+        // unguarded (unlike every OTHER categoryDisplayLabels read in this
+        // file, all of which fall back to categoryLabels or '') threw
+        // "Cannot read properties of undefined (reading 'map')" on every
+        // hover/click of a multi-class cluster bubble on such a runtime —
+        // an uncaught exception inside deck.gl's own getTooltip callback,
+        // which (same class of bug as the click-handler crash fixed
+        // earlier this session) can corrupt deck.gl's internal
+        // pointer/interaction state and silently break subsequent pan/
+        // zoom until something resets it. Root cause of the "trackpad
+        // zoom sometimes just stops updating" reports.
+        const labels = this.categoryDisplayLabels || this.categoryLabels || [];
+        return labels.map((label, i) => {
           if (!(props.counts[i] > 0)) return null;
           const rgb = this.categoryColorsRgb[i];
           return `<div>${swatch(rgb)}${label || '(n/d)'}: ${this._formatTooltipValue(props.counts[i])}${unit}</div>`;
@@ -2717,13 +3984,45 @@
     _formatTooltipValue(value) {
       const num = Number(value);
       if (isNaN(num)) return String(value);
-      const decimals = parseFloat(this.style.valuedecimals) || 2;
+      const rawDecimals = parseFloat(this.style.valuedecimals);
+      const decimals = isNaN(rawDecimals) ? 2 : rawDecimals;
       const [intPart, dec] = num.toFixed(decimals).split('.');
       const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
       return dec ? `${grouped}.${dec}` : grouped;
     }
 
-    buildDeckLayers(zoom, bbox) {
+    // Per-icon alpha for the legend's isolate-on-click behavior (see
+    // _markedClasses) — dims rather than removes, matching the real
+    // engine's "isolate_gray" evidence mode: a dimmed point stays visible
+    // at its real position instead of vanishing, so panning/zooming
+    // doesn't lose spatial context for the de-emphasized categories.
+    // A grouped/clustered item (properties.counts, one slot per category)
+    // counts as marked if ANY of its constituent categories is marked —
+    // a mixed cluster shouldn't dim just because one of several
+    // categories inside it happens to be unmarked.
+    _iconAlpha(d) {
+      if (!this._markedClasses.size) return 255;
+      if (d.properties.counts) {
+        for (let i = 0; i < d.properties.counts.length; i++) {
+          if (d.properties.counts[i] > 0 && this._markedClasses.has(i)) return 255;
+        }
+        return DIMMED_ICON_ALPHA;
+      }
+      return this._markedClasses.has(d.properties.cat) ? 255 : DIMMED_ICON_ALPHA;
+    }
+
+    // liveZoom (optional, defaults to `zoom`): the map's ACTUAL current
+    // zoom, even mid-gesture — see _buildChartLayers for why this needs
+    // to be separate from `zoom` (which freezes to the last SETTLED zoom
+    // during an active zoom gesture, for clustering/grid-alignment
+    // reasons unrelated to symbol size).
+    // globeCenter (null under mercator): the map's current geographic
+    // center under globe projection, used ONLY by _buildChartLayers to
+    // cull bubbles/glow icons sitting on the far (hidden) hemisphere —
+    // see that method's own comment for why this is needed at all
+    // (billboarded icons have no orientation-based back-face culling the
+    // way the FEATURE/CHOROPLETH GeoJsonLayer polygons do).
+    buildDeckLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
       this._lastZoom = zoom;
       this._lastBbox = bbox;
       if (this._hidden) return [];
@@ -2766,7 +4065,7 @@
       // superseded.
       if (this._isChoroplethGeometryDonor) return [];
       if (this.flags.has('FEATURE') || this.flags.has('FEATURES')) return this._buildFeaturesLayers();
-      if (this.flags.has('CHART') && this.flags.has('SYMBOL')) return this._buildChartLayers(zoom, bbox);
+      if (this.flags.has('CHART') && this.flags.has('SYMBOL')) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
       console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
       return [];
     }
@@ -2786,7 +4085,28 @@
         getFillColor: filled ? hexOrNamedToRgb(raw) : [0, 0, 0, 0],
         getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [130, 130, 130],
         lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
-        opacity: parseFloat(this.style.fillopacity) || 1
+        opacity: parseFloat(this.style.fillopacity) || 1,
+        // Confirmed live (2026-09-21, deck.gl v9.4/MapLibre-globe upgrade):
+        // this layer's fill rendered with a moire/hatching pattern of
+        // "holes" ONLY under globe projection, never flat Mercator —
+        // uniform across the whole polygon (not localized to specific
+        // edges/vertices) and completely unaffected by disabling `stroked`
+        // or by 5x+ densifying the source geometry's vertices (both ruled
+        // out as the cause by direct A/B testing, not assumed). Root cause:
+        // deck.gl's interleaved polygon surface and MapLibre's own native
+        // globe-sphere mesh independently compute the "same" 3D position
+        // for a point on the Earth's surface, at a depth-buffer precision
+        // that isn't enough to resolve which one is in front — classic
+        // coplanar z-fighting, worse at more zoomed-out views (less depth
+        // precision per screen pixel), invisible under flat rendering
+        // (no real depth contention there). `depthCompare: 'always'` makes
+        // this layer always win the depth test rather than flicker against
+        // MapLibre's own surface. Confirmed this doesn't let hidden
+        // far-side (back hemisphere) polygons bleed through: those are
+        // still correctly excluded by ordinary back-face culling, which is
+        // orientation-based and untouched by this change — verified by
+        // rotating the globe and checking for bleed-through, not assumed.
+        parameters: { depthCompare: 'always' }
       })];
     }
 
@@ -2905,7 +4225,7 @@
           cell = { px: snapped.x, py: snapped.y, sums: new Array(categories.length).fill(0), counts: new Array(categories.length).fill(0) };
           cells.set(key, cell);
         }
-        const v = this.binding.size ? (parseFloat(f.properties[this.binding.size]) || 0) : 1;
+        const v = this._resolveAggregateValue(f.properties);
         cell.sums[ci] += v;
         cell.counts[ci]++;
       });
@@ -3363,9 +4683,56 @@
       return hexOrNamedToRgb(raw);
     }
 
-    _buildChartLayers(zoom, bbox) {
-      if (!this._featuresByCategory) return [];
-      this._ensureClusterIndices(zoom);
+    // Turns a bbox + zoom into this runtime's rendered {individual, groups}
+    // shape — factored out of _buildChartLayers so the SAME clustering/
+    // RELOCATE math can also be run against the FULL data extent (see
+    // _ensureAggregateStats) instead of just the current viewport, without
+    // duplicating the logic.
+    //
+    // RELOCATE only ever changes WHERE an already-aggregated group is
+    // drawn — never which records get grouped together (that's
+    // Supercluster's per-category radius clustering, unaffected either
+    // way). Without RELOCATE, a grid-aggregated value (this pipeline —
+    // "aggregation by field" is a separate, not-yet-implemented mode) is
+    // positioned at the center of its RECT/hexbin grid element, not at
+    // Supercluster's own internally-computed centroid: snap that
+    // cluster's centroid through the SAME shared snapToAggregationGrid
+    // (hex by default, RECT if flagged) _groupCoLocated uses below, at
+    // the same cell width Supercluster itself just clustered with. With
+    // RELOCATE, _groupCoLocated instead positions at the mean of the
+    // ORIGINAL member positions (and additionally merges same-cell
+    // clusters across categories) — the two branches share the same grid
+    // math, they just use it for a different purpose.
+    _computeAggregatedItems(bbox, zoom) {
+      // Real ixmaps-flat's plain CHART/BUBBLE theme — no explicit
+      // AGGREGATE in the type string — draws exactly one icon per
+      // record, full stop. It does NOT merge nearby or even perfectly
+      // coincident records into a summed/counted group; overlapping
+      // records just overlap. Confirmed live as a real, user-facing
+      // deviation from that: with Supercluster running unconditionally
+      // for every CHART+SYMBOL theme (the old behavior here), 91 separate
+      // WRI power-plant records sharing near-identical coordinates (a
+      // real dataset case — co-located generators in one building) were
+      // silently merged into a single SUM bubble (517 MW combined) on an
+      // un-AGGREGATE-flagged page, verified directly via deck.gl's own
+      // pickObject against the rendered layer. AGGREGATE now gates the
+      // clustering step entirely — without it, every feature already in
+      // `_featuresByCategory` (built regardless, see _usesAggregationIndex
+      // — _buildChartLayers still needs SOMETHING to read from) becomes
+      // its own "individual" item here, bypassing Supercluster completely
+      // rather than just usually-resolving-to-1:1 the way it did before.
+      if (!this.flags.has('AGGREGATE')) {
+        const individual = [];
+        this._featuresByCategory.forEach((feats, cat) => {
+          feats.forEach(f => {
+            const [lng, lat] = f.geometry.coordinates;
+            if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
+            individual.push({ geometry: f.geometry, properties: { ...f.properties, cat } });
+          });
+        });
+        return { individual, groups: [] };
+      }
+
       const individual = [];
       const clusterFeatures = [];
       this._clusterIndices.forEach((index, cat) => {
@@ -3376,22 +4743,7 @@
         });
       });
 
-      const layers = [];
       const doRelocate = this.flags.has('RELOCATE');
-      // RELOCATE only ever changes WHERE an already-aggregated group is
-      // drawn — never which records get grouped together (that's
-      // Supercluster's per-category radius clustering, unaffected either
-      // way). Without RELOCATE, a grid-aggregated value (this pipeline —
-      // "aggregation by field" is a separate, not-yet-implemented mode)
-      // is positioned at the center of its RECT/hexbin grid element, not
-      // at Supercluster's own internally-computed centroid: snap that
-      // cluster's centroid through the SAME shared snapToAggregationGrid
-      // (hex by default, RECT if flagged) _groupCoLocated uses below, at
-      // the same cell width Supercluster itself just clustered with. With
-      // RELOCATE, _groupCoLocated instead positions at the mean of the
-      // ORIGINAL member positions (and additionally merges same-cell
-      // clusters across categories) — the two branches share the same
-      // grid math, they just use it for a different purpose.
       const groups = doRelocate ? this._groupCoLocated(clusterFeatures, zoom) : clusterFeatures.map(f => {
         const cellPx = this._clusterRadiusPx || CLUSTER_RADIUS_PX_DEFAULT;
         const [lng, lat] = f.geometry.coordinates;
@@ -3403,60 +4755,261 @@
           properties: { counts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value }
         };
       });
+      return { individual, groups };
+    }
 
-      // GLOW: gradient-texture halo (see _getGlowIcon for why this diverges
-      // from the real engine's literal flat-circle formula).
-      if (this.flags.has('GLOW')) {
-        layers.push(new IconLayer({
-          id: `ix-points-glow-${this.name}-g${this._iconGeneration}`,
-          data: individual, pickable: false,
-          getPosition: d => d.geometry.coordinates,
-          getIcon: d => this._getGlowIcon(this.categoryColorsRgb[d.properties.cat]),
-          getSize: d => valueRadius(d.properties.value, zoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 11,
-          sizeUnits: 'pixels'
-        }));
+    // NOOUTLIER / NORMALIZE / range-classed color breaks are PURE DATA
+    // operations on the aggregated dataset — they must NOT depend on
+    // which slice of the map happens to be panned into view right now.
+    // Confirmed as a real, user-facing bug: computing these from the
+    // current viewport's own individual/groups (as this engine originally
+    // did) meant NORMALIZE's [0,1] scale shifted every time panning or
+    // zooming changed which clusters were "in view" — a cluster whose own
+    // raw total never changed could get remapped to a completely
+    // different normalized fraction from one refresh to the next, purely
+    // because some unrelated cluster entered or left the viewport and
+    // moved the min/max. Measured live: zooming steadily into Roma's
+    // dataset, the SAME nearby cluster's rendered size sawtoothed
+    // (5px -> 19px -> 10px -> 32px -> 17px -> 55px -> 25px) instead of
+    // growing smoothly — the viewport-dependent NORMALIZE noise was
+    // swamping the actual (correctly smooth) zoom-based size term.
+    //
+    // Fix: compute mean/stddev (NOOUTLIER), min/max (NORMALIZE), and class
+    // breaks (range-classed AGGREGATE) from the FULL dataset's aggregation
+    // at this zoom (a world-spanning bbox query, same clustering/RELOCATE
+    // pipeline as _computeAggregatedItems), cached by zoom so a pure pan
+    // never recomputes it — only an actual zoom change (new clustering
+    // radius) or a facet-filter change (_buildAggregationIndex nulls this
+    // cache) does. _buildChartLayers then applies these DATASET-WIDE
+    // numbers to whatever subset is actually in the current viewport,
+    // exactly the "pure data operation, independent of the visualization"
+    // split real ixmaps' own NORMALIZE (maptheme.js:12764-12780) has:
+    // computed once per theme redraw, not per viewport.
+    _ensureAggregateStats(zoom) {
+      if (this._aggregateStatsCache && this._aggregateStatsCache.zoom === zoom) return this._aggregateStatsCache;
+
+      const WORLD_BBOX = [-180, -85, 180, 85];
+      const { individual, groups } = this._computeAggregatedItems(WORLD_BBOX, zoom);
+      let totals = individual.map(d => d.properties.value).concat(groups.map(d => d.properties.total));
+
+      // NOOUTLIER — see the block this replaces for the full real-source
+      // citation (maptheme.js distributeValues, population mean/stddev).
+      let outlier = null;
+      if (this.flags.has('NOOUTLIER') && totals.length) {
+        const mean = totals.reduce((a, b) => a + b, 0) / totals.length;
+        const variance = totals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / totals.length;
+        const threshold = Math.sqrt(variance) * (parseFloat(this.style.outlierscale) || 3);
+        outlier = { mean, threshold };
+        totals = totals.filter(v => Math.abs(v - mean) <= threshold);
       }
 
-      layers.push(new ScatterplotLayer({
-        id: `ix-points-${this.name}`,
-        data: individual, pickable: true,
-        getPosition: d => d.geometry.coordinates,
-        getRadius: d => valueRadius(d.properties.value, zoom, this.style, this.mapOptions, this.flags, this._maxSizeValue),
-        radiusUnits: 'pixels',
-        getFillColor: d => this.categoryColorsRgb[d.properties.cat],
-        stroked: false, opacity: parseFloat(this.style.fillopacity) || 0.85
-      }));
+      // NORMALIZE — see the block this replaces for the full real-source
+      // citation (maptheme.js:12764-12780). Runs on the OUTLIER-survivors,
+      // same order as the real source.
+      let normalize = null;
+      if (this.flags.has('NORMALIZE') && totals.length) {
+        let nMin = Infinity, nMax = -Infinity;
+        for (const v of totals) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+        normalize = { min: nMin, max: nMax };
+        const range = nMax - nMin;
+        totals = totals.map(v => (range ? (v - nMin) / range : (v ? 1 : 0)));
+      }
 
+      // Range-classed AGGREGATE color breaks — see the block this replaces
+      // for the full real-source citation. Computed on whatever the
+      // rendering step will actually classify (post-NORMALIZE values, if
+      // set), same as the real engine's own order of operations.
+      let breaks = null;
+      if (this._rangeClassed && totals.length) {
+        const nParts = this.categoryLabels.length;
+        let nMin = Infinity, nMax = -Infinity;
+        for (const v of totals) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+        breaks = this.flags.has('QUANTILE') ? this._quantileBreaks(totals, nParts)
+          : this.flags.has('NATURAL') ? this._naturalBreaks(totals, nParts)
+          : this._equalIntervalBreaks(nMin, nMax, nParts);
+      }
+
+      this._aggregateStatsCache = { zoom, outlier, normalize, breaks };
+      return this._aggregateStatsCache;
+    }
+
+    // liveZoom (defaults to `zoom` for callers that don't distinguish,
+    // e.g. tests): used ONLY for objectscaling:"dynamic"'s zoom-factor in
+    // the valueRadius() calls below, deliberately kept separate from
+    // `zoom` (frozen to the last settled zoom during an active zoom
+    // gesture — see buildDeckLayers' caller). Clustering/grid-snap math
+    // MUST keep using the frozen `zoom`: reclustering mid-gesture is what
+    // overflows deck.gl's icon atlas (see the comment on refreshLayers).
+    // But the SIZE a cached icon is drawn at costs nothing to update every
+    // frame — _getGlowIcon/_buildBubbleIcon cache by COLOR/proportions
+    // only, never by size or zoom, so scaling the same cached icon
+    // bigger/smaller as the user actively zooms is exactly what
+    // objectscaling:"dynamic" promises (continuous grow-on-zoom-in/
+    // shrink-on-zoom-out, not a one-time jump applied only once the
+    // gesture ends) and carries none of the reclustering risk.
+    _buildChartLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+      if (!this._featuresByCategory) return [];
+      // Supercluster indices are only needed by the AGGREGATE clustering
+      // path inside _computeAggregatedItems below — building them for a
+      // plain (non-AGGREGATE) BUBBLE/CHART theme would be pure waste (a
+      // full re-index of the whole dataset, every redraw, for indices
+      // that branch never reads).
+      if (this.flags.has('AGGREGATE')) this._ensureClusterIndices(zoom, bbox);
+      let { individual, groups } = this._computeAggregatedItems(bbox, zoom);
+      // Far-hemisphere cull under globe projection — see
+      // isOnVisibleHemisphere's own comment for why this is needed at
+      // all (this layer's depthCompare/cullMode overrides leave nothing
+      // else to hide a far-side bubble). Filtered here, before the
+      // NOOUTLIER/splice and VALUES-label steps below read individual/
+      // groups, so a hidden bubble never gets a label built for it either
+      // (NOOUTLIER/NORMALIZE's own stats come from a SEPARATE world-wide
+      // _ensureAggregateStats call, unaffected by this viewport-scoped
+      // filter either way).
+      if (globeCenter) {
+        individual = individual.filter(d => isOnVisibleHemisphere(d.geometry.coordinates[0], d.geometry.coordinates[1], globeCenter));
+        groups = groups.filter(d => isOnVisibleHemisphere(d.geometry.coordinates[0], d.geometry.coordinates[1], globeCenter));
+      }
+      const layers = [];
+
+      if (this.flags.has('NOOUTLIER') || this.flags.has('NORMALIZE') || this._rangeClassed) {
+        const stats = this._ensureAggregateStats(zoom);
+
+        if (stats.outlier) {
+          const { mean, threshold } = stats.outlier;
+          for (let i = individual.length - 1; i >= 0; i--) {
+            if (Math.abs(individual[i].properties.value - mean) > threshold) individual.splice(i, 1);
+          }
+          for (let i = groups.length - 1; i >= 0; i--) {
+            if (Math.abs(groups[i].properties.total - mean) > threshold) groups.splice(i, 1);
+          }
+        }
+
+        if (stats.normalize) {
+          const { min: nMin, max: nMax } = stats.normalize;
+          const range = nMax - nMin;
+          const normalize = v => (range ? (v - nMin) / range : (v ? 1 : 0));
+          individual.forEach(d => { d.properties.value = normalize(d.properties.value); });
+          groups.forEach(d => {
+            d.properties.total = normalize(d.properties.total);
+            // per-category sub-bubble breakdown (this engine's OWN multi-
+            // category cluster rendering, see the "Known divergence" note
+            // in every port using this pipeline) isn't part of the real
+            // engine's NORMALIZE at all, but VALUES prints these numbers
+            // too — leaving them as raw sums while the outer bubble's own
+            // size/label read a [0,1] fraction would show wildly
+            // mismatched numbers on the same bubble. Rescaled by the same
+            // range (not re-offset by nMin — these are PARTS of a total,
+            // not standalone values) for a consistent, readable scale.
+            d.properties.counts = d.properties.counts.map(c => (range ? c / range : c));
+          });
+        }
+
+        if (this._rangeClassed) {
+          const nParts = this.categoryLabels.length;
+          const classify = v => (stats.breaks ? (this._resolvePartsClass(v, stats.breaks) ?? 0) : 0);
+          individual.forEach(d => { d.properties.cat = classify(d.properties.value); });
+          groups.forEach(d => {
+            const cat = classify(d.properties.total);
+            const counts = new Array(nParts).fill(0);
+            counts[cat] = d.properties.total;
+            d.properties.counts = counts;
+          });
+        }
+      }
+
+      // Draw order: the real engine sorts every BUBBLE/CHART theme's
+      // items before drawing BY DEFAULT — fSortBeforeDraw is initialized
+      // true unconditionally (maptheme.js:7828), not behind a flag; the
+      // pre-draw sort (maptheme.js:16742-16848) only gets SKIPPED for
+      // DOT/NOSRT/NOSIZE themes or bare CATEGORICAL without AGGREGATE —
+      // none of which apply to this pipeline (DOT dispatches elsewhere
+      // entirely, and this engine's CHART/SYMBOL runtimes always carry
+      // AGGREGATE). The default comparator (no SORT+UP together) is
+      // sortUpChartObjectsCompare — ASCENDING by size (maptheme.js:19104-
+      // 19106) — confirmed as ixmaps' own default draw order: BIGGER
+      // symbols on top. SVG paints later document-order elements on top,
+      // and deck.gl does the same for flat (non-elevated, no depth test)
+      // symbols, so sorting the DATA array ascending (smallest first/
+      // underneath, biggest last/on top) reproduces the same stacking.
+      //
+      // Individual points and cluster bubbles used to be two SEPARATE
+      // layers (ScatterplotLayer + IconLayer) pushed in a fixed array
+      // order, so every cluster bubble drew over every individual point
+      // regardless of which was actually bigger. A GPU depth-test fix
+      // (elevating each item by a quantized Z-level, tried here and
+      // reverted) turned out unusable: confirmed live to create EXACT Z
+      // ties between meaningfully different-sized bubbles — only ~16
+      // elevation levels fit inside a budget that's simultaneously
+      // pan-safe (bigger spans cause visible parallax drift) and
+      // depth-buffer-precision-safe (smaller steps collapse), nowhere
+      // near enough for the hundreds of distinct sizes one dense viewport
+      // can hold. An exact tie's GPU resolution also isn't stable across
+      // a live zoom's continuously-changing camera matrix, so ties
+      // flickered mid-gesture AND rendered non-deterministically even
+      // once settled.
+      //
+      // Fix: render individual points and cluster bubbles through ONE
+      // shared IconLayer (and one shared GLOW IconLayer), combined into a
+      // single array and sorted together — the same array-order mechanism
+      // already proven reliable for same-type ordering now covers the
+      // individual/cluster split too, with no elevation and no ties.
+      // Individual points render as a plain flat-circle icon
+      // (_buildSingleIcon) instead of a ScatterplotLayer — same look (no
+      // stroke, same fill opacity baked into the icon instead of applied
+      // as a layer-wide opacity), just an icon so it can share a layer
+      // with cluster bubbles. A grouped item is detected by
+      // `properties.counts` (present only on groups — same convention
+      // _buildTooltipContext's own `isGroup` check already uses).
+      const sizeValueOf = d => d.properties.counts ? d.properties.total : d.properties.value;
+      const combined = individual.concat(groups).sort((a, b) => sizeValueOf(a) - sizeValueOf(b));
+      const fillOpacity = parseFloat(this.style.fillopacity) || 0.85;
+
+      // GLOW: gradient-texture halo (see _getGlowIcon for why this diverges
+      // from the real engine's literal flat-circle formula). Individual
+      // and cluster glows keep their own size multiplier (11 vs 9 — a lone
+      // point and a packed cluster read differently at the same radius)
+      // but share one sorted layer, same as the main bubbles below.
       if (this.flags.has('GLOW')) {
         layers.push(new IconLayer({
-          id: `ix-cluster-glow-${this.name}-g${this._iconGeneration}`,
-          data: groups, pickable: false,
+          id: `ix-glow-${this.name}-g${this._iconGeneration}`,
+          data: combined, pickable: false,
           getPosition: d => d.geometry.coordinates,
-          getIcon: d => this._getGlowIcon(this.categoryColorsRgb[dominant(d.properties.counts)]),
-          getSize: d => valueRadius(d.properties.total, zoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 9,
-          sizeUnits: 'pixels'
+          getIcon: d => this._getGlowIcon(this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat]),
+          getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * (d.properties.counts ? 9 : 11),
+          getColor: d => [255, 255, 255, this._iconAlpha(d)],
+          sizeUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
         }));
       }
 
       layers.push(new IconLayer({
-        id: `ix-cluster-${this.name}-g${this._iconGeneration}`,
-        data: groups, pickable: true,
+        id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
+        data: combined, pickable: true,
         getPosition: d => d.geometry.coordinates,
-        getIcon: d => this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb),
-        getSize: d => valueRadius(d.properties.total, zoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 2,
-        sizeUnits: 'pixels'
+        getIcon: d => d.properties.counts
+          ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb)
+          : this._buildSingleIcon(this.categoryColorsRgb[d.properties.cat], fillOpacity),
+        getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 2,
+        getColor: d => [255, 255, 255, this._iconAlpha(d)],
+        sizeUnits: 'pixels',
+        billboard: true,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
       }));
 
       // VALUES: bold value label centered on each bubble (see
-      // formatBubbleValue/valuesFontSizePx above) — added last so it draws
-      // on top of every bubble/glow layer. Entries whose computed font size
-      // would be sub-pixel are dropped rather than rendered at getSize: 0,
-      // matching the real engine's own "too small to bother" gate.
+      // formatBubbleValue/valuesFontSizePx above). Labels are their own
+      // layers, added last in the array so they draw on top of every icon
+      // layer (a small bubble's label can still show over a bigger
+      // neighboring bubble's icon — a known, accepted gap). Entries whose
+      // computed font size would be sub-pixel are dropped rather than
+      // rendered at getSize: 0, matching the real engine's own "too
+      // small to bother" gate.
       if (this.flags.has('VALUES') && !valuesHiddenByScale(this.style, zoom)) {
         const valueScale = parseFloat(this.style.valuescale) || 1;
 
         const pointLabels = individual.reduce((out, d) => {
-          const radius = valueRadius(d.properties.value, zoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+          const radius = valueRadius(d.properties.value, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
           const text = formatBubbleValue(d.properties.value, this.style);
           const fontSize = valuesFontSizePx(radius, text, valueScale);
           if (fontSize > VALUES_MIN_FONT_PX) {
@@ -3477,7 +5030,7 @@
         // number nobody's individual bubble actually shows.
         const groupLabels = groups.reduce((out, d) => {
           const counts = d.properties.counts;
-          const outerRadiusPx = valueRadius(d.properties.total, zoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+          const outerRadiusPx = valueRadius(d.properties.total, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
           const iconSizePx = outerRadiusPx * 2; // matches the cluster IconLayer's own getSize (*2) below
           const pxPerCanvasUnit = iconSizePx / BUBBLE_ICON_SIZE;
           const { present, radii, offsets, fitScale } = computeBubblePackLayout(counts, BUBBLE_ICON_SIZE);
@@ -3577,5 +5130,129 @@
     return NAMED[v] || [130, 130, 130];
   }
 
-  global.ixmaps = { layer, Map: createMap, setExternalData: setExternalDataBridge };
+  // Unlike this engine's tooltip/description HTML (deliberately raw,
+  // real-page-authored markup — see _buildTooltipContext/the legend's own
+  // meta.description rendering), the legend's country-select dropdown
+  // (style.legendfilter, see build()) injects raw DATA VALUES straight
+  // from a CSV a page merely points at — untrusted in the sense that
+  // nothing here authored that string. Escaped before going into
+  // innerHTML so a stray `<`/`&`/quote in a source field can't break the
+  // option markup (or worse).
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // GL-PORT COMPAT: real ixmaps-flat's ixmaps.getThemeObj(szId) — a
+  // global lookup by theme id, independent of which map built it — looked
+  // up from _globalThemeRegistry (see its own comment for the "last
+  // definition wins" caveat). Returns null for an unknown id, same as the
+  // real engine, rather than throwing.
+  function getThemeObj(szId) {
+    const rt = _globalThemeRegistry.get(szId);
+    if (!rt) return null;
+    return {
+      szId: rt.name,
+      szName: rt.name,
+      szFilter: rt._filterExpr || '',
+      szFlag: Array.from(rt.flags).join('|'),
+      fVisible: !rt._hidden
+    };
+  }
+
+  // GL-PORT COMPAT: real ixmaps-flat's global ixmaps.markThemeClass(szId,
+  // index)/unmarkThemeClass(szId, index) (htmlgui.js:2196/2208 — a bare
+  // add/remove pair, with the calling page's own onclick handler deciding
+  // which one to call, i.e. the toggle logic lives in the CALLER, not
+  // here, same as the real engine's doMarkClass wrapper). The native
+  // legend's own row clicks (see build()) call these same two functions
+  // rather than reaching into the runtime directly, so a page's own
+  // custom UI can drive the exact same isolate/dim behavior. Resolved via
+  // _globalThemeRegistry, same "unknown id -> silently no-op" contract as
+  // getThemeObj above (never throws on a bad szId). rt._triggerRedraw is
+  // wired up per-runtime inside build()'s legend block — a runtime built
+  // before that block ran (there is none, currently) would just no-op
+  // here instead of redrawing.
+  function markThemeClass(szId, index) {
+    const rt = _globalThemeRegistry.get(szId);
+    if (!rt) return;
+    rt._markedClasses.add(index);
+    if (rt._triggerRedraw) rt._triggerRedraw();
+  }
+  function unmarkThemeClass(szId, index) {
+    const rt = _globalThemeRegistry.get(szId);
+    if (!rt) return;
+    rt._markedClasses.delete(index);
+    if (rt._triggerRedraw) rt._triggerRedraw();
+  }
+
+  // GL-PORT COMPAT: real ixmaps-flat's ixmaps.data.getFacets(filterExpr,
+  // statsId, fields, szId, scope, mode) — a global facet query keyed by
+  // theme id. filterExpr/statsId/scope/mode have no equivalent here (this
+  // engine's own per-runtime getFacets(fields, opts) is already scoped to
+  // the runtime's OWN static filter + the current viewport bbox — see its
+  // own comment) and are accepted-but-ignored rather than requiring the
+  // caller to stop passing them. Returns [] for an unknown szId, matching
+  // "no facets" rather than throwing.
+  const ixmapsData = {
+    fShowFacetValues: true,
+    getFacets(filterExpr, statsId, fields, szId, scope, mode) {
+      const rt = _globalThemeRegistry.get(szId);
+      return rt ? rt.getFacets(fields, {}) : [];
+    }
+  };
+
+  // GL-PORT COMPAT: real ixmaps-flat's runtime projection-toggle pair
+  // (ixmaps.getProjectString()/.setProjectJSON(project), documented in
+  // the create-ixmap skill's "Switching projection at runtime" section —
+  // a page reads the current project JSON, overwrites project.map.map
+  // with a target projection SVG path plus project.map.center/.zoom, and
+  // hands the whole object back). This engine has no SVG projection file
+  // to swap — MapLibre GL's own native globe projection
+  // (map.setProjection({type:'globe'|'mercator'}), needs the maplibre-gl
+  // build actually loaded to be >=5.0.1, see LIB_URLS above) is the
+  // equivalent mechanism. The exact `project.map.map` STRING a real page
+  // builds is never itself resolved/fetched here — only checked for an
+  // "orthographic.svg" suffix, exactly the one real convention every
+  // known real page's globe toggle actually uses (see
+  // example-world-bubble-projection-toggle.md) — so `ixmaps.szResourceBase`
+  // only needs to be SOME string, not a real, working resource base URL.
+  const ixmapsSzResourceBase = '';
+  function getProjectString() {
+    if (!_lastMapApi || !_lastMapApi.map) return JSON.stringify({ map: {} });
+    const map = _lastMapApi.map;
+    const center = map.getCenter();
+    const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
+    return JSON.stringify({
+      map: {
+        map: proj.type === 'globe' ? 'maps/svg/maps/generic/orthographic.svg' : 'maps/svg/maps/generic/mercator.svg',
+        center: { lat: center.lat, lng: center.lng },
+        zoom: map.getZoom()
+      }
+    });
+  }
+  function setProjectJSON(project) {
+    if (!_lastMapApi || !_lastMapApi.map) return;
+    const map = _lastMapApi.map;
+    const m = (project && project.map) || {};
+    const wantsGlobe = /orthographic\.svg$/i.test(String(m.map || ''));
+    if (typeof map.setProjection === 'function') {
+      try { map.setProjection({ type: wantsGlobe ? 'globe' : 'mercator' }); }
+      catch (e) { console.warn('[ixmaps-gl] setProjectJSON: map.setProjection failed (needs maplibre-gl >=5.0.1)', e); }
+    } else {
+      console.warn('[ixmaps-gl] setProjectJSON: map.setProjection not available on the loaded maplibre-gl build (needs >=5.0.1) — projection unchanged');
+    }
+    const c = m.center;
+    const z = typeof m.zoom === 'number' ? m.zoom : undefined;
+    if (c && typeof c.lat === 'number' && typeof c.lng === 'number') {
+      map.jumpTo(Object.assign({ center: [c.lng, c.lat] }, z !== undefined ? { zoom: z } : {}));
+    } else if (z !== undefined) {
+      map.jumpTo({ zoom: z });
+    }
+  }
+
+  global.ixmaps = {
+    layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
+    szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON,
+    markThemeClass, unmarkThemeClass
+  };
 })(window);
