@@ -1027,6 +1027,13 @@
     }
 
     async build() {
+      // createMap() calls build() synchronously, and an async function runs
+      // synchronously up to its first await — so without this yield, the
+      // splash below read this._engineOptions BEFORE a page's chained
+      // ixmaps.Map(...).options({splash:false | splashText}) had run (only
+      // the Map(id, opts, map => map.options(...)) callback form worked).
+      // One microtask lets the caller's whole synchronous chain land first.
+      await null;
       const el = document.getElementById(this.containerId);
       if (!el) throw new Error(`[ixmaps-gl] container #${this.containerId} not found`);
 
