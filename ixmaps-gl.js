@@ -70,9 +70,9 @@
   // script; MapLibre GL, deck.gl, Supercluster, and Mustache are fetched
   // on first use, matching the real ixmaps-flat engine's own single-
   // <script src="ixmaps.js"> convention instead of this port's earlier
-  // per-page 5-tag boilerplate (still harmless to include statically too
-  // — see ensureLibrariesLoaded's own already-loaded check below, which
-  // makes the fetch a no-op whenever a page's own tags got there first).
+  // per-page 5-tag boilerplate (a page may still include them statically:
+  // ensureLibrariesLoaded below reuses compatible copies and replaces
+  // outdated ones — deck.gl < 9.4, maplibre-gl < 4.5.1 — with a warning).
   // Same CDN builds every example page already pinned; centralized here
   // so bumping a version is a one-file edit, not a 13-file one.
   // ---------------------------------------------------------------
@@ -140,15 +140,58 @@
 
   // Cached so multiple ixmaps.Map() calls on one page (or a page that
   // still has its own static <script> tags for these libraries) only
-  // ever fetch once: `global.deck` (etc.) already existing is treated as
-  // "already loaded", so a page with the old 5-tag boilerplate still
-  // works unchanged — this is purely additive, not a breaking migration.
+  // ever fetch once: a library a page already loaded is reused when it is
+  // compatible — MapLibre >= 4.5.1 and a deck.gl with MapLibreOverlay
+  // (>= 9.4) — and replaced, with a console warning, when it isn't (see
+  // pageMaplibreUsable/pageDeckUsable). Supercluster/Mustache are reused
+  // as found.
   let _librariesPromise = null;
+  // A page's own deck.gl is reused only if it has what this engine needs:
+  // MapLibreOverlay (deck.gl >= 9.4). Older pages still carry a deck.gl
+  // 8.9 <script> tag from before the 9.4 bump — reusing that one made
+  // `new MapLibreOverlay(...)` throw "is not a constructor" and the map
+  // never loaded. Feature-detected, not version-parsed.
+  function pageDeckUsable() {
+    if (!global.deck) return false;
+    if (global.deck.MapLibreOverlay) return true;
+    console.warn(`[ixmaps-gl] this page loads deck.gl ${global.deck.VERSION || '(unknown version)'}, which has no MapLibreOverlay — loading deck.gl ${LIB_URLS.deck.match(/deck\.gl@([\d.]+)/)[1]} instead (it replaces window.deck); remove the page's own deck.gl <script> tag`);
+    // deck.gl's bundle refuses to initialize while an older one's globals
+    // are still there — "deck.gl - multiple versions detected" (window.deck)
+    // and "luma.gl - multiple versions detected" (window.luma) — and merges
+    // into an existing window.loaders. The deck.gl 8.9 bundle sets all
+    // three (plus Hammer and polyfills, which 9.4 doesn't touch): take them
+    // off before loading ours.
+    for (const k of ['deck', 'luma', 'loaders']) {
+      try { delete global[k]; } catch (e) { global[k] = undefined; }
+    }
+    return false;
+  }
+  // Same for a page's own MapLibre: deck.gl 9.4's MapLibreOverlay throws
+  // "interleaved rendering requires MapLibre GL JS 4.5.1 or later" on the
+  // maplibre-gl 3.x such pages load. A version check here, since that's
+  // how deck.gl states the requirement. (The globe projection needs
+  // >= 5.0.1; setProjectJSON already warns about that separately.)
+  const MAPLIBRE_MIN_VERSION = [4, 5, 1];
+  function pageMaplibreUsable() {
+    const m = global.maplibregl;
+    if (!m) return false;
+    const v = String((typeof m.getVersion === 'function' && m.getVersion()) || m.version || '');
+    const parts = v.split('.').map(n => parseInt(n, 10) || 0);
+    for (let i = 0; i < 3; i++) {
+      if ((parts[i] || 0) !== MAPLIBRE_MIN_VERSION[i]) {
+        if ((parts[i] || 0) > MAPLIBRE_MIN_VERSION[i]) return true;
+        break;
+      }
+      if (i === 2) return true;
+    }
+    console.warn(`[ixmaps-gl] this page loads maplibre-gl ${v || '(unknown version)'}; deck.gl needs >= ${MAPLIBRE_MIN_VERSION.join('.')} — loading ${LIB_URLS.maplibreJs.match(/maplibre-gl@([\d.]+)/)[1]}.x instead (it replaces window.maplibregl); remove the page's own maplibre-gl <script> tag`);
+    return false;
+  }
   function ensureLibrariesLoaded() {
     if (!_librariesPromise) {
       _librariesPromise = Promise.all([
-        global.maplibregl ? Promise.resolve() : loadScript(LIB_URLS.maplibreJs),
-        global.deck ? Promise.resolve() : loadScript(LIB_URLS.deck),
+        pageMaplibreUsable() ? Promise.resolve() : loadScript(LIB_URLS.maplibreJs),
+        pageDeckUsable() ? Promise.resolve() : loadScript(LIB_URLS.deck),
         global.Supercluster ? Promise.resolve() : loadScript(LIB_URLS.supercluster),
         global.Mustache ? Promise.resolve() : loadScript(LIB_URLS.mustache),
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)

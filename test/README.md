@@ -60,10 +60,7 @@ delete `.cache/` and run `npm run snapshot`, then review the baseline diff.
 
 `pages.json` → `knownBroken` lists pages that fail for a known, recorded reason. They still
 run every time and are reported as `KNOWN`, not as failures; the runner says when one
-starts working again. Currently:
-
-- `examples/choropleth_range_quantile_fade.html` — the page loads deck.gl 8.9 itself, so the
-  engine skips loading deck.gl 9.4 and fails (`MapLibreOverlay is not a constructor`).
+starts working again. Currently none.
 
 ## How the harness was validated
 

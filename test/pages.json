@@ -32,7 +32,5 @@
     "examples/plot_curves.html",
     "examples/validate_demo.html"
   ],
-  "knownBroken": {
-    "examples/choropleth_range_quantile_fade.html": "page loads deck.gl 8.9.35 + maplibre-gl 3.6.2 itself; ensureLibrariesLoaded() then skips loading deck.gl 9.4 and the engine fails with 'MapLibreOverlay is not a constructor' (engine bug \u2014 fix in the engine, not the page)"
-  }
+  "knownBroken": {}
 }
