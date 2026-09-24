@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Global Power Plants — Facet Browser</title>
+<script src="./ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Arial, sans-serif; background: #0a1420; color: #cfe3ee; }
+
+  #map_div { position: absolute; top: 0; bottom: 0; left: 0; width: 66%; }
+
+  #sidebar {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 34%;
+    box-sizing: border-box; padding: 1.2em 1.2em 1.2em 1.4em; overflow: auto;
+    background: #0f1b2a; border-left: 1px solid #223347; text-align: left;
+  }
+
+  #status {
+    position: absolute; top: 1em; left: 1em; z-index: 10;
+    background: rgba(10,20,32,0.9); border: 1px solid #2a3f4d; color: #cfe3ee;
+    padding: 0.4em 0.8em; border-radius: 4px; font-size: 0.85em;
+  }
+
+  h1 { font-size: 1.4em; margin: 0 0 0.3em 0; color: #fff; font-weight: 600; }
+  #sidebar p { font-size: 0.95em; color: #9fb4c2; margin: 0.5em 0 1em 0; }
+  #sidebar a { color: #4fc3f7; }
+  #sidebar label { font-size: 0.95em; display: flex; align-items: center; gap: 0.4em; margin: 0.4em 0; cursor: pointer; color: #cfe3ee; }
+  #sidebar input[type=checkbox] { accent-color: #4fc3f7; }
+
+  #filter-div {
+    margin: 0.6em 0; padding: 0.4em 0.6em; font-size: 0.82em;
+    background: #16283a; border: 1px solid #2a3f4d; border-radius: 4px;
+    display: none; align-items: flex-start; justify-content: space-between; gap: 0.5em;
+  }
+  #filter-div span { word-break: break-word; color: #cfe3ee; }
+  #filter-div button {
+    flex: none; border: 1px solid #2a3f4d; background: #0f1b2a; color: #cfe3ee; border-radius: 3px;
+    cursor: pointer; font-size: 0.85em; padding: 0 0.5em;
+  }
+
+  #onmap-buttons { position: absolute; bottom: 2em; left: 1.5em; z-index: 5; }
+  #onmap-buttons .row {
+    display: flex; align-items: center; gap: 0.4em; background: rgba(10,20,32,0.85);
+    border: 1px solid #2a3f4d; padding: 0.3em 0.7em; border-radius: 4px; font-size: 0.8em; color: #9fb4c2;
+  }
+  #onmap-buttons input[type=range] { accent-color: #4fc3f7; }
+
+  hr { border: none; border-top: 1px solid #223347; margin: 1em 0; }
+
+  /* facet rows/bars themselves are styled by ixmaps.data.showFacets' own
+     injected default stylesheet (.ix-facet-* classes, see ixmaps-gl.js) —
+     nothing to duplicate here. */
+  #show-facets-div { margin-top: 0.5em; }
+
+  footer { font-size: 0.78em; color: #6a8294; margin-top: 1.5em; }
+</style>
+</head>
+<body>
+
+<div id="map_div"></div>
+<div id="status">loading...</div>
+
+<div id="onmap-buttons">
+  <div class="row">
+    <span style="font-size:0.5em">&#9679;</span>
+    <input type="range" min="0.1" max="2" step="0.01" value="1" id="slSize" style="width:90px;cursor:pointer;">
+    <span style="font-size:1.4em">&#9679;</span>
+    <span style="opacity:0.8;margin-left:0.2em">bubble size</span>
+  </div>
+</div>
+
+<div id="sidebar">
+  <h1>Global Power Plants<br>Facet Browser</h1>
+  <p>Installed capacity by fuel type, from the
+     <a href="https://datasets.wri.org/dataset/globalpowerplantdatabase" target="_blank">World Resources Institute</a>
+     Global Power Plant Database. Click a facet value to filter the map; filters AND together across fields.</p>
+
+  <label><input type="checkbox" id="sizeFieldCheckBox" checked> size bubbles &amp; facets by capacity (MW)</label>
+
+  <div id="filter-div">
+    <span id="filter-text"></span>
+    <button id="clear-filter-btn">&times;</button>
+  </div>
+
+  <hr>
+
+  <div id="show-facets-div"></div>
+
+  <footer>
+    Data: World Resources Institute — Global Power Plant Database.<br>
+    Facet browser built on ixmaps-gl's getFacets/setFacetFilter API.
+  </footer>
+</div>
+
+<script>
+(function () {
+
+  var DATA_URL = "https://raw.githubusercontent.com/wri/global-power-plant-database/master/output_database/global_power_plant_database.csv";
+
+  var FUEL_VALUES = [
+    "Solar", "Hydro", "Wind", "Gas", "Coal", "Oil", "Biomass", "Waste",
+    "Nuclear", "Geothermal", "Storage", "Other", "Cogeneration", "Petcoke", "Wave and Tidal"
+  ];
+  var FUEL_COLORS = [
+    "#ffd600", "#29b6f6", "#26c6da", "#ff9800", "#8d8d8d", "#8d6e63", "#c0ca33", "#6d4c41",
+    "#d7e600", "#ef5350", "#00e5ff", "#b0bec5", "#ff7043", "#4e342e", "#4dd0e1"
+  ];
+
+  var myMap = ixmaps.Map("map_div", {
+      mapType:       "#0a1420",
+      mapProjection: "equalearth",
+      mode:          "info",
+      tools:         false
+    })
+    .view({ center: { lat: 15, lng: 10 }, zoom: 1.8 })
+    .options({
+      objectscaling:   "dynamic",
+      normalSizeScale: "170000000",
+      basemapopacity:  0,
+      flushChartDraw:  1000000
+    });
+
+  // Land / countries backdrop — same GISCO source as the first power-
+  // plants page, no ocean/graticule overlay needed here (a plain dark
+  // background already reads fine at map_div's own 66%-width crop).
+  myMap.layer("countries")
+    .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json", type: "topojson" })
+    .binding({ geo: "geometry", id: "CNTR_ID", title: "NAME_ENGL" })
+    .type("FEATURE|SILENT")
+    .style({ colorscheme: ["#1c2b36"], fillopacity: "1", linecolor: "#2a3f4d", linewidth: 0.5, showdata: "true" })
+    .meta({ name: "countries_theme", tooltip: "{{}}" })
+    .define();
+
+  // Power plants — bubble size = capacity_mw, color = primary_fuel
+  // (categorical). No legendfilter/floating legend here (legend option
+  // omitted, matching accidents_app.html's own architecture) — the
+  // sidebar's facet browser below covers country/fuel/owner filtering
+  // more broadly than a single legendfilter dropdown could anyway.
+  myMap.layer("power_plants")
+    .data({ url: DATA_URL, type: "csv" })
+    .binding({ geo: "latitude|longitude", value: "primary_fuel", size: "capacity_mw", title: "name" })
+    .type("CHART|BUBBLE|SIZE|CATEGORICAL|GLOW|SUM")
+    .style({
+      colorscheme:     FUEL_COLORS,
+      values:          FUEL_VALUES,
+      fillopacity:     0.85,
+      sizepow:         2,
+      scale:           1,
+      normalsizevalue: "50000",
+      valuefield:      "capacity_mw",
+      valuedecimals:   0,
+      units:           " MW",
+      showdata:        "true"
+    })
+    .meta({
+      name:    "power_plants_theme",
+      tooltip: "<b>{{name}}</b><br>{{country_long}}<br>{{primary_fuel}}<br>{{capacity_mw}} MW"
+    })
+    .define();
+
+  myMap.then(function () {
+    try { ixmaps.setMapTool("info"); } catch (e) {}
+  });
+
+  // ---------------------------------------------------------------
+  // facets browser — built entirely on ixmaps' own STANDARD facet API
+  // (ixmaps.data.getFacets/showFacets, window.__setFacetFilter/
+  // __setFilter/__removeFacets — same names as real ixmaps-flat's
+  // ui/js/tools/facet.js + show_facets.js, ported into ixmaps-gl.js
+  // itself, see its own comments there for exact real-vs-port
+  // differences). A page using these needs no rendering/wiring code of
+  // its own at all — only its own field list, theme id, and the small
+  // "active filter" chip display, which the real engine also leaves to
+  // the page (no dedicated getter beyond a facet's own isActive/
+  // activeClause).
+  // ---------------------------------------------------------------
+
+  const THEME_ID = "power_plants";
+  const FACET_FIELDS = [
+    "primary_fuel", "country_long", "other_fuel1", "owner", "source",
+    "geolocation_source", "commissioning_year"
+  ];
+
+  // No explicit sizeField override needed here — getFacets' own default
+  // (see ixmaps-gl.js's rt.getFacets comment) already reads the theme's
+  // OWN binding.size, gated by ixmaps.data.fShowFacetValues, matching
+  // real facet.js's own behavior exactly (facet.js:565-568): weighting
+  // and bubble size share ONE field, so the sizeFieldCheckBox below only
+  // needs to call api.setSizeField — that alone keeps facet weighting in
+  // sync too, via the same onRedraw -> renderFacets loop already wired.
+  function renderFacets(api) {
+    const facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
+    ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
+    renderFilterDisplay(api);
+  }
+
+  function renderFilterDisplay(api) {
+    const active = api.getActiveFacetFilters(THEME_ID);
+    const parts = Object.entries(active).map(([field, clause]) => {
+      if (clause && typeof clause === 'object' && 'like' in clause) return `"${field}" LIKE "${clause.like}"`;
+      return `"${field}" = "${clause}"`;
+    });
+    const div = document.getElementById('filter-div');
+    if (parts.length) {
+      document.getElementById('filter-text').textContent = 'WHERE ' + parts.join(' AND ');
+      div.style.display = 'flex';
+    } else {
+      div.style.display = 'none';
+    }
+  }
+
+  myMap
+    .then(api => {
+      document.getElementById('status').remove();
+
+      renderFacets(api);
+      api.onRedraw(() => renderFacets(api));
+
+      document.getElementById('sizeFieldCheckBox').addEventListener('change', e => {
+        api.setSizeField(THEME_ID, e.target.checked ? "capacity_mw" : null);
+      });
+
+      document.getElementById('clear-filter-btn').addEventListener('click', () => {
+        api.clearAllFacetFilters(THEME_ID);
+      });
+
+      document.getElementById('slSize').addEventListener('input', e => {
+        api.setThemeStyle(THEME_ID, { scale: e.target.value });
+      });
+    })
+    .catch(err => { document.getElementById('status').textContent = 'error: ' + err.message; console.error(err); });
+})();
+</script>
+
+</body>
+</html>

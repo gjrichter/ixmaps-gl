@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Incidenti Stradali Roma — Indice di Pericolosità (ixmaps-gl)</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+<script src="ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F5F5F4; }
+
+  #map_div { position: absolute; top: 0; bottom: 0; left: 0; width: 66%; }
+
+  #sidebar {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 34%;
+    box-sizing: border-box; padding: 1em 1em 1em 1.2em; overflow: auto;
+    background: #F5F5F4; border-left: 1px solid #ddd; text-align: left;
+  }
+
+  #status {
+    position: absolute; top: 1em; left: 1em; z-index: 10;
+    background: rgba(255,255,255,0.9); padding: 0.4em 0.8em; border-radius: 4px; font-size: 0.85em;
+    display: flex; align-items: center; gap: 0.6em;
+  }
+  #status .spinner {
+    width: 14px; height: 14px; flex: none;
+    border: 2px solid rgba(0,0,0,0.15); border-top-color: #0088dd;
+    border-radius: 50%; animation: status-spin 0.8s linear infinite;
+  }
+  @keyframes status-spin { to { transform: rotate(360deg); } }
+
+  h1 { font-size: 1.5em; margin: 0 0 0.3em 0; color: #222; font-weight: 600; }
+  #sidebar p { font-size: 1em; color: #333; margin: 0.5em 0; }
+  #sidebar a { color: #0088dd; }
+
+  #stats-line { font-size: 0.95em; color: #333; margin: 0.6em 0; }
+  #stats-line b { color: #222; }
+
+  #filter-div {
+    margin: 0.6em 0; padding: 0.35em 0.6em; font-size: 0.85em;
+    background: #F7F6EF; border: 1px solid #ddd; border-radius: 4px;
+    display: none; align-items: flex-start; justify-content: space-between; gap: 0.5em;
+  }
+  #filter-div span { word-break: break-word; }
+  #filter-div button {
+    flex: none; border: 1px solid #ccc; background: #fff; border-radius: 3px;
+    cursor: pointer; font-size: 0.85em; padding: 0 0.5em;
+  }
+
+  #onmap-buttons { position: absolute; bottom: 2em; left: 1.5em; z-index: 5; }
+  #onmap-buttons .row {
+    display: flex; align-items: center; gap: 0.4em; background: rgba(255,255,255,0.85);
+    padding: 0.3em 0.7em; border-radius: 4px; font-size: 0.8em; color: #555;
+  }
+
+  hr { border: none; border-top: 1px solid #ddd; margin: 1em 0; }
+
+  #basemap-row { display: flex; align-items: center; gap: 0.4em; margin: 0.6em 0; font-size: 0.85em; color: #555; }
+  #basemap-row button {
+    border: 1px solid #ccc; background: #fff; border-radius: 3px; cursor: pointer;
+    width: 1.8em; height: 1.8em; font-size: 0.95em; line-height: 1;
+  }
+
+  /* overrides ixmaps.data.showFacets' own injected dark default
+     (.ix-facet-* classes) with this page's light theme — see
+     ixmaps-gl.js's ensureFacetStyles comment for why a page's own
+     same-specificity rule reliably wins here. */
+  #show-facets-div { margin-top: 0.5em; }
+  .ix-facet { margin-bottom: 0.9em; }
+  .ix-facet-header {
+    font-size: 1em; padding: 0.45em 0.6em; border-radius: 5px; background: #888;
+    color: #fff; margin-bottom: 0.4em;
+  }
+  .ix-facet-active .ix-facet-header { background: #884444; cursor: pointer; }
+  .ix-facet-active .ix-facet-header::after { content: " \00d7"; float: right; }
+  .ix-facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
+  .ix-facet-search input {
+    flex: 1; font-size: 0.85em; border: 1px solid #ddd; border-radius: 3px;
+    padding: 0.25em 0.5em; background: #fff;
+  }
+  .ix-facet-search button {
+    border: 1px solid #ddd; background: #fff; border-radius: 3px; cursor: pointer; font-size: 0.85em;
+  }
+  .ix-facet-bar {
+    cursor: pointer; padding: 0.3em 0.1em; border-bottom: 1px solid rgba(128,128,128,0.15);
+  }
+  .ix-facet-bar:hover { background: rgba(0,136,221,0.06); }
+  .ix-facet-bar-selected { background: rgba(136,68,68,0.08); }
+  .ix-facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; font-size: 0.95em; }
+  .ix-facet-label { color: #333; }
+  .ix-facet-count { flex: none; color: #333; font-weight: 600; white-space: nowrap; }
+  .ix-facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #ccc; }
+  .ix-facet-more {
+    margin: 0.2em 0 0.4em 0; font-size: 0.8em; padding: 0.2em 0.6em;
+    border: 1px solid #ccc; background: #fff; border-radius: 3px; cursor: pointer;
+  }
+
+  footer { font-size: 0.8em; color: #888; margin-top: 1.5em; }
+</style>
+</head>
+<body>
+
+<div id="map_div"></div>
+<div id="status"><span class="spinner"></span>caricamento dati ...</div>
+
+<div id="onmap-buttons">
+  <div class="row">
+    <span style="font-size:0.5em">&#9679;</span>
+    <input type="range" min="0.2" max="3" step="0.05" value="1" id="slSize" style="width:90px;cursor:pointer;accent-color:#0088dd">
+    <span style="font-size:1.4em">&#9679;</span>
+    <span style="opacity:0.65;margin-left:0.2em">grandezza grafici</span>
+  </div>
+</div>
+
+<div id="sidebar">
+  <h1>Incidenti Stradali<br>Roma</h1>
+  <p>Dati degli incidenti stradali nel Comune di Roma, marzo 2021 – marzo 2022, fonte Polizia Locale Roma Capitale.</p>
+  <p>Visualizzazione dell'<b>indice di pericolosità</b>: la grandezza dei cerchi rappresenta la gravità media degli incidenti (mortale = 9, con feriti = 3, illesi = 1).</p>
+
+  <div id="stats-line"><b id="no_incidenti">—</b> incidenti &nbsp;&nbsp; <b id="sum_pericolosita">—</b> indice tot.</div>
+
+  <div id="filter-div">
+    <span id="filter-text"></span>
+    <button id="clear-filter-btn">&times;</button>
+  </div>
+
+  <hr>
+
+  <div id="show-facets-div"></div>
+
+  <hr>
+
+  <p style="font-size:1em;">Fonte dati:</p>
+  <p>Incidenti stradali certificati dalla <b>Polizia Locale Roma Capitale</b>, pubblicati in open data sul portale <a href="https://dati.comune.roma.it/" target="_blank">dati.comune.roma.it</a></p>
+
+  <div id="basemap-row">
+    <button id="basemap-minus">-</button>
+    <span>mappa di fondo</span>
+    <button id="basemap-plus">+</button>
+  </div>
+
+  <footer>
+    Prototipo ixmaps-gl — port di roma_incidenti_pericolosita_sidebar.html.
+  </footer>
+</div>
+
+<!--
+  Layer/theme/map definitions below follow the original page
+  (roma_incidenti_pericolosita_sidebar.html) as closely as this engine's
+  builder API allows. Two deliberate deviations from the original config,
+  both noted where they matter:
+
+  1) .data(): the original page hands the CSV a "process" function (a
+     data.js Table.addColumn) to derive a "Pericolosita"/"grav_label"
+     column from Vittime/Feriti at load time. This engine's own .data()
+     idiom has no equivalent hook, so — exactly like
+     germany_accidents_app.html's own port — the ORIGINAL page's real
+     data.js is loaded and its process function ported verbatim into a
+     .data({query}) function, run against the real library (not
+     reimplemented) via ixmaps.setExternalData's bridge (see
+     fetchLayerData/setExternalDataBridge in ixmaps-gl.js).
+
+  2) .type("SYMBOLS") -> "SYMBOL": this engine's CHART dispatch checks the
+     literal flag "SYMBOL" (singular, see every other ported page in this
+     project); "SYMBOLS" would silently fall through as an unrecognized
+     flag and never render.
+
+  CORRECTED (2026-09-22, user-reported: facets were showing a summed
+  "Pericolosita" index instead of plain accident counts, unlike the real
+  engine's own screenshot of this exact page): an EARLIER version of this
+  port's config added `size: "Pericolosita"` to .binding() and swapped the
+  real page's own `SUM` type flag for `COUNT`, on the mistaken belief that
+  _buildAggregationIndex needed a distinct binding.size to sum per
+  aggregation cell without it. It doesn't — _resolveAggregateValue already
+  falls back to summing binding.value directly whenever SUM is set and no
+  binding.size exists (ixmaps-gl.js:3491-3498), exactly the real engine's
+  own real binding (`.binding({value:"Pericolosita"})`, no `size` key at
+  all, confirmed by reading roma_incidenti_pericolosita_sidebar.html's own
+  real source). That extra binding.size had a real, unintended side
+  effect once ixmaps.data.getFacets/showFacets started deriving facet
+  weighting automatically from a theme's OWN binding.size (matching real
+  facet.js:565-568 exactly, see [[project-ixmaps-gl-engine]]'s own count-
+  vs-sum entry) — it made THIS theme's facets sum "Pericolosita" the same
+  way a genuinely size-bound theme's would, which the real engine never
+  does for this page (its own binding has no size field to weight by in
+  the first place). Restored: .binding() drops `size` entirely, .type()
+  uses `SUM` (not `COUNT`, matching the real page's own flag) — map
+  rendering is unaffected (same _resolveAggregateValue SUM-of-
+  binding.value fallback, just reached the way it was always meant to
+  be), and facets now correctly default back to plain per-record counts,
+  matching the real engine's own confirmed screenshot for this exact
+  page.
+
+  RESOLVED divergence (was open, now fixed): the REAL engine's
+  non-CATEGORICAL SUM+AGGREGATE+RECT bubble classes color from the
+  AGGREGATED per-cell SUM (equal-interval/QUANTILE/NATURAL breaks over
+  the cell totals, computed AFTER binning — maptheme.js:12209-13006), not
+  from each record's own raw value. This engine's AGGREGATE pipeline
+  originally classed each RECORD into one of the 7 buckets BEFORE binning
+  (reusing the CATEGORICAL bubble machinery, which needs classes known
+  up front to build one Supercluster index per class) — closed by marking
+  this runtime `_rangeClassed` (set in _buildPartsA) so
+  _buildAggregationIndex skips per-record classing entirely (every record
+  goes into ONE bucket, so same-cell records cluster together regardless
+  of their own value) and _buildChartLayers reclassifies each point's/
+  cell's FINAL aggregated total (post-NORMALIZE, if set) into fresh
+  breaks computed from those totals, right before coloring — matching the
+  real engine's own order of operations exactly. Verified live: the
+  busiest cells (aggregated totals in the 200s) now render the scheme's
+  own top/red class, not whatever a single co-located low-severity record
+  happened to be.
+
+  NORMALIZE (min-max rescale of each point's/group's aggregated value
+  into [0,1] after binning) IS implemented faithfully — see the
+  NORMALIZE block in ixmaps-gl.js's _buildChartLayers, added specifically
+  for this port and verified against maptheme.js:12764-12780. Without it
+  a SUM aggregation's per-cell total is unbounded and grows with local
+  record density — confirmed live against this exact ~30k-row dataset,
+  where a few busy intersections summed into the hundreds while most
+  cells stayed under 15, making normalsizevalue-based sizing blow up.
+
+  .style({normalsizevalue}) recalibrated (0.33, not the original page's
+  literal "3"): this engine's AGGREGATE binning is Supercluster's
+  RADIUS-based hierarchical clustering (style.aggregation, a fixed pixel
+  radius chained outward), not the real engine's fixed geographic GRID —
+  the two produce differently-shaped distributions of per-cell totals
+  even both normalized into [0,1]. Measured live against this dataset at
+  zoom 12: median normalized cell ≈0.038, 90th percentile ≈0.21, only the
+  single busiest cell reaches 1.0 — a far more right-skewed distribution
+  than a fixed grid would produce. The real page's normalsizevalue:3
+  (already far above the theoretical [0,1] max, by design, to keep even
+  the biggest bubble modest) rendered every single bubble here under
+  ~5.4px radius, indistinguishable from background — 0.33 instead maps
+  the 90th-percentile cell to a clearly visible ~9px radius while still
+  leaving the rare busiest cell distinctly largest.
+-->
+<script>
+  var DATA_URL = "https://raw.githubusercontent.com/gjrichter/data/master/open%20data%20rome/incidenti/incidenti_roma_filtrati.csv";
+
+  // Verbatim (same logic as the original page's own `process` function),
+  // ported to the query()/addColumn shape germany_accidents_app.html's
+  // real config already established for this engine — runs against the
+  // REAL data.js loaded above, not a reimplementation.
+  var queryData = function(themeObj, options) {
+    var broker = Data.provider()
+      .addSource(DATA_URL, "csv")
+      .realize(function(dataA) {
+
+        var data = dataA[0];
+        var iVittime = data.column("Vittime").index;
+        var iFeriti  = data.column("Feriti").index;
+
+        data.addColumn({ destination: "Pericolosita" }, function(row) {
+          var v = parseInt(row[iVittime]) || 0;
+          var f = parseInt(row[iFeriti])  || 0;
+          return v*9 + f*3;
+        });
+        data.addColumn({ destination: "grav_label" }, function(row) {
+          var v = parseInt(row[iVittime]) || 0;
+          var f = parseInt(row[iFeriti])  || 0;
+          return v > 0 ? "Mortale" : f > 0 ? "Con feriti" : "Illesi";
+        });
+
+        options.type = "dbtable";
+        ixmaps.setExternalData(data, options);
+      });
+  };
+
+  var __ROMA_QUERY_DATA = { name: "themeDataObj", query: queryData.toString(), cache: "true" };
+
+  var __incidenti =
+    ixmaps.layer("Roma", layer => layer
+      .data(__ROMA_QUERY_DATA)
+      .binding({
+        position: "Latitude|Longitude",
+        value:    "Pericolosita"
+      })
+      .type("CHART|SYMBOL|SIZE|GLOW|ZEROISVALUE|AGGREGATE|RELOCATE|SUM|RECT|VALUES|NOOUTLIER|NORMALIZE")
+      .style({
+        name:            "pericolosita",
+        colorscheme:     ["7", "#36A6B1", "#b94023", "3colors", "#DDA729"],
+        classes:         7,
+        symbols:         ["circle"],
+        fillopacity:     "0.6",
+        valuecolor:      "#ffffff",
+        shadow:          "false",
+        units:           "",
+        scale:           "1",
+        normalsizevalue: "3",
+        sizepow:         "1.3",
+        valuescale:      "1",
+        valuedecimals:   "1",
+				gridwidth:       "50",
+        showdata:        "true"
+      })
+      .meta({
+        title:   "Indice di pericolosità — Roma mar.2021/mar.2022",
+        tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}",
+        splash:  "caricamento dati ..."
+      })
+    );
+
+  var __lat = 41.9028, __lon = 12.4964, __zoom = 10;
+
+  var _mapPromise = ixmaps.Map("map_div", {
+      mapService: "leaflet_vt",
+      mapType:    "VT_BRIGHT_LIGHT",
+      name:       "Roma_Pericolosita",
+      mode:       "pan",
+      width:      "100%",
+      height:     "100%",
+      legend:     "true",
+      tools:      "true",
+      search:     "Italy"
+    },
+    map => map
+    .view([__lat, __lon], __zoom)
+    .options({
+      featurescaling:  "true",
+      objectscaling:   "dynamic",
+      normalSizeScale: "100000",
+      dynamicScalePow: "3",
+      flushChartDraw:  "1000000",
+      basemapopacity:  "0.65",
+      panhidden:       "false"
+    })
+    .attribution("powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>")
+    .legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>Incidenti Stradali Roma — Indice di Pericolosità</h2></div>")
+    .layer(__incidenti)
+  );
+
+  // ---------------------------------------------------------------
+  // facets browser — built on ixmaps' own STANDARD facet API
+  // (ixmaps.data.getFacets/showFacets, window.__setFacetFilter/
+  // __setFilter/__removeFacets — same names as real ixmaps-flat's
+  // ui/js/tools/facet.js + show_facets.js, ported into ixmaps-gl.js
+  // itself). Field list trimmed to the columns the original page's own
+  // statistics() function read (szFieldsA).
+  // ---------------------------------------------------------------
+
+  const THEME_ID = "pericolosita";
+  const FACET_FIELDS = [
+    "grav_label", "NaturaIncidente", "CondizioneAtmosferica",
+    "Illuminazione", "FondoStradale", "Traffico", "Mese"
+  ];
+
+  function fmt(n) {
+    return (n || 0).toLocaleString('it-IT');
+  }
+
+  // Header stats (total count / summed danger score) — not part of the
+  // browsable facet list, so unaffected by the showFacets switch below;
+  // just reads the same standard ixmaps.data.getFacets for consistency.
+  function renderStats() {
+    const stats = ixmaps.data.getFacets(null, null, ["NaturaIncidente"], THEME_ID, null, null)[0];
+    document.getElementById('no_incidenti').textContent = fmt(stats ? stats.nCount : 0);
+    document.getElementById('sum_pericolosita').textContent = fmt(stats ? Math.round(stats.nValuesSum) : 0);
+  }
+
+  function renderFacets(api) {
+    const facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
+    ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
+    renderFilterDisplay(api);
+    renderStats();
+  }
+
+  function renderFilterDisplay(api) {
+    const active = api.getActiveFacetFilters(THEME_ID);
+    const parts = Object.entries(active).map(([field, clause]) => {
+      if (clause && typeof clause === 'object' && 'like' in clause) return `"${field}" LIKE "${clause.like}"`;
+      return `"${field}" = "${clause}"`;
+    });
+    const div = document.getElementById('filter-div');
+    if (parts.length) {
+      document.getElementById('filter-text').textContent = 'WHERE ' + parts.join(' AND ');
+      div.style.display = 'flex';
+    } else {
+      div.style.display = 'none';
+    }
+  }
+
+  _mapPromise
+    .then(api => {
+      document.getElementById('status').remove();
+
+      renderFacets(api);
+      api.onRedraw(() => renderFacets(api));
+
+      document.getElementById('clear-filter-btn').addEventListener('click', () => {
+        api.clearAllFacetFilters(THEME_ID);
+      });
+
+      document.getElementById('slSize').addEventListener('input', e => {
+        api.setThemeStyle(THEME_ID, { scale: e.target.value });
+      });
+
+      document.getElementById('basemap-minus').addEventListener('click', () => api.setBasemapOpacity(-0.1, 'relative'));
+      document.getElementById('basemap-plus').addEventListener('click', () => api.setBasemapOpacity(0.1, 'relative'));
+    })
+    .catch(err => { document.getElementById('status').textContent = 'errore: ' + err.message; console.error(err); });
+</script>
+
+</body>
+</html>

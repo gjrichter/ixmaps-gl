@@ -28,10 +28,10 @@
   }
   @keyframes status-spin { to { transform: rotate(360deg); } }
 
-  h1 { font-size: 1.4em; margin: 0 0 0.3em 0; color: #222; font-weight: 600; }
-  #sidebar p { font-size: 0.9em; color: #333; margin: 0.5em 0; }
+  h1 { font-size: 1.5em; margin: 0 0 0.3em 0; color: #222; font-weight: 600; }
+  #sidebar p { font-size: 1em; color: #333; margin: 0.5em 0; }
   #sidebar a { color: #0088dd; }
-  #sidebar label { font-size: 0.9em; display: flex; align-items: center; gap: 0.4em; margin: 0.4em 0; cursor: pointer; }
+  #sidebar label { font-size: 1em; display: flex; align-items: center; gap: 0.4em; margin: 0.4em 0; cursor: pointer; }
   #sidebar input[type=checkbox] { accent-color: #888; }
 
   #grid-size-row { display: none; align-items: center; gap: 0.5em; margin: 0.3em 0 0.6em 1.6em; }
@@ -55,37 +55,41 @@
 
   hr { border: none; border-top: 1px solid #ddd; margin: 1em 0; }
 
+  /* overrides ixmaps.data.showFacets' own injected dark default
+     (.ix-facet-* classes) with this page's light theme — see
+     ixmaps-gl.js's ensureFacetStyles comment for why a page's own
+     same-specificity rule reliably wins here. */
   #show-facets-div { margin-top: 0.5em; }
-  .facet { margin-bottom: 0.9em; }
-  .facet-header {
+  .ix-facet { margin-bottom: 0.9em; }
+  .ix-facet-header {
     font-size: 1em; padding: 0.45em 0.6em; border-radius: 5px; background: #888;
     color: #fff; margin-bottom: 0.4em;
   }
-  .facet.active .facet-header { background: #884444; cursor: pointer; }
-  .facet.active .facet-header::after { content: " \00d7"; float: right; }
-  .facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
-  .facet-search input {
+  .ix-facet-active .ix-facet-header { background: #884444; cursor: pointer; }
+  .ix-facet-active .ix-facet-header::after { content: " \00d7"; float: right; }
+  .ix-facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
+  .ix-facet-search input {
     flex: 1; font-size: 0.85em; border: 1px solid #ddd; border-radius: 3px;
     padding: 0.25em 0.5em; background: #fff;
   }
-  .facet-search button {
+  .ix-facet-search button {
     border: 1px solid #ddd; background: #fff; border-radius: 3px; cursor: pointer; font-size: 0.85em;
   }
-  .facet-bar {
+  .ix-facet-bar {
     cursor: pointer; padding: 0.3em 0.1em; border-bottom: 1px solid rgba(128,128,128,0.15);
   }
-  .facet-bar:hover { background: rgba(0,136,221,0.06); }
-  .facet-bar.selected { background: rgba(136,68,68,0.08); }
-  .facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; font-size: 0.85em; }
-  .facet-label { color: #333; }
-  .facet-count { flex: none; color: #333; font-weight: 600; white-space: nowrap; }
-  .facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #ccc; }
-  .facet-more {
+  .ix-facet-bar:hover { background: rgba(0,136,221,0.06); }
+  .ix-facet-bar-selected { background: rgba(136,68,68,0.08); }
+  .ix-facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; font-size: 0.95em; }
+  .ix-facet-label { color: #333; }
+  .ix-facet-count { flex: none; color: #333; font-weight: 600; white-space: nowrap; }
+  .ix-facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #ccc; }
+  .ix-facet-more {
     margin: 0.2em 0 0.4em 0; font-size: 0.8em; padding: 0.2em 0.6em;
     border: 1px solid #ccc; background: #fff; border-radius: 3px; cursor: pointer;
   }
 
-  footer { font-size: 0.75em; color: #888; margin-top: 1.5em; }
+  footer { font-size: 0.8em; color: #888; margin-top: 1.5em; }
 </style>
 </head>
 <body>
@@ -246,7 +250,7 @@
         valuedecimals: 0,
         clipparts: 10,
         maxcharts: 100000,
-        aggregation: ["1:1", "3px", "1:500000", "2px"],
+        aggregation: ["1:1", "3px", "1:200000", "50"],
         clipupper: "1:1000000",
         valuesupper: "1:10000",
         name: "chart"
@@ -336,84 +340,24 @@
   );
 
   // ---------------------------------------------------------------
-  // facets browser — same pattern as accidents_app.html, field list
-  // trimmed to what this dataset's CSV columns actually carry
+  // facets browser — built on ixmaps' own STANDARD facet API
+  // (ixmaps.data.getFacets/showFacets, window.__setFacetFilter/
+  // __setFilter/__removeFacets — same names as real ixmaps-flat's
+  // ui/js/tools/facet.js + show_facets.js, ported into ixmaps-gl.js
+  // itself). Field list trimmed to what this dataset's CSV columns
+  // actually carry; UART's .style({label:[...]}) German display names
+  // are handled automatically by showFacets via facet.valuesLabels.
   // ---------------------------------------------------------------
 
   const THEME_ID = "chart";
-  const PRIMARY_FIELD = "UART";
-
   const FACET_FIELDS = [
     "UART", "UJAHR", "UKATEGORIE", "UTYP1", "UMONAT", "USTUNDE", "UWOCHENTAG",
     "ULICHTVERH", "IstStrassenzustand", "IstRad", "IstPKW", "IstFuss", "IstKrad", "IstGkfz", "IstSonstige"
   ];
 
-  const MAX_SHOWN_UNCLIPPED = 12;
-  const MAX_SHOWN_CLIPPED = 10;
-  const SEARCH_THRESHOLD = 10;
-
-  function fmt(n) {
-    return (n || 0).toLocaleString('de-DE');
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
   function renderFacets(api) {
-    const facetsA = api.getFacets(THEME_ID, FACET_FIELDS, {});
-    const unit = "Unfälle";
-
-    let html = "";
-    facetsA.forEach(facet => {
-      const isPrimary = facet.id === PRIMARY_FIELD;
-      html += `<div class="facet${facet.isActive ? ' active' : ''}" data-field="${escapeHtml(facet.id)}">`;
-      html += `<div class="facet-header" data-role="header">${escapeHtml(facet.id)}</div>`;
-
-      if (facet.type === 'freetext') {
-        html += `<div class="facet-search"><input type="text" placeholder="Filtra per ... (es. ${escapeHtml(facet.example || '')})" data-role="search">` +
-                 `<button data-role="search-btn">&#128269;</button></div>`;
-        html += `</div>`;
-        return;
-      }
-
-      if (facet.values.length > SEARCH_THRESHOLD) {
-        const activeText = (facet.isActive && facet.activeClause && typeof facet.activeClause === 'object') ? facet.activeClause.like : '';
-        html += `<div class="facet-search"><input type="text" placeholder="Filtra per ..." value="${escapeHtml(activeText || '')}" data-role="search">` +
-                 `<button data-role="search-btn">&#128269;</button></div>`;
-      }
-
-      const maxShown = facet.values.length < MAX_SHOWN_UNCLIPPED ? facet.values.length : MAX_SHOWN_CLIPPED;
-      const renderBar = (value) => {
-        const count = facet.valuesCount[value] || 0;
-        const pct = facet.nValuesSum ? Math.min(100, (count / facet.nValuesSum) * 100) : 0;
-        const color = isPrimary ? api.getCategoryColor(THEME_ID, value) : null;
-        const bg = color ? `rgb(${color.join(',')})` : '#bbb';
-        const selected = facet.isActive && facet.activeClause === value;
-        // display text prefers .style({label:[...]}) when the theme
-        // defines one for this field (facet.valuesLabels); filtering
-        // (data-value, activeClause) always stays keyed by the raw value
-        const displayText = (facet.valuesLabels && facet.valuesLabels[value]) || value;
-        return `<div class="facet-bar${selected ? ' selected' : ''}" data-role="value" data-value="${escapeHtml(value)}">` +
-               `<div class="facet-row"><span class="facet-label">${escapeHtml(displayText)}</span>` +
-               `<span class="facet-count">${fmt(count)} ${unit}</span></div>` +
-               `<div class="facet-underline" style="width:${pct}%;background:${bg}"></div>` +
-               `</div>`;
-      };
-
-      facet.values.slice(0, maxShown).forEach(v => { html += renderBar(v); });
-      if (facet.values.length > maxShown) {
-        const extra = facet.values.slice(maxShown);
-        html += `<button class="facet-more" data-role="more">+ ${extra.length}</button>`;
-        html += `<div class="facet-extra" hidden>`;
-        extra.forEach(v => { html += renderBar(v); });
-        html += `</div>`;
-      }
-
-      html += `</div>`;
-    });
-
-    document.getElementById('show-facets-div').innerHTML = html;
+    const facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
+    ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
     renderFilterDisplay(api);
   }
 
@@ -432,67 +376,11 @@
     }
   }
 
-  function wireFacetsPanel(api) {
-    const panel = document.getElementById('show-facets-div');
-
-    panel.addEventListener('click', e => {
-      const moreBtn = e.target.closest('[data-role="more"]');
-      if (moreBtn) {
-        moreBtn.hidden = true;
-        moreBtn.nextElementSibling.hidden = false;
-        return;
-      }
-
-      const searchBtn = e.target.closest('[data-role="search-btn"]');
-      if (searchBtn) {
-        const input = searchBtn.previousElementSibling;
-        applySearch(api, searchBtn.closest('.facet').dataset.field, input.value);
-        return;
-      }
-
-      const header = e.target.closest('[data-role="header"]');
-      if (header) {
-        const facetEl = header.closest('.facet');
-        if (facetEl.classList.contains('active')) {
-          api.clearFacetFilter(THEME_ID, facetEl.dataset.field);
-        }
-        return;
-      }
-
-      const valueEl = e.target.closest('[data-role="value"]');
-      if (valueEl) {
-        const field = valueEl.closest('.facet').dataset.field;
-        const value = valueEl.dataset.value;
-        const active = api.getActiveFacetFilters(THEME_ID)[field];
-        if (active === value) {
-          api.clearFacetFilter(THEME_ID, field);
-        } else {
-          api.setFacetFilter(THEME_ID, field, value);
-        }
-      }
-    });
-
-    panel.addEventListener('keyup', e => {
-      if (e.key !== 'Enter') return;
-      const input = e.target.closest('[data-role="search"]');
-      if (input) applySearch(api, input.closest('.facet').dataset.field, input.value);
-    });
-
-    function applySearch(api, field, value) {
-      if (value && value.trim()) {
-        api.setFacetFilter(THEME_ID, field, { like: value.trim() });
-      } else {
-        api.clearFacetFilter(THEME_ID, field);
-      }
-    }
-  }
-
   _mapPromise
     .then(api => {
       document.getElementById('status').remove();
 
       renderFacets(api);
-      wireFacetsPanel(api);
       api.onRedraw(() => renderFacets(api));
 
       document.getElementById('clear-filter-btn').addEventListener('click', () => {

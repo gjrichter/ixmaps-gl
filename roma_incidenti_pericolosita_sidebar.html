@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="description" content="Incidenti Stradali Roma mar.2021/mar.2022 — indice di pericolosità">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>Incidenti Stradali Roma — Indice di Pericolosità</title>
+
+
+	<style>
+		html, body {
+			height: 100%;
+			overflow: hidden;
+		}
+		body, table, button {
+			background: #F5F5F4;
+		}
+		#map_div {
+			height: 100%;
+		}
+	</style>
+</head>
+
+<body style='text-align:center;background:#F5F5F4'>
+
+	<div id="map_div" style="float:left;width:66%"></div>
+
+	<!-- ----------------------------------------- -->
+	<!--                                             -->
+	<!--  s i d e b a r                              -->
+	<!--                                             -->
+	<!-- ----------------------------------------- -->
+
+	<div id="regis_sidebar" style="width:33%;float:right;">
+
+		<div style="font-family:open sans;text-align:left;margin:0.5em 0.5em 0em 0em;">
+
+			<h1>Incidenti Stradali<br>Roma</h1>
+			<p>Dati degli incidenti stradali nel Comune di Roma, marzo 2021 – marzo 2022, fonte Polizia Locale Roma Capitale.</p>
+
+			<p>Visualizzazione dell'<b>indice di pericolosità</b>: la grandezza dei cerchi rappresenta la gravità media degli incidenti (mortale = 9, con feriti = 3, illesi = 1).</p>
+
+			<p>
+				<span id="no_incidenti">—</span> incidenti &nbsp;&nbsp;
+				<span id="sum_feriti">—</span> indice tot.
+			</p>
+
+			<div id="filter-div" style="margin-top:0.8em;margin-right:2em;font-size:0.9em;background-color:#F7F6EF;padding:0.2em;border-color:#aaaaaa;display:none">
+				<span id="filter"></span>
+				<button style="font-size:0.8em" onclick="ixmaps.message('rimuovo filtri ...');clearFilter();">x</button>
+			</div>
+
+			<p style="font-size:0.9em;">
+				Crea <a style="color:#0088dd" href="javascript:void()" onclick="$('#popup1').html((ixmaps.szActualUrl));$('#popup1').toggle()"><i class="icon icon-share" title="link condivisibile" tabindex="-1"></i> link</a> condivisibile,
+				mostra tabella <a style="color:#0088dd" href="javascript:void()" onclick="ixmaps.popupThemeTable()">dati</a>.
+				Info sulla mappa <a style="color:#0088dd" href="javascript:void()" onclick="$('#info-overlay').show()"><i class="icon icon-info" tabindex="-1"></i> qui</a>.
+			</p>
+
+			<textarea id="popup1" style="font-size:1em;text-align:left;width:250px;height:150px;overflow:auto;background:transparent;display:none"></textarea>
+
+			<div id="scroll-area" style="overflow:auto;">
+
+				<div id="show-facets-div" style="margin-right:0.5em"> </div>
+
+				<!-- ----------------------------------------- -->
+				<!--  footer / fonte                           -->
+				<!-- ----------------------------------------- -->
+
+				<hr>
+				<p style="font-size:1em;">Fonte dati:</p>
+				<p>Incidenti stradali certificati dalla <b>Polizia Locale Roma Capitale</b>, pubblicati in open data sul portale <a style="color:#0088dd" href="https://dati.comune.roma.it/" target="_blank">dati.comune.roma.it</a></p>
+
+				<div style="display:flex;align-items:center;gap:0.4em;margin:0.6em 0;font-size:0.85em">
+					<span style="font-size:0.55em">●</span>
+					<input class="size-slider" type="range" min="20" max="300" step="5" value="100"
+					       style="width:90px;cursor:pointer;accent-color:#0088dd"
+					       oninput="setSizeFromSlider(this.value)">
+					<span style="font-size:1.3em">●</span>
+					<span style="opacity:0.65"> grandezza grafici</span>
+				</div>
+				<table>
+					<tr>
+						<td><button onclick="ixmaps.setBasemapOpacity(null,-0.1,'relative')">-</button></td>
+						<td><span style="font-size:0.8em"> &nbsp; mappa di fondo &nbsp;</span></td>
+						<td><button onclick="ixmaps.setBasemapOpacity(null,0.1,'relative')">+</button></td>
+					</tr>
+				</table>
+
+				<p style="font-size:0.9em;">
+					Cambia mappa di <a style="color:#0088dd" href="javascript:void()" onclick="ixmaps.popupBasemapSelect()">fondo</a>.
+				</p>
+				<p style="font-size:0.9em;">
+					Crea <a style="color:#0088dd" href="javascript:void()" onclick="$('#popup').html((ixmaps.szActualUrl));$('#popup').toggle()">link</a> condivisibile,
+					mostra tabella <a style="color:#0088dd" href="javascript:void()" onclick="ixmaps.popupThemeTable()">dati</a>.
+				</p>
+
+				<textarea id="popup" style="font-size:1em;text-align:left;width:250px;height:150px;overflow:auto;background:transparent;display:none"></textarea>
+
+			</div>
+		</div>
+	</div>
+
+	<!-- on-map chart size buttons -->
+
+	<div id="onmap-buttons" style="position:absolute;bottom:3em;right:35%;z-index:1000">
+		<div style="display:flex;align-items:center;gap:0.3em;background:rgba(255,255,255,0.82);padding:4px 8px;border-radius:4px;font-size:0.8em">
+			<span style="font-size:0.5em">●</span>
+			<input class="size-slider" type="range" min="20" max="300" step="5" value="100"
+			       style="width:90px;cursor:pointer;accent-color:#0088dd"
+			       oninput="setSizeFromSlider(this.value)">
+			<span style="font-size:1.4em">●</span>
+		</div>
+	</div>
+
+	<!-- mobile sidebar toggle -->
+
+	<div id="sidebarnav" style="position:absolute;left:0px;bottom:20px;opacity:0.9;width:100%;text-align:center;display:none">
+		<div>
+			<span style="padding:8px 16px 8px 18px;border:solid #ddd 1px;border-radius:2px;background-color:#ffffff;">
+				<a class="btn btn-link" href="javascript:void();" onclick="ixmaps.showMap();">Mappa</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+				<a class="btn btn-link" href="#javascript:void();" onclick="ixmaps.showSidebar();">Statistiche</a>
+			</span>
+		</div>
+	</div>
+
+	<!-- info overlay -->
+
+	<div id="info-overlay" style="position:absolute;bottom:20%;right:5%;width:90%;max-height:70%;display:none;z-index:1000;">
+		<div style="background:#F7F6EF;border:solid #444 0.1px;border-radius:0.5em;max-width:720px;margin:auto">
+			<div style="float:right;margin-top:0.5em;margin-right:0.5em;font-size:22px">
+				<a href="javascript:void()" onclick="$('#info-overlay').hide()"><i class="icon icon-cancel-circle" title="hide" tabindex="-1"></i></a>
+			</div>
+			<div style="margin:1em;text-align:left">
+				<p>Questa mappa visualizza i dati degli incidenti stradali nel Comune di Roma, marzo 2021 – marzo 2022, forniti dalla Polizia Locale Roma Capitale.</p>
+				<p>La visualizzazione mostra l'<b>indice di pericolosità</b> per zona: ogni cerchio rappresenta una cella della griglia e la sua dimensione indica la gravità media degli incidenti in quell'area.</p>
+				<ul>
+					<li><b>Incidente mortale</b> — punteggio 9</li>
+					<li><b>Con feriti</b> — punteggio 3</li>
+					<li><b>Illesi</b> — punteggio 1</li>
+				</ul>
+				<p>Il colore indica il livello di pericolosità (freddo = basso, caldo = alto). I singoli incidenti sono aggregati per griglia; zoomando si distinguono le singole celle.</p>
+				<p style="font-size:1em;">Fonte dati:</p>
+				<p>Incidenti stradali certificati dalla Polizia Locale Roma Capitale, pubblicati su <a style="color:#0088dd" href="https://dati.comune.roma.it/" target="_blank">dati.comune.roma.it</a></p>
+			</div>
+		</div>
+	</div>
+
+	<!-- ========================================================================= -->
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/ixmaps.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/ixmaps/pages/js/format.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/plugins/facet.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/plugins/show_facets.js"></script>
+
+	<!-- ========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+
+		// ---------------------------------------------------
+		//
+		// p r e s e r v e   f a c e t   m e t h o d s
+		//
+		// ixmaps.js replaces ixmaps.data when data loads,
+		// wiping out getFacets/showFacets added by facet.js.
+		// Save them here (scripts already ran) and restore later.
+		// ---------------------------------------------------
+
+		var __facetSave = {};
+		if (ixmaps.data && typeof ixmaps.data === 'object') {
+			Object.keys(ixmaps.data).forEach(function(k) { __facetSave[k] = ixmaps.data[k]; });
+		}
+
+		function __restoreFacetMethods() {
+			if (!ixmaps.data || typeof ixmaps.data !== 'object') return;
+			Object.keys(__facetSave).forEach(function(k) {
+				if (ixmaps.data[k] === undefined) { ixmaps.data[k] = __facetSave[k]; }
+			});
+		}
+
+		// ---------------------------------------------------
+		//
+		// d a t a   l o a d i n g
+		//
+		// ---------------------------------------------------
+
+		var DATA_URL = "https://raw.githubusercontent.com/gjrichter/data/master/open%20data%20rome/incidenti/incidenti_roma_filtrati.csv";
+
+		var process = function(data) {
+			var iVittime = data.column("Vittime").index;
+			var iFeriti  = data.column("Feriti").index;
+			data.addColumn({ destination: "Pericolosita" }, function(row) {
+				var v = parseInt(row[iVittime]) || 0;
+				var f = parseInt(row[iFeriti])  || 0;
+				return v*9 + f*3;
+			});
+			data.addColumn({ destination: "grav_label" }, function(row) {
+				var v = parseInt(row[iVittime]) || 0;
+				var f = parseInt(row[iFeriti])  || 0;
+				return v > 0 ? "Mortale" : f > 0 ? "Con feriti" : "Illesi";
+			});
+			data.addColumn({ destination: "Feriti_n" }, function(row) {
+				return parseInt(row[iFeriti]) || 0;
+			});
+			return data;
+		};
+
+		// ---------------------------------------------------
+		//
+		// h e l p e r s
+		//
+		// ---------------------------------------------------
+
+		var __getActiveTheme = function() {
+			var themesA = ixmaps.getThemes();
+			for (var i in themesA) {
+				if (themesA[i].szId.match(/pericolosita/) && themesA[i].fVisible) {
+					return themesA[i];
+				}
+			}
+			return null;
+		};
+
+		var sizeCharts = function(nFactor) {
+			ixmaps.changeThemeStyle('pericolosita', 'scale:' + nFactor, 'factor');
+			var themeObj = __getActiveTheme();
+			if (themeObj) { __actualizeUrl(themeObj); }
+		};
+
+		var setSizeFromSlider = function(val) {
+			var scale = val / 100;
+			ixmaps.changeThemeStyle('pericolosita', 'scale:' + scale, 'set');
+			document.querySelectorAll('.size-slider').forEach(function(el) { el.value = val; });
+			var themeObj = __getActiveTheme();
+			if (themeObj) { __actualizeUrl(themeObj); }
+		};
+
+		var clearFilter = function() {
+			ixmaps.changeThemeStyle('pericolosita', 'filter', 'remove');
+		};
+
+		// ---------------------------------------------------
+		//
+		// s t a t i s t i c s
+		//
+		// ---------------------------------------------------
+
+		ixmaps.statistics = function(szId) {
+
+			var themeObj = ixmaps.getThemeObj(szId);
+			var lastFilter = themeObj.szFilter || "";
+
+			if (szId == "pericolosita") {
+
+				var szFieldsA = ["NaturaIncidente"];
+				var facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map");
+
+				var count     = ixmaps.formatValue(facetsA[0].nCount    || 0, 0, "BLANK");
+				var sumFeriti = ixmaps.formatValue(facetsA[0].nValuesSum || 0, 0, "BLANK");
+				$("#no_incidenti").html(count);
+				$("#sum_feriti").html(sumFeriti);
+
+				ixmaps.data.fShowFacetValues = true;
+				szFieldsA = ["grav_label", "NaturaIncidente", "CondizioneAtmosferica", "Illuminazione", "FondoStradale", "Traffico", "Mese"];
+				facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map", "NONUMERIC");
+				ixmaps.data.showFacets(lastFilter, "show-facets-div", facetsA);
+			}
+		};
+
+		// ---------------------------------------------------
+		//
+		// e v e n t   h a n d l e r s
+		//
+		// ---------------------------------------------------
+
+		var __urlTimer = null;
+
+		var __actualizeUrl = function(themeObj) {
+
+			var center = ixmaps.getCenter();
+			if (!center) return;
+
+			var szFilter = themeObj.szFilter || "";
+			var nScale   = themeObj.nScale;
+			var szView   = "[" + center.lat + "," + center.lng + "]," + ixmaps.getZoom();
+
+			// share-link display (sidebar "link condivisibile")
+			ixmaps.szActualUrl  = window.location.hostname + window.location.pathname;
+			ixmaps.szActualUrl += "?filter=" + szFilter;
+			ixmaps.szActualUrl += "&scale="  + nScale;
+			ixmaps.szActualUrl += "&view="   + szView;
+			$('#popup').html(ixmaps.szActualUrl);
+			$('#popup1').html(ixmaps.szActualUrl);
+
+			// live browser address bar (debounced) — restored on reload via init params
+			clearTimeout(__urlTimer);
+			__urlTimer = setTimeout(function() {
+				var url = new URL(window.location);
+				url.searchParams.set("filter", szFilter);
+				url.searchParams.set("scale",  nScale);
+				url.searchParams.set("view",   szView);
+				history.replaceState(null, "", url);
+			}, 400);
+		};
+
+		var old_onDrawTheme = ixmaps.htmlgui_onDrawTheme;
+		ixmaps.htmlgui_onDrawTheme = function(szId) {
+
+			__restoreFacetMethods();
+
+			ixmaps.themesDrawnA = ixmaps.themesDrawnA || [];
+			ixmaps.themesDrawnA[szId] = true;
+
+			var themeObj = ixmaps.getThemeObj(szId);
+			if (themeObj.szFlag.match(/NOLEGEND/)) {
+				try { old_onDrawTheme(szId); } catch(e) {}
+				return;
+			}
+			if (!themeObj.fVisible) return;
+
+			ixmaps.statistics(szId);
+			__actualizeUrl(themeObj);
+
+			var sliderVal = Math.round((themeObj.nScale || 1) * 100);
+			document.querySelectorAll('.size-slider').forEach(function(el) { el.value = sliderVal; });
+
+			$("#scroll-area").height(window.innerHeight - $("#scroll-area").offset().top - 50);
+
+			try { old_onDrawTheme(szId); } catch(e) {}
+		};
+
+		ixmaps.nOldZoom = null;
+		ixmaps.htmlgui_onZoomAndPan = function() {
+			if (ixmaps.nOldZoom && (ixmaps.nOldZoom != ixmaps.getZoom())) {
+				if ((ixmaps.nOldZoom >= 13) && (ixmaps.getZoom() < 13)) {
+					ixmaps.changeThemeStyle("pericolosita", "sizepow:1.7",       "set|silent");
+					ixmaps.changeThemeStyle("pericolosita", "normalsizevalue:8", "set|silent");
+				} else if ((ixmaps.nOldZoom <= 13) && (ixmaps.getZoom() > 13)) {
+					ixmaps.changeThemeStyle("pericolosita", "sizepow:1.3",       "set|silent");
+					ixmaps.changeThemeStyle("pericolosita", "normalsizevalue:3", "set|silent");
+				}
+			}
+			ixmaps.nOldZoom = ixmaps.getZoom();
+
+			var themeObj = __getActiveTheme();
+			if (themeObj) { __actualizeUrl(themeObj); }
+		};
+
+		// ---------------------------------------------------
+		//
+		// m a p   p a r a m s   ( URL  state )
+		//
+		// ---------------------------------------------------
+
+		var __filter      = "";
+		var __lat         = 41.9028;
+		var __lon         = 12.4964;
+		var __zoom        = 12;
+		var __scale_chart = 1;
+		var __legend      = false;
+
+		var attribution = "powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
+
+		const params = new Proxy(new URLSearchParams(window.location.search), {
+			get: (searchParams, prop) => searchParams.get(prop),
+		});
+
+		if (params.filter) __filter = params.filter;
+		if (params.view) {
+			var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+			__lat  = latlonA[0];
+			__lon  = latlonA[1];
+			__zoom = parseInt(params.view.split(',')[2]);
+		}
+		if (params.scale)  __scale_chart = params.scale;
+		if (params.legend) __legend = params.legend;
+
+		// ---------------------------------------------------
+		//
+		// t h e   m a p
+		//
+		// ---------------------------------------------------
+
+		var __incidenti =
+			ixmaps.layer("Roma", layer => layer
+				.data({ url: DATA_URL, type: "csv", process: process.toString(), name: "incidenti_roma" })
+				.binding({
+					position: "Latitude|Longitude",
+					value:    "Pericolosita"
+				})
+				.type("CHART|SYMBOLS|SIZE|GLOW|NOOUTLIER|NORMALIZE|ZEROISVALUE|AGGREGATE|RELOCATE|SUM|RECT|VALUES")
+				.style({
+					colorscheme:     ["7", "#36A6B1", "#b94023", "3colors", "#DDA729"],
+					symbols:         ["circle"],
+					fillopacity:     "0.6",
+					shadow:          "false",
+					units:           "",
+					scale:           String(__scale_chart),
+					normalsizevalue: "3",
+					sizepow:         "1.3",
+					valuescale:      "1",
+					valuedecimals:   "1",
+					gridwidth:       "25",
+					showdata:        "true"
+				})
+				.meta({
+					name:    "pericolosita",
+					title:   "Indice di pericolosità — Roma mar.2021/mar.2022",
+					tooltip: "{{theme.item.chart}}{{theme.item.data}}",
+					filter:  __filter,
+					splash:  "caricamento dati ..."
+				})
+			);
+
+		ixmaps.Map("map_div", {
+			mapService: "leaflet_vt",
+			mapType:    "VT_BRIGHT_LIGHT",
+			name:       "Roma_Pericolosita",
+			mode:       "pan",
+			width:      "100%",
+			height:     (window.innerHeight - 15) + "px",
+			legend:     ((__legend == true) ? "true" : 0),
+			tools:      "true",
+			search:     "Italy"
+		},
+		map => map
+			.view([__lat, __lon], __zoom)
+			.options({
+				featurescaling:  "true",
+				objectscaling:   "dynamic",
+				normalSizeScale: "100000",
+				flushChartDraw:  "1000000",
+				basemapopacity:  "0.65",
+				panhidden:       "false"
+			})
+			.attribution(attribution)
+			.legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>Incidenti Stradali Roma — Indice di Pericolosità</h2></div>")
+			.layer(__incidenti)
+		);
+
+		// ---------------------------------------------------
+		//
+		// r e s p o n s i v e   l a y o u t
+		//
+		// ---------------------------------------------------
+
+		ixmaps.resize = function() {
+			if (window.innerWidth < 600) {
+				$("#sidebarnav").show();
+				$("#onmap-buttons").hide();
+				ixmaps.showMap();
+			} else {
+				$("#sidebarnav").hide();
+				$("#onmap-buttons").show();
+				ixmaps.showBoth();
+			}
+		};
+		ixmaps.showSidebar = function() {
+			$("#regis_sidebar").show();
+			$("#regis_sidebar").css("width", "100%");
+			$("#map_div").css("width", "0");
+		};
+		ixmaps.showMap = function() {
+			$("#regis_sidebar").hide();
+			$("#regis_sidebar").css("width", "0");
+			$("#map_div").css("width", "100%");
+		};
+		ixmaps.showBoth = function() {
+			$("#regis_sidebar").show();
+			$("#regis_sidebar").css("width", "33%");
+			$("#map_div").css("width", "66%");
+		};
+
+		ixmaps.resize();
+		$(window).resize(function() { ixmaps.resize(); });
+
+	</script>
+
+</body>
+</html>

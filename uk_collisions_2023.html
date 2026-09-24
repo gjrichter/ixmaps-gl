@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>UK Road Collisions</title>
+  <script src="ixmaps-gl.js"></script>
+  <!-- format.js/facet.js (real ixmaps-flat's own plugins) removed: they assume the full real
+       runtime exists (facet.js's getFacets calls ixmaps.getThemeDefinitionObj internally, which
+       nothing here provides) and, loading after ixmaps-gl.js, OVERWRITE its own compatible
+       ixmaps.data.getFacets/getThemeObj with their broken ones. ixmaps-gl.js implements this
+       page's actual calls (ixmaps.getThemeObj, ixmaps.data.getFacets, ixmaps.data.fShowFacetValues)
+       natively, so these plugins were never needed — same category of fix as the engine swap
+       itself, not a change to this page's own map-building code below. -->
+
+  <style>
+    html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#f0ede8}
+    #map{width:100%;height:100%}
+    #hdr{
+      position:absolute;top:12px;left:60px;
+      background:rgba(255,255,255,.85);color:#333;
+      padding:9px 15px;border-radius:6px;
+      font:13px/1.6 sans-serif;z-index:1000;
+      border-left:3px solid #cc2020;
+      box-shadow:0 1px 6px rgba(0,0,0,.18)
+    }
+    #hdr strong{font-size:15px;display:block;color:#111;margin-bottom:4px;pointer-events:none}
+    .yr-row{display:flex;gap:4px;margin-bottom:6px}
+    .yr-btn{
+      flex:1;padding:3px 6px;border:1px solid #ccc;border-radius:10px;
+      background:#f5f5f5;color:#888;font-size:11px;cursor:pointer;text-align:center;
+    }
+    .yr-btn:hover{background:#e0e0e0;color:#333}
+    .yr-btn.yr-active{background:#333;color:#fff;border-color:#333;font-weight:bold}
+    #hdr .row{display:flex;align-items:center;gap:12px;pointer-events:none}
+    #hdr .stats span{margin-right:14px;font-size:12px}
+    .f{color:#cc1010}.r{color:#cc6600}.b{color:#2255cc}.g{color:#888}
+    #hdr .sub{font-size:10px;color:#aaa;margin-top:2px;pointer-events:none}
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="hdr">
+  <strong>UK Road Collisions <span id="title-year">2023</span></strong>
+  <div class="yr-row">
+    <button class="yr-btn yr-active" data-year="2023" onclick="switchYear(2023)">2023</button>
+    <button class="yr-btn" data-year="2022" onclick="switchYear(2022)">2022</button>
+    <button class="yr-btn" data-year="2021" onclick="switchYear(2021)">2021</button>
+    <button class="yr-btn" data-year="2020" onclick="switchYear(2020)">2020</button>
+  </div>
+  <div class="row">
+    <div class="stats">
+      <span class="f">&#11044; Fatal <b id="cnt-fatal">—</b></span>
+      <span class="r">&#11044; Serious <b id="cnt-serious">—</b></span>
+      <span class="b">&#11044; Slight <b id="cnt-slight">—</b></span>
+      <span class="g">Total <b id="cnt-total">—</b></span>
+    </div>
+    <svg id="pie" viewBox="0 0 100 100" width="54" height="54" style="flex-shrink:0"></svg>
+  </div>
+  <div class="sub">STATS19 &middot; DfT &middot; 3 px grid &middot; pan &amp; zoom to filter</div>
+</div>
+<script>
+var YEAR_URLS = {
+    2023: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@7bb685b882be08d83c132e68bc8832150673a7e8/by-project/uk-collisions-2023/collisions.csv",
+    2022: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@efd5e23ba23a1c82f9eecf36ec088576d1b34b0e/by-project/uk-collisions-2022/collisions.csv",
+    2021: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@efd5e23ba23a1c82f9eecf36ec088576d1b34b0e/by-project/uk-collisions-2021/collisions.csv",
+    2020: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@efd5e23ba23a1c82f9eecf36ec088576d1b34b0e/by-project/uk-collisions-2020/collisions.csv"
+};
+
+var _currentYear = 2023;
+
+function set(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
+
+var _counts = { fatal: 0, serious: 0, slight: 0 };
+
+function drawPie() {
+    var el = document.getElementById("pie");
+    if (!el) return;
+    var total = _counts.fatal + _counts.serious + _counts.slight;
+    if (!total) return;
+    var slices = [
+        { v: _counts.fatal,   c: "#ff2020", o: 0.95 },
+        { v: _counts.serious, c: "#ff8800", o: 0.80 },
+        { v: _counts.slight,  c: "#4488ff", o: 0.65 }
+    ];
+    var cx = 50, cy = 50, r = 46, start = -Math.PI / 2, paths = "";
+    slices.forEach(function(s) {
+        if (!s.v) return;
+        var angle = s.v / total * 2 * Math.PI;
+        var end = start + angle;
+        var x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
+        var x2 = cx + r * Math.cos(end),   y2 = cy + r * Math.sin(end);
+        paths += '<path d="M' + cx + ',' + cy + ' L' + x1.toFixed(2) + ',' + y1.toFixed(2) +
+                 ' A' + r + ',' + r + ' 0 ' + (angle > Math.PI ? 1 : 0) + ',1 ' +
+                 x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z" fill="' + s.c +
+                 '" opacity="' + s.o + '"/>';
+        start = end;
+    });
+    el.innerHTML = paths;
+}
+
+ixmaps.statistics = function(szId) {
+    var themeObj = ixmaps.getThemeObj(szId);
+    if (!themeObj) return;
+    var name = themeObj.szName;
+    var sValue = { slight: "3", serious: "2", fatal: "1" }[name];
+    if (!sValue) return;
+
+    ixmaps.data.fShowFacetValues = false;
+    var facetsA = ixmaps.data.getFacets(
+        themeObj.szFilter || "", "stats_" + name, ["s"], szId, "map", "NONUMERIC"
+    );
+    if (!facetsA || !facetsA.length) return;
+
+    var vc = facetsA[0].valuesCount || {};
+    _counts[name] = vc[sValue] || 0;
+    set({ slight: "cnt-slight", serious: "cnt-serious", fatal: "cnt-fatal" }[name],
+        _counts[name].toLocaleString());
+    set("cnt-total", (_counts.fatal + _counts.serious + _counts.slight).toLocaleString());
+    drawPie();
+};
+
+var myMap = ixmaps.Map("map", {
+    mapType:  "VT_DATAVIZ",
+    mode:     "pan",
+    legend:   "open",
+    tools:    false
+})
+.view({ center: { lat: 54.0, lng: -2.0 }, zoom: 6 })
+.options({
+    objectscaling:   "dynamic",
+    normalSizeScale: "8000000",
+    basemapopacity:  0.85,
+    flushChartDraw:  1000000
+});
+
+function buildLayers(url) {
+    myMap.layer("slight")
+        .data({ url: url, type: "csv" })
+        .binding({ geo: "la|lo", value: "n" })
+        .filter('WHERE s == "3"')
+        .type("CHART|BUBBLE|SIZE|AGGREGATE|SUM|GLOW")
+        .style({ colorscheme:["#4488ff"], fillopacity:0.55, gridwidth:"3px",
+                 normalsizevalue:"5000", scale:"1", showdata:"true" })
+        .meta({ name: "slight", tooltip: "{{theme.item.chart}}{{theme.item.data}}" })
+        .title("Slight").define();
+
+    myMap.layer("serious")
+        .data({ url: url, type: "csv" })
+        .binding({ geo: "la|lo", value: "n" })
+        .filter('WHERE s == "2"')
+        .type("CHART|BUBBLE|SIZE|AGGREGATE|SUM|GLOW")
+        .style({ colorscheme:["#ff8800"], fillopacity:0.75, gridwidth:"3px",
+                 normalsizevalue:"1200", scale:"1", showdata:"true" })
+        .meta({ name: "serious", tooltip: "{{theme.item.chart}}{{theme.item.data}}" })
+        .title("Serious").define();
+
+    myMap.layer("fatal")
+        .data({ url: url, type: "csv" })
+        .binding({ geo: "la|lo", value: "n" })
+        .filter('WHERE s == "1"')
+        .type("CHART|BUBBLE|SIZE|AGGREGATE|SUM|GLOW")
+        .style({ colorscheme:["#ff2020"], fillopacity:0.95, gridwidth:"3px",
+                 normalsizevalue:"300", scale:"1", showdata:"true" })
+        .meta({ name: "fatal", tooltip: "{{theme.item.chart}}{{theme.item.data}}" })
+        .title("Fatal").define();
+}
+
+function switchYear(year) {
+    if (year === _currentYear) return;
+    _currentYear = year;
+
+    document.querySelectorAll(".yr-btn").forEach(function(b) {
+        b.classList.toggle("yr-active", +b.dataset.year === year);
+    });
+    set("title-year", year);
+
+    _counts = { fatal: 0, serious: 0, slight: 0 };
+    set("cnt-fatal", "—"); set("cnt-serious", "—");
+    set("cnt-slight", "—"); set("cnt-total", "—");
+    var pie = document.getElementById("pie");
+    if (pie) pie.innerHTML = "";
+
+    buildLayers(YEAR_URLS[year]);
+}
+
+myMap.on("layerdraw", function(e) {
+    var themeObj = ixmaps.getThemeObj(e.id);
+    if (!themeObj) return;
+    if (themeObj.szFlag && themeObj.szFlag.match(/NOLEGEND|SILENT/)) return;
+    if (!themeObj.fVisible) return;
+    ixmaps.statistics(e.id);
+});
+
+buildLayers(YEAR_URLS[_currentYear]);
+</script>
+</body>
+</html>
