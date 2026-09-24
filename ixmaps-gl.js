@@ -466,7 +466,20 @@
       console.warn('[ixmaps-gl] unsupported filter expression, left unfiltered:', filterExpr);
       return fc;
     }
-    const [, field, rawValue] = m;
+    const [, rawField, rawValue] = m;
+    // CORRECTED: only rawValue's quotes were stripped here — rawField was
+    // used AS-IS. Confirmed as a real, silent bug: a real page's own
+    // runtime filter (mappa_stranieri_30.html's changeThemeStyle(id,
+    // 'filter:WHERE "tipo" == "Liceo"', "set")) quotes the FIELD NAME too
+    // (unlike every .filter() config this function was originally built
+    // against — e.g. `WHERE DEN_REG = Lombardia`, `WHERE s == "3"` —
+    // where only the value, if anything, is quoted). Left unfixed, `field`
+    // stayed `'"tipo"'` (literal quote characters included), so
+    // f.properties['"tipo"'] was always undefined and the filter matched
+    // zero records — no error, no warning, just a silently-empty result,
+    // exactly the same failure shape as the earlier documented single-"="
+    // filter bug this function's own comment above already describes.
+    const field = rawField.replace(/^['"]|['"]$/g, '');
     const value = rawValue.replace(/^['"]|['"]$/g, '');
     if (fc.type === 'Table') return { type: 'Table', rows: fc.rows.filter(row => String(row[field]) === value) };
     return { type: 'FeatureCollection', features: fc.features.filter(f => String(f.properties[field]) === value) };
@@ -975,6 +988,14 @@
         rt._dataSourceKey = cacheKey;
         runtimes.push(rt);
         _globalThemeRegistry.set(rt.name, rt);
+        // See findRuntime's own comment on the three real theme-id
+        // conventions (.layer() name / style.name / meta.name) — this
+        // module-level registry (used by getThemeObj/markThemeClass/the
+        // global ixmaps.data.getFacets) needs the SAME meta.name fallback
+        // findRuntime just got, or those globals would silently miss a
+        // theme addressed only by its meta.name, same bug different
+        // resolution path.
+        if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
       }
 
       const [lat, lon] = this._viewCenter || [45.5, 9.2];
@@ -1218,8 +1239,20 @@
       // the visible thematic layer, never its invisible backdrop geometry
       // provider. Same disambiguation problem findRuntimeForLayerId
       // already solves for hover/click picking, above.
+      // GL-PORT COMPAT: a real page addresses a theme by whichever of
+      // THREE real identifiers it happens to have set at define() time —
+      // .layer(name)'s own name, .style({name}), or .meta({name}) — all
+      // three are real, live conventions, not this port's own invention:
+      // confirmed live as a real bug (mappa_stranieri_30.html's own
+      // filter dropdown, which addresses its theme purely by
+      // .meta({name:"scuole-pct-stranieri"}), silently no-opped — no
+      // error, findRuntime's own console.warn just never matched anything
+      // — because this only checked .name/.style.name, missing the third
+      // real convention entirely). r.meta.name checked last since it's
+      // the one real page found using it, matching the two already-
+      // verified conventions' own priority (layer name, then style.name).
       function findRuntime(themeId) {
-        const matches = runtimes.filter(r => r.name === themeId || (r.style && r.style.name === themeId));
+        const matches = runtimes.filter(r => r.name === themeId || (r.style && r.style.name === themeId) || (r.meta && r.meta.name === themeId));
         if (!matches.length) { console.warn(`[ixmaps-gl] no layer named "${themeId}"`); return undefined; }
         return matches.find(r => !r.flags.has('FEATURE') && !r.flags.has('FEATURES')) || matches[0];
       }
@@ -1342,6 +1375,31 @@
           const rt = findRuntime(themeId);
           if (rt) { rt.setStyle(patch); refresh(); }
         },
+        // GL-PORT COMPAT: real ixmaps-flat's ixmaps.changeThemeStyle(szId,
+        // "key:value", "set"|"remove") — a generic, STRING-based style
+        // patch API (confirmed used by real ported pages, e.g. a school-
+        // type filter dropdown calling changeThemeStyle(id,'filter:WHERE
+        // "tipo" == "X"', "set") / changeThemeStyle(id,"filter","remove")).
+        // Only the "filter" key is implemented — the one real page found
+        // using this only ever patches filter, and this engine's own
+        // setThemeStyle(patch) already covers arbitrary OBJECT-shaped
+        // style patches for everything else a page would reach for. A
+        // "filter:WHERE ..." value reuses rt.setRuntimeFilter, the SAME
+        // applyWhereFilter grammar the layer's own load-time .filter()
+        // already parses — just invoked again at runtime.
+        changeThemeStyle: (themeId, styleKeyValue, action) => {
+          const rt = findRuntime(themeId);
+          if (!rt) return;
+          const colonIdx = String(styleKeyValue).indexOf(':');
+          const key = colonIdx === -1 ? String(styleKeyValue) : styleKeyValue.slice(0, colonIdx);
+          const value = colonIdx === -1 ? '' : styleKeyValue.slice(colonIdx + 1);
+          if (key === 'filter') {
+            rt.setRuntimeFilter(action === 'remove' ? '' : value);
+            refresh();
+          } else {
+            console.warn(`[ixmaps-gl] changeThemeStyle: unsupported style key "${key}" (only "filter" implemented — use setThemeStyle(themeId, {...}) for other style properties)`);
+          }
+        },
         // shows/hides a whole theme (all the deck.gl layers its
         // buildDeckLayers would otherwise produce) without touching its
         // data or style — for toggle controls like the real page's
@@ -1393,6 +1451,7 @@
           rt._dataSourceKey = JSON.stringify({ url: layerBuilder._data && layerBuilder._data.url, urls: layerBuilder._data && layerBuilder._data.urls, type: layerBuilder._data && layerBuilder._data.type, query: layerBuilder._data && layerBuilder._data.query, obj: !!(layerBuilder._data && layerBuilder._data.obj) });
           runtimes.push(rt);
           _globalThemeRegistry.set(rt.name, rt);
+          if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
           refresh();
           notifyRedraw();
           return rt.name;
@@ -1415,6 +1474,17 @@
           if (removedRuntimes.includes(_globalThemeRegistry.get(name))) {
             _globalThemeRegistry.delete(name);
           }
+          // Same stale-registry guard, for the meta.name registration
+          // findRuntime's own comment documents (a removed runtime may
+          // have been ALSO reachable by a meta.name distinct from its
+          // .layer() name — leaving that second entry behind would let a
+          // later ixmaps.getThemeObj(metaName) call resolve a runtime this
+          // API just told the caller was removed).
+          removedRuntimes.forEach(rt => {
+            if (rt.meta && rt.meta.name && rt.meta.name !== name && _globalThemeRegistry.get(rt.meta.name) === rt) {
+              _globalThemeRegistry.delete(rt.meta.name);
+            }
+          });
           if (removed) { refresh(); notifyRedraw(); }
           return removed;
         }
@@ -1676,6 +1746,29 @@
       //     icons, not DOM/SVG nodes a CSS rule could reach.
       if (this.mapOptions.legend === 'open' && el.parentElement) {
         el.parentElement.style.position = el.parentElement.style.position || 'relative';
+        // Map-level `align` option positions the legend panel — a map-
+        // wide placement choice, not per-theme (unlike legendtheme/
+        // legendfilter above), so read once from this.mapOptions rather
+        // than per-runtime. Real ixmaps-flat ALSO has an `align` map
+        // option (ui/js/htmlgui_flat.js) controlling legend position, but
+        // its value shape is a free-form regex-matched left/right/center/
+        // top/bottom/pixel-prefixed string tied to a static in-page DOM
+        // panel — a different layout model from this panel's own
+        // position:absolute floating-overlay-over-the-map-canvas
+        // approach. This port reuses the real OPTION NAME but adapts the
+        // VALUE SHAPE to plain four-corner tokens matching how this panel
+        // is actually positioned — a deliberate divergence, same
+        // reasoning already applied to style.legendfilter's own name/
+        // shape choice earlier this session. Default "top-right" per
+        // explicit request (real engine's own fallback is right-anchored
+        // too, just without an opinion on vertical placement).
+        const ALIGN_CSS = {
+          'top-left': 'left:10px;top:10px;',
+          'top-right': 'right:10px;top:10px;',
+          'bottom-left': 'left:10px;bottom:10px;',
+          'bottom-right': 'right:10px;bottom:10px;'
+        };
+        const legendAlignCss = ALIGN_CSS[this.mapOptions.align] || ALIGN_CSS['top-right'];
         runtimes
           // .type("...|NOLEGEND") — the fourth real legend-related type()
           // token: opts a theme OUT of the legend entirely (real engine's
@@ -1687,6 +1780,26 @@
           .forEach((rt) => {
             const panel = document.createElement('div');
             panel.className = 'ix-native-legend';
+            // Opt-in via .style({legendtheme:"light"}) — a NEW, ixmaps-gl-
+            // only convention (same naming pattern as the sibling
+            // legendfilter/legendunits keys added earlier this session):
+            // real ixmaps-flat's legend.js has no such switch, this panel
+            // is entirely this port's own construction. Default ("dark")
+            // preserves the original always-dark panel exactly; "light" is
+            // for pages using a light basemap (e.g. CARTO Positron) where
+            // a dark semi-transparent panel reads as a mismatched dark
+            // patch rather than legend chrome. Every other hardcoded panel
+            // color below (rows, bar track, filter <select>) is expressed
+            // in terms of this one palette so the two variants stay in
+            // sync — no separate light/dark branch anywhere else.
+            const isLightLegend = rt.style.legendtheme === 'light';
+            const legendColors = isLightLegend
+              ? { bg: 'rgba(255,255,255,0.92)', fg: '#1a1a1a', shadow: '0 2px 10px rgba(0,0,0,0.18)',
+                  rowMarked: 'rgba(0,0,0,0.08)', track: 'rgba(0,0,0,0.08)',
+                  selectBg: 'rgba(0,0,0,0.04)', selectBorder: 'rgba(0,0,0,0.2)' }
+              : { bg: 'rgba(28,30,34,0.92)', fg: '#eee', shadow: '0 2px 10px rgba(0,0,0,0.45)',
+                  rowMarked: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.08)',
+                  selectBg: 'rgba(255,255,255,0.08)', selectBorder: 'rgba(255,255,255,0.25)' };
             // max-height:66% resolves against el.parentElement's own
             // height (the map container, which always has a definite
             // height for the map itself to render into) since this panel
@@ -1699,11 +1812,11 @@
             // slider stay fixed in place — a flex child won't actually
             // shrink to fit and scroll internally without min-height:0,
             // it just overflows its flex parent instead.
-            panel.style.cssText = 'position:absolute;left:10px;bottom:10px;z-index:6;width:280px;'
+            panel.style.cssText = 'position:absolute;' + legendAlignCss + 'z-index:6;width:280px;'
               + 'display:flex;flex-direction:column;max-height:66%;'
-              + 'background:rgba(28,30,34,0.92);color:#eee;font:12px/1.4 -apple-system,Arial,sans-serif;'
+              + 'background:' + legendColors.bg + ';color:' + legendColors.fg + ';font:12px/1.4 -apple-system,Arial,sans-serif;'
               + 'border-radius:6px;padding:10px 12px 12px;pointer-events:auto;'
-              + 'box-shadow:0 2px 10px rgba(0,0,0,0.45);';
+              + 'box-shadow:' + legendColors.shadow + ';';
             el.parentElement.appendChild(panel);
 
             // SUM+valuefield mirrors the real engine's own "SUM style
@@ -1839,7 +1952,7 @@
                 const marked = rt._markedClasses.has(i);
                 const dimmed = rt._markedClasses.size > 0 && !marked;
                 const rowStyle = 'padding:4px 3px;border-radius:4px;cursor:pointer;opacity:' + (dimmed ? 0.4 : 1) + ';'
-                  + 'background:' + (marked ? 'rgba(255,255,255,0.14)' : 'transparent') + ';';
+                  + 'background:' + (marked ? legendColors.rowMarked : 'transparent') + ';';
                 if (isSimple) {
                   // Swatch + label only, no bar/value — see rowsEl's own
                   // comment above for why (SIMPLELEGEND).
@@ -1870,7 +1983,7 @@
                   + '<div style="margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + labels[i] + '</div>'
                   + '<div style="display:flex;align-items:center;gap:6px;">'
                   + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
-                  + '<span style="flex:1 1 auto;min-width:0;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">'
+                  + '<span style="flex:1 1 auto;min-width:0;height:6px;background:' + legendColors.track + ';border-radius:3px;overflow:hidden;">'
                   + '<span style="display:block;height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px;"></span>'
                   + '</span>'
                   + '<span style="flex:0 0 auto;text-align:right;min-width:60px;">' + rt._formatTooltipValue(totals[i]) + legendUnit + '</span>'
@@ -1917,12 +2030,54 @@
             // of legend style.
             rt._triggerRedraw = () => { refresh(); };
 
+            // Header row (title/snippet + collapse toggle) always stays
+            // visible; everything else lives in `bodyEl`, hidden/shown as
+            // a single unit by the toggle below — collapsing shows just
+            // the title bar, matching the real engine's own fold/unfold
+            // behavior (ixmaps.legendState + the "legend-folded" CSS
+            // class, ui/js/tools/legend.js) even though this port toggles
+            // via a plain display swap on one wrapper div rather than a
+            // shared stylesheet class (this panel has no external CSS at
+            // all — everything here is inline-styled, unlike the real
+            // engine's DOM/CSS-class-driven legend).
             const header = document.createElement('div');
+            header.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:6px;';
+            const headerText = document.createElement('div');
+            headerText.style.cssText = 'min-width:0;flex:1 1 auto;';
             let headerHtml = '';
             if (rt.meta.title) headerHtml += '<div style="font-weight:600;font-size:13px;margin-bottom:2px;">' + rt.meta.title + '</div>';
-            if (rt.meta.snippet) headerHtml += '<div style="opacity:0.75;margin-bottom:8px;">' + rt.meta.snippet + '</div>';
-            header.innerHTML = headerHtml;
+            if (rt.meta.snippet) headerHtml += '<div style="opacity:0.75;">' + rt.meta.snippet + '</div>';
+            headerText.innerHTML = headerHtml;
+            header.appendChild(headerText);
+            const collapseBtn = document.createElement('button');
+            collapseBtn.type = 'button';
+            collapseBtn.style.cssText = 'flex:0 0 auto;background:transparent;border:none;color:inherit;'
+              + 'font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;opacity:0.7;';
+            header.appendChild(collapseBtn);
             panel.appendChild(header);
+
+            const bodyEl = document.createElement('div');
+            bodyEl.style.cssText = 'display:flex;flex-direction:column;min-height:0;flex:1 1 auto;margin-top:8px;';
+            panel.appendChild(bodyEl);
+
+            // Collapsed by default under the real engine's own narrow-
+            // screen legend threshold (ui/js/tools/legend.js: `if
+            // (window.innerWidth < 500) ixmaps.legend.hide()`) — reusing
+            // that concrete precedent rather than picking an arbitrary
+            // "mobile" breakpoint of this port's own invention. Checked
+            // once at panel-build time, not on resize — matching the real
+            // engine's own one-shot-at-redraw-time check, not a live
+            // matchMedia listener.
+            const MOBILE_LEGEND_BREAKPOINT = 500;
+            let collapsed = window.innerWidth < MOBILE_LEGEND_BREAKPOINT;
+            function applyCollapsed() {
+              bodyEl.style.display = collapsed ? 'none' : 'flex';
+              panel.style.maxHeight = collapsed ? 'none' : '66%';
+              collapseBtn.textContent = collapsed ? '▸' : '▾';
+              collapseBtn.title = collapsed ? 'Expand legend' : 'Collapse legend';
+            }
+            collapseBtn.addEventListener('click', () => { collapsed = !collapsed; applyCollapsed(); });
+            applyCollapsed();
 
             // Selection/filter by field — opt-in via .style({legendfilter:
             // "<field>"}), e.g. "country_long" on the power-plants sample.
@@ -1948,18 +2103,18 @@
                 ? facet.values.slice().sort((a, b) => String(a).localeCompare(String(b)))
                 : [];
               const filterEl = document.createElement('select');
-              filterEl.style.cssText = 'width:100%;margin-bottom:8px;background:rgba(255,255,255,0.08);'
-                + 'color:#eee;border:1px solid rgba(255,255,255,0.25);border-radius:4px;padding:4px 6px;font:inherit;';
+              filterEl.style.cssText = 'width:100%;margin-bottom:8px;background:' + legendColors.selectBg + ';'
+                + 'color:' + legendColors.fg + ';border:1px solid ' + legendColors.selectBorder + ';border-radius:4px;padding:4px 6px;font:inherit;';
               filterEl.innerHTML = '<option value="">All (' + values.length + ')</option>'
                 + values.map(v => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join('');
               filterEl.addEventListener('change', () => {
                 if (filterEl.value) engineApi.setFacetFilter(rt.name, filterField, filterEl.value);
                 else engineApi.clearFacetFilter(rt.name, filterField);
               });
-              panel.appendChild(filterEl);
+              bodyEl.appendChild(filterEl);
             }
 
-            if (!isTextOnly) { panel.appendChild(rowsScroll); renderRows(); }
+            if (!isTextOnly) { bodyEl.appendChild(rowsScroll); renderRows(); }
 
             if (rt.meta.description) {
               const desc = document.createElement('div');
@@ -1970,7 +2125,7 @@
               // pages already embed their own source-citation markup
               // inside meta.description (see the power-plants sample).
               desc.innerHTML = rt.meta.description;
-              panel.appendChild(desc);
+              bodyEl.appendChild(desc);
             }
 
             // Chart-size slider — real engine's own range (legend.js:
@@ -1982,7 +2137,7 @@
             sliderRow.style.cssText = 'margin-top:10px;font-size:11px;opacity:0.8;';
             const initialPct = Math.round((parseFloat(rt.style.scale) || 1) * 100);
             sliderRow.innerHTML = 'Chart size: <span class="ix-legend-scale-val">' + initialPct + '</span>%';
-            panel.appendChild(sliderRow);
+            bodyEl.appendChild(sliderRow);
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.min = '25';
@@ -1995,7 +2150,7 @@
               rt.setStyle({ scale: pct / 100 });
               refresh();
             });
-            panel.appendChild(slider);
+            bodyEl.appendChild(slider);
           });
       }
 
@@ -2049,7 +2204,31 @@
       // own comment).
       let resolvedApi = null;
       promise.then(api => { resolvedApi = api; }, () => {});
-      promise.view = (...args) => { builder.view(...args); return promise; };
+      // GL-PORT COMPAT: real ixmaps-flat's map.view(...) re-centers the
+      // LIVE map when called after it's already built — confirmed as a
+      // real, needed behavior by a real page's own city-picker dropdown
+      // (mappa_stranieri_30.html), which calls myMap.view({center,zoom})
+      // again on every selection change, long after the initial .then()
+      // already resolved. Before this fix .view() ALWAYS routed to
+      // builder.view(...) (a build-time-only config setter MapBuilder's
+      // own constructor reads exactly once, inside build()) regardless of
+      // resolvedApi — a post-build call silently mutated a property
+      // nothing ever reads again, so the dropdown visibly did nothing.
+      // Same before/after-build split .layer() below already has, applied
+      // here too: post-build, jump the actual MapLibre map directly
+      // instead of the inert builder property.
+      promise.view = (...args) => {
+        if (resolvedApi) {
+          const [latlonOrOpts, zoom] = args;
+          const c = (latlonOrOpts && typeof latlonOrOpts === 'object' && !Array.isArray(latlonOrOpts) && latlonOrOpts.center) ? latlonOrOpts.center : latlonOrOpts;
+          const z = (latlonOrOpts && typeof latlonOrOpts === 'object' && !Array.isArray(latlonOrOpts) && latlonOrOpts.center) ? latlonOrOpts.zoom : zoom;
+          const lngLat = Array.isArray(c) ? [c[1], c[0]] : [c.lng, c.lat];
+          resolvedApi.map.jumpTo(Object.assign({ center: lngLat }, z != null ? { zoom: z } : {}));
+        } else {
+          builder.view(...args);
+        }
+        return promise;
+      };
       promise.options = (...args) => { builder.options(...args); return promise; };
       promise.attribution = (...args) => { builder.attribution(...args); return promise; };
       promise.legend = (...args) => { builder.legend(...args); return promise; };
@@ -2127,6 +2306,16 @@
   const VALUE_RADIUS_MIN = 0.1;
   const VALUE_RADIUS_MAX = 40;
   const CLUSTER_RADIUS_PX_DEFAULT = 2;
+  // Reference zoom for converting a real-world-METERS .style({gridwidth})
+  // into the single, fixed pixel radius Supercluster's own constructor
+  // takes — see _ensureClusterIndices' own comment for why this MUST be a
+  // constant, never the live viewport zoom. The actual value is
+  // arbitrary (Supercluster's own multi-resolution index already scales
+  // a fixed radius correctly across every zoom it serves internally,
+  // matching how real-world meters per pixel halves each zoom step) —
+  // fixed at 0 purely so metersToWorldPixels' own formula needs no
+  // separate zoom-less variant.
+  const GRIDWIDTH_METERS_REFERENCE_ZOOM = 0;
 
   // .type("DOT") — the real engine's simplest symbol (maptheme.js ~line
   // 18046): a FIXED-radius circle, never value-scaled (a bound value only
@@ -2313,34 +2502,88 @@
   }
 
   // .style({aggregation: ["1:1","3px","1:500000","1px", ...]}) — pairs of
-  // (map-scale-ratio threshold, aggregation grid size in pixels). Scale
-  // denominator is approximated from zoom using the standard 96dpi Web
-  // Mercator formula (this is the one piece of the original engine's
-  // internals we don't have source for, so treat the exact threshold
-  // crossover as a documented approximation, not a guaranteed match).
-  // Picks the finest (smallest-ratio) step whose threshold still covers
-  // the current scale, falling back to the coarsest step once zoomed out
-  // past all of them.
-  function resolveAggregationPx(aggregation, zoom, fallbackPx) {
-    if (!Array.isArray(aggregation) || aggregation.length < 2) return fallbackPx;
-    const steps = [];
+  // (map-scale-ratio threshold, aggregation grid size). CORRECTED
+  // (2026-09-22, user-asked-to-verify): this engine's own prior comment
+  // here admitted the exact crossover rule was an unverified guess ("the
+  // one piece of the original engine's internals we don't have source
+  // for") — a research pass into the REAL engine's own source
+  // (maptheme.js:7990-8008, byte-identical duplicate at :6912-6928)
+  // found the actual algorithm and it differs from what was implemented:
+  //   - NO sorting — real code stores szAggregationFieldA verbatim
+  //     (toArray, maptheme.js:999-1017, does no reordering) and scans it
+  //     in AUTHOR-PROVIDED order.
+  //   - NO break, no max-tracking — a PLAIN linear scan over every pair;
+  //     every pair whose threshold is exceeded UNCONDITIONALLY overwrites
+  //     the result, so whichever matching pair comes LAST in array order
+  //     wins. This only produces "largest exceeded threshold wins" — the
+  //     intuitive reading — when the page author supplies pairs in
+  //     ascending "1:N" order (the real code assumes but never verifies
+  //     this; a descending array behaves differently for real too, not
+  //     just in this port).
+  //   - Strict `>`, not `>=` (maptheme.js:7993) — exact equality to a
+  //     threshold does NOT match.
+  //   - A pair's value can be a bare real-world-METERS number, not only
+  //     "Npx" (maptheme.js: `if (val.match(/px/)) nGridWidthPx = ...;
+  //     else { nGridWidth = ...; nGridWidthPx = 0; }`) — the exact same
+  //     px-vs-meters duality standalone .style({gridwidth}) has (see
+  //     _ensureClusterIndices' own comment) — the previous version here
+  //     silently DROPPED any non-"px" pair entirely, a real, separate gap
+  //     from the ordering bug. A matched meters entry is converted at the
+  //     SAME fixed GRIDWIDTH_METERS_REFERENCE_ZOOM the standalone-
+  //     gridwidth fix uses, for the identical reason: converting at the
+  //     LIVE zoom here would reintroduce the exact same
+  //     rebuild/re-cluster-every-zoom-tick bug this session already fixed
+  //     once, just reachable through this second, array-based path
+  //     instead of the plain scalar one.
+  //   - No match at all (current scale under every threshold) keeps
+  //     whatever value was already in effect — no equivalent "prior
+  //     value" concept exists on this call path, so `fallbackPx` (the
+  //     caller's own default) stands in for that case, matching this
+  //     function's existing contract.
+  // Returns { px, isMeters } — isMeters lets the caller (_ensureClusterIndices)
+  // decide whether the QUERY-time zoom must also be pinned to the fixed
+  // reference zoom (see _computeAggregatedItems' own comment) for
+  // whichever bracket happens to be active right now — a theme mixing
+  // "px" and meters entries across brackets can genuinely need different
+  // treatment as the live zoom crosses from one bracket into another.
+  function resolveAggregationPx(aggregation, zoom, fallbackPx, refLat) {
+    if (!Array.isArray(aggregation) || aggregation.length < 2) return { px: fallbackPx, isMeters: false };
+    const scaleDenominator = WEBMERCATOR_SCALE_CONSTANT / Math.pow(2, zoom == null ? DEFAULT_ZOOM_REFERENCE : zoom);
+    let chosenPx = fallbackPx, chosenIsMeters = false;
     for (let i = 0; i + 1 < aggregation.length; i += 2) {
       const ratioMatch = /^1:(\d+(?:\.\d+)?)$/.exec(aggregation[i]);
-      const pxMatch = /^(\d+(?:\.\d+)?)px$/.exec(aggregation[i + 1]);
-      if (ratioMatch && pxMatch) steps.push({ ratio: parseFloat(ratioMatch[1]), px: parseFloat(pxMatch[1]) });
+      if (!ratioMatch) continue;
+      const lower = parseFloat(ratioMatch[1]);
+      if (!(lower && scaleDenominator > lower)) continue;
+      const valueStr = String(aggregation[i + 1]);
+      const pxMatch = /^(\d+(?:\.\d+)?)\s*px$/i.exec(valueStr);
+      if (pxMatch) {
+        chosenPx = parseFloat(pxMatch[1]);
+        chosenIsMeters = false;
+      } else {
+        const meters = parseFloat(valueStr);
+        if (!isNaN(meters)) {
+          chosenPx = metersToWorldPixels(meters, refLat || 0, GRIDWIDTH_METERS_REFERENCE_ZOOM);
+          chosenIsMeters = true;
+        }
+      }
+      // no break — see this function's own comment on why the real
+      // engine's own last-match-wins scan is reproduced faithfully here.
     }
-    if (!steps.length) return fallbackPx;
-    steps.sort((a, b) => a.ratio - b.ratio);
-    const scaleDenominator = WEBMERCATOR_SCALE_CONSTANT / Math.pow(2, zoom || DEFAULT_ZOOM_REFERENCE);
-    // real scale denominators (thousands at street level, hundreds of
-    // millions zoomed out to the world) are always >= these ratios, so
-    // "1:1" only ever means "the finest/default step" — walk ascending and
-    // keep the largest threshold the current scale still clears
-    let chosen = steps[0];
-    for (const step of steps) {
-      if (scaleDenominator >= step.ratio) chosen = step; else break;
+    return { px: chosenPx, isMeters: chosenIsMeters };
+  }
+
+  // .style({aggregation}) can carry a bare-METERS entry (see
+  // resolveAggregationPx's own comment) just like standalone
+  // .style({gridwidth}) can — this just needs to know WHETHER one exists
+  // at _prepare() time, to decide whether the one-time full-extent
+  // reference-latitude scan is worth doing at all.
+  function aggregationHasMetersEntry(aggregation) {
+    if (!Array.isArray(aggregation)) return false;
+    for (let i = 1; i < aggregation.length; i += 2) {
+      if (!/px\s*$/i.test(String(aggregation[i]))) return true;
     }
-    return chosen.px;
+    return false;
   }
 
   // .type() flag VALUES — draws the bound value as a bold, centered text
@@ -2831,6 +3074,33 @@
         }, 0);
       }
 
+      // Reference latitude for a real-world-METERS aggregation cell size —
+      // either a bare .style({gridwidth}) OR a bare-meters (non-"px")
+      // entry inside .style({aggregation:[...]}) — see
+      // _ensureClusterIndices' and _computeAggregatedItems' own comments
+      // for the bug this fixes (index rebuilding AND cluster composition
+      // itself both shifting with the live zoom, for what must be a
+      // zoom-invariant real-world grid). Computed ONCE here from the
+      // theme's OWN full data extent ("the index is always calculated
+      // for the entire geographic data extension", per explicit
+      // correction) — the bbox-center of every feature's own
+      // coordinates, not the current viewport (which pans) and not tied
+      // to zoom at all. Only bothers with the O(n) scan when the theme
+      // could ever need it (a plain "px" gridwidth, or an aggregation
+      // array with only "px" entries, never reads this field).
+      const gridwidthIsMeters = typeof this.style.gridwidth === 'string' ? !/px\s*$/i.test(this.style.gridwidth) : this.style.gridwidth != null;
+      if (gridwidthIsMeters || aggregationHasMetersEntry(this.style.aggregation)) {
+        let minLat = Infinity, maxLat = -Infinity;
+        this.features.forEach(f => {
+          const lat = f.geometry && f.geometry.coordinates && f.geometry.coordinates[1];
+          if (typeof lat === 'number' && !isNaN(lat)) {
+            if (lat < minLat) minLat = lat;
+            if (lat > maxLat) maxLat = lat;
+          }
+        });
+        this._gridRefLat = (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
+      }
+
       if (this.flags.has('DOMINANT') && this.binding.value) {
         // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
         // (binding.value is a pipe-joined field list, e.g. one CSV column
@@ -2917,6 +3187,17 @@
       // this.features by MapBuilder.build()
       this.facetFilters = new Map();
       this._activeFeatures = null; // null = no active facet filter, use this.features directly
+      // GL-PORT COMPAT: real ixmaps-flat's ixmaps.changeThemeStyle(szId,
+      // "filter:WHERE ...", "set"/"remove") — a SEPARATE runtime-filter
+      // mechanism from the facet-browser's own setFacetFilter/clearFacetFilter
+      // (field=value/like clauses). This one takes a raw WHERE-expression
+      // STRING, the SAME grammar the layer's own load-time .filter(expr)
+      // already parses (applyWhereFilter) — just applied at RUNTIME instead
+      // of once at build time. AND'd together with any active facet
+      // filters in _rebuildActiveFeatures below, not mutually exclusive —
+      // a page could in principle use both at once, though no current
+      // ported page does.
+      this._runtimeFilterExpr = '';
 
       // GRIDSIZE layers (PLOT curves-chart, or its grid-mesh companion)
       // also carry AGGREGATE in their type string, but they bin into a
@@ -3082,6 +3363,40 @@
         if (relevance > bestRelevance) { bestRelevance = relevance; bestIndex = i; bestValue = v; }
       }
       return bestIndex === -1 ? null : { index: bestIndex, value: bestValue };
+    }
+
+    // .style({symbolfield, symbolvalues, symbols}) — a SEPARATE shape-
+    // encoding channel, independent of whatever field drives this theme's
+    // own COLOR (binding.value/categoryColorsRgb) — e.g. color = a %
+    // class, shape = school type, two orthogonal classifications on the
+    // same bubble. symbolvalues[i] maps to symbols[i] by position, the
+    // SAME parallel-array convention .style({values, colorscheme}) already
+    // uses for the primary color channel. This is the real engine's own
+    // SYMBOL type (used WITHOUT BUBBLE) — MapBuilder#type's own comment
+    // flagged this as "a DIFFERENT, still-unimplemented real type for
+    // non-circle marker shapes" before this method existed; see
+    // drawSymbolPath for the actual shape rendering. Only wired into the
+    // individual (non-AGGREGATE) rendering path — no ported page combines
+    // this with AGGREGATE clustering yet, so a clustered GROUP bubble
+    // always stays circular (_buildBubbleIcon, untouched).
+    _resolveSymbolShape(props) {
+      if (!this.style.symbolfield || !Array.isArray(this.style.symbolvalues) || !Array.isArray(this.style.symbols)) return 'circle';
+      // CORRECTED: found live via pickObject, not assumed — the properties
+      // this actually receives at render time (from _computeAggregatedItems'
+      // non-AGGREGATE branch, spreading a _featuresByCategory entry) are
+      // {value, raw, cat} — every RECORD field this method needs (e.g.
+      // "tipo") lives under .raw, wrapped there by _buildAggregationIndex
+      // for EVERY theme using this pipeline, categorical or not (see its
+      // own comment) — not flat on `props` itself. Reading `props` directly
+      // silently and permanently fell through to the 'circle' default,
+      // exactly what this method's own unit-level test (called with an
+      // UNWRAPPED raw feature's properties, not what render time actually
+      // passes) failed to catch — falling back to `props` itself keeps
+      // that direct-unwrapped-properties call shape working too.
+      const source = (props && props.raw) ? props.raw : props;
+      const raw = String(source[this.style.symbolfield]);
+      const idx = this.style.symbolvalues.findIndex(v => String(v) === raw);
+      return (idx !== -1 && this.style.symbols[idx]) || 'circle';
     }
 
     // .type("CHOROPLETH|COMPOSECOLOR") prep — unlike DOMINANT's argmax
@@ -3566,6 +3881,14 @@
       this._rebuildActiveFeatures();
     }
 
+    // See _runtimeFilterExpr's own comment (constructor) — the
+    // changeThemeStyle(id,"filter:WHERE ...","set"/"remove") runtime
+    // filter, distinct from the facet-browser's field=value clauses above.
+    setRuntimeFilter(expr) {
+      this._runtimeFilterExpr = expr || '';
+      this._rebuildActiveFeatures();
+    }
+
     // `_featuresByCategory` (plain per-category bucketing — NOT yet
     // Supercluster; that's a separate, later step gated by AGGREGATE
     // alone, see _computeAggregatedItems) is needed whenever this runtime
@@ -3579,11 +3902,19 @@
     }
 
     _rebuildActiveFeatures() {
+      // Base set: this.features narrowed by the runtime WHERE-filter
+      // (changeThemeStyle's own mechanism, see _runtimeFilterExpr's own
+      // comment) if one is active — reusing applyWhereFilter, the SAME
+      // parser the layer's load-time .filter(expr) already uses, just
+      // invoked again here instead of once at build time.
+      const base = this._runtimeFilterExpr
+        ? applyWhereFilter({ type: 'FeatureCollection', features: this.features }, this._runtimeFilterExpr).features
+        : this.features;
       if (this.facetFilters.size === 0) {
-        this._activeFeatures = null;
+        this._activeFeatures = this._runtimeFilterExpr ? base : null;
       } else {
         const clauses = Array.from(this.facetFilters.entries());
-        this._activeFeatures = this.features.filter(f =>
+        this._activeFeatures = base.filter(f =>
           clauses.every(([field, clause]) => matchesFacetClause(f.properties[field], clause)));
       }
       if (this._usesAggregationIndex()) this._buildAggregationIndex(this._activeFeatures || this.features);
@@ -3618,16 +3949,28 @@
 
     // Viewport + active-filter scoped facet stats for szFieldsA, matching
     // the real ixmaps.data.getFacets/showFacets behavior (facet.js /
-    // show_facets.js): per field, tally occurrences (weighted by
-    // sizeField, defaulting to this.binding.size) and sort descending —
-    // only fields with a modest number of distinct values in scope get a
-    // bar list (.values); fields with many distinct values (e.g. free-text
-    // street names) come back as 'freetext' (search-only, no bar list),
-    // matching the real engine's own numeric-input-facet fallback path
-    // once forced non-numeric.
+    // show_facets.js), confirmed by direct source read rather than
+    // assumed: count-vs-sum is NOT something a page picks per call — the
+    // real engine reads it straight off the THEME's own bubble-size
+    // binding (facet.js:565-568: `if (objThemeDefinition.style.sizefield
+    // && ixmaps.data.fShowFacetValues) { ...weight by that column... }`,
+    // where style.sizefield is set from binding.size at theme-build time,
+    // htmlgui.js:1677-1679 — literally the same field already sizing
+    // bubbles on the map). Mirrored here: sizeField defaults to
+    // `ixmapsData.fShowFacetValues ? this.binding.size : null` — a page
+    // toggles the GLOBAL gate (ixmaps.data.fShowFacetValues, exactly the
+    // real flag/name) to switch every facet browser on the map between
+    // record-count and size-field-sum, without needing to know or repeat
+    // which field that is per call. `opts.sizeField`, if explicitly
+    // passed, still overrides this default outright — a GL-port-only
+    // escape hatch (real pages have no per-call override at all) kept for
+    // a page that genuinely wants a DIFFERENT field than the one sizing
+    // bubbles, without weakening the new automatic default.
     getFacets(fields, opts) {
       opts = opts || {};
-      const sizeField = opts.sizeField !== undefined ? opts.sizeField : this.binding.size;
+      const sizeField = opts.sizeField !== undefined
+        ? opts.sizeField
+        : (ixmapsData.fShowFacetValues ? this.binding.size : null);
       const bbox = opts.bbox || this._lastBbox;
       const source = this._activeFeatures || this.features;
       const scoped = bbox ? source.filter(f => pointInBbox(f.geometry, bbox)) : source;
@@ -3684,7 +4027,14 @@
           valuesLabels,
           nCount: totalCount,
           nValuesSum: Array.from(weights.values()).reduce((a, b) => a + b, 0),
-          isActive: activeClause != null, activeClause
+          isActive: activeClause != null, activeClause,
+          // Real show_facets.js:776 appends objTheme.szUnits to a bar's
+          // number ONLY when fShowFacetValues (sizeField weighting) is
+          // active — matches sizeField's own truthiness here rather than
+          // being a separate condition, since a plain per-record COUNT
+          // isn't naturally expressed "in units of" this theme's size
+          // field at all.
+          unit: sizeField ? (this.style.units || '') : ''
         };
       });
     }
@@ -3695,12 +4045,35 @@
     // tick would be wasteful when most moves don't cross a threshold.
     // .style({gridwidth}) (meters, see metersToWorldPixels) takes
     // precedence over .style({aggregation}) (a fixed screen-pixel radius)
-    // when both are set — a real-world-sized cell needs a reference
-    // latitude, taken from the current viewport bbox's center (Mercator's
-    // meters-per-pixel varies by latitude); bbox is null on the very
-    // first build before any 'move' event has fired, in which case this
-    // falls back to the equator (0°) for that one call only.
-    _ensureClusterIndices(zoom, bbox) {
+    // when both are set.
+    //
+    // CORRECTED (2026-09-22, user-reported: a 25-meter gridwidth theme was
+    // visibly re-aggregating — different cell memberships, different
+    // computed per-cell totals — on every zoom change, when a fixed-
+    // meters grid must have the SAME membership at every zoom, "always
+    // calculated for the entire geographic data extent"). Root cause: the
+    // meters branch below used to call `metersToWorldPixels(meters,
+    // refLat, zoom)` with the LIVE viewport zoom AND the current
+    // viewport bbox's own center latitude — meaning `radiusPx` (and so
+    // `this._clusterRadiusPx`, the cache key just below) changed on
+    // every zoom tick, forcing Supercluster's entire index to be thrown
+    // away and REBUILT from scratch each time, with a DIFFERENT radius
+    // parameter. That's backwards: Supercluster's own `radius` option is
+    // a SINGLE fixed value applied consistently across every zoom level
+    // its own multi-resolution index serves internally — real-world
+    // meters per pixel already halves every zoom step in that same
+    // convention, so a fixed radius computed ONCE already represents a
+    // constant real-world distance at any zoom Supercluster is later
+    // queried at (see GRIDWIDTH_METERS_REFERENCE_ZOOM's own comment).
+    // Fixed: the reference zoom is now the fixed
+    // GRIDWIDTH_METERS_REFERENCE_ZOOM constant (never live `zoom`), and
+    // the reference latitude is `this._gridRefLat` — the FULL dataset's
+    // own extent, computed once in _prepare() — never the current,
+    // panning-dependent viewport bbox. `radiusPx` for this branch is now
+    // a true per-theme constant: computed once, cached forever, the
+    // Supercluster index built exactly once for the runtime's lifetime
+    // (barring an explicit style change to gridwidth/aggregation itself).
+    _ensureClusterIndices(zoom) {
       let radiusPx;
       // GL-PORT COMPAT: a real-ixmaps-flat page's own gridwidth is
       // sometimes a fixed SCREEN-PIXEL size (e.g. style.gridwidth:"3px",
@@ -3713,12 +4086,24 @@
       const gridwidthPxMatch = typeof this.style.gridwidth === 'string' && /^\s*(\d+(?:\.\d+)?)\s*px\s*$/i.exec(this.style.gridwidth);
       if (gridwidthPxMatch) {
         radiusPx = parseFloat(gridwidthPxMatch[1]);
+        this._clusterUsesFixedZoom = false;
       } else if (this.style.gridwidth != null) {
         const meters = parseFloat(this.style.gridwidth);
-        const refLat = bbox ? (bbox[1] + bbox[3]) / 2 : 0;
-        radiusPx = metersToWorldPixels(meters, refLat, zoom);
+        radiusPx = metersToWorldPixels(meters, this._gridRefLat || 0, GRIDWIDTH_METERS_REFERENCE_ZOOM);
+        this._clusterUsesFixedZoom = true;
       } else {
-        radiusPx = resolveAggregationPx(this.style.aggregation, zoom, CLUSTER_RADIUS_PX_DEFAULT);
+        // Which bracket of .style({aggregation}) is currently active DOES
+        // legitimately depend on the live zoom (that's the whole point of
+        // the array) — but see resolveAggregationPx's own comment for why
+        // a MATCHED meters-valued bracket still needs the fixed reference
+        // zoom for ITS OWN OWN radius conversion and, via
+        // _clusterUsesFixedZoom below, for _computeAggregatedItems' query
+        // zoom too. A theme whose brackets mix "px" and meters values can
+        // genuinely flip this flag as the live zoom crosses from one
+        // bracket into another.
+        const resolved = resolveAggregationPx(this.style.aggregation, zoom, CLUSTER_RADIUS_PX_DEFAULT, this._gridRefLat);
+        radiusPx = resolved.px;
+        this._clusterUsesFixedZoom = resolved.isMeters;
       }
       if (this._clusterIndices && this._clusterRadiusPx === radiusPx) return;
       this._clusterRadiusPx = radiusPx;
@@ -3806,19 +4191,49 @@
     // baked into the texture instead of applied as a layer-wide `opacity`,
     // so it stays correct when combined into one layer with cluster icons
     // (which already bake in their own fixed alpha).
-    _buildSingleIcon(colorRgb, opacity) {
-      const key = `single-${colorRgb.join(',')}-${opacity}`;
+    // shape (default 'circle'), borderColorRgb/borderWidth (default none)
+    // — .style({symbolfield, symbolvalues, symbols}) and
+    // .style({linecolor, linewidth}) on an individual (non-AGGREGATE)
+    // CHART|SYMBOL theme, see _resolveSymbolShape's own comment for the
+    // real feature this implements ("SYMBOL... a DIFFERENT, still-
+    // unimplemented real type for non-circle marker shapes", per
+    // MapBuilder#type's own comment — this is that implementation).
+    // Border width is a canvas-pixel value in this icon's OWN fixed
+    // BUBBLE_ICON_SIZE raster, not a calibrated real display-pixel width
+    // — this icon gets rasterized once and reused (scaled) at every
+    // on-screen bubble size the theme's own value-driven radius produces
+    // (see valueRadius/_iconCache), so there is no single "actual size"
+    // to calibrate a border against, same inherent tradeoff every other
+    // cached bubble icon here already accepts; the border scales with
+    // the bubble exactly as the fill already does, which reads as
+    // reasonable rather than wrong.
+    _buildSingleIcon(colorRgb, opacity, shape, borderColorRgb, borderWidth) {
+      shape = shape || 'circle';
+      borderWidth = borderWidth || 0;
+      const key = `single-${shape}-${colorRgb.join(',')}-${opacity}-${borderColorRgb ? borderColorRgb.join(',') : 'none'}-${borderWidth}`;
       if (this._iconCache.has(key)) return this._iconCache.get(key);
       const size = BUBBLE_ICON_SIZE;
       const canvas = document.createElement('canvas');
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
       const c = size / 2;
+      // Inset by half the border width so a thick stroke doesn't get
+      // clipped at the canvas edge (same reasoning as _buildGridSquareIcon's
+      // own inset, applied here for an arbitrary symbol shape instead of
+      // a fixed square).
+      const r = c - borderWidth / 2;
       ctx.beginPath();
-      ctx.arc(c, c, c, 0, Math.PI * 2);
+      drawSymbolPath(ctx, shape, c, c, r);
+      ctx.closePath();
       ctx.fillStyle = `rgb(${colorRgb.join(',')})`;
       ctx.globalAlpha = opacity;
       ctx.fill();
+      if (borderWidth > 0 && borderColorRgb) {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = `rgb(${borderColorRgb.join(',')})`;
+        ctx.lineWidth = borderWidth;
+        ctx.stroke();
+      }
       const icon = { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key };
       return this._cacheIcon(key, icon);
     }
@@ -4733,10 +5148,25 @@
         return { individual, groups: [] };
       }
 
+      // For a fixed-real-world-METERS gridwidth, BOTH the Supercluster
+      // query and the RELOCATE/grid-snap positioning below must run at
+      // the SAME fixed reference zoom the index itself was built at
+      // (_ensureClusterIndices) — querying Supercluster's own multi-
+      // resolution hierarchy at the LIVE zoom instead would still return
+      // a DIFFERENT level of its internal merge hierarchy per zoom (more
+      // aggressive merging as you zoom "out" through that hierarchy),
+      // even though the underlying index itself is now built exactly
+      // once — Supercluster is fundamentally a zoom-ADAPTIVE multi-
+      // resolution structure, and only querying it at a CONSTANT zoom
+      // yields a truly zoom-invariant result. Rendering (on-screen bubble
+      // size) is unaffected — that already scales with the separate,
+      // always-live `liveZoom` passed through valueRadius(), not this.
+      const effectiveZoom = this._clusterUsesFixedZoom ? GRIDWIDTH_METERS_REFERENCE_ZOOM : zoom;
+
       const individual = [];
       const clusterFeatures = [];
       this._clusterIndices.forEach((index, cat) => {
-        index.getClusters(bbox, zoom).forEach(f => {
+        index.getClusters(bbox, effectiveZoom).forEach(f => {
           const tagged = { geometry: f.geometry, properties: { ...f.properties, cat } };
           if (f.properties.cluster) clusterFeatures.push(tagged);
           else individual.push(tagged);
@@ -4744,12 +5174,12 @@
       });
 
       const doRelocate = this.flags.has('RELOCATE');
-      const groups = doRelocate ? this._groupCoLocated(clusterFeatures, zoom) : clusterFeatures.map(f => {
+      const groups = doRelocate ? this._groupCoLocated(clusterFeatures, effectiveZoom) : clusterFeatures.map(f => {
         const cellPx = this._clusterRadiusPx || CLUSTER_RADIUS_PX_DEFAULT;
         const [lng, lat] = f.geometry.coordinates;
-        const p = lngLatToWorldPixel(lng, lat, zoom);
+        const p = lngLatToWorldPixel(lng, lat, effectiveZoom);
         const snapped = snapToAggregationGrid(p.x, p.y, cellPx, this.flags);
-        const ll = worldPixelToLngLat(snapped.x, snapped.y, zoom);
+        const ll = worldPixelToLngLat(snapped.x, snapped.y, effectiveZoom);
         return {
           geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
           properties: { counts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value }
@@ -4854,7 +5284,7 @@
       // plain (non-AGGREGATE) BUBBLE/CHART theme would be pure waste (a
       // full re-index of the whole dataset, every redraw, for indices
       // that branch never reads).
-      if (this.flags.has('AGGREGATE')) this._ensureClusterIndices(zoom, bbox);
+      if (this.flags.has('AGGREGATE')) this._ensureClusterIndices(zoom);
       let { individual, groups } = this._computeAggregatedItems(bbox, zoom);
       // Far-hemisphere cull under globe projection — see
       // isOnVisibleHemisphere's own comment for why this is needed at
@@ -4963,6 +5393,15 @@
       const sizeValueOf = d => d.properties.counts ? d.properties.total : d.properties.value;
       const combined = individual.concat(groups).sort((a, b) => sizeValueOf(a) - sizeValueOf(b));
       const fillOpacity = parseFloat(this.style.fillopacity) || 0.85;
+      // .style({linecolor, linewidth}) — an individual icon's own border,
+      // see _buildSingleIcon's own comment. Real ixmaps-flat symbol
+      // markers do draw an outline (confirmed by a real ported page
+      // explicitly setting both), unlike this port's own pre-existing
+      // bubble icons, which never had one — computed once here (a
+      // per-theme constant, not per-record) rather than inside the
+      // getIcon callback below.
+      const singleBorderColorRgb = this.style.linecolor && this.style.linecolor !== 'none' ? hexOrNamedToRgb(this.style.linecolor) : null;
+      const singleBorderWidthPx = parseFloat(this.style.linewidth) || 0;
 
       // GLOW: gradient-texture halo (see _getGlowIcon for why this diverges
       // from the real engine's literal flat-circle formula). Individual
@@ -4989,7 +5428,7 @@
         getPosition: d => d.geometry.coordinates,
         getIcon: d => d.properties.counts
           ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb)
-          : this._buildSingleIcon(this.categoryColorsRgb[d.properties.cat], fillOpacity),
+          : this._buildSingleIcon(this.categoryColorsRgb[d.properties.cat], fillOpacity, this._resolveSymbolShape(d.properties), singleBorderColorRgb, singleBorderWidthPx),
         getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 2,
         getColor: d => [255, 255, 255, this._iconAlpha(d)],
         sizeUnits: 'pixels',
@@ -5124,6 +5563,39 @@
     return best;
   }
 
+  // Traces a symbol shape's outline into an already-`ctx.beginPath()`'d
+  // canvas context, centered at (cx, cy) with "radius" r (each shape's
+  // own natural half-extent, chosen so all four read as roughly
+  // comparable in size to a circle of that same radius — a reasoned
+  // visual approximation, not verified against the real engine's own
+  // exact proportions, since maptheme.js's SVG symbol drawing wasn't
+  // part of this feature's source-verification pass). Triangle points
+  // DOWN, confirmed against a real ported page's own comment ("il motore
+  // disegna il triangolo con la punta in basso" — "the engine draws the
+  // triangle with the tip at the bottom").
+  function drawSymbolPath(ctx, shape, cx, cy, r) {
+    switch (shape) {
+      case 'square': {
+        const s = r * Math.SQRT2;
+        ctx.rect(cx - s / 2, cy - s / 2, s, s);
+        break;
+      }
+      case 'diamond':
+        ctx.moveTo(cx, cy - r);
+        ctx.lineTo(cx + r, cy);
+        ctx.lineTo(cx, cy + r);
+        ctx.lineTo(cx - r, cy);
+        break;
+      case 'triangle':
+        ctx.moveTo(cx - r, cy - r * 0.6);
+        ctx.lineTo(cx + r, cy - r * 0.6);
+        ctx.lineTo(cx, cy + r);
+        break;
+      default: // circle
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    }
+  }
+
   function hexOrNamedToRgb(v) {
     if (typeof v === 'string' && v[0] === '#') return hexToRgb(v);
     const NAMED = { gray: [128, 128, 128], grey: [128, 128, 128], black: [0, 0, 0], white: [255, 255, 255] };
@@ -5192,14 +5664,251 @@
   // the runtime's OWN static filter + the current viewport bbox — see its
   // own comment) and are accepted-but-ignored rather than requiring the
   // caller to stop passing them. Returns [] for an unknown szId, matching
-  // "no facets" rather than throwing.
+  // "no facets" rather than throwing. A 7th, GL-port-only `opts` argument
+  // (real signature has none) forwards straight through to the runtime's
+  // own getFacets(fields, opts) — e.g. `{sizeField: "capacity_mw"}` to
+  // weight bars by a field's sum rather than a plain record count, the
+  // one extra capability this port's facet browser has that the real
+  // 6-arg signature has no room to express.
+  //
+  // Resolved via _lastMapApi.getFacets (which itself resolves szId
+  // through build()'s own findRuntime — matching EITHER a runtime's
+  // .layer() name OR its style.name, and preferring a non-FEATURE/
+  // FEATURES runtime on a collision), NOT _globalThemeRegistry directly.
+  // Confirmed as a real, necessary distinction, not an arbitrary
+  // preference: a page styling its theme with .style({name:"chart"})
+  // while calling .layer("AREU") (a real, common pattern — the theme id
+  // callers use is the STYLE name, "chart", not the layer name) plus a
+  // SEPARATE second runtime sharing that same .layer("AREU") name (e.g.
+  // a companion grid/curves overlay) broke exactly this way: looking up
+  // "chart" in _globalThemeRegistry (keyed only by .layer() name) found
+  // nothing, and even looking up "AREU" would have returned whichever of
+  // the two same-named runtimes was registered LAST — the wrong one —
+  // not the one actually named "chart". _lastMapApi's own findRuntime
+  // already handles both cases correctly.
   const ixmapsData = {
     fShowFacetValues: true,
-    getFacets(filterExpr, statsId, fields, szId, scope, mode) {
-      const rt = _globalThemeRegistry.get(szId);
-      return rt ? rt.getFacets(fields, {}) : [];
+    getFacets(filterExpr, statsId, fields, szId, scope, mode, opts) {
+      return _lastMapApi ? _lastMapApi.getFacets(szId, fields, opts || {}) : [];
+    },
+    // GL-PORT COMPAT: real ixmaps-flat's ixmaps.data.showFacets(szFilter,
+    // szDiv, facetsA) — the companion renderer to getFacets() above,
+    // confirmed (real ui/js/tools/show_facets.js + several real pages
+    // under pages/AREU_facets, pages/CinquePerMille, etc., all following
+    // the identical "call getFacets(), then showFacets() into an empty
+    // container div" two-step) rather than guessed. Same real names,
+    // deliberately adapted body:
+    //   - Real showFacets has NO theme-id parameter at all — its
+    //     generated click handlers (__setFacetFilter/__setFilter/
+    //     __removeFacets, also real names, see below) broadcast a filter
+    //     to EVERY theme on the map via ixmaps.changeThemeStyle(id,
+    //     "filter:...") for each of ixmaps.getThemes(), relying on a
+    //     non-matching theme's own field lookup to just harmlessly not
+    //     match. This engine's OWN setFacetFilter (build()'s engineApi,
+    //     see its own comment) deliberately scopes to sibling runtimes
+    //     sharing the SAME DATA SOURCE instead — a real, reasoned
+    //     improvement from earlier in this file's history, not
+    //     something to regress by reintroducing a global broadcast. The
+    //     4th `szId` parameter here (absent from the real signature) is
+    //     what lets this call through to that existing, already-correct
+    //     mechanism instead of reinventing global broadcast.
+    //   - Real showFacets renders Bootstrap-flavored markup (list-group/
+    //     form-control/badge classes) sized for pages that already load
+    //     Bootstrap; this engine has no such dependency (no page built
+    //     against it so far does), so this generates its own minimal,
+    //     dark-theme default styling instead (injected once, see
+    //     ensureFacetStyles below) — same OBSERVABLE behavior (per-field
+    //     header, proportional value bars, click-to-filter, search box
+    //     past a threshold, +N expand, active-state highlight), not
+    //     byte-identical DOM/CSS.
+    //   - Real plugin also exposes __setRangeFilter/__makeWordCloud/
+    //     __toggleSortActiveFacets for numeric-range sliders, a word-
+    //     cloud view, and a sort-order toggle — none of those are ported
+    //     here (no page has asked for them yet); only the three
+    //     click-to-filter/search-to-filter/remove-filter primitives that
+    //     actually drive a bar-list facet browser are.
+    showFacets(szFilter, szDiv, facetsA, szId) {
+      ensureFacetStyles();
+      const container = document.getElementById(szDiv);
+      if (!container) { console.warn(`[ixmaps-gl] showFacets: no element with id "${szDiv}"`); return; }
+
+      // Space-grouped thousands, same convention as _formatTooltipValue/
+      // the legend's own value formatting elsewhere in this file — not
+      // toLocaleString() with no explicit locale, which would otherwise
+      // pick up whatever locale the VIEWER's browser happens to default
+      // to (comma vs. period thousands/decimal separators), inconsistent
+      // with the rest of this engine's own number formatting.
+      const fmtCount = n => Math.round(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      const html = (facetsA || []).map(facet => {
+        const headerClass = facet.isActive ? 'ix-facet ix-facet-active' : 'ix-facet';
+        let body = `<div class="${headerClass}" data-field="${escapeHtml(facet.id)}">`
+          + `<div class="ix-facet-header" data-role="header">${escapeHtml(facet.id)}</div>`;
+
+        if (facet.type === 'freetext') {
+          const activeText = (facet.isActive && facet.activeClause && typeof facet.activeClause === 'object') ? facet.activeClause.like : '';
+          body += `<div class="ix-facet-search"><input type="text" placeholder="Filter by ... (e.g. ${escapeHtml(facet.example || '')})" value="${escapeHtml(activeText || '')}" data-role="search">`
+            + `<button data-role="search-btn">&#128269;</button></div></div>`;
+          return body;
+        }
+
+        const SEARCH_THRESHOLD = 10, MAX_SHOWN_UNCLIPPED = 12, MAX_SHOWN_CLIPPED = 10;
+        if (facet.values.length > SEARCH_THRESHOLD) {
+          const activeText = (facet.isActive && facet.activeClause && typeof facet.activeClause === 'object') ? facet.activeClause.like : '';
+          body += `<div class="ix-facet-search"><input type="text" placeholder="Filter by ..." value="${escapeHtml(activeText || '')}" data-role="search">`
+            + `<button data-role="search-btn">&#128269;</button></div>`;
+        }
+
+        const maxShown = facet.values.length < MAX_SHOWN_UNCLIPPED ? facet.values.length : MAX_SHOWN_CLIPPED;
+        const renderBar = value => {
+          const count = facet.valuesCount[value] || 0;
+          const pct = facet.nValuesSum ? Math.min(100, (count / facet.nValuesSum) * 100) : 0;
+          const rgb = szId && _lastMapApi ? _lastMapApi.getCategoryColor(szId, value) : null;
+          const bg = rgb ? `rgb(${rgb.join(',')})` : '#5a7688';
+          const selected = facet.isActive && facet.activeClause === value;
+          // facet.valuesLabels (set by rt.getFacets when a theme's own
+          // .style({label:[...]}) applies to this field — see that
+          // method's own comment) is a display-text override for coded
+          // values (e.g. German UART accident-type codes -> their real
+          // names); filtering itself always stays keyed by the raw value
+          // (data-value/activeClause), only the shown text changes.
+          const displayText = (facet.valuesLabels && facet.valuesLabels[value]) || value;
+          // facet.unit (see rt.getFacets' own comment) — appended only
+          // when this facet's numbers are size-field sums, matching real
+          // show_facets.js:776's own units-suffix condition exactly.
+          const unitSuffix = facet.unit ? ' ' + facet.unit : '';
+          return `<div class="ix-facet-bar${selected ? ' ix-facet-bar-selected' : ''}" data-role="value" data-value="${escapeHtml(value)}">`
+            + `<div class="ix-facet-row"><span class="ix-facet-label">${escapeHtml(displayText)}</span>`
+            + `<span class="ix-facet-count">${fmtCount(count)}${unitSuffix}</span></div>`
+            + `<div class="ix-facet-underline" style="width:${pct}%;background:${bg}"></div></div>`;
+        };
+
+        facet.values.slice(0, maxShown).forEach(v => { body += renderBar(v); });
+        if (facet.values.length > maxShown) {
+          const extra = facet.values.slice(maxShown);
+          body += `<button class="ix-facet-more" data-role="more">+ ${extra.length}</button>`
+            + `<div class="ix-facet-extra" hidden>${extra.map(renderBar).join('')}</div>`;
+        }
+        body += '</div>';
+        return body;
+      }).join('');
+
+      container.innerHTML = html;
+
+      // Wired once per container (not once per showFacets call — a page
+      // calls this again on every redraw, matching the real plugin's own
+      // "call getFacets+showFacets again inside htmlgui_onDrawTheme"
+      // pattern) via a dataset flag guard, delegated rather than the real
+      // plugin's inline onclick="javascript:__setFacetFilter(...)"
+      // strings — a facet VALUE can contain quotes/apostrophes/accents
+      // that would break an inline attribute (confirmed as a real,
+      // deliberately-avoided gotcha the first time this exact facet UI
+      // was built, see global_power_plants_sidebar.html's own comment on
+      // this). window.__setFacetFilter/__setFilter/__removeFacets (see
+      // their own comments) are still real, directly-callable globals a
+      // page's OWN custom UI can use too — only THIS generated markup
+      // happens to reach them via delegation instead of inline HTML.
+      if (!container.dataset.ixFacetsWired) {
+        container.dataset.ixFacetsWired = '1';
+        container.addEventListener('click', e => {
+          const moreBtn = e.target.closest('[data-role="more"]');
+          if (moreBtn) { moreBtn.hidden = true; moreBtn.nextElementSibling.hidden = false; return; }
+
+          const searchBtn = e.target.closest('[data-role="search-btn"]');
+          if (searchBtn) {
+            const input = searchBtn.previousElementSibling;
+            global.__setFilter(szId, searchBtn.closest('[data-field]').dataset.field, input.value);
+            return;
+          }
+
+          const header = e.target.closest('[data-role="header"]');
+          if (header) {
+            const facetEl = header.closest('[data-field]');
+            if (facetEl.classList.contains('ix-facet-active')) global.__removeFacets(szId, facetEl.dataset.field);
+            return;
+          }
+
+          const valueEl = e.target.closest('[data-role="value"]');
+          if (valueEl) {
+            global.__setFacetFilter(szId, valueEl.closest('[data-field]').dataset.field, valueEl.dataset.value);
+          }
+        });
+        container.addEventListener('keyup', e => {
+          if (e.key !== 'Enter') return;
+          const input = e.target.closest('[data-role="search"]');
+          if (input) global.__setFilter(szId, input.closest('[data-field]').dataset.field, input.value);
+        });
+      }
     }
   };
+
+  // Minimal default dark-theme styling for ixmaps.data.showFacets — see
+  // its own comment for why this diverges from the real plugin's
+  // Bootstrap-flavored markup. Injected once (id-guarded), and as the
+  // FIRST child of <head> rather than appended at the end — showFacets()
+  // typically first runs well after the page's own <head> (with its own
+  // <style> block, if any) has already parsed, so appending would put
+  // this LAST in source order and let it win ties over a page's own
+  // same-specificity override attempt (confirmed a real problem: a
+  // light-themed page overriding e.g. .ix-facet-header would otherwise
+  // have its rule silently beaten by this one). Inserted first instead,
+  // so a page's own plain `.ix-facet-header {...}` rule — no extra
+  // specificity needed — reliably wins, the way a caller would expect
+  // "my page's CSS overrides the library default" to work.
+  function ensureFacetStyles() {
+    if (document.getElementById('ix-facet-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'ix-facet-styles';
+    style.textContent = `
+      .ix-facet { margin-bottom: 0.9em; font: 14px/1.4 -apple-system,Arial,sans-serif; }
+      .ix-facet-header { padding: 0.45em 0.6em; border-radius: 5px; background: #1c2b3a; color: #cfe3ee; margin-bottom: 0.4em; }
+      .ix-facet-active .ix-facet-header { background: #2c4a63; cursor: pointer; color: #fff; }
+      .ix-facet-active .ix-facet-header::after { content: " \\00d7"; float: right; }
+      .ix-facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
+      .ix-facet-search input { flex: 1 1 auto; min-width: 0; font-size: 0.85em; border: 1px solid #2a3f4d; border-radius: 3px; padding: 0.25em 0.5em; background: #0f1b2a; color: #cfe3ee; }
+      .ix-facet-search button { border: 1px solid #2a3f4d; background: #0f1b2a; color: #cfe3ee; border-radius: 3px; cursor: pointer; font-size: 0.85em; }
+      .ix-facet-bar { cursor: pointer; padding: 0.3em 0.1em; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      .ix-facet-bar:hover { background: rgba(79,195,247,0.08); }
+      .ix-facet-bar-selected { background: rgba(79,195,247,0.16); }
+      .ix-facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; }
+      .ix-facet-label { color: #cfe3ee; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ix-facet-count { flex: none; color: #9fb4c2; font-weight: 600; white-space: nowrap; }
+      .ix-facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #2a3f4d; }
+      .ix-facet-more { margin: 0.2em 0 0.4em 0; font-size: 0.8em; padding: 0.2em 0.6em; border: 1px solid #2a3f4d; background: #0f1b2a; color: #cfe3ee; border-radius: 3px; cursor: pointer; }
+    `;
+    document.head.insertBefore(style, document.head.firstChild);
+  }
+
+  // GL-PORT COMPAT: real ixmaps-flat's window.__setFacetFilter/__setFilter/
+  // __removeFacets (ui/js/tools/show_facets.js — bare globals the
+  // plugin's own generated HTML calls via inline onclick, confirmed by
+  // direct source read; a page can also call them directly). Real
+  // __setFacetFilter(szFilter) takes one combined filter STRING and
+  // __removeFacets(szField)/__setFilter(szField, szFilter) take no theme
+  // id at all — this port's versions take a leading szId instead (see
+  // showFacets' own comment for why: this engine's setFacetFilter is
+  // scoped per data-source rather than broadcast to every theme, so it
+  // needs an anchor theme id these bare globals wouldn't otherwise have).
+  // All three are thin wrappers over the SAME already-correct
+  // setFacetFilter/clearFacetFilter/getActiveFacetFilters this file's
+  // own build()-time engineApi already exposes, reached via _lastMapApi
+  // (same "last-built map" convention as getProjectString/setProjectJSON/
+  // markThemeClass above) — no new filtering logic, just the real names.
+  function __setFacetFilter(szId, field, value) {
+    if (!_lastMapApi) return;
+    const active = _lastMapApi.getActiveFacetFilters(szId)[field];
+    if (active === value) _lastMapApi.clearFacetFilter(szId, field);
+    else _lastMapApi.setFacetFilter(szId, field, value);
+  }
+  function __setFilter(szId, field, value) {
+    if (!_lastMapApi) return;
+    const trimmed = value == null ? '' : String(value).trim();
+    if (trimmed) _lastMapApi.setFacetFilter(szId, field, { like: trimmed });
+    else _lastMapApi.clearFacetFilter(szId, field);
+  }
+  function __removeFacets(szId, field) {
+    if (!_lastMapApi) return;
+    _lastMapApi.clearFacetFilter(szId, field);
+  }
 
   // GL-PORT COMPAT: real ixmaps-flat's runtime projection-toggle pair
   // (ixmaps.getProjectString()/.setProjectJSON(project), documented in
@@ -5255,4 +5964,11 @@
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON,
     markThemeClass, unmarkThemeClass
   };
+  // Bare globals, not namespaced under ixmaps — matches the real engine's
+  // own convention (see their shared comment above) of exposing these
+  // directly on window for inline-HTML/onclick callers, not only via a
+  // library object.
+  global.__setFacetFilter = __setFacetFilter;
+  global.__setFilter = __setFilter;
+  global.__removeFacets = __removeFacets;
 })(window);
