@@ -63,6 +63,9 @@ flat's single lookup field (`geo`, `position`, `lookup`, `georef`, `lookupfield`
 by flat's own rule: `"lat|lon"` → points; `"geometry"` or GeoJSON/TopoJSON data → the
 features' own geometry; any other single field on tabular data → a join key against the
 same-named FEATURE layer — so a flat-style choropleth `.binding({geo: "code"})` works.
+And as in flat, `.meta()` is merged into style first (meta wins): a style property given in
+`.meta()` applies, and the meta keys (`title`, `tooltip`, `name`, `snippet`, `description`)
+work when given in `.style()` too.
 The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.

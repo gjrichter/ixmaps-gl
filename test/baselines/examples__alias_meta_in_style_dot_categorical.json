@@ -1,0 +1,1122 @@
+{
+ "page": "examples/alias_meta_in_style_dot_categorical.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 13,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-dot-AREU",
+     "type": "ScatterplotLayer",
+     "count": 69597,
+     "constants": {
+      "getRadius": 3,
+      "opacity": 0.8,
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPosition"
+     ],
+     "digest": "56741f9b8cdeeb1a",
+     "setDigest": "667e96aabf367090",
+     "columnDigests": {
+      "getFillColor": "921991c8b92a7011",
+      "getPosition": "791ac37ad548f93d"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ],
+      "getPosition": [
+       8.53358,
+       11.41876
+      ]
+     },
+     "sample": [
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.252939,
+        45.736787
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.278048,
+        45.733569
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.27326,
+        45.734682
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.262919,
+        45.736113
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.252855,
+        45.699419
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.2969,
+        45.701381
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.25713,
+        45.68986
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.236662,
+        45.602526
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.227255,
+        45.632591
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.243048,
+        45.625567
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.233326,
+        45.614335
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.249096,
+        45.612413
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.250996,
+        45.607524
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.251707,
+        45.696399
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.262907,
+        45.689923
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.292249,
+        45.70039
+       ]
+      ],
+      [
+       [
+        0,
+        170,
+        170
+       ],
+       [
+        9.408298,
+        45.645586
+       ]
+      ],
+      [
+       [
+        255,
+        0,
+        136
+       ],
+       [
+        9.405509,
+        45.646728
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "CATEGORICAL",
+      "DOT"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ]
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale</div>",
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 14,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-dot-AREU",
+     "type": "ScatterplotLayer",
+     "count": 69597,
+     "constants": {
+      "getRadius": 3,
+      "opacity": 0.8,
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPosition"
+     ],
+     "digest": "56741f9b8cdeeb1a",
+     "setDigest": "667e96aabf367090",
+     "columnDigests": {
+      "getFillColor": "921991c8b92a7011",
+      "getPosition": "791ac37ad548f93d"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ],
+      "getPosition": [
+       8.53358,
+       11.41876
+      ]
+     },
+     "sample": [
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.252939,
+        45.736787
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.278048,
+        45.733569
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.27326,
+        45.734682
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.262919,
+        45.736113
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.252855,
+        45.699419
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.2969,
+        45.701381
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.25713,
+        45.68986
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.236662,
+        45.602526
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.227255,
+        45.632591
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.243048,
+        45.625567
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.233326,
+        45.614335
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.249096,
+        45.612413
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.250996,
+        45.607524
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.251707,
+        45.696399
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.262907,
+        45.689923
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.292249,
+        45.70039
+       ]
+      ],
+      [
+       [
+        0,
+        170,
+        170
+       ],
+       [
+        9.408298,
+        45.645586
+       ]
+      ],
+      [
+       [
+        255,
+        0,
+        136
+       ],
+       [
+        9.405509,
+        45.646728
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "CATEGORICAL",
+      "DOT"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ]
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale</div>",
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 12,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-dot-AREU",
+     "type": "ScatterplotLayer",
+     "count": 69597,
+     "constants": {
+      "getRadius": 3,
+      "opacity": 0.8,
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPosition"
+     ],
+     "digest": "56741f9b8cdeeb1a",
+     "setDigest": "667e96aabf367090",
+     "columnDigests": {
+      "getFillColor": "921991c8b92a7011",
+      "getPosition": "791ac37ad548f93d"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ],
+      "getPosition": [
+       8.53358,
+       11.41876
+      ]
+     },
+     "sample": [
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.252939,
+        45.736787
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.278048,
+        45.733569
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.27326,
+        45.734682
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.262919,
+        45.736113
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.252855,
+        45.699419
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.2969,
+        45.701381
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.25713,
+        45.68986
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.236662,
+        45.602526
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.227255,
+        45.632591
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.243048,
+        45.625567
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.233326,
+        45.614335
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.249096,
+        45.612413
+       ]
+      ],
+      [
+       [
+        0,
+        102,
+        204
+       ],
+       [
+        9.250996,
+        45.607524
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.251707,
+        45.696399
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.262907,
+        45.689923
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.292249,
+        45.70039
+       ]
+      ],
+      [
+       [
+        0,
+        170,
+        170
+       ],
+       [
+        9.408298,
+        45.645586
+       ]
+      ],
+      [
+       [
+        255,
+        0,
+        136
+       ],
+       [
+        9.405509,
+        45.646728
+       ]
+      ],
+      [
+       [
+        221,
+        187,
+        34
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "CATEGORICAL",
+      "DOT"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ]
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale</div>",
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale</div>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

@@ -37,7 +37,9 @@
     "examples/alias_choropleth_dominant_deviation_density.html",
     "examples/alias_geo_choropleth_range_quantile.html",
     "examples/alias_style_lookupfield_choropleth_dopacity.html",
-    "alias_lookupfield_uk_collisions_2023.html"
+    "alias_lookupfield_uk_collisions_2023.html",
+    "examples/alias_meta_in_style_dot_categorical.html",
+    "examples/alias_style_in_meta_dot_categorical.html"
   ],
   "knownBroken": {},
   "equivalent": [
@@ -68,6 +70,14 @@
     [
       "alias_lookupfield_uk_collisions_2023.html",
       "uk_collisions_2023.html"
+    ],
+    [
+      "examples/alias_meta_in_style_dot_categorical.html",
+      "examples/dot_categorical.html"
+    ],
+    [
+      "examples/alias_style_in_meta_dot_categorical.html",
+      "examples/dot_categorical.html"
     ]
   ]
 }

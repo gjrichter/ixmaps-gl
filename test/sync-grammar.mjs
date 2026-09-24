@@ -31,18 +31,31 @@ function bindingAliasesSection(grammar, pkgVersion) {
   ].join('\n');
 }
 
+// the meta vocabulary: keys flat keeps in theme.meta (htmlgui.js moves them
+// back out of style when it serializes a theme)
+function metaKeysSection(grammar, pkgVersion) {
+  const keys = Object.keys(grammar.metaKeys).sort();
+  return [
+    `  // generated from ixmaps-grammar ${pkgVersion || '?'} — ${keys.length} meta keys`,
+    `  const FLAT_META_KEYS = ${JSON.stringify(keys)};`,
+  ].join('\n');
+}
+
 export function expectedSections(grammarFile = DEFAULT_GRAMMAR) {
   const grammar = JSON.parse(fs.readFileSync(grammarFile, 'utf8'));
   const pkgFile = path.resolve(path.dirname(grammarFile), '..', 'package.json');
   const pkgVersion = fs.existsSync(pkgFile) ? JSON.parse(fs.readFileSync(pkgFile, 'utf8')).version : null;
-  return { 'binding-aliases': bindingAliasesSection(grammar, pkgVersion) };
+  return {
+    'binding-aliases': bindingAliasesSection(grammar, pkgVersion),
+    'meta-keys': metaKeysSection(grammar, pkgVersion),
+  };
 }
 
 const sectionRe = name => new RegExp(`(  // <grammar:${name}>\\n)([\\s\\S]*?)(\\n  // </grammar:${name}>)`);
 
 export function currentSections(src = fs.readFileSync(ENGINE, 'utf8')) {
   const out = {};
-  for (const name of ['binding-aliases']) {
+  for (const name of ['binding-aliases', 'meta-keys']) {
     const m = src.match(sectionRe(name));
     if (!m) throw new Error(`section <grammar:${name}> not found in ixmaps-gl.js`);
     out[name] = m[2];
