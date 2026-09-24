@@ -130,5 +130,4 @@ python3 -m http.server 8000
 
 ## License
 
-No license has been chosen yet — treat this repository as all-rights-reserved
-until one is added.
+BSD 3-Clause — see [`LICENSE.txt`](./LICENSE.txt).
