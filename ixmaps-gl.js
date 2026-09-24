@@ -1065,6 +1065,61 @@
   }
 
   // ---------------------------------------------------------------
+  // Project-file themes. A theme in a real ixmaps-flat project JSON
+  // (setProjectJSON/loadProject) is stored in flat's OLDER shape: the data
+  // source lives in style.dbtable* keys, the value field at the top level.
+  // projectThemeToDefinition() reverses flat's own translation (htmlgui.js
+  // newTheme maps data{} → style.dbtable*; maptheme.js reads those back) into
+  // the definition shape normalizeTheme() takes:
+  //   style.dbtable        → data.name (a table NAME — flat never builds a
+  //                          file URL from it)
+  //   style.dbtableUrl     → data.url, used as is (flat passes it straight to
+  //                          its data loader)
+  //   style.dbtableType/Ext/Process/Query/Obj, datacache → data.type/ext/
+  //                          process/query/obj/cache
+  //   style.dbtable "name type (url) (ext)" — flat's oldest one-string form
+  //   theme.type → style.type; theme.field/field100 (or data.field/field100)
+  //                          → def.field/field100
+  // A modern theme.data{} wins over the style keys (flat applies it later).
+  // Code a project names (data.ext scripts, data.process functions) is kept
+  // as data and never run — the validator reports it.
+  // ---------------------------------------------------------------
+  const PROJECT_DATA_KEYS = {
+    dbtable: 'name', dbtableUrl: 'url', dbtableType: 'type', dbtableExt: 'ext',
+    dbtableProcess: 'process', dbtableQuery: 'query', dbtableObj: 'obj', datacache: 'cache',
+  };
+  function projectThemeToDefinition(theme) {
+    const t = theme || {};
+    const style = Object.assign({}, t.style);
+    const data = {};
+    for (const [k, dk] of Object.entries(PROJECT_DATA_KEYS)) {
+      if (style[k] !== undefined) { data[dk] = style[k]; delete style[k]; }
+    }
+    // "name type (url) (ext)" (maptheme.js MapTheme style parsing)
+    if (typeof data.name === 'string' && data.name.includes(' ')) {
+      const a = data.name.split(' ');
+      const inParens = x => (x && x.includes('(') ? x.split('(')[1].split(')')[0] : undefined);
+      data.name = a[0];
+      if (a.length === 2) { data.type = 'jsonDB'; data.url = inParens(a[1]); }
+      if (a.length >= 3) { data.type = a[1]; data.url = inParens(a[2]); }
+      if (a.length >= 4) data.ext = inParens(a[3]);
+    }
+    const modern = Object.assign({}, t.data);
+    if (modern.data !== undefined && modern.obj === undefined) modern.obj = modern.data; // flat: "data" aliases "obj"
+    delete modern.data;
+    const field = modern.field !== undefined ? modern.field : t.field;
+    const field100 = modern.field100 !== undefined ? modern.field100 : t.field100;
+    delete modern.field;
+    delete modern.field100;
+    Object.assign(data, modern);
+    if (t.type) style.type = t.type;
+    const def = { layer: t.layer, data: Object.keys(data).length ? data : undefined, binding: t.binding, style, meta: t.meta };
+    if (field !== undefined) def.field = field;
+    if (field100 !== undefined) def.field100 = field100;
+    return def;
+  }
+
+  // ---------------------------------------------------------------
   // Theme normalization — the ONE place a theme definition (real
   // ixmaps-flat's shape: {layer, data, binding, style: {type, filter,
   // title, ...}, meta}, see LayerBuilder.definition) becomes what the
@@ -1111,6 +1166,9 @@
     const binding = rawBinding;
     for (const [t, target] of Object.entries(GL_BINDING_TARGETS)) {
       if (!target || targets[t] === undefined) continue;
+      // "$item$" is flat's "no value field — count the items"; this engine
+      // counts records whenever no value field is bound (targets keeps it)
+      if (t === 'theme.field' && targets[t] === '$item$') continue;
       const [where, name] = target;
       (where === 'binding' ? binding : style)[name] = targets[t];
     }
@@ -6376,7 +6434,7 @@
   global.__setFacetFilter = __setFacetFilter;
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
-  global.__ixmapsGlInternals = { normalizeTheme, LayerBuilder };
+  global.__ixmapsGlInternals = { normalizeTheme, projectThemeToDefinition, LayerBuilder };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;
 })(window);

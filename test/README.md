@@ -88,6 +88,20 @@ failed exactly the 7 pages that rely on the default class count, and none that s
 `classes` explicitly; and the engine from before the splash-options fix (`dcda3a9`)
 matched all baselines.
 
+## Project compatibility report
+
+```bash
+node project-report.mjs [file-or-dir ...]   # default: the local ixmaps-flat project folders
+```
+
+Runs every theme of every real ixmaps-flat project file (`*.json` with `themes`) through
+the engine's `projectThemeToDefinition()` and `normalizeTheme()`, validates it against the
+shared grammar for engine=gl, and checks what the grammar can't see: code a project names
+(gl never runs it), missing data sources, joins to flat's own SVG map layers. Each theme is
+`ok`, `partial` (renders; some modifiers ignored) or `blocked` (a missing chart shape/base
+type, or one of those blockers). Writes `out/project-compat.md` with a ranking of what
+blocks the most themes, and of what alone would unblock the most. Nothing is loaded or run.
+
 ## Files
 
 | Path | |
@@ -96,6 +110,7 @@ matched all baselines.
 | `browser.js` | injected before page scripts: captures every `ixmaps.Map()` handle, takes snapshots |
 | `run.mjs` | static server, data record/replay, settle detection, comparison |
 | `unit/` | Node unit tests for pure internals (`normalizeTheme`, …) — the engine runs in a `vm` sandbox |
+| `project-report.mjs` | compatibility report over real ixmaps-flat project files (see above) |
 | `sync-grammar.mjs` | writes/checks ixmaps-gl.js's generated grammar sections (the binding-alias table) from the sibling ixmaps-grammar checkout; `npm run unit` fails on drift |
 | `baselines/` | committed snapshots, one per page |
 | `data-manifest.json` | committed URL → SHA-256 of recorded remote data |
