@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ixmaps-gl — example maps</title>
+<style>
+  html, body { margin: 0; font-family: -apple-system, sans-serif; background: #F5F5F4; color: #222; }
+  body { padding: 2em; max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.6em; margin-bottom: 0.2em; }
+  p.intro { color: #555; margin-top: 0; max-width: 40em; }
+  p.intro a { color: #0066cc; }
+  h2 { font-size: 1em; color: #666; margin: 2em 0 0.6em; text-transform: uppercase; letter-spacing: 0.03em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1em; }
+  .card {
+    display: block; text-decoration: none; color: inherit; background: #fff;
+    border: 1px solid #e2e0da; border-radius: 8px; padding: 1em 1.2em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
+  .card b { display: block; font-size: 1.02em; margin-bottom: 0.3em; }
+  .card span { font-size: 0.88em; color: #666; }
+  footer { margin-top: 3em; font-size: 0.85em; color: #888; }
+  footer a { color: #0066cc; }
+</style>
+</head>
+<body>
+
+<h1>ixmaps-gl — example maps</h1>
+<p class="intro">
+  <a href="https://github.com/gjrichter/ixmaps-gl">ixmaps-gl</a> is a MapLibre GL +
+  deck.gl reimplementation of the <a href="https://ixmaps.com">ixmaps</a> declarative
+  mapping engine. These pages are real ixmaps configurations running against it,
+  used to verify compatibility with the original framework.
+</p>
+
+<h2>Full applications</h2>
+<div class="grid">
+  <a class="card" href="demo_accidents.html">
+    <b>Minimal quick-start</b>
+    <span>The smallest working page — one theme, no sidebar chrome.</span>
+  </a>
+  <a class="card" href="accidents_app.html">
+    <b>ISTAT road accidents (Lombardia)</b>
+    <span>Full app with a facets sidebar built on the standard facets API.</span>
+  </a>
+  <a class="card" href="germany_accidents_app.html">
+    <b>Germany road accidents</b>
+    <span>Same pattern as above, with German UART code labels in the facets.</span>
+  </a>
+  <a class="card" href="global_power_plants_world_map.html">
+    <b>Global power plants — native legend</b>
+    <span>Native interactive legend, click-to-isolate, globe/flat projection toggle.</span>
+  </a>
+  <a class="card" href="global_power_plants_sidebar.html">
+    <b>Global power plants — facets sidebar</b>
+    <span>Same dataset with a browsable facets sidebar instead of the native legend.</span>
+  </a>
+  <a class="card" href="mappa_stranieri_30.html">
+    <b>Foreign students per school (Italy)</b>
+    <span>Symbol shapes by school type, city picker, runtime style filtering, light legend theme.</span>
+  </a>
+  <a class="card" href="roma_incidenti_pericolosita_sidebar_gl.html">
+    <b>Roma accident danger index</b>
+    <span>AGGREGATE + fixed-gridwidth clustering, facets sidebar.</span>
+  </a>
+  <a class="card" href="uk_collisions_2023.html">
+    <b>UK road collisions 2023</b>
+    <span>Hosted CSV data with live facet-driven counts.</span>
+  </a>
+</div>
+
+<h2>Feature-by-feature examples</h2>
+<div class="grid">
+  <a class="card" href="examples/">
+    <b>Chart type &amp; classification gallery →</b>
+    <span>Small, isolated demos of each base symbol type and coloring/classification method.</span>
+  </a>
+</div>
+
+<footer>
+  Source on <a href="https://github.com/gjrichter/ixmaps-gl">GitHub</a>. See the
+  <a href="https://github.com/gjrichter/ixmaps-gl#readme">README</a> for the engine's
+  current implementation status.
+</footer>
+
+</body>
+</html>
