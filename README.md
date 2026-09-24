@@ -74,6 +74,20 @@ The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); 
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.
 
+### Loading ixmaps-flat project files
+
+`map.loadProject(src, flags)` (and the global `ixmaps.loadProject` / `ixmaps.setProjectJSON`)
+loads a real ixmaps-flat project — an object, a JSON string or a URL — the way flat's own
+`setProjectJSON` does: the map part (projection from flat's map file, `center`/`zoom`,
+`options`) and then the themes, in order; without `add` the first theme clears the existing
+ones, `replace` swaps themes by `style.name`/`meta.name`, `themeonly`/`maponly`/`keepview`
+work as in flat. Themes in flat's older shape (data source in `style.dbtable*`, value field at
+the top level) are translated first. It resolves to `{ themes, skipped, notes }`: a theme
+that can't load is skipped with a warning, the rest still load. **Nothing a project names is
+ever run** — `required` scripts, `ext` data scripts and `process` functions are reported,
+not executed — and the basemap isn't switched. `test/project-report.mjs` shows which themes
+of your own project files gl can render.
+
 ## Quick start
 
 ```html

@@ -1,0 +1,40 @@
+{
+ "metadata": {
+  "title": "Test fixture for the ixmaps-gl regression harness: the map of examples/choropleth_range_quantile.html as a real ixmaps-flat project file (choropleth theme only, for loadProject(…, 'add'))"
+ },
+ "themes": [
+  {
+   "layer": "comuni",
+   "data": {
+    "url": "https://raw.githubusercontent.com/gjrichter/ixmaps-data/main/by-project/italy-comuni-demographics/comuni_population_by_age_sex_v3.csv",
+    "type": "csv",
+    "name": "popData",
+    "cache": "true"
+   },
+   "binding": {
+    "lookup": "comune_code",
+    "value": "2024_30-34_male"
+   },
+   "type": "CHOROPLETH|QUANTILE",
+   "style": {
+    "colorscheme": [
+     "#fdec50",
+     "#94da73",
+     "#4db99c",
+     "#5493a4",
+     "#66689f",
+     "#683375"
+    ],
+    "fillopacity": 0.85,
+    "linecolor": "#ffffff",
+    "linewidth": 0.08,
+    "units": "%",
+    "valuedecimals": 2
+   },
+   "meta": {
+    "title": "Population share — 30-34, male, 2024",
+    "tooltip": "<b>{{comune_name}}</b> ({{provincia}})<br>{{theme.item.value}}%"
+   }
+  }
+ ]
+}

@@ -1,0 +1,69 @@
+{
+ "metadata": {
+  "title": "Test fixture for the ixmaps-gl regression harness: the map of examples/choropleth_range_quantile.html as a real ixmaps-flat project file (modern theme form)"
+ },
+ "map": {
+  "map": "../../maps/svg/maps/generic/mercator.svg",
+  "center": {
+   "lat": 42.5,
+   "lng": 12.5
+  },
+  "zoom": 6
+ },
+ "themes": [
+  {
+   "layer": "comuni",
+   "data": {
+    "url": "https://raw.githubusercontent.com/gjrichter/geo/0153a0e14da5dae877b8c94d6deb11f210d4660a/italy/boundaries/italy_istat_municipalities_4326_500m.topojson",
+    "type": "topojson"
+   },
+   "binding": {
+    "geo": "geometry",
+    "id": "com_istat_code_num",
+    "title": "name"
+   },
+   "type": "FEATURE",
+   "style": {
+    "colorscheme": [
+     "#e9e9e9"
+    ],
+    "fillopacity": 0.4,
+    "linecolor": "#aaaaaa",
+    "linewidth": 0.15
+   }
+  },
+  {
+   "layer": "comuni",
+   "data": {
+    "url": "https://raw.githubusercontent.com/gjrichter/ixmaps-data/main/by-project/italy-comuni-demographics/comuni_population_by_age_sex_v3.csv",
+    "type": "csv",
+    "name": "popData",
+    "cache": "true"
+   },
+   "binding": {
+    "lookup": "comune_code",
+    "value": "2024_30-34_male"
+   },
+   "type": "CHOROPLETH|QUANTILE",
+   "style": {
+    "colorscheme": [
+     "#fdec50",
+     "#94da73",
+     "#4db99c",
+     "#5493a4",
+     "#66689f",
+     "#683375"
+    ],
+    "fillopacity": 0.85,
+    "linecolor": "#ffffff",
+    "linewidth": 0.08,
+    "units": "%",
+    "valuedecimals": 2
+   },
+   "meta": {
+    "title": "Population share — 30-34, male, 2024",
+    "tooltip": "<b>{{comune_name}}</b> ({{provincia}})<br>{{theme.item.value}}%"
+   }
+  }
+ ]
+}

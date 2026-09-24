@@ -175,11 +175,18 @@
     // cheap readiness probe — the runner waits until this stops changing
     async state() {
       const apis = await resolvedMaps(0);
+      // test pages that add themes after the map exists (e.g. loadProject)
+      // expose that work as window.__glTestWait; not settled until it is
+      const waiting = window.__glTestWait && !window.__glTestWaitDone;
+      if (window.__glTestWait && !window.__glTestWaitHooked) {
+        window.__glTestWaitHooked = true;
+        Promise.resolve(window.__glTestWait).then(() => { window.__glTestWaitDone = true; }, () => { window.__glTestWaitDone = true; });
+      }
       return apis.map(api => {
         if (!api || typeof api !== 'object' || !api.map) return { pending: String(api) };
         const arr = layersOf(api);
         if (!layerArrays.has(arr)) layerArrays.set(arr, ++layerArraySeq);
-        return { loaded: api.map.loaded(), moving: api.map.isMoving(), layersRef: layerArrays.get(arr), layers: arr.length, splash: !!document.querySelector('.ixmaps-splash') };
+        return { loaded: api.map.loaded() && !waiting, moving: api.map.isMoving(), layersRef: layerArrays.get(arr), layers: arr.length, splash: !!document.querySelector('.ixmaps-splash') };
       });
     },
     async snapshot(label) {

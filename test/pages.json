@@ -43,7 +43,11 @@
     "examples/alias_field_method_bubble_range_quantile.html",
     "examples/alias_geo_lookup_methods_choropleth_range_quantile.html",
     "examples/alias_encoding_dot_categorical.html",
-    "examples/alias_split_calls_dot_categorical.html"
+    "examples/alias_split_calls_dot_categorical.html",
+    "examples/project_modern_choropleth_range_quantile.html",
+    "examples/project_legacy_url_choropleth_range_quantile.html",
+    "examples/project_add_choropleth_range_quantile.html",
+    "examples/project_clear_choropleth_range_quantile.html"
   ],
   "knownBroken": {},
   "equivalent": [
@@ -98,6 +102,22 @@
     [
       "examples/alias_split_calls_dot_categorical.html",
       "examples/dot_categorical.html"
+    ],
+    [
+      "examples/project_modern_choropleth_range_quantile.html",
+      "examples/choropleth_range_quantile.html"
+    ],
+    [
+      "examples/project_legacy_url_choropleth_range_quantile.html",
+      "examples/choropleth_range_quantile.html"
+    ],
+    [
+      "examples/project_add_choropleth_range_quantile.html",
+      "examples/choropleth_range_quantile.html"
+    ],
+    [
+      "examples/project_clear_choropleth_range_quantile.html",
+      "examples/choropleth_range_quantile.html"
     ]
   ]
 }

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- equivalence twin of choropleth_range_quantile.html: builds the FEATURE base itself, then adds the choropleth from a project with loadProject(url, 'add') — the regression harness requires identical output -->
+<meta charset="utf-8">
+<title>CHOROPLETH · QUANTILE</title>
+<script src="../ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 320px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>CHOROPLETH · QUANTILE (polygon fill)</b>
+  <span>A FEATURE base layer (comuni boundaries) + a CHOROPLETH layer of the same name, joined to a separate CSV via binding.lookup — same "same layer name as FEATURE base" pattern as the real engine. Share of population aged 30-34 (male), 2024, ~7900 Italian comuni.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  var GEO_URL = "https://raw.githubusercontent.com/gjrichter/geo/0153a0e14da5dae877b8c94d6deb11f210d4660a/italy/boundaries/italy_istat_municipalities_4326_500m.topojson";
+  var base = ixmaps.layer("comuni", layer => layer
+    .data({ url: GEO_URL, type: "topojson" })
+    .binding({ geo: "geometry", id: "com_istat_code_num", title: "name" })
+    .type("FEATURE")
+    .style({ colorscheme: ["#e9e9e9"], fillopacity: 0.4, linecolor: "#aaaaaa", linewidth: 0.15 })
+  );
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([42.5, 12.5], 6).layer(base)
+  );
+  // "add": keep the existing theme, skip the project's map part
+  window.__glTestWait = window._mapPromise.then(map => map.loadProject("projects/choropleth_range_quantile.choropleth-only.json", "add"));
+</script>
+</body>
+</html>
