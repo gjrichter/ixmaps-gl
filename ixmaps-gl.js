@@ -3549,6 +3549,641 @@
     return { present, radii, offsets, fitScale, maxR };
   }
 
+  // ---------------------------------------------------------------
+  // Classification — pure functions (no LayerRuntime state): class
+  // breaks for a numeric field, and which class a value falls in.
+  // LayerRuntime keeps thin _method delegations to these.
+  // ---------------------------------------------------------------
+  function equalIntervalBreaks(nMin, nMax, nParts) {
+    const nStep = (nMax - nMin) / nParts || 1; // guard a zero-range dataset (all values equal)
+    return new Array(nParts).fill(null).map((_, i) => ({
+      min: nMin + i * nStep,
+      max: nMin + (i + 1) * nStep
+    }));
+  }
+
+  // .type("QUANTILE") — equal-COUNT classes (as opposed to
+  // _equalIntervalBreaks's equal-WIDTH ranges). The real engine
+  // (maptheme.js:13024-13032, getMeanMedianQuantile + distributeValues'
+  // QUANTILE branch) sorts every value ascending and computes a FIXED
+  // stride ONCE (nMaxMember = round(N/nParts)), then reuses it for every
+  // boundary (index i*nMaxMember) — a real quirk: rounding error from
+  // that single division compounds linearly with i instead of being
+  // corrected at each step, so class sizes drift uneven (and the drift
+  // all piles onto the last class, since its max is force-set to the
+  // true data max regardless of where the stride landed).
+  //
+  // Deliberately NOT ported here — this recomputes each boundary
+  // independently as round(i*N/nParts), the textbook percentile-split
+  // formula, so class membership stays as close to equal-count as
+  // integer rounding allows at every boundary, not just the first few.
+  function quantileBreaks(values, nParts) {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const n = sorted.length;
+    const breaks = new Array(nParts).fill(null).map((_, i) => ({
+      min: sorted[Math.min(Math.round(i * n / nParts), n - 1)],
+      max: sorted[Math.min(Math.round((i + 1) * n / nParts), n - 1)]
+    }));
+    breaks[breaks.length - 1].max = sorted[n - 1];
+    return breaks;
+  }
+
+  // .type("NATURAL") — Jenks natural breaks (maptheme.js:8085-8168,
+  // getNaturalBreaks): the classic Fisher-Jenks "goodness of variance
+  // fit" O(n^2 * nParts) dynamic program, minimizing total within-class
+  // variance. The DP recurrence and backtracking below are ported
+  // directly from the real source (same matrices, same accumulation).
+  //
+  // One necessary, loudly-documented deviation: the real engine runs
+  // this on the FULL raw per-record value array with NO cap, sample, or
+  // early-out anywhere in the source (confirmed) — fine for the small
+  // datasets ixmaps typically classes, but at this engine's real scale
+  // (this project's own AREU layer is 69,597 records) O(n^2*k) is tens
+  // of billions of operations and would hang the browser tab solid, not
+  // "run slowly but correctly." That's a genuine scalability gap in the
+  // source, not a detail to silently reproduce. Past
+  // NATURAL_BREAKS_MAX_SAMPLE values, this classifies an evenly-strided
+  // sample of the sorted distribution instead of every value — standard
+  // practice for Jenks at scale (what d3/simple-statistics-based tools
+  // do too) — since the sample only decides WHERE the class boundaries
+  // fall, not which bucket each actual record's color resolves to
+  // afterward (every record is still tested against the resulting
+  // partsA individually, same as every other method here).
+  function naturalBreaks(values, nParts) {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const n = sorted.length;
+
+    if (n <= nParts) {
+      // not enough distinct items to fill every class -> identity breaks
+      const identity = [sorted[0] || 0].concat(sorted);
+      while (identity.length < nParts + 1) identity.push(identity[identity.length - 1]);
+      return partsFromBreakValues(identity, nParts, sorted[n - 1]);
+    }
+
+    const sample = n > NATURAL_BREAKS_MAX_SAMPLE ? evenStrideSample(sorted, NATURAL_BREAKS_MAX_SAMPLE) : sorted;
+    const breakValues = jenksBreakValues(sample, nParts);
+    return partsFromBreakValues(breakValues, nParts, sorted[n - 1]);
+  }
+
+  function evenStrideSample(sortedValues, sampleSize) {
+    const n = sortedValues.length;
+    return new Array(sampleSize).fill(null).map((_, i) =>
+      sortedValues[Math.min(Math.round(i * (n - 1) / (sampleSize - 1)), n - 1)]);
+  }
+
+  // core Fisher-Jenks DP, ported line-for-line from getNaturalBreaks —
+  // mat1/mat2 are the lower-class-limit / cumulative-variance matrices;
+  // v is the within-segment sum-of-squared-deviations for the trailing
+  // run ending at l, recomputed incrementally as the window grows.
+  function jenksBreakValues(valuesA, nParts) {
+    const n = valuesA.length;
+    const mat1 = [], mat2 = [];
+    for (let i = 0; i <= n; i++) {
+      mat1.push(new Array(nParts + 1).fill(0));
+      mat2.push(new Array(nParts + 1).fill(0));
+    }
+    for (let i = 1; i <= nParts; i++) {
+      mat1[1][i] = 1;
+      mat2[1][i] = 0;
+      for (let j = 2; j <= n; j++) mat2[j][i] = Infinity;
+    }
+
+    let v = 0;
+    for (let l = 2; l <= n; l++) {
+      let s1 = 0, s2 = 0, w = 0;
+      for (let m = 1; m <= l; m++) {
+        const i3 = l - m + 1;
+        const val = valuesA[i3 - 1];
+        s2 += val * val;
+        s1 += val;
+        w++;
+        v = s2 - (s1 * s1) / w;
+        const i4 = i3 - 1;
+        if (i4 !== 0) {
+          for (let j = 2; j <= nParts; j++) {
+            if (mat2[l][j] >= (v + mat2[i4][j - 1])) {
+              mat1[l][j] = i3;
+              mat2[l][j] = v + mat2[i4][j - 1];
+            }
+          }
+        }
+      }
+      mat1[l][1] = 1;
+      mat2[l][1] = v;
+    }
+
+    let k = n;
+    const breaks = [];
+    breaks[nParts] = valuesA[n - 1];
+    breaks[0] = valuesA[0];
+    let countNum = nParts;
+    while (countNum > 1) {
+      const id = mat1[k][countNum] - 2;
+      breaks[countNum - 1] = valuesA[id];
+      k = mat1[k][countNum] - 1;
+      countNum--;
+    }
+    return breaks;
+  }
+
+  // breakValues[i] (for 0 < i < nParts) is the LAST element of segment
+  // i-1 in the DP's own backtracking, not the first element of segment
+  // i — verified empirically: on a 3-cluster test dataset ({1..10},
+  // {50,51,52}, {100..103}), the DP's own within-class variance is
+  // minimized only if the shared boundary value (e.g. 10) stays in the
+  // LOWER segment, not the upper one. Since _resolvePartsClass tests
+  // every class as inclusive-min/exclusive-max (except the true last
+  // class), each non-last segment's max is nudged just past its shared
+  // boundary value so ties resolve toward the lower (already-optimal)
+  // segment instead of leaking into the next one.
+  function partsFromBreakValues(breakValues, nParts, trueMax) {
+    const TIE_EPSILON = 1e-6;
+    return new Array(nParts).fill(null).map((_, i) => ({
+      min: breakValues[i],
+      max: i === nParts - 1 ? trueMax : breakValues[i + 1] + TIE_EPSILON
+    }));
+  }
+
+  // partsA override param: lets a caller classify against a DIFFERENT,
+  // dynamically-computed breaks array (e.g. the AGGREGATE reclassify
+  // step in _buildChartLayers, which needs to bucket a post-aggregation
+  // cell TOTAL, not this runtime's own static this.partsA built from
+  // raw per-record values) without disturbing this.partsA itself,
+  // which every other caller here still relies on unchanged.
+  function resolvePartsClass(value, partsA) {
+    if (!partsA || isNaN(value)) return null;
+    for (let i = 0; i < partsA.length; i++) {
+      const isLast = i === partsA.length - 1;
+      const inLower = value >= partsA[i].min;
+      const inUpper = isLast ? value <= partsA[i].max : value < partsA[i].max;
+      if (inLower && inUpper) return i;
+    }
+    return null; // outside every class (e.g. explicit user ranges that don't cover the data) -> caller drops the feature
+  }
+
+
+  // --- per-theme class statistics (compute) and per-item lookups (resolve):
+  //     computeX returns fields under the exact names LayerRuntime keeps
+  //     (Object.assign(this, result)); resolveX reads only its own fields
+  //     from ctx (the runtime, or a plain object in the unit tests)
+
+  // .binding({alpha, alpha100}) prep — orthogonal to classification (real
+  // source confirms this combines with CHOROPLETH's own DOMINANT mode,
+  // not just plain range-classed themes), computed once per theme build.
+  // Cheap no-op unless binding.alpha is actually set. Three modes, real
+  // source confirmed (maptheme.js:9834-9852/9134-9143):
+  //  - alpha100 is the literal string "$density$": per-feature value =
+  //    (alpha field's own value) / (that polygon's own geodesic area in
+  //    km²) — see geodesicPolygonAreaKm2.
+  //  - alpha100 is any OTHER (real field) name: percent-normalize,
+  //    100/alpha100Value*alphaValue.
+  //  - alpha100 unset: the alpha field's raw value, unchanged.
+  // _alphaMax (the max nAlpha across every feature) is the ramp's own
+  // denominator in _resolveDopacityAlpha — a SEPARATE stats pass from
+  // the main bound value's min/max/median, real source confirmed.
+  // Keyed by feature object identity (WeakMap), not written into
+  // properties — this is a derived rendering input, not real CSV data,
+  // and keeping it out of `properties` keeps it out of the tooltip's
+  // bare-field/`raw` mustache expansion too.
+  function computeAlphaStats(features, binding) {
+    const out = {};
+    if (!binding.alpha) return null;
+    const alpha100 = binding.alpha100;
+    const isDensity = alpha100 === '$density$';
+    out._alphaByFeature = new WeakMap();
+    let maxAlpha = -Infinity;
+    features.forEach(f => {
+      let v = parseFloat(f.properties[binding.alpha]);
+      if (isNaN(v)) return;
+      if (isDensity) {
+        const areaKm2 = geodesicPolygonAreaKm2(f.geometry);
+        if (!areaKm2) return;
+        v = v / areaKm2;
+      } else if (alpha100) {
+        const v100 = parseFloat(f.properties[alpha100]);
+        if (!isNaN(v100) && v100) v = 100 / v100 * v;
+      }
+      out._alphaByFeature.set(f, v);
+      if (v > maxAlpha) maxAlpha = v;
+    });
+    out._alphaMax = isFinite(maxAlpha) ? maxAlpha : 0;
+    return out;
+  }
+
+  // Shared setup for every MULTI-field CHOROPLETH mode (DOMINANT's three
+  // relevance formulas, and COMPOSECOLOR): parses binding.value's
+  // pipe-joined field list (same pipe convention
+  // csvRowsToFeatureCollection's binding.position already uses) and
+  // resolves one label/color per field — same .style({values:[...]})
+  // explicit-ordered-list convention as CATEGORICAL, positionally
+  // aligned with the piped fields (e.g. AGE_BANDS, built by mapping over
+  // the very same array that produced the pipe-joined binding.value). No
+  // raw-vs-display distinction needed here (unlike CATEGORICAL's
+  // categoryLabels/categoryDisplayLabels split) — there's no exact-match
+  // filtering against these labels, only field-index lookup.
+  function computeMultiFieldClasses(binding, style) {
+    const out = {};
+    const fields = binding.value.split('|');
+    out._multiFields = fields;
+    const explicit = Array.isArray(style.values) && style.values.length === fields.length
+      ? style.values.map(String) : fields;
+    out.categoryLabels = explicit;
+    out.categoryDisplayLabels = explicit;
+    out.categoryColorsRgb = resolveClassColors(style.colorscheme, out.categoryLabels);
+    
+    return out;
+  }
+
+  // .type("CHOROPLETH|DOMINANT") prep — computes, once per theme build,
+  // each piped field's own cross-record MEAN, MIN, and (population)
+  // STANDARD DEVIATION (over this.features, i.e. every polygon this
+  // CHOROPLETH's join produced — real source: maptheme.js:13086-13160,
+  // distributeValues' DOMINANT block, plus getDeviationOfArray at line
+  // 6198 for the stddev itself; nMinA doubles as the default nFilterA in
+  // _resolveDominantClass). All three are computed unconditionally even
+  // though a given theme only ends up using one relevance formula — the
+  // pass is cheap, and one prep path avoids duplicating the field-parsing
+  // loop per mode. Values are filtered by JS truthiness (skips NaN AND
+  // exactly 0), matching the real source's own `nValuesA[i]||0`-style
+  // pooling (maptheme.js:13154, confirmed by direct source read) — not
+  // merely a NaN guard.
+  function computeDominantStats(features, binding, style) {
+    const out = {};
+    Object.assign(out, computeMultiFieldClasses(binding, style));
+    const fields = out._multiFields;
+    const sums = fields.map(() => 0), counts = fields.map(() => 0), mins = fields.map(() => Infinity);
+    const valuesByField = fields.map(() => []);
+    features.forEach(f => {
+      fields.forEach((field, i) => {
+        const v = parseFloat(f.properties[field]);
+        if (!v) return; // skips NaN and 0 — real source's own truthy pooling, not just a NaN guard
+        sums[i] += v; counts[i]++;
+        if (v < mins[i]) mins[i] = v;
+        valuesByField[i].push(v);
+      });
+    });
+    out._dominantMeans = sums.map((s, i) => counts[i] ? s / counts[i] : 0);
+    out._dominantMins = mins.map(m => isFinite(m) ? m : 0);
+    // Population standard deviation (divide by N, no Bessel's
+    // correction) — matches getDeviationOfArray exactly.
+    out._dominantStdDevs = valuesByField.map((vals, i) => {
+      if (!vals.length) return 0;
+      const mean = out._dominantMeans[i];
+      const variance = vals.reduce((s, v) => s + (v - mean) * (v - mean), 0) / vals.length;
+      return Math.sqrt(variance);
+    });
+    return out;
+  }
+
+  // Which piped field "wins" for one joined polygon's properties — three
+  // relevance formulas, real engine confirmed by direct source read:
+  //
+  // PERCENTOFMEAN (maptheme.js:13491/13505): nRelevanz = 100 * value /
+  // mean[i].
+  // DEVIATION (maptheme.js:13493/13502-13503, stddev from
+  // getDeviationOfArray): nRelevanz = (value - mean[i]) / stddev[i] — a
+  // z-score. Both share the SAME filter: a field can only win if its own
+  // value is strictly greater than that field's own dataset-wide MIN
+  // (real default nFilterA[i] = nMinA[i]; szDominantFilter
+  // "mean"/"median" variants aren't implemented, not used by any config
+  // ported here). Both deliberately unguarded against divide-by-zero
+  // (mean=0 or stddev=0) — matching the real source exactly: that
+  // naturally yields Infinity/NaN, and NaN can never win the `>`
+  // comparison below (though +Infinity CAN — a real, confirmed-unguarded
+  // quirk of the source itself, not introduced here).
+  //
+  // Plain DOMINANT (no PERCENTOFMEAN/DEVIATION, per explicit
+  // correction): nRelevanz = value itself — the field with the highest
+  // raw value wins outright, no mean/min filter. "Which band dominates
+  // this comune's own local profile," not a cross-record comparison.
+  //
+  // All three: the winning threshold starts at 0, not -Infinity (real
+  // source: maptheme.js:13440, nLastRelevant reset to 0 per record,
+  // shared by every relevance mode) — a field must have a STRICTLY
+  // POSITIVE relevance score to win at all, so DEVIATION in particular
+  // only ever picks a field ABOVE its own mean, never the most anomalous
+  // in either direction. Ties go to the first (lowest-index) field
+  // (strict `>`).
+  function resolveDominantClass(ctx, props) {
+    const fields = ctx._multiFields;
+    const usePercentOfMean = ctx.flags.has('PERCENTOFMEAN');
+    const useDeviation = ctx.flags.has('DEVIATION');
+    const needsFilter = usePercentOfMean || useDeviation;
+    let bestIndex = -1, bestRelevance = 0, bestValue = null;
+    for (let i = 0; i < fields.length; i++) {
+      const v = parseFloat(props[fields[i]]);
+      if (needsFilter && !(v > ctx._dominantMins[i])) continue;
+      const relevance = useDeviation ? (v - ctx._dominantMeans[i]) / ctx._dominantStdDevs[i]
+        : usePercentOfMean ? 100 * v / ctx._dominantMeans[i]
+        : v;
+      if (relevance > bestRelevance) { bestRelevance = relevance; bestIndex = i; bestValue = v; }
+    }
+    return bestIndex === -1 ? null : { index: bestIndex, value: bestValue };
+  }
+
+  // .type("CHOROPLETH|COMPOSECOLOR") prep — unlike DOMINANT's argmax
+  // (exactly one field "wins"), COMPOSECOLOR blends EVERY field's own
+  // class color into one RGB triple, weighted by that field's value.
+  // Real source (maptheme.js:13267-13321, __maptheme_initComposedColor,
+  // confirmed by direct source read) precomputes, once, over the
+  // resolved class colors themselves (not the data): the mean channel-
+  // sum (R+G+B) and the mean per-color peak channel (max(R,G,B)) — used
+  // as brightness/normalization constants in _resolveComposedColor.
+  // Also precomputes nMax: the GLOBAL max value across every field AND
+  // every feature combined (not per-field, unlike DOMINANT's own
+  // per-field means) — confirmed real source computes one shared max,
+  // not one per field.
+  function computeComposeColorStats(features, binding, style) {
+    const out = {};
+    Object.assign(out, computeMultiFieldClasses(binding, style));
+    const fields = out._multiFields;
+    let nMax = 0;
+    features.forEach(f => fields.forEach(field => {
+      const v = parseFloat(f.properties[field]);
+      if (v > nMax) nMax = v;
+    }));
+    out._composeColorMax = nMax;
+    const rgbs = out.categoryColorsRgb;
+    out._composeColorSumIntensity = rgbs.reduce((s, c) => s + c[0] + c[1] + c[2], 0) / rgbs.length;
+    out._composeColorMeanMaxIntensity = rgbs.reduce((s, c) => s + Math.max(c[0], c[1], c[2]), 0) / rgbs.length;
+    return out;
+  }
+
+  // Blends every piped field's class color into one RGB triple for a
+  // single polygon — real source (maptheme.js:13442-13452 in paintMap's
+  // render loop, __maptheme_getComposedColor_additive/_subtractive,
+  // confirmed by direct source read). No nFilterA/min filter here
+  // (unlike DOMINANT) — every field's raw value (or 0) contributes.
+  //
+  // ADDITIVE (COMPOSECOLOR alone, the real engine's own default when
+  // SUBTRACTIVE isn't also set): per channel, sum each field's own
+  // channel value weighted by (fieldValue/nMax), then normalize by the
+  // sum's own peak channel and scale to a brightness constant.
+  //
+  // SUBTRACTIVE (COMPOSECOLOR|SUBTRACTIVE): the same weighted sum but
+  // over each color's COMPLEMENT (255-channel), then subtracted from a
+  // brightness ceiling — approximates paint-style mixing (more
+  // contributing colors -> darker result) without true CMY conversion,
+  // matching the real source's own per-channel-RGB approach exactly
+  // rather than a "more correct" but fabricated color-space conversion.
+  //
+  // Real source has no guard for nMax===0 (all-zero dataset) or for the
+  // weighted sum's own peak channel being 0 — both divide-by-zero to
+  // NaN there. This port guards both (`|| 1`) rather than faithfully
+  // reproducing a NaN fill color, since deck.gl has no equivalent of the
+  // real engine's own silent-failure-to-white-shape fallback to lean on.
+  function resolveComposedColor(ctx, props) {
+    const fields = ctx._multiFields;
+    const rgbs = ctx.categoryColorsRgb;
+    const nMax = ctx._composeColorMax || 1;
+    const subtractive = ctx.flags.has('SUBTRACTIVE');
+    let rr = 0, gg = 0, bb = 0;
+    for (let i = 0; i < fields.length; i++) {
+      const v = parseFloat(props[fields[i]]) || 0;
+      const weight = v / nMax;
+      const [r, g, b] = rgbs[i];
+      if (subtractive) { rr += (255 - r) * weight; gg += (255 - g) * weight; bb += (255 - b) * weight; }
+      else { rr += r * weight; gg += g * weight; bb += b * weight; }
+    }
+    const peak = Math.max(rr, gg, bb) || 1;
+    const styleBrightness = parseFloat(ctx.style.brightness);
+    if (subtractive) {
+      const brightness = !isNaN(styleBrightness) ? Math.floor(styleBrightness * 255)
+        : (Math.min(Math.floor(ctx._composeColorSumIntensity), 300) || 255);
+      return [rr, gg, bb].map(c => Math.max(0, Math.min(255,
+        brightness - Math.floor(c / peak * ctx._composeColorMeanMaxIntensity))));
+    }
+    const scale = !isNaN(styleBrightness) ? Math.floor(styleBrightness * 255) : ctx._composeColorMeanMaxIntensity;
+    return [rr, gg, bb].map(c => Math.max(0, Math.min(255, Math.floor(c / peak * scale))));
+  }
+
+  // .style({classes: N}) numeric range/class buckets — real engine's
+  // "distributeValues" (maptheme.js ~12817-13166). Three classification
+  // methods implemented: equal-interval/"EQUIDISTANT" (the DEFAULT when
+  // no method flag is present, ~line 12983), QUANTILE (~line 13024), and
+  // NATURAL/Jenks (~line 13017). Other real methods (HEADTAIL, LOG,
+  // POW2, POW3) aren't implemented yet (documented gap, not silently
+  // guessed). Class count
+  // defaults to 5 (colorScheme.length in the real engine's own hardcoded
+  // default palette), overridable via style.classes; colors resolve
+  // through the SAME resolveColorScheme used for CATEGORICAL (literal
+  // array / "none" / stringified fn / the diverging N-step sweep — see
+  // resolveClassColors), sliced positionally per class.
+  //
+  // One deliberate correction vs. the literal source, shared by both
+  // methods: the real engine's bucket test is `value >= min && value <
+  // max` for EVERY class including the last, which (for breaks ending
+  // exactly at the data's own max) excludes the single highest-valued
+  // record from every bucket. The real source actually patches this the
+  // same way for every method (`partsA[last].max += 0.001`, line 13166)
+  // — this engine achieves the same effect via an inclusive last-bucket
+  // comparison in _resolvePartsClass instead of a literal epsilon bump.
+  function computeRangeClasses(features, binding, style, flags, formatValue) {
+    const out = {};
+    const values = features
+      .map(f => parseFloat(f.properties[binding.value]))
+      .filter(v => !isNaN(v));
+    if (!values.length) return null;
+
+    // Plain loop, not Math.min(...values)/Math.max(...values) — spreading
+    // a huge array as individual function arguments overflows the call
+    // stack well before a real dataset's size (confirmed live: a
+    // >1M-row CSV-sourced dataset threw "Maximum call stack size
+    // exceeded" here; every prior dataset ported this session topped
+    // out at 69,597 rows, comfortably under engines' argument-count
+    // limits, which is why this never surfaced before).
+    let nMin = Infinity, nMax = -Infinity;
+    for (const v of values) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+    // Dataset min/max/median — real engine's own theme-level stats
+    // (this.nMin/this.nMax/this.nMedianA[0], distributeValues), stored
+    // here (not local to partsA) since .style({dopacity...}) reads them
+    // independently of which classification method produced partsA —
+    // see _resolveDopacityAlpha.
+    out._valueMin = nMin;
+    out._valueMax = nMax;
+    const sorted = values.slice().sort((a, b) => a - b);
+    out._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
+    const nParts = parseInt(style.classes, 10) || DEFAULT_RANGE_CLASSES;
+    const placeholders = new Array(nParts).fill('');
+    const colorsRgb = resolveClassColors(style.colorscheme, placeholders);
+
+    out.partsA = flags.has('QUANTILE') ? quantileBreaks(values, nParts)
+      : flags.has('NATURAL') ? naturalBreaks(values, nParts)
+      : equalIntervalBreaks(nMin, nMax, nParts);
+
+    out.categoryLabels = out.partsA.map(p => `${formatValue(p.min)} - ${formatValue(p.max)}`);
+    out.categoryColorsRgb = colorsRgb;
+    // Marks "numeric range/class coloring" (as opposed to CATEGORICAL
+    // exact-match, or DOMINANT/COMPOSECOLOR, neither of which call
+    // _buildPartsA at all) — _buildAggregationIndex/_buildChartLayers
+    // use this to decide whether an AGGREGATE bubble's color must be
+    // resolved from the aggregated CELL TOTAL instead of each record's
+    // own raw value (see the reclassify step in _buildChartLayers).
+    out._rangeClassed = true;
+    return out;
+  }
+
+  // .type("CHOROPLETH|DOPACITY") family — per-RECORD fill opacity, two
+  // entirely different real formulas depending on whether
+  // .binding({alpha}) is set (real source: all three DOPACITY call
+  // sites in paintMap are `if (this.szAlphaField) {...} else {...}`,
+  // confirmed by direct source read — alphafield doesn't just tweak the
+  // value/min/max ramps below, it REPLACES them outright):
+  //
+  // WITH binding.alpha (maptheme.js:13456-13471 etc., ~line "if
+  // (this.szAlphaField)"): nOpacity = dopacityscale / nAlphaMax^(1/pow)
+  // * nAlpha^(1/pow) — nAlpha/nAlphaMax from _prepareAlphaField's OWN
+  // separate stats pass (never the main value's min/max/median), and
+  // — per the literal source quoted — NOT multiplied by the theme's
+  // base fillopacity here (unlike every other variant below). DOPACITY*
+  // flag choice (MIN/MAX/MINMAX) is irrelevant once alpha is set — only
+  // the bare DOPACITY-family gate in buildDeckLayers matters.
+  //
+  // WITHOUT binding.alpha (the bound value drives opacity directly,
+  // maptheme.js paintMap ~13635-13800): returned as a 0-1 fraction
+  // already scaled by the theme's own base fillopacity, matching the
+  // real engine writing this value directly as the shape's final
+  // fill-opacity:
+  //   DOPACITYMINMAX (or real source's own auto-trigger: an unflagged
+  //   theme whose data straddles zero, _valueMin<0<_valueMax —
+  //   "BIPOLAR" data): ramps from the dataset MEDIAN toward nMax above
+  //   it and toward nMin below it — two independent half-ramps.
+  //   DOPACITYMIN: inverted ramp — HIGHER value -> LOWER opacity.
+  //   DOPACITYMAX: direct ramp — higher value -> higher opacity.
+  //   Plain DOPACITY: (value-min)/(median-min), capped at a 0.5
+  //   ceiling BEFORE the fillopacity/scale multiply — real source's own
+  //   formula, not a rounding choice of this port's.
+  //
+  // dopacitypow (real nDopacityPow, default 1) is the exponent
+  // 1/dopacitypow — on the alpha ramp always, on the value ramp only
+  // for MIN/MAX/MINMAX (plain DOPACITY has no pow term in the real
+  // source either). dopacityscale (real nDopacityScale, default 1) is
+  // a flat multiplier on the final result, every variant. Clamped:
+  // <0.0001 snaps to 0 (real source's own near-zero cutoff); capped at
+  // the theme's own base opacity (real source caps at a separate
+  // `this.nOpacity||0.9` style property this port doesn't model
+  // separately — using the already-resolved base fillopacity as the
+  // cap instead, a minor documented deviation).
+  function resolveDopacityAlpha(ctx, f, value, baseOpacity) {
+    const scale = parseFloat(ctx.style.dopacityscale) || 1;
+    const pow = 1 / (parseFloat(ctx.style.dopacitypow) || 1);
+    if (ctx.binding.alpha) {
+      if (!ctx._alphaByFeature) return null;
+      const nAlpha = ctx._alphaByFeature.get(f);
+      if (nAlpha == null) return null;
+      let nOpacity = scale / Math.pow(ctx._alphaMax || 1, pow) * Math.pow(nAlpha, pow);
+      if (nOpacity < 0.0001) nOpacity = 0;
+      return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
+    }
+    if (isNaN(value) || ctx._valueMin == null) return null;
+    const nMin = ctx._valueMin, nMax = ctx._valueMax, nMedian = ctx._valueMedian;
+    const bipolar = ctx.flags.has('DOPACITYMINMAX') || ctx.flags.has('BIPOLAR') || (nMin < 0 && nMax > 0);
+    let nOpacity;
+    if (bipolar) {
+      nOpacity = value >= nMedian
+        ? Math.pow(Math.abs(value - nMedian), pow) / Math.pow((nMax - nMedian) || 1, pow)
+        : Math.pow(Math.abs(value - nMedian), pow) / Math.pow((nMedian - nMin) || 1, pow);
+    } else if (ctx.flags.has('DOPACITYMIN')) {
+      nOpacity = Math.pow(nMax - value, pow) / Math.pow((nMax - nMin) || 1, pow);
+    } else if (ctx.flags.has('DOPACITYMAX')) {
+      nOpacity = Math.pow(value - nMin, pow) / Math.pow((nMax - nMin) || 1, pow);
+    } else {
+      nOpacity = (value - nMin) / ((nMedian - nMin) || 1) * 0.5;
+    }
+    nOpacity *= baseOpacity * scale;
+    if (nOpacity < 0.0001) nOpacity = 0;
+    return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
+  }
+
+  // ---------------------------------------------------------------
+  // Aggregation — pure value math (what a record contributes, how a
+  // cell's values combine, co-located grouping). The stateful parts —
+  // Supercluster indices, per-zoom caches — stay in LayerRuntime.
+  // ---------------------------------------------------------------
+  // group raw features by category — cheap, radius-independent. The
+  // actual Supercluster indices are built lazily per resolved aggregation
+  // radius (see _ensureClusterIndices), since that radius is a
+  // construction-time parameter that can change with zoom per
+  // style.aggregation, and Supercluster can't vary it after .load().
+  // Re-run whenever the active feature set changes (facet filter, or
+  // .binding.size rebound via setSizeField) so clustering always reflects
+  // what's actually visible/bound right now.
+  // GL-PORT COMPAT: this engine's own idiom for "what to sum per cell" is
+  // a dedicated binding.size (independent of binding.value, which drives
+  // color/class) — but a real-ixmaps-flat page ported straight across,
+  // unmodified, often has only ONE field bound (binding.value) plus an
+  // explicit SUM flag, expecting THAT field to be summed (real engine
+  // semantics: AGGREGATE|SUM on the bound value sums it). Falling back to
+  // a per-record COUNT (this engine's default when binding.size is unset)
+  // would silently produce nonsense totals for such a page — this makes
+  // SUM without a separate size binding behave like the real source
+  // instead of requiring the page to be rewritten with an extra binding.
+  function resolveAggregateValue(binding, flags, props) {
+    if (binding.size) return parseFloat(props[binding.size]) || 0;
+    if (flags.has('SUM') && binding.value != null) {
+      const v = parseFloat(props[binding.value]);
+      if (!isNaN(v)) return v;
+    }
+    return 1;
+  }
+
+  // real engine's SUM (default) vs MEAN aggregation per cell per
+  // category — resolved at consumption time from the raw sums/counts
+  // _ensureGridIndex stores, not baked in, so the same grid index could
+  // serve either without rebinning.
+  function cellAggregatedValues(cell, flags) {
+    const useMean = flags.has('MEAN');
+    return cell.sums.map((s, i) => (useMean && cell.counts[i] > 0 ? s / cell.counts[i] : s));
+  }
+
+  function oneHot(cat, value, nCategories) {
+    const arr = new Array(nCategories).fill(0);
+    arr[cat] = value;
+    return arr;
+  }
+
+  function groupCoLocated(clusterFeatures, zoom, clusterRadiusPx, nCategories, flags) {
+    // Merge tolerance MUST track the same theme-driven, scale-dependent
+    // aggregation width the clustering itself just used (clusterRadiusPx,
+    // set by _ensureClusterIndices right before this runs) — not an
+    // independent constant. Grouping and clustering are two views of the
+    // same "how close counts as the same spot" question at the current
+    // map scale, so they need the same answer.
+    const cellPx = clusterRadiusPx || CLUSTER_RADIUS_PX_DEFAULT;
+    const cells = new Map();
+    const n = nCategories;
+    clusterFeatures.forEach(f => {
+      const [lng, lat] = f.geometry.coordinates;
+      const p = lngLatToWorldPixel(lng, lat, zoom);
+      // Same shared snapToAggregationGrid as GRIDSIZE (hex by default,
+      // RECT if set) decides ONLY which same-spot clusters get grouped
+      // together — the group's final position below still comes from
+      // the mean of the members' own ORIGINAL (unsnapped) positions,
+      // not the grid snap point; RELOCATE's positioning is orthogonal
+      // to grid shape (confirmed against the real source: RELOCATE
+      // recomputes ptPos as the mean of ptPosA regardless of which
+      // grid produced the grouping key).
+      const snapped = snapToAggregationGrid(p.x, p.y, cellPx, flags);
+      const key = `${snapped.x}:${snapped.y}`;
+      let cell = cells.get(key);
+      if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0) }; cells.set(key, cell); }
+      cell.sumX += p.x; cell.sumY += p.y; cell.n++;
+      cell.counts[f.properties.cat] += f.properties.value;
+      // point_count is Supercluster's own built-in aggregated-record
+      // count (absent on an un-clustered leaf, which is exactly 1 record)
+      // — tracked separately from counts (the summed bound VALUE) purely
+      // for the tooltip's theme.item.count.
+      cell.recordCounts[f.properties.cat] += (f.properties.point_count || 1);
+    });
+    return Array.from(cells.values()).map(cell => {
+      const ll = worldPixelToLngLat(cell.sumX / cell.n, cell.sumY / cell.n, zoom);
+      return {
+        geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
+        properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts }
+      };
+    });
+  }
+
   class LayerRuntime {
     // spec: a normalizeTheme() result — never a raw LayerBuilder
     constructor(spec, fc, mapOptions) {
@@ -3777,152 +4412,17 @@
       this._prepareAlphaField();
     }
 
-    // .binding({alpha, alpha100}) prep — orthogonal to classification (real
-    // source confirms this combines with CHOROPLETH's own DOMINANT mode,
-    // not just plain range-classed themes), computed once per theme build.
-    // Cheap no-op unless binding.alpha is actually set. Three modes, real
-    // source confirmed (maptheme.js:9834-9852/9134-9143):
-    //  - alpha100 is the literal string "$density$": per-feature value =
-    //    (alpha field's own value) / (that polygon's own geodesic area in
-    //    km²) — see geodesicPolygonAreaKm2.
-    //  - alpha100 is any OTHER (real field) name: percent-normalize,
-    //    100/alpha100Value*alphaValue.
-    //  - alpha100 unset: the alpha field's raw value, unchanged.
-    // _alphaMax (the max nAlpha across every feature) is the ramp's own
-    // denominator in _resolveDopacityAlpha — a SEPARATE stats pass from
-    // the main bound value's min/max/median, real source confirmed.
-    // Keyed by feature object identity (WeakMap), not written into
-    // properties — this is a derived rendering input, not real CSV data,
-    // and keeping it out of `properties` keeps it out of the tooltip's
-    // bare-field/`raw` mustache expansion too.
-    _prepareAlphaField() {
-      if (!this.binding.alpha) return;
-      const alpha100 = this.binding.alpha100;
-      const isDensity = alpha100 === '$density$';
-      this._alphaByFeature = new WeakMap();
-      let maxAlpha = -Infinity;
-      this.features.forEach(f => {
-        let v = parseFloat(f.properties[this.binding.alpha]);
-        if (isNaN(v)) return;
-        if (isDensity) {
-          const areaKm2 = geodesicPolygonAreaKm2(f.geometry);
-          if (!areaKm2) return;
-          v = v / areaKm2;
-        } else if (alpha100) {
-          const v100 = parseFloat(f.properties[alpha100]);
-          if (!isNaN(v100) && v100) v = 100 / v100 * v;
-        }
-        this._alphaByFeature.set(f, v);
-        if (v > maxAlpha) maxAlpha = v;
-      });
-      this._alphaMax = isFinite(maxAlpha) ? maxAlpha : 0;
-    }
+    // pure: prepareAlphaField → see "Classification — pure functions"
+    _prepareAlphaField() { const r = computeAlphaStats(this.features, this.binding); if (r) Object.assign(this, r); }
 
-    // Shared setup for every MULTI-field CHOROPLETH mode (DOMINANT's three
-    // relevance formulas, and COMPOSECOLOR): parses binding.value's
-    // pipe-joined field list (same pipe convention
-    // csvRowsToFeatureCollection's binding.position already uses) and
-    // resolves one label/color per field — same .style({values:[...]})
-    // explicit-ordered-list convention as CATEGORICAL, positionally
-    // aligned with the piped fields (e.g. AGE_BANDS, built by mapping over
-    // the very same array that produced the pipe-joined binding.value). No
-    // raw-vs-display distinction needed here (unlike CATEGORICAL's
-    // categoryLabels/categoryDisplayLabels split) — there's no exact-match
-    // filtering against these labels, only field-index lookup.
-    _prepareMultiFieldChoropleth() {
-      const fields = this.binding.value.split('|');
-      this._multiFields = fields;
-      const explicit = Array.isArray(this.style.values) && this.style.values.length === fields.length
-        ? this.style.values.map(String) : fields;
-      this.categoryLabels = explicit;
-      this.categoryDisplayLabels = explicit;
-      this.categoryColorsRgb = resolveClassColors(this.style.colorscheme, this.categoryLabels);
-      return fields;
-    }
+    // pure: prepareMultiFieldChoropleth → see "Classification — pure functions"
+    _prepareMultiFieldChoropleth() { const r = computeMultiFieldClasses(this.binding, this.style); Object.assign(this, r); return r._multiFields; }
 
-    // .type("CHOROPLETH|DOMINANT") prep — computes, once per theme build,
-    // each piped field's own cross-record MEAN, MIN, and (population)
-    // STANDARD DEVIATION (over this.features, i.e. every polygon this
-    // CHOROPLETH's join produced — real source: maptheme.js:13086-13160,
-    // distributeValues' DOMINANT block, plus getDeviationOfArray at line
-    // 6198 for the stddev itself; nMinA doubles as the default nFilterA in
-    // _resolveDominantClass). All three are computed unconditionally even
-    // though a given theme only ends up using one relevance formula — the
-    // pass is cheap, and one prep path avoids duplicating the field-parsing
-    // loop per mode. Values are filtered by JS truthiness (skips NaN AND
-    // exactly 0), matching the real source's own `nValuesA[i]||0`-style
-    // pooling (maptheme.js:13154, confirmed by direct source read) — not
-    // merely a NaN guard.
-    _prepareDominant() {
-      const fields = this._prepareMultiFieldChoropleth();
-      const sums = fields.map(() => 0), counts = fields.map(() => 0), mins = fields.map(() => Infinity);
-      const valuesByField = fields.map(() => []);
-      this.features.forEach(f => {
-        fields.forEach((field, i) => {
-          const v = parseFloat(f.properties[field]);
-          if (!v) return; // skips NaN and 0 — real source's own truthy pooling, not just a NaN guard
-          sums[i] += v; counts[i]++;
-          if (v < mins[i]) mins[i] = v;
-          valuesByField[i].push(v);
-        });
-      });
-      this._dominantMeans = sums.map((s, i) => counts[i] ? s / counts[i] : 0);
-      this._dominantMins = mins.map(m => isFinite(m) ? m : 0);
-      // Population standard deviation (divide by N, no Bessel's
-      // correction) — matches getDeviationOfArray exactly.
-      this._dominantStdDevs = valuesByField.map((vals, i) => {
-        if (!vals.length) return 0;
-        const mean = this._dominantMeans[i];
-        const variance = vals.reduce((s, v) => s + (v - mean) * (v - mean), 0) / vals.length;
-        return Math.sqrt(variance);
-      });
-    }
+    // pure: prepareDominant → see "Classification — pure functions"
+    _prepareDominant() { Object.assign(this, computeDominantStats(this.features, this.binding, this.style)); }
 
-    // Which piped field "wins" for one joined polygon's properties — three
-    // relevance formulas, real engine confirmed by direct source read:
-    //
-    // PERCENTOFMEAN (maptheme.js:13491/13505): nRelevanz = 100 * value /
-    // mean[i].
-    // DEVIATION (maptheme.js:13493/13502-13503, stddev from
-    // getDeviationOfArray): nRelevanz = (value - mean[i]) / stddev[i] — a
-    // z-score. Both share the SAME filter: a field can only win if its own
-    // value is strictly greater than that field's own dataset-wide MIN
-    // (real default nFilterA[i] = nMinA[i]; szDominantFilter
-    // "mean"/"median" variants aren't implemented, not used by any config
-    // ported here). Both deliberately unguarded against divide-by-zero
-    // (mean=0 or stddev=0) — matching the real source exactly: that
-    // naturally yields Infinity/NaN, and NaN can never win the `>`
-    // comparison below (though +Infinity CAN — a real, confirmed-unguarded
-    // quirk of the source itself, not introduced here).
-    //
-    // Plain DOMINANT (no PERCENTOFMEAN/DEVIATION, per explicit
-    // correction): nRelevanz = value itself — the field with the highest
-    // raw value wins outright, no mean/min filter. "Which band dominates
-    // this comune's own local profile," not a cross-record comparison.
-    //
-    // All three: the winning threshold starts at 0, not -Infinity (real
-    // source: maptheme.js:13440, nLastRelevant reset to 0 per record,
-    // shared by every relevance mode) — a field must have a STRICTLY
-    // POSITIVE relevance score to win at all, so DEVIATION in particular
-    // only ever picks a field ABOVE its own mean, never the most anomalous
-    // in either direction. Ties go to the first (lowest-index) field
-    // (strict `>`).
-    _resolveDominantClass(props) {
-      const fields = this._multiFields;
-      const usePercentOfMean = this.flags.has('PERCENTOFMEAN');
-      const useDeviation = this.flags.has('DEVIATION');
-      const needsFilter = usePercentOfMean || useDeviation;
-      let bestIndex = -1, bestRelevance = 0, bestValue = null;
-      for (let i = 0; i < fields.length; i++) {
-        const v = parseFloat(props[fields[i]]);
-        if (needsFilter && !(v > this._dominantMins[i])) continue;
-        const relevance = useDeviation ? (v - this._dominantMeans[i]) / this._dominantStdDevs[i]
-          : usePercentOfMean ? 100 * v / this._dominantMeans[i]
-          : v;
-        if (relevance > bestRelevance) { bestRelevance = relevance; bestIndex = i; bestValue = v; }
-      }
-      return bestIndex === -1 ? null : { index: bestIndex, value: bestValue };
-    }
+    // pure: resolveDominantClass → see "Classification — pure functions"
+    _resolveDominantClass(props) { return resolveDominantClass(this, props); }
 
     // .style({symbolfield, symbolvalues, symbols}) — a SEPARATE shape-
     // encoding channel, independent of whatever field drives this theme's
@@ -3958,309 +4458,23 @@
       return (idx !== -1 && this.style.symbols[idx]) || 'circle';
     }
 
-    // .type("CHOROPLETH|COMPOSECOLOR") prep — unlike DOMINANT's argmax
-    // (exactly one field "wins"), COMPOSECOLOR blends EVERY field's own
-    // class color into one RGB triple, weighted by that field's value.
-    // Real source (maptheme.js:13267-13321, __maptheme_initComposedColor,
-    // confirmed by direct source read) precomputes, once, over the
-    // resolved class colors themselves (not the data): the mean channel-
-    // sum (R+G+B) and the mean per-color peak channel (max(R,G,B)) — used
-    // as brightness/normalization constants in _resolveComposedColor.
-    // Also precomputes nMax: the GLOBAL max value across every field AND
-    // every feature combined (not per-field, unlike DOMINANT's own
-    // per-field means) — confirmed real source computes one shared max,
-    // not one per field.
-    _prepareComposeColor() {
-      const fields = this._prepareMultiFieldChoropleth();
-      let nMax = 0;
-      this.features.forEach(f => fields.forEach(field => {
-        const v = parseFloat(f.properties[field]);
-        if (v > nMax) nMax = v;
-      }));
-      this._composeColorMax = nMax;
-      const rgbs = this.categoryColorsRgb;
-      this._composeColorSumIntensity = rgbs.reduce((s, c) => s + c[0] + c[1] + c[2], 0) / rgbs.length;
-      this._composeColorMeanMaxIntensity = rgbs.reduce((s, c) => s + Math.max(c[0], c[1], c[2]), 0) / rgbs.length;
-    }
+    // pure: prepareComposeColor → see "Classification — pure functions"
+    _prepareComposeColor() { Object.assign(this, computeComposeColorStats(this.features, this.binding, this.style)); }
 
-    // Blends every piped field's class color into one RGB triple for a
-    // single polygon — real source (maptheme.js:13442-13452 in paintMap's
-    // render loop, __maptheme_getComposedColor_additive/_subtractive,
-    // confirmed by direct source read). No nFilterA/min filter here
-    // (unlike DOMINANT) — every field's raw value (or 0) contributes.
-    //
-    // ADDITIVE (COMPOSECOLOR alone, the real engine's own default when
-    // SUBTRACTIVE isn't also set): per channel, sum each field's own
-    // channel value weighted by (fieldValue/nMax), then normalize by the
-    // sum's own peak channel and scale to a brightness constant.
-    //
-    // SUBTRACTIVE (COMPOSECOLOR|SUBTRACTIVE): the same weighted sum but
-    // over each color's COMPLEMENT (255-channel), then subtracted from a
-    // brightness ceiling — approximates paint-style mixing (more
-    // contributing colors -> darker result) without true CMY conversion,
-    // matching the real source's own per-channel-RGB approach exactly
-    // rather than a "more correct" but fabricated color-space conversion.
-    //
-    // Real source has no guard for nMax===0 (all-zero dataset) or for the
-    // weighted sum's own peak channel being 0 — both divide-by-zero to
-    // NaN there. This port guards both (`|| 1`) rather than faithfully
-    // reproducing a NaN fill color, since deck.gl has no equivalent of the
-    // real engine's own silent-failure-to-white-shape fallback to lean on.
-    _resolveComposedColor(props) {
-      const fields = this._multiFields;
-      const rgbs = this.categoryColorsRgb;
-      const nMax = this._composeColorMax || 1;
-      const subtractive = this.flags.has('SUBTRACTIVE');
-      let rr = 0, gg = 0, bb = 0;
-      for (let i = 0; i < fields.length; i++) {
-        const v = parseFloat(props[fields[i]]) || 0;
-        const weight = v / nMax;
-        const [r, g, b] = rgbs[i];
-        if (subtractive) { rr += (255 - r) * weight; gg += (255 - g) * weight; bb += (255 - b) * weight; }
-        else { rr += r * weight; gg += g * weight; bb += b * weight; }
-      }
-      const peak = Math.max(rr, gg, bb) || 1;
-      const styleBrightness = parseFloat(this.style.brightness);
-      if (subtractive) {
-        const brightness = !isNaN(styleBrightness) ? Math.floor(styleBrightness * 255)
-          : (Math.min(Math.floor(this._composeColorSumIntensity), 300) || 255);
-        return [rr, gg, bb].map(c => Math.max(0, Math.min(255,
-          brightness - Math.floor(c / peak * this._composeColorMeanMaxIntensity))));
-      }
-      const scale = !isNaN(styleBrightness) ? Math.floor(styleBrightness * 255) : this._composeColorMeanMaxIntensity;
-      return [rr, gg, bb].map(c => Math.max(0, Math.min(255, Math.floor(c / peak * scale))));
-    }
+    // pure: resolveComposedColor → see "Classification — pure functions"
+    _resolveComposedColor(props) { return resolveComposedColor(this, props); }
 
-    // .style({classes: N}) numeric range/class buckets — real engine's
-    // "distributeValues" (maptheme.js ~12817-13166). Three classification
-    // methods implemented: equal-interval/"EQUIDISTANT" (the DEFAULT when
-    // no method flag is present, ~line 12983), QUANTILE (~line 13024), and
-    // NATURAL/Jenks (~line 13017). Other real methods (HEADTAIL, LOG,
-    // POW2, POW3) aren't implemented yet (documented gap, not silently
-    // guessed). Class count
-    // defaults to 5 (colorScheme.length in the real engine's own hardcoded
-    // default palette), overridable via style.classes; colors resolve
-    // through the SAME resolveColorScheme used for CATEGORICAL (literal
-    // array / "none" / stringified fn / the diverging N-step sweep — see
-    // resolveClassColors), sliced positionally per class.
-    //
-    // One deliberate correction vs. the literal source, shared by both
-    // methods: the real engine's bucket test is `value >= min && value <
-    // max` for EVERY class including the last, which (for breaks ending
-    // exactly at the data's own max) excludes the single highest-valued
-    // record from every bucket. The real source actually patches this the
-    // same way for every method (`partsA[last].max += 0.001`, line 13166)
-    // — this engine achieves the same effect via an inclusive last-bucket
-    // comparison in _resolvePartsClass instead of a literal epsilon bump.
-    _buildPartsA() {
-      const values = this.features
-        .map(f => parseFloat(f.properties[this.binding.value]))
-        .filter(v => !isNaN(v));
-      if (!values.length) return;
+    // pure: buildPartsA → see "Classification — pure functions"
+    _buildPartsA() { const r = computeRangeClasses(this.features, this.binding, this.style, this.flags, v => this._formatTooltipValue(v)); if (r) Object.assign(this, r); }
 
-      // Plain loop, not Math.min(...values)/Math.max(...values) — spreading
-      // a huge array as individual function arguments overflows the call
-      // stack well before a real dataset's size (confirmed live: a
-      // >1M-row CSV-sourced dataset threw "Maximum call stack size
-      // exceeded" here; every prior dataset ported this session topped
-      // out at 69,597 rows, comfortably under engines' argument-count
-      // limits, which is why this never surfaced before).
-      let nMin = Infinity, nMax = -Infinity;
-      for (const v of values) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
-      // Dataset min/max/median — real engine's own theme-level stats
-      // (this.nMin/this.nMax/this.nMedianA[0], distributeValues), stored
-      // here (not local to partsA) since .style({dopacity...}) reads them
-      // independently of which classification method produced partsA —
-      // see _resolveDopacityAlpha.
-      this._valueMin = nMin;
-      this._valueMax = nMax;
-      const sorted = values.slice().sort((a, b) => a - b);
-      this._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
-      const nParts = parseInt(this.style.classes, 10) || DEFAULT_RANGE_CLASSES;
-      const placeholders = new Array(nParts).fill('');
-      const colorsRgb = resolveClassColors(this.style.colorscheme, placeholders);
-
-      this.partsA = this.flags.has('QUANTILE') ? this._quantileBreaks(values, nParts)
-        : this.flags.has('NATURAL') ? this._naturalBreaks(values, nParts)
-        : this._equalIntervalBreaks(nMin, nMax, nParts);
-
-      this.categoryLabels = this.partsA.map(p => `${this._formatTooltipValue(p.min)} - ${this._formatTooltipValue(p.max)}`);
-      this.categoryColorsRgb = colorsRgb;
-      // Marks "numeric range/class coloring" (as opposed to CATEGORICAL
-      // exact-match, or DOMINANT/COMPOSECOLOR, neither of which call
-      // _buildPartsA at all) — _buildAggregationIndex/_buildChartLayers
-      // use this to decide whether an AGGREGATE bubble's color must be
-      // resolved from the aggregated CELL TOTAL instead of each record's
-      // own raw value (see the reclassify step in _buildChartLayers).
-      this._rangeClassed = true;
-    }
-
-    _equalIntervalBreaks(nMin, nMax, nParts) {
-      const nStep = (nMax - nMin) / nParts || 1; // guard a zero-range dataset (all values equal)
-      return new Array(nParts).fill(null).map((_, i) => ({
-        min: nMin + i * nStep,
-        max: nMin + (i + 1) * nStep
-      }));
-    }
-
-    // .type("QUANTILE") — equal-COUNT classes (as opposed to
-    // _equalIntervalBreaks's equal-WIDTH ranges). The real engine
-    // (maptheme.js:13024-13032, getMeanMedianQuantile + distributeValues'
-    // QUANTILE branch) sorts every value ascending and computes a FIXED
-    // stride ONCE (nMaxMember = round(N/nParts)), then reuses it for every
-    // boundary (index i*nMaxMember) — a real quirk: rounding error from
-    // that single division compounds linearly with i instead of being
-    // corrected at each step, so class sizes drift uneven (and the drift
-    // all piles onto the last class, since its max is force-set to the
-    // true data max regardless of where the stride landed).
-    //
-    // Deliberately NOT ported here — this recomputes each boundary
-    // independently as round(i*N/nParts), the textbook percentile-split
-    // formula, so class membership stays as close to equal-count as
-    // integer rounding allows at every boundary, not just the first few.
-    _quantileBreaks(values, nParts) {
-      const sorted = values.slice().sort((a, b) => a - b);
-      const n = sorted.length;
-      const breaks = new Array(nParts).fill(null).map((_, i) => ({
-        min: sorted[Math.min(Math.round(i * n / nParts), n - 1)],
-        max: sorted[Math.min(Math.round((i + 1) * n / nParts), n - 1)]
-      }));
-      breaks[breaks.length - 1].max = sorted[n - 1];
-      return breaks;
-    }
-
-    // .type("NATURAL") — Jenks natural breaks (maptheme.js:8085-8168,
-    // getNaturalBreaks): the classic Fisher-Jenks "goodness of variance
-    // fit" O(n^2 * nParts) dynamic program, minimizing total within-class
-    // variance. The DP recurrence and backtracking below are ported
-    // directly from the real source (same matrices, same accumulation).
-    //
-    // One necessary, loudly-documented deviation: the real engine runs
-    // this on the FULL raw per-record value array with NO cap, sample, or
-    // early-out anywhere in the source (confirmed) — fine for the small
-    // datasets ixmaps typically classes, but at this engine's real scale
-    // (this project's own AREU layer is 69,597 records) O(n^2*k) is tens
-    // of billions of operations and would hang the browser tab solid, not
-    // "run slowly but correctly." That's a genuine scalability gap in the
-    // source, not a detail to silently reproduce. Past
-    // NATURAL_BREAKS_MAX_SAMPLE values, this classifies an evenly-strided
-    // sample of the sorted distribution instead of every value — standard
-    // practice for Jenks at scale (what d3/simple-statistics-based tools
-    // do too) — since the sample only decides WHERE the class boundaries
-    // fall, not which bucket each actual record's color resolves to
-    // afterward (every record is still tested against the resulting
-    // partsA individually, same as every other method here).
-    _naturalBreaks(values, nParts) {
-      const sorted = values.slice().sort((a, b) => a - b);
-      const n = sorted.length;
-
-      if (n <= nParts) {
-        // not enough distinct items to fill every class -> identity breaks
-        const identity = [sorted[0] || 0].concat(sorted);
-        while (identity.length < nParts + 1) identity.push(identity[identity.length - 1]);
-        return this._partsFromBreakValues(identity, nParts, sorted[n - 1]);
-      }
-
-      const sample = n > NATURAL_BREAKS_MAX_SAMPLE ? this._evenStrideSample(sorted, NATURAL_BREAKS_MAX_SAMPLE) : sorted;
-      const breakValues = this._jenksBreakValues(sample, nParts);
-      return this._partsFromBreakValues(breakValues, nParts, sorted[n - 1]);
-    }
-
-    _evenStrideSample(sortedValues, sampleSize) {
-      const n = sortedValues.length;
-      return new Array(sampleSize).fill(null).map((_, i) =>
-        sortedValues[Math.min(Math.round(i * (n - 1) / (sampleSize - 1)), n - 1)]);
-    }
-
-    // core Fisher-Jenks DP, ported line-for-line from getNaturalBreaks —
-    // mat1/mat2 are the lower-class-limit / cumulative-variance matrices;
-    // v is the within-segment sum-of-squared-deviations for the trailing
-    // run ending at l, recomputed incrementally as the window grows.
-    _jenksBreakValues(valuesA, nParts) {
-      const n = valuesA.length;
-      const mat1 = [], mat2 = [];
-      for (let i = 0; i <= n; i++) {
-        mat1.push(new Array(nParts + 1).fill(0));
-        mat2.push(new Array(nParts + 1).fill(0));
-      }
-      for (let i = 1; i <= nParts; i++) {
-        mat1[1][i] = 1;
-        mat2[1][i] = 0;
-        for (let j = 2; j <= n; j++) mat2[j][i] = Infinity;
-      }
-
-      let v = 0;
-      for (let l = 2; l <= n; l++) {
-        let s1 = 0, s2 = 0, w = 0;
-        for (let m = 1; m <= l; m++) {
-          const i3 = l - m + 1;
-          const val = valuesA[i3 - 1];
-          s2 += val * val;
-          s1 += val;
-          w++;
-          v = s2 - (s1 * s1) / w;
-          const i4 = i3 - 1;
-          if (i4 !== 0) {
-            for (let j = 2; j <= nParts; j++) {
-              if (mat2[l][j] >= (v + mat2[i4][j - 1])) {
-                mat1[l][j] = i3;
-                mat2[l][j] = v + mat2[i4][j - 1];
-              }
-            }
-          }
-        }
-        mat1[l][1] = 1;
-        mat2[l][1] = v;
-      }
-
-      let k = n;
-      const breaks = [];
-      breaks[nParts] = valuesA[n - 1];
-      breaks[0] = valuesA[0];
-      let countNum = nParts;
-      while (countNum > 1) {
-        const id = mat1[k][countNum] - 2;
-        breaks[countNum - 1] = valuesA[id];
-        k = mat1[k][countNum] - 1;
-        countNum--;
-      }
-      return breaks;
-    }
-
-    // breakValues[i] (for 0 < i < nParts) is the LAST element of segment
-    // i-1 in the DP's own backtracking, not the first element of segment
-    // i — verified empirically: on a 3-cluster test dataset ({1..10},
-    // {50,51,52}, {100..103}), the DP's own within-class variance is
-    // minimized only if the shared boundary value (e.g. 10) stays in the
-    // LOWER segment, not the upper one. Since _resolvePartsClass tests
-    // every class as inclusive-min/exclusive-max (except the true last
-    // class), each non-last segment's max is nudged just past its shared
-    // boundary value so ties resolve toward the lower (already-optimal)
-    // segment instead of leaking into the next one.
-    _partsFromBreakValues(breakValues, nParts, trueMax) {
-      const TIE_EPSILON = 1e-6;
-      return new Array(nParts).fill(null).map((_, i) => ({
-        min: breakValues[i],
-        max: i === nParts - 1 ? trueMax : breakValues[i + 1] + TIE_EPSILON
-      }));
-    }
-
-    // partsA override param: lets a caller classify against a DIFFERENT,
-    // dynamically-computed breaks array (e.g. the AGGREGATE reclassify
-    // step in _buildChartLayers, which needs to bucket a post-aggregation
-    // cell TOTAL, not this runtime's own static this.partsA built from
-    // raw per-record values) without disturbing this.partsA itself,
-    // which every other caller here still relies on unchanged.
-    _resolvePartsClass(value, partsA = this.partsA) {
-      if (!partsA || isNaN(value)) return null;
-      for (let i = 0; i < partsA.length; i++) {
-        const isLast = i === partsA.length - 1;
-        const inLower = value >= partsA[i].min;
-        const inUpper = isLast ? value <= partsA[i].max : value < partsA[i].max;
-        if (inLower && inUpper) return i;
-      }
-      return null; // outside every class (e.g. explicit user ranges that don't cover the data) -> caller drops the feature
-    }
+    // pure versions: see "Classification — pure functions" above the class
+    _equalIntervalBreaks(nMin, nMax, nParts) { return equalIntervalBreaks(nMin, nMax, nParts); }
+    _quantileBreaks(values, nParts) { return quantileBreaks(values, nParts); }
+    _naturalBreaks(values, nParts) { return naturalBreaks(values, nParts); }
+    _evenStrideSample(sortedValues, sampleSize) { return evenStrideSample(sortedValues, sampleSize); }
+    _jenksBreakValues(valuesA, nParts) { return jenksBreakValues(valuesA, nParts); }
+    _partsFromBreakValues(breakValues, nParts, trueMax) { return partsFromBreakValues(breakValues, nParts, trueMax); }
+    _resolvePartsClass(value, partsA = this.partsA) { return resolvePartsClass(value, partsA); }
 
     // Single entry point for "which color-class bucket does this feature's
     // bound value belong to" — CATEGORICAL (exact match), range/class
@@ -4272,104 +4486,11 @@
       return 0;
     }
 
-    // .type("CHOROPLETH|DOPACITY") family — per-RECORD fill opacity, two
-    // entirely different real formulas depending on whether
-    // .binding({alpha}) is set (real source: all three DOPACITY call
-    // sites in paintMap are `if (this.szAlphaField) {...} else {...}`,
-    // confirmed by direct source read — alphafield doesn't just tweak the
-    // value/min/max ramps below, it REPLACES them outright):
-    //
-    // WITH binding.alpha (maptheme.js:13456-13471 etc., ~line "if
-    // (this.szAlphaField)"): nOpacity = dopacityscale / nAlphaMax^(1/pow)
-    // * nAlpha^(1/pow) — nAlpha/nAlphaMax from _prepareAlphaField's OWN
-    // separate stats pass (never the main value's min/max/median), and
-    // — per the literal source quoted — NOT multiplied by the theme's
-    // base fillopacity here (unlike every other variant below). DOPACITY*
-    // flag choice (MIN/MAX/MINMAX) is irrelevant once alpha is set — only
-    // the bare DOPACITY-family gate in buildDeckLayers matters.
-    //
-    // WITHOUT binding.alpha (the bound value drives opacity directly,
-    // maptheme.js paintMap ~13635-13800): returned as a 0-1 fraction
-    // already scaled by the theme's own base fillopacity, matching the
-    // real engine writing this value directly as the shape's final
-    // fill-opacity:
-    //   DOPACITYMINMAX (or real source's own auto-trigger: an unflagged
-    //   theme whose data straddles zero, _valueMin<0<_valueMax —
-    //   "BIPOLAR" data): ramps from the dataset MEDIAN toward nMax above
-    //   it and toward nMin below it — two independent half-ramps.
-    //   DOPACITYMIN: inverted ramp — HIGHER value -> LOWER opacity.
-    //   DOPACITYMAX: direct ramp — higher value -> higher opacity.
-    //   Plain DOPACITY: (value-min)/(median-min), capped at a 0.5
-    //   ceiling BEFORE the fillopacity/scale multiply — real source's own
-    //   formula, not a rounding choice of this port's.
-    //
-    // dopacitypow (real nDopacityPow, default 1) is the exponent
-    // 1/dopacitypow — on the alpha ramp always, on the value ramp only
-    // for MIN/MAX/MINMAX (plain DOPACITY has no pow term in the real
-    // source either). dopacityscale (real nDopacityScale, default 1) is
-    // a flat multiplier on the final result, every variant. Clamped:
-    // <0.0001 snaps to 0 (real source's own near-zero cutoff); capped at
-    // the theme's own base opacity (real source caps at a separate
-    // `this.nOpacity||0.9` style property this port doesn't model
-    // separately — using the already-resolved base fillopacity as the
-    // cap instead, a minor documented deviation).
-    _resolveDopacityAlpha(f, value, baseOpacity) {
-      const scale = parseFloat(this.style.dopacityscale) || 1;
-      const pow = 1 / (parseFloat(this.style.dopacitypow) || 1);
-      if (this.binding.alpha) {
-        if (!this._alphaByFeature) return null;
-        const nAlpha = this._alphaByFeature.get(f);
-        if (nAlpha == null) return null;
-        let nOpacity = scale / Math.pow(this._alphaMax || 1, pow) * Math.pow(nAlpha, pow);
-        if (nOpacity < 0.0001) nOpacity = 0;
-        return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
-      }
-      if (isNaN(value) || this._valueMin == null) return null;
-      const nMin = this._valueMin, nMax = this._valueMax, nMedian = this._valueMedian;
-      const bipolar = this.flags.has('DOPACITYMINMAX') || this.flags.has('BIPOLAR') || (nMin < 0 && nMax > 0);
-      let nOpacity;
-      if (bipolar) {
-        nOpacity = value >= nMedian
-          ? Math.pow(Math.abs(value - nMedian), pow) / Math.pow((nMax - nMedian) || 1, pow)
-          : Math.pow(Math.abs(value - nMedian), pow) / Math.pow((nMedian - nMin) || 1, pow);
-      } else if (this.flags.has('DOPACITYMIN')) {
-        nOpacity = Math.pow(nMax - value, pow) / Math.pow((nMax - nMin) || 1, pow);
-      } else if (this.flags.has('DOPACITYMAX')) {
-        nOpacity = Math.pow(value - nMin, pow) / Math.pow((nMax - nMin) || 1, pow);
-      } else {
-        nOpacity = (value - nMin) / ((nMedian - nMin) || 1) * 0.5;
-      }
-      nOpacity *= baseOpacity * scale;
-      if (nOpacity < 0.0001) nOpacity = 0;
-      return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
-    }
+    // pure: resolveDopacityAlpha → see the pure-function sections above the class
+    _resolveDopacityAlpha(f, value, baseOpacity) { return resolveDopacityAlpha(this, f, value, baseOpacity); }
 
-    // group raw features by category — cheap, radius-independent. The
-    // actual Supercluster indices are built lazily per resolved aggregation
-    // radius (see _ensureClusterIndices), since that radius is a
-    // construction-time parameter that can change with zoom per
-    // style.aggregation, and Supercluster can't vary it after .load().
-    // Re-run whenever the active feature set changes (facet filter, or
-    // .binding.size rebound via setSizeField) so clustering always reflects
-    // what's actually visible/bound right now.
-    // GL-PORT COMPAT: this engine's own idiom for "what to sum per cell" is
-    // a dedicated binding.size (independent of binding.value, which drives
-    // color/class) — but a real-ixmaps-flat page ported straight across,
-    // unmodified, often has only ONE field bound (binding.value) plus an
-    // explicit SUM flag, expecting THAT field to be summed (real engine
-    // semantics: AGGREGATE|SUM on the bound value sums it). Falling back to
-    // a per-record COUNT (this engine's default when binding.size is unset)
-    // would silently produce nonsense totals for such a page — this makes
-    // SUM without a separate size binding behave like the real source
-    // instead of requiring the page to be rewritten with an extra binding.
-    _resolveAggregateValue(props) {
-      if (this.binding.size) return parseFloat(props[this.binding.size]) || 0;
-      if (this.flags.has('SUM') && this.binding.value != null) {
-        const v = parseFloat(props[this.binding.value]);
-        if (!isNaN(v)) return v;
-      }
-      return 1;
-    }
+    // pure: resolveAggregateValue → see the pure-function sections above the class
+    _resolveAggregateValue(props) { return resolveAggregateValue(this.binding, this.flags, props); }
 
     _buildAggregationIndex(sourceFeatures) {
       // Range-classed (non-CATEGORICAL numeric) coloring: DON'T pre-split
@@ -5240,14 +5361,8 @@
       return this._resolveClassIndex(rawValue);
     }
 
-    // real engine's SUM (default) vs MEAN aggregation per cell per
-    // category — resolved at consumption time from the raw sums/counts
-    // _ensureGridIndex stores, not baked in, so the same grid index could
-    // serve either without rebinning.
-    _cellAggregatedValues(cell) {
-      const useMean = this.flags.has('MEAN');
-      return cell.sums.map((s, i) => (useMean && cell.counts[i] > 0 ? s / cell.counts[i] : s));
-    }
+    // pure: cellAggregatedValues → see the pure-function sections above the class
+    _cellAggregatedValues(cell) { return cellAggregatedValues(cell, this.flags); }
 
     // .type("GRIDSIZE|PLOT|LINES|AREA|...") — the per-year curves chart:
     // one small multi-point line/area chart per grid cell, rendered to a
@@ -6067,53 +6182,11 @@
       return layers;
     }
 
-    _oneHot(cat, value) {
-      const arr = new Array(this.categoryLabels.length).fill(0);
-      arr[cat] = value;
-      return arr;
-    }
+    // pure: oneHot → see the pure-function sections above the class
+    _oneHot(cat, value) { return oneHot(cat, value, this.categoryLabels.length); }
 
-    _groupCoLocated(clusterFeatures, zoom) {
-      // Merge tolerance MUST track the same theme-driven, scale-dependent
-      // aggregation width the clustering itself just used (this._clusterRadiusPx,
-      // set by _ensureClusterIndices right before this runs) — not an
-      // independent constant. Grouping and clustering are two views of the
-      // same "how close counts as the same spot" question at the current
-      // map scale, so they need the same answer.
-      const cellPx = this._clusterRadiusPx || CLUSTER_RADIUS_PX_DEFAULT;
-      const cells = new Map();
-      const n = this.categoryLabels.length;
-      clusterFeatures.forEach(f => {
-        const [lng, lat] = f.geometry.coordinates;
-        const p = lngLatToWorldPixel(lng, lat, zoom);
-        // Same shared snapToAggregationGrid as GRIDSIZE (hex by default,
-        // RECT if set) decides ONLY which same-spot clusters get grouped
-        // together — the group's final position below still comes from
-        // the mean of the members' own ORIGINAL (unsnapped) positions,
-        // not the grid snap point; RELOCATE's positioning is orthogonal
-        // to grid shape (confirmed against the real source: RELOCATE
-        // recomputes ptPos as the mean of ptPosA regardless of which
-        // grid produced the grouping key).
-        const snapped = snapToAggregationGrid(p.x, p.y, cellPx, this.flags);
-        const key = `${snapped.x}:${snapped.y}`;
-        let cell = cells.get(key);
-        if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0) }; cells.set(key, cell); }
-        cell.sumX += p.x; cell.sumY += p.y; cell.n++;
-        cell.counts[f.properties.cat] += f.properties.value;
-        // point_count is Supercluster's own built-in aggregated-record
-        // count (absent on an un-clustered leaf, which is exactly 1 record)
-        // — tracked separately from counts (the summed bound VALUE) purely
-        // for the tooltip's theme.item.count.
-        cell.recordCounts[f.properties.cat] += (f.properties.point_count || 1);
-      });
-      return Array.from(cells.values()).map(cell => {
-        const ll = worldPixelToLngLat(cell.sumX / cell.n, cell.sumY / cell.n, zoom);
-        return {
-          geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
-          properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts }
-        };
-      });
-    }
+    // pure: groupCoLocated → see the pure-function sections above the class
+    _groupCoLocated(clusterFeatures, zoom) { return groupCoLocated(clusterFeatures, zoom, this._clusterRadiusPx, this.categoryLabels.length, this.flags); }
   }
 
   function dominant(counts) {
@@ -6523,7 +6596,13 @@
   global.__setFacetFilter = __setFacetFilter;
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
-  global.__ixmapsGlInternals = { normalizeTheme, projectThemeToDefinition, LayerBuilder };
+  global.__ixmapsGlInternals = {
+    normalizeTheme, projectThemeToDefinition, LayerBuilder,
+    equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
+    computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
+    resolveComposedColor, computeRangeClasses, resolveDopacityAlpha,
+    resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated,
+  };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;
 })(window);
