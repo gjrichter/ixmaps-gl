@@ -66,6 +66,13 @@ theme, legend and tooltip — must be identical, which checks that an alias real
 same thing (`EQUIVALENT` / `NOT EQUIVALENT` at the end of a run). The check has teeth: run
 against the engine from before the aliases existed, every twin fails.
 
+## Skipped pages
+
+A page that never calls `ixmaps.Map()` within 15 s is reported as `SKIP` (it needs user
+interaction). That is only accepted for a page that never produced a map: a page that throws
+before creating its map is an error, and a page whose baseline has views fails if it stops
+producing one.
+
 ## Known-broken pages
 
 `pages.json` → `knownBroken` lists pages that fail for a known, recorded reason. They still

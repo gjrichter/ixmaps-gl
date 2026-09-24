@@ -65,7 +65,10 @@ features' own geometry; any other single field on tabular data → a join key ag
 same-named FEATURE layer — so a flat-style choropleth `.binding({geo: "code"})` works.
 And as in flat, `.meta()` is merged into style first (meta wins): a style property given in
 `.meta()` applies, and the meta keys (`title`, `tooltip`, `name`, `snippet`, `description`)
-work when given in `.style()` too.
+work when given in `.style()` too. The layer builder has all of flat's methods, including
+`.field()`, `.field100()`, `.geo()`, `.lookup()`, `.encoding()`, `.query()`, `.process()` and
+`.json()`; each writes the slot flat writes (`.process()` is stored but not run yet — the
+validator reports it).
 The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.

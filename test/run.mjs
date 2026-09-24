@@ -140,7 +140,13 @@ async function runPage(browser, localOrigin, pagePath) {
     await page.goto(localOrigin + REPO_URL_PREFIX + pagePath, { waitUntil: 'load', timeout: PAGE_TIMEOUT_MS });
     const t0 = Date.now();
     while (!(await page.evaluate(() => window.__glTest.mapCount())) && Date.now() - t0 < NO_MAP_MS) await sleep(250);
-    if (!(await page.evaluate(() => window.__glTest.mapCount()))) return { page: pagePath, skipped: 'no ixmaps.Map() call within 15s (needs interaction?)' };
+    if (!(await page.evaluate(() => window.__glTest.mapCount()))) {
+      // a page that THREW before creating its map is broken, not "waiting for
+      // interaction" — e.g. a builder method the engine lost
+      const pageErrors = [...consoleMsgs].filter(m => m.startsWith('pageerror:'));
+      if (pageErrors.length) return { page: pagePath, error: `no ixmaps.Map() call — ${pageErrors[0]}`, console: [...consoleMsgs].sort() };
+      return { page: pagePath, skipped: 'no ixmaps.Map() call within 15s (needs interaction?)' };
+    }
     const resolved = await page.evaluate(ms => window.__glTest.resolvedMaps(ms), PAGE_TIMEOUT_MS);
     if (!resolved.every(r => r === 'ok')) throw new Error(`map promise: ${resolved.join(', ')}`);
     const views = [];
@@ -240,7 +246,15 @@ async function worker() {
     r.seconds = Math.round((Date.now() - t0) / 1000);
     results.push(r);
     const file = path.join(BASELINES, slug(p) + '.json');
-    if (r.skipped) { console.log(`SKIP  ${p} — ${r.skipped}`); continue; }
+    if (r.skipped) {
+      // skipping is only acceptable for a page that never produced a map
+      const b = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+      if (!UPDATE && b && b.views && b.views.length) {
+        r.diffs = [`produced no map (${r.skipped}) — its baseline has ${b.views.length} views`];
+        console.log(`FAIL  ${p}\n        ${r.diffs[0]}`);
+      } else console.log(`SKIP  ${p} — ${r.skipped}`);
+      continue;
+    }
     const known = (config.knownBroken || {})[p];
     if (known) {
       r.known = true;
@@ -275,7 +289,7 @@ const equivFailed = [];
 for (const [twin, orig] of config.equivalent || []) {
   const a = byPage.get(twin), b = byPage.get(orig);
   if (!a || !b) continue; // one of the pair filtered out by --page
-  const d = (a.error || b.error) ? [`not comparable: ${a.error || b.error}`]
+  const d = (a.error || b.error || a.skipped || b.skipped) ? [`not comparable: ${a.error || b.error || a.skipped || b.skipped}`]
     : diffSnapshots({ views: b.views, console: [] }, { views: a.views, console: [] });
   if (d.length) {
     equivFailed.push(twin);
@@ -285,7 +299,7 @@ for (const [twin, orig] of config.equivalent || []) {
 
 if (manifestDirty) fs.writeFileSync(MANIFEST, JSON.stringify(Object.fromEntries(Object.entries(manifest).sort()), null, 1) + '\n');
 const failed = results.filter(r => !r.known && ((r.diffs && r.diffs.length) || (r.error && !UPDATE)));
-const skipped = results.filter(r => r.skipped).length;
+const skipped = results.filter(r => r.skipped && !(r.diffs && r.diffs.length)).length;
 const known = results.filter(r => r.known).length;
 console.log(`\n${results.length} page(s)${ENGINE ? ` against ${path.relative(process.cwd(), ENGINE)}` : ''}: ${UPDATE ? 'baselines written' : `${results.length - failed.length - skipped - known} passed, ${failed.length} failed`}, ${skipped} skipped, ${known} known-broken`
   + ` — data: ${cacheStats.replayed} replayed, ${cacheStats.recorded} recorded, ${cacheStats.live} live (tiles)`);
