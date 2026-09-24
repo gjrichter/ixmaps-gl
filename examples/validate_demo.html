@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Grammar validation</title>
+<script src="../ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>Grammar validation</b>
+  <span>This page contains deliberate mistakes. With <code>.options({validate:true})</code> ixmaps-gl checks every theme against the
+  shared ixmaps grammar and reports typos and features it doesn't implement in the browser console, once per keyword
+  (<code>map.getValidationReport()</code> returns them as data).</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // On localhost, use the sibling ixmaps-grammar checkout's build; anywhere
+  // else, true = the published validator (jsDelivr).
+  const validator = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+    ? new URL('../../ixmaps-grammar/dist/validate.mjs', location.href).href
+    : true;
+
+  const rows = [
+    { lat: 45.46, lon: 9.19, cat: "a", v: 10 },
+    { lat: 45.47, lon: 9.20, cat: "b", v: 20 },
+    { lat: 45.45, lon: 9.18, cat: "a", v: 5 },
+  ];
+
+  window._map = ixmaps.Map("map_div", { mapType: "white", mapTyp: "white" })   // Map option typo
+    .options({ validate: validator, objectscalling: "dynamic", panhidden: true }) // typo; flat-only option
+    .view([45.46, 9.19], 13);
+
+  window._map.layer("points")
+    .data({ obj: rows, type: "json" })
+    .binding({ position: "lat|lon", value: "v", positon: "x" })       // binding typo
+    .type("CHART|BUBBLE|SIZE|CATEGORICL|AGGREGATE")                      // flag typo
+    .style({ colorscheme: ["#e6194b", "#4363d8"], fillOpacity: 0.7, scale: 1 }) // style key case typo
+    .meta({ title: "points", tooltp: "{{cat}}" });                       // meta typo
+
+  window._map.then(map => {
+    // runtime style changes are validated too
+    map.setThemeStyle("points", { strokewidth: 1 });
+    map.changeThemeStyle("points", "opacty:0.5", "set");
+    // a layer added after load (defineLayer path)
+    window._map.layer("pie").data({ obj: rows, type: "json" })
+      .binding({ position: "lat|lon", value: "v" })
+      .type("CHART|PIE|VALUES").define();
+    // runtime API: exists in ixmaps-flat but not in ixmaps-gl; and a typo
+    if (ixmaps.setMapTool) ixmaps.setMapTool("info");
+    if (ixmaps.getThemObj) ixmaps.getThemObj("points");
+  });
+</script>
+</body>
+</html>

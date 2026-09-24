@@ -74,6 +74,39 @@ See [`demo_accidents.html`](./demo_accidents.html) for a minimal working page co
 verbatim (config included) from a real ixmaps page — the only change is which script
 provides `ixmaps.layer`/`ixmaps.Map`.
 
+## Grammar validation (opt-in)
+
+ixmaps-gl can check every theme definition against the shared ixmaps grammar
+([ixmaps-grammar](https://github.com/gjrichter/ixmaps-grammar), extracted from the real
+ixmaps-flat sources) and report — once per keyword, in the browser console — typos and
+features this engine doesn't implement:
+
+```text
+[ixmaps-gl validate] error unknown-style-key — layer "points": unknown style key "fillOpacity" — did you mean "fillopacity"?
+[ixmaps-gl validate] warning gl-unsupported — layer "pie": type flag "PIE" is not implemented by ixmaps-gl
+```
+
+It is **off by default** — nothing is fetched and nothing changes. Turn it on with any of:
+
+```js
+ixmaps.Map("map_div", {...}).options({ validate: true })  // or a validator module URL
+ixmaps.validate = true                                     // before or after loading ixmaps-gl.js
+```
+
+or by adding `?ixmaps-validate` to the page URL (this only switches validation on; the
+validator URL can only be set from page code).
+
+Checked: Map() options, `.options()`, each layer's `.type()` flags, `.style()`, `.meta()`,
+`.binding()`, `.data()`; layers added later (`defineLayer`); runtime `setThemeStyle` /
+`changeThemeStyle` patches; and reads of `ixmaps.*` functions this engine lacks (the
+`ixmaps` global becomes a Proxy in validation mode only; missing properties still read as
+`undefined`). `map.getValidationReport()` returns the findings as data (`null` when off).
+If the validator can't be loaded, the map loads normally without it. See
+[`examples/validate_demo.html`](./examples/validate_demo.html).
+
+For checking page files before they run, use the static checker in ixmaps-grammar
+(`ixmaps-check --engine gl page.html`).
+
 ## Example / demo pages
 
 | Page | What it shows |

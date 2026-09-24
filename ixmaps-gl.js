@@ -167,6 +167,112 @@
   }
 
   // ---------------------------------------------------------------
+  // Opt-in grammar validation — checks every theme definition against
+  // the shared ixmaps grammar (github.com/gjrichter/ixmaps-grammar, the
+  // keyword registry extracted from the real ixmaps-flat sources) and
+  // warns once per keyword about anything unknown (typos) or not
+  // implemented by THIS engine. Off by default: nothing is fetched and
+  // nothing changes unless a page turns it on with
+  //   .options({ validate: true })            (or a validator URL string)
+  //   ixmaps.validate = true                  (before or after this script)
+  //   ?ixmaps-validate                        (page URL; on/off only)
+  // The query parameter can only switch validation ON — it never selects
+  // the validator URL, since that URL is import()ed and executed: a
+  // crafted link must not be able to load arbitrary code into the page.
+  // ---------------------------------------------------------------
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.0/dist/validate.mjs';
+  // a page may set ixmaps.validate BEFORE loading this script — the
+  // `global.ixmaps = {...}` export below would otherwise overwrite it
+  const _preloadValidate = global.ixmaps && global.ixmaps.validate;
+
+  function resolveValidatorUrl(engineOptions) {
+    const opt = engineOptions && engineOptions.validate;
+    if (opt === false) return null;
+    const setting = opt != null ? opt : (global.ixmaps && global.ixmaps.validate);
+    if (typeof setting === 'string' && setting) return setting;
+    if (setting) return VALIDATOR_URL_DEFAULT;
+    try {
+      if (new URLSearchParams(global.location.search).has('ixmaps-validate')) return VALIDATOR_URL_DEFAULT;
+    } catch (e) { /* no location (non-browser) */ }
+    return null;
+  }
+
+  const _validatorModules = new Map();
+  function loadValidatorModule(url) {
+    if (!_validatorModules.has(url)) _validatorModules.set(url, import(url));
+    return _validatorModules.get(url);
+  }
+
+  // One per map. Findings print once per (layer, code, keyword) and are
+  // kept for map.getValidationReport().
+  class GrammarValidation {
+    constructor(mod) {
+      this.mod = mod;
+      this.report = [];
+      this._seen = new Set();
+      this.v = mod.createValidator({
+        engine: 'gl',
+        onFinding: (f, ctx) => {
+          const layer = ctx && ctx.layer != null ? ctx.layer : null;
+          const key = `${layer}|${f.code}|${f.keyword}`;
+          if (this._seen.has(key)) return;
+          this._seen.add(key);
+          this.report.push(Object.assign({ layer }, f));
+          const where = layer != null ? `layer "${layer}": ` : '';
+          const log = f.severity === 'info' ? console.info : console.warn;
+          log(`[ixmaps-gl validate] ${f.severity} ${f.code} — ${where}${f.message}`);
+        }
+      });
+    }
+    layer(lb) {
+      this.v.theme({ type: lb._typeStr, style: lb._style, meta: lb._meta, binding: lb._binding, data: lb._data }, { layer: lb.name });
+    }
+    mapOptions(o) { this.v.mapOptions(o, { layer: null }); }
+    options(o) { this.v.options(o, { layer: null }); }
+    style(themeId, patch) { this.v.style(patch, { layer: themeId }); }
+    // a property read on the ixmaps global that this engine doesn't have:
+    // report it when ixmaps-flat has it (a real gap) or it's a near-miss
+    // typo; stay silent for anything else (a page's own ixmaps.* state)
+    runtimeAccess(name) {
+      const known = this.v.v.lookup('runtimeApi', name).known;
+      if (known || this.mod.suggest(name, this.v.v.keys('runtimeApi'))) this.v.runtimeCall(name, { layer: null });
+    }
+  }
+
+  // Replaces the ixmaps global with a Proxy (validation mode only) that
+  // reports reads of missing properties, then returns undefined exactly as
+  // before — feature checks like `if (ixmaps.setMapTool)` keep working.
+  const PROXY_IGNORED_PROPS = new Set(['then', 'toJSON', 'constructor', 'prototype', 'valueOf', 'toString',
+    'length', 'nodeType', 'tagName', '$$typeof', 'inspect', 'validate', '__proto__']);
+  function installRuntimeApiProxy(validation) {
+    const target = global.ixmaps;
+    if (!target || target.__ixmapsGlValidationProxy) return;
+    global.ixmaps = new Proxy(target, {
+      get(t, prop, recv) {
+        if (prop === '__ixmapsGlValidationProxy') return true;
+        if (typeof prop === 'string' && !(prop in t) && !PROXY_IGNORED_PROPS.has(prop)) validation.runtimeAccess(prop);
+        return Reflect.get(t, prop, recv);
+      }
+    });
+  }
+
+  // null when validation is off or the validator can't be loaded — a
+  // validator failure must never break the map itself
+  async function startValidation(engineOptions) {
+    const url = resolveValidatorUrl(engineOptions);
+    if (!url) return null;
+    try {
+      const validation = new GrammarValidation(await loadValidatorModule(url));
+      console.info(`[ixmaps-gl validate] on — ixmaps-grammar ${validation.mod.version || '?'} (${url})`);
+      installRuntimeApiProxy(validation);
+      return validation;
+    } catch (e) {
+      console.warn(`[ixmaps-gl validate] could not load the validator from ${url} — continuing without validation`, e);
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------------
   // generic TopoJSON -> GeoJSON decoding (all geometry types, with or
   // without quantization) — no external topojson-client dependency
   // ---------------------------------------------------------------
@@ -939,6 +1045,16 @@
       // own <script>/<link> tags already loaded (see ensureLibrariesLoaded).
       await ensureLibrariesLoaded();
 
+      // opt-in grammar validation (see startValidation) — only now, after
+      // the library load, have .options() calls chained onto ixmaps.Map()
+      // landed in this._engineOptions
+      const validation = await startValidation(this._engineOptions);
+      if (validation) {
+        validation.mapOptions(this.mapOptions);
+        validation.options(this._engineOptions);
+        this._layerBuilders.forEach(lb => validation.layer(lb));
+      }
+
       // load + filter every attached layer's data up front. Multiple
       // layers pointing at the SAME source (real convention:
       // .data({cache:"true"}) — this engine's own multi-layer example
@@ -1371,7 +1487,10 @@
           const rt = findRuntime(themeId);
           if (rt) { rt.setSizeField(field); refresh(); }
         },
+        // findings of the opt-in grammar validation (null when it's off)
+        getValidationReport: () => (validation ? validation.report.slice() : null),
         setThemeStyle: (themeId, patch) => {
+          if (validation) validation.style(themeId, patch);
           const rt = findRuntime(themeId);
           if (rt) { rt.setStyle(patch); refresh(); }
         },
@@ -1393,6 +1512,7 @@
           const colonIdx = String(styleKeyValue).indexOf(':');
           const key = colonIdx === -1 ? String(styleKeyValue) : styleKeyValue.slice(0, colonIdx);
           const value = colonIdx === -1 ? '' : styleKeyValue.slice(colonIdx + 1);
+          if (validation) validation.style(themeId, { [key]: value });
           if (key === 'filter') {
             rt.setRuntimeFilter(action === 'remove' ? '' : value);
             refresh();
@@ -1441,6 +1561,7 @@
         // already push responsibility for "what should happen" to the
         // caller rather than guessing.
         defineLayer: async (layerBuilder) => {
+          if (validation) validation.layer(layerBuilder);
           // No cross-call fetch cache here (unlike build()'s own loop) —
           // a dynamic add is a one-off call, not part of a batch of
           // layers sharing one data source.
@@ -5962,7 +6083,9 @@
   global.ixmaps = {
     layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON,
-    markThemeClass, unmarkThemeClass
+    markThemeClass, unmarkThemeClass,
+    // carried over from a page's own pre-load `ixmaps.validate = ...`
+    validate: _preloadValidate
   };
   // Bare globals, not namespaced under ixmaps — matches the real engine's
   // own convention (see their shared comment above) of exposing these
