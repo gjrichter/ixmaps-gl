@@ -1,0 +1,14 @@
+{
+  "name": "ixmaps-gl-regression",
+  "private": true,
+  "description": "Output-regression harness for ixmaps-gl.js: snapshots what the engine produces per page and compares against baselines",
+  "type": "module",
+  "scripts": {
+    "snapshot": "node run.mjs --update",
+    "test": "node run.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  },
+  "license": "BSD-3-Clause"
+}

@@ -1,0 +1,3216 @@
+{
+ "page": "mappa_stranieri_30.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 12,
+    "center": [
+     9.1828,
+     45.4734
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-scuole-g0",
+     "type": "IconLayer",
+     "count": 470,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "548806e96f57a502",
+     "setDigest": "4182270d46a801e2",
+     "columnDigests": {
+      "getColor": "891cb36463627e8d",
+      "getIcon": "6c468215e9ccd0f6",
+      "getPosition": "6ab462ab22cbaee3",
+      "getSize": "672b88897425ec9e"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.098314,
+       9.266647
+      ],
+      "getSize": [
+       15.244451,
+       143.654185
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       15.244451
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       15.244451
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.172719,
+        45.479224
+       ],
+       15.244451
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       16.69946
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.17298,
+        45.459898
+       ],
+       17.043815
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.202675,
+        45.458418
+       ],
+       17.043815
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.18923,
+        45.505901
+       ],
+       17.712452
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       18.037478
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       18.037478
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       18.037478
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.201119,
+        45.488063
+       ],
+       18.979189
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.130526,
+        45.462916
+       ],
+       18.979189
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       19.282875
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       19.282875
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       21.013026
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.238972,
+        45.501436
+       ],
+       21.287718
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.198924,
+        45.454276
+       ],
+       21.826733
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-235,104,52",
+        "url": "#8cb86684:9962",
+        "width": 64
+       },
+       [
+        9.188878,
+        45.442302
+       ],
+       22.611176
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.207197,
+        45.453778
+       ],
+       22.866677
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.248246,
+        45.458902
+       ],
+       23.119355
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-scuole-g0",
+     "type": "IconLayer",
+     "count": 470,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "8ad39704c0e4fea4",
+     "setDigest": "3c880a6d67ed72cf",
+     "columnDigests": {
+      "getColor": "891cb36463627e8d",
+      "getIcon": "e7e6b2553cff6710",
+      "getPosition": "6ab462ab22cbaee3",
+      "getSize": "e9468011c90de985"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.098314,
+       9.266647
+      ],
+      "getSize": [
+       2.771718,
+       26.118943
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       2.771718
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-134,182,239-0.85-255,255,255-1",
+        "url": "#fb3e8631:502",
+        "width": 48
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       2.771718
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.172719,
+        45.479224
+       ],
+       2.771718
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       3.036265
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.17298,
+        45.459898
+       ],
+       3.098875
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.202675,
+        45.458418
+       ],
+       3.098875
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.18923,
+        45.505901
+       ],
+       3.220446
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-134,182,239-0.85-255,255,255-1",
+        "url": "#feea585f:782",
+        "width": 48
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       3.279541
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       3.279541
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1",
+        "url": "#5f2c33ac:798",
+        "width": 48
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       3.279541
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.201119,
+        45.488063
+       ],
+       3.450762
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-42,120,214-0.85-255,255,255-1",
+        "url": "#a9605f76:506",
+        "width": 48
+       },
+       [
+        9.130526,
+        45.462916
+       ],
+       3.450762
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       3.505977
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1",
+        "url": "#5f2c33ac:798",
+        "width": 48
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       3.505977
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-85,152,231-0.85-255,255,255-1",
+        "url": "#45d690e0:2310",
+        "width": 48
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       3.82055
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.238972,
+        45.501436
+       ],
+       3.870494
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-85,152,231-0.85-255,255,255-1",
+        "url": "#eca5cd72:502",
+        "width": 48
+       },
+       [
+        9.198924,
+        45.454276
+       ],
+       3.968497
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-235,104,52-0.85-255,255,255-1",
+        "url": "#3ed523e8:494",
+        "width": 48
+       },
+       [
+        9.188878,
+        45.442302
+       ],
+       4.111123
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-134,182,239-0.85-255,255,255-1",
+        "url": "#fb3e8631:502",
+        "width": 48
+       },
+       [
+        9.207197,
+        45.453778
+       ],
+       4.157578
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.248246,
+        45.458902
+       ],
+       4.203519
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-scuole_approx-g0",
+     "type": "IconLayer",
+     "count": 0,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e3b0c44298fc1c14",
+     "setDigest": "e3b0c44298fc1c14",
+     "columnDigests": {
+      "getColor": "e3b0c44298fc1c14",
+      "getIcon": "e3b0c44298fc1c14",
+      "getPosition": "e3b0c44298fc1c14",
+      "getSize": "e3b0c44298fc1c14"
+     },
+     "stats": {},
+     "sample": []
+    }
+   ],
+   "themes": [
+    {
+     "name": "scuole",
+     "flags": [
+      "CATEGORICAL",
+      "CHART",
+      "GLOW",
+      "NOSORT",
+      "SYMBOL"
+     ],
+     "features": 7593,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "meno del 10%",
+      "10–20%",
+      "20–30%",
+      "30–50%",
+      "50% e oltre"
+     ],
+     "categoryColorsRgb": [
+      [
+       134,
+       182,
+       239
+      ],
+      [
+       85,
+       152,
+       231
+      ],
+      [
+       42,
+       120,
+       214
+      ],
+      [
+       235,
+       104,
+       52
+      ],
+      [
+       168,
+       32,
+       26
+      ]
+     ],
+     "maxSizeValue": 2057
+    },
+    {
+     "name": "scuole_approx",
+     "flags": [
+      "CATEGORICAL",
+      "CHART",
+      "NOLEGEND",
+      "NOSORT",
+      "SYMBOL"
+     ],
+     "features": 288,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "meno del 10%",
+      "10–20%",
+      "20–30%",
+      "30–50%",
+      "50% e oltre"
+     ],
+     "categoryColorsRgb": [
+      [
+       134,
+       182,
+       239
+      ],
+      [
+       85,
+       152,
+       231
+      ],
+      [
+       42,
+       120,
+       214
+      ],
+      [
+       235,
+       104,
+       52
+      ],
+      [
+       168,
+       32,
+       26
+      ]
+     ],
+     "maxSizeValue": 1409
+    }
+   ],
+   "legend": [
+    "Alunni stranieri per scuola Plessi statali e paritari, a.s. 2024/25 · colore = % stranieri, forma = tipo di scuola, dimensione = numero di alunni ▾ meno del 10% 210.00 10–20% 84.00 30–50% 69.00 20–30% 63.00 50% e oltre 44.00 Primaria Secondaria di I grado Liceo Tecnico o professionale posizione approssimata Percentuale di alunni con cittadinanza non italiana per plesso (media nazionale 12%). Esclusi i plessi con meno di 20 alunni; l'infanzia non è inclusa perché i dati MIM sulla cittadinanza per scuola coprono solo primaria e secondaria. Le scuole che non è stato possibile geolocalizzare sono mostrate con bordo scuro e riempimento trasparente, raggruppate al centro della città: la loro posizione non è reale. Fonti: MIM open data (anagrafe scuole, studenti per cittadinanza); coordinate da beni immobili pubblici, ANNCSU, civici dei Comuni di Torino e Bari, © OpenStreetMap contributors (ODbL). Chart size: 55%"
+   ],
+   "tooltips": {
+    "scuole": [
+     "<b>LICEO CLASSICO INTERNAZIONALE PER L'INTERCULTURA QUADRIENNALE - SAN CARLO</b><br>Liceo · paritaria · Milano<br><span style='color:#666'>scuola sec. secondo grado non statale</span><br>Alunni con cittadinanza non italiana: <b>0%</b><br>(0.00 su 20.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: civico</span>",
+     "<b>I.P. - MARELLI DUDOVICH</b><br>Tecnico o professionale · statale · Milano<br><span style='color:#666'>ist prof industria e artigianato</span><br>Alunni con cittadinanza non italiana: <b>69.3%</b><br>(167.00 su 241.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: fgb_civico</span>",
+     "<b>LICEO - VIRGILIO</b><br>Liceo · statale · Milano<br><span style='color:#666'>istituto magistrale</span><br>Alunni con cittadinanza non italiana: <b>9.5%</b><br>(168.00 su 1 776.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: osm_plesso</span>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 13,
+    "center": [
+     9.1828,
+     45.4734
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-scuole-g0",
+     "type": "IconLayer",
+     "count": 216,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "3a6c2555f343fc06",
+     "setDigest": "2b69f4b72ade706a",
+     "columnDigests": {
+      "getColor": "3afcc5e129dc9486",
+      "getIcon": "950c895efcddfd35",
+      "getPosition": "ae7a753145b63e36",
+      "getSize": "5bff3de0fdc610f5"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.13919,
+       9.225262
+      ],
+      "getSize": [
+       19.206805,
+       180.992932
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       19.206805
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       19.206805
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.172719,
+        45.479224
+       ],
+       19.206805
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       21.040001
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.17298,
+        45.459898
+       ],
+       21.473861
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.202675,
+        45.458418
+       ],
+       21.473861
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       22.725798
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       22.725798
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.201119,
+        45.488063
+       ],
+       23.91228
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       24.2949
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       26.474754
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.198924,
+        45.454276
+       ],
+       27.49996
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.207197,
+        45.453778
+       ],
+       28.810208
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.201645,
+        45.456842
+       ],
+       29.443475
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.201645,
+        45.456842
+       ],
+       30.063406
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.20887,
+        45.488194
+       ],
+       30.063406
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.201645,
+        45.456842
+       ],
+       30.368626
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       32.708011
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.19255,
+        45.45432
+       ],
+       32.708011
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.176066,
+        45.478929
+       ],
+       33.267163
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-scuole-g0",
+     "type": "IconLayer",
+     "count": 216,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "74c036eae261eac8",
+     "setDigest": "5c95d8eb9c149dfe",
+     "columnDigests": {
+      "getColor": "3afcc5e129dc9486",
+      "getIcon": "4001878d6d23ec7c",
+      "getPosition": "ae7a753145b63e36",
+      "getSize": "e1e482b6f481ea42"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.13919,
+       9.225262
+      ],
+      "getSize": [
+       3.492146,
+       32.907806
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       3.492146
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-134,182,239-0.85-255,255,255-1",
+        "url": "#fb3e8631:502",
+        "width": 48
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       3.492146
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.172719,
+        45.479224
+       ],
+       3.492146
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       3.825455
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.17298,
+        45.459898
+       ],
+       3.904338
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.202675,
+        45.458418
+       ],
+       3.904338
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-134,182,239-0.85-255,255,255-1",
+        "url": "#feea585f:782",
+        "width": 48
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       4.131963
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       4.131963
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.201119,
+        45.488063
+       ],
+       4.347687
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1",
+        "url": "#5f2c33ac:798",
+        "width": 48
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       4.417255
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-85,152,231-0.85-255,255,255-1",
+        "url": "#45d690e0:2310",
+        "width": 48
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       4.813592
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-85,152,231-0.85-255,255,255-1",
+        "url": "#eca5cd72:502",
+        "width": 48
+       },
+       [
+        9.198924,
+        45.454276
+       ],
+       4.999993
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-134,182,239-0.85-255,255,255-1",
+        "url": "#fb3e8631:502",
+        "width": 48
+       },
+       [
+        9.207197,
+        45.453778
+       ],
+       5.23822
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-85,152,231-0.85-255,255,255-1",
+        "url": "#eca5cd72:502",
+        "width": 48
+       },
+       [
+        9.201645,
+        45.456842
+       ],
+       5.353359
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-134,182,239-0.85-255,255,255-1",
+        "url": "#feea585f:782",
+        "width": 48
+       },
+       [
+        9.201645,
+        45.456842
+       ],
+       5.466074
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.20887,
+        45.488194
+       ],
+       5.466074
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.201645,
+        45.456842
+       ],
+       5.521568
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       5.946911
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-134,182,239-0.85-255,255,255-1",
+        "url": "#fb3e8631:502",
+        "width": 48
+       },
+       [
+        9.19255,
+        45.45432
+       ],
+       5.946911
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.176066,
+        45.478929
+       ],
+       6.048575
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-scuole_approx-g0",
+     "type": "IconLayer",
+     "count": 0,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e3b0c44298fc1c14",
+     "setDigest": "e3b0c44298fc1c14",
+     "columnDigests": {
+      "getColor": "e3b0c44298fc1c14",
+      "getIcon": "e3b0c44298fc1c14",
+      "getPosition": "e3b0c44298fc1c14",
+      "getSize": "e3b0c44298fc1c14"
+     },
+     "stats": {},
+     "sample": []
+    }
+   ],
+   "themes": [
+    {
+     "name": "scuole",
+     "flags": [
+      "CATEGORICAL",
+      "CHART",
+      "GLOW",
+      "NOSORT",
+      "SYMBOL"
+     ],
+     "features": 7593,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "meno del 10%",
+      "10–20%",
+      "20–30%",
+      "30–50%",
+      "50% e oltre"
+     ],
+     "categoryColorsRgb": [
+      [
+       134,
+       182,
+       239
+      ],
+      [
+       85,
+       152,
+       231
+      ],
+      [
+       42,
+       120,
+       214
+      ],
+      [
+       235,
+       104,
+       52
+      ],
+      [
+       168,
+       32,
+       26
+      ]
+     ],
+     "maxSizeValue": 2057
+    },
+    {
+     "name": "scuole_approx",
+     "flags": [
+      "CATEGORICAL",
+      "CHART",
+      "NOLEGEND",
+      "NOSORT",
+      "SYMBOL"
+     ],
+     "features": 288,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "meno del 10%",
+      "10–20%",
+      "20–30%",
+      "30–50%",
+      "50% e oltre"
+     ],
+     "categoryColorsRgb": [
+      [
+       134,
+       182,
+       239
+      ],
+      [
+       85,
+       152,
+       231
+      ],
+      [
+       42,
+       120,
+       214
+      ],
+      [
+       235,
+       104,
+       52
+      ],
+      [
+       168,
+       32,
+       26
+      ]
+     ],
+     "maxSizeValue": 1409
+    }
+   ],
+   "legend": [
+    "Alunni stranieri per scuola Plessi statali e paritari, a.s. 2024/25 · colore = % stranieri, forma = tipo di scuola, dimensione = numero di alunni ▾ meno del 10% 131.00 10–20% 42.00 20–30% 18.00 30–50% 18.00 50% e oltre 7.00 Primaria Secondaria di I grado Liceo Tecnico o professionale posizione approssimata Percentuale di alunni con cittadinanza non italiana per plesso (media nazionale 12%). Esclusi i plessi con meno di 20 alunni; l'infanzia non è inclusa perché i dati MIM sulla cittadinanza per scuola coprono solo primaria e secondaria. Le scuole che non è stato possibile geolocalizzare sono mostrate con bordo scuro e riempimento trasparente, raggruppate al centro della città: la loro posizione non è reale. Fonti: MIM open data (anagrafe scuole, studenti per cittadinanza); coordinate da beni immobili pubblici, ANNCSU, civici dei Comuni di Torino e Bari, © OpenStreetMap contributors (ODbL). Chart size: 55%"
+   ],
+   "tooltips": {
+    "scuole": [
+     "<b>LICEO CLASSICO INTERNAZIONALE PER L'INTERCULTURA QUADRIENNALE - SAN CARLO</b><br>Liceo · paritaria · Milano<br><span style='color:#666'>scuola sec. secondo grado non statale</span><br>Alunni con cittadinanza non italiana: <b>0%</b><br>(0.00 su 20.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: civico</span>",
+     "<b>PRIMARIA DANTE ALIGHIERI</b><br>Primaria · statale · Milano<br><span style='color:#666'>scuola primaria</span><br>Alunni con cittadinanza non italiana: <b>49.8%</b><br>(113.00 su 227.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: osm_plesso</span>",
+     "<b>LICEO - VIRGILIO</b><br>Liceo · statale · Milano<br><span style='color:#666'>istituto magistrale</span><br>Alunni con cittadinanza non italiana: <b>9.5%</b><br>(168.00 su 1 776.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: osm_plesso</span>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 11,
+    "center": [
+     9.1828,
+     45.4734
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-scuole-g0",
+     "type": "IconLayer",
+     "count": 509,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "1345953cba5e35c7",
+     "setDigest": "12376faf2fc23c41",
+     "columnDigests": {
+      "getColor": "0928284c5d50bfdc",
+      "getIcon": "0343aeb8dc0d070b",
+      "getPosition": "24db4891fcbd66f3",
+      "getSize": "d01ce21cb2946d2d"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.070988,
+       9.268734
+      ],
+      "getSize": [
+       12.099529,
+       114.018402
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       12.099529
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       12.099529
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.172719,
+        45.479224
+       ],
+       12.099529
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       13.25437
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.17298,
+        45.459898
+       ],
+       13.527685
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.202675,
+        45.458418
+       ],
+       13.527685
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.18923,
+        45.505901
+       ],
+       14.058382
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       14.316356
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       14.316356
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       14.316356
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.201119,
+        45.488063
+       ],
+       15.063792
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.130526,
+        45.462916
+       ],
+       15.063792
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       15.304828
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       15.304828
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-42,120,214",
+        "url": "#2c2c37e3:10102",
+        "width": 64
+       },
+       [
+        9.072042,
+        45.489636
+       ],
+       15.775856
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       16.67805
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.238972,
+        45.501436
+       ],
+       16.896073
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-85,152,231",
+        "url": "#a52ffe78:10026",
+        "width": 64
+       },
+       [
+        9.198924,
+        45.454276
+       ],
+       17.323889
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-235,104,52",
+        "url": "#8cb86684:9962",
+        "width": 64
+       },
+       [
+        9.188878,
+        45.442302
+       ],
+       17.946502
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-134,182,239",
+        "url": "#adb1d422:10182",
+        "width": 64
+       },
+       [
+        9.207197,
+        45.453778
+       ],
+       18.149294
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-scuole-g0",
+     "type": "IconLayer",
+     "count": 509,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "34208cef9da0bcfa",
+     "setDigest": "63d6054c9b52598b",
+     "columnDigests": {
+      "getColor": "0928284c5d50bfdc",
+      "getIcon": "6aa84a9d4a805006",
+      "getPosition": "24db4891fcbd66f3",
+      "getSize": "10273113c2e78a29"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.070988,
+       9.268734
+      ],
+      "getSize": [
+       2.199914,
+       20.730619
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       2.199914
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-134,182,239-0.85-255,255,255-1",
+        "url": "#fb3e8631:502",
+        "width": 48
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       2.199914
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.172719,
+        45.479224
+       ],
+       2.199914
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       2.409885
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.17298,
+        45.459898
+       ],
+       2.459579
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.202675,
+        45.458418
+       ],
+       2.459579
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.18923,
+        45.505901
+       ],
+       2.55607
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-134,182,239-0.85-255,255,255-1",
+        "url": "#feea585f:782",
+        "width": 48
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       2.602974
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
+        "url": "#3ee9adfc:1258",
+        "width": 48
+       },
+       [
+        9.169772,
+        45.465581
+       ],
+       2.602974
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1",
+        "url": "#5f2c33ac:798",
+        "width": 48
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       2.602974
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.201119,
+        45.488063
+       ],
+       2.738871
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-42,120,214-0.85-255,255,255-1",
+        "url": "#a9605f76:506",
+        "width": 48
+       },
+       [
+        9.130526,
+        45.462916
+       ],
+       2.738871
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.190128,
+        45.51729
+       ],
+       2.782696
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1",
+        "url": "#5f2c33ac:798",
+        "width": 48
+       },
+       [
+        9.167238,
+        45.469578
+       ],
+       2.782696
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-42,120,214-0.85-255,255,255-1",
+        "url": "#a9605f76:506",
+        "width": 48
+       },
+       [
+        9.072042,
+        45.489636
+       ],
+       2.868337
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-85,152,231-0.85-255,255,255-1",
+        "url": "#45d690e0:2310",
+        "width": 48
+       },
+       [
+        9.155281,
+        45.463754
+       ],
+       3.032373
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
+        "url": "#dbdc53a7:1238",
+        "width": 48
+       },
+       [
+        9.238972,
+        45.501436
+       ],
+       3.072013
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-85,152,231-0.85-255,255,255-1",
+        "url": "#eca5cd72:502",
+        "width": 48
+       },
+       [
+        9.198924,
+        45.454276
+       ],
+       3.149798
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-235,104,52-0.85-255,255,255-1",
+        "url": "#3ed523e8:494",
+        "width": 48
+       },
+       [
+        9.188878,
+        45.442302
+       ],
+       3.263
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-square-134,182,239-0.85-255,255,255-1",
+        "url": "#fb3e8631:502",
+        "width": 48
+       },
+       [
+        9.207197,
+        45.453778
+       ],
+       3.299872
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-scuole_approx-g0",
+     "type": "IconLayer",
+     "count": 0,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e3b0c44298fc1c14",
+     "setDigest": "e3b0c44298fc1c14",
+     "columnDigests": {
+      "getColor": "e3b0c44298fc1c14",
+      "getIcon": "e3b0c44298fc1c14",
+      "getPosition": "e3b0c44298fc1c14",
+      "getSize": "e3b0c44298fc1c14"
+     },
+     "stats": {},
+     "sample": []
+    }
+   ],
+   "themes": [
+    {
+     "name": "scuole",
+     "flags": [
+      "CATEGORICAL",
+      "CHART",
+      "GLOW",
+      "NOSORT",
+      "SYMBOL"
+     ],
+     "features": 7593,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "meno del 10%",
+      "10–20%",
+      "20–30%",
+      "30–50%",
+      "50% e oltre"
+     ],
+     "categoryColorsRgb": [
+      [
+       134,
+       182,
+       239
+      ],
+      [
+       85,
+       152,
+       231
+      ],
+      [
+       42,
+       120,
+       214
+      ],
+      [
+       235,
+       104,
+       52
+      ],
+      [
+       168,
+       32,
+       26
+      ]
+     ],
+     "maxSizeValue": 2057
+    },
+    {
+     "name": "scuole_approx",
+     "flags": [
+      "CATEGORICAL",
+      "CHART",
+      "NOLEGEND",
+      "NOSORT",
+      "SYMBOL"
+     ],
+     "features": 288,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "meno del 10%",
+      "10–20%",
+      "20–30%",
+      "30–50%",
+      "50% e oltre"
+     ],
+     "categoryColorsRgb": [
+      [
+       134,
+       182,
+       239
+      ],
+      [
+       85,
+       152,
+       231
+      ],
+      [
+       42,
+       120,
+       214
+      ],
+      [
+       235,
+       104,
+       52
+      ],
+      [
+       168,
+       32,
+       26
+      ]
+     ],
+     "maxSizeValue": 1409
+    }
+   ],
+   "legend": [
+    "Alunni stranieri per scuola Plessi statali e paritari, a.s. 2024/25 · colore = % stranieri, forma = tipo di scuola, dimensione = numero di alunni ▾ meno del 10% 213.00 10–20% 86.00 30–50% 85.00 20–30% 76.00 50% e oltre 49.00 Primaria Secondaria di I grado Liceo Tecnico o professionale posizione approssimata Percentuale di alunni con cittadinanza non italiana per plesso (media nazionale 12%). Esclusi i plessi con meno di 20 alunni; l'infanzia non è inclusa perché i dati MIM sulla cittadinanza per scuola coprono solo primaria e secondaria. Le scuole che non è stato possibile geolocalizzare sono mostrate con bordo scuro e riempimento trasparente, raggruppate al centro della città: la loro posizione non è reale. Fonti: MIM open data (anagrafe scuole, studenti per cittadinanza); coordinate da beni immobili pubblici, ANNCSU, civici dei Comuni di Torino e Bari, © OpenStreetMap contributors (ODbL). Chart size: 55%"
+   ],
+   "tooltips": {
+    "scuole": [
+     "<b>LICEO CLASSICO INTERNAZIONALE PER L'INTERCULTURA QUADRIENNALE - SAN CARLO</b><br>Liceo · paritaria · Milano<br><span style='color:#666'>scuola sec. secondo grado non statale</span><br>Alunni con cittadinanza non italiana: <b>0%</b><br>(0.00 su 20.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: civico</span>",
+     "<b>LICEO SCIENTIFICO ALEXIS CARREL</b><br>Liceo · paritaria · Milano<br><span style='color:#666'>scuola sec. secondo grado non statale</span><br>Alunni con cittadinanza non italiana: <b>1.2%</b><br>(3.00 su 244.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: civico</span>",
+     "<b>LICEO - VIRGILIO</b><br>Liceo · statale · Milano<br><span style='color:#666'>istituto magistrale</span><br>Alunni con cittadinanza non italiana: <b>9.5%</b><br>(168.00 su 1 776.00 alunni)<br><span style='color:#888;font-size:0.85em'>posizione: osm_plesso</span>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

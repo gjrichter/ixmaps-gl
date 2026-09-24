@@ -1,0 +1,3330 @@
+{
+ "page": "demo_accidents.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.19,
+     45.47
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-ITALIA_Regioni_2022",
+     "type": "GeoJsonLayer",
+     "count": 1,
+     "constants": {
+      "filled": false,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "getLineColor": [
+       128,
+       128,
+       128
+      ],
+      "lineWidthMinPixels": 2,
+      "opacity": 1,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "157c1305f3cad0c7",
+     "setDigest": "157c1305f3cad0c7",
+     "columnDigests": {
+      "~geometry": "809c5398fcdd1ce8"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        1599,
+        [
+         8.97512,
+         45.961634
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-glow-AREU-g0",
+     "type": "IconLayer",
+     "count": 25883,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "df17453863ea5515",
+     "setDigest": "350ac3300f13b1df",
+     "columnDigests": {
+      "getColor": "5d3edfd7c6009460",
+      "getIcon": "cfa7c5c3b5c67746",
+      "getPosition": "8a69d32ac2e2fc7b",
+      "getSize": "ac1ed43b157703cf"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.838505,
+       9.54122
+      ],
+      "getSize": [
+       1.1,
+       138.561163
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2335,
+        45.35722
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.30476,
+        45.53884
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.44337,
+        45.54415
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        8.84594,
+        45.31875
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.213636,
+        45.589886
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.166573,
+        45.648032
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.32939,
+        45.53419
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0873,
+        45.42558
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.01174,
+        45.42251
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.325394,
+        45.527154
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.5374,
+        45.56978
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.06008,
+        45.33253
+       ],
+       1.1
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-AREU-g0",
+     "type": "IconLayer",
+     "count": 25883,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "51664a0337dda2cf",
+     "setDigest": "3a27fd29d0b646a5",
+     "columnDigests": {
+      "getColor": "5d3edfd7c6009460",
+      "getIcon": "abfd1517b1f06855",
+      "getPosition": "8a69d32ac2e2fc7b",
+      "getSize": "7b36507cf3a3075d"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.838505,
+       9.54122
+      ],
+      "getSize": [
+       0.2,
+       30.791369
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2335,
+        45.35722
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.30476,
+        45.53884
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.44337,
+        45.54415
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        8.84594,
+        45.31875
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.213636,
+        45.589886
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.166573,
+        45.648032
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.32939,
+        45.53419
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0873,
+        45.42558
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.01174,
+        45.42251
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.325394,
+        45.527154
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.5374,
+        45.56978
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.06008,
+        45.33253
+       ],
+       0.2
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "ITALIA_Regioni_2022",
+     "flags": [
+      "FEATURES",
+      "NOLEGEND"
+     ],
+     "features": 1,
+     "active": null,
+     "hidden": false
+    },
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "CLIPTOGEOBOUNDS",
+      "COMPACTLEGEND",
+      "COUNT",
+      "DOWN",
+      "GLOW",
+      "RECT",
+      "RELOCATE",
+      "SEQUENCE",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "ITALIA_Regioni_2022": [
+     ""
+    ],
+    "AREU": [
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in sosta: 1 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 35 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 11 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 27 feriti</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 11,
+    "center": [
+     9.19,
+     45.47
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-ITALIA_Regioni_2022",
+     "type": "GeoJsonLayer",
+     "count": 1,
+     "constants": {
+      "filled": false,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "getLineColor": [
+       128,
+       128,
+       128
+      ],
+      "lineWidthMinPixels": 2,
+      "opacity": 1,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "157c1305f3cad0c7",
+     "setDigest": "157c1305f3cad0c7",
+     "columnDigests": {
+      "~geometry": "809c5398fcdd1ce8"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        1599,
+        [
+         8.97512,
+         45.961634
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-glow-AREU-g0",
+     "type": "IconLayer",
+     "count": 14208,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "a103158680241e23",
+     "setDigest": "f9dae33f3da51f81",
+     "columnDigests": {
+      "getColor": "02859a2a9307fce2",
+      "getIcon": "6cdf3a2ee76267aa",
+      "getPosition": "2fc9c597fc8c47e3",
+      "getSize": "72aa44670345be99"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.014298,
+       9.36517
+      ],
+      "getSize": [
+       1.1,
+       167.591892
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.32939,
+        45.53419
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0873,
+        45.42558
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.325394,
+        45.527154
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.03251,
+        45.53991
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,170,170",
+        "url": "#bc5183bc:7174",
+        "width": 64
+       },
+       [
+        9.16686,
+        45.44401
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,170,170",
+        "url": "#bc5183bc:7174",
+        "width": 64
+       },
+       [
+        9.0482,
+        45.49159
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.252266,
+        45.457749
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.239521,
+        45.542772
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.18768,
+        45.44589
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.17159,
+        45.40967
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.17543,
+        45.46979
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.114101,
+        45.406163
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.12405,
+        45.43436
+       ],
+       1.1
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-AREU-g0",
+     "type": "IconLayer",
+     "count": 14208,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "43d7b46cd43c6faf",
+     "setDigest": "cdf4db2f964d7a79",
+     "columnDigests": {
+      "getColor": "02859a2a9307fce2",
+      "getIcon": "0768304a6167a88a",
+      "getPosition": "2fc9c597fc8c47e3",
+      "getSize": "8ad2026742ff9ed5"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.014298,
+       9.36517
+      ],
+      "getSize": [
+       0.2,
+       37.242643
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.32939,
+        45.53419
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0873,
+        45.42558
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.325394,
+        45.527154
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.03251,
+        45.53991
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,170,170-0.9-none-0",
+        "url": "#fbf44a4:1586",
+        "width": 48
+       },
+       [
+        9.16686,
+        45.44401
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,170,170-0.9-none-0",
+        "url": "#fbf44a4:1586",
+        "width": 48
+       },
+       [
+        9.0482,
+        45.49159
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.252266,
+        45.457749
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.239521,
+        45.542772
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.18768,
+        45.44589
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.17159,
+        45.40967
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.17543,
+        45.46979
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.114101,
+        45.406163
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.12405,
+        45.43436
+       ],
+       0.2
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "ITALIA_Regioni_2022",
+     "flags": [
+      "FEATURES",
+      "NOLEGEND"
+     ],
+     "features": 1,
+     "active": null,
+     "hidden": false
+    },
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "CLIPTOGEOBOUNDS",
+      "COMPACTLEGEND",
+      "COUNT",
+      "DOWN",
+      "GLOW",
+      "RECT",
+      "RELOCATE",
+      "SEQUENCE",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "ITALIA_Regioni_2022": [
+     ""
+    ],
+    "AREU": [
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in sosta: 1 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 30 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 8 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 4 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con ostacolo accidentale: 10 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 11 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 30 feriti</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.19,
+     45.47
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-ITALIA_Regioni_2022",
+     "type": "GeoJsonLayer",
+     "count": 1,
+     "constants": {
+      "filled": false,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "getLineColor": [
+       128,
+       128,
+       128
+      ],
+      "lineWidthMinPixels": 2,
+      "opacity": 1,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "157c1305f3cad0c7",
+     "setDigest": "157c1305f3cad0c7",
+     "columnDigests": {
+      "~geometry": "809c5398fcdd1ce8"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        1599,
+        [
+         8.97512,
+         45.961634
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-glow-AREU-g0",
+     "type": "IconLayer",
+     "count": 34414,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "603e561d07aa78a9",
+     "setDigest": "872424469f07f482",
+     "columnDigests": {
+      "getColor": "fd057e712d5494db",
+      "getIcon": "7f8a05e48ab08b3b",
+      "getPosition": "2fe8dc885e1b8c5b",
+      "getSize": "b5401be470be8a06"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.53358,
+       9.893034
+      ],
+      "getSize": [
+       1.1,
+       129.462427
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.891029,
+        45.185356
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.797804,
+        45.181184
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.868795,
+        45.278599
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.862907,
+        45.413648
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.647992,
+        45.422345
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2335,
+        45.35722
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.44337,
+        45.54415
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.663655,
+        45.647812
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.84876,
+        45.690481
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.6699,
+        45.70535
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.44926,
+        45.66232
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.418648,
+        45.688946
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.378466,
+        45.70085
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.239061,
+        45.726078
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.13792,
+        45.19913
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       1.1
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-AREU-g0",
+     "type": "IconLayer",
+     "count": 34414,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "4c915df7def4fc9a",
+     "setDigest": "24835a343bbc2171",
+     "columnDigests": {
+      "getColor": "fd057e712d5494db",
+      "getIcon": "0efb2cf6c03eec33",
+      "getPosition": "2fe8dc885e1b8c5b",
+      "getSize": "34e8ee92d40ba614"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.53358,
+       9.893034
+      ],
+      "getSize": [
+       0.2,
+       28.769428
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.891029,
+        45.185356
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.797804,
+        45.181184
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.868795,
+        45.278599
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.862907,
+        45.413648
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.647992,
+        45.422345
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2335,
+        45.35722
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.44337,
+        45.54415
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.663655,
+        45.647812
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.84876,
+        45.690481
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.6699,
+        45.70535
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.44926,
+        45.66232
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.418648,
+        45.688946
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.378466,
+        45.70085
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.239061,
+        45.726078
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.13792,
+        45.19913
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       0.2
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "ITALIA_Regioni_2022",
+     "flags": [
+      "FEATURES",
+      "NOLEGEND"
+     ],
+     "features": 1,
+     "active": null,
+     "hidden": false
+    },
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "CLIPTOGEOBOUNDS",
+      "COMPACTLEGEND",
+      "COUNT",
+      "DOWN",
+      "GLOW",
+      "RECT",
+      "RELOCATE",
+      "SEQUENCE",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "ITALIA_Regioni_2022": [
+     ""
+    ],
+    "AREU": [
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Caduta da veicolo: 1 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 40 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 13 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 13 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 7 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 11 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 38 feriti</div>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

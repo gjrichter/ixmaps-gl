@@ -1,0 +1,1053 @@
+{
+ "page": "examples/dot_range_equidistant.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 13,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-dot-AREU",
+     "type": "ScatterplotLayer",
+     "count": 69597,
+     "constants": {
+      "getRadius": 3,
+      "opacity": 0.85,
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPosition"
+     ],
+     "digest": "a03ef7dfa5dedabc",
+     "setDigest": "aa554c7de813f7a1",
+     "columnDigests": {
+      "getFillColor": "71ed7a49e9e6ec06",
+      "getPosition": "791ac37ad548f93d"
+     },
+     "stats": {
+      "getFillColor": [
+       8,
+       198
+      ],
+      "getPosition": [
+       8.53358,
+       11.41876
+      ]
+     },
+     "sample": [
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.252939,
+        45.736787
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.278048,
+        45.733569
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.27326,
+        45.734682
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.262919,
+        45.736113
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.252855,
+        45.699419
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.2969,
+        45.701381
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.25713,
+        45.68986
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.236662,
+        45.602526
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.227255,
+        45.632591
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.243048,
+        45.625567
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.233326,
+        45.614335
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.249096,
+        45.612413
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.250996,
+        45.607524
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.251707,
+        45.696399
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.262907,
+        45.689923
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.292249,
+        45.70039
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.408298,
+        45.645586
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.405509,
+        45.646728
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "DOT"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0 - 5",
+      "5 - 10",
+      "10 - 14",
+      "14 - 19",
+      "19 - 24"
+     ],
+     "categoryColorsRgb": [
+      [
+       198,
+       219,
+       239
+      ],
+      [
+       158,
+       202,
+       225
+      ],
+      [
+       107,
+       174,
+       214
+      ],
+      [
+       49,
+       130,
+       189
+      ],
+      [
+       8,
+       81,
+       156
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 4.8,
+       "min": 0
+      },
+      {
+       "max": 9.6,
+       "min": 4.8
+      },
+      {
+       "max": 14.4,
+       "min": 9.6
+      },
+      {
+       "max": 19.2,
+       "min": 14.4
+      },
+      {
+       "max": 24,
+       "min": 19.2
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 24,
+     "valueMedian": 1
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 14,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-dot-AREU",
+     "type": "ScatterplotLayer",
+     "count": 69597,
+     "constants": {
+      "getRadius": 3,
+      "opacity": 0.85,
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPosition"
+     ],
+     "digest": "a03ef7dfa5dedabc",
+     "setDigest": "aa554c7de813f7a1",
+     "columnDigests": {
+      "getFillColor": "71ed7a49e9e6ec06",
+      "getPosition": "791ac37ad548f93d"
+     },
+     "stats": {
+      "getFillColor": [
+       8,
+       198
+      ],
+      "getPosition": [
+       8.53358,
+       11.41876
+      ]
+     },
+     "sample": [
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.252939,
+        45.736787
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.278048,
+        45.733569
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.27326,
+        45.734682
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.262919,
+        45.736113
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.252855,
+        45.699419
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.2969,
+        45.701381
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.25713,
+        45.68986
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.236662,
+        45.602526
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.227255,
+        45.632591
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.243048,
+        45.625567
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.233326,
+        45.614335
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.249096,
+        45.612413
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.250996,
+        45.607524
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.251707,
+        45.696399
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.262907,
+        45.689923
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.292249,
+        45.70039
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.408298,
+        45.645586
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.405509,
+        45.646728
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "DOT"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0 - 5",
+      "5 - 10",
+      "10 - 14",
+      "14 - 19",
+      "19 - 24"
+     ],
+     "categoryColorsRgb": [
+      [
+       198,
+       219,
+       239
+      ],
+      [
+       158,
+       202,
+       225
+      ],
+      [
+       107,
+       174,
+       214
+      ],
+      [
+       49,
+       130,
+       189
+      ],
+      [
+       8,
+       81,
+       156
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 4.8,
+       "min": 0
+      },
+      {
+       "max": 9.6,
+       "min": 4.8
+      },
+      {
+       "max": 14.4,
+       "min": 9.6
+      },
+      {
+       "max": 19.2,
+       "min": 14.4
+      },
+      {
+       "max": 24,
+       "min": 19.2
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 24,
+     "valueMedian": 1
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 12,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-dot-AREU",
+     "type": "ScatterplotLayer",
+     "count": 69597,
+     "constants": {
+      "getRadius": 3,
+      "opacity": 0.85,
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPosition"
+     ],
+     "digest": "a03ef7dfa5dedabc",
+     "setDigest": "aa554c7de813f7a1",
+     "columnDigests": {
+      "getFillColor": "71ed7a49e9e6ec06",
+      "getPosition": "791ac37ad548f93d"
+     },
+     "stats": {
+      "getFillColor": [
+       8,
+       198
+      ],
+      "getPosition": [
+       8.53358,
+       11.41876
+      ]
+     },
+     "sample": [
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.252939,
+        45.736787
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.278048,
+        45.733569
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.27326,
+        45.734682
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.262919,
+        45.736113
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.252855,
+        45.699419
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.2969,
+        45.701381
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.25713,
+        45.68986
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.236662,
+        45.602526
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.227255,
+        45.632591
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.243048,
+        45.625567
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.233326,
+        45.614335
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.249096,
+        45.612413
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.250996,
+        45.607524
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.251707,
+        45.696399
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.262907,
+        45.689923
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.292249,
+        45.70039
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.408298,
+        45.645586
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.405509,
+        45.646728
+       ]
+      ],
+      [
+       [
+        198,
+        219,
+        239
+       ],
+       [
+        9.244629,
+        45.603587
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "DOT"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0 - 5",
+      "5 - 10",
+      "10 - 14",
+      "14 - 19",
+      "19 - 24"
+     ],
+     "categoryColorsRgb": [
+      [
+       198,
+       219,
+       239
+      ],
+      [
+       158,
+       202,
+       225
+      ],
+      [
+       107,
+       174,
+       214
+      ],
+      [
+       49,
+       130,
+       189
+      ],
+      [
+       8,
+       81,
+       156
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 4.8,
+       "min": 0
+      },
+      {
+       "max": 9.6,
+       "min": 4.8
+      },
+      {
+       "max": 14.4,
+       "min": 9.6
+      },
+      {
+       "max": 19.2,
+       "min": 14.4
+      },
+      {
+       "max": 24,
+       "min": 19.2
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 24,
+     "valueMedian": 1
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>",
+     "<b>DOT · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(198,219,239);margin-right:0.4em;vertical-align:middle\"></span></div>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

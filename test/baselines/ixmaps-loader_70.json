@@ -1,0 +1,60 @@
+{
+ "page": "ixmaps-loader_70.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 6,
+    "center": [
+     12.5,
+     42.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [],
+   "themes": [],
+   "legend": [],
+   "tooltips": {},
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 7,
+    "center": [
+     12.5,
+     42.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [],
+   "themes": [],
+   "legend": [],
+   "tooltips": {},
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 5,
+    "center": [
+     12.5,
+     42.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [],
+   "themes": [],
+   "legend": [],
+   "tooltips": {},
+   "validation": null
+  }
+ ],
+ "console": []
+}

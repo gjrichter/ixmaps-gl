@@ -1,0 +1,118 @@
+{
+ "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json": {
+  "sha256": "a9e202b9696cf1734fddc2e9cd48358ee494efe99135a426323b0bc23522bc61",
+  "bytes": 106878
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js": {
+  "sha256": "7b22a17c33961eb4b5e031f7d7f191dd09be7ec436b8442467b4099063d4fe1f",
+  "bytes": 423220
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@7bb685b882be08d83c132e68bc8832150673a7e8/by-project/uk-collisions-2023/collisions.csv": {
+  "sha256": "88509492624ceca7b95dd1032add7a20a8f9659afea31883ad8ee2b4acdf4cd3",
+  "bytes": 2046624
+ },
+ "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js": {
+  "sha256": "fbae778a6211805c0d45698b903d25dc7c3b95e8f315ee9e54e62c2db818b61b",
+  "bytes": 14568
+ },
+ "https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap": {
+  "sha256": "5987aeacae72aaa340a337aad8e1ca7c1d0a428b3305a8574687aa5f813a9932",
+  "bytes": 7368
+ },
+ "https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K6z9mXg.woff2": {
+  "sha256": "468d56b6b25b05b70190b6c233d773f6f1770e8579827ce022a57f03fa8002fb",
+  "bytes": 36980
+ },
+ "https://fonts.gstatic.com/s/spacemono/v17/i7dMIFZifjKcF5UAWdDRaPpZUFWaHi6WZ3Q.woff2": {
+  "sha256": "af7cf6d2b897ec453acdcdacde4e9bcc8410718af5914de865b453e09f10eebc",
+  "bytes": 9552
+ },
+ "https://fonts.gstatic.com/s/spacemono/v17/i7dPIFZifjKcF5UAWdDRYEF8RXi4EwQ.woff2": {
+  "sha256": "e0c8e616bda27642f4c3cebaecff6525d901e73afc8a227cbbb0f2af4810f300",
+  "bytes": 9464
+ },
+ "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json": {
+  "sha256": "cb15a269b4dfbdb1085167022508ffad20356aade57abbfb699799a686539baf",
+  "bytes": 212831
+ },
+ "https://raw.githubusercontent.com/gjrichter/data/master/open%20data%20rome/incidenti/incidenti_roma_filtrati.csv": {
+  "sha256": "5485d196164453c8bcb29e476cffb061d0a260e55398f90323dad631e497788a",
+  "bytes": 6139713
+ },
+ "https://raw.githubusercontent.com/gjrichter/geo/0153a0e14da5dae877b8c94d6deb11f210d4660a/italy/boundaries/italy_istat_municipalities_4326_500m.topojson": {
+  "sha256": "161635facb52743b035d0c5cab92b2f1194cb9bd0d7c297b11fb7b980daea89b",
+  "bytes": 4686409
+ },
+ "https://raw.githubusercontent.com/gjrichter/ixmaps-data/main/by-project/italy-comuni-demographics/comuni_population_by_age_sex_v3.csv": {
+  "sha256": "bcb3f1b3f96ff5d4aa733f398d4d06eef1e6ba8ba5f97a5db31f7d100e396589",
+  "bytes": 10047471
+ },
+ "https://raw.githubusercontent.com/wri/global-power-plant-database/master/output_database/global_power_plant_database.csv": {
+  "sha256": "4b1f93e0fd93664f18684d9b05d0a52ed9658c6a8cf0d21ff2520791379ba7fc",
+  "bytes": 11973385
+ },
+ "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/regioni_2022/Reg01012022_s_WGS84.topojson.gz": {
+  "sha256": "c7c3cdb09f52a7242feeaee9fef577cca07113aac9d5cb72807248c98d02bacc",
+  "bytes": 135437
+ },
+ "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz": {
+  "sha256": "c385e1b8c9a7c275219e6c655f388adcac407f8fdb802ec61c3111d8e64cf36e",
+  "bytes": 75849073
+ },
+ "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2020_LinRef.csv.gz": {
+  "sha256": "561c7cda6dd3fff5340c45de959e758a0f291c8437780a344307b5d35e9e1799",
+  "bytes": 38068070
+ },
+ "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2021_LinRef.csv.gz": {
+  "sha256": "37618bc9a7b00fa43261a4960661e7063dbe5eefb47e7e284d7bda4fd4c5de24",
+  "bytes": 37080538
+ },
+ "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2022_LinRef.csv.gz": {
+  "sha256": "6d31f2aac4b432289e8da2109b1b25376791e7cbf1a2e1d0e59748678ae11770",
+  "bytes": 41035126
+ },
+ "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2023_LinRef.csv.gz": {
+  "sha256": "5bb22c9acd631c11fccaa049e81e3588baac4bf66d736ab479384f0884b4139d",
+  "bytes": 43585339
+ },
+ "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2024_LinRef.csv.gz": {
+  "sha256": "9f8d523ed0a3358fbef2ce48d3bd5d1fa0ea605e28306db977f01f9473379fa1",
+  "bytes": 43500713
+ },
+ "https://tiles.basemaps.cartocdn.com/vector/carto.streets/v1/tiles.json": {
+  "sha256": "119c67859c18c271f33ebbd95e06f45ddba911f2e5fa78619e12cea787385370",
+  "bytes": 44256
+ },
+ "https://unpkg.com/deck.gl@8.9.35/dist.min.js": {
+  "sha256": "6ddd95ee72dafb70693f02816accf8a665fa73c40f3fb1a09cb5aa7208377fea",
+  "bytes": 1623945
+ },
+ "https://unpkg.com/deck.gl@9.4.0/dist.min.js": {
+  "sha256": "2eb6a1ae0d58604b1378682cd1136f8793478ba801e43dae48b3807e48758a6b",
+  "bytes": 2073497
+ },
+ "https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css": {
+  "sha256": "731181d400d65a8b09d842f55b70bc4dc11010b15b8549e2c65a69d233fbdd2e",
+  "bytes": 63722
+ },
+ "https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js": {
+  "sha256": "c46084df69bbaa995b301a515274a86ec53905c78459b80dccbc27a0c0b8d13b",
+  "bytes": 762783
+ },
+ "https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css": {
+  "sha256": "ab1e70d59ec40465bae7e7030da2f3ccf28133fd502e62bd598eefbadfd7a732",
+  "bytes": 70024
+ },
+ "https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js": {
+  "sha256": "45a9b07a9189ce56054c620a947ccf41e291e58c95e9b61533b740aaa65ee5cb",
+  "bytes": 1056837
+ },
+ "https://unpkg.com/mustache@4.2.0/mustache.min.js": {
+  "sha256": "d7fd0603512461e8edbd81686bead2ab82df3389b9cca235dd9d5b408848e02a",
+  "bytes": 11790
+ },
+ "https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js": {
+  "sha256": "5981fb396427d9050ae430a350d3e6175b33acd6bb1523713fa457b5ca3411d4",
+  "bytes": 9021
+ }
+}

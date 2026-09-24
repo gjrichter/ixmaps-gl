@@ -1,0 +1,1233 @@
+{
+ "page": "examples/validate_demo.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 13,
+    "center": [
+     9.19,
+     45.46
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-points-g0",
+     "type": "IconLayer",
+     "count": 3,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "b56de9a6ae2b274a",
+     "setDigest": "6a24ce9af0490647",
+     "columnDigests": {
+      "getColor": "4bdd37889df299db",
+      "getIcon": "ae062097971759b6",
+      "getPosition": "03ced840ded58f9e",
+      "getSize": "10698c26645aa11f"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getSize": [
+       50,
+       50
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.19,
+        45.46
+       ],
+       50
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.2,
+        45.47
+       ],
+       50
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.18,
+        45.45
+       ],
+       50
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "points",
+     "flags": [
+      "AGGREGATE",
+      "BUBBLE",
+      "CATEGORICL",
+      "CHART",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "5.00 - 8.00",
+      "8.00 - 11.00",
+      "11.00 - 14.00",
+      "14.00 - 17.00",
+      "17.00 - 20.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       230,
+       25,
+       75
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 8,
+       "min": 5
+      },
+      {
+       "max": 11,
+       "min": 8
+      },
+      {
+       "max": 14,
+       "min": 11
+      },
+      {
+       "max": 17,
+       "min": 14
+      },
+      {
+       "max": 20,
+       "min": 17
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
+    },
+    {
+     "name": "pie",
+     "flags": [
+      "CHART",
+      "PIE",
+      "VALUES"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "5.00 - 8.00",
+      "8.00 - 11.00",
+      "11.00 - 14.00",
+      "14.00 - 17.00",
+      "17.00 - 20.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       60,
+       180,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       245,
+       130,
+       49
+      ],
+      [
+       145,
+       30,
+       180
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 8,
+       "min": 5
+      },
+      {
+       "max": 11,
+       "min": 8
+      },
+      {
+       "max": 14,
+       "min": 11
+      },
+      {
+       "max": 17,
+       "min": 14
+      },
+      {
+       "max": 20,
+       "min": 17
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "points": [
+     "",
+     "",
+     ""
+    ]
+   },
+   "validation": [
+    {
+     "code": "unknown-Map-option",
+     "keyword": "mapTyp",
+     "layer": null,
+     "message": "unknown Map option \"mapTyp\" — did you mean \"mapType\"?",
+     "section": "mapOptions",
+     "severity": "error",
+     "suggestion": "mapType"
+    },
+    {
+     "code": "unknown-options-key",
+     "keyword": "objectscalling",
+     "layer": null,
+     "message": "unknown options key \"objectscalling\" — did you mean \"objectscaling\"?",
+     "section": "optionsKeys",
+     "severity": "error",
+     "suggestion": "objectscaling"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "panhidden",
+     "layer": null,
+     "message": "options key \"panhidden\" is not implemented by ixmaps-gl",
+     "section": "optionsKeys",
+     "severity": "warning"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "SIZE",
+     "layer": "points",
+     "message": "type flag \"SIZE\": ixmaps-gl always sizes CHART|BUBBLE by value (valueRadius) and never tests the SIZE flag (ixmaps-gl.js:3208) — behavior WITHOUT SIZE may differ from flat; unverified",
+     "section": "flags",
+     "severity": "info"
+    },
+    {
+     "code": "unknown-type-flag",
+     "keyword": "CATEGORICL",
+     "layer": "points",
+     "message": "unknown type flag \"CATEGORICL\" — did you mean \"CATEGORICAL\"?",
+     "section": "flags",
+     "severity": "error",
+     "suggestion": "CATEGORICAL"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "fillOpacity",
+     "layer": "points",
+     "message": "unknown style key \"fillOpacity\" — did you mean \"fillopacity\"?",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "fillopacity"
+    },
+    {
+     "code": "unknown-meta-key",
+     "keyword": "tooltp",
+     "layer": "points",
+     "message": "unknown meta key \"tooltp\" — did you mean \"tooltip\"?",
+     "section": "metaKeys",
+     "severity": "error",
+     "suggestion": "tooltip"
+    },
+    {
+     "code": "unknown-binding-key",
+     "keyword": "positon",
+     "layer": "points",
+     "message": "unknown binding key \"positon\" — did you mean \"position\"? (ixmaps-flat silently ignores unknown binding keys)",
+     "section": "bindingKeys",
+     "severity": "error",
+     "suggestion": "position"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "json",
+     "layer": "points",
+     "message": "data type \"json\": ixmaps-gl accepts this only as inline .data({obj}) — any obj whose type is not topojson/geojson is read as a row table (ixmaps-gl.js:403); URL loads support only csv/topojson/geojson",
+     "section": "dataTypes",
+     "severity": "info"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "strokewidth",
+     "layer": "points",
+     "message": "unknown style key \"strokewidth\"",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "~undef"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "opacty",
+     "layer": "points",
+     "message": "unknown style key \"opacty\" — did you mean \"opacity\"?",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "opacity"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "PIE",
+     "layer": "pie",
+     "message": "type flag \"PIE\" is not implemented by ixmaps-gl",
+     "section": "flags",
+     "severity": "warning"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "json",
+     "layer": "pie",
+     "message": "data type \"json\": ixmaps-gl accepts this only as inline .data({obj}) — any obj whose type is not topojson/geojson is read as a row table (ixmaps-gl.js:403); URL loads support only csv/topojson/geojson",
+     "section": "dataTypes",
+     "severity": "info"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "setMapTool",
+     "layer": null,
+     "message": "ixmaps function \"setMapTool\" is not implemented by ixmaps-gl",
+     "section": "runtimeApi",
+     "severity": "warning"
+    },
+    {
+     "code": "unknown-ixmaps-function",
+     "keyword": "getThemObj",
+     "layer": null,
+     "message": "unknown ixmaps function \"getThemObj\" — did you mean \"getThemeObj\"?",
+     "section": "runtimeApi",
+     "severity": "error",
+     "suggestion": "getThemeObj"
+    }
+   ]
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 14,
+    "center": [
+     9.19,
+     45.46
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-points-g0",
+     "type": "IconLayer",
+     "count": 3,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "f0dbeebe1e64fb2a",
+     "setDigest": "52b137b7088c532a",
+     "columnDigests": {
+      "getColor": "4bdd37889df299db",
+      "getIcon": "ae062097971759b6",
+      "getPosition": "03ced840ded58f9e",
+      "getSize": "a2dfae6c9c1a3ef4"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getSize": [
+       62.996052,
+       62.996052
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.19,
+        45.46
+       ],
+       62.996052
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.2,
+        45.47
+       ],
+       62.996052
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.18,
+        45.45
+       ],
+       62.996052
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "points",
+     "flags": [
+      "AGGREGATE",
+      "BUBBLE",
+      "CATEGORICL",
+      "CHART",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "5.00 - 8.00",
+      "8.00 - 11.00",
+      "11.00 - 14.00",
+      "14.00 - 17.00",
+      "17.00 - 20.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       230,
+       25,
+       75
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 8,
+       "min": 5
+      },
+      {
+       "max": 11,
+       "min": 8
+      },
+      {
+       "max": 14,
+       "min": 11
+      },
+      {
+       "max": 17,
+       "min": 14
+      },
+      {
+       "max": 20,
+       "min": 17
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
+    },
+    {
+     "name": "pie",
+     "flags": [
+      "CHART",
+      "PIE",
+      "VALUES"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "5.00 - 8.00",
+      "8.00 - 11.00",
+      "11.00 - 14.00",
+      "14.00 - 17.00",
+      "17.00 - 20.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       60,
+       180,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       245,
+       130,
+       49
+      ],
+      [
+       145,
+       30,
+       180
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 8,
+       "min": 5
+      },
+      {
+       "max": 11,
+       "min": 8
+      },
+      {
+       "max": 14,
+       "min": 11
+      },
+      {
+       "max": 17,
+       "min": 14
+      },
+      {
+       "max": 20,
+       "min": 17
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "points": [
+     "",
+     "",
+     ""
+    ]
+   },
+   "validation": [
+    {
+     "code": "unknown-Map-option",
+     "keyword": "mapTyp",
+     "layer": null,
+     "message": "unknown Map option \"mapTyp\" — did you mean \"mapType\"?",
+     "section": "mapOptions",
+     "severity": "error",
+     "suggestion": "mapType"
+    },
+    {
+     "code": "unknown-options-key",
+     "keyword": "objectscalling",
+     "layer": null,
+     "message": "unknown options key \"objectscalling\" — did you mean \"objectscaling\"?",
+     "section": "optionsKeys",
+     "severity": "error",
+     "suggestion": "objectscaling"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "panhidden",
+     "layer": null,
+     "message": "options key \"panhidden\" is not implemented by ixmaps-gl",
+     "section": "optionsKeys",
+     "severity": "warning"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "SIZE",
+     "layer": "points",
+     "message": "type flag \"SIZE\": ixmaps-gl always sizes CHART|BUBBLE by value (valueRadius) and never tests the SIZE flag (ixmaps-gl.js:3208) — behavior WITHOUT SIZE may differ from flat; unverified",
+     "section": "flags",
+     "severity": "info"
+    },
+    {
+     "code": "unknown-type-flag",
+     "keyword": "CATEGORICL",
+     "layer": "points",
+     "message": "unknown type flag \"CATEGORICL\" — did you mean \"CATEGORICAL\"?",
+     "section": "flags",
+     "severity": "error",
+     "suggestion": "CATEGORICAL"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "fillOpacity",
+     "layer": "points",
+     "message": "unknown style key \"fillOpacity\" — did you mean \"fillopacity\"?",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "fillopacity"
+    },
+    {
+     "code": "unknown-meta-key",
+     "keyword": "tooltp",
+     "layer": "points",
+     "message": "unknown meta key \"tooltp\" — did you mean \"tooltip\"?",
+     "section": "metaKeys",
+     "severity": "error",
+     "suggestion": "tooltip"
+    },
+    {
+     "code": "unknown-binding-key",
+     "keyword": "positon",
+     "layer": "points",
+     "message": "unknown binding key \"positon\" — did you mean \"position\"? (ixmaps-flat silently ignores unknown binding keys)",
+     "section": "bindingKeys",
+     "severity": "error",
+     "suggestion": "position"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "json",
+     "layer": "points",
+     "message": "data type \"json\": ixmaps-gl accepts this only as inline .data({obj}) — any obj whose type is not topojson/geojson is read as a row table (ixmaps-gl.js:403); URL loads support only csv/topojson/geojson",
+     "section": "dataTypes",
+     "severity": "info"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "strokewidth",
+     "layer": "points",
+     "message": "unknown style key \"strokewidth\"",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "~undef"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "opacty",
+     "layer": "points",
+     "message": "unknown style key \"opacty\" — did you mean \"opacity\"?",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "opacity"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "PIE",
+     "layer": "pie",
+     "message": "type flag \"PIE\" is not implemented by ixmaps-gl",
+     "section": "flags",
+     "severity": "warning"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "json",
+     "layer": "pie",
+     "message": "data type \"json\": ixmaps-gl accepts this only as inline .data({obj}) — any obj whose type is not topojson/geojson is read as a row table (ixmaps-gl.js:403); URL loads support only csv/topojson/geojson",
+     "section": "dataTypes",
+     "severity": "info"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "setMapTool",
+     "layer": null,
+     "message": "ixmaps function \"setMapTool\" is not implemented by ixmaps-gl",
+     "section": "runtimeApi",
+     "severity": "warning"
+    },
+    {
+     "code": "unknown-ixmaps-function",
+     "keyword": "getThemObj",
+     "layer": null,
+     "message": "unknown ixmaps function \"getThemObj\" — did you mean \"getThemeObj\"?",
+     "section": "runtimeApi",
+     "severity": "error",
+     "suggestion": "getThemeObj"
+    }
+   ]
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 12,
+    "center": [
+     9.19,
+     45.46
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-points-g0",
+     "type": "IconLayer",
+     "count": 3,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "241a26847bc34fd6",
+     "setDigest": "42c109c971d39087",
+     "columnDigests": {
+      "getColor": "4bdd37889df299db",
+      "getIcon": "ae062097971759b6",
+      "getPosition": "03ced840ded58f9e",
+      "getSize": "e01280d5c8875fda"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getSize": [
+       39.685026,
+       39.685026
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.19,
+        45.46
+       ],
+       39.685026
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.2,
+        45.47
+       ],
+       39.685026
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-230,25,75-0.85-none-0",
+        "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.18,
+        45.45
+       ],
+       39.685026
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "points",
+     "flags": [
+      "AGGREGATE",
+      "BUBBLE",
+      "CATEGORICL",
+      "CHART",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "5.00 - 8.00",
+      "8.00 - 11.00",
+      "11.00 - 14.00",
+      "14.00 - 17.00",
+      "17.00 - 20.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       230,
+       25,
+       75
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 8,
+       "min": 5
+      },
+      {
+       "max": 11,
+       "min": 8
+      },
+      {
+       "max": 14,
+       "min": 11
+      },
+      {
+       "max": 17,
+       "min": 14
+      },
+      {
+       "max": 20,
+       "min": 17
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
+    },
+    {
+     "name": "pie",
+     "flags": [
+      "CHART",
+      "PIE",
+      "VALUES"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "5.00 - 8.00",
+      "8.00 - 11.00",
+      "11.00 - 14.00",
+      "14.00 - 17.00",
+      "17.00 - 20.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       60,
+       180,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       245,
+       130,
+       49
+      ],
+      [
+       145,
+       30,
+       180
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 8,
+       "min": 5
+      },
+      {
+       "max": 11,
+       "min": 8
+      },
+      {
+       "max": 14,
+       "min": 11
+      },
+      {
+       "max": 17,
+       "min": 14
+      },
+      {
+       "max": 20,
+       "min": 17
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "points": [
+     "",
+     "",
+     ""
+    ]
+   },
+   "validation": [
+    {
+     "code": "unknown-Map-option",
+     "keyword": "mapTyp",
+     "layer": null,
+     "message": "unknown Map option \"mapTyp\" — did you mean \"mapType\"?",
+     "section": "mapOptions",
+     "severity": "error",
+     "suggestion": "mapType"
+    },
+    {
+     "code": "unknown-options-key",
+     "keyword": "objectscalling",
+     "layer": null,
+     "message": "unknown options key \"objectscalling\" — did you mean \"objectscaling\"?",
+     "section": "optionsKeys",
+     "severity": "error",
+     "suggestion": "objectscaling"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "panhidden",
+     "layer": null,
+     "message": "options key \"panhidden\" is not implemented by ixmaps-gl",
+     "section": "optionsKeys",
+     "severity": "warning"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "SIZE",
+     "layer": "points",
+     "message": "type flag \"SIZE\": ixmaps-gl always sizes CHART|BUBBLE by value (valueRadius) and never tests the SIZE flag (ixmaps-gl.js:3208) — behavior WITHOUT SIZE may differ from flat; unverified",
+     "section": "flags",
+     "severity": "info"
+    },
+    {
+     "code": "unknown-type-flag",
+     "keyword": "CATEGORICL",
+     "layer": "points",
+     "message": "unknown type flag \"CATEGORICL\" — did you mean \"CATEGORICAL\"?",
+     "section": "flags",
+     "severity": "error",
+     "suggestion": "CATEGORICAL"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "fillOpacity",
+     "layer": "points",
+     "message": "unknown style key \"fillOpacity\" — did you mean \"fillopacity\"?",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "fillopacity"
+    },
+    {
+     "code": "unknown-meta-key",
+     "keyword": "tooltp",
+     "layer": "points",
+     "message": "unknown meta key \"tooltp\" — did you mean \"tooltip\"?",
+     "section": "metaKeys",
+     "severity": "error",
+     "suggestion": "tooltip"
+    },
+    {
+     "code": "unknown-binding-key",
+     "keyword": "positon",
+     "layer": "points",
+     "message": "unknown binding key \"positon\" — did you mean \"position\"? (ixmaps-flat silently ignores unknown binding keys)",
+     "section": "bindingKeys",
+     "severity": "error",
+     "suggestion": "position"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "json",
+     "layer": "points",
+     "message": "data type \"json\": ixmaps-gl accepts this only as inline .data({obj}) — any obj whose type is not topojson/geojson is read as a row table (ixmaps-gl.js:403); URL loads support only csv/topojson/geojson",
+     "section": "dataTypes",
+     "severity": "info"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "strokewidth",
+     "layer": "points",
+     "message": "unknown style key \"strokewidth\"",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "~undef"
+    },
+    {
+     "code": "unknown-style-key",
+     "keyword": "opacty",
+     "layer": "points",
+     "message": "unknown style key \"opacty\" — did you mean \"opacity\"?",
+     "section": "styleKeys",
+     "severity": "error",
+     "suggestion": "opacity"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "PIE",
+     "layer": "pie",
+     "message": "type flag \"PIE\" is not implemented by ixmaps-gl",
+     "section": "flags",
+     "severity": "warning"
+    },
+    {
+     "code": "gl-implicit",
+     "keyword": "json",
+     "layer": "pie",
+     "message": "data type \"json\": ixmaps-gl accepts this only as inline .data({obj}) — any obj whose type is not topojson/geojson is read as a row table (ixmaps-gl.js:403); URL loads support only csv/topojson/geojson",
+     "section": "dataTypes",
+     "severity": "info"
+    },
+    {
+     "code": "gl-unsupported",
+     "keyword": "setMapTool",
+     "layer": null,
+     "message": "ixmaps function \"setMapTool\" is not implemented by ixmaps-gl",
+     "section": "runtimeApi",
+     "severity": "warning"
+    },
+    {
+     "code": "unknown-ixmaps-function",
+     "keyword": "getThemObj",
+     "layer": null,
+     "message": "unknown ixmaps function \"getThemObj\" — did you mean \"getThemeObj\"?",
+     "section": "runtimeApi",
+     "severity": "error",
+     "suggestion": "getThemeObj"
+    }
+   ]
+  }
+ ],
+ "console": [
+  "warning: [ixmaps-gl validate] error unknown-Map-option — unknown Map option \"mapTyp\" — did you mean \"mapType\"?",
+  "warning: [ixmaps-gl validate] error unknown-binding-key — layer \"points\": unknown binding key \"positon\" — did you mean \"position\"? (ixmaps-flat silently ignores unknown binding keys)",
+  "warning: [ixmaps-gl validate] error unknown-ixmaps-function — unknown ixmaps function \"getThemObj\" — did you mean \"getThemeObj\"?",
+  "warning: [ixmaps-gl validate] error unknown-meta-key — layer \"points\": unknown meta key \"tooltp\" — did you mean \"tooltip\"?",
+  "warning: [ixmaps-gl validate] error unknown-options-key — unknown options key \"objectscalling\" — did you mean \"objectscaling\"?",
+  "warning: [ixmaps-gl validate] error unknown-style-key — layer \"points\": unknown style key \"fillOpacity\" — did you mean \"fillopacity\"?",
+  "warning: [ixmaps-gl validate] error unknown-style-key — layer \"points\": unknown style key \"opacty\" — did you mean \"opacity\"?",
+  "warning: [ixmaps-gl validate] error unknown-style-key — layer \"points\": unknown style key \"strokewidth\"",
+  "warning: [ixmaps-gl validate] error unknown-type-flag — layer \"points\": unknown type flag \"CATEGORICL\" — did you mean \"CATEGORICAL\"?",
+  "warning: [ixmaps-gl validate] warning gl-unsupported — ixmaps function \"setMapTool\" is not implemented by ixmaps-gl",
+  "warning: [ixmaps-gl validate] warning gl-unsupported — layer \"pie\": type flag \"PIE\" is not implemented by ixmaps-gl",
+  "warning: [ixmaps-gl validate] warning gl-unsupported — options key \"panhidden\" is not implemented by ixmaps-gl",
+  "warning: [ixmaps-gl] changeThemeStyle: unsupported style key \"opacty\" (only \"filter\" implemented — use setThemeStyle(themeId, {...}) for other style properties)",
+  "warning: [ixmaps-gl] layer \"pie\": type \"CHART|PIE|VALUES\" has no implemented renderer"
+ ]
+}

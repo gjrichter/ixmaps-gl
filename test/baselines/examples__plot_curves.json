@@ -1,0 +1,2328 @@
+{
+ "page": "examples/plot_curves.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 12.5,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-grid-AREU-g0",
+     "type": "IconLayer",
+     "count": 8354,
+     "constants": {
+      "getSize": 100,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition"
+     ],
+     "digest": "689f5a1dd5785d9b",
+     "setDigest": "33c8a4badde03029",
+     "columnDigests": {
+      "getIcon": "19b832181c24c88c",
+      "getPosition": "4140c2cbe2ed05f4"
+     },
+     "stats": {
+      "getPosition": [
+       8.531957,
+       11.420871
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.272393,
+        45.731695
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.697793
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.29667,
+        45.697793
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.22384,
+        45.629929
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.405914,
+        45.646903
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.629929
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.22384,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.629929
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.211701,
+        45.655388
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.199563,
+        45.663871
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-plot-Mercator-g0",
+     "type": "IconLayer",
+     "count": 8354,
+     "constants": {
+      "getSize": 100,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition"
+     ],
+     "digest": "e8016a99123f8970",
+     "setDigest": "f26b97e05d28f730",
+     "columnDigests": {
+      "getIcon": "1ea373dd0a392ddc",
+      "getPosition": "4140c2cbe2ed05f4"
+     },
+     "stats": {
+      "getPosition": [
+       8.531957,
+       11.420871
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-80:0|3",
+        "url": "#17bfdc3f:2962",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-80:0|3",
+        "url": "#cdc2a726:2530",
+        "width": 100
+       },
+       [
+        9.272393,
+        45.731695
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-80:0|3",
+        "url": "#cdc2a726:2530",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#86cb1be4:2582",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.697793
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.29667,
+        45.697793
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.22384,
+        45.629929
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-80:0|3",
+        "url": "#17bfdc3f:2962",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.405914,
+        45.646903
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#86cb1be4:2582",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-88:0|3",
+        "url": "#e6d8325e:2534",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.629929
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.22384,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.629929
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.211701,
+        45.655388
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#86cb1be4:2582",
+        "width": 100
+       },
+       [
+        9.199563,
+        45.663871
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CHART",
+      "GRIDSIZE",
+      "MEAN",
+      "NOLEGEND",
+      "NOOUTLIER",
+      "QUANTILE",
+      "RECT",
+      "SIZE",
+      "SYMBOL",
+      "ZEROISNOTVALUE"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2 019.00 - 2 019.00",
+      "2 019.00 - 2 020.00",
+      "2 020.00 - 2 020.00",
+      "2 020.00 - 2 021.00",
+      "2 021.00 - 2 021.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       60,
+       180,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       245,
+       130,
+       49
+      ],
+      [
+       145,
+       30,
+       180
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 2019,
+       "min": 2019
+      },
+      {
+       "max": 2020,
+       "min": 2019
+      },
+      {
+       "max": 2020,
+       "min": 2020
+      },
+      {
+       "max": 2021,
+       "min": 2020
+      },
+      {
+       "max": 2021,
+       "min": 2021
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 2019,
+     "valueMax": 2021,
+     "valueMedian": 2020
+    },
+    {
+     "name": "Mercator",
+     "flags": [
+      "AGGREGATE",
+      "AREA",
+      "BOX",
+      "CATEGORICAL",
+      "CHART",
+      "FIXSIZE",
+      "GRIDSIZE",
+      "LASTARROW",
+      "LINES",
+      "NOLEGEND",
+      "NOSORT",
+      "PLOT",
+      "RECT",
+      "SUM",
+      "SYMBOL",
+      "XAXIS",
+      "ZEROISVALUE"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2019",
+      "2020",
+      "2021"
+     ],
+     "categoryColorsRgb": [
+      [
+       102,
+       102,
+       102
+      ],
+      [
+       102,
+       102,
+       102
+      ],
+      [
+       102,
+       102,
+       102
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "",
+     "",
+     ""
+    ],
+    "Mercator": [
+     "<b>Numero dei feriti per anno</b><br><div>2019: 7.00</div><div>2020: 2.00</div><div>2021: 4.00</div>",
+     "<b>Numero dei feriti per anno</b><br><div>2019: 1.00</div><div>2020: 4.00</div><div>2021: 4.00</div>",
+     "<b>Numero dei feriti per anno</b><br><div>2019: 0.00</div><div>2020: 0.00</div><div>2021: 2.00</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 13.5,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-grid-AREU-g0",
+     "type": "IconLayer",
+     "count": 15869,
+     "constants": {
+      "getSize": 100,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition"
+     ],
+     "digest": "800050a5d3ebf8a6",
+     "setDigest": "9d0cf732773147a5",
+     "columnDigests": {
+      "getIcon": "cb07bd101e524957",
+      "getPosition": "2e749c6dcdecfa34"
+     },
+     "stats": {
+      "getPosition": [
+       8.531957,
+       11.420871
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.254186,
+        45.735931
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.278462,
+        45.731695
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.272393,
+        45.735931
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.735931
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.254186,
+        45.697793
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.29667,
+        45.702032
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.254186,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.242047,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.229909,
+        45.634173
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.242047,
+        45.625685
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.608704
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.2906,
+        45.702032
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.405914,
+        45.646903
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.617195
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.617195
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-plot-Mercator-g0",
+     "type": "IconLayer",
+     "count": 15869,
+     "constants": {
+      "getSize": 100,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition"
+     ],
+     "digest": "383f254e8cfcbffd",
+     "setDigest": "46d96413d081ce95",
+     "columnDigests": {
+      "getIcon": "f605830add2f5acc",
+      "getPosition": "2e749c6dcdecfa34"
+     },
+     "stats": {
+      "getPosition": [
+       8.531957,
+       11.420871
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.254186,
+        45.735931
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.278462,
+        45.731695
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.272393,
+        45.735931
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.735931
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-80:0|3",
+        "url": "#17bfdc3f:2962",
+        "width": 100
+       },
+       [
+        9.254186,
+        45.697793
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#86cb1be4:2582",
+        "width": 100
+       },
+       [
+        9.29667,
+        45.702032
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#86cb1be4:2582",
+        "width": 100
+       },
+       [
+        9.254186,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-80:0|3",
+        "url": "#17bfdc3f:2962",
+        "width": 100
+       },
+       [
+        9.242047,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-80:0|3",
+        "url": "#cdc2a726:2530",
+        "width": 100
+       },
+       [
+        9.229909,
+        45.634173
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.242047,
+        45.625685
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-72:0|3",
+        "url": "#b2901cf5:2462",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.61295
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.608704
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.2906,
+        45.702032
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.405914,
+        45.646903
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.617195
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#86cb1be4:2582",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.248116,
+        45.617195
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CHART",
+      "GRIDSIZE",
+      "MEAN",
+      "NOLEGEND",
+      "NOOUTLIER",
+      "QUANTILE",
+      "RECT",
+      "SIZE",
+      "SYMBOL",
+      "ZEROISNOTVALUE"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2 019.00 - 2 019.00",
+      "2 019.00 - 2 020.00",
+      "2 020.00 - 2 020.00",
+      "2 020.00 - 2 021.00",
+      "2 021.00 - 2 021.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       60,
+       180,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       245,
+       130,
+       49
+      ],
+      [
+       145,
+       30,
+       180
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 2019,
+       "min": 2019
+      },
+      {
+       "max": 2020,
+       "min": 2019
+      },
+      {
+       "max": 2020,
+       "min": 2020
+      },
+      {
+       "max": 2021,
+       "min": 2020
+      },
+      {
+       "max": 2021,
+       "min": 2021
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 2019,
+     "valueMax": 2021,
+     "valueMedian": 2020
+    },
+    {
+     "name": "Mercator",
+     "flags": [
+      "AGGREGATE",
+      "AREA",
+      "BOX",
+      "CATEGORICAL",
+      "CHART",
+      "FIXSIZE",
+      "GRIDSIZE",
+      "LASTARROW",
+      "LINES",
+      "NOLEGEND",
+      "NOSORT",
+      "PLOT",
+      "RECT",
+      "SUM",
+      "SYMBOL",
+      "XAXIS",
+      "ZEROISVALUE"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2019",
+      "2020",
+      "2021"
+     ],
+     "categoryColorsRgb": [
+      [
+       102,
+       102,
+       102
+      ],
+      [
+       102,
+       102,
+       102
+      ],
+      [
+       102,
+       102,
+       102
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "",
+     "",
+     ""
+    ],
+    "Mercator": [
+     "<b>Numero dei feriti per anno</b><br><div>2019: 1.00</div><div>2020: 0.00</div><div>2021: 0.00</div>",
+     "<b>Numero dei feriti per anno</b><br><div>2019: 3.00</div><div>2020: 3.00</div><div>2021: 3.00</div>",
+     "<b>Numero dei feriti per anno</b><br><div>2019: 0.00</div><div>2020: 0.00</div><div>2021: 1.00</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 11.5,
+    "center": [
+     9.19,
+     45.4642
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-grid-AREU-g0",
+     "type": "IconLayer",
+     "count": 3732,
+     "constants": {
+      "getSize": 100,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition"
+     ],
+     "digest": "f44eec132b783274",
+     "setDigest": "690209cbea92042d",
+     "columnDigests": {
+      "getIcon": "d87cc9d1ea670021",
+      "getPosition": "64416ccc12d68ccd"
+     },
+     "stats": {
+      "getPosition": [
+       8.531957,
+       11.420871
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.706271
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.308808,
+        45.706271
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.706271
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.405914,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.211701,
+        45.655388
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.211701,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.308808,
+        45.587472
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.587472
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.57048
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.587472
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.57048
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
+        "url": "#cd998e1c:946",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.57048
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-plot-Mercator-g0",
+     "type": "IconLayer",
+     "count": 3732,
+     "constants": {
+      "getSize": 100,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition"
+     ],
+     "digest": "e4619353b1372f9f",
+     "setDigest": "0578b892475f293b",
+     "columnDigests": {
+      "getIcon": "e4530a1501f39d59",
+      "getPosition": "64416ccc12d68ccd"
+     },
+     "stats": {
+      "getPosition": [
+       8.531957,
+       11.420871
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.740167
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#86cb1be4:2582",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.706271
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-88:0-80:0|3",
+        "url": "#17bfdc3f:2962",
+        "width": 100
+       },
+       [
+        9.308808,
+        45.706271
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-80:0|3",
+        "url": "#cdc2a726:2530",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.689315
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "72:0-80:0-72:0|3",
+        "url": "#1b5b3de7:2862",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.604459
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#e31213a6:2010",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.706271
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "88:0-80:0-88:0|3",
+        "url": "#78e56d59:2962",
+        "width": 100
+       },
+       [
+        9.405914,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.62144
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "72:0-80:0-80:0|3",
+        "url": "#595267e9:2510",
+        "width": 100
+       },
+       [
+        9.211701,
+        45.655388
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-88:0|3",
+        "url": "#e6d8325e:2534",
+        "width": 100
+       },
+       [
+        9.211701,
+        45.638416
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-72:0|3",
+        "url": "#b2901cf5:2462",
+        "width": 100
+       },
+       [
+        9.308808,
+        45.587472
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-72:0-72:0|3",
+        "url": "#e0b95589:2498",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.587472
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-72:0|3",
+        "url": "#b2901cf5:2462",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.57048
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-72:0|3",
+        "url": "#b2901cf5:2462",
+        "width": 100
+       },
+       [
+        9.260255,
+        45.587472
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.235978,
+        45.57048
+       ]
+      ],
+      [
+       {
+        "anchorX": 50,
+        "anchorY": 50,
+        "height": 100,
+        "id": "80:0-80:0-80:0|3",
+        "url": "#d8c950d1:2014",
+        "width": 100
+       },
+       [
+        9.284531,
+        45.57048
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CHART",
+      "GRIDSIZE",
+      "MEAN",
+      "NOLEGEND",
+      "NOOUTLIER",
+      "QUANTILE",
+      "RECT",
+      "SIZE",
+      "SYMBOL",
+      "ZEROISNOTVALUE"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2 019.00 - 2 019.00",
+      "2 019.00 - 2 020.00",
+      "2 020.00 - 2 020.00",
+      "2 020.00 - 2 021.00",
+      "2 021.00 - 2 021.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       230,
+       25,
+       75
+      ],
+      [
+       60,
+       180,
+       75
+      ],
+      [
+       67,
+       99,
+       216
+      ],
+      [
+       245,
+       130,
+       49
+      ],
+      [
+       145,
+       30,
+       180
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 2019,
+       "min": 2019
+      },
+      {
+       "max": 2020,
+       "min": 2019
+      },
+      {
+       "max": 2020,
+       "min": 2020
+      },
+      {
+       "max": 2021,
+       "min": 2020
+      },
+      {
+       "max": 2021,
+       "min": 2021
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 2019,
+     "valueMax": 2021,
+     "valueMedian": 2020
+    },
+    {
+     "name": "Mercator",
+     "flags": [
+      "AGGREGATE",
+      "AREA",
+      "BOX",
+      "CATEGORICAL",
+      "CHART",
+      "FIXSIZE",
+      "GRIDSIZE",
+      "LASTARROW",
+      "LINES",
+      "NOLEGEND",
+      "NOSORT",
+      "PLOT",
+      "RECT",
+      "SUM",
+      "SYMBOL",
+      "XAXIS",
+      "ZEROISVALUE"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2019",
+      "2020",
+      "2021"
+     ],
+     "categoryColorsRgb": [
+      [
+       102,
+       102,
+       102
+      ],
+      [
+       102,
+       102,
+       102
+      ],
+      [
+       102,
+       102,
+       102
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "AREU": [
+     "",
+     "",
+     ""
+    ],
+    "Mercator": [
+     "<b>Numero dei feriti per anno</b><br><div>2019: 12.00</div><div>2020: 18.00</div><div>2021: 15.00</div>",
+     "<b>Numero dei feriti per anno</b><br><div>2019: 46.00</div><div>2020: 43.00</div><div>2021: 62.00</div>",
+     "<b>Numero dei feriti per anno</b><br><div>2019: 0.00</div><div>2020: 0.00</div><div>2021: 1.00</div>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

@@ -128,6 +128,20 @@ Serve any of these with a static file server (they fetch remote data over HTTPS,
 python3 -m http.server 8000
 ```
 
+## Testing
+
+[`test/`](./test) holds an output-regression harness: it loads every example and real-page
+test in headless Chromium, records what the engine produces (every deck.gl layer's
+per-item accessor output, each theme's class breaks and colors, legend and tooltips) and
+compares it against committed baselines, so a refactor that changes any output is caught
+with the exact layer and field.
+
+```bash
+cd test && npm install && npm test
+```
+
+See [`test/README.md`](./test/README.md).
+
 ## License
 
 BSD 3-Clause — see [`LICENSE.txt`](./LICENSE.txt).
