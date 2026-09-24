@@ -1,7 +1,31 @@
 {
+ "https://api.maptiler.com/maps/bright-v2-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=681a134c-0e3c-4366-bae3-0d93a2c632de": {
+  "sha256": "0380b912eb5373e0ea3e74bf9ffe70a0aed1fd5993cec5360e7d522cb617b2a1",
+  "bytes": 51806
+ },
+ "https://api.maptiler.com/maps/bright-v2-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=ab405eb6-5f99-461f-b6c5-48d78c4622b1": {
+  "sha256": "0380b912eb5373e0ea3e74bf9ffe70a0aed1fd5993cec5360e7d522cb617b2a1",
+  "bytes": 51806
+ },
+ "https://api.maptiler.com/maps/bright-v2-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=bde25d36-45a7-4d55-9131-2d8dcd293858": {
+  "sha256": "0380b912eb5373e0ea3e74bf9ffe70a0aed1fd5993cec5360e7d522cb617b2a1",
+  "bytes": 51806
+ },
+ "https://api.maptiler.com/maps/dataviz-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=7437c96a-0aa7-4de1-9668-1fa0fa214d8a": {
+  "sha256": "e4887dcf870de51e9be0a19a98ac143bf3d21cf41ed4cbd54ac9600d17abb9c0",
+  "bytes": 24882
+ },
+ "https://api.maptiler.com/resources/logo.svg": {
+  "sha256": "c2fef38a1e77e9ff774dc1b21a2e931c81eab12191395be726c594404e4bf332",
+  "bytes": 16656
+ },
  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json": {
   "sha256": "a9e202b9696cf1734fddc2e9cd48358ee494efe99135a426323b0bc23522bc61",
   "bytes": 106878
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/data.js/data.js": {
+  "sha256": "7b22a17c33961eb4b5e031f7d7f191dd09be7ec436b8442467b4099063d4fe1f",
+  "bytes": 423220
  },
  "https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js": {
   "sha256": "7b22a17c33961eb4b5e031f7d7f191dd09be7ec436b8442467b4099063d4fe1f",
@@ -10,6 +34,186 @@
  "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@7bb685b882be08d83c132e68bc8832150673a7e8/by-project/uk-collisions-2023/collisions.csv": {
   "sha256": "88509492624ceca7b95dd1032add7a20a8f9659afea31883ad8ee2b4acdf4cd3",
   "bytes": 2046624
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ixmaps.js": {
+  "sha256": "21135b8e36f85b24f890b0d0fdb43ced6d6edcfb68fd8c1b508191c29452087f",
+  "bytes": 58294
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283914624": {
+  "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
+  "bytes": 860237
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283919665": {
+  "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
+  "bytes": 860237
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283925098": {
+  "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
+  "bytes": 860237
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283930065": {
+  "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
+  "bytes": 860237
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/maps/generic/mercator.svg": {
+  "sha256": "29365e4683dfc249c8db27fcd1804b2f5addac6bb8278252d7ec5de22a2bc746",
+  "bytes": 4482
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/resources/svg/maplocal.svg": {
+  "sha256": "3b59186a9d87d698ab0ef174fb244d1348d2facb65c0197afb7e54b4fb41cabf",
+  "bytes": 5295
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/css/ixmaps.css": {
+  "sha256": "809eae9b9155979b6d66788be6362157547df13596b7abff18ddcde48524d65b",
+  "bytes": 2430
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/css/legend.css": {
+  "sha256": "72ecd0583b1b4e98d3b609590c7d6adc88ae3a6905554879df98dcad2d48b38f",
+  "bytes": 12040
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/css/main.css": {
+  "sha256": "3e894fe16bb620a0dabcbc90d871d48d3397172966e2051949fe40b9efe1348d",
+  "bytes": 14841
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/css/messagebox.css": {
+  "sha256": "a58546a9c35918c7f4fcd508b667720788e70039fb419f3c93bc7984b81a9b28",
+  "bytes": 1815
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/html/assets/css/font-awesome.min.css": {
+  "sha256": "e082e26e8bdb99b25711d0eeca1a5b8e72a5a9bb816d149278c27b6d682c9bd8",
+  "bytes": 22245
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/html/assets/css/icomoon.css": {
+  "sha256": "a244e6e20098d8c9a32e57ecb0a58c048609f2fa32e28647a17d7d78b5b570cd",
+  "bytes": 28438
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/html/mappage.html": {
+  "sha256": "7d8ead957def54bd0e568c1ce6e5f8bf3974b2f0f9f765e20fde0ee2808b1709",
+  "bytes": 22257
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/htmlgui.js": {
+  "sha256": "549d9e47573eb965b51711dee89d7217e4a11215f6cf131328ab8b8710c5a316",
+  "bytes": 134392
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/htmlgui_dialog.js": {
+  "sha256": "36438b87e3cbc83ac6fa3c568b78d4d6c40779f794992fdcecd0847dd78eabcd",
+  "bytes": 36840
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/htmlgui_flat.js": {
+  "sha256": "775f0499df7181466c32902b9a5438d23b216eb8fb39a8f01b8ca07ff908d06e",
+  "bytes": 96424
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/htmlgui_query.js": {
+  "sha256": "ce1669b39ad6cdbe1104fbf2a09b2d2f6f6cf31b245e2e5053f5e9db3bade093",
+  "bytes": 30990
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/htmlgui_story.js": {
+  "sha256": "39b203d601b4f864c2ba2c190104ebdd6cc26842695f1bdd766bec3681501b9e",
+  "bytes": 15499
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/htmlgui_sync.js": {
+  "sha256": "78f391250f0755e208c5d10c36eab39cb1ef931f93118607a911a59075741451",
+  "bytes": 40019
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/htmlgui_sync_Leaflet_VT.js": {
+  "sha256": "399e2c0dce248e6bfc67299e3a751369c45fd2aafc171db7687a74786a41c9d4",
+  "bytes": 43294
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/background_theme.js": {
+  "sha256": "60dc786a6862eaf1361921d8ecd6f11ea3a47658c0a2a22d06a1f42222262a23",
+  "bytes": 6873
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/colorscheme.js": {
+  "sha256": "5c1a2500c97fa40ddf03946d89bf13a85b07407a5243fab8ba9e70ffcd024b60",
+  "bytes": 35589
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/colorselect.js": {
+  "sha256": "d8202a17e5337e143fc8646100217d93f3967a283ffcd15ef027d93cf4544b52",
+  "bytes": 12175
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/dialogmanager.js": {
+  "sha256": "5ed5f2be4681bc0a2ed444e7a2f965c6416edbb1cb02236f196677e64c9565ea",
+  "bytes": 23624
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283914521": {
+  "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
+  "bytes": 4024
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283919561": {
+  "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
+  "bytes": 4024
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283924995": {
+  "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
+  "bytes": 4024
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283929962": {
+  "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
+  "bytes": 4024
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/layer_legend.js": {
+  "sha256": "28c9dd3aeaa0618305764ab41cb95f4a332692c2dbf69a151499c37a854c5c4c",
+  "bytes": 29073
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/legend.js": {
+  "sha256": "8d6a96c2fc0e8c4283184032825023025f57898288f898f42b92150e860516a6",
+  "bytes": 199846
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283914522": {
+  "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
+  "bytes": 23518
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283919562": {
+  "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
+  "bytes": 23518
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283924995": {
+  "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
+  "bytes": 23518
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283929962": {
+  "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
+  "bytes": 23518
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/tooltip_mustache.js": {
+  "sha256": "e4c73bcb2479188769f9889aeac31c1c8e0929b3f6f57a2429850882d1261f3b",
+  "bytes": 38812
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/getUrlParam/js/jquery.getUrlParam.js": {
+  "sha256": "8ed15aa20e5197f395a876797032e523e9cc6a37da75136ec51db0648abc6f88",
+  "bytes": 2152
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/jquery/jquery-1.7.1.min.js": {
+  "sha256": "88171413fc76dda23ab32baa17b11e4fff89141c633ece737852445f1ba6c1bd",
+  "bytes": 93868
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/leaflet-gesture-handling/leaflet-gesture-handling.min.css": {
+  "sha256": "2e126218bf33767c26a908312b8e465e8bb166762132b0dda2be30c8bc4ac528",
+  "bytes": 1022
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/leaflet-gesture-handling/leaflet-gesture-handling.min.js": {
+  "sha256": "ead9fa36139cafff19ef087721f9c60044cb9138bae6c70b4ce73ab5293dca0e",
+  "bytes": 20276
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/maptiler/leaflet-maptilersdk.js": {
+  "sha256": "9dec972f13fbce3b040925be7b4a9ea04596546030faa77d02c481bcc7cfcd2b",
+  "bytes": 12461
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/maptiler/maptiler-sdk.css": {
+  "sha256": "f4ea7891e17ffd54eb59a1a4ba2c545bc582ca51b4e41d69451d27d4b5f47dbb",
+  "bytes": 103843
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/maptiler/maptiler-sdk.umd.js": {
+  "sha256": "23c1c3c644a1b3fcfbde3eb1100abd924b0634242a9faa142256f3234ca24dea",
+  "bytes": 883278
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/messagebox.js": {
+  "sha256": "06b13069b6709718a3b54252f059b023c089026b7ccf597714230f5f91c59c30",
+  "bytes": 4407
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/libs/modernizr/js/testsvg.js": {
+  "sha256": "583873402c3190a1991709809320a80de3df002aabf25373590a23e31fb2452b",
+  "bytes": 6497
  },
  "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js": {
   "sha256": "fbae778a6211805c0d45698b903d25dc7c3b95e8f315ee9e54e62c2db818b61b",
@@ -91,6 +295,14 @@
   "sha256": "2eb6a1ae0d58604b1378682cd1136f8793478ba801e43dae48b3807e48758a6b",
   "bytes": 2073497
  },
+ "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css": {
+  "sha256": "a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6",
+  "bytes": 14806
+ },
+ "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js": {
+  "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a",
+  "bytes": 147552
+ },
  "https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css": {
   "sha256": "731181d400d65a8b09d842f55b70bc4dc11010b15b8549e2c65a69d233fbdd2e",
   "bytes": 63722
@@ -114,5 +326,9 @@
  "https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js": {
   "sha256": "5981fb396427d9050ae430a350d3e6175b33acd6bb1523713fa457b5ca3411d4",
   "bytes": 9021
+ },
+ "https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js": {
+  "sha256": "25cd02ae486cc5063e0215a4e4cfb15de83700c87ac48bac4d57dc6aaf3ebb89",
+  "bytes": 7169
  }
 }
