@@ -42,7 +42,8 @@
     "examples/alias_style_in_meta_dot_categorical.html",
     "examples/alias_field_method_bubble_range_quantile.html",
     "examples/alias_geo_lookup_methods_choropleth_range_quantile.html",
-    "examples/alias_encoding_dot_categorical.html"
+    "examples/alias_encoding_dot_categorical.html",
+    "examples/alias_split_calls_dot_categorical.html"
   ],
   "knownBroken": {},
   "equivalent": [
@@ -92,6 +93,10 @@
     ],
     [
       "examples/alias_encoding_dot_categorical.html",
+      "examples/dot_categorical.html"
+    ],
+    [
+      "examples/alias_split_calls_dot_categorical.html",
       "examples/dot_categorical.html"
     ]
   ]

@@ -68,7 +68,8 @@ And as in flat, `.meta()` is merged into style first (meta wins): a style proper
 work when given in `.style()` too. The layer builder has all of flat's methods, including
 `.field()`, `.field100()`, `.geo()`, `.lookup()`, `.encoding()`, `.query()`, `.process()` and
 `.json()`; each writes the slot flat writes (`.process()` is stored but not run yet — the
-validator reports it).
+validator reports it). Repeated `.binding()`, `.style()` and `.meta()` calls merge, as in flat
+(a later value for the same key wins).
 The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.

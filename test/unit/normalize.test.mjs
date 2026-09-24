@@ -45,11 +45,11 @@ test('definition() has real ixmaps-flat\'s shape: type/filter/title inside style
   });
 });
 
-test('.style() and .meta() still replace wholesale; type survives a later .style()', () => {
+test('.style() and .meta() merge across calls like flat\'s themeConstruct; type survives a later .style()', () => {
   const { ixmaps } = loadEngine();
   const def = ixmaps.layer('x').type('DOT').style({ a: 1 }).style({ b: 2 }).meta({ m: 1 }).meta({ n: 2 }).definition();
-  assert.deepEqual(plain(def.style), { b: 2, type: 'DOT' });
-  assert.deepEqual(plain(def.meta), { n: 2 });
+  assert.deepEqual(plain(def.style), { a: 1, b: 2, type: 'DOT' });
+  assert.deepEqual(plain(def.meta), { m: 1, n: 2 });
 });
 
 test('type string → flag set; BUBBLE implies SYMBOL', () => {

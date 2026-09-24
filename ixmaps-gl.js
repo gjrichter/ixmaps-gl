@@ -843,9 +843,13 @@
       this._meta = {};
     }
     data(d) { this._data = d; return this; }
-    // aliases (geo → position, ...) are resolved in normalizeTheme, not here
+    // .binding()/.style()/.meta() MERGE into what earlier calls set, as real
+    // ixmaps-flat's themeConstruct does (for (i in obj) def.x[i] = obj[i]):
+    // .binding({geo}).binding({value}) keeps both, a later value for the same
+    // key wins. Always into a new object — the page's own objects are never
+    // mutated. Aliases (geo → position, ...) are resolved in normalizeTheme.
     binding(b) {
-      this._binding = b;
+      this._binding = Object.assign({}, this._binding, b);
       return this;
     }
     filter(expr) { this._filterExpr = expr; return this; }
@@ -855,8 +859,8 @@
       this._typeStr = t;
       return this;
     }
-    style(s) { this._style = s; return this; }
-    meta(m) { this._meta = m; return this; }
+    style(s) { this._style = Object.assign({}, this._style, s); return this; }
+    meta(m) { this._meta = Object.assign({}, this._meta, m); return this; }
     // Real ixmaps-flat's remaining themeConstruct methods — each stores what
     // flat stores, and definition() writes it into flat's slot:
     //   field/field100 → def.field/def.field100 (a .binding() value wins)
@@ -883,9 +887,8 @@
     // text (not a value-field label, despite the name reading that way at
     // first glance — confirmed against real pages, e.g. the power-plants
     // sample's .title("Global Power Plants") becomes that legend's title
-    // line). Stored separately (not merged into _meta here) since
-    // .meta() REPLACES this._meta wholesale, and callers can chain
-    // .title() before OR after .meta() — definition() puts it where real
+    // line). Stored separately (not merged into _meta here), so callers can
+    // chain .title() before OR after .meta() — definition() puts it where real
     // ixmaps-flat does (style.title) and normalizeTheme applies it as a
     // fallback (meta.title wins if a caller's own .meta({title:...})
     // already set one). Consumed by the native legend renderer in build()
@@ -901,9 +904,8 @@
     // The theme definition in real ixmaps-flat's own shape (its
     // themeConstruct.definition() — also a project-JSON theme, schema v1.2):
     // type, filter and title live INSIDE style there. Built fresh from this
-    // builder's fields on every call — .style()/.meta() still REPLACE
-    // wholesale, so chaining semantics are unchanged. normalizeTheme() turns
-    // it into what the renderers read.
+    // builder's fields on every call. normalizeTheme() turns it into what the
+    // renderers read.
     definition() {
       const style = Object.assign({}, this._style);
       if (this._typeStr) style.type = this._typeStr;

@@ -74,3 +74,26 @@ test('json() returns the definition', () => {
   const l = ixmaps.layer('x').type('DOT').binding({ geo: 'geometry' });
   assert.deepEqual(plain(l.json()), plain(l.definition()));
 });
+
+test('.binding() merges across calls (flat); a later value for the same key wins', () => {
+  const def = ixmaps.layer('x').binding({ geo: 'geometry', value: 'a' }).binding({ value: 'b', size: 's' }).definition();
+  assert.deepEqual(plain(def.binding), { geo: 'geometry', value: 'b', size: 's' });
+});
+
+test('.style()/.meta(): a later value for the same key wins', () => {
+  const def = ixmaps.layer('x').style({ fillopacity: 0.8 }).style({ fillopacity: 0.5 }).meta({ title: 'A' }).meta({ title: 'B' }).definition();
+  assert.equal(def.style.fillopacity, 0.5);
+  assert.equal(def.meta.title, 'B');
+});
+
+test('merging never mutates the page\'s own objects', () => {
+  const b = { geo: 'geometry' }, s = { a: 1 }, m = { title: 'T' };
+  ixmaps.layer('x').binding(b).binding({ value: 'v' }).style(s).style({ b: 2 }).meta(m).meta({ tooltip: 't' });
+  assert.deepEqual([b, s, m], [{ geo: 'geometry' }, { a: 1 }, { title: 'T' }]);
+});
+
+test('an empty or missing argument keeps what earlier calls set', () => {
+  const def = ixmaps.layer('x').binding({ value: 'v' }).binding().style({ a: 1 }).style(null).definition();
+  assert.equal(def.binding.value, 'v');
+  assert.equal(def.style.a, 1);
+});
