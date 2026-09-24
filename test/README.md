@@ -88,6 +88,20 @@ failed exactly the 7 pages that rely on the default class count, and none that s
 `classes` explicitly; and the engine from before the splash-options fix (`dcda3a9`)
 matched all baselines.
 
+## Comparing with real ixmaps-flat (`--flat-oracle`)
+
+```bash
+node run.mjs --flat-oracle                 # all pairs in pages.json → flatOracle
+node run.mjs --flat-oracle --page quantile # only pairs whose page paths contain "quantile"
+```
+
+Loads each `flat` page of a `{flat, gl}` pair on the **real ixmaps-flat engine**, reads the
+classes flat computed from its own theme objects (`map.Themes.themesA`: breaks, colors,
+value range) and compares them with the gl twin's baseline, pairing themes by base type in
+definition order. Writes `out/flat-oracle.md`. It is a report of differences (exit 0), not a
+pass/fail test: each difference is decided on and fixed as its own change. The flat engine is
+recorded into `.cache/` like any remote file.
+
 ## Project compatibility report
 
 ```bash

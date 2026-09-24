@@ -200,5 +200,22 @@
       for (const api of apis) if (api && api.map) api.map.jumpTo({ zoom: api.map.getZoom() + step });
     },
     resolvedMaps: async ms => (await resolvedMaps(ms)).map(a => (a && a.map ? 'ok' : String(a))),
+    // on a REAL ixmaps-flat page: each theme's computed classes, read from
+    // flat's own theme objects (map.Themes.themesA) — the --flat-oracle input
+    flatThemes() {
+      let themes = null;
+      try {
+        const m = (window.ixmaps && ixmaps.embeddedSVG && ixmaps.embeddedSVG.window && ixmaps.embeddedSVG.window.map) || window.map;
+        themes = m && m.Themes && m.Themes.themesA;
+      } catch (e) { return { error: e.message }; }
+      if (!themes) return { pending: true };
+      return { themes: themes.map(t => ({
+        flag: String(t.szFlag || ''),
+        fields: t.szFields,
+        parts: (t.partsA || []).map(p => [norm(p.min), norm(p.max)]),
+        colors: (t.colorScheme || []).slice(),
+        min: norm(t.nMin), max: norm(t.nMax),
+      })) };
+    },
   };
 })();

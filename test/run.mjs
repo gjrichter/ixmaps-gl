@@ -38,6 +38,7 @@ const UPDATE = flag('--update');
 const ENGINE = opt('--engine') ? path.resolve(opt('--engine')) : null;
 const FILTER = opt('--page');
 const JOBS = Number(opt('--jobs', 2));
+const FLAT_ORACLE = flag('--flat-oracle');
 const SETTLE_MS = 1200;       // layers unchanged this long = settled
 const PAGE_TIMEOUT_MS = 120000;
 const NO_MAP_MS = 15000;      // no ixmaps.Map() call by then = page needs interaction → skip
@@ -226,6 +227,88 @@ function diffSnapshots(base, act) {
   return d;
 }
 
+// ------------------------------------------------------------ flat oracle
+// The same map on the REAL ixmaps-flat engine (pages.json → flatOracle):
+// read flat's computed classes from its own theme objects and compare them
+// with gl's baseline for the gl twin. A report of differences, not a test.
+
+async function runFlatPage(browser, localOrigin, pagePath) {
+  const context = await browser.newContext({ viewport: { width: 1024, height: 768 }, deviceScaleFactor: 1 });
+  await context.addInitScript(browserCode);
+  await context.route('**/*', route => handleRoute(route, localOrigin));
+  const page = await context.newPage();
+  try {
+    await page.goto(localOrigin + REPO_URL_PREFIX + pagePath, { waitUntil: 'load', timeout: PAGE_TIMEOUT_MS });
+    let last = null, stable = 0;
+    const t0 = Date.now();
+    while (Date.now() - t0 < PAGE_TIMEOUT_MS) {
+      await sleep(1000);
+      const r = await page.evaluate(() => window.__glTest.flatThemes());
+      const ready = r.themes && r.themes.length && r.themes.every(t => /FEATURE/.test(t.flag) || t.parts.length);
+      const key = JSON.stringify(r);
+      stable = ready && key === last ? stable + 1 : 0;
+      last = key;
+      if (stable >= 3) return r.themes;
+    }
+    throw new Error(`flat themes not ready after ${PAGE_TIMEOUT_MS / 1000}s: ${String(last).slice(0, 200)}`);
+  } finally { await context.close(); }
+}
+
+const baseType = flags => (flags.find(f => /^(CHOROPLETH|CHART|FEATURES?)$/.test(f)) || '?').replace('FEATURES', 'FEATURE');
+const hexRgb = c => {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(c).trim());
+  if (!m) return String(c);
+  const h = m[1].length === 3 ? m[1].replace(/./g, x => x + x) : m[1];
+  return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+};
+const near = (a, b) => typeof a === 'number' && typeof b === 'number' ? Math.abs(a - b) <= Math.max(1e-6, 1e-4 * Math.abs(a)) : js(a) === js(b);
+
+function compareWithFlat(flatThemes, glThemes) {
+  const out = [];
+  const seen = {};
+  const byBase = {};
+  for (const t of glThemes) (byBase[baseType(t.flags)] ||= []).push(t);
+  for (const f of flatThemes) {
+    const base = baseType(f.flag.split('|'));
+    const i = seen[base] = (seen[base] ?? -1) + 1;
+    const g = (byBase[base] || [])[i];
+    const label = `${base}#${i} (flat "${f.flag}")`;
+    if (!g) { out.push(`${label}: no gl theme to compare`); continue; }
+    if (base === 'FEATURE') continue; // a plain outline/fill layer has no classes
+    const gp = (g.partsA || []).map(p => [p.min, p.max]);
+    if (f.parts.length !== gp.length) out.push(`${label}: flat ${f.parts.length} classes, gl ${gp.length}`);
+    for (let k = 0; k < Math.min(f.parts.length, gp.length); k++) {
+      if (!near(f.parts[k][0], gp[k][0]) || !near(f.parts[k][1], gp[k][1])) out.push(`${label}: class ${k} flat [${f.parts[k]}] gl [${gp[k]}]`);
+    }
+    const fc = f.colors.map(hexRgb), gc = g.categoryColorsRgb || [];
+    if (fc.length !== gc.length) out.push(`${label}: flat ${fc.length} colors, gl ${gc.length}`);
+    for (let k = 0; k < Math.min(fc.length, gc.length); k++) if (js(fc[k]) !== js(gc[k])) out.push(`${label}: color ${k} flat ${js(fc[k])} gl ${js(gc[k])}`);
+    if (g.valueMin !== undefined && !near(f.min, g.valueMin)) out.push(`${label}: min flat ${f.min} gl ${g.valueMin}`);
+    if (g.valueMax !== undefined && !near(f.max, g.valueMax)) out.push(`${label}: max flat ${f.max} gl ${g.valueMax}`);
+  }
+  return out;
+}
+
+async function flatOracle(browser, localOrigin) {
+  const md = ['# ixmaps-gl vs real ixmaps-flat — computed classes', ''];
+  let total = 0;
+  for (const { flat, gl } of config.flatOracle || []) {
+    if (FILTER && !flat.includes(FILTER) && !gl.includes(FILTER)) continue;
+    const file = path.join(BASELINES, slug(gl) + '.json');
+    let lines;
+    try {
+      if (!fs.existsSync(file)) throw new Error(`no gl baseline for ${gl}`);
+      const glThemes = JSON.parse(fs.readFileSync(file, 'utf8')).views[0].themes;
+      lines = compareWithFlat(await runFlatPage(browser, localOrigin, flat), glThemes);
+    } catch (e) { lines = [`not compared: ${e.message.split('\n')[0]}`]; }
+    total += lines.length;
+    console.log(`${lines.length ? 'DIFF ' : 'SAME '} ${flat} ↔ ${gl}${lines.map(l => '\n        ' + l).join('')}`);
+    md.push(`## ${flat} ↔ ${gl}`, '', ...(lines.length ? lines.map(l => `- ${l}`) : ['- same classes']), '');
+  }
+  fs.writeFileSync(path.join(OUT, 'flat-oracle.md'), md.join('\n') + '\n');
+  console.log(`\n${total} difference(s) — report: test/out/flat-oracle.md`);
+}
+
 // ------------------------------------------------------------ main
 
 const server = await serve();
@@ -235,6 +318,14 @@ fs.mkdirSync(BASELINES, { recursive: true });
 // out/ only ever holds THIS run's failures
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
+
+if (FLAT_ORACLE) {
+  await flatOracle(browser, localOrigin);
+  await browser.close();
+  server.close();
+  if (manifestDirty) fs.writeFileSync(MANIFEST, JSON.stringify(Object.fromEntries(Object.entries(manifest).sort()), null, 1) + '\n');
+  process.exit(0);
+}
 
 const results = [];
 const queue = [...pages];
