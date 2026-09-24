@@ -1,5 +1,5 @@
 {
-  "$comment": "Pages the regression harness snapshots (paths relative to the repo root). Only pages that load the LOCAL ixmaps-gl.js belong here \u2014 the real-ixmaps-flat reference/comparison pages (roma_incidenti_pericolosita_sidebar.html, examples/* copy.html, examples/*_svg.html), the index pages and _scratch_* pages are excluded on purpose. zoomSteps: extra views relative to the page's own initial zoom (aggregation depends on zoom). knownBroken: pages that currently fail for a known, recorded reason \u2014 still run every time and reported as KNOWN (not a failure); the runner says so when one starts working again.",
+  "$comment": "Pages the regression harness snapshots (paths relative to the repo root). Only pages that load the LOCAL ixmaps-gl.js belong here \u2014 the real-ixmaps-flat reference/comparison pages (roma_incidenti_pericolosita_sidebar.html, examples/* copy.html, examples/*_svg.html), the index pages and _scratch_* pages are excluded on purpose. zoomSteps: extra views relative to the page's own initial zoom (aggregation depends on zoom). knownBroken: pages that currently fail for a known, recorded reason \u2014 still run every time and reported as KNOWN (not a failure); the runner says so when one starts working again. equivalent: [twin, original] pairs \u2014 the twin writes the same map with another (flat) spelling; their whole output (every layer, theme, legend, tooltip) must be identical, which checks that an alias really means the same thing.",
   "zoomSteps": [
     1,
     -1
@@ -30,7 +30,29 @@
     "examples/dot_categorical.html",
     "examples/dot_range_equidistant.html",
     "examples/plot_curves.html",
-    "examples/validate_demo.html"
+    "examples/validate_demo.html",
+    "examples/alias_bubble_range_quantile.html",
+    "examples/alias_style_sizefield_bubble.html",
+    "examples/alias_choropleth_range_quantile.html",
+    "examples/alias_choropleth_dominant_deviation_density.html"
   ],
-  "knownBroken": {}
+  "knownBroken": {},
+  "equivalent": [
+    [
+      "examples/alias_bubble_range_quantile.html",
+      "examples/bubble_range_quantile.html"
+    ],
+    [
+      "examples/alias_style_sizefield_bubble.html",
+      "examples/bubble_range_quantile.html"
+    ],
+    [
+      "examples/alias_choropleth_range_quantile.html",
+      "examples/choropleth_range_quantile.html"
+    ],
+    [
+      "examples/alias_choropleth_dominant_deviation_density.html",
+      "examples/choropleth_dominant_deviation_density.html"
+    ]
+  ]
 }

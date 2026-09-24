@@ -164,6 +164,10 @@ async function runPage(browser, localOrigin, pagePath) {
 
 // ------------------------------------------------------------ compare
 
+// JSON.stringify(undefined) is undefined, not a string — a field that exists
+// on only one side must still print
+const js = v => (v === undefined ? 'undefined' : JSON.stringify(v));
+
 function diffSnapshots(base, act) {
   const d = [];
   if (act.error) { d.push(`run error: ${act.error}`); return d; }
@@ -171,7 +175,7 @@ function diffSnapshots(base, act) {
   for (const label of new Set([...bv.keys(), ...av.keys()])) {
     const b = bv.get(label), a = av.get(label);
     if (!b || !a) { d.push(`[${label}] view ${b ? 'missing' : 'new'}`); continue; }
-    if (JSON.stringify(b.view) !== JSON.stringify(a.view)) d.push(`[${label}] view ${JSON.stringify(b.view)} → ${JSON.stringify(a.view)}`);
+    if (js(b.view) !== js(a.view)) d.push(`[${label}] view ${js(b.view)} → ${js(a.view)}`);
     const bl = new Map(b.layers.map(l => [l.id, l])), al = new Map(a.layers.map(l => [l.id, l]));
     for (const id of new Set([...bl.keys(), ...al.keys()])) {
       const x = bl.get(id), y = al.get(id);
@@ -179,7 +183,7 @@ function diffSnapshots(base, act) {
       if (x.type !== y.type) d.push(`[${label}] ${id}: type ${x.type} → ${y.type}`);
       if (x.count !== y.count) d.push(`[${label}] ${id}: ${x.count} → ${y.count} items`);
       for (const k of new Set([...Object.keys(x.constants), ...Object.keys(y.constants)])) {
-        if (JSON.stringify(x.constants[k]) !== JSON.stringify(y.constants[k])) d.push(`[${label}] ${id}: prop ${k} ${JSON.stringify(x.constants[k])} → ${JSON.stringify(y.constants[k])}`);
+        if (js(x.constants[k]) !== js(y.constants[k])) d.push(`[${label}] ${id}: prop ${k} ${js(x.constants[k])} → ${js(y.constants[k])}`);
       }
       if (x.digest !== y.digest) {
         const cols = y.columns.filter(c => x.columnDigests[c] !== y.columnDigests[c]);
@@ -189,9 +193,9 @@ function diffSnapshots(base, act) {
         } else {
           for (const c of cols.filter(c => !added.includes(c))) {
             const ci = y.columns.indexOf(c), cx = x.columns.indexOf(c);
-            const first = y.sample.findIndex((r, i) => JSON.stringify(r[ci]) !== JSON.stringify((x.sample[i] || [])[cx]));
-            const detail = first >= 0 ? ` e.g. item ${first}: ${JSON.stringify((x.sample[first] || [])[cx])} → ${JSON.stringify(y.sample[first][ci])}` : ` (first difference beyond the ${y.sample.length}-item sample)`;
-            d.push(`[${label}] ${id}: ${c} changed${JSON.stringify(x.stats[c]) !== JSON.stringify(y.stats[c]) ? ` range ${JSON.stringify(x.stats[c])} → ${JSON.stringify(y.stats[c])}` : ''};${detail}`);
+            const first = y.sample.findIndex((r, i) => js(r[ci]) !== js((x.sample[i] || [])[cx]));
+            const detail = first >= 0 ? ` e.g. item ${first}: ${js((x.sample[first] || [])[cx])} → ${js(y.sample[first][ci])}` : ` (first difference beyond the ${y.sample.length}-item sample)`;
+            d.push(`[${label}] ${id}: ${c} changed${js(x.stats[c]) !== js(y.stats[c]) ? ` range ${js(x.stats[c])} → ${js(y.stats[c])}` : ''};${detail}`);
           }
           if (added.length) d.push(`[${label}] ${id}: new accessors ${added.join(', ')}`);
           if (removed.length) d.push(`[${label}] ${id}: removed accessors ${removed.join(', ')}`);
@@ -203,11 +207,11 @@ function diffSnapshots(base, act) {
       const x = bt.get(name), y = at.get(name);
       if (!x || !y) { d.push(`[${label}] theme ${name} ${x ? 'removed' : 'added'}`); continue; }
       for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) {
-        if (JSON.stringify(x[k]) !== JSON.stringify(y[k])) d.push(`[${label}] theme ${name}.${k}: ${JSON.stringify(x[k]).slice(0, 120)} → ${JSON.stringify(y[k]).slice(0, 120)}`);
+        if (js(x[k]) !== js(y[k])) d.push(`[${label}] theme ${name}.${k}: ${js(x[k]).slice(0, 120)} → ${js(y[k]).slice(0, 120)}`);
       }
     }
     for (const k of ['legend', 'tooltips', 'validation']) {
-      if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) d.push(`[${label}] ${k} changed: ${JSON.stringify(b[k]).slice(0, 160)} → ${JSON.stringify(a[k]).slice(0, 160)}`);
+      if (js(b[k]) !== js(a[k])) d.push(`[${label}] ${k} changed: ${js(b[k]).slice(0, 160)} → ${js(a[k]).slice(0, 160)}`);
     }
   }
   const bc = new Set(base.console || []), ac = new Set(act.console || []);
@@ -263,6 +267,22 @@ await Promise.all(Array.from({ length: Math.max(1, JOBS) }, worker));
 await browser.close();
 server.close();
 
+// ------------------------------------------------------------ equivalence
+// [twin, original]: the twin spells the same map differently (flat aliases)
+// — every layer, theme, legend and tooltip must come out identical
+const byPage = new Map(results.map(r => [r.page, r]));
+const equivFailed = [];
+for (const [twin, orig] of config.equivalent || []) {
+  const a = byPage.get(twin), b = byPage.get(orig);
+  if (!a || !b) continue; // one of the pair filtered out by --page
+  const d = (a.error || b.error) ? [`not comparable: ${a.error || b.error}`]
+    : diffSnapshots({ views: b.views, console: [] }, { views: a.views, console: [] });
+  if (d.length) {
+    equivFailed.push(twin);
+    console.log(`NOT EQUIVALENT  ${twin} ≠ ${orig}\n${d.slice(0, 15).map(x => '        ' + x).join('\n')}`);
+  } else console.log(`EQUIVALENT  ${twin} ≡ ${orig}`);
+}
+
 if (manifestDirty) fs.writeFileSync(MANIFEST, JSON.stringify(Object.fromEntries(Object.entries(manifest).sort()), null, 1) + '\n');
 const failed = results.filter(r => !r.known && ((r.diffs && r.diffs.length) || (r.error && !UPDATE)));
 const skipped = results.filter(r => r.skipped).length;
@@ -270,4 +290,5 @@ const known = results.filter(r => r.known).length;
 console.log(`\n${results.length} page(s)${ENGINE ? ` against ${path.relative(process.cwd(), ENGINE)}` : ''}: ${UPDATE ? 'baselines written' : `${results.length - failed.length - skipped - known} passed, ${failed.length} failed`}, ${skipped} skipped, ${known} known-broken`
   + ` — data: ${cacheStats.replayed} replayed, ${cacheStats.recorded} recorded, ${cacheStats.live} live (tiles)`);
 if (cacheStats.remoteChanged.length) console.log(`WARNING remote data changed since the manifest was written:\n  ${cacheStats.remoteChanged.join('\n  ')}`);
-process.exitCode = failed.length ? 1 : 0;
+if (equivFailed.length) console.log(`${equivFailed.length} equivalence pair(s) differ`);
+process.exitCode = failed.length || equivFailed.length ? 1 : 0;

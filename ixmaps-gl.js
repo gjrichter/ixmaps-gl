@@ -223,8 +223,8 @@
   // the validator URL, since that URL is import()ed and executed: a
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
-  // v0.1.1: knows that this engine reads style.type/filter/title (normalizeTheme)
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.1/dist/validate.mjs';
+  // v0.1.2: knows this engine's binding aliases (FLAT_BINDING_ALIASES/GL_BINDING_TARGETS)
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.2/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -899,6 +899,106 @@
   }
 
   // ---------------------------------------------------------------
+  // Binding aliases. Real ixmaps-flat accepts ~50 .binding() keys and maps
+  // them onto 17 internal targets (htmlgui.js newTheme: value/values/field/
+  // fields → theme.field, size/sizefield → style.sizefield, ...). The table
+  // between the markers is GENERATED from the shared grammar
+  // (github.com/gjrichter/ixmaps-grammar) by test/sync-grammar.mjs — do not
+  // edit it by hand; `npm run unit` fails when it drifts.
+  // ---------------------------------------------------------------
+  // <grammar:binding-aliases>
+  // generated from ixmaps-grammar 0.1.2 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
+  const FLAT_BINDING_ALIASES = {
+    "aggregation": "style.aggregationfield",
+    "aggregationfield": "style.aggregationfield",
+    "alpha": "style.alphafield",
+    "alpha100": "style.alphafield100",
+    "alphafield": "style.alphafield",
+    "alphafield100": "style.alphafield100",
+    "color": "style.colorfield",
+    "colorfield": "style.colorfield",
+    "digits": "style.lookupdigits",
+    "field": "theme.field",
+    "field100": "theme.field100",
+    "fields": "theme.field",
+    "geo": "style.lookupfield",
+    "geo1": "style.lookupfield",
+    "geo2": "style.lookupfield2",
+    "georef": "style.lookupfield",
+    "georef1": "style.lookupfield",
+    "georef2": "style.lookupfield2",
+    "id": "style.itemfield",
+    "item": "style.itemfield",
+    "itemfield": "style.itemfield",
+    "lookup": "style.lookupfield",
+    "lookup1": "style.lookupfield",
+    "lookup2": "style.lookupfield2",
+    "lookupdigits": "style.lookupdigits",
+    "lookupfield": "style.lookupfield",
+    "lookupfield1": "style.lookupfield",
+    "lookupfield2": "style.lookupfield2",
+    "lookupsuffix": "style.lookupsuffix",
+    "lookuptonumber": "style.lookuptonumber",
+    "lookuptoupper": "style.lookuptoupper",
+    "number": "style.lookuptonumber",
+    "position": "style.lookupfield",
+    "position1": "style.lookupfield",
+    "position2": "style.lookupfield2",
+    "size": "style.sizefield",
+    "sizefield": "style.sizefield",
+    "suffix": "style.lookupsuffix",
+    "text": "style.valuefield",
+    "textvalue": "style.valuefield",
+    "time": "style.timefield",
+    "timefield": "style.timefield",
+    "title": "style.titlefield",
+    "titlefield": "style.titlefield",
+    "tonumber": "style.lookuptonumber",
+    "toupper": "style.lookuptoupper",
+    "upper": "style.lookuptoupper",
+    "value": "theme.field",
+    "value100": "theme.field100",
+    "valuefield": "style.valuefield",
+    "values": "theme.field",
+    "valuetext": "style.valuefield",
+  };
+  // </grammar:binding-aliases>
+
+  // Which of those flat targets this engine implements, and under which name
+  // its renderers read it. Targets missing here (theme.field100,
+  // style.colorfield, style.timefield, ...) are still resolved into
+  // spec.targets, just not used yet — the validator reports them as
+  // gl-unsupported. The style.lookupfield family (geo/position/lookup/...)
+  // keeps this engine's own position-vs-lookup handling for now (flat's
+  // single-target rule comes in a separate change).
+  const GL_BINDING_TARGETS = {
+    'theme.field': ['binding', 'value'],
+    'style.sizefield': ['binding', 'size'],
+    'style.itemfield': ['binding', 'id'],
+    'style.alphafield': ['binding', 'alpha'],
+    'style.alphafield100': ['binding', 'alpha100'],
+    'style.valuefield': ['style', 'valuefield'],
+  };
+  const LOOKUPFIELD_TARGET = 'style.lookupfield';
+
+  // flat's own resolution order (htmlgui.js newTheme): a target given as a
+  // STYLE key first (in flat, .style({sizefield}) and .binding({size}) are the
+  // same thing), then every .binding() alias in object order — the last
+  // alias for a target wins.
+  function resolveBindingTargets(style, rawBinding) {
+    const targets = {};
+    const styleTargets = new Set(Object.values(FLAT_BINDING_ALIASES).filter(t => t.startsWith('style.')));
+    for (const [k, v] of Object.entries(style)) {
+      if (styleTargets.has('style.' + k) && 'style.' + k !== LOOKUPFIELD_TARGET) targets['style.' + k] = v;
+    }
+    for (const [k, v] of Object.entries(rawBinding)) {
+      const t = FLAT_BINDING_ALIASES[k];
+      if (t && t !== LOOKUPFIELD_TARGET) targets[t] = v;
+    }
+    return targets;
+  }
+
+  // ---------------------------------------------------------------
   // Theme normalization — the ONE place a theme definition (real
   // ixmaps-flat's shape: {layer, data, binding, style: {type, filter,
   // title, ...}, meta}, see LayerBuilder.definition) becomes what the
@@ -906,6 +1006,8 @@
   // the call sites where each gap happened to show up:
   //   - type string → flag Set; BUBBLE implies SYMBOL (real flat's base
   //     chart flag is BUBBLE; this engine's CHART pipeline keys on SYMBOL)
+  //   - every flat binding alias → its target (see FLAT_BINDING_ALIASES /
+  //     GL_BINDING_TARGETS), also when given as a style key, flat's order
   //   - binding.geo (real flat's name) → binding.position (this engine's)
   //   - style.title (.title()) → meta.title fallback (legend heading)
   //   - style.type/filter/title are taken out of style, so rt.style holds
@@ -930,13 +1032,20 @@
       }
     });
 
-    const binding = Object.assign({}, def.binding);
+    const rawBinding = Object.assign({}, def.binding);
+    const targets = resolveBindingTargets(style, rawBinding);
+    // every original key is kept (position/lookup/geo, and keys flat ignores);
+    // implemented targets are then written under this engine's own names
+    const binding = rawBinding;
+    for (const [t, [where, name]] of Object.entries(GL_BINDING_TARGETS)) {
+      if (targets[t] !== undefined) (where === 'binding' ? binding : style)[name] = targets[t];
+    }
     if (binding.geo != null && binding.position == null) binding.position = binding.geo;
 
     const meta = Object.assign({}, def.meta);
     if (title && !meta.title) meta.title = title;
 
-    return { name: def.layer, data: def.data, binding, flags, typeStr, style, meta, filter };
+    return { name: def.layer, data: def.data, binding, targets, flags, typeStr, style, meta, filter };
   }
 
   // ---------------------------------------------------------------

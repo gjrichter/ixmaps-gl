@@ -55,8 +55,13 @@ Every layer definition passes through one pure function, `normalizeTheme()`, bef
 renderer sees it. Its input has real ixmaps-flat's theme-definition shape (`{layer, data,
 binding, style: {type, filter, title, …}, meta}` — the same shape as a theme in a flat
 project JSON), and every alias rule lives there: `BUBBLE` implies `SYMBOL`, `geo` is read
-as `position`, `.title()` is the legend-title fallback. It never mutates the page's own
-objects. Unit tests: `cd test && npm run unit`.
+as `position`, `.title()` is the legend-title fallback, and all of real ixmaps-flat's
+binding aliases resolve to their targets (`values`/`fields`/`field` → `value`,
+`sizefield` → `size`, `itemfield` → `id`, `text`/`valuefield` → the value-label field, …),
+also when given as a style key (`.style({sizefield})` ≡ `.binding({size})`, as in flat).
+The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
+this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
+but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.
 
 ## Quick start
 

@@ -57,6 +57,15 @@ fresh machine records a file whose hash differs, the run ends with a
 `WARNING remote data changed` line. To test against current remote data and libraries,
 delete `.cache/` and run `npm run snapshot`, then review the baseline diff.
 
+## Equivalence pairs
+
+`pages.json` → `equivalent` lists `[twin, original]` pairs: the twin writes the same map
+with a different spelling (real ixmaps-flat's binding aliases, e.g. `fields`/`sizefield`
+instead of `value`/`size`, or the size as a style key). Their whole output — every layer,
+theme, legend and tooltip — must be identical, which checks that an alias really means the
+same thing (`EQUIVALENT` / `NOT EQUIVALENT` at the end of a run). The check has teeth: run
+against the engine from before the aliases existed, every twin fails.
+
 ## Known-broken pages
 
 `pages.json` → `knownBroken` lists pages that fail for a known, recorded reason. They still
@@ -80,6 +89,7 @@ matched all baselines.
 | `browser.js` | injected before page scripts: captures every `ixmaps.Map()` handle, takes snapshots |
 | `run.mjs` | static server, data record/replay, settle detection, comparison |
 | `unit/` | Node unit tests for pure internals (`normalizeTheme`, …) — the engine runs in a `vm` sandbox |
+| `sync-grammar.mjs` | writes/checks ixmaps-gl.js's generated grammar sections (the binding-alias table) from the sibling ixmaps-grammar checkout; `npm run unit` fails on drift |
 | `baselines/` | committed snapshots, one per page |
 | `data-manifest.json` | committed URL → SHA-256 of recorded remote data |
 | `.cache/`, `out/` | git-ignored: recorded data; this run's failed snapshots (`*.actual.json`) |

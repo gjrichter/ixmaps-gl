@@ -987,7 +987,8 @@
      ],
      "features": 1,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "maxSizeValue": 23862315752
     },
     {
      "name": "AREU",
@@ -2095,7 +2096,8 @@
      ],
      "features": 1,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "maxSizeValue": 23862315752
     },
     {
      "name": "AREU",
@@ -3203,7 +3205,8 @@
      ],
      "features": 1,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "maxSizeValue": 23862315752
     },
     {
      "name": "AREU",
