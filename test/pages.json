@@ -34,7 +34,10 @@
     "examples/alias_bubble_range_quantile.html",
     "examples/alias_style_sizefield_bubble.html",
     "examples/alias_choropleth_range_quantile.html",
-    "examples/alias_choropleth_dominant_deviation_density.html"
+    "examples/alias_choropleth_dominant_deviation_density.html",
+    "examples/alias_geo_choropleth_range_quantile.html",
+    "examples/alias_style_lookupfield_choropleth_dopacity.html",
+    "alias_lookupfield_uk_collisions_2023.html"
   ],
   "knownBroken": {},
   "equivalent": [
@@ -53,6 +56,18 @@
     [
       "examples/alias_choropleth_dominant_deviation_density.html",
       "examples/choropleth_dominant_deviation_density.html"
+    ],
+    [
+      "examples/alias_geo_choropleth_range_quantile.html",
+      "examples/choropleth_range_quantile.html"
+    ],
+    [
+      "examples/alias_style_lookupfield_choropleth_dopacity.html",
+      "examples/choropleth_dopacity.html"
+    ],
+    [
+      "alias_lookupfield_uk_collisions_2023.html",
+      "uk_collisions_2023.html"
     ]
   ]
 }

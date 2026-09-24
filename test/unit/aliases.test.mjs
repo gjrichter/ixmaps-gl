@@ -51,13 +51,60 @@ test('several aliases for one target: the last one in the object wins (flat\'s l
   assert.equal(norm({ size: 'a', sizefield: 'b' }).binding.size, 'b');
 });
 
-test('the geo/position/lookup family keeps this engine\'s own handling (flat\'s rule is a later change)', () => {
-  assert.equal(norm({ geo: 'lat|lon' }).binding.position, 'lat|lon');
-  assert.equal(norm({ geo: 'a|b', position: 'c|d' }).binding.position, 'c|d');
-  assert.equal(norm({ lookup: 'code' }).binding.lookup, 'code');
-  assert.equal(norm({ lookup: 'code' }).binding.position, undefined);
-  assert.equal(norm({ georef: 'lat|lon' }).binding.position, undefined, 'georef is not mapped yet');
-  assert.equal(norm({}, { lookupfield: 'code' }).binding.lookup, undefined, 'style.lookupfield is not promoted yet');
+// flat's lookupfield rule (maptheme.js getSelectionId): "a|b" = lat/lon,
+// geometry-bearing data = embedded geometry, otherwise a join key
+const withData = (binding, type, style) => normalizeTheme({ layer: 'x', binding, style, data: { url: 'u', type } });
+
+test('lookupfield "a|b" → points (binding.position), whichever alias spells it', () => {
+  for (const a of ['geo', 'georef', 'position', 'lookup', 'lookupfield', 'geo1', 'position1']) {
+    const spec = withData({ [a]: 'la|lo' }, 'csv');
+    assert.equal(spec.binding.position, 'la|lo', a);
+    assert.equal(spec.binding.lookup, undefined, a);
+    assert.equal(spec.geometry.kind, 'latlon', a);
+  }
+});
+
+test('a single field on tabular data → join key (binding.lookup) — flat-style choropleth .binding({geo: "code"})', () => {
+  for (const a of ['geo', 'position', 'lookup', 'lookupfield']) {
+    const spec = withData({ [a]: 'code' }, 'csv');
+    assert.equal(spec.binding.lookup, 'code', a);
+    assert.equal(spec.binding.position, undefined, a);
+    assert.equal(spec.geometry.kind, 'join', a);
+  }
+  assert.equal(norm({ lookup: 'code' }).binding.lookup, 'code', 'no data declared → join, as before');
+});
+
+test('the field "geometry" → embedded geometry whatever the data type (flat\'s convention)', () => {
+  assert.equal(norm({ geo: 'geometry' }).binding.position, 'geometry');
+  assert.equal(withData({ position: 'geometry' }, 'csv').geometry.kind, 'embedded');
+});
+
+test('GeoJSON/TopoJSON data → embedded geometry (binding.position)', () => {
+  for (const type of ['geojson', 'topojson', 'TopoJSON']) {
+    const spec = withData({ geo: 'geometry' }, type);
+    assert.equal(spec.binding.position, 'geometry', type);
+    assert.equal(spec.geometry.kind, 'embedded', type);
+  }
+});
+
+test('lookupfield as a style key counts too; a binding alias overrides it', () => {
+  assert.equal(withData({}, 'csv', { lookupfield: 'code' }).binding.lookup, 'code');
+  assert.equal(withData({ geo: 'la|lo' }, 'csv', { lookupfield: 'code' }).binding.position, 'la|lo');
+});
+
+test('several lookupfield spellings: the last one wins, and exactly one of position/lookup is set', () => {
+  assert.equal(withData({ geo: 'a|b', position: 'c|d' }, 'csv').binding.position, 'c|d');
+  assert.equal(withData({ position: 'c|d', geo: 'a|b' }, 'csv').binding.position, 'a|b');
+  const spec = withData({ position: 'la|lo', lookup: 'code' }, 'csv');
+  assert.equal(spec.binding.lookup, 'code');
+  assert.equal(spec.binding.position, undefined);
+});
+
+test('no lookupfield spelling → position/lookup untouched, spec.geometry null', () => {
+  const spec = withData({ value: 'v', id: 'code' }, 'topojson');
+  assert.equal(spec.binding.position, undefined);
+  assert.equal(spec.binding.lookup, undefined);
+  assert.equal(spec.geometry, null);
 });
 
 test('targets this engine does not implement are recorded in spec.targets, not applied', () => {

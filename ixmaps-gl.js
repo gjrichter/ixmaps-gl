@@ -223,8 +223,8 @@
   // the validator URL, since that URL is import()ed and executed: a
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
-  // v0.1.2: knows this engine's binding aliases (FLAT_BINDING_ALIASES/GL_BINDING_TARGETS)
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.2/dist/validate.mjs';
+  // v0.1.3: knows this engine's binding aliases incl. the lookupfield family
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.3/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -907,7 +907,7 @@
   // edit it by hand; `npm run unit` fails when it drifts.
   // ---------------------------------------------------------------
   // <grammar:binding-aliases>
-  // generated from ixmaps-grammar 0.1.2 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
+  // generated from ixmaps-grammar 0.1.3 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
   const FLAT_BINDING_ALIASES = {
     "aggregation": "style.aggregationfield",
     "aggregationfield": "style.aggregationfield",
@@ -968,10 +968,11 @@
   // its renderers read it. Targets missing here (theme.field100,
   // style.colorfield, style.timefield, ...) are still resolved into
   // spec.targets, just not used yet — the validator reports them as
-  // gl-unsupported. The style.lookupfield family (geo/position/lookup/...)
-  // keeps this engine's own position-vs-lookup handling for now (flat's
-  // single-target rule comes in a separate change).
+  // gl-unsupported. style.lookupfield (geo/position/lookup/georef/... — ONE
+  // target in flat) has no fixed name here: resolveGeometryBinding decides,
+  // by flat's own rule, whether it means points or a join key.
   const GL_BINDING_TARGETS = {
+    'style.lookupfield': null, // → binding.position or binding.lookup, see resolveGeometryBinding
     'theme.field': ['binding', 'value'],
     'style.sizefield': ['binding', 'size'],
     'style.itemfield': ['binding', 'id'],
@@ -989,13 +990,31 @@
     const targets = {};
     const styleTargets = new Set(Object.values(FLAT_BINDING_ALIASES).filter(t => t.startsWith('style.')));
     for (const [k, v] of Object.entries(style)) {
-      if (styleTargets.has('style.' + k) && 'style.' + k !== LOOKUPFIELD_TARGET) targets['style.' + k] = v;
+      if (styleTargets.has('style.' + k)) targets['style.' + k] = v;
     }
     for (const [k, v] of Object.entries(rawBinding)) {
       const t = FLAT_BINDING_ALIASES[k];
-      if (t && t !== LOOKUPFIELD_TARGET) targets[t] = v;
+      if (t) targets[t] = v;
     }
     return targets;
+  }
+
+  // What style.lookupfield means — real ixmaps-flat's rule (maptheme.js
+  // MapTheme.getSelectionId): "a|b" naming two fields = lat/lon; a single
+  // field holding GeoJSON geometry = the item's own geometry; any other
+  // single field = a lookup key joined to map items. This engine gets its
+  // geometry from GeoJSON/TopoJSON sources (not from a per-record geometry
+  // string), and joins only against a same-named FEATURE layer, so:
+  //   "a|b"                        → latlon   → binding.position (points)
+  //   "geometry", or geojson/
+  //   topojson data                → embedded → binding.position
+  //   any other data, single field → join     → binding.lookup
+  // ("geometry" is flat's own convention: htmlgui.js defaults lookupfield
+  // to "geometry" for GeoJSON/TopoJSON sources — that field IS the geometry)
+  function resolveGeometryBinding(field, data) {
+    if (String(field).includes('|')) return { kind: 'latlon', field };
+    if (field === 'geometry' || (data && /^(geo|topo)json$/i.test(String(data.type || '')))) return { kind: 'embedded', field };
+    return { kind: 'join', field };
   }
 
   // ---------------------------------------------------------------
@@ -1008,7 +1027,9 @@
   //     chart flag is BUBBLE; this engine's CHART pipeline keys on SYMBOL)
   //   - every flat binding alias → its target (see FLAT_BINDING_ALIASES /
   //     GL_BINDING_TARGETS), also when given as a style key, flat's order
-  //   - binding.geo (real flat's name) → binding.position (this engine's)
+  //   - geo/position/lookup/georef/lookupfield/... (flat's single
+  //     lookupfield) → binding.position (points / embedded geometry) or
+  //     binding.lookup (join key), by flat's rule (resolveGeometryBinding)
   //   - style.title (.title()) → meta.title fallback (legend heading)
   //   - style.type/filter/title are taken out of style, so rt.style holds
   //     only real style properties
@@ -1037,15 +1058,25 @@
     // every original key is kept (position/lookup/geo, and keys flat ignores);
     // implemented targets are then written under this engine's own names
     const binding = rawBinding;
-    for (const [t, [where, name]] of Object.entries(GL_BINDING_TARGETS)) {
-      if (targets[t] !== undefined) (where === 'binding' ? binding : style)[name] = targets[t];
+    for (const [t, target] of Object.entries(GL_BINDING_TARGETS)) {
+      if (!target || targets[t] === undefined) continue;
+      const [where, name] = target;
+      (where === 'binding' ? binding : style)[name] = targets[t];
     }
-    if (binding.geo != null && binding.position == null) binding.position = binding.geo;
+    // flat has ONE lookupfield; this engine reads it as either position or
+    // lookup — set exactly one of them, never both
+    let geometry = null;
+    if (targets[LOOKUPFIELD_TARGET] !== undefined) {
+      geometry = resolveGeometryBinding(targets[LOOKUPFIELD_TARGET], def.data);
+      delete binding.position;
+      delete binding.lookup;
+      binding[geometry.kind === 'join' ? 'lookup' : 'position'] = geometry.field;
+    }
 
     const meta = Object.assign({}, def.meta);
     if (title && !meta.title) meta.title = title;
 
-    return { name: def.layer, data: def.data, binding, targets, flags, typeStr, style, meta, filter };
+    return { name: def.layer, data: def.data, binding, targets, geometry, flags, typeStr, style, meta, filter };
   }
 
   // ---------------------------------------------------------------

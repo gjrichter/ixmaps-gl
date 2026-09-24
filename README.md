@@ -59,6 +59,10 @@ as `position`, `.title()` is the legend-title fallback, and all of real ixmaps-f
 binding aliases resolve to their targets (`values`/`fields`/`field` → `value`,
 `sizefield` → `size`, `itemfield` → `id`, `text`/`valuefield` → the value-label field, …),
 also when given as a style key (`.style({sizefield})` ≡ `.binding({size})`, as in flat).
+flat's single lookup field (`geo`, `position`, `lookup`, `georef`, `lookupfield`, …) is read
+by flat's own rule: `"lat|lon"` → points; `"geometry"` or GeoJSON/TopoJSON data → the
+features' own geometry; any other single field on tabular data → a join key against the
+same-named FEATURE layer — so a flat-style choropleth `.binding({geo: "code"})` works.
 The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.

@@ -70,7 +70,7 @@ test('no type → empty flag set (no renderer), as before', () => {
   assert.deepEqual(plain(spec.meta), {});
 });
 
-test('binding.geo → binding.position; an explicit position wins', () => {
+test('binding.geo → binding.position (flat\'s lookupfield: the last spelling wins — here position)', () => {
   const { normalizeTheme } = loadEngine();
   assert.equal(normalizeTheme({ layer: 'x', binding: { geo: 'lat|lon' } }).binding.position, 'lat|lon');
   assert.equal(normalizeTheme({ layer: 'x', binding: { geo: 'a|b', position: 'c|d' } }).binding.position, 'c|d');
