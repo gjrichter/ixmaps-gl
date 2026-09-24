@@ -7,7 +7,8 @@ to the engine's output shows up as a named, per-field difference.
 ```bash
 cd test
 npm install                      # once — Playwright 1.62.1 (uses the cached chromium-1234)
-npm test                         # compare all pages against baselines/
+npm test                         # unit tests, then compare all pages against baselines/
+npm run unit                     # only the Node unit tests (pure engine internals, ~1 s)
 npm run snapshot                 # re-write baselines/ after an INTENDED output change
 node run.mjs --page choropleth   # only pages whose path contains "choropleth"
 node run.mjs --engine ../x.js    # run the pages against another ixmaps-gl.js build
@@ -78,6 +79,7 @@ matched all baselines.
 | `pages.json` | page list, zoom steps, known-broken pages |
 | `browser.js` | injected before page scripts: captures every `ixmaps.Map()` handle, takes snapshots |
 | `run.mjs` | static server, data record/replay, settle detection, comparison |
+| `unit/` | Node unit tests for pure internals (`normalizeTheme`, …) — the engine runs in a `vm` sandbox |
 | `baselines/` | committed snapshots, one per page |
 | `data-manifest.json` | committed URL → SHA-256 of recorded remote data |
 | `.cache/`, `out/` | git-ignored: recorded data; this run's failed snapshots (`*.actual.json`) |

@@ -223,7 +223,8 @@
   // the validator URL, since that URL is import()ed and executed: a
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.0/dist/validate.mjs';
+  // v0.1.1: knows that this engine reads style.type/filter/title (normalizeTheme)
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.1/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -268,7 +269,7 @@
       });
     }
     layer(lb) {
-      this.v.theme({ type: lb._typeStr, style: lb._style, meta: lb._meta, binding: lb._binding, data: lb._data }, { layer: lb.name });
+      this.v.theme(lb.definition(), { layer: lb.name });
     }
     mapOptions(o) { this.v.mapOptions(o, { layer: null }); }
     options(o) { this.v.options(o, { layer: null }); }
@@ -650,10 +651,10 @@
   // .layer() call order, so `runtimes` already holds the base by the
   // time this runs, same precondition the real engine's own
   // same-name-join convention has.
-  function joinChoroplethFeatures(lb, table, runtimes) {
-    const geomRt = runtimes.find(r => r.name === lb.name && (r.flags.has('FEATURE') || r.flags.has('FEATURES')));
+  function joinChoroplethFeatures(spec, table, runtimes) {
+    const geomRt = runtimes.find(r => r.name === spec.name && (r.flags.has('FEATURE') || r.flags.has('FEATURES')));
     if (!geomRt) {
-      throw new Error(`[ixmaps-gl] CHOROPLETH layer "${lb.name}" needs a FEATURE base layer with the same name, .layer()'d earlier on the map`);
+      throw new Error(`[ixmaps-gl] CHOROPLETH layer "${spec.name}" needs a FEATURE base layer with the same name, .layer()'d earlier on the map`);
     }
     // A FEATURE base that's donating geometry to a same-named CHOROPLETH
     // exists PURELY as a geometry template (per this join's own
@@ -670,9 +671,9 @@
     // coincidentally.
     geomRt._isChoroplethGeometryDonor = true;
     const idField = geomRt.binding.id;
-    const lookupField = lb._binding.lookup;
+    const lookupField = spec.binding.lookup;
     if (!idField || !lookupField) {
-      throw new Error(`[ixmaps-gl] CHOROPLETH layer "${lb.name}" needs .binding({lookup}), and its FEATURE base needs .binding({id})`);
+      throw new Error(`[ixmaps-gl] CHOROPLETH layer "${spec.name}" needs .binding({lookup}), and its FEATURE base needs .binding({id})`);
     }
     const rowsByKey = new Map(table.rows.map(row => [String(row[lookupField]), row]));
     // Unmatched polygons (no CSV row for that id) keep their geometry with
@@ -838,43 +839,20 @@
       this._binding = {};
       this._filterExpr = null;
       this._typeStr = '';
-      this._flags = new Set();
       this._style = {};
       this._meta = {};
     }
     data(d) { this._data = d; return this; }
-    // GL-PORT COMPAT: binding.geo is the real-ixmaps-flat field name for
-    // the bound geometry/position; this engine's own convention (used by
-    // every field that actually reads it — fetchLayerData/rowsResult/
-    // LayerRuntime) is binding.position. Normalized HERE, at the one
-    // point every caller's binding object passes through, so a real page
-    // using .binding({geo:...}) unmodified works exactly like one already
-    // using .binding({position:...}) — every downstream reader only ever
-    // needs to know about .position.
+    // aliases (geo → position, ...) are resolved in normalizeTheme, not here
     binding(b) {
-      if (b && b.geo != null && b.position == null) b.position = b.geo;
       this._binding = b;
       return this;
     }
     filter(expr) { this._filterExpr = expr; return this; }
+    // flags (and their implications, e.g. BUBBLE → SYMBOL) are resolved in
+    // normalizeTheme, not here
     type(t) {
       this._typeStr = t;
-      this._flags = new Set(t.split('|'));
-      // GL-PORT COMPAT: real ixmaps-flat's actual base-chart flag is
-      // BUBBLE (confirmed against the real engine's own source and
-      // htmlgui_flat.js docs — SYMBOL is a DIFFERENT, still-unimplemented
-      // real type for non-circle marker shapes); this engine's CHART
-      // dispatch was built keying on SYMBOL specifically. Treating BUBBLE
-      // as implying SYMBOL here — once, at the source — means every real
-      // page's authentic "CHART|BUBBLE|..." type string just works,
-      // without rewriting it to this engine's own preferred spelling.
-      if (this._flags.has('BUBBLE')) this._flags.add('SYMBOL');
-      this._flags.forEach(flag => {
-        if (KNOWN_INERT_FLAGS.includes(flag) && !_warnedFlags.has(flag)) {
-          _warnedFlags.add(flag);
-          console.info(`[ixmaps-gl] type flag "${flag}" recognized, no distinct rendering behavior implemented yet`);
-        }
-      });
       return this;
     }
     style(s) { this._style = s; return this; }
@@ -885,10 +863,11 @@
     // sample's .title("Global Power Plants") becomes that legend's title
     // line). Stored separately (not merged into _meta here) since
     // .meta() REPLACES this._meta wholesale, and callers can chain
-    // .title() before OR after .meta() — LayerRuntime's constructor
-    // applies it as a fallback (meta.title wins if a caller's own
-    // .meta({title:...}) already set one) once both are final. Consumed
-    // by the native legend renderer in build() via rt.meta.title.
+    // .title() before OR after .meta() — definition() puts it where real
+    // ixmaps-flat does (style.title) and normalizeTheme applies it as a
+    // fallback (meta.title wins if a caller's own .meta({title:...})
+    // already set one). Consumed by the native legend renderer in build()
+    // via rt.meta.title.
     title(fieldName) { this._titleField = fieldName; return this; }
     // GL-PORT COMPAT: real ixmaps-flat's map.layer(name).data()...define()
     // chain ends with an explicit .define() call that commits the theme.
@@ -897,6 +876,19 @@
     // ixmaps.layer(name, cb) factory path and the real-flat map.layer(name)
     // compat path) is already enough — so .define() is a harmless no-op,
     // not a crash, for a page that calls it out of real-engine habit.
+    // The theme definition in real ixmaps-flat's own shape (its
+    // themeConstruct.definition() — also a project-JSON theme, schema v1.2):
+    // type, filter and title live INSIDE style there. Built fresh from this
+    // builder's fields on every call — .style()/.meta() still REPLACE
+    // wholesale, so chaining semantics are unchanged. normalizeTheme() turns
+    // it into what the renderers read.
+    definition() {
+      const style = Object.assign({}, this._style);
+      if (this._typeStr) style.type = this._typeStr;
+      if (this._filterExpr != null) style.filter = this._filterExpr;
+      if (this._titleField != null) style.title = this._titleField;
+      return { layer: this.name, data: this._data, binding: this._binding, style, meta: this._meta };
+    }
     define() { return this; }
   }
 
@@ -904,6 +896,47 @@
     const builder = new LayerBuilder(name);
     if (configFn) configFn(builder);
     return builder;
+  }
+
+  // ---------------------------------------------------------------
+  // Theme normalization — the ONE place a theme definition (real
+  // ixmaps-flat's shape: {layer, data, binding, style: {type, filter,
+  // title, ...}, meta}, see LayerBuilder.definition) becomes what the
+  // renderers read. Every alias/implication rule lives here instead of at
+  // the call sites where each gap happened to show up:
+  //   - type string → flag Set; BUBBLE implies SYMBOL (real flat's base
+  //     chart flag is BUBBLE; this engine's CHART pipeline keys on SYMBOL)
+  //   - binding.geo (real flat's name) → binding.position (this engine's)
+  //   - style.title (.title()) → meta.title fallback (legend heading)
+  //   - style.type/filter/title are taken out of style, so rt.style holds
+  //     only real style properties
+  // Pure: returns new objects and never mutates the caller's definition
+  // (the page's own binding/style/meta objects stay untouched).
+  function normalizeTheme(def) {
+    const style = Object.assign({}, def.style);
+    const typeStr = style.type != null ? String(style.type) : '';
+    const filter = style.filter;
+    const title = style.title;
+    delete style.type;
+    delete style.filter;
+    delete style.title;
+
+    const flags = new Set(typeStr ? typeStr.split('|') : []);
+    if (flags.has('BUBBLE')) flags.add('SYMBOL');
+    flags.forEach(flag => {
+      if (KNOWN_INERT_FLAGS.includes(flag) && !_warnedFlags.has(flag)) {
+        _warnedFlags.add(flag);
+        console.info(`[ixmaps-gl] type flag "${flag}" recognized, no distinct rendering behavior implemented yet`);
+      }
+    });
+
+    const binding = Object.assign({}, def.binding);
+    if (binding.geo != null && binding.position == null) binding.position = binding.geo;
+
+    const meta = Object.assign({}, def.meta);
+    if (title && !meta.title) meta.title = title;
+
+    return { name: def.layer, data: def.data, binding, flags, typeStr, style, meta, filter };
   }
 
   // ---------------------------------------------------------------
@@ -1120,6 +1153,7 @@
       const dataCache = new Map();
       const runtimes = [];
       for (const lb of this._layerBuilders) {
+        const spec = normalizeTheme(lb.definition());
         // .data({obj}) is already in-memory (no network cost to "re-
         // fetch"), and its object identity can't be captured in a
         // JSON.stringify key without serializing the whole table — skip
@@ -1135,17 +1169,17 @@
         // arms can reach it, and .obj sources get a distinct identity tag
         // instead of colliding with each other under one 'null' entry.
         let raw, cacheKey;
-        if (lb._data && lb._data.obj) {
-          raw = await fetchLayerData(lb._data, lb._binding);
-          cacheKey = 'obj:' + lb.name;
+        if (spec.data && spec.data.obj) {
+          raw = await fetchLayerData(spec.data, spec.binding);
+          cacheKey = 'obj:' + spec.name;
         } else {
-          cacheKey = JSON.stringify({ url: lb._data && lb._data.url, urls: lb._data && lb._data.urls, type: lb._data && lb._data.type, query: lb._data && lb._data.query });
-          if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(lb._data, lb._binding));
+          cacheKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query });
+          if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(spec.data, spec.binding));
           raw = await dataCache.get(cacheKey);
         }
-        const filtered = applyWhereFilter(raw, lb._filterExpr);
-        const fc = filtered.type === 'Table' ? joinChoroplethFeatures(lb, filtered, runtimes) : filtered;
-        const rt = new LayerRuntime(lb, fc, this._engineOptions);
+        const filtered = applyWhereFilter(raw, spec.filter);
+        const fc = filtered.type === 'Table' ? joinChoroplethFeatures(spec, filtered, runtimes) : filtered;
+        const rt = new LayerRuntime(spec, fc, this._engineOptions);
         // tags which underlying data source this runtime came from — see
         // setFacetFilter/clearFacetFilter/clearAllFacetFilters below,
         // which use this to propagate a facet filter to every theme
@@ -1615,11 +1649,12 @@
           // No cross-call fetch cache here (unlike build()'s own loop) —
           // a dynamic add is a one-off call, not part of a batch of
           // layers sharing one data source.
-          const raw = await fetchLayerData(layerBuilder._data, layerBuilder._binding);
-          const filtered = applyWhereFilter(raw, layerBuilder._filterExpr);
-          const fc = filtered.type === 'Table' ? joinChoroplethFeatures(layerBuilder, filtered, runtimes) : filtered;
-          const rt = new LayerRuntime(layerBuilder, fc, this._engineOptions);
-          rt._dataSourceKey = JSON.stringify({ url: layerBuilder._data && layerBuilder._data.url, urls: layerBuilder._data && layerBuilder._data.urls, type: layerBuilder._data && layerBuilder._data.type, query: layerBuilder._data && layerBuilder._data.query, obj: !!(layerBuilder._data && layerBuilder._data.obj) });
+          const spec = normalizeTheme(layerBuilder.definition());
+          const raw = await fetchLayerData(spec.data, spec.binding);
+          const filtered = applyWhereFilter(raw, spec.filter);
+          const fc = filtered.type === 'Table' ? joinChoroplethFeatures(spec, filtered, runtimes) : filtered;
+          const rt = new LayerRuntime(spec, fc, this._engineOptions);
+          rt._dataSourceKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
           runtimes.push(rt);
           _globalThemeRegistry.set(rt.name, rt);
           if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
@@ -3162,19 +3197,19 @@
   }
 
   class LayerRuntime {
-    constructor(builder, fc, mapOptions) {
-      this.name = builder.name;
-      this.binding = builder._binding || {};
-      this.flags = builder._flags || new Set();
-      this.style = builder._style || {};
-      this.meta = builder._meta || {};
-      if (builder._titleField && !this.meta.title) this.meta.title = builder._titleField;
+    // spec: a normalizeTheme() result — never a raw LayerBuilder
+    constructor(spec, fc, mapOptions) {
+      this.name = spec.name;
+      this.binding = spec.binding;
+      this.flags = spec.flags;
+      this.style = spec.style;
+      this.meta = spec.meta;
       // GL-PORT COMPAT: retained only for ixmaps.getThemeObj()'s szFilter
       // (real ixmaps-flat global compat shim, see _globalThemeRegistry) —
       // this engine's own filtering is fully static/load-time (see
       // applyWhereFilter in MapBuilder.build()), so nothing else here ever
       // reads it back off the runtime.
-      this._filterExpr = builder._filterExpr || '';
+      this._filterExpr = spec.filter || '';
       this.mapOptions = mapOptions || {};
       this.features = fc.features;
       this._iconCache = new Map();
@@ -6142,6 +6177,9 @@
   // directly on window for inline-HTML/onclick callers, not only via a
   // library object.
   global.__setFacetFilter = __setFacetFilter;
+  // test-only: lets test/unit/*.test.mjs call pure internals directly (the
+  // engine runs in a Node vm there); deliberately NOT on the ixmaps object
+  global.__ixmapsGlInternals = { normalizeTheme, LayerBuilder };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;
 })(window);

@@ -1,0 +1,120 @@
+// Unit tests for normalizeTheme / LayerBuilder.definition — pure functions,
+// run against the real ixmaps-gl.js loaded into a Node vm (no browser).
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'ixmaps-gl.js');
+
+function loadEngine() {
+  const logs = [];
+  const win = {
+    console: { info: (...a) => logs.push(['info', a.join(' ')]), warn: (...a) => logs.push(['warn', a.join(' ')]), log() {}, error() {} },
+    location: { search: '' },
+    document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } },
+  };
+  win.window = win; win.globalThis = win;
+  vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
+  return { ...win.__ixmapsGlInternals, ixmaps: win.ixmaps, logs };
+}
+
+// objects from the vm have a different prototype chain — compare as JSON
+const plain = v => JSON.parse(JSON.stringify(v));
+const setOf = s => [...s].sort();
+
+test('definition() has real ixmaps-flat\'s shape: type/filter/title inside style', () => {
+  const { ixmaps } = loadEngine();
+  const def = ixmaps.layer('plants')
+    .data({ url: 'p.csv', type: 'csv' })
+    .binding({ geo: 'lat|lon', value: 'mw' })
+    .type('CHART|BUBBLE|SIZE')
+    .style({ colorscheme: ['#f00'], scale: 1.5 })
+    .meta({ tooltip: '{{name}}' })
+    .filter('WHERE "fuel" == "Solar"')
+    .title('Power plants')
+    .definition();
+  assert.deepEqual(plain(def), {
+    layer: 'plants',
+    data: { url: 'p.csv', type: 'csv' },
+    binding: { geo: 'lat|lon', value: 'mw' },
+    style: { colorscheme: ['#f00'], scale: 1.5, type: 'CHART|BUBBLE|SIZE', filter: 'WHERE "fuel" == "Solar"', title: 'Power plants' },
+    meta: { tooltip: '{{name}}' },
+  });
+});
+
+test('.style() and .meta() still replace wholesale; type survives a later .style()', () => {
+  const { ixmaps } = loadEngine();
+  const def = ixmaps.layer('x').type('DOT').style({ a: 1 }).style({ b: 2 }).meta({ m: 1 }).meta({ n: 2 }).definition();
+  assert.deepEqual(plain(def.style), { b: 2, type: 'DOT' });
+  assert.deepEqual(plain(def.meta), { n: 2 });
+});
+
+test('type string → flag set; BUBBLE implies SYMBOL', () => {
+  const { normalizeTheme } = loadEngine();
+  const spec = normalizeTheme({ layer: 'x', style: { type: 'CHART|BUBBLE|VALUES' } });
+  assert.deepEqual(setOf(spec.flags), ['BUBBLE', 'CHART', 'SYMBOL', 'VALUES']);
+  assert.equal(spec.typeStr, 'CHART|BUBBLE|VALUES');
+  assert.deepEqual(setOf(normalizeTheme({ layer: 'x', style: { type: 'CHART|SYMBOL' } }).flags), ['CHART', 'SYMBOL']);
+});
+
+test('no type → empty flag set (no renderer), as before', () => {
+  const { normalizeTheme } = loadEngine();
+  const spec = normalizeTheme({ layer: 'x' });
+  assert.equal(spec.flags.size, 0);
+  assert.equal(spec.typeStr, '');
+  assert.deepEqual(plain(spec.binding), {});
+  assert.deepEqual(plain(spec.style), {});
+  assert.deepEqual(plain(spec.meta), {});
+});
+
+test('binding.geo → binding.position; an explicit position wins', () => {
+  const { normalizeTheme } = loadEngine();
+  assert.equal(normalizeTheme({ layer: 'x', binding: { geo: 'lat|lon' } }).binding.position, 'lat|lon');
+  assert.equal(normalizeTheme({ layer: 'x', binding: { geo: 'a|b', position: 'c|d' } }).binding.position, 'c|d');
+  assert.equal(normalizeTheme({ layer: 'x', binding: { lookup: 'code' } }).binding.position, undefined);
+});
+
+test('style.title → meta.title fallback; an explicit meta.title wins', () => {
+  const { normalizeTheme } = loadEngine();
+  assert.equal(normalizeTheme({ layer: 'x', style: { title: 'T' } }).meta.title, 'T');
+  assert.equal(normalizeTheme({ layer: 'x', style: { title: 'T' }, meta: { title: 'M' } }).meta.title, 'M');
+});
+
+test('type/filter/title are taken out of style; filter is returned separately', () => {
+  const { normalizeTheme } = loadEngine();
+  const spec = normalizeTheme({ layer: 'x', style: { type: 'DOT', filter: 'WHERE a == 1', title: 'T', scale: 2 } });
+  assert.deepEqual(plain(spec.style), { scale: 2 });
+  assert.equal(spec.filter, 'WHERE a == 1');
+  assert.equal(spec.name, 'x');
+});
+
+test('pure: the page\'s own binding/style/meta objects are never mutated', () => {
+  const { normalizeTheme } = loadEngine();
+  const def = { layer: 'x', data: { url: 'u' }, binding: { geo: 'a|b' }, style: { type: 'CHART|BUBBLE', title: 'T' }, meta: {} };
+  const before = JSON.stringify(def);
+  const spec = normalizeTheme(def);
+  assert.equal(JSON.stringify(def), before);
+  assert.notEqual(spec.binding, def.binding);
+  assert.notEqual(spec.style, def.style);
+  assert.notEqual(spec.meta, def.meta);
+  assert.equal(spec.data, def.data, 'data is passed through (it may be a large inline table)');
+});
+
+test('an inert flag logs its "no rendering behavior" note once', () => {
+  const { normalizeTheme, logs } = loadEngine();
+  normalizeTheme({ layer: 'a', style: { type: 'CHART|BUBBLE|SORT' } });
+  normalizeTheme({ layer: 'b', style: { type: 'CHART|BUBBLE|SORT' } });
+  assert.equal(logs.filter(([lvl, m]) => lvl === 'info' && m.includes('"SORT"')).length, 1);
+});
+
+test('the builder path end to end: definition() → normalizeTheme', () => {
+  const { ixmaps, normalizeTheme } = loadEngine();
+  const spec = normalizeTheme(ixmaps.layer('p').binding({ geo: 'lat|lon' }).type('CHART|BUBBLE').title('P').definition());
+  assert.equal(spec.binding.position, 'lat|lon');
+  assert.ok(spec.flags.has('SYMBOL'));
+  assert.equal(spec.meta.title, 'P');
+  assert.deepEqual(plain(spec.style), {});
+});

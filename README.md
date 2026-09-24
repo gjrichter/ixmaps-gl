@@ -49,6 +49,15 @@ Not yet implemented: `CATEGORICAL` choropleths, and the `QUAD`/`BEZIER`/`VECTOR`
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
 
+### Theme normalization
+
+Every layer definition passes through one pure function, `normalizeTheme()`, before any
+renderer sees it. Its input has real ixmaps-flat's theme-definition shape (`{layer, data,
+binding, style: {type, filter, title, …}, meta}` — the same shape as a theme in a flat
+project JSON), and every alias rule lives there: `BUBBLE` implies `SYMBOL`, `geo` is read
+as `position`, `.title()` is the legend-title fallback. It never mutates the page's own
+objects. Unit tests: `cd test && npm run unit`.
+
 ## Quick start
 
 ```html
