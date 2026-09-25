@@ -2572,6 +2572,7 @@
               const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
               const globeCenter = proj.type === 'globe' ? map.getCenter() : null;
               totals = new Array(rt.categoryLabels.length).fill(0);
+              if (rt._rangeClassed) { totals = rangeClassLegendTotals(rt, bbox, globeCenter); maxTotal = Math.max(0, ...totals); order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]); return; }
               // _activeFeatures (set by setFacetFilter/clearFacetFilter,
               // e.g. the country-select dropdown below) is the facet-
               // filtered subset when a filter is active, null otherwise —
@@ -4498,6 +4499,45 @@
     });
   }
 
+  // A range-classed theme's legend numbers, as real ixmaps-flat computes
+  // partsA[i].nCount / nSum (legend.js 644-720): per class the number of
+  // items and the sum of their class values — for CHART themes over the
+  // VISIBLE items as drawn (aggregated cells included, maptheme.js
+  // 16633-16683), for CHOROPLETH over every polygon (distributeValues,
+  // 13790ff). Shown like flat: SUM → the sum (with PERCENT the share of
+  // all, with MEAN the mean), otherwise the count. (flat's remaining case,
+  // no SUM/COUNT on a non-CATEGORICAL theme, divides two undefined values
+  // — shown as the count here instead of NaN.)
+  function rangeClassLegendTotals(rt, bbox, globeCenter) {
+    const n = rt.categoryLabels.length;
+    const count = new Array(n).fill(0), sum = new Array(n).fill(0);
+    const add = (cat, v) => { if (cat == null || cat < 0 || cat >= n) return; count[cat]++; sum[cat] += Number.isFinite(v) ? v : 0; };
+    if (rt.flags.has('CHOROPLETH')) {
+      (rt._activeFeatures || rt.features).forEach(f => {
+        const v = parseFloat(f.properties[rt.binding.value]);
+        add(rt._resolvePartsClass(v), v);
+      });
+    } else if (rt._legendItems) {
+      rt._legendItems.forEach(d => add(d.cat, d.value));
+    } else {
+      (rt._activeFeatures || rt.features).forEach(f => {
+        const c = f.geometry && f.geometry.coordinates;
+        if (!c || typeof c[0] !== 'number') return;
+        const [lng, lat] = c;
+        if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
+        if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
+        const v = parseFloat(f.properties[rt.binding.value]);
+        add(rt._resolvePartsClass(v), v);
+      });
+    }
+    if (rt.flags.has('SUM') && !rt.flags.has('COUNT')) {
+      if (rt.flags.has('PERCENT')) { const all = sum.reduce((a, b) => a + b, 0); return sum.map(x => (all ? 100 * x / all : 0)); }
+      if (rt.flags.has('MEAN')) return sum.map((x, i) => (count[i] ? x / count[i] : 0));
+      return sum;
+    }
+    return count;
+  }
+
   class LayerRuntime {
     // spec: a normalizeTheme() result — never a raw LayerBuilder
     constructor(spec, fc, mapOptions) {
@@ -6325,12 +6365,19 @@
           const nParts = this.categoryLabels.length;
           const classify = v => (stats.breaks ? (this._resolvePartsClass(v, stats.breaks) ?? 0) : 0);
           individual.forEach(d => { d.properties.cat = classify(indValue(d)); });
+          // what the legend's per-class numbers read (flat sums the VISIBLE
+          // charts' class values per class while drawing, maptheme.js
+          // 16633-16683) — set just below, once every item has its class
+          this._legendItems = null;
           groups.forEach(d => {
             const cat = classify(grpValue(d));
             const counts = new Array(nParts).fill(0);
             counts[cat] = d.properties.total;
             d.properties.counts = counts;
+            d.properties.cat = cat;
           });
+          this._legendItems = individual.map(d => ({ cat: d.properties.cat, value: indValue(d) }))
+            .concat(groups.map(d => ({ cat: d.properties.cat, value: grpValue(d) })));
         }
       }
 
@@ -6918,7 +6965,7 @@
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts,
+    fetchLayerData, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;

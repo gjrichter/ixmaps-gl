@@ -261,3 +261,24 @@ test('flatOutlierStats: mean incl. zeros, stddev over the non-zero values around
   // zeros don't shrink the deviation: [0 × 8, 10, 30] → pool stddev 10
   assert.equal(G.flatOutlierStats([0, 0, 0, 0, 0, 0, 0, 0, 10, 30], 3).threshold, 30);
 });
+
+// ---- range-class legend numbers (flat: partsA nCount / nSum, legend.js 644-720)
+test('rangeClassLegendTotals: CHART → the drawn items per class; SUM shows the sum, else the count', () => {
+  const parts = [{ min: 0, max: 5 }, { min: 5, max: 10 }];
+  const rt = f => ({ categoryLabels: ['a', 'b'], flags: flags(...f), features: [], _resolvePartsClass: v => G.resolvePartsClass(v, parts),
+    _legendItems: [{ cat: 0, value: 1 }, { cat: 0, value: 3 }, { cat: 1, value: 8 }] });
+  const bbox = [-180, -85, 180, 85];
+  assert.deepEqual(plain(G.rangeClassLegendTotals(rt(['CHART', 'SUM']), bbox, null)), [4, 8]);
+  assert.deepEqual(plain(G.rangeClassLegendTotals(rt(['CHART', 'SUM', 'PERCENT']), bbox, null)), [100 * 4 / 12, 100 * 8 / 12]);
+  assert.deepEqual(plain(G.rangeClassLegendTotals(rt(['CHART', 'SUM', 'MEAN']), bbox, null)), [2, 8]);
+  assert.deepEqual(plain(G.rangeClassLegendTotals(rt(['CHART', 'SUM', 'COUNT']), bbox, null)), [2, 1], 'SUM|COUNT counts');
+  assert.deepEqual(plain(G.rangeClassLegendTotals(rt(['CHART']), bbox, null)), [2, 1]);
+});
+
+test('rangeClassLegendTotals: CHOROPLETH → every polygon, classed by its value', () => {
+  const parts = [{ min: 0, max: 5 }, { min: 5, max: 10 }];
+  const poly = v => ({ geometry: { type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] }, properties: { v } });
+  const rt = { categoryLabels: ['a', 'b'], flags: flags('CHOROPLETH'), binding: { value: 'v' }, features: [poly(1), poly(6), poly(7), poly('x')],
+    _resolvePartsClass: v => G.resolvePartsClass(v, parts) };
+  assert.deepEqual(plain(G.rangeClassLegendTotals(rt, [0, 0, 0, 0], null)), [1, 2]);
+});
