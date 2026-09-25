@@ -275,10 +275,22 @@ function compareWithFlat(flatThemes, glThemes) {
     const label = `${base}#${i} (flat "${f.flag}")`;
     if (!g) { out.push(`${label}: no gl theme to compare`); continue; }
     if (base === 'FEATURE') continue; // a plain outline/fill layer has no classes
-    const gp = (g.partsA || []).map(p => [p.min, p.max]);
-    if (f.parts.length !== gp.length) out.push(`${label}: flat ${f.parts.length} classes, gl ${gp.length}`);
-    for (let k = 0; k < Math.min(f.parts.length, gp.length); k++) {
-      if (!near(f.parts[k][0], gp[k][0]) || !near(f.parts[k][1], gp[k][1])) out.push(`${label}: class ${k} flat [${f.parts[k]}] gl [${gp[k]}]`);
+    if (/\bDOMINANT\b/.test(f.flag)) {
+      // flat: partsA = one entry per field, items classed by the dominant
+      // field's index — compare the category count and the per-field
+      // statistics that pick the dominant field instead of value ranges
+      const nCat = (g.categoryLabels || []).length;
+      if (f.parts.length !== nCat) out.push(`${label}: flat ${f.parts.length} categories, gl ${nCat}`);
+      for (const [name, fv, gv] of [['mean', f.means, g.dominantMeans], ['min', f.mins, g.dominantMins], ['stddev', f.devs, g.dominantStdDevs]]) {
+        if (!fv || !gv) { out.push(`${label}: per-field ${name} not available (flat ${!!fv}, gl ${!!gv})`); continue; }
+        for (let k = 0; k < Math.max(fv.length, gv.length); k++) if (!near(fv[k], gv[k])) out.push(`${label}: field ${k} ${name} flat ${fv[k]} gl ${gv[k]}`);
+      }
+    } else {
+      const gp = (g.partsA || []).map(p => [p.min, p.max]);
+      if (f.parts.length !== gp.length) out.push(`${label}: flat ${f.parts.length} classes, gl ${gp.length}`);
+      for (let k = 0; k < Math.min(f.parts.length, gp.length); k++) {
+        if (!near(f.parts[k][0], gp[k][0]) || !near(f.parts[k][1], gp[k][1])) out.push(`${label}: class ${k} flat [${f.parts[k]}] gl [${gp[k]}]`);
+      }
     }
     const fc = f.colors.map(hexRgb), gc = g.categoryColorsRgb || [];
     if (fc.length !== gc.length) out.push(`${label}: flat ${fc.length} colors, gl ${gc.length}`);

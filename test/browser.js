@@ -131,6 +131,9 @@
       valueMax: pick('_valueMax'),
       valueMedian: pick('_valueMedian'),
       maxSizeValue: pick('_maxSizeValue'),
+      dominantMeans: pick('_dominantMeans'),
+      dominantMins: pick('_dominantMins'),
+      dominantStdDevs: pick('_dominantStdDevs'),
     };
   }
 
@@ -215,6 +218,11 @@
         parts: (t.partsA || []).map(p => [norm(p.min), norm(p.max)]),
         colors: (t.colorScheme || []).slice(),
         min: norm(t.nMin), max: norm(t.nMax),
+        // per-field statistics DOMINANT classifies by (its partsA is one
+        // entry per field, a count holder — not value ranges)
+        means: t.nMeanA ? norm(Array.from(t.nMeanA)) : null,
+        mins: t.nMinA ? norm(Array.from(t.nMinA)) : null,
+        devs: t.nDeviationA ? norm(Array.from(t.nDeviationA)) : null,
       })) };
     },
   };
