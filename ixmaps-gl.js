@@ -3773,15 +3773,23 @@
   function naturalBreaks(values, nParts) {
     const sorted = values.slice().sort((a, b) => a - b);
     const n = sorted.length;
+    const sample = n > NATURAL_BREAKS_MAX_SAMPLE ? evenStrideSample(sorted, NATURAL_BREAKS_MAX_SAMPLE) : sorted;
 
-    if (n <= nParts) {
-      // not enough distinct items to fill every class -> identity breaks
-      const identity = [sorted[0] || 0].concat(sorted);
+    // Not enough DISTINCT values to fill every class → identity breaks,
+    // one class per distinct value, the surplus classes padded at the top.
+    // The source guards only `n <= nParts` (maptheme.js getNaturalBreaks,
+    // whose own comment says "not enough distinct items"): with fewer
+    // distinct values than classes but more records (ties), the DP below
+    // leaves back-pointers at 0 and the backtrack reads valuesA[-2] —
+    // undefined class bounds, values in no class. Checking distinct values,
+    // as that comment intends, fixes it (flat itself still has the bug).
+    const distinct = sample.filter((v, i) => i === 0 || v !== sample[i - 1]);
+    if (distinct.length <= nParts) {
+      const identity = [distinct[0] || 0].concat(distinct);
       while (identity.length < nParts + 1) identity.push(identity[identity.length - 1]);
       return partsFromBreakValues(identity, nParts, sorted[n - 1]);
     }
 
-    const sample = n > NATURAL_BREAKS_MAX_SAMPLE ? evenStrideSample(sorted, NATURAL_BREAKS_MAX_SAMPLE) : sorted;
     const breakValues = jenksBreakValues(sample, nParts);
     return partsFromBreakValues(breakValues, nParts, sorted[n - 1]);
   }

@@ -46,6 +46,17 @@ test('jenksBreakValues: two clearly separated groups break between them', () => 
   assert.equal(b[2], 12);
 });
 
+test('naturalBreaks: more records than classes but fewer DISTINCT values (ties) → one class per distinct value, padded', () => {
+  // the fixed case: 14 records, 4 distinct values, 5/7 classes (the DP used to read valuesA[-2])
+  const ties = [1, 1, 1, 1, 2, 2, 3, 3, 3, 9, 9, 9, 9, 9];
+  for (const k of [4, 5, 7]) {
+    const b = G.naturalBreaks(ties, k);
+    assert.equal(b.length, k);
+    assert.ok(b.every(p => Number.isFinite(p.min) && Number.isFinite(p.max)), `finite bounds for ${k} classes`);
+    assert.deepEqual([1, 2, 3, 9].map(v => G.resolvePartsClass(v, b)), [0, 1, 2, 3], `each distinct value its own class (${k})`);
+  }
+});
+
 test('naturalBreaks: fewer values than classes → one class per value, padded', () => {
   const b = G.naturalBreaks([4, 2], 4);
   assert.equal(b.length, 4);
@@ -91,15 +102,7 @@ const methods = {
 for (const [mname, fn] of Object.entries(methods)) {
   for (const [dname, values] of Object.entries(datasets)) {
     for (const k of [3, 5, 7]) {
-      // KNOWN ISSUE (found by this test, not changed by the behavior-preserving
-      // extraction): natural breaks with MORE classes than distinct values
-      // yield duplicate classes, and from ~k ≥ distinct+3 undefined bounds
-      // (jenksBreakValues backtracks to valuesA[-2]) — values then fit no
-      // class and are dropped. To be fixed as its own change.
-      const distinct = new Set(values).size;
-      const known = mname === 'natural' && k > distinct
-        ? `known issue: natural breaks with ${k} classes on ${distinct} distinct values (duplicate/undefined class bounds)` : undefined;
-      test(`property: ${mname} / ${dname} / ${k} classes`, { todo: known }, () => {
+      test(`property: ${mname} / ${dname} / ${k} classes`, () => {
         const parts = fn(values, k);
         const lo = Math.min(...values), hi = Math.max(...values);
         assert.equal(parts.length, k);
@@ -119,7 +122,10 @@ for (const [mname, fn] of Object.entries(methods)) {
           const overlap = parts[i].max - parts[i + 1].min;
           if (mname === 'natural') {
             assert.ok(overlap >= 0 && overlap <= 1e-6 + 1e-12, `natural: classes ${i}/${i + 1} overlap only by the tie epsilon`);
-            if (values.includes(parts[i + 1].min)) assert.equal(G.resolvePartsClass(parts[i + 1].min, parts), i, `break value ${parts[i + 1].min} → lower class ${i}`);
+            // (not between empty padded classes — fewer distinct values than
+            // classes: those share their min, and the value belongs to the
+            // first class reaching it, checked above)
+            if (values.includes(parts[i + 1].min) && parts[i + 1].min !== parts[i].min) assert.equal(G.resolvePartsClass(parts[i + 1].min, parts), i, `break value ${parts[i + 1].min} → lower class ${i}`);
           } else {
             assert.ok(overlap <= 1e-12, `${mname}: classes ${i}/${i + 1} do not overlap`);
           }
