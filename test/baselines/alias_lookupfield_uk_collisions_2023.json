@@ -2791,7 +2791,7 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 1 009.00"
+      "0.00 - 1 010.00"
      ],
      "categoryColorsRgb": [
       [
@@ -2802,8 +2802,8 @@
      ],
      "partsA": [
       {
-       "max": 1009,
-       "min": 1
+       "max": 1010.001,
+       "min": 0
       }
      ],
      "rangeClassed": true,
@@ -2837,7 +2837,7 @@
      ],
      "partsA": [
       {
-       "max": 255,
+       "max": 255.00355,
        "min": 1
       }
      ],
@@ -2872,7 +2872,7 @@
      ],
      "partsA": [
       {
-       "max": 7,
+       "max": 7.00107,
        "min": 1
       }
      ],
@@ -2883,15 +2883,15 @@
     }
    ],
    "legend": [
-    "Slight ▾ 1.00 - 1 009.00 0.00 Chart size: 100%",
+    "Slight ▾ 0.00 - 1 010.00 0.00 Chart size: 100%",
     "Serious ▾ 1.00 - 255.00 0.00 Chart size: 100%",
     "Fatal ▾ 1.00 - 7.00 0.00 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>51.41</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-1.51</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>3.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 1 009.00: 4.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 1 009.00: 1 009.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>0.00 - 1 010.00: 4.00</div>",
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>0.00 - 1 010.00: 1 009.00</div>"
     ],
     "serious": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>52.08</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-2.60</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>2.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
@@ -5707,7 +5707,7 @@
      ],
      "partsA": [
       {
-       "max": 338,
+       "max": 338.00438,
        "min": 1
       }
      ],
@@ -5742,7 +5742,7 @@
      ],
      "partsA": [
       {
-       "max": 99,
+       "max": 99.00199,
        "min": 1
       }
      ],
@@ -5777,7 +5777,7 @@
      ],
      "partsA": [
       {
-       "max": 5,
+       "max": 5.00105,
        "min": 1
       }
      ],
@@ -8601,7 +8601,7 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 3 121.00"
+      "0.00 - 3 130.00"
      ],
      "categoryColorsRgb": [
       [
@@ -8612,8 +8612,8 @@
      ],
      "partsA": [
       {
-       "max": 3121,
-       "min": 1
+       "max": 3130.001,
+       "min": 0
       }
      ],
      "rangeClassed": true,
@@ -8636,7 +8636,7 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 631.00"
+      "1.00 - 631.01"
      ],
      "categoryColorsRgb": [
       [
@@ -8647,7 +8647,7 @@
      ],
      "partsA": [
       {
-       "max": 631,
+       "max": 631.00731,
        "min": 1
       }
      ],
@@ -8682,7 +8682,7 @@
      ],
      "partsA": [
       {
-       "max": 16,
+       "max": 16.00116,
        "min": 1
       }
      ],
@@ -8693,20 +8693,20 @@
     }
    ],
    "legend": [
-    "Slight ▾ 1.00 - 3 121.00 0.00 Chart size: 100%",
-    "Serious ▾ 1.00 - 631.00 0.00 Chart size: 100%",
+    "Slight ▾ 0.00 - 3 130.00 0.00 Chart size: 100%",
+    "Serious ▾ 1.00 - 631.01 0.00 Chart size: 100%",
     "Fatal ▾ 1.00 - 16.00 0.00 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>57.23</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-5.41</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>3.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 3 121.00: 10.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 3 121.00: 3 121.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>0.00 - 3 130.00: 10.00</div>",
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>0.00 - 3 130.00: 3 121.00</div>"
     ],
     "serious": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>51.38</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>1.30</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>2.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 631.00: 4.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 631.00: 631.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 631.01: 4.00</div>",
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 631.01: 631.00</div>"
     ],
     "fatal": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>56.42</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-5.47</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>1.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",

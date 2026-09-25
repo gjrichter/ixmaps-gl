@@ -19,23 +19,27 @@ const feat = props => ({ type: 'Feature', properties: props, geometry: null });
 const flags = (...f) => new Set(f);
 
 // ---- range classes
-test('computeRangeClasses: min/max/median, equal interval by default, labels via the formatter', () => {
+test('computeRangeClasses: min/max/median, equal interval by default (flat range rules), labels via the formatter', () => {
   const r = G.computeRangeClasses([1, 2, 3, 4, 5, 'x'].map(v => feat({ v })), { value: 'v' }, { classes: 2 }, flags(), x => `#${x}`);
   assert.equal(r._valueMin, 1);
   assert.equal(r._valueMax, 5);
   assert.equal(r._valueMedian, 3);
-  assert.deepEqual(plain(r.partsA), [{ min: 1, max: 3 }, { min: 3, max: 5 }]);
-  assert.deepEqual(plain(r.categoryLabels), ['#1 - #3', '#3 - #5']);
+  // flat: max 5 → 5.00005 (max/100000), step 2.000025 floored to 2, last max + 0.001
+  assert.deepEqual(plain(r.partsA), [{ min: 1, max: 3 }, { min: 3, max: 5.00105 }]);
+  assert.deepEqual(plain(r.categoryLabels), ['#1 - #3', '#3 - #5.00105']);
   assert.equal(r.categoryColorsRgb.length, 2);
   assert.equal(r._rangeClassed, true);
 });
 
 test('computeRangeClasses: QUANTILE and NATURAL pick their break functions', () => {
   const fs_ = [1, 2, 3, 10, 11, 12].map(v => feat({ v }));
+  // flat: the break algorithm's classes, the last max being the adjusted max
+  const lastMax = 12 + 12 / 100000 + 0.001;
+  const withFlatMax = parts => { parts[parts.length - 1].max = lastMax; return parts; };
   const q = G.computeRangeClasses(fs_, { value: 'v' }, { classes: 2 }, flags('QUANTILE'), String);
-  assert.deepEqual(plain(q.partsA), plain(G.quantileBreaks([1, 2, 3, 10, 11, 12], 2)));
+  assert.deepEqual(plain(q.partsA), withFlatMax(plain(G.quantileBreaks([1, 2, 3, 10, 11, 12], 2))));
   const n = G.computeRangeClasses(fs_, { value: 'v' }, { classes: 2 }, flags('NATURAL'), String);
-  assert.deepEqual(plain(n.partsA), plain(G.naturalBreaks([1, 2, 3, 10, 11, 12], 2)));
+  assert.deepEqual(plain(n.partsA), withFlatMax(plain(G.naturalBreaks([1, 2, 3, 10, 11, 12], 2))));
 });
 
 test('computeRangeClasses: no numeric value at all → null (the runtime keeps nothing)', () => {
@@ -197,4 +201,31 @@ test('GridAggregateIndex: getClusters(bbox, zoom) filters one per-zoom aggregati
   const idx = new G.GridAggregateIndex(10, flags('RECT')).load([pt(9.19, 45.46, 2), pt(9.19001, 45.46001, 3), pt(20, 50, 1)]);
   assert.equal(idx.getClusters([-180, -85, 180, 85], 12).length, 2);
   assert.equal(idx.getClusters([9, 45, 10, 46], 12).length, 1);
+});
+
+// ---- flat's range adjustments (values from real ixmaps-flat via --flat-oracle)
+const near = (a, b) => Math.abs(a - b) < 1e-9;
+test('flatRangeParts: equal interval 0..81 in 5 → steps floored to 16, last max 81.00181 (flat)', () => {
+  const p = G.flatRangeParts([0, 81], 0, 81, 5, flags());
+  assert.deepEqual(plain(p.slice(0, 4)), [{ min: 0, max: 16 }, { min: 16, max: 32 }, { min: 32, max: 48 }, { min: 48, max: 64 }]);
+  assert.equal(p[4].min, 64);
+  assert.ok(near(p[4].max, 81.00181), `last max ${p[4].max}`);
+});
+
+test('flatRangeParts: QUANTILE last max = max + max/100000 + 0.001 (flat: 6.7797 → 6.780768)', () => {
+  const p = G.flatRangeParts([0, 1, 2, 3, 6.7797], 0, 6.7797, 2, flags('QUANTILE'));
+  assert.ok(Math.abs(p[1].max - 6.780768) < 1e-6, `last max ${p[1].max}`);
+});
+
+test('flatRangeParts: a range above 1000 rounds min/max outward to nPreClip and floors the step', () => {
+  // range 4990 → nPreClip 10: min 3 → 0, max 4993 → 5000, step 1000
+  const p = G.flatRangeParts([3, 4993], 3, 4993, 5, flags());
+  assert.deepEqual(plain(p.map(x => x.min)), [0, 1000, 2000, 3000, 4000]);
+  assert.equal(p[4].max, 5000.001);
+});
+
+test('flatRangeParts: all values equal → one class', () => {
+  const p = G.flatRangeParts([1, 1, 1], 1, 1, 5, flags());
+  assert.equal(p.length, 1);
+  assert.equal(p[0].min, 1);
 });

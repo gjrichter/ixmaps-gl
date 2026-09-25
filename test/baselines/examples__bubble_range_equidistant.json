@@ -29,11 +29,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b48ce450d60348b6",
-     "setDigest": "aa5bdad0f322c396",
+     "digest": "ec86a0cca73c1d0b",
+     "setDigest": "db60d5e9cbbeb7df",
      "columnDigests": {
       "getColor": "617c7aa90901e25d",
-      "getIcon": "2262e8627c39893e",
+      "getIcon": "c52f243612c9695e",
       "getPosition": "e9802c3efc030dc0",
       "getSize": "204f0d839df149e2"
      },
@@ -489,11 +489,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "1e2fca422ed89e07",
-     "setDigest": "d1509e401f6dbcf3",
+     "digest": "6278948c710d289f",
+     "setDigest": "e3d4077c35a9a28a",
      "columnDigests": {
       "getColor": "617c7aa90901e25d",
-      "getIcon": "4c080169fb05eebf",
+      "getIcon": "6c41ffe5c43fab7f",
       "getPosition": "e9802c3efc030dc0",
       "getSize": "5ad7a28aaafc8868"
      },
@@ -1645,9 +1645,9 @@
      "categoryLabels": [
       "0 - 16",
       "16 - 32",
-      "32 - 49",
-      "49 - 65",
-      "65 - 81"
+      "32 - 48",
+      "48 - 64",
+      "64 - 81"
      ],
      "categoryColorsRgb": [
       [
@@ -1678,24 +1678,24 @@
      ],
      "partsA": [
       {
-       "max": 16.2,
+       "max": 16,
        "min": 0
       },
       {
-       "max": 32.4,
-       "min": 16.2
+       "max": 32,
+       "min": 16
       },
       {
-       "max": 48.6,
-       "min": 32.4
+       "max": 48,
+       "min": 32
       },
       {
-       "max": 64.8,
-       "min": 48.6
+       "max": 64,
+       "min": 48
       },
       {
-       "max": 81,
-       "min": 64.8
+       "max": 81.00181,
+       "min": 64
       }
      ],
      "rangeClassed": true,
@@ -1710,7 +1710,7 @@
     "AREU": [
      "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,255,178);margin-right:0.4em;vertical-align:middle\"></span>: 0</div>",
      "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,255,178);margin-right:0.4em;vertical-align:middle\"></span>: 2</div>",
-     "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(215,102,94);margin-right:0.4em;vertical-align:middle\"></span>49 - 65: 60</div>"
+     "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(215,102,94);margin-right:0.4em;vertical-align:middle\"></span>48 - 64: 60</div>"
     ]
    },
    "validation": null
@@ -1743,11 +1743,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0fb8f8bea51992c2",
-     "setDigest": "3e2a0e07d2c6162e",
+     "digest": "2cf907e8155c9275",
+     "setDigest": "ca31aa1ce7f1a31f",
      "columnDigests": {
       "getColor": "8ce8255bee1a9225",
-      "getIcon": "d739745abf16fe37",
+      "getIcon": "ae3121803e14cfff",
       "getPosition": "17c2f2ddee26ac98",
       "getSize": "8da56cc945ffd6cb"
      },
@@ -2203,11 +2203,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "350cb51a80a5ac77",
-     "setDigest": "adce3165151cda83",
+     "digest": "ba3b5a13fbfbc138",
+     "setDigest": "bc30064f9b264b1b",
      "columnDigests": {
       "getColor": "8ce8255bee1a9225",
-      "getIcon": "a7991523f0fa2e2b",
+      "getIcon": "c3fc662f37fa0877",
       "getPosition": "17c2f2ddee26ac98",
       "getSize": "954c6f7a56425100"
      },
@@ -3359,9 +3359,9 @@
      "categoryLabels": [
       "0 - 16",
       "16 - 32",
-      "32 - 49",
-      "49 - 65",
-      "65 - 81"
+      "32 - 48",
+      "48 - 64",
+      "64 - 81"
      ],
      "categoryColorsRgb": [
       [
@@ -3392,24 +3392,24 @@
      ],
      "partsA": [
       {
-       "max": 16.2,
+       "max": 16,
        "min": 0
       },
       {
-       "max": 32.4,
-       "min": 16.2
+       "max": 32,
+       "min": 16
       },
       {
-       "max": 48.6,
-       "min": 32.4
+       "max": 48,
+       "min": 32
       },
       {
-       "max": 64.8,
-       "min": 48.6
+       "max": 64,
+       "min": 48
       },
       {
-       "max": 81,
-       "min": 64.8
+       "max": 81.00181,
+       "min": 64
       }
      ],
      "rangeClassed": true,
@@ -3424,7 +3424,7 @@
     "AREU": [
      "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,255,178);margin-right:0.4em;vertical-align:middle\"></span>: 0</div>",
      "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,255,178);margin-right:0.4em;vertical-align:middle\"></span>: 1</div>",
-     "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(235,178,136);margin-right:0.4em;vertical-align:middle\"></span>32 - 49: 47</div>"
+     "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(235,178,136);margin-right:0.4em;vertical-align:middle\"></span>32 - 48: 47</div>"
     ]
    },
    "validation": null
@@ -5122,7 +5122,7 @@
        "min": 63
       },
       {
-       "max": 105,
+       "max": 105.00205,
        "min": 84
       }
      ],

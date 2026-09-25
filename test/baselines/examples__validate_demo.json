@@ -133,8 +133,7 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00"
+      "1.00 - 1.00"
      ],
      "categoryColorsRgb": [
       [
@@ -150,12 +149,8 @@
      ],
      "partsA": [
       {
-       "max": 2,
+       "max": 1.00101,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
       }
      ],
      "rangeClassed": true,
@@ -225,7 +220,7 @@
        "min": 14
       },
       {
-       "max": 20,
+       "max": 20.0012,
        "min": 17
       }
      ],
@@ -507,8 +502,7 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00"
+      "1.00 - 1.00"
      ],
      "categoryColorsRgb": [
       [
@@ -524,12 +518,8 @@
      ],
      "partsA": [
       {
-       "max": 2,
+       "max": 1.00101,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
       }
      ],
      "rangeClassed": true,
@@ -599,7 +589,7 @@
        "min": 14
       },
       {
-       "max": 20,
+       "max": 20.0012,
        "min": 17
       }
      ],
@@ -881,8 +871,7 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00"
+      "1.00 - 1.00"
      ],
      "categoryColorsRgb": [
       [
@@ -898,12 +887,8 @@
      ],
      "partsA": [
       {
-       "max": 2,
+       "max": 1.00101,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
       }
      ],
      "rangeClassed": true,
@@ -973,7 +958,7 @@
        "min": 14
       },
       {
-       "max": 20,
+       "max": 20.0012,
        "min": 17
       }
      ],

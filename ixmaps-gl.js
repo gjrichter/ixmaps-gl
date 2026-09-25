@@ -40,8 +40,8 @@
 // DOT_RADIUS_PX/_buildDotLayers). BUBBLE, DOT, and CHOROPLETH all share
 // the real engine's two coloring modes for a bound value: CATEGORICAL
 // (exact-match classes) and numeric range/class coloring (_buildPartsA —
-// equal-interval by default, or QUANTILE, or NATURAL/Jenks; see
-// _equalIntervalBreaks/_quantileBreaks/_naturalBreaks). A CHOROPLETH
+// equal-interval by default, or QUANTILE, or NATURAL/Jenks, with flat's
+// range adjustments; see flatRangeParts). A CHOROPLETH
 // layer's geometry is borrowed from a FEATURE base layer sharing the same
 // .layer() name (the real engine's own convention), joined via
 // binding.lookup — see joinChoroplethFeatures. HEADTAIL/LOG/POW2/POW3 are
@@ -4099,6 +4099,44 @@
     return colorscheme.length;
   }
 
+  // Real ixmaps-flat's range classes (maptheme.js distributeValues,
+  // 12850-12887, 13006-13062, 13193-13196), around the break algorithms
+  // above:
+  //  - the range is clipped to a precision nPreClip (1, ×10 while the
+  //    range exceeds nPreClip·1000): above 1 the min/max round outward to
+  //    it, otherwise the max is nudged by max/100000;
+  //  - equal-interval steps are floored to nPreClip (0-81 in 5 classes →
+  //    steps of 16, not 16.2);
+  //  - QUANTILE/NATURAL classes take their bounds from the data, the last
+  //    class max is the adjusted max;
+  //  - all values equal → one class;
+  //  - finally the last class max grows by 0.001 ("we test for < max").
+  // Not ported, as gl supports neither: rangecentervalue and INTEGER,
+  // and the 0.01 precision of a 100-field theme.
+  function flatRangeParts(values, nMin, nMax, nParts, flags) {
+    let nRange = nMax - nMin;
+    let nPreClip = 1;
+    while (nRange > nPreClip * 1000) nPreClip *= 10;
+    if (nPreClip > 1) {
+      nMin = Math.floor(nMin / nPreClip) * nPreClip;
+      nMax = Math.ceil(nMax / nPreClip) * nPreClip;
+    } else {
+      nMax += nMax / 100000;
+    }
+    nRange = nMax - nMin;
+    if (nRange === 0 || values.every(v => v === values[0])) nParts = 1;
+    let parts;
+    if (flags.has('QUANTILE')) parts = quantileBreaks(values, nParts);
+    else if (flags.has('NATURAL')) parts = naturalBreaks(values, nParts);
+    else {
+      let nStep = nRange / nParts;
+      if (nStep > nPreClip) nStep = Math.floor(nStep / nPreClip) * nPreClip;
+      parts = new Array(nParts).fill(null).map((_, i) => ({ min: nMin + i * nStep, max: nMin + (i + 1) * nStep }));
+    }
+    parts[parts.length - 1].max = nMax + 0.001;
+    return parts;
+  }
+
   function computeRangeClasses(features, binding, style, flags, formatValue) {
     const out = {};
     const values = features
@@ -4128,9 +4166,8 @@
     const placeholders = new Array(nParts).fill('');
     const colorsRgb = resolveClassColors(style.colorscheme, placeholders, style.classes);
 
-    out.partsA = flags.has('QUANTILE') ? quantileBreaks(values, nParts)
-      : flags.has('NATURAL') ? naturalBreaks(values, nParts)
-      : equalIntervalBreaks(nMin, nMax, nParts);
+    out.partsA = flatRangeParts(values, nMin, nMax, nParts, flags);
+    out._nRangeParts = nParts; // the configured count; partsA may have fewer (all values equal)
 
     out.categoryLabels = out.partsA.map(p => `${formatValue(p.min)} - ${formatValue(p.max)}`);
     out.categoryColorsRgb = colorsRgb;
@@ -4651,9 +4688,6 @@
     _buildPartsA() { const r = computeRangeClasses(this.features, this.binding, this.style, this.flags, v => this._formatTooltipValue(v)); if (r) Object.assign(this, r); }
 
     // pure versions: see "Classification — pure functions" above the class
-    _equalIntervalBreaks(nMin, nMax, nParts) { return equalIntervalBreaks(nMin, nMax, nParts); }
-    _quantileBreaks(values, nParts) { return quantileBreaks(values, nParts); }
-    _naturalBreaks(values, nParts) { return naturalBreaks(values, nParts); }
     _evenStrideSample(sortedValues, sampleSize) { return evenStrideSample(sortedValues, sampleSize); }
     _jenksBreakValues(valuesA, nParts) { return jenksBreakValues(valuesA, nParts); }
     _partsFromBreakValues(breakValues, nParts, trueMax) { return partsFromBreakValues(breakValues, nParts, trueMax); }
@@ -6065,12 +6099,12 @@
       // set), same as the real engine's own order of operations.
       let breaks = null;
       if (this._rangeClassed && totals.length) {
-        const nParts = this.categoryLabels.length;
+        // _nRangeParts, not categoryLabels.length: that follows partsA,
+        // which is a single class at a zoom where all totals are equal
+        const nParts = this._nRangeParts || this.categoryLabels.length;
         let nMin = Infinity, nMax = -Infinity;
         for (const v of totals) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
-        breaks = this.flags.has('QUANTILE') ? this._quantileBreaks(totals, nParts)
-          : this.flags.has('NATURAL') ? this._naturalBreaks(totals, nParts)
-          : this._equalIntervalBreaks(nMin, nMax, nParts);
+        breaks = flatRangeParts(totals, nMin, nMax, nParts, this.flags);
       }
 
       // The theme's own classes follow the aggregated items, as flat's do
@@ -6756,7 +6790,7 @@
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex,
+    resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;

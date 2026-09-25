@@ -1807,7 +1807,7 @@
      "active": null,
      "hidden": true,
      "categoryLabels": [
-      "2 019.00 - 2 021.00"
+      "2 019.00 - 2 021.02"
      ],
      "categoryColorsRgb": [
       [
@@ -1818,7 +1818,7 @@
      ],
      "partsA": [
       {
-       "max": 2021,
+       "max": 2021.02121,
        "min": 2019
       }
      ],
@@ -3696,7 +3696,7 @@
      "active": null,
      "hidden": true,
      "categoryLabels": [
-      "2 019.00 - 2 021.00"
+      "2 019.00 - 2 021.02"
      ],
      "categoryColorsRgb": [
       [
@@ -3707,7 +3707,7 @@
      ],
      "partsA": [
       {
-       "max": 2021,
+       "max": 2021.02121,
        "min": 2019
       }
      ],
@@ -4893,7 +4893,7 @@
      "active": null,
      "hidden": true,
      "categoryLabels": [
-      "2 019.00 - 2 021.00"
+      "2 019.00 - 2 021.02"
      ],
      "categoryColorsRgb": [
       [
@@ -4904,7 +4904,7 @@
      ],
      "partsA": [
       {
-       "max": 2021,
+       "max": 2021.02121,
        "min": 2019
       }
      ],

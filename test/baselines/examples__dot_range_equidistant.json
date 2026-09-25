@@ -29,10 +29,10 @@
       "getFillColor",
       "getPosition"
      ],
-     "digest": "ae1ab67443c5650e",
-     "setDigest": "00f7bf35a757c680",
+     "digest": "61e67b19d5308184",
+     "setDigest": "8ec38e1db532750f",
      "columnDigests": {
-      "getFillColor": "6deb713db01b390e",
+      "getFillColor": "8c2a6c92c57c6982",
       "getPosition": "791ac37ad548f93d"
      },
      "stats": {
@@ -279,11 +279,11 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "0 - 5",
-      "5 - 10",
-      "10 - 14",
-      "14 - 19",
-      "19 - 24"
+      "0 - 4",
+      "4 - 8",
+      "8 - 12",
+      "12 - 16",
+      "16 - 24"
      ],
      "categoryColorsRgb": [
       [
@@ -314,24 +314,24 @@
      ],
      "partsA": [
       {
-       "max": 4.8,
+       "max": 4,
        "min": 0
       },
       {
-       "max": 9.6,
-       "min": 4.8
+       "max": 8,
+       "min": 4
       },
       {
-       "max": 14.4,
-       "min": 9.6
+       "max": 12,
+       "min": 8
       },
       {
-       "max": 19.2,
-       "min": 14.4
+       "max": 16,
+       "min": 12
       },
       {
-       "max": 24,
-       "min": 19.2
+       "max": 24.00124,
+       "min": 16
       }
      ],
      "rangeClassed": true,
@@ -378,10 +378,10 @@
       "getFillColor",
       "getPosition"
      ],
-     "digest": "ae1ab67443c5650e",
-     "setDigest": "00f7bf35a757c680",
+     "digest": "61e67b19d5308184",
+     "setDigest": "8ec38e1db532750f",
      "columnDigests": {
-      "getFillColor": "6deb713db01b390e",
+      "getFillColor": "8c2a6c92c57c6982",
       "getPosition": "791ac37ad548f93d"
      },
      "stats": {
@@ -628,11 +628,11 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "0 - 5",
-      "5 - 10",
-      "10 - 14",
-      "14 - 19",
-      "19 - 24"
+      "0 - 4",
+      "4 - 8",
+      "8 - 12",
+      "12 - 16",
+      "16 - 24"
      ],
      "categoryColorsRgb": [
       [
@@ -663,24 +663,24 @@
      ],
      "partsA": [
       {
-       "max": 4.8,
+       "max": 4,
        "min": 0
       },
       {
-       "max": 9.6,
-       "min": 4.8
+       "max": 8,
+       "min": 4
       },
       {
-       "max": 14.4,
-       "min": 9.6
+       "max": 12,
+       "min": 8
       },
       {
-       "max": 19.2,
-       "min": 14.4
+       "max": 16,
+       "min": 12
       },
       {
-       "max": 24,
-       "min": 19.2
+       "max": 24.00124,
+       "min": 16
       }
      ],
      "rangeClassed": true,
@@ -727,10 +727,10 @@
       "getFillColor",
       "getPosition"
      ],
-     "digest": "ae1ab67443c5650e",
-     "setDigest": "00f7bf35a757c680",
+     "digest": "61e67b19d5308184",
+     "setDigest": "8ec38e1db532750f",
      "columnDigests": {
-      "getFillColor": "6deb713db01b390e",
+      "getFillColor": "8c2a6c92c57c6982",
       "getPosition": "791ac37ad548f93d"
      },
      "stats": {
@@ -977,11 +977,11 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "0 - 5",
-      "5 - 10",
-      "10 - 14",
-      "14 - 19",
-      "19 - 24"
+      "0 - 4",
+      "4 - 8",
+      "8 - 12",
+      "12 - 16",
+      "16 - 24"
      ],
      "categoryColorsRgb": [
       [
@@ -1012,24 +1012,24 @@
      ],
      "partsA": [
       {
-       "max": 4.8,
+       "max": 4,
        "min": 0
       },
       {
-       "max": 9.6,
-       "min": 4.8
+       "max": 8,
+       "min": 4
       },
       {
-       "max": 14.4,
-       "min": 9.6
+       "max": 12,
+       "min": 8
       },
       {
-       "max": 19.2,
-       "min": 14.4
+       "max": 16,
+       "min": 12
       },
       {
-       "max": 24,
-       "min": 19.2
+       "max": 24.00124,
+       "min": 16
       }
      ],
      "rangeClassed": true,
