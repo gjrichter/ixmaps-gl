@@ -1542,7 +1542,7 @@
         style: mapTypeColor ? buildBlankBackgroundStyle(mapTypeColor)
                              : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
         center: [lon, lat],
-        zoom: this._viewZoom || 8,
+        zoom: this._viewZoom != null && this._viewZoom !== '' ? flatToMapLibreZoom(Number(this._viewZoom)) : 8,
         // .attribution(a) (MapBuilder, above) was stored but never read —
         // unlike .legend()'s parallel _legendHtml, which the splash/legend
         // block below actually renders. MapLibre's own AttributionControl
@@ -2116,8 +2116,8 @@
           const c = m.center || {};
           const lat = Number(c.lat), lng = Number(c.lng);
           const z = m.zoom != null && m.zoom !== '' ? Number(m.zoom) : NaN;
-          if (Number.isFinite(lat) && Number.isFinite(lng)) map.jumpTo(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: z } : {}));
-          else if (Number.isFinite(z)) map.jumpTo({ zoom: z });
+          if (Number.isFinite(lat) && Number.isFinite(lng)) map.jumpTo(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: flatToMapLibreZoom(z) } : {}));
+          else if (Number.isFinite(z)) map.jumpTo({ zoom: flatToMapLibreZoom(z) });
         }
         if (m.options && typeof m.options === 'object') Object.assign(builder._engineOptions, m.options);
         if (m.scaleParam && m.scaleParam.normalSizeScale != null) builder._engineOptions.normalSizeScale = m.scaleParam.normalSizeScale;
@@ -2863,7 +2863,7 @@
           const c = (latlonOrOpts && typeof latlonOrOpts === 'object' && !Array.isArray(latlonOrOpts) && latlonOrOpts.center) ? latlonOrOpts.center : latlonOrOpts;
           const z = (latlonOrOpts && typeof latlonOrOpts === 'object' && !Array.isArray(latlonOrOpts) && latlonOrOpts.center) ? latlonOrOpts.zoom : zoom;
           const lngLat = Array.isArray(c) ? [c[1], c[0]] : [c.lng, c.lat];
-          resolvedApi.map.jumpTo(Object.assign({ center: lngLat }, z != null ? { zoom: z } : {}));
+          resolvedApi.map.jumpTo(Object.assign({ center: lngLat }, z != null ? { zoom: flatToMapLibreZoom(Number(z)) } : {}));
         } else {
           builder.view(...args);
         }
@@ -2935,6 +2935,8 @@
   // our real theme's normalsizevalue=50 reproduces the prior tuned slope
   // of 0.25 px/unit exactly (12.5 / 50 = 0.25).
   const NORMAL_RADIUS_PX = 12.5;
+  // A flat-convention zoom (see FLAT_ZOOM_OFFSET), like every zoom a page
+  // passes in; flatToMapLibreZoom() before comparing with the live map.
   const DEFAULT_ZOOM_REFERENCE = 10;
   const DEFAULT_DYNAMIC_SCALE_POW = 3;
   // Near-zero rather than a real floor: for aggressive-size-contrast themes
@@ -2992,22 +2994,42 @@
   const PLOT_ICON_RASTER_SIZE = 100;
   const PLOT_XAXIS_HEIGHT = 12;
 
-  // standard 96dpi Web Mercator scale-denominator constant: scale = this / 2^zoom
+  // standard 96dpi Web Mercator scale-denominator constant for 256px
+  // tiles: scale = this / 2^zoom
   const WEBMERCATOR_SCALE_CONSTANT = 559082264.028;
+
+  // Zoom convention. Real ixmaps-flat's zoom numbers are Leaflet's, on
+  // 256px tiles; MapLibre's world is 512px, so MapLibre zoom z shows what
+  // Leaflet shows at z + 1 on the same screen. Measured with
+  // --flat-oracle: a flat page at view(..., 12.5) spans 0.2486° of
+  // longitude on a 1024px map, gl at MapLibre zoom 12.5 showed half that.
+  // Every zoom crossing the flat API (view(), loadProject/setProjectJSON,
+  // getProjectString) is converted here, and every scale denominator is
+  // computed from the flat zoom of what the map actually shows. Internal
+  // MapLibre zooms (rendering, clustering, grid math) stay MapLibre's.
+  const FLAT_ZOOM_OFFSET = 1;
+  const flatToMapLibreZoom = z => z - FLAT_ZOOM_OFFSET;
+  const mapLibreToFlatZoom = z => z + FLAT_ZOOM_OFFSET;
+  // map scale denominator at a MapLibre zoom (null → the default reference)
+  function scaleDenominatorAt(mapLibreZoom) {
+    const flatZoom = mapLibreZoom == null ? DEFAULT_ZOOM_REFERENCE : mapLibreToFlatZoom(mapLibreZoom);
+    return WEBMERCATOR_SCALE_CONSTANT / Math.pow(2, flatZoom);
+  }
 
   // Map-level .options({objectscaling, normalSizeScale}) — the zoom-anchor
   // half of dynamic symbol scaling (normalsizevalue/sizepow, above, is the
   // *value*-driven half). normalSizeScale is a map SCALE DENOMINATOR (e.g.
   // "259302", meaning 1:259302) at which symbols render at their
   // configured normal size, converted here to the equivalent zoom level
-  // via the same scale formula used for style.aggregation thresholds.
+  // via the same scale formula used for style.aggregation thresholds —
+  // returned as a MapLibre zoom, comparable with the live map's.
   // objectscaling:"dynamic" (the default, matching this engine's prior
   // always-on behavior) means symbols DO scale with zoom; anything else
   // (e.g. "fixed") means they don't — same pixel size at every zoom.
   function resolveZoomReference(mapOptions) {
     const scaleDenominator = parseFloat(mapOptions && mapOptions.normalSizeScale);
-    if (!scaleDenominator) return DEFAULT_ZOOM_REFERENCE;
-    return Math.log2(WEBMERCATOR_SCALE_CONSTANT / scaleDenominator);
+    if (!scaleDenominator) return flatToMapLibreZoom(DEFAULT_ZOOM_REFERENCE);
+    return flatToMapLibreZoom(Math.log2(WEBMERCATOR_SCALE_CONSTANT / scaleDenominator));
   }
 
   // .options({dynamicScalePow}) — the REAL parameter name (confirmed in
@@ -3188,7 +3210,7 @@
   // treatment as the live zoom crosses from one bracket into another.
   function resolveAggregationPx(aggregation, zoom, fallbackPx, refLat) {
     if (!Array.isArray(aggregation) || aggregation.length < 2) return { px: fallbackPx, isMeters: false };
-    const scaleDenominator = WEBMERCATOR_SCALE_CONSTANT / Math.pow(2, zoom == null ? DEFAULT_ZOOM_REFERENCE : zoom);
+    const scaleDenominator = scaleDenominatorAt(zoom);
     let chosenPx = fallbackPx, chosenIsMeters = false;
     for (let i = 0; i + 1 < aggregation.length; i += 2) {
       const ratioMatch = /^1:(\d+(?:\.\d+)?)$/.exec(aggregation[i]);
@@ -3263,7 +3285,7 @@
     const m = /^1:(\d+(?:\.\d+)?)$/.exec(style.valueupper || '');
     if (!m) return false;
     const upperRatio = parseFloat(m[1]);
-    const scaleDenominator = WEBMERCATOR_SCALE_CONSTANT / Math.pow(2, zoom == null ? DEFAULT_ZOOM_REFERENCE : zoom);
+    const scaleDenominator = scaleDenominatorAt(zoom);
     return scaleDenominator > upperRatio;
   }
 
@@ -6673,7 +6695,7 @@
       map: {
         map: proj.type === 'globe' ? 'maps/svg/maps/generic/orthographic.svg' : 'maps/svg/maps/generic/mercator.svg',
         center: { lat: center.lat, lng: center.lng },
-        zoom: map.getZoom()
+        zoom: mapLibreToFlatZoom(map.getZoom())
       }
     });
   }
@@ -6708,6 +6730,7 @@
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors,
+    flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated,
   };
   global.__setFilter = __setFilter;

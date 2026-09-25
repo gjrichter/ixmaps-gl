@@ -49,6 +49,16 @@ Not yet implemented: `CATEGORICAL` choropleths, and the `QUAD`/`BEZIER`/`VECTOR`
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
 
+### Zoom levels
+
+Zoom numbers in the ixmaps API are ixmaps-flat's, i.e. Leaflet's (256px tiles):
+`.view({center, zoom})`, `view([lat, lng], zoom)`, the `zoom` of a project map
+(`loadProject`/`setProjectJSON`) and the `zoom` `getProjectString()` returns. MapLibre
+works on 512px tiles, so ixmaps-gl shows ixmaps zoom *z* at MapLibre zoom *z* − 1 — the
+same area a flat page shows. Map scales (`aggregation` and `valueupper` thresholds,
+`normalSizeScale`) are computed from the zoom that is actually displayed. Code that talks
+to the MapLibre map directly (`api.map.getZoom()`, `jumpTo`) sees MapLibre zooms.
+
 ### Theme normalization
 
 Every layer definition passes through one pure function, `normalizeTheme()`, before any

@@ -4,2618 +4,6 @@
   {
    "label": "initial",
    "view": {
-    "zoom": 1.5,
-    "center": [
-     0,
-     0
-    ],
-    "bearing": 0,
-    "pitch": 0,
-    "projection": "mercator"
-   },
-   "layers": [
-    {
-     "id": "ix-features-countries",
-     "type": "GeoJsonLayer",
-     "count": 257,
-     "constants": {
-      "filled": true,
-      "getFillColor": [
-       28,
-       43,
-       54
-      ],
-      "getLineColor": [
-       42,
-       63,
-       77
-      ],
-      "lineWidthMinPixels": 0.5,
-      "opacity": 1,
-      "stroked": true
-     },
-     "columns": [
-      "~geometry"
-     ],
-     "digest": "2522cab18deb5b7e",
-     "setDigest": "a2f155589d192295",
-     "columnDigests": {
-      "~geometry": "902f1358e52bffb2"
-     },
-     "stats": {},
-     "sample": [
-      [
-       [
-        "MultiPolygon",
-        707,
-        [
-         -57.469742,
-         -63.564269
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        7,
-        [
-         3.084773,
-         -54.399239
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        39,
-        [
-         25.266099,
-         -17.800136
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        43,
-        [
-         31.78345,
-         52.109152
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        13,
-        [
-         -88.909362,
-         15.900571
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        78,
-        [
-         44.808,
-         39.630799
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        172,
-        [
-         13.713536,
-         46.519826
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -2.366657,
-         49.290082
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        8,
-        [
-         -78.290749,
-         18.286408
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         39.204297,
-         32.155991
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        203,
-        [
-         141.380523,
-         41.314919
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         35.945621,
-         4.618187
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        46,
-        [
-         80.247365,
-         42.217998
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        26,
-        [
-         104.438716,
-         10.427181
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        285,
-        [
-         143.370244,
-         -12.607433
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -70.189743,
-         12.581146
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        35,
-        [
-         48.574258,
-         41.827477
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        25,
-        [
-         19.022843,
-         44.854012
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        6,
-        [
-         -59.703102,
-         13.227945
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        27,
-        [
-         92.601907,
-         21.971946
-        ]
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "ix-glow-power_plants-g0",
-     "type": "IconLayer",
-     "count": 33482,
-     "constants": {
-      "billboard": true,
-      "pickable": false,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "168f381b4d7d0a3a",
-     "setDigest": "bad398d43b195284",
-     "columnDigests": {
-      "getColor": "6c43ec7fa65612d4",
-      "getIcon": "ca04754ca31ecffa",
-      "getPosition": "be7de719112d35de",
-      "getSize": "33c6a2316939b7ed"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       -127.2335,
-       127.26
-      ],
-      "getSize": [
-       1.1,
-       87.71658
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -40.2747,
-        -6.0039
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -88.3141,
-        48.9428
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -115.9476,
-        49.669
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -110.7199,
-        50.0378
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        18.1182,
-        49.7088
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.4311,
-        49.2488
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.8273,
-        48.9951
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        13.8468,
-        50.3435
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.9981,
-        48.962
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        14.5048,
-        49.0301
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        16.1614,
-        50.3968
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        14.1163,
-        50.4488
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.3579,
-        49.078
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        13.1598,
-        49.348
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        13.9193,
-        50.6644
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.976,
-        49.9565
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        13.6627,
-        49.9352
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        14.9249,
-        48.9514
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.8044,
-        49.962
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.023,
-        49.1225
-       ],
-       1.1
-      ]
-     ]
-    },
-    {
-     "id": "ix-bubbles-power_plants-g0",
-     "type": "IconLayer",
-     "count": 33482,
-     "constants": {
-      "billboard": true,
-      "pickable": true,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "7a0f24b88c58d249",
-     "setDigest": "cf659c64bf057c6a",
-     "columnDigests": {
-      "getColor": "6c43ec7fa65612d4",
-      "getIcon": "a767a17432833689",
-      "getPosition": "be7de719112d35de",
-      "getSize": "105cfc9a6c5dd822"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       -127.2335,
-       127.26
-      ],
-      "getSize": [
-       0.2,
-       15.948469
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        -40.2747,
-        -6.0039
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        -88.3141,
-        48.9428
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        -115.9476,
-        49.669
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        -110.7199,
-        50.0378
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        18.1182,
-        49.7088
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.4311,
-        49.2488
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.8273,
-        48.9951
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        13.8468,
-        50.3435
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.9981,
-        48.962
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        14.5048,
-        49.0301
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        16.1614,
-        50.3968
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        14.1163,
-        50.4488
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.3579,
-        49.078
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        13.1598,
-        49.348
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        13.9193,
-        50.6644
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.976,
-        49.9565
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        13.6627,
-        49.9352
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        14.9249,
-        48.9514
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.8044,
-        49.962
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.023,
-        49.1225
-       ],
-       0.2
-      ]
-     ]
-    }
-   ],
-   "themes": [
-    {
-     "name": "countries",
-     "flags": [
-      "FEATURE",
-      "SILENT"
-     ],
-     "features": 257,
-     "active": null,
-     "hidden": false
-    },
-    {
-     "name": "power_plants",
-     "flags": [
-      "BUBBLE",
-      "CATEGORICAL",
-      "CHART",
-      "COMPACTLEGEND",
-      "GLOW",
-      "SIZE",
-      "SUM",
-      "SYMBOL"
-     ],
-     "features": 34936,
-     "active": null,
-     "hidden": false,
-     "categoryLabels": [
-      "Solar",
-      "Hydro",
-      "Wind",
-      "Gas",
-      "Coal",
-      "Oil",
-      "Biomass",
-      "Waste",
-      "Nuclear",
-      "Geothermal",
-      "Storage",
-      "Other",
-      "Cogeneration",
-      "Petcoke",
-      "Wave and Tidal"
-     ],
-     "categoryColorsRgb": [
-      [
-       255,
-       214,
-       0
-      ],
-      [
-       41,
-       182,
-       246
-      ],
-      [
-       38,
-       198,
-       218
-      ],
-      [
-       255,
-       152,
-       0
-      ],
-      [
-       141,
-       141,
-       141
-      ],
-      [
-       141,
-       110,
-       99
-      ],
-      [
-       192,
-       202,
-       51
-      ],
-      [
-       109,
-       76,
-       65
-      ],
-      [
-       215,
-       230,
-       0
-      ],
-      [
-       239,
-       83,
-       80
-      ],
-      [
-       0,
-       229,
-       255
-      ],
-      [
-       176,
-       190,
-       197
-      ],
-      [
-       255,
-       112,
-       67
-      ],
-      [
-       78,
-       52,
-       46
-      ],
-      [
-       77,
-       208,
-       225
-      ]
-     ],
-     "maxSizeValue": 22500
-    }
-   ],
-   "legend": [
-    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 868 163 Gas 1 412 599 Hydro 996 552 Nuclear 348 151 Wind 254 309 Oil 210 012 Solar 178 085 Biomass 33 639 Waste 14 432 Geothermal 11 330 Cogeneration 4 048 Other 3 513 Petcoke 2 425 Storage 1 625 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
-   ],
-   "tooltips": {
-    "countries": [
-     "",
-     "",
-     ""
-    ],
-    "power_plants": [
-     "<b>Tauá</b><br>Brazil<br>Solar<br>1 MW",
-     "<b>Échalot</b><br>France<br>Wind<br>16 MW",
-     "<b>Three Gorges Dam</b><br>China<br>Hydro<br>22 500 MW"
-    ]
-   },
-   "validation": null
-  },
-  {
-   "label": "zoom+1",
-   "view": {
-    "zoom": 2.5,
-    "center": [
-     0,
-     0
-    ],
-    "bearing": 0,
-    "pitch": 0,
-    "projection": "mercator"
-   },
-   "layers": [
-    {
-     "id": "ix-features-countries",
-     "type": "GeoJsonLayer",
-     "count": 257,
-     "constants": {
-      "filled": true,
-      "getFillColor": [
-       28,
-       43,
-       54
-      ],
-      "getLineColor": [
-       42,
-       63,
-       77
-      ],
-      "lineWidthMinPixels": 0.5,
-      "opacity": 1,
-      "stroked": true
-     },
-     "columns": [
-      "~geometry"
-     ],
-     "digest": "2522cab18deb5b7e",
-     "setDigest": "a2f155589d192295",
-     "columnDigests": {
-      "~geometry": "902f1358e52bffb2"
-     },
-     "stats": {},
-     "sample": [
-      [
-       [
-        "MultiPolygon",
-        707,
-        [
-         -57.469742,
-         -63.564269
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        7,
-        [
-         3.084773,
-         -54.399239
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        39,
-        [
-         25.266099,
-         -17.800136
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        43,
-        [
-         31.78345,
-         52.109152
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        13,
-        [
-         -88.909362,
-         15.900571
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        78,
-        [
-         44.808,
-         39.630799
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        172,
-        [
-         13.713536,
-         46.519826
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -2.366657,
-         49.290082
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        8,
-        [
-         -78.290749,
-         18.286408
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         39.204297,
-         32.155991
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        203,
-        [
-         141.380523,
-         41.314919
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         35.945621,
-         4.618187
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        46,
-        [
-         80.247365,
-         42.217998
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        26,
-        [
-         104.438716,
-         10.427181
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        285,
-        [
-         143.370244,
-         -12.607433
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -70.189743,
-         12.581146
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        35,
-        [
-         48.574258,
-         41.827477
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        25,
-        [
-         19.022843,
-         44.854012
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        6,
-        [
-         -59.703102,
-         13.227945
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        27,
-        [
-         92.601907,
-         21.971946
-        ]
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "ix-glow-power_plants-g0",
-     "type": "IconLayer",
-     "count": 5594,
-     "constants": {
-      "billboard": true,
-      "pickable": false,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "ee36beba5cbf95fa",
-     "setDigest": "c02d6863c41fcc9c",
-     "columnDigests": {
-      "getColor": "492c2f409f3a2413",
-      "getIcon": "b8b41da90de6fa48",
-      "getPosition": "0da23fc910a591a4",
-      "getSize": "083ae89ee03f24de"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       -63.6072,
-       61.8417
-      ],
-      "getSize": [
-       1.1,
-       69.315432
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -40.2747,
-        -6.0039
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.4977,
-        40.424
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        18.1241,
-        40.1175
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        16.2339,
-        41.2196
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.9003,
-        40.5047
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.8533,
-        41.8212
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.8484,
-        41.8304
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.6087,
-        41.482
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        18.145,
-        40.0983
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        18.2162,
-        40.1989
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        15.4122,
-        41.471
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        18.1396,
-        40.1137
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.4247,
-        40.4117
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.5873,
-        40.3175
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        18.2334,
-        40.1563
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        11.6104,
-        42.4067
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        18.3629,
-        40.0366
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.8699,
-        40.4667
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.8579,
-        40.4069
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        17.7149,
-        40.6359
-       ],
-       1.1
-      ]
-     ]
-    },
-    {
-     "id": "ix-bubbles-power_plants-g0",
-     "type": "IconLayer",
-     "count": 5594,
-     "constants": {
-      "billboard": true,
-      "pickable": true,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "1be317a70aca192c",
-     "setDigest": "ddd9ded8419aa94e",
-     "columnDigests": {
-      "getColor": "492c2f409f3a2413",
-      "getIcon": "20fc114d22dbbfb7",
-      "getPosition": "0da23fc910a591a4",
-      "getSize": "5ed8769f29f9c405"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       -63.6072,
-       61.8417
-      ],
-      "getSize": [
-       0.2,
-       12.602806
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        -40.2747,
-        -6.0039
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.4977,
-        40.424
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        18.1241,
-        40.1175
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        16.2339,
-        41.2196
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.9003,
-        40.5047
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.8533,
-        41.8212
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.8484,
-        41.8304
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.6087,
-        41.482
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        18.145,
-        40.0983
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        18.2162,
-        40.1989
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        15.4122,
-        41.471
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        18.1396,
-        40.1137
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.4247,
-        40.4117
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.5873,
-        40.3175
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        18.2334,
-        40.1563
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        11.6104,
-        42.4067
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        18.3629,
-        40.0366
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.8699,
-        40.4667
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.8579,
-        40.4069
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,214,0-0.85-none-0",
-        "url": "#15b07e07:1534",
-        "width": 48
-       },
-       [
-        17.7149,
-        40.6359
-       ],
-       0.2
-      ]
-     ]
-    }
-   ],
-   "themes": [
-    {
-     "name": "countries",
-     "flags": [
-      "FEATURE",
-      "SILENT"
-     ],
-     "features": 257,
-     "active": null,
-     "hidden": false
-    },
-    {
-     "name": "power_plants",
-     "flags": [
-      "BUBBLE",
-      "CATEGORICAL",
-      "CHART",
-      "COMPACTLEGEND",
-      "GLOW",
-      "SIZE",
-      "SUM",
-      "SYMBOL"
-     ],
-     "features": 34936,
-     "active": null,
-     "hidden": false,
-     "categoryLabels": [
-      "Solar",
-      "Hydro",
-      "Wind",
-      "Gas",
-      "Coal",
-      "Oil",
-      "Biomass",
-      "Waste",
-      "Nuclear",
-      "Geothermal",
-      "Storage",
-      "Other",
-      "Cogeneration",
-      "Petcoke",
-      "Wave and Tidal"
-     ],
-     "categoryColorsRgb": [
-      [
-       255,
-       214,
-       0
-      ],
-      [
-       41,
-       182,
-       246
-      ],
-      [
-       38,
-       198,
-       218
-      ],
-      [
-       255,
-       152,
-       0
-      ],
-      [
-       141,
-       141,
-       141
-      ],
-      [
-       141,
-       110,
-       99
-      ],
-      [
-       192,
-       202,
-       51
-      ],
-      [
-       109,
-       76,
-       65
-      ],
-      [
-       215,
-       230,
-       0
-      ],
-      [
-       239,
-       83,
-       80
-      ],
-      [
-       0,
-       229,
-       255
-      ],
-      [
-       176,
-       190,
-       197
-      ],
-      [
-       255,
-       112,
-       67
-      ],
-      [
-       78,
-       52,
-       46
-      ],
-      [
-       77,
-       208,
-       225
-      ]
-     ],
-     "maxSizeValue": 22500
-    }
-   ],
-   "legend": [
-    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Gas 332 965 Hydro 215 161 Oil 105 168 Coal 102 089 Wind 32 495 Solar 18 930 Biomass 14 126 Nuclear 13 400 Geothermal 1 526 Other 1 268 Waste 696 Storage 0 Cogeneration 0 Petcoke 0 Wave and Tidal 0 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
-   ],
-   "tooltips": {
-    "countries": [
-     "",
-     "",
-     ""
-    ],
-    "power_plants": [
-     "<b>Tauá</b><br>Brazil<br>Solar<br>1 MW",
-     "<b>Serra do Espinhaço</b><br>Brazil<br>Wind<br>18 MW",
-     "<b>Simon Bolivar (Guri)</b><br>Venezuela<br>Hydro<br>8 851 MW"
-    ]
-   },
-   "validation": null
-  },
-  {
-   "label": "zoom-1",
-   "view": {
     "zoom": 0.584962,
     "center": [
      0,
@@ -2873,13 +261,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "16965b5db4c435dc",
-     "setDigest": "6bec0c0f99afd677",
+     "digest": "d402f3973de7d1fd",
+     "setDigest": "597411b292115d7e",
      "columnDigests": {
       "getColor": "c75c20354a3992e1",
       "getIcon": "c777707761125a34",
       "getPosition": "5f5412bb5178486f",
-      "getSize": "22c15674acfcae00"
+      "getSize": "cb2b6262e9f230bb"
      },
      "stats": {
       "getColor": [
@@ -2892,7 +280,7 @@
       ],
       "getSize": [
        1.1,
-       71.000887
+       89.455512
       ]
      },
      "sample": [
@@ -3333,13 +721,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "1529071a3c9ba6de",
-     "setDigest": "f465c849e166e2c4",
+     "digest": "d5daa208c4494b7c",
+     "setDigest": "f51662ffe38d855e",
      "columnDigests": {
       "getColor": "c75c20354a3992e1",
       "getIcon": "0e2e6c212a3123c6",
       "getPosition": "5f5412bb5178486f",
-      "getSize": "ffb5f02aa860784a"
+      "getSize": "09b78ec7341127db"
      },
      "stats": {
       "getColor": [
@@ -3352,7 +740,2619 @@
       ],
       "getSize": [
        0.2,
-       12.909252
+       16.264639
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        138.5882,
+        -34.9453
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        133.8682,
+        -23.7685
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -40.2747,
+        -6.0039
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -88.3141,
+        48.9428
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -115.9476,
+        49.669
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -110.7199,
+        50.0378
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        18.1182,
+        49.7088
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        17.4311,
+        49.2488
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        15.8273,
+        48.9951
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.8468,
+        50.3435
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        15.9981,
+        48.962
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        14.5048,
+        49.0301
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        16.1614,
+        50.3968
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        14.1163,
+        50.4488
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        17.3579,
+        49.078
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.1598,
+        49.348
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.9193,
+        50.6644
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        17.976,
+        49.9565
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.6627,
+        49.9352
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        14.9249,
+        48.9514
+       ],
+       0.2
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "countries",
+     "flags": [
+      "FEATURE",
+      "SILENT"
+     ],
+     "features": 257,
+     "active": null,
+     "hidden": false
+    },
+    {
+     "name": "power_plants",
+     "flags": [
+      "BUBBLE",
+      "CATEGORICAL",
+      "CHART",
+      "COMPACTLEGEND",
+      "GLOW",
+      "SIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 34936,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Solar",
+      "Hydro",
+      "Wind",
+      "Gas",
+      "Coal",
+      "Oil",
+      "Biomass",
+      "Waste",
+      "Nuclear",
+      "Geothermal",
+      "Storage",
+      "Other",
+      "Cogeneration",
+      "Petcoke",
+      "Wave and Tidal"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       214,
+       0
+      ],
+      [
+       41,
+       182,
+       246
+      ],
+      [
+       38,
+       198,
+       218
+      ],
+      [
+       255,
+       152,
+       0
+      ],
+      [
+       141,
+       141,
+       141
+      ],
+      [
+       141,
+       110,
+       99
+      ],
+      [
+       192,
+       202,
+       51
+      ],
+      [
+       109,
+       76,
+       65
+      ],
+      [
+       215,
+       230,
+       0
+      ],
+      [
+       239,
+       83,
+       80
+      ],
+      [
+       0,
+       229,
+       255
+      ],
+      [
+       176,
+       190,
+       197
+      ],
+      [
+       255,
+       112,
+       67
+      ],
+      [
+       78,
+       52,
+       46
+      ],
+      [
+       77,
+       208,
+       225
+      ]
+     ],
+     "maxSizeValue": 22500
+    }
+   ],
+   "legend": [
+    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 965 541 Gas 1 493 051 Hydro 1 053 160 Nuclear 407 912 Wind 263 054 Oil 261 879 Solar 188 253 Biomass 34 281 Waste 14 749 Geothermal 12 688 Cogeneration 4 048 Other 3 613 Petcoke 2 425 Storage 1 712 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
+   ],
+   "tooltips": {
+    "countries": [
+     "",
+     "",
+     ""
+    ],
+    "power_plants": [
+     "<b>Adelaide Showgrounds</b><br>Australia<br>Solar<br>1 MW",
+     "<b>Tennant Creek</b><br>Australia<br>Gas<br>17 MW",
+     "<b>Three Gorges Dam</b><br>China<br>Hydro<br>22 500 MW"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 1.584962,
+    "center": [
+     0,
+     0
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-countries",
+     "type": "GeoJsonLayer",
+     "count": 257,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       28,
+       43,
+       54
+      ],
+      "getLineColor": [
+       42,
+       63,
+       77
+      ],
+      "lineWidthMinPixels": 0.5,
+      "opacity": 1,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "2522cab18deb5b7e",
+     "setDigest": "a2f155589d192295",
+     "columnDigests": {
+      "~geometry": "902f1358e52bffb2"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        707,
+        [
+         -57.469742,
+         -63.564269
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         3.084773,
+         -54.399239
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        39,
+        [
+         25.266099,
+         -17.800136
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        43,
+        [
+         31.78345,
+         52.109152
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        13,
+        [
+         -88.909362,
+         15.900571
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        78,
+        [
+         44.808,
+         39.630799
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        172,
+        [
+         13.713536,
+         46.519826
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        5,
+        [
+         -2.366657,
+         49.290082
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         -78.290749,
+         18.286408
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        35,
+        [
+         39.204297,
+         32.155991
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        203,
+        [
+         141.380523,
+         41.314919
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        35,
+        [
+         35.945621,
+         4.618187
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        46,
+        [
+         80.247365,
+         42.217998
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        26,
+        [
+         104.438716,
+         10.427181
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        285,
+        [
+         143.370244,
+         -12.607433
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        5,
+        [
+         -70.189743,
+         12.581146
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        35,
+        [
+         48.574258,
+         41.827477
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        25,
+        [
+         19.022843,
+         44.854012
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        6,
+        [
+         -59.703102,
+         13.227945
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        27,
+        [
+         92.601907,
+         21.971946
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-glow-power_plants-g0",
+     "type": "IconLayer",
+     "count": 31674,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "20e3e32444425605",
+     "setDigest": "184c8ec96430ff03",
+     "columnDigests": {
+      "getColor": "f3877c786b7a055c",
+      "getIcon": "903c2ea142dcf8dd",
+      "getPosition": "a7ded36658490154",
+      "getSize": "e8647973510bf850"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       -119.9914,
+       119.9921
+      ],
+      "getSize": [
+       1.1,
+       112.706883
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -40.2747,
+        -6.0039
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -88.3141,
+        48.9428
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -115.9476,
+        49.669
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -110.7199,
+        50.0378
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        18.1182,
+        49.7088
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        17.4311,
+        49.2488
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        15.8273,
+        48.9951
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.8468,
+        50.3435
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        15.9981,
+        48.962
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        14.5048,
+        49.0301
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        16.1614,
+        50.3968
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        14.1163,
+        50.4488
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        17.3579,
+        49.078
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.1598,
+        49.348
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.9193,
+        50.6644
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        17.976,
+        49.9565
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.6627,
+        49.9352
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        14.9249,
+        48.9514
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        15.8044,
+        49.962
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        15.023,
+        49.1225
+       ],
+       1.1
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-power_plants-g0",
+     "type": "IconLayer",
+     "count": 31674,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "05ab97809b4704d9",
+     "setDigest": "9b90792118fce3f5",
+     "columnDigests": {
+      "getColor": "f3877c786b7a055c",
+      "getIcon": "b5809633f6a8d7e0",
+      "getPosition": "a7ded36658490154",
+      "getSize": "15d0db615943ecf0"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       -119.9914,
+       119.9921
+      ],
+      "getSize": [
+       0.2,
+       20.492161
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -40.2747,
+        -6.0039
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -88.3141,
+        48.9428
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -115.9476,
+        49.669
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        -110.7199,
+        50.0378
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        18.1182,
+        49.7088
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        17.4311,
+        49.2488
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        15.8273,
+        48.9951
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.8468,
+        50.3435
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        15.9981,
+        48.962
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        14.5048,
+        49.0301
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        16.1614,
+        50.3968
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        14.1163,
+        50.4488
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        17.3579,
+        49.078
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.1598,
+        49.348
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.9193,
+        50.6644
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        17.976,
+        49.9565
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        13.6627,
+        49.9352
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        14.9249,
+        48.9514
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        15.8044,
+        49.962
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,214,0-0.85-none-0",
+        "url": "#15b07e07:1534",
+        "width": 48
+       },
+       [
+        15.023,
+        49.1225
+       ],
+       0.2
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "countries",
+     "flags": [
+      "FEATURE",
+      "SILENT"
+     ],
+     "features": 257,
+     "active": null,
+     "hidden": false
+    },
+    {
+     "name": "power_plants",
+     "flags": [
+      "BUBBLE",
+      "CATEGORICAL",
+      "CHART",
+      "COMPACTLEGEND",
+      "GLOW",
+      "SIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 34936,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Solar",
+      "Hydro",
+      "Wind",
+      "Gas",
+      "Coal",
+      "Oil",
+      "Biomass",
+      "Waste",
+      "Nuclear",
+      "Geothermal",
+      "Storage",
+      "Other",
+      "Cogeneration",
+      "Petcoke",
+      "Wave and Tidal"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       214,
+       0
+      ],
+      [
+       41,
+       182,
+       246
+      ],
+      [
+       38,
+       198,
+       218
+      ],
+      [
+       255,
+       152,
+       0
+      ],
+      [
+       141,
+       141,
+       141
+      ],
+      [
+       141,
+       110,
+       99
+      ],
+      [
+       192,
+       202,
+       51
+      ],
+      [
+       109,
+       76,
+       65
+      ],
+      [
+       215,
+       230,
+       0
+      ],
+      [
+       239,
+       83,
+       80
+      ],
+      [
+       0,
+       229,
+       255
+      ],
+      [
+       176,
+       190,
+       197
+      ],
+      [
+       255,
+       112,
+       67
+      ],
+      [
+       78,
+       52,
+       46
+      ],
+      [
+       77,
+       208,
+       225
+      ]
+     ],
+     "maxSizeValue": 22500
+    }
+   ],
+   "legend": [
+    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 663 575 Gas 1 331 219 Hydro 945 883 Nuclear 318 574 Wind 233 319 Oil 203 375 Solar 171 274 Biomass 32 365 Waste 13 255 Geothermal 7 658 Cogeneration 4 040 Other 3 499 Petcoke 2 397 Storage 1 603 Wave and Tidal 298 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
+   ],
+   "tooltips": {
+    "countries": [
+     "",
+     "",
+     ""
+    ],
+    "power_plants": [
+     "<b>Tauá</b><br>Brazil<br>Solar<br>1 MW",
+     "<b>Le Lamentin</b><br>France<br>Solar<br>15 MW",
+     "<b>Three Gorges Dam</b><br>China<br>Hydro<br>22 500 MW"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 0.584962,
+    "center": [
+     0,
+     0
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-countries",
+     "type": "GeoJsonLayer",
+     "count": 257,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       28,
+       43,
+       54
+      ],
+      "getLineColor": [
+       42,
+       63,
+       77
+      ],
+      "lineWidthMinPixels": 0.5,
+      "opacity": 1,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "2522cab18deb5b7e",
+     "setDigest": "a2f155589d192295",
+     "columnDigests": {
+      "~geometry": "902f1358e52bffb2"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        707,
+        [
+         -57.469742,
+         -63.564269
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         3.084773,
+         -54.399239
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        39,
+        [
+         25.266099,
+         -17.800136
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        43,
+        [
+         31.78345,
+         52.109152
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        13,
+        [
+         -88.909362,
+         15.900571
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        78,
+        [
+         44.808,
+         39.630799
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        172,
+        [
+         13.713536,
+         46.519826
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        5,
+        [
+         -2.366657,
+         49.290082
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         -78.290749,
+         18.286408
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        35,
+        [
+         39.204297,
+         32.155991
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        203,
+        [
+         141.380523,
+         41.314919
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        35,
+        [
+         35.945621,
+         4.618187
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        46,
+        [
+         80.247365,
+         42.217998
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        26,
+        [
+         104.438716,
+         10.427181
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        285,
+        [
+         143.370244,
+         -12.607433
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        5,
+        [
+         -70.189743,
+         12.581146
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        35,
+        [
+         48.574258,
+         41.827477
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        25,
+        [
+         19.022843,
+         44.854012
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        6,
+        [
+         -59.703102,
+         13.227945
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        27,
+        [
+         92.601907,
+         21.971946
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-glow-power_plants-g0",
+     "type": "IconLayer",
+     "count": 34935,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "d402f3973de7d1fd",
+     "setDigest": "597411b292115d7e",
+     "columnDigests": {
+      "getColor": "c75c20354a3992e1",
+      "getIcon": "c777707761125a34",
+      "getPosition": "5f5412bb5178486f",
+      "getSize": "cb2b6262e9f230bb"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       -179.9777,
+       179.3887
+      ],
+      "getSize": [
+       1.1,
+       89.455512
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        138.5882,
+        -34.9453
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        133.8682,
+        -23.7685
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -40.2747,
+        -6.0039
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -88.3141,
+        48.9428
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -115.9476,
+        49.669
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        -110.7199,
+        50.0378
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        18.1182,
+        49.7088
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        17.4311,
+        49.2488
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        15.8273,
+        48.9951
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.8468,
+        50.3435
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        15.9981,
+        48.962
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        14.5048,
+        49.0301
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        16.1614,
+        50.3968
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        14.1163,
+        50.4488
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        17.3579,
+        49.078
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.1598,
+        49.348
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.9193,
+        50.6644
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        17.976,
+        49.9565
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.6627,
+        49.9352
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        14.9249,
+        48.9514
+       ],
+       1.1
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-power_plants-g0",
+     "type": "IconLayer",
+     "count": 34935,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "d5daa208c4494b7c",
+     "setDigest": "f51662ffe38d855e",
+     "columnDigests": {
+      "getColor": "c75c20354a3992e1",
+      "getIcon": "0e2e6c212a3123c6",
+      "getPosition": "5f5412bb5178486f",
+      "getSize": "09b78ec7341127db"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       -179.9777,
+       179.3887
+      ],
+      "getSize": [
+       0.2,
+       16.264639
       ]
      },
      "sample": [

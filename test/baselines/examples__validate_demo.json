@@ -4,7 +4,7 @@
   {
    "label": "initial",
    "view": {
-    "zoom": 13,
+    "zoom": 12,
     "center": [
      9.19,
      45.46
@@ -378,7 +378,7 @@
   {
    "label": "zoom+1",
    "view": {
-    "zoom": 14,
+    "zoom": 13,
     "center": [
      9.19,
      45.46
@@ -752,7 +752,7 @@
   {
    "label": "zoom-1",
    "view": {
-    "zoom": 12,
+    "zoom": 11,
     "center": [
      9.19,
      45.46
