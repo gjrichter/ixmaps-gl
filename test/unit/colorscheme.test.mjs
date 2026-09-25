@@ -1,0 +1,73 @@
+// Generated color sweeps (["N", cc1, cc2, nParam1, nParam2]) against the
+// REAL ixmaps-flat colorscheme.js, run in node from a sibling
+// ixmaps-flat checkout (skipped when it is missing), plus the
+// style.classes rewrite of maptheme.js parseStyle.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ENGINE = path.resolve(HERE, '..', '..', 'ixmaps-gl.js');
+const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location: { search: '' },
+  document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
+win.window = win; win.globalThis = win;
+vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
+const G = win.__ixmapsGlInternals;
+const plain = v => JSON.parse(JSON.stringify(v));
+
+const FLAT_COLORSCHEME = [
+  path.resolve(HERE, '..', '..', '..', 'ixmaps-flat', 'maps', 'svg', 'js-source', 'colorscheme.js'),
+  path.join(os.homedir(), 'Repositories/GitHub/ixmaps-flat/maps/svg/js-source/colorscheme.js'),
+].find(p => fs.existsSync(p));
+let flat = null;
+if (FLAT_COLORSCHEME) {
+  const w = { console: { log() {} } };
+  w.window = w;
+  vm.runInNewContext(fs.readFileSync(FLAT_COLORSCHEME, 'utf8'), w, { filename: 'colorscheme.js' });
+  flat = w.ColorScheme;
+}
+const hex = rgb => '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
+
+const ends = [['#ffffb2', '#bd0026'], ['#CFFF33', '#9A5195'], ['#0000ff', '#ff0000'], ['#102030', '#304050'], ['#000000', '#ffffff']];
+const params = [[], ['linear'], ['dynamic'], ['2colors'], ['3colors', '#94CCC8'], ['3low', '#94CCC8'], ['3high', '#94CCC8'],
+  ['2low'], ['2high'], ['2narrow'], ['3narrow', '#ffffff'], ['2wide'], ['3wide', '#808080'], ['#fd8d3c', '#f03b20'],
+  ['#00ff00'], ['auto'], ['dynamic', 'shift'], ['3colors', 'warm'], ['2colors', 'cold']];
+
+test('flatColorSweep reproduces real colorscheme.js for every mode, 1-25 steps', { skip: !flat && 'no sibling ixmaps-flat checkout' }, () => {
+  let compared = 0;
+  for (const [cc1, cc2] of ends) for (const [p1, p2] of params) for (let n = 1; n <= 25; n++) {
+    const want = Array.from(flat.createColorScheme(cc1, cc2, n, p1, p2), c => String(c).toLowerCase());
+    // flat's hex encoding breaks for a channel outside 0-255 (the narrow/
+    // wide sweeps can overshoot); gl clamps — compare only valid output
+    if (!want.every(c => /^#[0-9a-f]{6}$/.test(c))) continue;
+    const got = Array.from(G.flatColorSweep(cc1, cc2, n, p1, p2), c => hex(Array.from(c)));
+    assert.deepEqual(got, want, `${cc1}→${cc2} n=${n} ${p1 || ''} ${p2 || ''}`);
+    compared++;
+  }
+  assert.ok(compared > 2000, `compared ${compared} sweeps`);
+});
+
+test('flatColorSweep: named ixmaps palettes are not ported → null', () => {
+  assert.equal(G.flatColorSweep('viridis', undefined, 5), null);
+  assert.equal(G.flatColorSweep('Spectrum', 'dark', 5), null);
+});
+
+test('applyClassesToColorScheme: explicit list → [classes, first, last, cs[3], cs[4]] (parseStyle)', () => {
+  assert.deepEqual(plain(G.applyClassesToColorScheme(['#a', '#b', '#c', '#d', '#e'], '5')), [5, '#a', '#e', '#d', '#e']);
+  assert.deepEqual(plain(G.applyClassesToColorScheme(['#a'], 3)), [3, '#a', '#a']);
+  assert.deepEqual(plain(G.applyClassesToColorScheme(['21', '#a', '#b', '3colors', '#c'], 7)), [7, '#a', '#b', '3colors', '#c']);
+  assert.deepEqual(plain(G.applyClassesToColorScheme(['#a', '#b'], undefined)), ['#a', '#b'], 'no classes → unchanged');
+});
+
+test('resolveClassColors: classes on an explicit list gives flat\'s generated sweep, not the listed colors', () => {
+  const cs = ['#ffffb2', '#fecc5c', '#fd8d3c', '#f03b20', '#bd0026'];
+  const labels = new Array(5).fill('');
+  assert.deepEqual(plain(G.resolveClassColors(cs, labels)).map(hex), cs, 'without classes: the list itself');
+  const swept = plain(G.resolveClassColors(cs, labels, '5'));
+  assert.deepEqual(swept[1], [248, 229, 164], 'dynamic sweep #ffffb2 → #bd0026, step 1 (flat: [248,229,164])');
+  if (flat) assert.deepEqual(swept.map(hex), Array.from(flat.createColorScheme('#ffffb2', '#bd0026', 5, '#fd8d3c', '#f03b20'), c => c.toLowerCase()));
+});

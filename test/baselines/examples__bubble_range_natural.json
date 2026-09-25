@@ -29,11 +29,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "e5bfb2640fcf0fdd",
-     "setDigest": "94808c694ccd8417",
+     "digest": "45c084a82418467e",
+     "setDigest": "38073aea8d97120f",
      "columnDigests": {
       "getColor": "a98504874b266f2e",
-      "getIcon": "6da9fffc7d85f7eb",
+      "getIcon": "282a9e7f504ca443",
       "getPosition": "b93045a0dc7d44a5",
       "getSize": "df797da0742fb3a7"
      },
@@ -489,11 +489,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "6804447a78201ba0",
-     "setDigest": "e4ac207faf07c0f3",
+     "digest": "c590a47b2a43c64e",
+     "setDigest": "af1285bb0eeb701a",
      "columnDigests": {
       "getColor": "a98504874b266f2e",
-      "getIcon": "a5b4b48c24a8901e",
+      "getIcon": "859fbee92eee3c28",
       "getPosition": "b93045a0dc7d44a5",
       "getSize": "38fb64d063a76efd"
      },
@@ -1657,19 +1657,19 @@
        178
       ],
       [
-       254,
-       204,
-       92
+       248,
+       229,
+       164
       ],
       [
-       253,
-       141,
-       60
+       235,
+       178,
+       136
       ],
       [
-       240,
-       59,
-       32
+       215,
+       102,
+       94
       ],
       [
        189,
@@ -1744,11 +1744,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "544e66d5bfadd557",
-     "setDigest": "7b3689564c4db5ff",
+     "digest": "b2f794cc42cbfb35",
+     "setDigest": "8fe98d459e729e5f",
      "columnDigests": {
       "getColor": "16c0cc4da7effb59",
-      "getIcon": "5387cd26d8565a70",
+      "getIcon": "ccf26823ad9b0f2a",
       "getPosition": "a9a57e3986571314",
       "getSize": "b567624d718c3928"
      },
@@ -2204,11 +2204,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "c75152bbc9695a5b",
-     "setDigest": "d94bc99a3153ef02",
+     "digest": "f289e2ad165029fb",
+     "setDigest": "eb58cb0efb96506e",
      "columnDigests": {
       "getColor": "16c0cc4da7effb59",
-      "getIcon": "0886179744ae0b63",
+      "getIcon": "f22dbbcd2a8d4369",
       "getPosition": "a9a57e3986571314",
       "getSize": "17ce5cd05b879771"
      },
@@ -3372,19 +3372,19 @@
        178
       ],
       [
-       254,
-       204,
-       92
+       248,
+       229,
+       164
       ],
       [
-       253,
-       141,
-       60
+       235,
+       178,
+       136
       ],
       [
-       240,
-       59,
-       32
+       215,
+       102,
+       94
       ],
       [
        189,
@@ -3459,11 +3459,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "da9cd0d9e69be7f1",
-     "setDigest": "89aa20d840854385",
+     "digest": "9d4ff5d12fa5b29c",
+     "setDigest": "0ee991e076f9b7b2",
      "columnDigests": {
       "getColor": "e12cc981ade94c67",
-      "getIcon": "9da237483d38df4b",
+      "getIcon": "7cdb78015c464a32",
       "getPosition": "018f46b4f6b22560",
       "getSize": "04ea6e31c9b7cc98"
      },
@@ -3919,11 +3919,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "5333ab9fc297dc38",
-     "setDigest": "021659502ec7c910",
+     "digest": "0de8a909c05a08bb",
+     "setDigest": "d04386a93f4f5caa",
      "columnDigests": {
       "getColor": "e12cc981ade94c67",
-      "getIcon": "1e5a76fdeb6b6c7d",
+      "getIcon": "b3cb96403e9877df",
       "getPosition": "018f46b4f6b22560",
       "getSize": "003043c8b673b1f0"
      },
@@ -5087,19 +5087,19 @@
        178
       ],
       [
-       254,
-       204,
-       92
+       248,
+       229,
+       164
       ],
       [
-       253,
-       141,
-       60
+       235,
+       178,
+       136
       ],
       [
-       240,
-       59,
-       32
+       215,
+       102,
+       94
       ],
       [
        189,

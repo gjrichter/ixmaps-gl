@@ -29,11 +29,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "c69ba0fb22e9136e",
-     "setDigest": "48e53c00b8a4be31",
+     "digest": "5e7920ca7ec13633",
+     "setDigest": "2f2a6c52e79c31e7",
      "columnDigests": {
       "getColor": "2dde0f51b468a56c",
-      "getIcon": "31fd187759783f4d",
+      "getIcon": "46d543a9bfdda3b0",
       "getPosition": "292d3713edd4496c",
       "getSize": "e5755f0de6e9ba2b"
      },
@@ -489,11 +489,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "f75bed0a69c859fb",
-     "setDigest": "1969def100faaef2",
+     "digest": "689780cc7f317c5a",
+     "setDigest": "fec3b98329eb534d",
      "columnDigests": {
       "getColor": "2dde0f51b468a56c",
-      "getIcon": "ad6e5bb0d59dbafd",
+      "getIcon": "0549a65f7239ce68",
       "getPosition": "292d3713edd4496c",
       "getSize": "8fba7c3f5317772f"
      },
@@ -1663,29 +1663,29 @@
        177
       ],
       [
-       110,
+       109,
        166,
-       132
+       131
       ],
       [
        165,
-       167,
+       166,
        86
       ],
       [
-       221,
+       220,
        167,
-       41
+       40
       ],
       [
-       209,
-       133,
-       39
+       208,
+       132,
+       38
       ],
       [
-       197,
+       196,
        98,
-       37
+       36
       ],
       [
        185,
@@ -1767,11 +1767,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "43e68392d932385d",
-     "setDigest": "57756688497540d2",
+     "digest": "4e1ce9d1013ee092",
+     "setDigest": "5c85817af75bfa0d",
      "columnDigests": {
       "getColor": "c282875a0bac343b",
-      "getIcon": "1ed96347b3ceeb19",
+      "getIcon": "e4e286cf3e775cd7",
       "getPosition": "1159324fc469693d",
       "getSize": "d8244240cba86e2e"
      },
@@ -2227,11 +2227,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "9934f865a9a6e959",
-     "setDigest": "7c875dd379ee6c61",
+     "digest": "a57c1aca3d7ea311",
+     "setDigest": "48b2753e1ff49221",
      "columnDigests": {
       "getColor": "c282875a0bac343b",
-      "getIcon": "dfc40035db15caff",
+      "getIcon": "b5b1e8a37ca0a74b",
       "getPosition": "1159324fc469693d",
       "getSize": "13fab13566d473db"
      },
@@ -3401,29 +3401,29 @@
        177
       ],
       [
-       110,
+       109,
        166,
-       132
+       131
       ],
       [
        165,
-       167,
+       166,
        86
       ],
       [
-       221,
+       220,
        167,
-       41
+       40
       ],
       [
-       209,
-       133,
-       39
+       208,
+       132,
+       38
       ],
       [
-       197,
+       196,
        98,
-       37
+       36
       ],
       [
        185,
@@ -3505,11 +3505,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "794dfa03c6d5809e",
-     "setDigest": "fb28f09b4d5177a6",
+     "digest": "389875bf7ee4098b",
+     "setDigest": "5960daa529f02e72",
      "columnDigests": {
       "getColor": "9f2749307ff49016",
-      "getIcon": "4185d17cff681711",
+      "getIcon": "249d5515af136963",
       "getPosition": "af340e5485fbae2c",
       "getSize": "e9434480eea3d65a"
      },
@@ -3965,11 +3965,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "30590241bb4d0cb6",
-     "setDigest": "7fc13e007d56fd1f",
+     "digest": "ad679dbcc1476a15",
+     "setDigest": "d99a85020f63110f",
      "columnDigests": {
       "getColor": "9f2749307ff49016",
-      "getIcon": "46f30bfbacd6bc6b",
+      "getIcon": "3a94eec85144957a",
       "getPosition": "af340e5485fbae2c",
       "getSize": "7c831859410c78e2"
      },
@@ -5139,29 +5139,29 @@
        177
       ],
       [
-       110,
+       109,
        166,
-       132
+       131
       ],
       [
        165,
-       167,
+       166,
        86
       ],
       [
-       221,
+       220,
        167,
-       41
+       40
       ],
       [
-       209,
-       133,
-       39
+       208,
+       132,
+       38
       ],
       [
-       197,
+       196,
        98,
-       37
+       36
       ],
       [
        185,

@@ -29,11 +29,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "2ebb30f7ea2987fb",
-     "setDigest": "f166acae7f45b3a8",
+     "digest": "12193c93da1a5527",
+     "setDigest": "eeea7fffbe1b8f45",
      "columnDigests": {
       "getColor": "a98504874b266f2e",
-      "getIcon": "bd357a53ac89fcf1",
+      "getIcon": "61849323e237f7a4",
       "getPosition": "b93045a0dc7d44a5",
       "getSize": "df797da0742fb3a7"
      },
@@ -489,11 +489,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "ada9c8d216f5cb8a",
-     "setDigest": "831696d7e5bee77c",
+     "digest": "605814ea525c43b7",
+     "setDigest": "6b2a4f6938256794",
      "columnDigests": {
       "getColor": "a98504874b266f2e",
-      "getIcon": "2602f59af0a1a799",
+      "getIcon": "de46cc7985d1f5d9",
       "getPosition": "b93045a0dc7d44a5",
       "getSize": "38fb64d063a76efd"
      },
@@ -1656,19 +1656,19 @@
        178
       ],
       [
-       254,
-       204,
-       92
+       248,
+       229,
+       164
       ],
       [
-       253,
-       141,
-       60
+       235,
+       178,
+       136
       ],
       [
-       240,
-       59,
-       32
+       215,
+       102,
+       94
       ],
       [
        189,
@@ -1743,11 +1743,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "2ad078e7e0232e40",
-     "setDigest": "3af71e3ae05945d0",
+     "digest": "02b866083a6bd589",
+     "setDigest": "954c47db45bbfd2a",
      "columnDigests": {
       "getColor": "16c0cc4da7effb59",
-      "getIcon": "292a5ae6422a3cf6",
+      "getIcon": "d326f720f6c5eeea",
       "getPosition": "a9a57e3986571314",
       "getSize": "b567624d718c3928"
      },
@@ -2203,11 +2203,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "707a3271799a6537",
-     "setDigest": "19bb65cd29e241f1",
+     "digest": "084226e4ff1abb2c",
+     "setDigest": "d636010993fcd31d",
      "columnDigests": {
       "getColor": "16c0cc4da7effb59",
-      "getIcon": "7be3d57a49aa6e54",
+      "getIcon": "3ee5f3914cd8a73d",
       "getPosition": "a9a57e3986571314",
       "getSize": "17ce5cd05b879771"
      },
@@ -3370,19 +3370,19 @@
        178
       ],
       [
-       254,
-       204,
-       92
+       248,
+       229,
+       164
       ],
       [
-       253,
-       141,
-       60
+       235,
+       178,
+       136
       ],
       [
-       240,
-       59,
-       32
+       215,
+       102,
+       94
       ],
       [
        189,
@@ -3424,7 +3424,7 @@
     "AREU": [
      "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,255,178);margin-right:0.4em;vertical-align:middle\"></span>: 0</div>",
      "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,255,178);margin-right:0.4em;vertical-align:middle\"></span>: 2</div>",
-     "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(253,141,60);margin-right:0.4em;vertical-align:middle\"></span>10 - 14: 35</div>"
+     "<b>BUBBLE · range (equal-interval)</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(235,178,136);margin-right:0.4em;vertical-align:middle\"></span>10 - 14: 35</div>"
     ]
    },
    "validation": null
@@ -3457,11 +3457,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b26bb65beed1ead8",
-     "setDigest": "b22d069e9ab73a69",
+     "digest": "9fe309b772aded20",
+     "setDigest": "938e0385ad3f6ff8",
      "columnDigests": {
       "getColor": "e12cc981ade94c67",
-      "getIcon": "2b724b4a29aaa374",
+      "getIcon": "6bc04b8844eb632c",
       "getPosition": "018f46b4f6b22560",
       "getSize": "04ea6e31c9b7cc98"
      },
@@ -3917,11 +3917,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "e9929d4b0185b8c6",
-     "setDigest": "38207695f9511008",
+     "digest": "5230e3650a72b32d",
+     "setDigest": "3a9e734adf63e69b",
      "columnDigests": {
       "getColor": "e12cc981ade94c67",
-      "getIcon": "fc4fe41ae2eafe96",
+      "getIcon": "03821466bf9f9684",
       "getPosition": "018f46b4f6b22560",
       "getSize": "003043c8b673b1f0"
      },
@@ -5084,19 +5084,19 @@
        178
       ],
       [
-       254,
-       204,
-       92
+       248,
+       229,
+       164
       ],
       [
-       253,
-       141,
-       60
+       235,
+       178,
+       136
       ],
       [
-       240,
-       59,
-       32
+       215,
+       102,
+       94
       ],
       [
        189,

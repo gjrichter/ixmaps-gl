@@ -698,27 +698,126 @@
   const FALLBACK_PALETTE = ['#e6194b', '#3cb44b', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c'];
 
   // .style({colorscheme: ["N", cc1, cc2, nParam1, nParam2]}) — the real
-  // engine's diverging N-step sweep (colorscheme.js:123 createColorScheme
-  // / _circ_createColorScheme, confirmed by direct source read against
-  // the dev tree): a 3-anchor cc1 -> cc3 -> cc2 sweep, where cc3 is taken
-  // from POSITION 5 (nParam2) and cc2 (position 3) is ALWAYS exact at the
-  // final step. nParam1 selects the split fraction between the two
-  // halves: "3colors"/"auto" (default) is a symmetric 50/50 split,
-  // "3high" is 23/77 (expands the cc3->cc2 half), "3low" is 75/25 (the
-  // mirror) — verified against colorscheme.js:394-457. A bare color in
-  // the nParam1 slot (no keyword) hits the exact same branch as
-  // "3colors"/"auto" in the real source — so ["N",cc1,cc2,cc3] and
-  // ["N",cc1,cc2,"3colors",cc3] are computationally identical there, not
-  // two different features; this port only implements the 5-element form
-  // actually used (values/DOMINANT_COLORS-style configs always pass
-  // nParam1 explicitly).
-  //
-  // Only this ONE real colorscheme.js code path is ported — not the rest
-  // of its API surface (2-anchor sweeps, other nParam1/nParam2 shapes),
-  // matching what real configs ported into this engine so far actually
-  // use.
-  function isDivergingColorScheme(colorscheme) {
-    return Array.isArray(colorscheme) && colorscheme.length === 5 && /^\d+$/.test(String(colorscheme[0]));
+  // engine's generated N-step color sweep: a colorscheme whose first
+  // element is a number is never used as a color list, it is handed to
+  // ColorScheme.createColorScheme(cs[1], cs[2], N, cs[3], cs[4])
+  // (maptheme.js:12575-12606). flatColorSweep ports its core,
+  // colorscheme.js _circ_createColorScheme (verified against real
+  // ixmaps-flat with --flat-oracle), branch for branch:
+  //  - N < 2 → [cc2]; N < 3 → [cc1, cc2];
+  //  - middle color cc3: '#FFFDE0', or 0.55·(cc1+cc2) when either end is
+  //    bright (mean channel > 127), or 1.5·(cc1+cc2) for 'auto'; a COLOR
+  //    in the nParam1 slot becomes cc3 and the mode 'auto', a color in
+  //    the nParam2 slot becomes cc3 (so ["N",a,b,c] and
+  //    ["N",a,b,"3colors",c] both take c as the middle color);
+  //  - 'linear': cc1 → cc2 in equal steps;
+  //  - 'dynamic', and 'auto' when either end is bright: cc1 → cc2 with
+  //    triangular-number steps (low range expanded) — cc3 is IGNORED
+  //    there, so a bright 3-anchor sweep never reaches its middle color;
+  //  - 'auto'/'2colors'/'3colors' (split 0.5), '2low'/'3low' (0.75),
+  //    '2high'/'3high' (0.23): cc1 → cc3 → cc2, last step exactly cc2;
+  //  - '2narrow'/'3narrow', '2wide'/'3wide': cumulative-step variants.
+  // Channels are FLOORED, as the source's own hex encoding does
+  // (hh.charAt(Math.floor(v / 16)) + hh.charAt(v % 16) truncates the
+  // fraction), and clamped to 0-255. Flat's named palettes (spectrum,
+  // viridis, tableau, ...) are not ported: null, the caller's fallback.
+  const FLAT_PALETTE_SCHEMES = /^(spectrum|spectral|office|mineral|minaral|pastel|harvest|fruit|kmeansp?|pimp|intense|fluo|tableau(10|20)?|viridis|plasma|magma)$/i;
+  const FLAT_SWEEP_MODES = ['auto', 'linear', 'dynamic', '2colors', '2wide', '2narrow', '2low', '2high', '3colors', '3wide', '3narrow', '3low', '3high'];
+
+  function isGeneratedColorScheme(colorscheme) {
+    return Array.isArray(colorscheme) && colorscheme.length > 0 && !isNaN(Number(colorscheme[0])) && String(colorscheme[0]).trim() !== '';
+  }
+
+  // colorscheme.js _circ_getHexaColor, to RGB: '#rrggbb', 'rgb(r,g,b)',
+  // else this engine's named-color table
+  function flatColorRgb(c, fallback) {
+    if (typeof c !== 'string') return fallback;
+    const m = c.match(/(?:rgb|rgba)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (m) return [+m[1], +m[2], +m[3]];
+    return c[0] === '#' ? hexToRgb(c) : hexOrNamedToRgb(c);
+  }
+
+  function flatColorSweep(cc1, cc2, nSteps, nParam1, nParam2) {
+    if (typeof cc1 === 'string' && FLAT_PALETTE_SCHEMES.test(cc1)) return null;
+    nSteps = Number(nSteps);
+    const [r1, g1, b1] = flatColorRgb(cc1, [255, 255, 255]);
+    const [r2, g2, b2] = flatColorRgb(cc2, [0, 0, 0]);
+    if (nSteps < 2) return [[r2, g2, b2]];
+    if (nSteps < 3) return [[r1, g1, b1], [r2, g2, b2]];
+    const bright = (r1 + g1 + b1) / 3 > 127 || (r2 + g2 + b2) / 3 > 127;
+    let c3 = [255, 253, 224]; // '#FFFDE0'
+    if (bright) c3 = [Math.min(255, (r1 + r2) * 0.55), Math.min(255, (g1 + g2) * 0.55), Math.min(255, (b1 + b2) * 0.55)].map(Math.floor);
+    if (nParam1 === 'auto' || nParam2 === 'auto') {
+      c3 = [Math.min(255, (r1 + r2) * 1.5), Math.min(255, (g1 + g2) * 1.5), Math.min(255, (b1 + b2) * 1.5)].map(Math.floor);
+      nParam1 = nParam2 = 'auto';
+    }
+    if (nParam1 && !FLAT_SWEEP_MODES.includes(nParam1)) { c3 = flatColorRgb(nParam1, [255, 253, 224]); nParam1 = 'auto'; }
+    if (!nParam1) nParam1 = 'auto';
+    if (nParam2 && nParam2 !== 'shift') {
+      if (FLAT_SWEEP_MODES.includes(nParam2)) nParam1 = nParam2;
+      else if (nParam2 === 'warm') c3 = [255, 253, 216];
+      else if (nParam2 === 'cold') c3 = [255, 255, 255];
+      else c3 = flatColorRgb(nParam2, [255, 253, 224]);
+    }
+    const [r3, g3, b3] = c3;
+    const ch = v => Math.max(0, Math.min(255, Math.floor(v)));
+    const px = (r, g, b) => [ch(r), ch(g), ch(b)];
+    const out = [];
+    if (nParam1 === 'linear') {
+      const dr = (r2 - r1) / (nSteps - 1), dg = (g2 - g1) / (nSteps - 1), db = (b2 - b1) / (nSteps - 1);
+      for (let i = 0; i < nSteps; i++) out.push(px(r1 + dr * i, g1 + dg * i, b1 + db * i));
+      return out;
+    }
+    if (nParam1 === 'dynamic' || (nParam1 === 'auto' && bright)) {
+      const shift = nParam2 === 'shift' ? 1 : 0;
+      let nn = 0;
+      for (let i = 0; i < nSteps + shift; i++) nn += i;
+      const dr = (r2 - r1) / nn, dg = (g2 - g1) / nn, db = (b2 - b1) / nn;
+      nn = 0;
+      for (let i = shift; i < nSteps + shift; i++) { nn += i; out.push(px(r1 + dr * nn, g1 + dg * nn, b1 + db * nn)); }
+      return out;
+    }
+    let rr = r1, gg = g1, bb = b1;
+    if (['auto', '2colors', '2high', '2low', '3colors', '3high', '3low'].includes(nParam1)) {
+      const nPart1 = /low$/.test(nParam1) ? 0.75 : /high$/.test(nParam1) ? 0.23 : 0.5;
+      const nPart2 = 1 - nPart1;
+      const d1 = (nSteps - 1) * nPart1, d2 = (nSteps - 1) * nPart2;
+      const dr1 = (r3 - r1) / d1, dg1 = (g3 - g1) / d1, db1 = (b3 - b1) / d1;
+      const dr2 = (r3 - r2) / d2, dg2 = (g3 - g2) / d2, db2 = (b3 - b2) / d2;
+      for (let i = 0; i < nSteps - 1; i++) {
+        out.push(px(rr, gg, bb));
+        if (i < d1) { rr += dr1; gg += dg1; bb += db1; } else { rr -= dr2; gg -= dg2; bb -= db2; }
+        rr = Math.max(Math.min(255, rr), 0); gg = Math.max(Math.min(255, gg), 0); bb = Math.max(Math.min(255, bb), 0);
+      }
+    } else { // '2narrow'/'3narrow', '2wide'/'3wide'
+      const wide = /wide$/.test(nParam1);
+      let nn = 0;
+      for (let i = 0; i < nSteps / 2; i++) nn += i;
+      if (wide) nn -= Math.floor((nSteps / 2 - Math.floor(nSteps / 2)) * nSteps / 2);
+      const dr1 = (r3 - r1) / (nn + 1), dg1 = (g3 - g1) / (nn + 1), db1 = (b3 - b1) / (nn + 1);
+      const dr2 = (r3 - r2) / (nn + 1), dg2 = (g3 - g2) / (nn + 1), db2 = (b3 - b2) / (nn + 1);
+      for (let i = 0; i < nSteps - 1; i++) {
+        if (i < nSteps / 2) { const k = wide ? nSteps / 2 - 1 - i : i; rr += dr1 * k; gg += dg1 * k; bb += db1 * k; }
+        else { const k = wide ? i - nSteps / 2 : nSteps - 1 - i; rr -= dr2 * k; gg -= dg2 * k; bb -= db2 * k; }
+        out.push(px(rr, gg, bb));
+      }
+    }
+    out.push([r2, g2, b2]); // the last step is exactly cc2
+    return out;
+  }
+
+  // style.classes rewrites the colorscheme before it is generated
+  // (maptheme.js parseStyle, :1253): an explicit color list becomes
+  // [classes, first, last, cs[3], cs[4]] — slots 3/4 keep the ORIGINAL
+  // list's 4th/5th colors, which the sweep then reads as nParam1/nParam2
+  // — and a generated one just gets classes as its N. So `classes` on an
+  // explicit list yields a generated sweep, not the listed colors.
+  function applyClassesToColorScheme(colorscheme, classes) {
+    if (classes === undefined || classes === null || classes === '' || !Array.isArray(colorscheme) || !colorscheme.length) return colorscheme;
+    const cs = colorscheme.slice();
+    if (isNaN(Number(cs[0]))) { const last = cs[cs.length - 1]; cs[1] = cs[0]; cs[2] = last; }
+    cs[0] = Number(classes);
+    return cs;
   }
 
   // Deliberate deviation from the real source: real colorscheme.js takes
@@ -728,35 +827,17 @@
   // calling in, precisely because of this). This port always uses
   // `labels.length` as the step count instead — the one value that
   // actually has to match categoryColorsRgb's indexing in this engine —
-  // and only uses the array's leading element to DETECT this colorscheme
-  // shape (isDivergingColorScheme above), never as the real step count.
-  function divergingColorSweep(cc1Hex, cc2Hex, cc3Hex, nParam1, nSteps) {
-    const nPart1 = nParam1 === '3high' ? 0.23 : nParam1 === '3low' ? 0.75 : 0.5;
-    const nPart2 = 1 - nPart1;
-    const [r1, g1, b1] = hexToRgb(cc1Hex);
-    const [r2, g2, b2] = hexToRgb(cc2Hex);
-    const [r3, g3, b3] = hexToRgb(cc3Hex);
-    const denom1 = (nSteps - 1) * nPart1 || 1;
-    const denom2 = (nSteps - 1) * nPart2 || 1;
-    const dr1 = (r3 - r1) / denom1, dg1 = (g3 - g1) / denom1, db1 = (b3 - b1) / denom1;
-    const dr2 = (r3 - r2) / denom2, dg2 = (g3 - g2) / denom2, db2 = (b3 - b2) / denom2;
-    const threshold = (nSteps - 1) * nPart1;
-    const colors = [];
-    let rr = r1, gg = g1, bb = b1;
-    for (let i = 0; i < nSteps - 1; i++) {
-      colors.push([Math.round(rr), Math.round(gg), Math.round(bb)]);
-      if (i < threshold) { rr += dr1; gg += dg1; bb += db1; }
-      else { rr -= dr2; gg -= dg2; bb -= db2; }
-    }
-    colors.push([r2, g2, b2]); // forced exact final step, matching real source
-    return colors;
-  }
-
-  function resolveColorScheme(colorscheme, labels) {
+  // and only uses the array's leading element to DETECT a generated
+  // colorscheme (isGeneratedColorScheme above), never as the step count.
+  function resolveColorScheme(colorscheme, labels, classes) {
     if (!colorscheme) return labels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]);
-    if (isDivergingColorScheme(colorscheme)) {
+    colorscheme = applyClassesToColorScheme(colorscheme, classes);
+    if (isGeneratedColorScheme(colorscheme)) {
       const [, cc1, cc2, nParam1, nParam2] = colorscheme;
-      return divergingColorSweep(cc1, cc2, nParam2, nParam1, labels.length);
+      const sweep = flatColorSweep(cc1, cc2, labels.length, nParam1, nParam2);
+      if (sweep) return sweep;
+      console.warn(`[ixmaps-gl] colorscheme "${cc1}" (a named ixmaps palette) is not supported, using the fallback palette`);
+      return null;
     }
     if (Array.isArray(colorscheme)) {
       if (colorscheme.length === 1 && colorscheme[0] === 'none') return null; // no fill (FEATURES outline-only)
@@ -788,8 +869,8 @@
   // of the three call sites (_prepare's CATEGORICAL branch, _buildPartsA,
   // _prepareDominant) doing its own `.map(hexToRgb)` that would break on
   // the diverging sweep's own output.
-  function resolveClassColors(colorscheme, labels) {
-    const resolved = resolveColorScheme(colorscheme, labels);
+  function resolveClassColors(colorscheme, labels, classes) {
+    const resolved = resolveColorScheme(colorscheme, labels, classes);
     return (resolved || labels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]))
       .map(c => Array.isArray(c) ? c : hexToRgb(c));
   }
@@ -3789,7 +3870,7 @@
       ? style.values.map(String) : fields;
     out.categoryLabels = explicit;
     out.categoryDisplayLabels = explicit;
-    out.categoryColorsRgb = resolveClassColors(style.colorscheme, out.categoryLabels);
+    out.categoryColorsRgb = resolveClassColors(style.colorscheme, out.categoryLabels, style.classes);
     
     return out;
   }
@@ -4030,7 +4111,7 @@
     out._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
     const nParts = parseInt(style.classes, 10) || colorSchemeClassCount(style.colorscheme) || DEFAULT_RANGE_CLASSES;
     const placeholders = new Array(nParts).fill('');
-    const colorsRgb = resolveClassColors(style.colorscheme, placeholders);
+    const colorsRgb = resolveClassColors(style.colorscheme, placeholders, style.classes);
 
     out.partsA = flags.has('QUANTILE') ? quantileBreaks(values, nParts)
       : flags.has('NATURAL') ? naturalBreaks(values, nParts)
@@ -4386,7 +4467,7 @@
         // a function like __setColors that pattern-matches category NAMES
         // ("investimento"/"tamponamento"/...) needs the display text, not
         // a raw numeric code it could never match against.
-        this.categoryColorsRgb = resolveClassColors(this.style.colorscheme, this.categoryDisplayLabels);
+        this.categoryColorsRgb = resolveClassColors(this.style.colorscheme, this.categoryDisplayLabels, this.style.classes);
       } else if (this.binding.value) {
         // real engine's OTHER coloring mode (maptheme.js distributeValues,
         // partsA): a NUMERIC bound value, not CATEGORICAL, is classed into
@@ -6626,6 +6707,7 @@
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
+    flatColorSweep, applyClassesToColorScheme, resolveClassColors,
     resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated,
   };
   global.__setFilter = __setFilter;

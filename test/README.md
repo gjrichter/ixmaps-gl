@@ -98,7 +98,9 @@ node run.mjs --flat-oracle --page quantile # only pairs whose page paths contain
 Loads each `flat` page of a `{flat, gl}` pair on the **real ixmaps-flat engine**, reads the
 classes flat computed from its own theme objects (`map.Themes.themesA`: breaks, colors,
 value range) and compares them with the gl twin's baseline, pairing themes by base type in
-definition order. Writes `out/flat-oracle.md`. It is a report of differences (exit 0), not a
+definition order. For DOMINANT themes, whose `partsA` in flat is one count entry per field
+rather than value classes, it compares the category count and the per-field mean, minimum
+and standard deviation (`nMeanA`/`nMinA`/`nDeviationA`) instead. Writes `out/flat-oracle.md`. It is a report of differences (exit 0), not a
 pass/fail test: each difference is decided on and fixed as its own change. The flat engine is
 recorded into `.cache/` like any remote file.
 
