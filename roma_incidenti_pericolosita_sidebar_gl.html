@@ -234,72 +234,92 @@
   leaving the rare busiest cell distinctly largest.
 -->
 <script>
-  var DATA_URL = "https://raw.githubusercontent.com/gjrichter/data/master/open%20data%20rome/incidenti/incidenti_roma_filtrati.csv";
+		var DATA_URL = "https://raw.githubusercontent.com/gjrichter/data/master/open%20data%20rome/incidenti/incidenti_roma_filtrati.csv";
 
-  // Verbatim (same logic as the original page's own `process` function),
-  // ported to the query()/addColumn shape germany_accidents_app.html's
-  // real config already established for this engine — runs against the
-  // REAL data.js loaded above, not a reimplementation.
-  var queryData = function(themeObj, options) {
-    var broker = Data.provider()
-      .addSource(DATA_URL, "csv")
-      .realize(function(dataA) {
+		var process = function(data) {
+			var iVittime = data.column("Vittime").index;
+			var iFeriti  = data.column("Feriti").index;
+			data.addColumn({ destination: "Pericolosita" }, function(row) {
+				var v = parseInt(row[iVittime]) || 0;
+				var f = parseInt(row[iFeriti])  || 0;
+				return v*9 + f*3;
+			});
+			data.addColumn({ destination: "grav_label" }, function(row) {
+				var v = parseInt(row[iVittime]) || 0;
+				var f = parseInt(row[iFeriti])  || 0;
+				return v > 0 ? "Mortale" : f > 0 ? "Con feriti" : "Illesi";
+			});
+			data.addColumn({ destination: "Feriti_n" }, function(row) {
+				return parseInt(row[iFeriti]) || 0;
+			});
+			return data;
+		};
 
-        var data = dataA[0];
-        var iVittime = data.column("Vittime").index;
-        var iFeriti  = data.column("Feriti").index;
+		// ---------------------------------------------------
+		//
+		// m a p   p a r a m s   ( URL  state )
+		//
+		// ---------------------------------------------------
 
-        data.addColumn({ destination: "Pericolosita" }, function(row) {
-          var v = parseInt(row[iVittime]) || 0;
-          var f = parseInt(row[iFeriti])  || 0;
-          return v*9 + f*3;
-        });
-        data.addColumn({ destination: "grav_label" }, function(row) {
-          var v = parseInt(row[iVittime]) || 0;
-          var f = parseInt(row[iFeriti])  || 0;
-          return v > 0 ? "Mortale" : f > 0 ? "Con feriti" : "Illesi";
-        });
+		var __filter      = "";
+		var __lat         = 41.9028;
+		var __lon         = 12.4964;
+		var __zoom        = 12;
+		var __scale_chart = 1;
+		var __legend      = false;
 
-        options.type = "dbtable";
-        ixmaps.setExternalData(data, options);
-      });
-  };
+		var attribution = "powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
 
-  var __ROMA_QUERY_DATA = { name: "themeDataObj", query: queryData.toString(), cache: "true" };
+		const params = new Proxy(new URLSearchParams(window.location.search), {
+			get: (searchParams, prop) => searchParams.get(prop),
+		});
+
+		if (params.filter) __filter = params.filter;
+		if (params.view) {
+			var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+			__lat  = latlonA[0];
+			__lon  = latlonA[1];
+			__zoom = parseInt(params.view.split(',')[2]);
+		}
+		if (params.scale)  __scale_chart = params.scale;
+		if (params.legend) __legend = params.legend;
+
+		// ---------------------------------------------------
+		//
+		// t h e   m a p
+		//
+		// ---------------------------------------------------
 
   var __incidenti =
     ixmaps.layer("Roma", layer => layer
-      .data(__ROMA_QUERY_DATA)
+			.data({ url: DATA_URL, type: "csv", process: process.toString(), name: "incidenti_roma" })
       .binding({
         position: "Latitude|Longitude",
         value:    "Pericolosita"
       })
-      .type("CHART|SYMBOL|SIZE|GLOW|ZEROISVALUE|AGGREGATE|RELOCATE|SUM|RECT|VALUES|NOOUTLIER|NORMALIZE")
+			.type("CHART|SYMBOL|SIZE|GLOW|NOOUTLIER|NORMALIZE|ZEROISVALUE|AGGREGATE|RELOCATE|SUM|RECT|VALUES")
       .style({
-        name:            "pericolosita",
         colorscheme:     ["7", "#36A6B1", "#b94023", "3colors", "#DDA729"],
-        classes:         7,
         symbols:         ["circle"],
+        textcolor:       "#ffffff",
         fillopacity:     "0.6",
-        valuecolor:      "#ffffff",
         shadow:          "false",
         units:           "",
-        scale:           "1",
+        scale:           String(__scale_chart),
         normalsizevalue: "3",
         sizepow:         "1.3",
         valuescale:      "1",
         valuedecimals:   "1",
-				gridwidth:       "50",
+        gridwidth:       "25",
         showdata:        "true"
       })
       .meta({
+        name:    "pericolosita",
         title:   "Indice di pericolosità — Roma mar.2021/mar.2022",
         tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}",
         splash:  "caricamento dati ..."
       })
     );
-
-  var __lat = 41.9028, __lon = 12.4964, __zoom = 10;
 
   var _mapPromise = ixmaps.Map("map_div", {
       mapService: "leaflet_vt",
