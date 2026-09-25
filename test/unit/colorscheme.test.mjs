@@ -71,3 +71,17 @@ test('resolveClassColors: classes on an explicit list gives flat\'s generated sw
   assert.deepEqual(swept[1], [248, 229, 164], 'dynamic sweep #ffffb2 → #bd0026, step 1 (flat: [248,229,164])');
   if (flat) assert.deepEqual(swept.map(hex), Array.from(flat.createColorScheme('#ffffb2', '#bd0026', 5, '#fd8d3c', '#f03b20'), c => c.toLowerCase()));
 });
+
+test('parseCssColor: hex and rgb()/RGB()/rgba() in any case, as the browser reads them in flat\'s SVG', () => {
+  assert.deepEqual(plain(G.parseCssColor('RGB(238,217,36)')), [238, 217, 36]);
+  assert.deepEqual(plain(G.parseCssColor('rgb( 5, 177, 240 )')), [5, 177, 240]);
+  assert.deepEqual(plain(G.parseCssColor('rgba(10,20,30,0.5)')), [10, 20, 30]);
+  assert.deepEqual(plain(G.parseCssColor('#abc')), [170, 187, 204]);
+  assert.deepEqual(plain(G.parseCssColor('#11223380')), [17, 34, 51], '#rrggbbaa: alpha ignored');
+  assert.equal(G.parseCssColor(''), null);
+  assert.equal(G.parseCssColor(42), null);
+});
+
+test('resolveClassColors: an explicit list with RGB() colors', () => {
+  assert.deepEqual(plain(G.resolveClassColors(['RGB(238,217,36)', '#05b1f0'], ['a', 'b'])), [[238, 217, 36], [5, 177, 240]]);
+});
