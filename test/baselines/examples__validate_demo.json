@@ -133,8 +133,8 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "5.00 - 12.50",
-      "12.50 - 20.00"
+      "1.00 - 2.00",
+      "2.00 - 3.00"
      ],
      "categoryColorsRgb": [
       [
@@ -150,18 +150,18 @@
      ],
      "partsA": [
       {
-       "max": 12.5,
-       "min": 5
+       "max": 2,
+       "min": 1
       },
       {
-       "max": 20,
-       "min": 12.5
+       "max": 3,
+       "min": 2
       }
      ],
      "rangeClassed": true,
-     "valueMin": 5,
-     "valueMax": 20,
-     "valueMedian": 10
+     "valueMin": 1,
+     "valueMax": 1,
+     "valueMedian": 1
     },
     {
      "name": "pie",
@@ -507,8 +507,8 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "5.00 - 12.50",
-      "12.50 - 20.00"
+      "1.00 - 2.00",
+      "2.00 - 3.00"
      ],
      "categoryColorsRgb": [
       [
@@ -524,18 +524,18 @@
      ],
      "partsA": [
       {
-       "max": 12.5,
-       "min": 5
+       "max": 2,
+       "min": 1
       },
       {
-       "max": 20,
-       "min": 12.5
+       "max": 3,
+       "min": 2
       }
      ],
      "rangeClassed": true,
-     "valueMin": 5,
-     "valueMax": 20,
-     "valueMedian": 10
+     "valueMin": 1,
+     "valueMax": 1,
+     "valueMedian": 1
     },
     {
      "name": "pie",
@@ -881,8 +881,8 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "5.00 - 12.50",
-      "12.50 - 20.00"
+      "1.00 - 2.00",
+      "2.00 - 3.00"
      ],
      "categoryColorsRgb": [
       [
@@ -898,18 +898,18 @@
      ],
      "partsA": [
       {
-       "max": 12.5,
-       "min": 5
+       "max": 2,
+       "min": 1
       },
       {
-       "max": 20,
-       "min": 12.5
+       "max": 3,
+       "min": 2
       }
      ],
      "rangeClassed": true,
-     "valueMin": 5,
-     "valueMax": 20,
-     "valueMedian": 10
+     "valueMin": 1,
+     "valueMax": 1,
+     "valueMedian": 1
     },
     {
      "name": "pie",

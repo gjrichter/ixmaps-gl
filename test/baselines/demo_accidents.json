@@ -60,7 +60,7 @@
     {
      "id": "ix-glow-AREU-g0",
      "type": "IconLayer",
-     "count": 34414,
+     "count": 40101,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -72,13 +72,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "9a2cb74c942eeff5",
-     "setDigest": "22a1fc3d3fa40f3f",
+     "digest": "cafa562537dc9072",
+     "setDigest": "3e4ab5b7884559de",
      "columnDigests": {
-      "getColor": "fd057e712d5494db",
-      "getIcon": "7f8a05e48ab08b3b",
-      "getPosition": "2fe8dc885e1b8c5b",
-      "getSize": "61f2b1a824e2212f"
+      "getColor": "8c70452c95eed0eb",
+      "getIcon": "372cd4b4afd3803b",
+      "getPosition": "dc725bf2de88f64e",
+      "getSize": "3f5e004dacf9bea7"
      },
      "stats": {
       "getColor": [
@@ -90,11 +90,95 @@
        9.893034
       ],
       "getSize": [
-       1.1,
-       163.112437
+       0.9,
+       138.561163
       ]
      },
      "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.239061,
+        45.726078
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.213636,
+        45.589886
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.166573,
+        45.648032
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.378466,
+        45.70085
+       ],
+       1.1
+      ],
       [
        [
         255,
@@ -153,155 +237,8 @@
         "width": 64
        },
        [
-        9.868795,
-        45.278599
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.862907,
-        45.413648
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.647992,
-        45.422345
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.24246,
-        45.3339
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.2335,
-        45.35722
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.44337,
-        45.54415
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.2416,
-        45.50492
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.663655,
-        45.647812
+        9.6699,
+        45.70535
        ],
        1.1
       ],
@@ -342,8 +279,8 @@
         "width": 64
        },
        [
-        9.6699,
-        45.70535
+        9.18609,
+        45.55476
        ],
        1.1
       ],
@@ -363,113 +300,8 @@
         "width": 64
        },
        [
-        9.44926,
-        45.66232
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.418648,
-        45.688946
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.378466,
-        45.70085
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.239061,
-        45.726078
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.16527,
-        45.47595
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.13792,
-        45.19913
+        9.063172,
+        45.5328
        ],
        1.1
       ],
@@ -514,13 +346,181 @@
         45.532041
        ],
        1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        8.982461,
+        45.772794
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0668,
+        45.73107
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.22432,
+        45.75723
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        8.702046,
+        45.769144
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.44926,
+        45.66232
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2335,
+        45.35722
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       1.1
       ]
      ]
     },
     {
      "id": "ix-bubbles-AREU-g0",
      "type": "IconLayer",
-     "count": 34414,
+     "count": 40101,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -532,13 +532,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "620165aa7792bbd7",
-     "setDigest": "ce26a2640f070f91",
+     "digest": "2559f307d2573df1",
+     "setDigest": "e4e70be10ee0d815",
      "columnDigests": {
-      "getColor": "fd057e712d5494db",
-      "getIcon": "7dee6f97e1adac4f",
-      "getPosition": "2fe8dc885e1b8c5b",
-      "getSize": "4e81bbfca1b4ab16"
+      "getColor": "8c70452c95eed0eb",
+      "getIcon": "374547ea21122a3d",
+      "getPosition": "dc725bf2de88f64e",
+      "getSize": "203ec1635b5585fe"
      },
      "stats": {
       "getColor": [
@@ -551,10 +551,94 @@
       ],
       "getSize": [
        0.2,
-       36.247208
+       30.791369
       ]
      },
      "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.239061,
+        45.726078
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.213636,
+        45.589886
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.166573,
+        45.648032
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.378466,
+        45.70085
+       ],
+       0.2
+      ],
       [
        [
         255,
@@ -613,8 +697,8 @@
         "width": 48
        },
        [
-        9.868795,
-        45.278599
+        9.6699,
+        45.70535
        ],
        0.2
       ],
@@ -634,8 +718,8 @@
         "width": 48
        },
        [
-        9.862907,
-        45.413648
+        9.84876,
+        45.690481
        ],
        0.2
       ],
@@ -655,8 +739,1054 @@
         "width": 48
        },
        [
-        9.647992,
-        45.422345
+        9.18609,
+        45.55476
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        8.982461,
+        45.772794
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0668,
+        45.73107
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.22432,
+        45.75723
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        8.702046,
+        45.769144
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.44926,
+        45.66232
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2335,
+        45.35722
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       0.2
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "ITALIA_Regioni_2022",
+     "flags": [
+      "FEATURES",
+      "NOLEGEND"
+     ],
+     "features": 1,
+     "active": null,
+     "hidden": false,
+     "maxSizeValue": 23862315752
+    },
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "CLIPTOGEOBOUNDS",
+      "COMPACTLEGEND",
+      "COUNT",
+      "DOWN",
+      "GLOW",
+      "RECT",
+      "RELOCATE",
+      "SEQUENCE",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "ITALIA_Regioni_2022": [
+     ""
+    ],
+    "AREU": [
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 1 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 34 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 12 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 27 feriti</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.19,
+     45.47
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-ITALIA_Regioni_2022",
+     "type": "GeoJsonLayer",
+     "count": 1,
+     "constants": {
+      "filled": false,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "getLineColor": [
+       128,
+       128,
+       128
+      ],
+      "lineWidthMinPixels": 2,
+      "opacity": 1,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "157c1305f3cad0c7",
+     "setDigest": "157c1305f3cad0c7",
+     "columnDigests": {
+      "~geometry": "809c5398fcdd1ce8"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        1599,
+        [
+         8.97512,
+         45.961634
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-glow-AREU-g0",
+     "type": "IconLayer",
+     "count": 21898,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "a846b906bfe98d12",
+     "setDigest": "a9fbd1b489769e2e",
+     "columnDigests": {
+      "getColor": "4d8252caa638065c",
+      "getIcon": "a732173c799bd183",
+      "getPosition": "d39febf997480bda",
+      "getSize": "bc68ad7fca86f8e6"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.838456,
+       9.541466
+      ],
+      "getSize": [
+       1.1,
+       173.421898
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.213636,
+        45.589886
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.166573,
+        45.648032
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2335,
+        45.35722
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.16527,
+        45.47595
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.22041,
+        45.54789
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.44337,
+        45.54415
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.32939,
+        45.53419
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0873,
+        45.42558
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.01174,
+        45.42251
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.5374,
+        45.56978
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.07054,
+        45.56268
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.03251,
+        45.53991
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        8.903028,
+        45.620704
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,102,204",
+        "url": "#332e7561:8594",
+        "width": 64
+       },
+       [
+        9.325394,
+        45.527154
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.419748,
+        45.613017
+       ],
+       1.1
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-AREU-g0",
+     "type": "IconLayer",
+     "count": 21898,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "bd181b16e7442972",
+     "setDigest": "be0dc9361029a8f8",
+     "columnDigests": {
+      "getColor": "4d8252caa638065c",
+      "getIcon": "735112f88872becd",
+      "getPosition": "d39febf997480bda",
+      "getSize": "56e263bdf636beb7"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.838456,
+       9.541466
+      ],
+      "getSize": [
+       0.2,
+       38.5382
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.213636,
+        45.589886
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.166573,
+        45.648032
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.215043,
+        45.532041
        ],
        0.2
       ],
@@ -718,6 +1848,48 @@
         "width": 48
        },
        [
+        9.16527,
+        45.47595
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.22041,
+        45.54789
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
         9.44337,
         45.54415
        ],
@@ -739,8 +1911,8 @@
         "width": 48
        },
        [
-        9.2416,
-        45.50492
+        9.32939,
+        45.53419
        ],
        0.2
       ],
@@ -760,8 +1932,8 @@
         "width": 48
        },
        [
-        9.663655,
-        45.647812
+        9.0873,
+        45.42558
        ],
        0.2
       ],
@@ -781,8 +1953,113 @@
         "width": 48
        },
        [
-        9.84876,
-        45.690481
+        9.01174,
+        45.42251
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.5374,
+        45.56978
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.07054,
+        45.56268
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.03251,
+        45.53991
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        8.903028,
+        45.620704
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,102,204-0.9-none-0",
+        "url": "#e1808d02:1626",
+        "width": 48
+       },
+       [
+        9.325394,
+        45.527154
        ],
        0.2
       ],
@@ -800,11 +2077,721 @@
         "id": "single-circle-221,187,34-0.9-none-0",
         "url": "#73d6ca84:1734",
         "width": 48
+       },
+       [
+        9.419748,
+        45.613017
+       ],
+       0.2
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "ITALIA_Regioni_2022",
+     "flags": [
+      "FEATURES",
+      "NOLEGEND"
+     ],
+     "features": 1,
+     "active": null,
+     "hidden": false,
+     "maxSizeValue": 23862315752
+    },
+    {
+     "name": "AREU",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "CLIPTOGEOBOUNDS",
+      "COMPACTLEGEND",
+      "COUNT",
+      "DOWN",
+      "GLOW",
+      "RECT",
+      "RELOCATE",
+      "SEQUENCE",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 69597,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "Scontro frontale-laterale",
+      "Scontro-laterale",
+      "Tamponamento",
+      "Scontro frontale",
+      "Urto con veicolo in momentanea",
+      "Investimento di pedone",
+      "Urto con ostacolo accidentale",
+      "Fuoriuscita",
+      "Urto con veicolo in sosta",
+      "Caduta da veicolo",
+      "Frenata improvvisa",
+      "Urto con treno",
+      ""
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       102,
+       204
+      ],
+      [
+       221,
+       187,
+       34
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       255,
+       0,
+       136
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ],
+      [
+       0,
+       170,
+       170
+      ]
+     ],
+     "maxSizeValue": 24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "ITALIA_Regioni_2022": [
+     ""
+    ],
+    "AREU": [
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in sosta: 1 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 35 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 12 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 27 feriti</div>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.19,
+     45.47
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-ITALIA_Regioni_2022",
+     "type": "GeoJsonLayer",
+     "count": 1,
+     "constants": {
+      "filled": false,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "getLineColor": [
+       128,
+       128,
+       128
+      ],
+      "lineWidthMinPixels": 2,
+      "opacity": 1,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "157c1305f3cad0c7",
+     "setDigest": "157c1305f3cad0c7",
+     "columnDigests": {
+      "~geometry": "809c5398fcdd1ce8"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        1599,
+        [
+         8.97512,
+         45.961634
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-glow-AREU-g0",
+     "type": "IconLayer",
+     "count": 42308,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "8787e9835396a703",
+     "setDigest": "563dfa392221b9d2",
+     "columnDigests": {
+      "getColor": "ff592c960b9d807c",
+      "getIcon": "c301726c2cc1643d",
+      "getPosition": "636fd266ad75dd23",
+      "getSize": "d9c7c811c89f2823"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.53358,
+       10.596183
+      ],
+      "getSize": [
+       1.1,
+       93.361682
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.239061,
+        45.726078
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.213636,
+        45.589886
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.166573,
+        45.648032
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.378466,
+        45.70085
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        10.06938,
+        45.1447
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        10.416257,
+        45.237533
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        10.56086,
+        45.1876
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        10.534984,
+        45.330277
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.891029,
+        45.185356
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.797804,
+        45.181184
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        10.154242,
+        45.267804
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
        },
        [
         9.6699,
         45.70535
        ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.063172,
+        45.5328
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0794,
+        45.51449
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.215043,
+        45.532041
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.0668,
+        45.73107
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.22432,
+        45.75723
+       ],
+       1.1
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-AREU-g0",
+     "type": "IconLayer",
+     "count": 42308,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "40f37d34e61b8f72",
+     "setDigest": "497847e69b1b5151",
+     "columnDigests": {
+      "getColor": "ff592c960b9d807c",
+      "getIcon": "43a7af277130126d",
+      "getPosition": "636fd266ad75dd23",
+      "getSize": "a93be2cbbc001d44"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.53358,
+       10.596183
+      ],
+      "getSize": [
+       0.2,
+       20.74704
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.239061,
+        45.726078
+       ],
        0.2
       ],
       [
@@ -823,8 +2810,8 @@
         "width": 48
        },
        [
-        9.44926,
-        45.66232
+        9.213636,
+        45.589886
        ],
        0.2
       ],
@@ -844,8 +2831,8 @@
         "width": 48
        },
        [
-        9.418648,
-        45.688946
+        9.166573,
+        45.648032
        ],
        0.2
       ],
@@ -886,8 +2873,8 @@
         "width": 48
        },
        [
-        9.239061,
-        45.726078
+        10.06938,
+        45.1447
        ],
        0.2
       ],
@@ -907,8 +2894,8 @@
         "width": 48
        },
        [
-        9.16527,
-        45.47595
+        10.416257,
+        45.237533
        ],
        0.2
       ],
@@ -928,8 +2915,176 @@
         "width": 48
        },
        [
-        9.13792,
-        45.19913
+        10.56086,
+        45.1876
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        10.534984,
+        45.330277
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.891029,
+        45.185356
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.797804,
+        45.181184
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        10.154242,
+        45.267804
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.6699,
+        45.70535
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.18609,
+        45.55476
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2416,
+        45.50492
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.063172,
+        45.5328
        ],
        0.2
       ],
@@ -972,6 +3127,69 @@
        [
         9.215043,
         45.532041
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.24246,
+        45.3339
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.0668,
+        45.73107
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.22432,
+        45.75723
        ],
        0.2
       ]
@@ -1105,2225 +3323,7 @@
     "AREU": [
      "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
      "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Caduta da veicolo: 1 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 40 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 13 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 13 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 7 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 11 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 38 feriti</div>"
-    ]
-   },
-   "validation": null
-  },
-  {
-   "label": "zoom+1",
-   "view": {
-    "zoom": 10,
-    "center": [
-     9.19,
-     45.47
-    ],
-    "bearing": 0,
-    "pitch": 0,
-    "projection": "mercator"
-   },
-   "layers": [
-    {
-     "id": "ix-features-ITALIA_Regioni_2022",
-     "type": "GeoJsonLayer",
-     "count": 1,
-     "constants": {
-      "filled": false,
-      "getFillColor": [
-       0,
-       0,
-       0,
-       0
-      ],
-      "getLineColor": [
-       128,
-       128,
-       128
-      ],
-      "lineWidthMinPixels": 2,
-      "opacity": 1,
-      "stroked": true
-     },
-     "columns": [
-      "~geometry"
-     ],
-     "digest": "157c1305f3cad0c7",
-     "setDigest": "157c1305f3cad0c7",
-     "columnDigests": {
-      "~geometry": "809c5398fcdd1ce8"
-     },
-     "stats": {},
-     "sample": [
-      [
-       [
-        "MultiPolygon",
-        1599,
-        [
-         8.97512,
-         45.961634
-        ]
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "ix-glow-AREU-g0",
-     "type": "IconLayer",
-     "count": 17067,
-     "constants": {
-      "billboard": true,
-      "pickable": false,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "fb7c7d3f2aa7bff8",
-     "setDigest": "9631012bb0496395",
-     "columnDigests": {
-      "getColor": "90d6abc217b64669",
-      "getIcon": "fee55fa2be7bb1fb",
-      "getPosition": "ecc4aa88326fdd1d",
-      "getSize": "dba96f7a3f0ae1bb"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       8.83851,
-       9.541465
-      ],
-      "getSize": [
-       1.1,
-       199.085979
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.24246,
-        45.3339
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.44337,
-        45.54415
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.2335,
-        45.35722
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.16527,
-        45.47595
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.0794,
-        45.51449
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.063172,
-        45.5328
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.213636,
-        45.589886
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.18609,
-        45.55476
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.166573,
-        45.648032
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.32939,
-        45.53419
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.0873,
-        45.42558
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.01174,
-        45.42251
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-0,102,204",
-        "url": "#332e7561:8594",
-        "width": 64
-       },
-       [
-        9.325394,
-        45.527154
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-0,102,204",
-        "url": "#332e7561:8594",
-        "width": 64
-       },
-       [
-        9.5374,
-        45.56978
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.47149,
-        45.39855
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.47779,
-        45.48084
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.48848,
-        45.61713
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.419748,
-        45.613017
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        8.87468,
-        45.30635
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        8.907047,
-        45.583913
-       ],
-       1.1
-      ]
-     ]
-    },
-    {
-     "id": "ix-bubbles-AREU-g0",
-     "type": "IconLayer",
-     "count": 17067,
-     "constants": {
-      "billboard": true,
-      "pickable": true,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "70ca92c5ca27d9bc",
-     "setDigest": "d6f10b2c8189ca85",
-     "columnDigests": {
-      "getColor": "90d6abc217b64669",
-      "getIcon": "5a57b0ab47982c10",
-      "getPosition": "ecc4aa88326fdd1d",
-      "getSize": "a1041d937df806b7"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       8.83851,
-       9.541465
-      ],
-      "getSize": [
-       0.2,
-       44.241329
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.24246,
-        45.3339
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.44337,
-        45.54415
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.2335,
-        45.35722
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.16527,
-        45.47595
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.0794,
-        45.51449
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.063172,
-        45.5328
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.213636,
-        45.589886
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.18609,
-        45.55476
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.166573,
-        45.648032
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.32939,
-        45.53419
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.0873,
-        45.42558
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.01174,
-        45.42251
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-0,102,204-0.9-none-0",
-        "url": "#e1808d02:1626",
-        "width": 48
-       },
-       [
-        9.325394,
-        45.527154
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-0,102,204-0.9-none-0",
-        "url": "#e1808d02:1626",
-        "width": 48
-       },
-       [
-        9.5374,
-        45.56978
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.47149,
-        45.39855
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.47779,
-        45.48084
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.48848,
-        45.61713
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.419748,
-        45.613017
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        8.87468,
-        45.30635
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        8.907047,
-        45.583913
-       ],
-       0.2
-      ]
-     ]
-    }
-   ],
-   "themes": [
-    {
-     "name": "ITALIA_Regioni_2022",
-     "flags": [
-      "FEATURES",
-      "NOLEGEND"
-     ],
-     "features": 1,
-     "active": null,
-     "hidden": false,
-     "maxSizeValue": 23862315752
-    },
-    {
-     "name": "AREU",
-     "flags": [
-      "AGGREGATE",
-      "CATEGORICAL",
-      "CHART",
-      "CLIPTOGEOBOUNDS",
-      "COMPACTLEGEND",
-      "COUNT",
-      "DOWN",
-      "GLOW",
-      "RECT",
-      "RELOCATE",
-      "SEQUENCE",
-      "SORT",
-      "STAR",
-      "SYMBOL",
-      "VALUES"
-     ],
-     "features": 69597,
-     "active": null,
-     "hidden": false,
-     "categoryLabels": [
-      "Scontro frontale-laterale",
-      "Scontro-laterale",
-      "Tamponamento",
-      "Scontro frontale",
-      "Urto con veicolo in momentanea",
-      "Investimento di pedone",
-      "Urto con ostacolo accidentale",
-      "Fuoriuscita",
-      "Urto con veicolo in sosta",
-      "Caduta da veicolo",
-      "Frenata improvvisa",
-      "Urto con treno",
-      ""
-     ],
-     "categoryColorsRgb": [
-      [
-       221,
-       187,
-       34
-      ],
-      [
-       221,
-       187,
-       34
-      ],
-      [
-       0,
-       102,
-       204
-      ],
-      [
-       221,
-       187,
-       34
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       255,
-       0,
-       136
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ]
-     ],
-     "maxSizeValue": 24
-    }
-   ],
-   "legend": [],
-   "tooltips": {
-    "ITALIA_Regioni_2022": [
-     ""
-    ],
-    "AREU": [
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>: 1 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 35 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 38 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 17 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 31 feriti</div>"
-    ]
-   },
-   "validation": null
-  },
-  {
-   "label": "zoom-1",
-   "view": {
-    "zoom": 8,
-    "center": [
-     9.19,
-     45.47
-    ],
-    "bearing": 0,
-    "pitch": 0,
-    "projection": "mercator"
-   },
-   "layers": [
-    {
-     "id": "ix-features-ITALIA_Regioni_2022",
-     "type": "GeoJsonLayer",
-     "count": 1,
-     "constants": {
-      "filled": false,
-      "getFillColor": [
-       0,
-       0,
-       0,
-       0
-      ],
-      "getLineColor": [
-       128,
-       128,
-       128
-      ],
-      "lineWidthMinPixels": 2,
-      "opacity": 1,
-      "stroked": true
-     },
-     "columns": [
-      "~geometry"
-     ],
-     "digest": "157c1305f3cad0c7",
-     "setDigest": "157c1305f3cad0c7",
-     "columnDigests": {
-      "~geometry": "809c5398fcdd1ce8"
-     },
-     "stats": {},
-     "sample": [
-      [
-       [
-        "MultiPolygon",
-        1599,
-        [
-         8.97512,
-         45.961634
-        ]
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "ix-glow-AREU-g0",
-     "type": "IconLayer",
-     "count": 34317,
-     "constants": {
-      "billboard": true,
-      "pickable": false,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "60d97043d8195e99",
-     "setDigest": "72a20443b716d043",
-     "columnDigests": {
-      "getColor": "de3571125f147917",
-      "getIcon": "f1f77da2a2905b81",
-      "getPosition": "8a62b0795adfb5e9",
-      "getSize": "d1e8ceec6005f2b7"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       8.53358,
-       10.596183
-      ],
-      "getSize": [
-       1.1,
-       142.519662
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        10.416257,
-        45.237533
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        10.56086,
-        45.1876
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        10.130549,
-        45.227134
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        10.154242,
-        45.267804
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        10.534984,
-        45.330277
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        10.06938,
-        45.1447
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.797804,
-        45.181184
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.891029,
-        45.185356
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.868795,
-        45.278599
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.647992,
-        45.422345
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.862907,
-        45.413648
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.663655,
-        45.647812
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.6699,
-        45.70535
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.44926,
-        45.66232
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.378466,
-        45.70085
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.2335,
-        45.35722
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.24246,
-        45.3339
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.0794,
-        45.51449
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.063172,
-        45.5328
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.213636,
-        45.589886
-       ],
-       1.1
-      ]
-     ]
-    },
-    {
-     "id": "ix-bubbles-AREU-g0",
-     "type": "IconLayer",
-     "count": 34317,
-     "constants": {
-      "billboard": true,
-      "pickable": true,
-      "sizeUnits": "pixels"
-     },
-     "columns": [
-      "getColor",
-      "getIcon",
-      "getPosition",
-      "getSize"
-     ],
-     "digest": "31d73cbb0d46bdcd",
-     "setDigest": "a86ceec61d6bb5ab",
-     "columnDigests": {
-      "getColor": "de3571125f147917",
-      "getIcon": "01f49a0358c6d83f",
-      "getPosition": "8a62b0795adfb5e9",
-      "getSize": "3cce1ff9362a99e7"
-     },
-     "stats": {
-      "getColor": [
-       255,
-       255
-      ],
-      "getPosition": [
-       8.53358,
-       10.596183
-      ],
-      "getSize": [
-       0.2,
-       31.671036
-      ]
-     },
-     "sample": [
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        10.416257,
-        45.237533
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        10.56086,
-        45.1876
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        10.130549,
-        45.227134
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        10.154242,
-        45.267804
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        10.534984,
-        45.330277
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        10.06938,
-        45.1447
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.797804,
-        45.181184
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.891029,
-        45.185356
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.868795,
-        45.278599
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.647992,
-        45.422345
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.862907,
-        45.413648
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.663655,
-        45.647812
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.6699,
-        45.70535
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.44926,
-        45.66232
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.378466,
-        45.70085
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.2335,
-        45.35722
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.24246,
-        45.3339
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.0794,
-        45.51449
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.063172,
-        45.5328
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.213636,
-        45.589886
-       ],
-       0.2
-      ]
-     ]
-    }
-   ],
-   "themes": [
-    {
-     "name": "ITALIA_Regioni_2022",
-     "flags": [
-      "FEATURES",
-      "NOLEGEND"
-     ],
-     "features": 1,
-     "active": null,
-     "hidden": false,
-     "maxSizeValue": 23862315752
-    },
-    {
-     "name": "AREU",
-     "flags": [
-      "AGGREGATE",
-      "CATEGORICAL",
-      "CHART",
-      "CLIPTOGEOBOUNDS",
-      "COMPACTLEGEND",
-      "COUNT",
-      "DOWN",
-      "GLOW",
-      "RECT",
-      "RELOCATE",
-      "SEQUENCE",
-      "SORT",
-      "STAR",
-      "SYMBOL",
-      "VALUES"
-     ],
-     "features": 69597,
-     "active": null,
-     "hidden": false,
-     "categoryLabels": [
-      "Scontro frontale-laterale",
-      "Scontro-laterale",
-      "Tamponamento",
-      "Scontro frontale",
-      "Urto con veicolo in momentanea",
-      "Investimento di pedone",
-      "Urto con ostacolo accidentale",
-      "Fuoriuscita",
-      "Urto con veicolo in sosta",
-      "Caduta da veicolo",
-      "Frenata improvvisa",
-      "Urto con treno",
-      ""
-     ],
-     "categoryColorsRgb": [
-      [
-       221,
-       187,
-       34
-      ],
-      [
-       221,
-       187,
-       34
-      ],
-      [
-       0,
-       102,
-       204
-      ],
-      [
-       221,
-       187,
-       34
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       255,
-       0,
-       136
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ],
-      [
-       0,
-       170,
-       170
-      ]
-     ],
-     "maxSizeValue": 24
-    }
-   ],
-   "legend": [],
-   "tooltips": {
-    "ITALIA_Regioni_2022": [
-     ""
-    ],
-    "AREU": [
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>: 1 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 46 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 25 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con ostacolo accidentale: 4 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in sosta: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 67 feriti</div>"
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 45 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 6 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 6 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 3 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 7 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 3 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 9 feriti</div>"
     ]
    },
    "validation": null

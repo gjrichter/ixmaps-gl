@@ -165,3 +165,36 @@ test('computeRangeClasses: without style.classes the class count follows the col
   assert.equal(G.computeRangeClasses(fs_, { value: 'v' }, { classes: 3, colorscheme: ['#1', '#2', '#3', '#4', '#5', '#6'] }, flags(), String).partsA.length, 3);
   assert.equal(G.computeRangeClasses(fs_, { value: 'v' }, { colorscheme: 'function (t) {}' }, flags(), String).partsA.length, 5, 'unknown count → default 5');
 });
+
+// ---- AGGREGATE grid (flat: snap to the grid, one item per cell)
+const pt = (lng, lat, value) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { value, raw: {} } });
+
+test('aggregateOnGrid: records in one cell become one item with the summed value', () => {
+  // two records ~1 m apart and one far away, 10px cells at zoom 12
+  const items = G.aggregateOnGrid([pt(9.19, 45.46, 2), pt(9.19001, 45.46001, 3), pt(9.3, 45.5, 7)], 12, 10, flags('RECT'));
+  assert.equal(items.length, 2);
+  const merged = items.find(f => f.properties.cluster);
+  assert.equal(merged.properties.point_count, 2);
+  assert.equal(merged.properties.value, 5);
+  assert.equal(items.find(f => !f.properties.cluster).properties.value, 7, 'a single-record cell keeps its own properties');
+});
+
+test('aggregateOnGrid without a grid width: only identical coordinates merge (flat keys by exact position)', () => {
+  const items = G.aggregateOnGrid([pt(9.19, 45.46, 1), pt(9.19, 45.46, 1), pt(9.19001, 45.46, 1)], 12, null, flags());
+  assert.equal(items.length, 2);
+  assert.equal(items.find(f => f.properties.cluster).properties.point_count, 2);
+});
+
+test('aggregateOnGrid: the item sits at the cell center, with RELOCATE at the mean of its records', () => {
+  const recs = [pt(9.19, 45.46, 1), pt(9.19002, 45.46002, 1)];
+  const center = G.aggregateOnGrid(recs, 12, 50, flags('RECT'))[0].geometry.coordinates;
+  const mean = G.aggregateOnGrid(recs, 12, 50, flags('RECT', 'RELOCATE'))[0].geometry.coordinates;
+  assert.ok(Math.abs(mean[0] - 9.19001) < 1e-7 && Math.abs(mean[1] - 45.46001) < 1e-7, `mean ${mean}`);
+  assert.ok(Math.abs(center[0] - 9.19001) > 1e-6, 'cell center differs from the records\' mean');
+});
+
+test('GridAggregateIndex: getClusters(bbox, zoom) filters one per-zoom aggregation by bbox', () => {
+  const idx = new G.GridAggregateIndex(10, flags('RECT')).load([pt(9.19, 45.46, 2), pt(9.19001, 45.46001, 3), pt(20, 50, 1)]);
+  assert.equal(idx.getClusters([-180, -85, 180, 85], 12).length, 2);
+  assert.equal(idx.getClusters([9, 45, 10, 46], 12).length, 1);
+});

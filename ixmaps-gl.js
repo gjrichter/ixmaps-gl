@@ -67,7 +67,7 @@
 
   // ---------------------------------------------------------------
   // Lazy-loaded dependencies — a page only needs to include THIS one
-  // script; MapLibre GL, deck.gl, Supercluster, and Mustache are fetched
+  // script; MapLibre GL, deck.gl, and Mustache are fetched
   // on first use, matching the real ixmaps-flat engine's own single-
   // <script src="ixmaps.js"> convention instead of this port's earlier
   // per-page 5-tag boilerplate (a page may still include them statically:
@@ -99,7 +99,6 @@
     // context for interleaved mode (deck.gl v9's own requirement,
     // supplied by MapLibre GL JS itself, nothing this engine manages).
     deck: 'https://unpkg.com/deck.gl@9.4.0/dist.min.js',
-    supercluster: 'https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js',
     mustache: 'https://unpkg.com/mustache@4.2.0/mustache.min.js'
   };
 
@@ -143,8 +142,7 @@
   // ever fetch once: a library a page already loaded is reused when it is
   // compatible — MapLibre >= 4.5.1 and a deck.gl with MapLibreOverlay
   // (>= 9.4) — and replaced, with a console warning, when it isn't (see
-  // pageMaplibreUsable/pageDeckUsable). Supercluster/Mustache are reused
-  // as found.
+  // pageMaplibreUsable/pageDeckUsable). Mustache is reused as found.
   let _librariesPromise = null;
   // A page's own deck.gl is reused only if it has what this engine needs:
   // MapLibreOverlay (deck.gl >= 9.4). Older pages still carry a deck.gl
@@ -192,7 +190,6 @@
       _librariesPromise = Promise.all([
         pageMaplibreUsable() ? Promise.resolve() : loadScript(LIB_URLS.maplibreJs),
         pageDeckUsable() ? Promise.resolve() : loadScript(LIB_URLS.deck),
-        global.Supercluster ? Promise.resolve() : loadScript(LIB_URLS.supercluster),
         global.Mustache ? Promise.resolve() : loadScript(LIB_URLS.mustache),
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
       ]).then(() => {
@@ -1458,7 +1455,7 @@
         : showSplash(el, this._engineOptions.splashText || 'loading…');
 
       // fast local check (missing container) before the network round
-      // trip — MapLibre/deck.gl/Supercluster/Mustache + MapLibre's own
+      // trip — MapLibre/deck.gl/Mustache + MapLibre's own
       // CSS, all in parallel; a no-op per-library for anything a page's
       // own <script>/<link> tags already loaded (see ensureLibrariesLoaded).
       await ensureLibrariesLoaded();
@@ -2149,7 +2146,7 @@
       //     hidden outright (not just frozen) for the gesture's duration,
       //     below, and pop back in once zoomend snaps everything to the
       //     new level.
-      //   - BUBBLE/DOT clustering (Supercluster) reclusters on every
+      //   - BUBBLE/DOT aggregation (grid, per zoom) re-aggregates on every
       //     distinct zoom it's queried at, each producing its own new set
       //     of aggregated group icons through _buildBubbleIcon. A smooth
       //     zoom gesture passes through MANY intermediate zoom levels in
@@ -2158,7 +2155,7 @@
       //     from every one of those intermediate clustering states over
       //     the course of one gesture, eventually overflowing deck.gl's
       //     shared icon atlas into solid black squares, on top of being
-      //     visibly slow (a fresh Supercluster query + icon batch on every
+      //     visibly slow (a fresh aggregation + icon batch on every
       //     throttled tick, repeatedly, for the whole gesture). A single
       //     `setZoom` jump to the SAME end zoom — one clustering pass —
       //     renders perfectly clean, confirming the accumulation, not any
@@ -2200,7 +2197,7 @@
       // this code did, to hide GRIDSIZE layers instantly) bypassed the
       // 150ms throttle entirely — on a fast scroll-wheel zoom that meant
       // dozens of full, UNTHROTTLED layer rebuilds per second, each
-      // re-running Supercluster clustering (_ensureClusterIndices) and
+      // re-running the grid aggregation (_computeAggregatedItems) and
       // regenerating bubble icons for every visible runtime, not just the
       // GRIDSIZE ones. Confirmed live: this made zooming visibly slow and
       // blocking, and the resulting churn of rapid, closely-spaced
@@ -2947,16 +2944,12 @@
   // in the renderer, not a deliberate visual floor.
   const VALUE_RADIUS_MIN = 0.1;
   const VALUE_RADIUS_MAX = 40;
-  const CLUSTER_RADIUS_PX_DEFAULT = 2;
-  // Reference zoom for converting a real-world-METERS .style({gridwidth})
-  // into the single, fixed pixel radius Supercluster's own constructor
-  // takes — see _ensureClusterIndices' own comment for why this MUST be a
-  // constant, never the live viewport zoom. The actual value is
-  // arbitrary (Supercluster's own multi-resolution index already scales
-  // a fixed radius correctly across every zoom it serves internally,
-  // matching how real-world meters per pixel halves each zoom step) —
-  // fixed at 0 purely so metersToWorldPixels' own formula needs no
-  // separate zoom-less variant.
+  // Reference zoom for a real-world-METERS .style({gridwidth}): the cell
+  // width is converted to world pixels at this ONE fixed zoom and the
+  // grid aggregation runs at it too (see _ensureClusterIndices /
+  // _computeAggregatedItems), so a meters grid has the same cells at every
+  // map zoom. The value itself is arbitrary; 0 keeps metersToWorldPixels
+  // formula-only.
   const GRIDWIDTH_METERS_REFERENCE_ZOOM = 0;
 
   // .type("DOT") — the real engine's simplest symbol (maptheme.js ~line
@@ -4226,13 +4219,12 @@
   // ---------------------------------------------------------------
   // Aggregation — pure value math (what a record contributes, how a
   // cell's values combine, co-located grouping). The stateful parts —
-  // Supercluster indices, per-zoom caches — stay in LayerRuntime.
+  // the per-category grid indices, per-zoom caches — stay in LayerRuntime.
   // ---------------------------------------------------------------
-  // group raw features by category — cheap, radius-independent. The
-  // actual Supercluster indices are built lazily per resolved aggregation
-  // radius (see _ensureClusterIndices), since that radius is a
-  // construction-time parameter that can change with zoom per
-  // style.aggregation, and Supercluster can't vary it after .load().
+  // group raw features by category — cheap, cell-width-independent. The
+  // per-category GridAggregateIndex is built lazily per resolved grid
+  // width (see _ensureClusterIndices), which can change with zoom per
+  // style.aggregation.
   // Re-run whenever the active feature set changes (facet filter, or
   // .binding.size rebound via setSizeField) so clustering always reflects
   // what's actually visible/bound right now.
@@ -4270,6 +4262,69 @@
     return arr;
   }
 
+  // Real ixmaps-flat's AGGREGATE (maptheme.js:10587-10760, 11139): every
+  // record's position snaps to the aggregation grid — hexagonal by
+  // default, square with RECT (snapToAggregationGrid, a line-for-line
+  // port) — and all records of one cell become ONE item, keyed by the
+  // snapped position, values summed. The item sits at the cell center, or
+  // with RELOCATE at the mean of its records' original positions. Without
+  // a grid width (no aggregation/gridwidth/gridwidthpx) flat does not
+  // snap at all: the key is the exact position, so only records at
+  // identical coordinates merge. cellPx and positions are world pixels at
+  // `zoom`, i.e. screen pixels there.
+  //
+  // Returns Supercluster's getClusters() shape, which the rest of the
+  // pipeline reads: a cell of 2+ records → { cluster: true, point_count,
+  // value }, a single-record cell → that record's own feature, moved to
+  // the item position.
+  function aggregateOnGrid(features, zoom, cellPx, flags) {
+    const relocate = flags.has('RELOCATE');
+    const cells = new Map();
+    for (const f of features) {
+      const [lng, lat] = f.geometry.coordinates;
+      const p = lngLatToWorldPixel(lng, lat, zoom);
+      const snapped = cellPx ? snapToAggregationGrid(p.x, p.y, cellPx, flags) : p;
+      const key = `${snapped.x}:${snapped.y}`;
+      let cell = cells.get(key);
+      if (!cell) { cell = { snapped, sumX: 0, sumY: 0, n: 0, value: 0, first: f }; cells.set(key, cell); }
+      cell.sumX += p.x; cell.sumY += p.y; cell.n++;
+      cell.value += f.properties.value;
+    }
+    const out = [];
+    for (const cell of cells.values()) {
+      const x = relocate ? cell.sumX / cell.n : cell.snapped.x;
+      const y = relocate ? cell.sumY / cell.n : cell.snapped.y;
+      const ll = worldPixelToLngLat(x, y, zoom);
+      const geometry = { type: 'Point', coordinates: [ll.lng, ll.lat] };
+      out.push(cell.n > 1
+        ? { type: 'Feature', geometry, properties: { cluster: true, point_count: cell.n, value: cell.value } }
+        : { type: 'Feature', geometry, properties: cell.first.properties });
+    }
+    return out;
+  }
+
+  // Drop-in for the Supercluster index this engine used before (whose
+  // radius-based, whole-zoom-level, cross-level-merging clusters were
+  // up to ~2x flat's grid cells — found with --flat-oracle): the same
+  // load()/getClusters(bbox, zoom) surface, aggregating the whole dataset
+  // once per zoom (cached) and filtering by bbox.
+  class GridAggregateIndex {
+    constructor(cellPx, flags) { this.cellPx = cellPx; this.flags = flags; this.features = []; this._byZoom = new Map(); }
+    load(features) { this.features = features; this._byZoom.clear(); return this; }
+    getClusters(bbox, zoom) {
+      let items = this._byZoom.get(zoom);
+      if (!items) {
+        if (this._byZoom.size >= 8) this._byZoom.delete(this._byZoom.keys().next().value);
+        items = aggregateOnGrid(this.features, zoom, this.cellPx, this.flags);
+        this._byZoom.set(zoom, items);
+      }
+      return items.filter(f => {
+        const [lng, lat] = f.geometry.coordinates;
+        return lng >= bbox[0] && lng <= bbox[2] && lat >= bbox[1] && lat <= bbox[3];
+      });
+    }
+  }
+
   function groupCoLocated(clusterFeatures, zoom, clusterRadiusPx, nCategories, flags) {
     // Merge tolerance MUST track the same theme-driven, scale-dependent
     // aggregation width the clustering itself just used (clusterRadiusPx,
@@ -4277,7 +4332,7 @@
     // independent constant. Grouping and clustering are two views of the
     // same "how close counts as the same spot" question at the current
     // map scale, so they need the same answer.
-    const cellPx = clusterRadiusPx || CLUSTER_RADIUS_PX_DEFAULT;
+    const cellPx = clusterRadiusPx; // null: no grid, exact positions (aggregateOnGrid)
     const cells = new Map();
     const n = nCategories;
     clusterFeatures.forEach(f => {
@@ -4291,14 +4346,14 @@
       // to grid shape (confirmed against the real source: RELOCATE
       // recomputes ptPos as the mean of ptPosA regardless of which
       // grid produced the grouping key).
-      const snapped = snapToAggregationGrid(p.x, p.y, cellPx, flags);
+      const snapped = cellPx ? snapToAggregationGrid(p.x, p.y, cellPx, flags) : p;
       const key = `${snapped.x}:${snapped.y}`;
       let cell = cells.get(key);
       if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0) }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
       cell.counts[f.properties.cat] += f.properties.value;
-      // point_count is Supercluster's own built-in aggregated-record
-      // count (absent on an un-clustered leaf, which is exactly 1 record)
+      // point_count is the aggregated-record count of a multi-record
+      // cell (aggregateOnGrid; absent on a single-record cell)
       // — tracked separately from counts (the summed bound VALUE) purely
       // for the tooltip's theme.item.count.
       cell.recordCounts[f.properties.cat] += (f.properties.point_count || 1);
@@ -4523,8 +4578,8 @@
 
       // GRIDSIZE layers (PLOT curves-chart, or its grid-mesh companion)
       // also carry AGGREGATE in their type string, but they bin into a
-      // spatial grid (_ensureGridIndex), not Supercluster's per-category
-      // clustering — building _featuresByCategory for them would be wasted
+      // spatial grid (_ensureGridIndex), not the per-category AGGREGATE
+      // grid — building _featuresByCategory for them would be wasted
       // work (up to the full dataset, never consumed by buildDeckLayers).
       //
       // GL-PORT COMPAT: see _usesAggregationIndex()'s own comment — also
@@ -4627,8 +4682,8 @@
       // (see the reclassify step in _buildChartLayers), never from each
       // record's own raw value. Splitting by pre-class here would do
       // exactly that wrong thing (and would also keep same-cell,
-      // different-class records in separate Supercluster indices, so
-      // they'd never even cluster together in the first place). Every
+      // different-class records in separate grid indices, so
+      // they'd never even share a cell in the first place). Every
       // feature goes into ONE bucket; _buildChartLayers resolves the real
       // 7-class color once it knows each cell's actual aggregated total.
       if (this._rangeClassed) {
@@ -4698,7 +4753,7 @@
     }
 
     // `_featuresByCategory` (plain per-category bucketing — NOT yet
-    // Supercluster; that's a separate, later step gated by AGGREGATE
+    // grid-aggregated; that's a separate, later step gated by AGGREGATE
     // alone, see _computeAggregatedItems) is needed whenever this runtime
     // will dispatch to _buildChartLayers, i.e. explicit AGGREGATE or
     // CHART+SYMBOL on its own — _buildChartLayers has no other data
@@ -4847,40 +4902,14 @@
       });
     }
 
-    // (re)builds the per-category Supercluster indices at the aggregation
-    // radius resolved for the given zoom, but only when that radius has
-    // actually changed since the last build — rebuilding on every pan/zoom
-    // tick would be wasteful when most moves don't cross a threshold.
-    // .style({gridwidth}) (meters, see metersToWorldPixels) takes
-    // precedence over .style({aggregation}) (a fixed screen-pixel radius)
-    // when both are set.
-    //
-    // CORRECTED (2026-09-22, user-reported: a 25-meter gridwidth theme was
-    // visibly re-aggregating — different cell memberships, different
-    // computed per-cell totals — on every zoom change, when a fixed-
-    // meters grid must have the SAME membership at every zoom, "always
-    // calculated for the entire geographic data extent"). Root cause: the
-    // meters branch below used to call `metersToWorldPixels(meters,
-    // refLat, zoom)` with the LIVE viewport zoom AND the current
-    // viewport bbox's own center latitude — meaning `radiusPx` (and so
-    // `this._clusterRadiusPx`, the cache key just below) changed on
-    // every zoom tick, forcing Supercluster's entire index to be thrown
-    // away and REBUILT from scratch each time, with a DIFFERENT radius
-    // parameter. That's backwards: Supercluster's own `radius` option is
-    // a SINGLE fixed value applied consistently across every zoom level
-    // its own multi-resolution index serves internally — real-world
-    // meters per pixel already halves every zoom step in that same
-    // convention, so a fixed radius computed ONCE already represents a
-    // constant real-world distance at any zoom Supercluster is later
-    // queried at (see GRIDWIDTH_METERS_REFERENCE_ZOOM's own comment).
-    // Fixed: the reference zoom is now the fixed
-    // GRIDWIDTH_METERS_REFERENCE_ZOOM constant (never live `zoom`), and
-    // the reference latitude is `this._gridRefLat` — the FULL dataset's
-    // own extent, computed once in _prepare() — never the current,
-    // panning-dependent viewport bbox. `radiusPx` for this branch is now
-    // a true per-theme constant: computed once, cached forever, the
-    // Supercluster index built exactly once for the runtime's lifetime
-    // (barring an explicit style change to gridwidth/aggregation itself).
+    // (re)builds the per-category GridAggregateIndex for the grid width
+    // resolved at the given zoom, only when that width changed. Grid width,
+    // as flat reads it (maptheme.js:1892-1908, 7990-8008): gridwidthpx and
+    // a "Npx" gridwidth are screen pixels; a bare gridwidth is METERS,
+    // converted once at the fixed GRIDWIDTH_METERS_REFERENCE_ZOOM with the
+    // FULL dataset's reference latitude (this._gridRefLat), so a meters
+    // grid keeps the same cells at every zoom; otherwise the matching
+    // style.aggregation bracket; none → no grid (exact positions).
     _ensureClusterIndices(zoom) {
       let radiusPx;
       // GL-PORT COMPAT: a real-ixmaps-flat page's own gridwidth is
@@ -4892,7 +4921,12 @@
       // style.aggregation already expresses. Detected by the "px" suffix
       // so both conventions can coexist without the page needing to change.
       const gridwidthPxMatch = typeof this.style.gridwidth === 'string' && /^\s*(\d+(?:\.\d+)?)\s*px\s*$/i.exec(this.style.gridwidth);
-      if (gridwidthPxMatch) {
+      // flat: gridwidthpx is the AGGREGATE grid width in screen pixels too
+      // (maptheme.js:1906, nGridWidthPx), default 50 when not a number
+      if (this.style.gridwidthpx != null && this.style.gridwidthpx !== '') {
+        radiusPx = Number(this.style.gridwidthpx) || 50;
+        this._clusterUsesFixedZoom = false;
+      } else if (gridwidthPxMatch) {
         radiusPx = parseFloat(gridwidthPxMatch[1]);
         this._clusterUsesFixedZoom = false;
       } else if (this.style.gridwidth != null) {
@@ -4909,18 +4943,14 @@
         // zoom too. A theme whose brackets mix "px" and meters values can
         // genuinely flip this flag as the live zoom crosses from one
         // bracket into another.
-        const resolved = resolveAggregationPx(this.style.aggregation, zoom, CLUSTER_RADIUS_PX_DEFAULT, this._gridRefLat);
+        // no matching bracket and no gridwidth: no grid (null), like flat
+        const resolved = resolveAggregationPx(this.style.aggregation, zoom, null, this._gridRefLat);
         radiusPx = resolved.px;
         this._clusterUsesFixedZoom = resolved.isMeters;
       }
       if (this._clusterIndices && this._clusterRadiusPx === radiusPx) return;
       this._clusterRadiusPx = radiusPx;
-      this._clusterIndices = this._featuresByCategory.map(feats => new global.Supercluster({
-        radius: radiusPx,
-        maxZoom: 15,
-        map: p => ({ value: p.value }),
-        reduce: (acc, p) => { acc.value += p.value; }
-      }).load(feats));
+      this._clusterIndices = this._featuresByCategory.map(feats => new GridAggregateIndex(radiusPx, this.flags).load(feats));
     }
 
     // Reverted from the source-accurate two-flat-circle GLOW (radius*6
@@ -5906,20 +5936,12 @@
     // _ensureAggregateStats) instead of just the current viewport, without
     // duplicating the logic.
     //
-    // RELOCATE only ever changes WHERE an already-aggregated group is
-    // drawn — never which records get grouped together (that's
-    // Supercluster's per-category radius clustering, unaffected either
-    // way). Without RELOCATE, a grid-aggregated value (this pipeline —
-    // "aggregation by field" is a separate, not-yet-implemented mode) is
-    // positioned at the center of its RECT/hexbin grid element, not at
-    // Supercluster's own internally-computed centroid: snap that
-    // cluster's centroid through the SAME shared snapToAggregationGrid
-    // (hex by default, RECT if flagged) _groupCoLocated uses below, at
-    // the same cell width Supercluster itself just clustered with. With
-    // RELOCATE, _groupCoLocated instead positions at the mean of the
-    // ORIGINAL member positions (and additionally merges same-cell
-    // clusters across categories) — the two branches share the same grid
-    // math, they just use it for a different purpose.
+    // RELOCATE only ever changes WHERE an aggregated item is drawn, never
+    // which records share a cell (aggregateOnGrid, per category). Without
+    // RELOCATE an item sits at the center of its RECT/hexbin cell ("aggre-
+    // gation by field" is a separate, not-yet-implemented mode); with
+    // RELOCATE at the mean of its records' positions, and _groupCoLocated
+    // additionally merges same-cell items across categories.
     _computeAggregatedItems(bbox, zoom) {
       // Real ixmaps-flat's plain CHART/BUBBLE theme — no explicit
       // AGGREGATE in the type string — draws exactly one icon per
@@ -5950,19 +5972,12 @@
         return { individual, groups: [] };
       }
 
-      // For a fixed-real-world-METERS gridwidth, BOTH the Supercluster
-      // query and the RELOCATE/grid-snap positioning below must run at
-      // the SAME fixed reference zoom the index itself was built at
-      // (_ensureClusterIndices) — querying Supercluster's own multi-
-      // resolution hierarchy at the LIVE zoom instead would still return
-      // a DIFFERENT level of its internal merge hierarchy per zoom (more
-      // aggressive merging as you zoom "out" through that hierarchy),
-      // even though the underlying index itself is now built exactly
-      // once — Supercluster is fundamentally a zoom-ADAPTIVE multi-
-      // resolution structure, and only querying it at a CONSTANT zoom
-      // yields a truly zoom-invariant result. Rendering (on-screen bubble
-      // size) is unaffected — that already scales with the separate,
-      // always-live `liveZoom` passed through valueRadius(), not this.
+      // For a fixed-real-world-METERS gridwidth, the grid aggregation and
+      // the RELOCATE grouping run at the SAME fixed reference zoom the
+      // cell width was converted at (_ensureClusterIndices), so the cells
+      // don't change with the map zoom. Rendering (on-screen bubble size)
+      // is unaffected — that scales with the always-live `liveZoom`
+      // passed through valueRadius(), not this.
       const effectiveZoom = this._clusterUsesFixedZoom ? GRIDWIDTH_METERS_REFERENCE_ZOOM : zoom;
 
       const individual = [];
@@ -5976,14 +5991,11 @@
       });
 
       const doRelocate = this.flags.has('RELOCATE');
+      // without RELOCATE a cell's item already sits at the cell center
+      // (aggregateOnGrid)
       const groups = doRelocate ? this._groupCoLocated(clusterFeatures, effectiveZoom) : clusterFeatures.map(f => {
-        const cellPx = this._clusterRadiusPx || CLUSTER_RADIUS_PX_DEFAULT;
-        const [lng, lat] = f.geometry.coordinates;
-        const p = lngLatToWorldPixel(lng, lat, effectiveZoom);
-        const snapped = snapToAggregationGrid(p.x, p.y, cellPx, this.flags);
-        const ll = worldPixelToLngLat(snapped.x, snapped.y, effectiveZoom);
         return {
-          geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
+          geometry: f.geometry,
           properties: { counts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value }
         };
       });
@@ -6061,6 +6073,21 @@
           : this._equalIntervalBreaks(nMin, nMax, nParts);
       }
 
+      // The theme's own classes follow the aggregated items, as flat's do
+      // (its partsA/nMin/nMax are computed over the aggregated itemA): so
+      // the legend, tooltips and getThemeObj describe what the map draws,
+      // not the raw records. categoryLabels is updated IN PLACE — the
+      // native legend holds that array and re-renders it on every redraw.
+      if (breaks) {
+        this.partsA = breaks;
+        const labels = breaks.map(p => `${this._formatTooltipValue(p.min)} - ${this._formatTooltipValue(p.max)}`);
+        this.categoryLabels.splice(0, this.categoryLabels.length, ...labels);
+        const sorted = totals.slice().sort((a, b) => a - b);
+        this._valueMin = sorted[0];
+        this._valueMax = sorted[sorted.length - 1];
+        this._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
+      }
+
       this._aggregateStatsCache = { zoom, outlier, normalize, breaks };
       return this._aggregateStatsCache;
     }
@@ -6081,11 +6108,9 @@
     // gesture ends) and carries none of the reclustering risk.
     _buildChartLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
       if (!this._featuresByCategory) return [];
-      // Supercluster indices are only needed by the AGGREGATE clustering
-      // path inside _computeAggregatedItems below — building them for a
-      // plain (non-AGGREGATE) BUBBLE/CHART theme would be pure waste (a
-      // full re-index of the whole dataset, every redraw, for indices
-      // that branch never reads).
+      // Grid indices are only needed by the AGGREGATE path inside
+      // _computeAggregatedItems below — a plain (non-AGGREGATE)
+      // BUBBLE/CHART theme never reads them.
       if (this.flags.has('AGGREGATE')) this._ensureClusterIndices(zoom);
       let { individual, groups } = this._computeAggregatedItems(bbox, zoom);
       // Far-hemisphere cull under globe projection — see
@@ -6731,7 +6756,7 @@
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated,
+    resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;

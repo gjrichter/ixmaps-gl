@@ -34,8 +34,10 @@ page. It currently implements:
   `SUBTRACTIVE` color blend); plus DOPACITY/DOPACITYMIN/DOPACITYMAX/DOPACITYMINMAX for
   value- or density-driven fill opacity
 - **CHART\|SYMBOL\|GLOW\|CATEGORICAL\|AGGREGATE\|COUNT\|RELOCATE\|VALUES** — the
-  bubble-map pipeline: categorical clustering, dynamic sizing, glow, multi-point
-  grouping, on-bubble value labels, `NORMALIZE`
+  bubble-map pipeline: AGGREGATE on ixmaps-flat's grid (hexagonal, or square with
+  `RECT`; cell width from `aggregation`/`gridwidth`/`gridwidthpx`, values summed per
+  cell, class breaks and legend from the aggregated cells), dynamic sizing, glow,
+  multi-point grouping, on-bubble value labels, `NORMALIZE`
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - A native interactive legend (default bars, `SIMPLELEGEND`, `COMPACTLEGEND`,
   `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner `align` option;
@@ -165,7 +167,7 @@ For checking page files before they run, use the static checker in ixmaps-gramma
 | [`global_power_plants_world_map.html`](./global_power_plants_world_map.html) | Native legend, globe projection toggle |
 | [`global_power_plants_sidebar.html`](./global_power_plants_sidebar.html) | Same dataset with a facets sidebar instead of the native legend |
 | [`mappa_stranieri_30.html`](./mappa_stranieri_30.html) | Symbol shapes, city picker, runtime `changeThemeStyle` filtering, light legend theme |
-| [`roma_incidenti_pericolosita_sidebar_gl.html`](./roma_incidenti_pericolosita_sidebar_gl.html) | AGGREGATE + gridwidth clustering, facets sidebar |
+| [`roma_incidenti_pericolosita_sidebar_gl.html`](./roma_incidenti_pericolosita_sidebar_gl.html) | AGGREGATE on a gridwidth grid, facets sidebar |
 | [`roma_incidenti_pericolosita_sidebar.html`](./roma_incidenti_pericolosita_sidebar.html) | The same page on the **real** ixmaps-flat engine, kept for side-by-side reference |
 | [`uk_collisions_2023.html`](./uk_collisions_2023.html), [`ixmaps-loader_70.html`](./ixmaps-loader_70.html) | Additional real-page compatibility tests |
 | [`examples/`](./examples) | Smaller feature-by-feature test pages (choropleth classing modes, bubble ranges, etc.) |
