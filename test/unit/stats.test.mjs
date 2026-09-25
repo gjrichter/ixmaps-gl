@@ -50,11 +50,13 @@ test('computeMultiFieldClasses: fields from the piped value; style.values relabe
   assert.deepEqual(plain(G.computeMultiFieldClasses({ value: 'a|b' }, { values: ['only one'] }).categoryLabels), ['a', 'b']);
 });
 
-test('computeDominantStats: per-field mean/min/stddev, zeros and NaN skipped (flat\'s truthy pooling)', () => {
+test('computeDominantStats: mean/min over every finite value incl. 0 (mean ÷ item count); stddev over non-zero values only — as flat', () => {
   const r = G.computeDominantStats([feat({ a: 2, b: 0 }), feat({ a: 4, b: 6 }), feat({ a: 'x', b: 10 })], { value: 'a|b' }, {});
-  assert.deepEqual(plain(r._dominantMeans), [3, 8]);
-  assert.deepEqual(plain(r._dominantMins), [2, 6]);
-  assert.deepEqual(plain(r._dominantStdDevs), [1, 2]);
+  assert.deepEqual(plain(r._dominantMeans), [2, 16 / 3], 'flat nMeanA = nSumA / nCount (all 3 items)');
+  assert.deepEqual(plain(r._dominantMins), [2, 0], 'flat nMinA includes 0');
+  assert.deepEqual(plain(r._dominantStdDevs), [1, 2], 'flat getDeviationOfArray over the truthy pool [2,4] / [6,10]');
+  const withUnjoined = G.computeDominantStats([feat({ a: 2, b: 0 }), feat({ a: 4, b: 6 }), feat({ a: 'x', b: 10 }), feat({})], { value: 'a|b' }, {});
+  assert.deepEqual(plain(withUnjoined._dominantMeans), [2, 16 / 3], 'a polygon without a joined record is not an item');
 });
 
 test('resolveDominantClass: plain = highest raw value; PERCENTOFMEAN / DEVIATION rank relative to the field', () => {
@@ -65,6 +67,14 @@ test('resolveDominantClass: plain = highest raw value; PERCENTOFMEAN / DEVIATION
   ctx.flags = flags('DEVIATION');       // a: (20-10)/1 = 10, b: (50-100)/50 < 0
   assert.equal(G.resolveDominantClass(ctx, { a: 20, b: 50 }).index, 0);
   assert.equal(G.resolveDominantClass(ctx, { a: 0.5, b: 0.5 }), null, 'below every field minimum → no class');
+});
+
+test('resolveDominantClass: the min filter applies in plain DOMINANT too (flat: nValue > (nFilterA[i] || 0))', () => {
+  const ctx = { _multiFields: ['a', 'b'], _dominantMeans: [0, 0], _dominantMins: [5, 1], _dominantStdDevs: [1, 1], flags: flags() };
+  assert.equal(G.resolveDominantClass(ctx, { a: 5, b: 3 }).index, 1, 'a equals its min → excluded, b wins');
+  assert.equal(G.resolveDominantClass(ctx, { a: 4, b: 1 }), null);
+  ctx._dominantMins = [-3, -3];
+  assert.equal(G.resolveDominantClass(ctx, { a: -1, b: -2 }), null, 'negative values pass the filter but never beat the 0 start');
 });
 
 // ---- COMPOSECOLOR

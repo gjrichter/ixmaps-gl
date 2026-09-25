@@ -34,10 +34,10 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "b11b98cacfe8467c",
-     "setDigest": "599669d37ff75fcb",
+     "digest": "12b2010ff7563dd9",
+     "setDigest": "a90e88862e36545e",
      "columnDigests": {
-      "getFillColor": "9a12dc8a44a1094d",
+      "getFillColor": "b764ddf74160e870",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
@@ -49,9 +49,9 @@
      "sample": [
       [
        [
-        207,
-        255,
-        51
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -64,9 +64,9 @@
       ],
       [
        [
-        201,
-        250,
-        66
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -94,9 +94,9 @@
       ],
       [
        [
-        207,
-        255,
-        51
+        153,
+        93,
+        154
        ],
        [
         "Polygon",
@@ -109,9 +109,9 @@
       ],
       [
        [
-        189,
-        240,
-        96
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -499,13 +499,82 @@
        81,
        149
       ]
+     ],
+     "dominantMeans": [
+      1.610763,
+      1.916979,
+      2.204661,
+      2.39961,
+      2.510551,
+      2.553097,
+      2.642526,
+      2.750041,
+      3.037292,
+      3.67711,
+      4.079168,
+      4.291539,
+      3.902543,
+      3.40078,
+      3.024506,
+      2.474713,
+      1.766418,
+      1.094536,
+      0.408705,
+      0.081296,
+      0.007553
+     ],
+     "dominantMins": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "dominantStdDevs": [
+      0.502221,
+      0.545336,
+      0.579306,
+      0.582686,
+      0.599414,
+      0.606858,
+      0.588941,
+      0.589694,
+      0.610284,
+      0.669536,
+      0.710027,
+      0.782053,
+      0.8043,
+      0.828069,
+      0.800987,
+      0.714977,
+      0.604441,
+      0.496147,
+      0.278908,
+      0.132512,
+      0.065437
      ]
     }
    ],
    "legend": [],
    "tooltips": {
     "comuni": [
-     "<b>Agliè</b> (Torino)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(207,255,51);margin-right:0.4em;vertical-align:middle\"></span>0-4: 2.00 %</div>",
+     "<b>Agliè</b> (Torino)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(154,81,149);margin-right:0.4em;vertical-align:middle\"></span>100+: 0.04 %</div>",
      "<b>Davagna</b> (Genova)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(152,118,164);margin-right:0.4em;vertical-align:middle\"></span>85-89: 1.70 %</div>",
      "<b></b> ()<br>"
     ]
@@ -545,10 +614,10 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "b11b98cacfe8467c",
-     "setDigest": "599669d37ff75fcb",
+     "digest": "12b2010ff7563dd9",
+     "setDigest": "a90e88862e36545e",
      "columnDigests": {
-      "getFillColor": "9a12dc8a44a1094d",
+      "getFillColor": "b764ddf74160e870",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
@@ -560,9 +629,9 @@
      "sample": [
       [
        [
-        207,
-        255,
-        51
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -575,9 +644,9 @@
       ],
       [
        [
-        201,
-        250,
-        66
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -605,9 +674,9 @@
       ],
       [
        [
-        207,
-        255,
-        51
+        153,
+        93,
+        154
        ],
        [
         "Polygon",
@@ -620,9 +689,9 @@
       ],
       [
        [
-        189,
-        240,
-        96
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -1010,13 +1079,82 @@
        81,
        149
       ]
+     ],
+     "dominantMeans": [
+      1.610763,
+      1.916979,
+      2.204661,
+      2.39961,
+      2.510551,
+      2.553097,
+      2.642526,
+      2.750041,
+      3.037292,
+      3.67711,
+      4.079168,
+      4.291539,
+      3.902543,
+      3.40078,
+      3.024506,
+      2.474713,
+      1.766418,
+      1.094536,
+      0.408705,
+      0.081296,
+      0.007553
+     ],
+     "dominantMins": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "dominantStdDevs": [
+      0.502221,
+      0.545336,
+      0.579306,
+      0.582686,
+      0.599414,
+      0.606858,
+      0.588941,
+      0.589694,
+      0.610284,
+      0.669536,
+      0.710027,
+      0.782053,
+      0.8043,
+      0.828069,
+      0.800987,
+      0.714977,
+      0.604441,
+      0.496147,
+      0.278908,
+      0.132512,
+      0.065437
      ]
     }
    ],
    "legend": [],
    "tooltips": {
     "comuni": [
-     "<b>Agliè</b> (Torino)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(207,255,51);margin-right:0.4em;vertical-align:middle\"></span>0-4: 2.00 %</div>",
+     "<b>Agliè</b> (Torino)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(154,81,149);margin-right:0.4em;vertical-align:middle\"></span>100+: 0.04 %</div>",
      "<b>Davagna</b> (Genova)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(152,118,164);margin-right:0.4em;vertical-align:middle\"></span>85-89: 1.70 %</div>",
      "<b></b> ()<br>"
     ]
@@ -1056,10 +1194,10 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "b11b98cacfe8467c",
-     "setDigest": "599669d37ff75fcb",
+     "digest": "12b2010ff7563dd9",
+     "setDigest": "a90e88862e36545e",
      "columnDigests": {
-      "getFillColor": "9a12dc8a44a1094d",
+      "getFillColor": "b764ddf74160e870",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
@@ -1071,9 +1209,9 @@
      "sample": [
       [
        [
-        207,
-        255,
-        51
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -1086,9 +1224,9 @@
       ],
       [
        [
-        201,
-        250,
-        66
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -1116,9 +1254,9 @@
       ],
       [
        [
-        207,
-        255,
-        51
+        153,
+        93,
+        154
        ],
        [
         "Polygon",
@@ -1131,9 +1269,9 @@
       ],
       [
        [
-        189,
-        240,
-        96
+        154,
+        81,
+        149
        ],
        [
         "Polygon",
@@ -1521,13 +1659,82 @@
        81,
        149
       ]
+     ],
+     "dominantMeans": [
+      1.610763,
+      1.916979,
+      2.204661,
+      2.39961,
+      2.510551,
+      2.553097,
+      2.642526,
+      2.750041,
+      3.037292,
+      3.67711,
+      4.079168,
+      4.291539,
+      3.902543,
+      3.40078,
+      3.024506,
+      2.474713,
+      1.766418,
+      1.094536,
+      0.408705,
+      0.081296,
+      0.007553
+     ],
+     "dominantMins": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "dominantStdDevs": [
+      0.502221,
+      0.545336,
+      0.579306,
+      0.582686,
+      0.599414,
+      0.606858,
+      0.588941,
+      0.589694,
+      0.610284,
+      0.669536,
+      0.710027,
+      0.782053,
+      0.8043,
+      0.828069,
+      0.800987,
+      0.714977,
+      0.604441,
+      0.496147,
+      0.278908,
+      0.132512,
+      0.065437
      ]
     }
    ],
    "legend": [],
    "tooltips": {
     "comuni": [
-     "<b>Agliè</b> (Torino)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(207,255,51);margin-right:0.4em;vertical-align:middle\"></span>0-4: 2.00 %</div>",
+     "<b>Agliè</b> (Torino)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(154,81,149);margin-right:0.4em;vertical-align:middle\"></span>100+: 0.04 %</div>",
      "<b>Davagna</b> (Genova)<br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(152,118,164);margin-right:0.4em;vertical-align:middle\"></span>85-89: 1.70 %</div>",
      "<b></b> ()<br>"
     ]

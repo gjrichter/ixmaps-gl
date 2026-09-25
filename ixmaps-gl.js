@@ -3803,32 +3803,42 @@
   // _resolveDominantClass). All three are computed unconditionally even
   // though a given theme only ends up using one relevance formula — the
   // pass is cheap, and one prep path avoids duplicating the field-parsing
-  // loop per mode. Values are filtered by JS truthiness (skips NaN AND
-  // exactly 0), matching the real source's own `nValuesA[i]||0`-style
-  // pooling (maptheme.js:13154, confirmed by direct source read) — not
-  // merely a NaN guard.
+  // loop per mode. The pooling differs per statistic, as in the real
+  // source (verified against real ixmaps-flat with --flat-oracle):
+  // MEAN and MIN take every finite value INCLUDING 0 — nSumA/nMinA are
+  // accumulated per item (maptheme.js:9121-9128) and nMeanA = nSumA /
+  // nCount divides by the item count (maptheme.js:13126ff) — the DATA
+  // records, so a polygon without a joined record (empty properties, see
+  // joinChoroplethFeatures) is not counted; the STDDEV
+  // pools only truthy values (skips NaN AND exactly 0, `if
+  // (nValuesA[i]) nPopA.push(...)`, maptheme.js:12976) around that
+  // pool's own mean, as getDeviationOfArray does.
   function computeDominantStats(features, binding, style) {
     const out = {};
     Object.assign(out, computeMultiFieldClasses(binding, style));
     const fields = out._multiFields;
-    const sums = fields.map(() => 0), counts = fields.map(() => 0), mins = fields.map(() => Infinity);
+    const sums = fields.map(() => 0), mins = fields.map(() => Infinity);
     const valuesByField = fields.map(() => []);
+    let nItems = 0;
     features.forEach(f => {
+      if (!f.properties || !Object.keys(f.properties).length) return; // unjoined polygon
+      nItems++;
       fields.forEach((field, i) => {
         const v = parseFloat(f.properties[field]);
-        if (!v) return; // skips NaN and 0 — real source's own truthy pooling, not just a NaN guard
-        sums[i] += v; counts[i]++;
+        if (!isFinite(v)) return;
+        sums[i] += v;
         if (v < mins[i]) mins[i] = v;
-        valuesByField[i].push(v);
+        if (v) valuesByField[i].push(v); // stddev pool: truthy values only
       });
     });
-    out._dominantMeans = sums.map((s, i) => counts[i] ? s / counts[i] : 0);
+    out._dominantMeans = sums.map(s => nItems ? s / nItems : 0);
     out._dominantMins = mins.map(m => isFinite(m) ? m : 0);
     // Population standard deviation (divide by N, no Bessel's
-    // correction) — matches getDeviationOfArray exactly.
-    out._dominantStdDevs = valuesByField.map((vals, i) => {
+    // correction) of the truthy pool around its own mean — matches
+    // getDeviationOfArray exactly.
+    out._dominantStdDevs = valuesByField.map(vals => {
       if (!vals.length) return 0;
-      const mean = out._dominantMeans[i];
+      const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
       const variance = vals.reduce((s, v) => s + (v - mean) * (v - mean), 0) / vals.length;
       return Math.sqrt(variance);
     });
@@ -3842,9 +3852,11 @@
   // mean[i].
   // DEVIATION (maptheme.js:13493/13502-13503, stddev from
   // getDeviationOfArray): nRelevanz = (value - mean[i]) / stddev[i] — a
-  // z-score. Both share the SAME filter: a field can only win if its own
-  // value is strictly greater than that field's own dataset-wide MIN
-  // (real default nFilterA[i] = nMinA[i]; szDominantFilter
+  // z-score. Every mode (plain DOMINANT too) shares the SAME filter: a
+  // field can only win if its own value is strictly greater than that
+  // field's own dataset-wide MIN, zeros included — so 0 for non-negative
+  // data (real source: `nValue > (nFilterA[i] || 0)`, maptheme.js:21423,
+  // default nFilterA[i] = nMinA[i]; szDominantFilter
   // "mean"/"median" variants aren't implemented, not used by any config
   // ported here). Both deliberately unguarded against divide-by-zero
   // (mean=0 or stddev=0) — matching the real source exactly: that
@@ -3854,7 +3866,7 @@
   //
   // Plain DOMINANT (no PERCENTOFMEAN/DEVIATION, per explicit
   // correction): nRelevanz = value itself — the field with the highest
-  // raw value wins outright, no mean/min filter. "Which band dominates
+  // raw value wins (subject to the min filter above). "Which band dominates
   // this comune's own local profile," not a cross-record comparison.
   //
   // All three: the winning threshold starts at 0, not -Infinity (real
@@ -3868,11 +3880,10 @@
     const fields = ctx._multiFields;
     const usePercentOfMean = ctx.flags.has('PERCENTOFMEAN');
     const useDeviation = ctx.flags.has('DEVIATION');
-    const needsFilter = usePercentOfMean || useDeviation;
     let bestIndex = -1, bestRelevance = 0, bestValue = null;
     for (let i = 0; i < fields.length; i++) {
       const v = parseFloat(props[fields[i]]);
-      if (needsFilter && !(v > ctx._dominantMins[i])) continue;
+      if (!(v > (ctx._dominantMins[i] || 0))) continue;
       const relevance = useDeviation ? (v - ctx._dominantMeans[i]) / ctx._dominantStdDevs[i]
         : usePercentOfMean ? 100 * v / ctx._dominantMeans[i]
         : v;
