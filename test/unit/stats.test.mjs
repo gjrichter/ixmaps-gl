@@ -137,3 +137,21 @@ test('groupCoLocated: points in the same grid cell merge; per-category values an
   assert.deepEqual(plain(milan.properties.counts), [2, 3]);
   assert.deepEqual(plain(milan.properties.recordCounts), [1, 4]);
 });
+
+// ---- class count (flat: number of classes = number of colors in the scheme)
+test('colorSchemeClassCount: explicit list → its length; generator ["N", …] → N; function/none → unknown', () => {
+  assert.equal(G.colorSchemeClassCount(['#a', '#b', '#c', '#d', '#e', '#f']), 6);
+  assert.equal(G.colorSchemeClassCount(['#a']), 1);
+  assert.equal(G.colorSchemeClassCount(['7', '#36A6B1', '#b94023', '3colors', '#DDA729']), 7);
+  assert.equal(G.colorSchemeClassCount('function (t) {}'), null);
+  assert.equal(G.colorSchemeClassCount(['none']), null);
+  assert.equal(G.colorSchemeClassCount(undefined), null);
+});
+
+test('computeRangeClasses: without style.classes the class count follows the colors (flat); classes still wins', () => {
+  const fs_ = Array.from({ length: 30 }, (_, i) => feat({ v: i }));
+  assert.equal(G.computeRangeClasses(fs_, { value: 'v' }, { colorscheme: ['#1', '#2', '#3', '#4', '#5', '#6'] }, flags('QUANTILE'), String).partsA.length, 6);
+  assert.equal(G.computeRangeClasses(fs_, { value: 'v' }, { colorscheme: ['7', '#a', '#b', '3colors', '#c'] }, flags(), String).partsA.length, 7);
+  assert.equal(G.computeRangeClasses(fs_, { value: 'v' }, { classes: 3, colorscheme: ['#1', '#2', '#3', '#4', '#5', '#6'] }, flags(), String).partsA.length, 3);
+  assert.equal(G.computeRangeClasses(fs_, { value: 'v' }, { colorscheme: 'function (t) {}' }, flags(), String).partsA.length, 5, 'unknown count → default 5');
+});

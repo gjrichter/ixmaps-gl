@@ -3978,6 +3978,20 @@
   // same way for every method (`partsA[last].max += 0.001`, line 13166)
   // — this engine achieves the same effect via an inclusive last-bucket
   // comparison in _resolvePartsClass instead of a literal epsilon bump.
+  // Real ixmaps-flat's class count: the number of classes IS the number of
+  // colors in the theme's color scheme (maptheme.js: `var nParts =
+  // this.colorScheme.length;` — and style.classes works by rewriting the
+  // scheme into an N-color ramp, parseStyle). An explicit color list → its
+  // length (a single color → 1 class); a generator spec ["N", ...] → N. A
+  // scheme given as a function can't be counted up front → null (caller
+  // falls back to DEFAULT_RANGE_CLASSES).
+  function colorSchemeClassCount(colorscheme) {
+    if (!Array.isArray(colorscheme) || !colorscheme.length) return null;
+    if (/^\d+$/.test(String(colorscheme[0]))) return Number(colorscheme[0]) || null;
+    if (colorscheme.length === 1 && colorscheme[0] === 'none') return null;
+    return colorscheme.length;
+  }
+
   function computeRangeClasses(features, binding, style, flags, formatValue) {
     const out = {};
     const values = features
@@ -4003,7 +4017,7 @@
     out._valueMax = nMax;
     const sorted = values.slice().sort((a, b) => a - b);
     out._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
-    const nParts = parseInt(style.classes, 10) || DEFAULT_RANGE_CLASSES;
+    const nParts = parseInt(style.classes, 10) || colorSchemeClassCount(style.colorscheme) || DEFAULT_RANGE_CLASSES;
     const placeholders = new Array(nParts).fill('');
     const colorsRgb = resolveClassColors(style.colorscheme, placeholders);
 
@@ -6600,7 +6614,7 @@
     normalizeTheme, projectThemeToDefinition, LayerBuilder,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
-    resolveComposedColor, computeRangeClasses, resolveDopacityAlpha,
+    resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated,
   };
   global.__setFilter = __setFilter;

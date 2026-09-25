@@ -489,11 +489,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "c705596ff83f04af",
-     "setDigest": "b2f2f368e460e427",
+     "digest": "96737ba1f050b254",
+     "setDigest": "788bc395fea1db2f",
      "columnDigests": {
       "getColor": "ff16a2e377a19173",
-      "getIcon": "eb85984fdc541d76",
+      "getIcon": "fba9d17400cd56b7",
       "getPosition": "8fd4cf9eae52b53b",
       "getSize": "4e7b65ccdcba7d3f"
      },
@@ -1409,11 +1409,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b2d0efbed79ae8ba",
-     "setDigest": "7fee7b42a9c9d831",
+     "digest": "9265fd5565776c32",
+     "setDigest": "60a9cc9fe508ac03",
      "columnDigests": {
       "getColor": "55f8264960bed79a",
-      "getIcon": "10cbb582453426dd",
+      "getIcon": "ffabb4e0a19e355b",
       "getPosition": "257bc31478f59f1e",
       "getSize": "91e838bb8afd23ac"
      },
@@ -2329,11 +2329,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b20c389f1f8702fe",
-     "setDigest": "c298eb6215e4a096",
+     "digest": "459e336e2c2261c4",
+     "setDigest": "a4341005e1ea1109",
      "columnDigests": {
       "getColor": "c6fbc8399cf46287",
-      "getIcon": "ee1a991e5ff18f86",
+      "getIcon": "457c4b2316db6c75",
       "getPosition": "1342815aca9b69cf",
       "getSize": "2299767bbd94c1ec"
      },
@@ -2791,33 +2791,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
       [
        68,
        136,
@@ -2828,22 +2804,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -2866,33 +2826,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
       [
        255,
        136,
@@ -2903,22 +2839,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -2941,33 +2861,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
       [
        255,
        32,
@@ -2978,22 +2874,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -3003,25 +2883,25 @@
     }
    ],
    "legend": [
-    "Slight ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%",
-    "Serious ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%",
-    "Fatal ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%"
+    "Slight ▾ 1.00 - 2.00 0.00 Chart size: 100%",
+    "Serious ▾ 1.00 - 2.00 0.00 Chart size: 100%",
+    "Fatal ▾ 1.00 - 2.00 0.00 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>52.26</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>0.56</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>3.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 2.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>5.00 - 6.00: 953.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 953.00</div>"
     ],
     "serious": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>51.73</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-1.69</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>2.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 2.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>5.00 - 6.00: 200.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 200.00</div>"
     ],
     "fatal": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>52.24</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-0.68</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>1.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>52.62</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-2.08</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>1.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>5.00 - 6.00: 6.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 6.00</div>"
     ]
    },
    "validation": null
@@ -3514,11 +3394,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "cee45f91283b94e9",
-     "setDigest": "c031c7f7f1e7a8ae",
+     "digest": "38669c971b3dbc9d",
+     "setDigest": "e0440ad6dbdab11c",
      "columnDigests": {
       "getColor": "9a19ec4aeed4b58e",
-      "getIcon": "8a20edcd3d1cae36",
+      "getIcon": "3fd0cdfa1499ee29",
       "getPosition": "e27f84e2abd01497",
       "getSize": "28b202e33dd1a0c7"
      },
@@ -4434,11 +4314,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "3b71961d008a4be2",
-     "setDigest": "7c8e0de5e0ef470a",
+     "digest": "0ecbcfa87359ad56",
+     "setDigest": "136737a19b32ef78",
      "columnDigests": {
       "getColor": "7dffe396481d16bc",
-      "getIcon": "c8d99873a9c8401c",
+      "getIcon": "6d923651bd0e9e11",
       "getPosition": "73396c3364055a45",
       "getSize": "31a7ebbce99f34a4"
      },
@@ -5354,11 +5234,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "4efba9a8b8bd976e",
-     "setDigest": "b1e9652216142b87",
+     "digest": "49f8d9dfe592ab35",
+     "setDigest": "a7a4e10e90d83376",
      "columnDigests": {
       "getColor": "fdc384e70b3c7f83",
-      "getIcon": "819cbeb5f581af2d",
+      "getIcon": "1e0d03cea4d7dc5c",
       "getPosition": "35b914468c84a3dc",
       "getSize": "d46862ccb5e0caf8"
      },
@@ -5816,33 +5696,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
       [
        68,
        136,
@@ -5853,22 +5709,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -5891,33 +5731,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
       [
        255,
        136,
@@ -5928,22 +5744,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -5966,33 +5766,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
       [
        255,
        32,
@@ -6003,22 +5779,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -6028,25 +5788,25 @@
     }
    ],
    "legend": [
-    "Slight ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%",
-    "Serious ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%",
-    "Fatal ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%"
+    "Slight ▾ 1.00 - 2.00 0.00 Chart size: 100%",
+    "Serious ▾ 1.00 - 2.00 0.00 Chart size: 100%",
+    "Fatal ▾ 1.00 - 2.00 0.00 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>52.85</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-0.29</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>3.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 2.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>2.00 - 3.00: 101.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 101.00</div>"
     ],
     "serious": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>53.94</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-0.90</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>2.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>55.21</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-2.11</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>2.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>3.00 - 4.00: 43.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 43.00</div>"
     ],
     "fatal": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>55.16</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-1.61</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>1.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>52.90</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-2.62</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>1.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>4.00 - 5.00: 3.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 3.00</div>"
     ]
    },
    "validation": null
@@ -6539,11 +6299,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "90bc96068cee610e",
-     "setDigest": "e520069746d92f87",
+     "digest": "835db177838532b9",
+     "setDigest": "b0fcebd8b65129c5",
      "columnDigests": {
       "getColor": "3c23d823b6878e54",
-      "getIcon": "fa7628f67c1c2c62",
+      "getIcon": "3853fb76eee1cbc5",
       "getPosition": "5ffbaaccdeecc4dc",
       "getSize": "c69be93dd22be125"
      },
@@ -7459,11 +7219,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "218b156da6a61e95",
-     "setDigest": "159a0105362e5963",
+     "digest": "8f8ce01b9f9c54f6",
+     "setDigest": "7e2589883a49095f",
      "columnDigests": {
       "getColor": "9991d16304faa8a5",
-      "getIcon": "1be6078ba9e6d1cc",
+      "getIcon": "5cde41e1fe6c1c05",
       "getPosition": "c3feee8e433493f1",
       "getSize": "dae93386c6a757b9"
      },
@@ -8379,11 +8139,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "18c47e0c6b70bee3",
-     "setDigest": "b29409141be2ef5e",
+     "digest": "f5d56c6c42b42150",
+     "setDigest": "70dafaa5fa312e36",
      "columnDigests": {
       "getColor": "ae462dcc691f4c69",
-      "getIcon": "dbf0927e357902fe",
+      "getIcon": "2fbc643132faa91d",
       "getPosition": "2a7dae4a332afe8e",
       "getSize": "24815e3904f24118"
      },
@@ -8841,33 +8601,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
-      [
-       68,
-       136,
-       255
-      ],
       [
        68,
        136,
@@ -8878,22 +8614,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -8916,33 +8636,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
-      [
-       255,
-       136,
-       0
-      ],
       [
        255,
        136,
@@ -8953,22 +8649,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -8991,33 +8671,9 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 2.00",
-      "2.00 - 3.00",
-      "3.00 - 4.00",
-      "4.00 - 5.00",
-      "5.00 - 6.00"
+      "1.00 - 2.00"
      ],
      "categoryColorsRgb": [
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
-      [
-       255,
-       32,
-       32
-      ],
       [
        255,
        32,
@@ -9028,22 +8684,6 @@
       {
        "max": 2,
        "min": 1
-      },
-      {
-       "max": 3,
-       "min": 2
-      },
-      {
-       "max": 4,
-       "min": 3
-      },
-      {
-       "max": 5,
-       "min": 4
-      },
-      {
-       "max": 6,
-       "min": 5
       }
      ],
      "rangeClassed": true,
@@ -9053,25 +8693,25 @@
     }
    ],
    "legend": [
-    "Slight ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%",
-    "Serious ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%",
-    "Fatal ▾ 1.00 - 2.00 0.00 2.00 - 3.00 0.00 3.00 - 4.00 0.00 4.00 - 5.00 0.00 5.00 - 6.00 0.00 Chart size: 100%"
+    "Slight ▾ 1.00 - 2.00 0.00 Chart size: 100%",
+    "Serious ▾ 1.00 - 2.00 0.00 Chart size: 100%",
+    "Fatal ▾ 1.00 - 2.00 0.00 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>51.20</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>0.66</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>3.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 5.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>5.00 - 6.00: 2 897.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(68,136,255);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 2 897.00</div>"
     ],
     "serious": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>55.20</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-1.93</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>2.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 3.00</div>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>5.00 - 6.00: 642.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,136,0);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 642.00</div>"
     ],
     "fatal": [
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>53.62</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-1.70</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>1.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
      "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>: 1.00</div><table style=\"font-size:0.85em;border-collapse:collapse\"><tr><td style=\"padding:0 0.6em 0 0;color:#888\">la</td><td>53.78</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">lo</td><td>-2.57</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">s</td><td>1.00</td></tr><tr><td style=\"padding:0 0.6em 0 0;color:#888\">n</td><td>1.00</td></tr></table>",
-     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>5.00 - 6.00: 10.00</div>"
+     "<div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,32,32);margin-right:0.4em;vertical-align:middle\"></span>1.00 - 2.00: 10.00</div>"
     ]
    },
    "validation": null
