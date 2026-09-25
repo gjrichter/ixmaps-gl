@@ -29,13 +29,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b56de9a6ae2b274a",
-     "setDigest": "6a24ce9af0490647",
+     "digest": "0541ff45229d84ed",
+     "setDigest": "0541ff45229d84ed",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
-      "getIcon": "ae062097971759b6",
-      "getPosition": "03ced840ded58f9e",
-      "getSize": "10698c26645aa11f"
+      "getIcon": "db2c389e9ef30ec2",
+      "getPosition": "4c28149854a8aaae",
+      "getSize": "d6e0b2b00ff9b3dc"
      },
      "stats": {
       "getColor": [
@@ -47,8 +47,8 @@
        9.2
       ],
       "getSize": [
-       50,
-       50
+       80,
+       80
       ]
      },
      "sample": [
@@ -68,10 +68,10 @@
         "width": 48
        },
        [
-        9.19,
-        45.46
+        9.18,
+        45.45
        ],
-       50
+       80
       ],
       [
        [
@@ -86,34 +86,34 @@
         "height": 48,
         "id": "single-circle-230,25,75-0.85-none-0",
         "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.19,
+        45.46
+       ],
+       80
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-67,99,216-0.85-none-0",
+        "url": "#7ea85d4d:1782",
         "width": 48
        },
        [
         9.2,
         45.47
        ],
-       50
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
-       [
-        9.18,
-        45.45
-       ],
-       50
+       80
       ]
      ]
     }
@@ -133,7 +133,8 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 1.00"
+      "5.00 - 12.00",
+      "12.00 - 20.00"
      ],
      "categoryColorsRgb": [
       [
@@ -149,14 +150,18 @@
      ],
      "partsA": [
       {
-       "max": 1.00101,
-       "min": 1
+       "max": 12,
+       "min": 5
+      },
+      {
+       "max": 20.0012,
+       "min": 12
       }
      ],
      "rangeClassed": true,
-     "valueMin": 1,
-     "valueMax": 1,
-     "valueMedian": 1
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
     },
     {
      "name": "pie",
@@ -398,13 +403,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "f0dbeebe1e64fb2a",
-     "setDigest": "52b137b7088c532a",
+     "digest": "0541ff45229d84ed",
+     "setDigest": "0541ff45229d84ed",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
-      "getIcon": "ae062097971759b6",
-      "getPosition": "03ced840ded58f9e",
-      "getSize": "a2dfae6c9c1a3ef4"
+      "getIcon": "db2c389e9ef30ec2",
+      "getPosition": "4c28149854a8aaae",
+      "getSize": "d6e0b2b00ff9b3dc"
      },
      "stats": {
       "getColor": [
@@ -416,8 +421,8 @@
        9.2
       ],
       "getSize": [
-       62.996052,
-       62.996052
+       80,
+       80
       ]
      },
      "sample": [
@@ -437,10 +442,10 @@
         "width": 48
        },
        [
-        9.19,
-        45.46
+        9.18,
+        45.45
        ],
-       62.996052
+       80
       ],
       [
        [
@@ -455,34 +460,34 @@
         "height": 48,
         "id": "single-circle-230,25,75-0.85-none-0",
         "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.19,
+        45.46
+       ],
+       80
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-67,99,216-0.85-none-0",
+        "url": "#7ea85d4d:1782",
         "width": 48
        },
        [
         9.2,
         45.47
        ],
-       62.996052
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
-       [
-        9.18,
-        45.45
-       ],
-       62.996052
+       80
       ]
      ]
     }
@@ -502,7 +507,8 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 1.00"
+      "5.00 - 12.00",
+      "12.00 - 20.00"
      ],
      "categoryColorsRgb": [
       [
@@ -518,14 +524,18 @@
      ],
      "partsA": [
       {
-       "max": 1.00101,
-       "min": 1
+       "max": 12,
+       "min": 5
+      },
+      {
+       "max": 20.0012,
+       "min": 12
       }
      ],
      "rangeClassed": true,
-     "valueMin": 1,
-     "valueMax": 1,
-     "valueMedian": 1
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
     },
     {
      "name": "pie",
@@ -767,13 +777,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "241a26847bc34fd6",
-     "setDigest": "42c109c971d39087",
+     "digest": "0541ff45229d84ed",
+     "setDigest": "0541ff45229d84ed",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
-      "getIcon": "ae062097971759b6",
-      "getPosition": "03ced840ded58f9e",
-      "getSize": "e01280d5c8875fda"
+      "getIcon": "db2c389e9ef30ec2",
+      "getPosition": "4c28149854a8aaae",
+      "getSize": "d6e0b2b00ff9b3dc"
      },
      "stats": {
       "getColor": [
@@ -785,8 +795,8 @@
        9.2
       ],
       "getSize": [
-       39.685026,
-       39.685026
+       80,
+       80
       ]
      },
      "sample": [
@@ -806,10 +816,10 @@
         "width": 48
        },
        [
-        9.19,
-        45.46
+        9.18,
+        45.45
        ],
-       39.685026
+       80
       ],
       [
        [
@@ -824,34 +834,34 @@
         "height": 48,
         "id": "single-circle-230,25,75-0.85-none-0",
         "url": "#d94547c6:1750",
+        "width": 48
+       },
+       [
+        9.19,
+        45.46
+       ],
+       80
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-67,99,216-0.85-none-0",
+        "url": "#7ea85d4d:1782",
         "width": 48
        },
        [
         9.2,
         45.47
        ],
-       39.685026
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
-       [
-        9.18,
-        45.45
-       ],
-       39.685026
+       80
       ]
      ]
     }
@@ -871,7 +881,8 @@
      "active": null,
      "hidden": false,
      "categoryLabels": [
-      "1.00 - 1.00"
+      "5.00 - 12.00",
+      "12.00 - 20.00"
      ],
      "categoryColorsRgb": [
       [
@@ -887,14 +898,18 @@
      ],
      "partsA": [
       {
-       "max": 1.00101,
-       "min": 1
+       "max": 12,
+       "min": 5
+      },
+      {
+       "max": 20.0012,
+       "min": 12
       }
      ],
      "rangeClassed": true,
-     "valueMin": 1,
-     "valueMax": 1,
-     "valueMedian": 1
+     "valueMin": 5,
+     "valueMax": 20,
+     "valueMedian": 10
     },
     {
      "name": "pie",

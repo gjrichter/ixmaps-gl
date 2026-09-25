@@ -126,11 +126,14 @@ test('resolveDopacityAlpha with an alpha binding reads the precomputed per-featu
 });
 
 // ---- aggregation value math
-test('resolveAggregateValue: size field, else SUM of the value field, else a count of 1', () => {
+test('resolveAggregateValue (the cell SIZE): size field; CATEGORICAL → count; value-based → the value, SUM or not (flat)', () => {
   assert.equal(G.resolveAggregateValue({ size: 's' }, flags(), { s: '4' }), 4);
   assert.equal(G.resolveAggregateValue({ size: 's' }, flags(), { s: 'x' }), 0);
   assert.equal(G.resolveAggregateValue({ value: 'v' }, flags('SUM'), { v: 3 }), 3);
-  assert.equal(G.resolveAggregateValue({ value: 'v' }, flags(), { v: 3 }), 1);
+  assert.equal(G.resolveAggregateValue({ value: 'v' }, flags(), { v: 3 }), 3, 'flat aggregates by sum by default');
+  assert.equal(G.resolveAggregateValue({ value: 'v' }, flags(), { v: 'x' }), 0);
+  assert.equal(G.resolveAggregateValue({ value: 'cat' }, flags('CATEGORICAL'), { cat: 'A' }), 1, 'CATEGORICAL: count per category');
+  assert.equal(G.resolveAggregateValue({ value: 'cat', size: 's' }, flags('CATEGORICAL'), { cat: 'A', s: 5 }), 5);
 });
 
 test('cellAggregatedValues: sums, or means with MEAN', () => {
@@ -228,4 +231,33 @@ test('flatRangeParts: all values equal → one class', () => {
   const p = G.flatRangeParts([1, 1, 1], 1, 1, 5, flags());
   assert.equal(p.length, 1);
   assert.equal(p[0].min, 1);
+});
+
+// ---- AGGREGATE class value (flat: cells are classed by the summed value field)
+test('classValueSeparate: only where the class sum differs from the size sum', () => {
+  assert.equal(G.classValueSeparate({ value: 'v' }, flags()), false, 'no size: the value sum sizes AND classes the cell');
+  assert.equal(G.classValueSeparate({ value: 'v' }, flags('SUM')), false);
+  assert.equal(G.classValueSeparate({ value: 'v', size: 'v' }, flags()), false);
+  assert.equal(G.classValueSeparate({ value: 'v', size: 's' }, flags()), true);
+  assert.equal(G.classValueSeparate({ size: 's' }, flags()), false, 'no value field: nothing to class by');
+});
+
+test('aggregateOnGrid / groupCoLocated sum a separate classValue alongside the size value', () => {
+  const rec = (lng, lat, value, classValue) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { value, classValue, raw: {} } });
+  const [cell] = G.aggregateOnGrid([rec(9.19, 45.46, 1, 5), rec(9.19001, 45.46001, 1, 7)], 12, 10, flags('RECT'));
+  assert.equal(cell.properties.value, 2, 'size: record count');
+  assert.equal(cell.properties.classValue, 12, 'class: sum of the value field');
+  const [group] = G.groupCoLocated([{ ...cell, properties: { ...cell.properties, cat: 0 } }], 12, 10, 1, flags('RECT'));
+  assert.equal(group.properties.classTotal, 12);
+  const [plainCell] = G.aggregateOnGrid([pt(9.19, 45.46, 2), pt(9.19001, 45.46001, 3)], 12, 10, flags('RECT'));
+  assert.equal(plainCell.properties.classValue, undefined, 'no classValue unless the records carry one');
+});
+
+// ---- NOOUTLIER (flat: mean over all items, deviation over the non-zero ones)
+test('flatOutlierStats: mean incl. zeros, stddev over the non-zero values around their own mean', () => {
+  const { mean, threshold } = G.flatOutlierStats([0, 0, 2, 4], 3);
+  assert.equal(mean, 1.5, 'mean over all 4 items');
+  assert.equal(threshold, 3, 'stddev of [2,4] = 1, × 3');
+  // zeros don't shrink the deviation: [0 × 8, 10, 30] → pool stddev 10
+  assert.equal(G.flatOutlierStats([0, 0, 0, 0, 0, 0, 0, 0, 10, 30], 3).threshold, 30);
 });

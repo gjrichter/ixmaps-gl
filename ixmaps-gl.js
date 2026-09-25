@@ -221,7 +221,7 @@
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
   // v0.1.6: knows this engine's aliases, lookupfield rule, meta↔style, builder methods, project loading
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.6/dist/validate.mjs';
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.7/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -520,6 +520,28 @@
   // loaded at all.
   // ---------------------------------------------------------------
 
+  // .data({process}) — real ixmaps-flat's data processing hook
+  // (htmlgui.js:1749-1760 registers it as ixmaps.<name>.process, called
+  // after loading as `data = process(data, options) || data`,
+  // htmlgui.js:3646/3774): a page-written function (or its toString())
+  // that receives the loaded data as a data.js Table and may change it —
+  // add computed columns (addColumn), filter, … . Run against the REAL
+  // data.js (window.Data, loaded by the page like for .data({query})),
+  // with the CSV parsed by data.js too (Data.import, flat's own parser),
+  // so the function sees exactly the Table flat gives it. Only a page's
+  // own .data() runs one; loadProject strips it from project files.
+  function requireDataJs(what) {
+    if (!global.Data) {
+      throw new Error(`[ixmaps-gl] .data({${what}}) needs the real data.js loaded first — ` +
+        '<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"> before ixmaps-gl.js');
+    }
+  }
+  function runDataProcess(table, dataConfig) {
+    const fn = typeof dataConfig.process === 'function' ? dataConfig.process : new Function(`return (${dataConfig.process});`)();
+    if (typeof fn !== 'function') throw new Error('[ixmaps-gl] .data({process}) is not a function');
+    return fn(table, dataConfig) || table;
+  }
+
   async function fetchLayerData(dataConfig, binding) {
     if (!dataConfig || (!dataConfig.url && !dataConfig.urls && !dataConfig.query && !dataConfig.obj)) {
       throw new Error('[ixmaps-gl] layer .data() needs a url, urls, query, or obj');
@@ -551,7 +573,21 @@
     if (dataConfig.obj) {
       if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(dataConfig.obj);
       if (dataConfig.type === 'geojson') return sanitizeGeoJSON(dataConfig.obj);
-      const rows = typeof dataConfig.obj.json === 'function' ? dataConfig.obj.json() : dataConfig.obj;
+      let obj = dataConfig.obj;
+      if (dataConfig.process) {
+        requireDataJs('process');
+        if (typeof obj.json !== 'function') {
+          // a jsonDB object ({table, fields, records}) or plain row objects
+          if (Array.isArray(obj)) {
+            const headers = Object.keys(obj[0] || {});
+            obj = new global.Data.Table().setArray([headers, ...obj.map(r => headers.map(h => r[h]))]);
+          } else {
+            obj = new global.Data.Table(obj);
+          }
+        }
+        obj = runDataProcess(obj, dataConfig);
+      }
+      const rows = typeof obj.json === 'function' ? obj.json() : obj;
       return rowsResult(rows, binding);
     }
 
@@ -565,7 +601,7 @@
         _pendingQueryResolve = resolve;
         queryFn({}, {});
       });
-      return rowsResult(dataObj.json(), binding);
+      return rowsResult((dataConfig.process ? runDataProcess(dataObj, dataConfig) : dataObj).json(), binding);
     }
 
     if (dataConfig.type === 'csv') {
@@ -575,7 +611,23 @@
         if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${url}: ${resp.status}`);
         return resp.text();
       }));
-      let rows = [].concat(...texts.map(parseCsvText));
+      let rows;
+      if (dataConfig.process) {
+        requireDataJs('process');
+        // data.js parses (as flat does); several urls append their records
+        // Data.object(...).import(cb): data.js may first load its CSV
+        // parser (PapaParse), so the Table arrives via the callback
+        const tables = await Promise.all(texts.map(text => new Promise((resolve, reject) => {
+          global.Data.object({ source: text, type: 'csv', error: e => reject(new Error(`[ixmaps-gl] data.js CSV import failed: ${e}`)) })
+            .import(table => resolve(table));
+        })));
+        const table = tables[0];
+        for (const t of tables.slice(1)) table.records = table.records.concat(t.records);
+        table.table.records = table.records.length;
+        rows = runDataProcess(table, dataConfig).json();
+      } else {
+        rows = [].concat(...texts.map(parseCsvText));
+      }
       if (dataConfig.remap) {
         Object.entries(dataConfig.remap).forEach(([field, map]) => {
           rows.forEach(row => { if (row[field] in map) row[field] = map[row[field]]; });
@@ -1507,7 +1559,7 @@
           raw = await fetchLayerData(spec.data, spec.binding);
           cacheKey = 'obj:' + spec.name;
         } else {
-          cacheKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query });
+          cacheKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, process: spec.data && spec.data.process && String(spec.data.process) });
           if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(spec.data, spec.binding));
           raw = await dataCache.get(cacheKey);
         }
@@ -2087,7 +2139,7 @@
             if (/replace/i.test(f) && name) removeThemesNamed(name);
             else if (i === 0 && !/add/i.test(f)) [...new Set(runtimes.map(r => r.name))].forEach(n => engineApi.removeTheme(n));
             try {
-              report.themes.push(await defineFromDefinition(t));
+              report.themes.push(await defineFromDefinition(withoutProjectCode(t, report)));
             } catch (e) {
               report.skipped.push({ layer: t.layer, reason: e.message });
             }
@@ -2097,6 +2149,19 @@
           console.warn('[ixmaps-gl] loadProject:', [...report.notes, ...report.skipped.map(x => `theme "${x.layer}" skipped — ${x.reason}`)].join('; '));
         }
         return report;
+      }
+
+      // a project file's data processing function is code the project
+      // names — kept out, never run (a page's own .data({process}) runs)
+      function withoutProjectCode(t, report) {
+        const hasData = t.data && t.data.process != null;
+        const hasStyle = t.style && t.style.dbtableProcess != null;
+        if (!hasData && !hasStyle) return t;
+        report.notes.push(`theme "${t.layer}": the project's data.process function is never run by ixmaps-gl`);
+        const copy = Object.assign({}, t);
+        if (hasData) { copy.data = Object.assign({}, t.data); delete copy.data.process; }
+        if (hasStyle) { copy.style = Object.assign({}, t.style); delete copy.style.dbtableProcess; }
+        return copy;
       }
 
       function applyProjectMap(m, f, report) {
@@ -4137,6 +4202,21 @@
     return parts;
   }
 
+  // NOOUTLIER as real ixmaps-flat computes it over the aggregated items
+  // (maptheme.js distributeValues 12380-12440): an item is an outlier when
+  // |value − mean| > deviation · outlierscale (default 3), where the MEAN
+  // is over every item, zeros included (getMeanMedianQuantile: sum/count,
+  // 8045ff), but the DEVIATION only over the non-zero values, around their
+  // own mean (`if (nValuesA[i]) nPopA.push(...)`, getDeviationOfArray —
+  // population stddev). Min/max are recomputed after the removal (12441).
+  function flatOutlierStats(values, scale) {
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    const pool = values.filter(v => v);
+    const poolMean = pool.length ? pool.reduce((a, b) => a + b, 0) / pool.length : 0;
+    const deviation = pool.length ? Math.sqrt(pool.reduce((a, v) => a + (v - poolMean) * (v - poolMean), 0) / pool.length) : 0;
+    return { mean, threshold: deviation * scale };
+  }
+
   function computeRangeClasses(features, binding, style, flags, formatValue) {
     const out = {};
     const values = features
@@ -4265,23 +4345,27 @@
   // Re-run whenever the active feature set changes (facet filter, or
   // .binding.size rebound via setSizeField) so clustering always reflects
   // what's actually visible/bound right now.
-  // GL-PORT COMPAT: this engine's own idiom for "what to sum per cell" is
-  // a dedicated binding.size (independent of binding.value, which drives
-  // color/class) — but a real-ixmaps-flat page ported straight across,
-  // unmodified, often has only ONE field bound (binding.value) plus an
-  // explicit SUM flag, expecting THAT field to be summed (real engine
-  // semantics: AGGREGATE|SUM on the bound value sums it). Falling back to
-  // a per-record COUNT (this engine's default when binding.size is unset)
-  // would silently produce nonsense totals for such a page — this makes
-  // SUM without a separate size binding behave like the real source
-  // instead of requiring the page to be rewritten with an extra binding.
+  // What a record adds to its AGGREGATE cell's size, as in real
+  // ixmaps-flat:
+  //  - a size field bound: its value (summed per cell / per category);
+  //  - CATEGORICAL without a size field: 1 — the record count per category;
+  //  - value-based (numeric value field) without a size field: the value
+  //    itself — the cell's aggregated value (flat's default aggregation is
+  //    "sum", SUM or not) is what sizes the symbol, after NORMALIZE when
+  //    set (e.g. roma: summed Pericolosita, normalized to 0..1).
+  // (flat's per-item nSize holds a record count in that last case, but it
+  // is not what draws a value-based symbol.)
   function resolveAggregateValue(binding, flags, props) {
     if (binding.size) return parseFloat(props[binding.size]) || 0;
-    if (flags.has('SUM') && binding.value != null) {
-      const v = parseFloat(props[binding.value]);
-      if (!isNaN(v)) return v;
-    }
-    return 1;
+    if (flags.has('CATEGORICAL') || binding.value == null) return 1;
+    return parseFloat(props[binding.value]) || 0;
+  }
+
+  // Whether a range-classed AGGREGATE cell's class value (flat: the sum
+  // of the value field, nValuesA) differs from its size sum: only when a
+  // size field other than the value field is bound.
+  function classValueSeparate(binding, flags) {
+    return binding.value != null && !!binding.size && binding.size !== binding.value;
   }
 
   // real engine's SUM (default) vs MEAN aggregation per cell per
@@ -4323,9 +4407,10 @@
       const snapped = cellPx ? snapToAggregationGrid(p.x, p.y, cellPx, flags) : p;
       const key = `${snapped.x}:${snapped.y}`;
       let cell = cells.get(key);
-      if (!cell) { cell = { snapped, sumX: 0, sumY: 0, n: 0, value: 0, first: f }; cells.set(key, cell); }
+      if (!cell) { cell = { snapped, sumX: 0, sumY: 0, n: 0, value: 0, classValue: 0, first: f }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
       cell.value += f.properties.value;
+      if (f.properties.classValue !== undefined) cell.classValue += f.properties.classValue;
     }
     const out = [];
     for (const cell of cells.values()) {
@@ -4334,7 +4419,7 @@
       const ll = worldPixelToLngLat(x, y, zoom);
       const geometry = { type: 'Point', coordinates: [ll.lng, ll.lat] };
       out.push(cell.n > 1
-        ? { type: 'Feature', geometry, properties: { cluster: true, point_count: cell.n, value: cell.value } }
+        ? { type: 'Feature', geometry, properties: { cluster: true, point_count: cell.n, value: cell.value, ...(cell.first.properties.classValue !== undefined ? { classValue: cell.classValue } : {}) } }
         : { type: 'Feature', geometry, properties: cell.first.properties });
     }
     return out;
@@ -4386,9 +4471,10 @@
       const snapped = cellPx ? snapToAggregationGrid(p.x, p.y, cellPx, flags) : p;
       const key = `${snapped.x}:${snapped.y}`;
       let cell = cells.get(key);
-      if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0) }; cells.set(key, cell); }
+      if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0), classTotal: undefined }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
       cell.counts[f.properties.cat] += f.properties.value;
+      if (f.properties.classValue !== undefined) cell.classTotal = (cell.classTotal || 0) + f.properties.classValue;
       // point_count is the aggregated-record count of a multi-record
       // cell (aggregateOnGrid; absent on a single-record cell)
       // — tracked separately from counts (the summed bound VALUE) purely
@@ -4399,7 +4485,7 @@
       const ll = worldPixelToLngLat(cell.sumX / cell.n, cell.sumY / cell.n, zoom);
       return {
         geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
-        properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts }
+        properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts, ...(cell.classTotal !== undefined ? { classTotal: cell.classTotal } : {}) }
       };
     });
   }
@@ -4721,11 +4807,19 @@
       // feature goes into ONE bucket; _buildChartLayers resolves the real
       // 7-class color once it knows each cell's actual aggregated total.
       if (this._rangeClassed) {
+        // flat colors/classes an aggregated cell by the SUM of the value
+        // field (nValuesA, maptheme.js:10870ff; classified by nValuesA[0],
+        // 16676/17386/18112), whatever sizes it. Where that differs from
+        // the quantity _resolveAggregateValue sums for the size — a size
+        // field other than the value field, or no size field and no SUM
+        // (a record count) — the cell carries its own classValue sum.
+        this._classSeparate = classValueSeparate(this.binding, this.flags);
         this._featuresByCategory = [sourceFeatures.map(f => ({
           type: 'Feature',
           geometry: f.geometry,
           properties: {
             value: this._resolveAggregateValue(f.properties),
+            ...(this._classSeparate ? { classValue: parseFloat(f.properties[this.binding.value]) || 0 } : {}),
             raw: f.properties
           }
         }))];
@@ -6030,7 +6124,8 @@
       const groups = doRelocate ? this._groupCoLocated(clusterFeatures, effectiveZoom) : clusterFeatures.map(f => {
         return {
           geometry: f.geometry,
-          properties: { counts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value }
+          properties: { counts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value,
+            ...(f.properties.classValue !== undefined ? { classTotal: f.properties.classValue } : {}) }
         };
       });
       return { individual, groups };
@@ -6069,15 +6164,19 @@
       const WORLD_BBOX = [-180, -85, 180, 85];
       const { individual, groups } = this._computeAggregatedItems(WORLD_BBOX, zoom);
       let totals = individual.map(d => d.properties.value).concat(groups.map(d => d.properties.total));
+      const rawSizeTotals = totals;
+      // A separate class value (see _buildAggregationIndex) is what flat's
+      // NOOUTLIER / NORMALIZE and classes act on (its nValuesA,
+      // maptheme.js:12786-12803) — never the size (nSize), which stays raw.
+      if (this._rangeClassed && this._classSeparate) {
+        totals = individual.map(d => d.properties.classValue).concat(groups.map(d => d.properties.classTotal));
+      }
 
-      // NOOUTLIER — see the block this replaces for the full real-source
-      // citation (maptheme.js distributeValues, population mean/stddev).
+      // NOOUTLIER — flat's rule, see flatOutlierStats
       let outlier = null;
       if (this.flags.has('NOOUTLIER') && totals.length) {
-        const mean = totals.reduce((a, b) => a + b, 0) / totals.length;
-        const variance = totals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / totals.length;
-        const threshold = Math.sqrt(variance) * (parseFloat(this.style.outlierscale) || 3);
-        outlier = { mean, threshold };
+        outlier = flatOutlierStats(totals, parseFloat(this.style.outlierscale) || 3);
+        const { mean, threshold } = outlier;
         totals = totals.filter(v => Math.abs(v - mean) <= threshold);
       }
 
@@ -6098,12 +6197,18 @@
       // rendering step will actually classify (post-NORMALIZE values, if
       // set), same as the real engine's own order of operations.
       let breaks = null;
+      // flat takes the class RANGE (nMin/nMax) from the raw sizes when a
+      // size field is bound (maptheme.js:11186-11203) and classifies by the
+      // value sums anyway; after NORMALIZE the range is 0..1 either way.
+      // (Not ported: flat's NORMALIZE of a size-field theme then scales
+      // the value sums by that SIZE range.)
       if (this._rangeClassed && totals.length) {
         // _nRangeParts, not categoryLabels.length: that follows partsA,
         // which is a single class at a zoom where all totals are equal
         const nParts = this._nRangeParts || this.categoryLabels.length;
+        const rangeSource = this._classSeparate && this.binding.size && !normalize ? rawSizeTotals : totals;
         let nMin = Infinity, nMax = -Infinity;
-        for (const v of totals) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+        for (const v of rangeSource) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
         breaks = flatRangeParts(totals, nMin, nMax, nParts, this.flags);
       }
 
@@ -6165,17 +6270,30 @@
       if (this.flags.has('NOOUTLIER') || this.flags.has('NORMALIZE') || this._rangeClassed) {
         const stats = this._ensureAggregateStats(zoom);
 
+        // the quantity NOOUTLIER/NORMALIZE/classes act on: the separate
+        // class value where there is one (sizes then stay raw), else the
+        // size total (see _ensureAggregateStats)
+        const sep = this._rangeClassed && this._classSeparate;
+        const indValue = d => (sep ? d.properties.classValue : d.properties.value);
+        const grpValue = d => (sep ? d.properties.classTotal : d.properties.total);
+
         if (stats.outlier) {
           const { mean, threshold } = stats.outlier;
           for (let i = individual.length - 1; i >= 0; i--) {
-            if (Math.abs(individual[i].properties.value - mean) > threshold) individual.splice(i, 1);
+            if (Math.abs(indValue(individual[i]) - mean) > threshold) individual.splice(i, 1);
           }
           for (let i = groups.length - 1; i >= 0; i--) {
-            if (Math.abs(groups[i].properties.total - mean) > threshold) groups.splice(i, 1);
+            if (Math.abs(grpValue(groups[i]) - mean) > threshold) groups.splice(i, 1);
           }
         }
 
-        if (stats.normalize) {
+        if (stats.normalize && sep) {
+          const { min: nMin, max: nMax } = stats.normalize;
+          const range = nMax - nMin;
+          const normalize = v => (range ? (v - nMin) / range : (v ? 1 : 0));
+          individual.forEach(d => { d.properties.classValue = normalize(d.properties.classValue); });
+          groups.forEach(d => { d.properties.classTotal = normalize(d.properties.classTotal); });
+        } else if (stats.normalize) {
           const { min: nMin, max: nMax } = stats.normalize;
           const range = nMax - nMin;
           const normalize = v => (range ? (v - nMin) / range : (v ? 1 : 0));
@@ -6198,9 +6316,9 @@
         if (this._rangeClassed) {
           const nParts = this.categoryLabels.length;
           const classify = v => (stats.breaks ? (this._resolvePartsClass(v, stats.breaks) ?? 0) : 0);
-          individual.forEach(d => { d.properties.cat = classify(d.properties.value); });
+          individual.forEach(d => { d.properties.cat = classify(indValue(d)); });
           groups.forEach(d => {
-            const cat = classify(d.properties.total);
+            const cat = classify(grpValue(d));
             const counts = new Array(nParts).fill(0);
             counts[cat] = d.properties.total;
             d.properties.counts = counts;
@@ -6310,7 +6428,8 @@
 
         const pointLabels = individual.reduce((out, d) => {
           const radius = valueRadius(d.properties.value, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
-          const text = formatBubbleValue(d.properties.value, this.style);
+          // flat's VALUES label prints the value (nValuesA), not the size
+          const text = formatBubbleValue(d.properties.classValue !== undefined ? d.properties.classValue : d.properties.value, this.style);
           const fontSize = valuesFontSizePx(radius, text, valueScale);
           if (fontSize > VALUES_MIN_FONT_PX) {
             out.push({ geometry: d.geometry, text, fontSize, color: resolveTextColor(this.style, contrastTextColor(this.categoryColorsRgb[d.properties.cat])) });
@@ -6336,7 +6455,8 @@
           const { present, radii, offsets, fitScale } = computeBubblePackLayout(counts, BUBBLE_ICON_SIZE);
 
           present.forEach((p, i) => {
-            const text = formatBubbleValue(p.c, this.style);
+            // one part for a range-classed cell: its class value, if separate
+            const text = formatBubbleValue(d.properties.classTotal !== undefined && present.length === 1 ? d.properties.classTotal : p.c, this.style);
             const subRadiusPx = radii[i] * fitScale * pxPerCanvasUnit;
             const fontSize = valuesFontSizePx(subRadiusPx, text, valueScale);
             if (fontSize > VALUES_MIN_FONT_PX) {
@@ -6788,9 +6908,9 @@
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
-    flatColorSweep, applyClassesToColorScheme, resolveClassColors,
+    flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    resolveAggregateValue, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts,
+    fetchLayerData, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;

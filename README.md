@@ -79,9 +79,13 @@ And as in flat, `.meta()` is merged into style first (meta wins): a style proper
 `.meta()` applies, and the meta keys (`title`, `tooltip`, `name`, `snippet`, `description`)
 work when given in `.style()` too. The layer builder has all of flat's methods, including
 `.field()`, `.field100()`, `.geo()`, `.lookup()`, `.encoding()`, `.query()`, `.process()` and
-`.json()`; each writes the slot flat writes (`.process()` is stored but not run yet — the
-validator reports it). Repeated `.binding()`, `.style()` and `.meta()` calls merge, as in flat
+`.json()`; each writes the slot flat writes. Repeated `.binding()`, `.style()` and `.meta()` calls merge, as in flat
 (a later value for the same key wins).
+A page's own data processing function (`.data({process})` or `.process()`, as a function or
+its `toString()`) runs like in flat: after loading, it gets the data as a data.js Table
+(`column()`, `addColumn()`, …) and returns it, or nothing to keep the changed table. The page
+loads the real data.js for it (`<script src=".../data.js">` before ixmaps-gl.js, as for
+`.data({query})`), and a CSV is then parsed by data.js, as flat does.
 The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.
@@ -96,8 +100,8 @@ ones, `replace` swaps themes by `style.name`/`meta.name`, `themeonly`/`maponly`/
 work as in flat. Themes in flat's older shape (data source in `style.dbtable*`, value field at
 the top level) are translated first. It resolves to `{ themes, skipped, notes }`: a theme
 that can't load is skipped with a warning, the rest still load. **Nothing a project names is
-ever run** — `required` scripts, `ext` data scripts and `process` functions are reported,
-not executed — and the basemap isn't switched. `test/project-report.mjs` shows which themes
+ever run** — `required` scripts, `ext` data scripts and a project's `process` functions are
+reported, not executed (only a page's own `.data({process})` runs) — and the basemap isn't switched. `test/project-report.mjs` shows which themes
 of your own project files gl can render.
 
 ## Quick start
