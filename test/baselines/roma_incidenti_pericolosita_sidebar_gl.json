@@ -1729,9 +1729,7 @@
      "valueMedian": 0
     }
    ],
-   "legend": [
-    "Indice di pericolosità — Roma mar.2021/mar.2022 ▾ 0.0 - 0.1 491.8 0.1 - 0.3 256.9 0.3 - 0.4 138.0 0.4 - 0.6 128.1 0.9 - 1.0 41.9 0.6 - 0.7 36.0 0.7 - 0.9 16.3 Chart size: 100%"
-   ],
+   "legend": [],
    "tooltips": {
     "Roma": [
      "<b>Indice di pericolosità — Roma mar.2021/mar.2022</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(54,166,177);margin-right:0.4em;vertical-align:middle\"></span>: 0.0</div>",
@@ -3469,9 +3467,7 @@
      "valueMedian": 0
     }
    ],
-   "legend": [
-    "Indice di pericolosità — Roma mar.2021/mar.2022 ▾ 0.0 - 0.1 278.0 0.1 - 0.3 138.2 0.4 - 0.6 80.7 0.3 - 0.4 78.0 0.9 - 1.0 25.3 0.6 - 0.7 20.7 0.7 - 0.9 10.9 Chart size: 100%"
-   ],
+   "legend": [],
    "tooltips": {
     "Roma": [
      "<b>Indice di pericolosità — Roma mar.2021/mar.2022</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(54,166,177);margin-right:0.4em;vertical-align:middle\"></span>: 0.0</div>",
@@ -5209,9 +5205,7 @@
      "valueMedian": 0
     }
    ],
-   "legend": [
-    "Indice di pericolosità — Roma mar.2021/mar.2022 ▾ 0.0 - 0.1 604.2 0.1 - 0.3 328.9 0.3 - 0.4 179.3 0.4 - 0.6 167.7 0.9 - 1.0 57.8 0.6 - 0.7 48.0 0.7 - 0.9 28.8 Chart size: 100%"
-   ],
+   "legend": [],
    "tooltips": {
     "Roma": [
      "<b>Indice di pericolosità — Roma mar.2021/mar.2022</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(54,166,177);margin-right:0.4em;vertical-align:middle\"></span>: 0.0</div>",
