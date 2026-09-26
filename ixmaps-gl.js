@@ -1741,11 +1741,23 @@
       // at click time (not live-updating), but its screen POSITION is kept
       // in sync with the map on every pan/zoom via map.project().
       let pinned = null; // { runtime, object, lngLat }
+      // Tooltip look, like the legend's (flatLegendLook): flat's light
+      // tooltip (tooltip_mustache.js: white 0.95, #444 text, thin black
+      // border, 5px radius) on light basemaps, this engine's dark tooltip
+      // on dark ones. Read when shown, so options set later (a
+      // myMap.then(...).options({basemapopacity})) count.
+      const tooltipLook = () => {
+        const o = parseFloat(this._engineOptions.basemapopacity);
+        const look = flatLegendLook(this.mapOptions.mapType, isNaN(o) ? 1 : o, this.mapOptions.legendBackground || this.mapOptions.legendbackground);
+        return look.dark
+          ? { background: 'rgb(41,50,60)', color: 'rgb(200,205,214)', border: 'none', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }
+          : { background: 'rgba(255,255,255,0.95)', color: '#444', border: '0.5px solid black', borderRadius: '5px',
+              boxShadow: 'rgba(0,0,0,0.2) 0px 2px 4px 0px, rgba(0,0,0,0.19) 0px 3px 10px 0px' };
+      };
       const pinnedTooltipEl = document.createElement('div');
       pinnedTooltipEl.style.cssText = 'position:absolute;top:0;left:0;z-index:6;display:none;' +
         'pointer-events:auto;max-width:320px;max-height:320px;overflow:auto;' +
-        'background:rgb(41,50,60);color:rgb(160,167,180);padding:0.6em 1.6em 0.6em 0.7em;' +
-        'border-radius:4px;font-size:0.85em;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
+        'padding:0.6em 1.6em 0.6em 0.7em;font-size:0.85em;';
 
       function updatePinnedTooltipPosition() {
         if (!pinned) return;
@@ -1793,6 +1805,7 @@
         const html = pinned.runtime.buildTooltipHtml(pinned.object);
         if (!html) { pinned = null; pinnedTooltipEl.style.display = 'none'; return; }
         pinnedContentEl.innerHTML = html;
+        Object.assign(pinnedTooltipEl.style, tooltipLook());
         pinnedTooltipEl.style.display = 'block';
         updatePinnedTooltipPosition();
       }
@@ -1842,7 +1855,7 @@
           const rt = findRuntimeForLayerId(layer.id);
           if (!rt) return null;
           const html = rt.buildTooltipHtml(object);
-          return html ? { html } : null;
+          return html ? { html, style: Object.assign({ fontSize: '0.85em', padding: '0.5em 0.7em', maxWidth: '320px' }, tooltipLook()) } : null;
         },
         onClick: (info) => {
           if (info && info.object && info.layer) {
@@ -1985,6 +1998,18 @@
       }
 
       let _chainedLayers = Promise.resolve();
+      // Jump the live map AND make sure deck.gl follows: deck's picking
+      // viewport is synced from the map's move events, and a jump made
+      // right after the build (a page's myMap.then(map => map.view(...)))
+      // can come before deck's overlay listens — picking then kept the
+      // map's FIRST view (hover/click hit the wrong shapes) until the next
+      // user pan/zoom. Re-firing 'move' (again once loaded) re-syncs it.
+      const jumpLive = (opts) => {
+        map.jumpTo(opts);
+        map.fire('move');
+        if (!map.loaded()) map.once('load', () => map.fire('move'));
+        else map.once('idle', () => map.fire('move'));
+      };
       let addLegendPanel = () => {}; // set up with the legend, below
       let updateSubTheme = () => {};
       const engineApi = {
@@ -2133,7 +2158,7 @@
           const z = isOpts ? latlonOrOpts.zoom : zoom;
           if (c) {
             const lngLat = Array.isArray(c) ? [c[1], c[0]] : [c.lng, c.lat];
-            map.jumpTo(Object.assign({ center: lngLat }, z != null ? { zoom: flatToMapLibreZoom(Number(z)) } : {}));
+            jumpLive(Object.assign({ center: lngLat }, z != null ? { zoom: flatToMapLibreZoom(Number(z)) } : {}));
           }
           return engineApi;
         },
@@ -2312,8 +2337,8 @@
           const c = m.center || {};
           const lat = Number(c.lat), lng = Number(c.lng);
           const z = m.zoom != null && m.zoom !== '' ? Number(m.zoom) : NaN;
-          if (Number.isFinite(lat) && Number.isFinite(lng)) map.jumpTo(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: flatToMapLibreZoom(z) } : {}));
-          else if (Number.isFinite(z)) map.jumpTo({ zoom: flatToMapLibreZoom(z) });
+          if (Number.isFinite(lat) && Number.isFinite(lng)) jumpLive(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: flatToMapLibreZoom(z) } : {}));
+          else if (Number.isFinite(z)) jumpLive({ zoom: flatToMapLibreZoom(z) });
         }
         if (m.options && typeof m.options === 'object') Object.assign(builder._engineOptions, m.options);
         if (m.scaleParam && m.scaleParam.normalSizeScale != null) builder._engineOptions.normalSizeScale = m.scaleParam.normalSizeScale;
@@ -5702,18 +5727,18 @@
         const BAR_PX = 60;
         return '<table style="border-collapse:collapse;font-size:0.72em;line-height:1.25;margin-top:0.2em">'
           + rows.map(r => '<tr>'
-            + `<td style="text-align:right;padding:0 0.4em 0 0;color:#666;white-space:nowrap">${esc(labels[r.i] || fields[r.i])}</td>`
+            + `<td style="text-align:right;padding:0 0.4em 0 0;opacity:0.8;white-space:nowrap">${esc(labels[r.i] || fields[r.i])}</td>`
             + `<td style="padding:1px 0"><div style="width:${Math.round(frac(r.v) * BAR_PX)}px;min-width:${r.v ? 2 : 0}px;height:0.95em;background:${color(r.i)}"></div></td>`
-            + `<td style="padding:0 0 0 0.4em;color:#444;white-space:nowrap">${this._formatTooltipValue(r.v)}${unit}</td>`
+            + `<td style="padding:0 0 0 0.4em;white-space:nowrap">${this._formatTooltipValue(r.v)}${unit}</td>`
             + '</tr>').join('')
           + '</table>';
       }
       const COL_PX = 50;
       return '<div style="display:flex;align-items:flex-end;gap:4px;font-size:0.72em;margin-top:0.3em">'
         + rows.map(r => '<div style="display:flex;flex-direction:column;align-items:center;max-width:4.5em">'
-          + `<div style="color:#444;white-space:nowrap">${this._formatTooltipValue(r.v)}${unit}</div>`
+          + `<div style="white-space:nowrap">${this._formatTooltipValue(r.v)}${unit}</div>`
           + `<div style="width:1.4em;height:${Math.round(frac(r.v) * COL_PX)}px;min-height:${r.v ? 2 : 0}px;background:${color(r.i)}"></div>`
-          + `<div style="color:#666;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:4.5em">${esc(labels[r.i] || fields[r.i])}</div>`
+          + `<div style="opacity:0.8;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:4.5em">${esc(labels[r.i] || fields[r.i])}</div>`
           + '</div>').join('')
         + '</div>';
     }
