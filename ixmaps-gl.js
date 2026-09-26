@@ -1300,6 +1300,38 @@
   //     only real style properties
   // Pure: returns new objects and never mutates the caller's definition
   // (the page's own binding/style/meta objects stay untouched).
+  // Style keys this engine reads as numbers. A string that is a complete
+  // number ("0.8", " 12 ") becomes that number ONCE — here, for every theme,
+  // and in LayerRuntime.setStyle for runtime patches (legend sliders,
+  // setThemeStyle) — so read sites get numbers and don't parse. Anything
+  // else stays as given: flat gives "auto", "12px", … their own meaning.
+  // (flat stores most of these as given and lets arithmetic coerce them;
+  // its runtime changeThemeStyle applies Number() — the same result for
+  // every clean value.) A linewidth list is typed element by element.
+  const STYLE_NUMBER_KEYS = ['linewidth', 'fillopacity', 'scale', 'classes', 'valuedecimals', 'normalsizevalue',
+    'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
+    'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx'];
+  function toNumberIfNumeric(v) {
+    if (typeof v !== 'string' || !v.trim()) return v;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : v;
+  }
+  // types STYLE_NUMBER_KEYS of `style` in place (callers pass their own copy)
+  function typeStyleNumbers(style) {
+    for (const k of STYLE_NUMBER_KEYS) {
+      if (!(k in style)) continue;
+      const v = style[k];
+      style[k] = Array.isArray(v) ? v.map(toNumberIfNumeric) : toNumberIfNumeric(v);
+    }
+    return style;
+  }
+  // read side of a typed key: the number, a list's first number, else NaN
+  // (so `styleNum(style.x) || default` and isNaN checks work as before)
+  function styleNum(v) {
+    if (Array.isArray(v)) v = v[0];
+    return typeof v === 'number' ? v : NaN;
+  }
+
   function normalizeTheme(def) {
     // real ixmaps-flat (htmlgui.js newTheme) merges .meta() INTO style first
     // — meta wins — and only then reads type, bindings and style properties
@@ -1352,6 +1384,7 @@
       if (k !== 'title' && meta[k] == null && style[k] != null) meta[k] = style[k];
     }
 
+    typeStyleNumbers(style);
     return { name: def.layer, data: def.data, binding, targets, geometry, flags, typeStr, style, meta, filter };
   }
 
@@ -3088,10 +3121,10 @@
             const isOpacitySlider = rt.flags.has('CHOROPLETH');
             const sliderRow = document.createElement('div');
             sliderRow.style.cssText = 'margin-top:10px;font-size:11px;opacity:0.8;';
-            const fillPct = Math.round(parseFloat(rt.style.fillopacity) * 100);
+            const fillPct = Math.round(styleNum(rt.style.fillopacity) * 100);
             const initialPct = isOpacitySlider
               ? (Number.isFinite(fillPct) ? Math.max(0, Math.min(100, fillPct)) : 90)
-              : Math.round((parseFloat(rt.style.scale) || 1) * 100);
+              : Math.round((styleNum(rt.style.scale) || 1) * 100);
             const sliderLabel = isOpacitySlider ? 'Opacity' : 'Chart size';
             sliderRow.innerHTML = sliderLabel + ': <span class="ix-legend-scale-val">' + initialPct + '</span>%';
             bodyEl.appendChild(sliderRow);
@@ -3420,7 +3453,7 @@
   // opacity, same as being at/below the normal reference view).
   function resolveFillOpacity(style, mapOptions, zoom) {
     if (style.fillopacity === 'auto') return resolveAutoFillOpacity(zoom, mapOptions);
-    return parseFloat(style.fillopacity) || 1;
+    return styleNum(style.fillopacity) || 1;
   }
 
   // .style({sizepow}) — power-law exponent applied to value BEFORE scaling:
@@ -3443,7 +3476,7 @@
     if (flags.has('SIZELOG') || flags.has('SIZEP10')) return 10;
     if (flags.has('SIZEP4')) return 4;
     if (flags.has('SIZEP3') || flags.has('SIZEVOLUME')) return 3;
-    const parsed = parseFloat(style.sizepow);
+    const parsed = styleNum(style.sizepow);
     return isNaN(parsed) ? 2 : parsed;
   }
 
@@ -3462,7 +3495,7 @@
     // normalsizevalue: the dataset's own max value on the bound size
     // field (maxSizeValue, from LayerRuntime._prepare), not a fixed
     // constant. Final `|| 1` only guards a pathological empty dataset.
-    const normalValue = parseFloat(style.normalsizevalue) || maxSizeValue || 1;
+    const normalValue = styleNum(style.normalsizevalue) || maxSizeValue || 1;
     const sizePow = resolveSizePow(style, flags || new Set());
     const ratio = Math.pow(Math.max(0, value || 0) / normalValue, 1 / sizePow);
     // NOTE: valuescale (nValueScale) is deliberately NOT here — checked the
@@ -3470,7 +3503,7 @@
     // sizing (nFontSize/nTextSize), never symbol radius. An earlier version
     // of this engine multiplied it into the radius, which was a fabricated
     // behavior not present in ixmaps.
-    const k = NORMAL_RADIUS_PX * ratio * (parseFloat(style.scale) || 1);
+    const k = NORMAL_RADIUS_PX * ratio * (styleNum(style.scale) || 1);
     return Math.max(VALUE_RADIUS_MIN, Math.min(VALUE_RADIUS_MAX, k * zoomFactor));
   }
 
@@ -3572,7 +3605,7 @@
   const VALUES_MIN_FONT_PX = 1;
 
   function roundBubbleValue(value, style) {
-    const parsedDecimals = parseInt(style.valuedecimals, 10);
+    const parsedDecimals = styleNum(style.valuedecimals);
     const decimals = !isNaN(parsedDecimals) ? parsedDecimals : (value < 1 ? 1 : 0);
     return decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
   }
@@ -4379,7 +4412,7 @@
       else { rr += r * weight; gg += g * weight; bb += b * weight; }
     }
     const peak = Math.max(rr, gg, bb) || 1;
-    const styleBrightness = parseFloat(ctx.style.brightness);
+    const styleBrightness = styleNum(ctx.style.brightness);
     if (subtractive) {
       const brightness = !isNaN(styleBrightness) ? Math.floor(styleBrightness * 255)
         : (Math.min(Math.floor(ctx._composeColorSumIntensity), 300) || 255);
@@ -4505,7 +4538,7 @@
     if (!f100 || !binding.value || !Array.isArray(features)) return features;
     const fields = String(binding.value).split('|');
     const f100A = String(f100).split('|');
-    const fractionScale = parseFloat(style && style.fractionscale) || 1;
+    const fractionScale = styleNum(style && style.fractionscale) || 1;
     return features.map(f => {
       if (!f || !f.properties) return f;
       const props = Object.assign({}, f.properties);
@@ -4558,7 +4591,7 @@
     out._valueMax = nMax;
     const sorted = values.slice().sort((a, b) => a - b);
     out._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
-    const nParts = parseInt(style.classes, 10) || colorSchemeClassCount(style.colorscheme) || DEFAULT_RANGE_CLASSES;
+    const nParts = Math.trunc(styleNum(style.classes)) || colorSchemeClassCount(style.colorscheme) || DEFAULT_RANGE_CLASSES;
     const placeholders = new Array(nParts).fill('');
     const colorsRgb = resolveClassColors(style.colorscheme, placeholders, style.classes);
 
@@ -4619,8 +4652,8 @@
   // separately — using the already-resolved base fillopacity as the
   // cap instead, a minor documented deviation).
   function resolveDopacityAlpha(ctx, f, value, baseOpacity) {
-    const scale = parseFloat(ctx.style.dopacityscale) || 1;
-    const pow = 1 / (parseFloat(ctx.style.dopacitypow) || 1);
+    const scale = styleNum(ctx.style.dopacityscale) || 1;
+    const pow = 1 / (styleNum(ctx.style.dopacitypow) || 1);
     if (ctx.binding.alpha) {
       if (!ctx._alphaByFeature) return null;
       const nAlpha = ctx._alphaByFeature.get(f);
@@ -5290,7 +5323,7 @@
     }
 
     setStyle(patch) {
-      Object.assign(this.style, patch);
+      Object.assign(this.style, typeStyleNumbers(Object.assign({}, patch)));
     }
 
     // Viewport + active-filter scoped facet stats for szFieldsA, matching
@@ -5407,7 +5440,7 @@
       // flat: gridwidthpx is the AGGREGATE grid width in screen pixels too
       // (maptheme.js:1906, nGridWidthPx), default 50 when not a number
       if (this.style.gridwidthpx != null && this.style.gridwidthpx !== '') {
-        radiusPx = Number(this.style.gridwidthpx) || 50;
+        radiusPx = styleNum(this.style.gridwidthpx) || 50;
         this._clusterUsesFixedZoom = false;
       } else if (gridwidthPxMatch) {
         radiusPx = parseFloat(gridwidthPxMatch[1]);
@@ -5771,7 +5804,7 @@
     _formatTooltipValue(value) {
       const num = Number(value);
       if (isNaN(num)) return String(value);
-      const rawDecimals = parseFloat(this.style.valuedecimals);
+      const rawDecimals = styleNum(this.style.valuedecimals);
       const decimals = isNaN(rawDecimals) ? 2 : rawDecimals;
       // flat's __formatValue (mapscript.js 6268ff) rounds twice: first to
       // one decimal more (toFixed), then to the precision (Math.round) —
@@ -5876,8 +5909,8 @@
         // unlike CHOROPLETH, there's no per-feature classification here.
         getFillColor: filled ? hexOrNamedToRgb(raw) : [0, 0, 0, 0],
         getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [130, 130, 130],
-        lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
-        opacity: parseFloat(this.style.fillopacity) || 1,
+        lineWidthMinPixels: styleNum(this.style.linewidth) || 1,
+        opacity: styleNum(this.style.fillopacity) || 1,
         // Confirmed live (2026-09-21, deck.gl v9.4/MapLibre-globe upgrade):
         // this layer's fill rendered with a moire/hatching pattern of
         // "holes" ONLY under globe projection, never flat Mercator —
@@ -5997,7 +6030,7 @@
         getLineColor: this._markedClasses.size && !this._onMarksChanged && evidenceMode === 'isolate'
           ? d => (unmarkedEvidence(d) === 'hide' ? [0, 0, 0, 0] : lineRgb)
           : lineRgb,
-        lineWidthMinPixels: parseFloat(this.style.linewidth) || 1,
+        lineWidthMinPixels: styleNum(this.style.linewidth) || 1,
         // per-feature alpha (baked above) already carries the resolved
         // base opacity — a layer-level opacity on TOP of that would
         // multiply it a second time.
@@ -6017,7 +6050,7 @@
     // behavior. Rebuilt only when zoom or cell pitch changes, matching the
     // real engine's own geo-anchored-grid behavior (stable under pure pan).
     _ensureGridIndex(zoom) {
-      const cellPx = parseFloat(this.style.gridwidthpx) || GRID_WIDTH_PX_DEFAULT;
+      const cellPx = styleNum(this.style.gridwidthpx) || GRID_WIDTH_PX_DEFAULT;
       if (this._gridIndex && this._gridZoom === zoom && this._gridCellPx === cellPx) return;
       this._gridZoom = zoom;
       this._gridCellPx = cellPx;
@@ -6118,7 +6151,7 @@
         };
       });
 
-      const iconSize = (parseFloat(this.style.gridwidthpx) || GRID_WIDTH_PX_DEFAULT) * (parseFloat(this.style.scale) || 1);
+      const iconSize = (styleNum(this.style.gridwidthpx) || GRID_WIDTH_PX_DEFAULT) * (styleNum(this.style.scale) || 1);
 
       // Under FIXSIZE, both the Y-axis auto-scale and the curve point
       // markers are calibrated against the WHOLE dataset, not each cell's
@@ -6130,7 +6163,7 @@
       // (not per-icon) — this._buildPlotIcon runs once per grid cell, and
       // rescanning the whole grid inside it would be O(cells^2) before
       // icons are cache-warm.
-      let normalSizeValue = parseFloat(this.style.normalsizevalue);
+      let normalSizeValue = styleNum(this.style.normalsizevalue);
       let datasetMax = 0;
       data.forEach(d => d.properties.values.forEach(v => { if (v > datasetMax) datasetMax = v; }));
       datasetMax = datasetMax || 1;
@@ -6189,10 +6222,10 @@
       // FIXSIZE (not exercised by this config), per-cell local scaling is
       // the natural fallback. style.rangescale stretches (>1) or
       // compresses (<1) whichever range ends up in effect.
-      const rangeScale = parseFloat(this.style.rangescale) || 1;
+      const rangeScale = styleNum(this.style.rangescale) || 1;
       const definedValues = plotValues.filter(v => v != null && !isNaN(v));
-      const styleMin = parseFloat(this.style.minvalue);
-      const styleMax = parseFloat(this.style.maxvalue);
+      const styleMin = styleNum(this.style.minvalue);
+      const styleMax = styleNum(this.style.maxvalue);
       const autoMin = 0;
       const autoMax = this.flags.has('FIXSIZE')
         ? (datasetMax || 1)
@@ -6210,7 +6243,7 @@
       // (not exercised by this config), each point instead sizes to its
       // own raw value via the same normalsizevalue formula BUBBLE's
       // valueRadius uses.
-      const baseMarkerR = parseFloat(this.style.markersize) || 0;
+      const baseMarkerR = styleNum(this.style.markersize) || 0;
       const sizePow = resolveSizePow(this.style, this.flags);
       const markerRadiusFor = v => this.flags.has('FIXSIZE')
         ? baseMarkerR / (normalSizeValue || 1)
@@ -6257,7 +6290,7 @@
       const ctx = canvas.getContext('2d');
 
       // BOX
-      const boxOpacity = parseFloat(this.style.boxopacity);
+      const boxOpacity = styleNum(this.style.boxopacity);
       if (!isNaN(boxOpacity) && boxOpacity > 0) {
         ctx.fillStyle = `rgba(255,255,255,${boxOpacity})`;
         ctx.fillRect(0, 0, W, H);
@@ -6305,7 +6338,7 @@
 
       // AREA — fill between the line and the baseline
       if (this.flags.has('AREA')) {
-        const fillOpacity = parseFloat(this.style.fillopacity);
+        const fillOpacity = styleNum(this.style.fillopacity);
         ctx.fillStyle = `rgba(${rgbStr},${isNaN(fillOpacity) ? 0.15 : fillOpacity})`;
         ctx.beginPath();
         runs.forEach(run => {
@@ -6321,7 +6354,7 @@
       // LINES
       if (this.flags.has('LINES')) {
         ctx.strokeStyle = `rgb(${rgbStr})`;
-        ctx.lineWidth = parseFloat(this.style.linewidth) || 1;
+        ctx.lineWidth = styleNum(this.style.linewidth) || 1;
         ctx.beginPath();
         runs.forEach(run => {
           ctx.moveTo(run[0].x, run[0].y);
@@ -6409,7 +6442,7 @@
 
       const fillColor = (resolveColorScheme(this.style.colorscheme, ['']) || ['rgba(255,255,255,0.3)'])[0] || 'rgba(255,255,255,0.3)';
       const borderColor = Array.isArray(this.style.linecolor) ? this.style.linecolor[0] : this.style.linecolor;
-      const borderWidth = Array.isArray(this.style.linewidth) ? parseFloat(this.style.linewidth[0]) : parseFloat(this.style.linewidth);
+      const borderWidth = styleNum(this.style.linewidth);
       const cellPx = this._gridCellPx;
       const icon = this._buildGridSquareIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx);
 
@@ -6480,7 +6513,7 @@
         radiusUnits: 'pixels',
         getFillColor: d => (d.properties.cat != null ? this.categoryColorsRgb[d.properties.cat] : null) || fallbackRgb,
         stroked: false,
-        opacity: parseFloat(this.style.fillopacity) || 1
+        opacity: styleNum(this.style.fillopacity) || 1
       })];
     }
 
@@ -6611,7 +6644,7 @@
       // NOOUTLIER — flat's rule, see flatOutlierStats
       let outlier = null;
       if (this.flags.has('NOOUTLIER') && totals.length) {
-        outlier = flatOutlierStats(totals, parseFloat(this.style.outlierscale) || 3);
+        outlier = flatOutlierStats(totals, styleNum(this.style.outlierscale) || 3);
         const { mean, threshold } = outlier;
         totals = totals.filter(v => Math.abs(v - mean) <= threshold);
       }
@@ -6814,7 +6847,7 @@
       // _buildTooltipContext's own `isGroup` check already uses).
       const sizeValueOf = d => d.properties.counts ? d.properties.total : d.properties.value;
       const combined = individual.concat(groups).sort((a, b) => sizeValueOf(a) - sizeValueOf(b));
-      const fillOpacity = parseFloat(this.style.fillopacity) || 0.85;
+      const fillOpacity = styleNum(this.style.fillopacity) || 0.85;
       // .style({linecolor, linewidth}) — an individual icon's own border,
       // see _buildSingleIcon's own comment. Real ixmaps-flat symbol
       // markers do draw an outline (confirmed by a real ported page
@@ -6823,7 +6856,7 @@
       // per-theme constant, not per-record) rather than inside the
       // getIcon callback below.
       const singleBorderColorRgb = this.style.linecolor && this.style.linecolor !== 'none' ? hexOrNamedToRgb(this.style.linecolor) : null;
-      const singleBorderWidthPx = parseFloat(this.style.linewidth) || 0;
+      const singleBorderWidthPx = styleNum(this.style.linewidth) || 0;
 
       // GLOW: gradient-texture halo (see _getGlowIcon for why this diverges
       // from the real engine's literal flat-circle formula). Individual
@@ -6867,7 +6900,7 @@
       // rendered at getSize: 0, matching the real engine's own "too
       // small to bother" gate.
       if (this.flags.has('VALUES') && !valuesHiddenByScale(this.style, zoom)) {
-        const valueScale = parseFloat(this.style.valuescale) || 1;
+        const valueScale = styleNum(this.style.valuescale) || 1;
 
         const pointLabels = individual.reduce((out, d) => {
           const radius = valueRadius(d.properties.value, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
@@ -7353,7 +7386,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    normalizeTheme, projectThemeToDefinition, LayerBuilder,
+    normalizeTheme, projectThemeToDefinition, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,

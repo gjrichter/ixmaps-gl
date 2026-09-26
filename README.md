@@ -80,7 +80,9 @@ And as in flat, `.meta()` is merged into style first (meta wins): a style proper
 work when given in `.style()` too. The layer builder has all of flat's methods, including
 `.field()`, `.field100()`, `.geo()`, `.lookup()`, `.encoding()`, `.query()`, `.process()` and
 `.json()`; each writes the slot flat writes. Repeated `.binding()`, `.style()` and `.meta()` calls merge, as in flat
-(a later value for the same key wins).
+(a later value for the same key wins). The style keys read as numbers (`fillopacity`, `linewidth`, `scale`, `classes`,
+…) are typed here once: `"0.8"` becomes `0.8`, also in runtime style changes (`setThemeStyle`, the legend sliders),
+while anything that isn't a plain number (`"auto"`, `"12px"`) stays as given.
 A page's own data processing function (`.data({process})` or `.process()`, as a function or
 its `toString()`) runs like in flat: after loading, it gets the data as a data.js Table
 (`column()`, `addColumn()`, …) and returns it, or nothing to keep the changed table. The page

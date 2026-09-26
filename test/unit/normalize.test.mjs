@@ -118,3 +118,43 @@ test('the builder path end to end: definition() → normalizeTheme', () => {
   assert.equal(spec.meta.title, 'P');
   assert.deepEqual(plain(spec.style), {});
 });
+
+test('value typing: numeric strings of the number style keys become numbers, once, in normalizeTheme', () => {
+  const { normalizeTheme } = loadEngine();
+  const spec = normalizeTheme({ layer: 'x', style: {
+    type: 'CHOROPLETH', fillopacity: '0.8', classes: ' 5 ', scale: 1.5, linewidth: ['2', '0.5'],
+    gridwidthpx: '', gridwidth: '12px', valuedecimals: 'two', colorscheme: ['#ff0000', '#0000ff'],
+  } });
+  assert.deepEqual(plain(spec.style), {
+    fillopacity: 0.8, classes: 5, scale: 1.5, linewidth: [2, 0.5],
+    gridwidthpx: '', gridwidth: '12px', valuedecimals: 'two', colorscheme: ['#ff0000', '#0000ff'],
+  }, 'empty and non-numeric strings stay as given; gridwidth ("12px") and non-number keys untouched');
+  assert.equal(normalizeTheme({ layer: 'x', style: { fillopacity: 'auto' } }).style.fillopacity, 'auto', 'flat\'s "auto" keeps its meaning');
+  assert.equal(normalizeTheme({ layer: 'x', meta: { scale: '2' } }).style.scale, 2, 'a style key given in .meta() is typed too');
+});
+
+test('value typing: the page\'s own linewidth list is not mutated', () => {
+  const { normalizeTheme } = loadEngine();
+  const lw = ['2', '3'];
+  normalizeTheme({ layer: 'x', style: { linewidth: lw } });
+  assert.deepEqual(lw, ['2', '3']);
+});
+
+test('value typing: runtime patches (setStyle — legend sliders, setThemeStyle) are typed the same way', () => {
+  const { LayerRuntime } = loadEngine();
+  const rt = { style: { scale: 1, fillopacity: 0.5 } };
+  const patch = { scale: '1.25', filter: 'WHERE "a" == "1"' };
+  LayerRuntime.prototype.setStyle.call(rt, patch);
+  assert.deepEqual(plain(rt.style), { scale: 1.25, fillopacity: 0.5, filter: 'WHERE "a" == "1"' });
+  assert.equal(patch.scale, '1.25', 'the caller\'s patch object is not mutated');
+});
+
+test('styleNum: the number, a list\'s first number, else NaN (as parseFloat gave for missing values)', () => {
+  const { styleNum } = loadEngine();
+  assert.equal(styleNum(0.8), 0.8);
+  assert.equal(styleNum([2, 0.5]), 2);
+  assert.ok(Number.isNaN(styleNum(undefined)));
+  assert.ok(Number.isNaN(styleNum('auto')));
+  assert.ok(Number.isNaN(styleNum('')));
+  assert.equal(styleNum(undefined) || 1, 1, '`|| default` keeps working');
+});
