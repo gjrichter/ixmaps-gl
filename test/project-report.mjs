@@ -63,12 +63,10 @@ const SHAPE_FLAGS = new Set(['FEATURE', 'FEATURES', 'CHOROPLETH', 'CHART', 'DOT'
   'STARBURST', 'WAFFLE', 'BUBBLE', 'SQUARE', 'LABEL', 'SYMBOL', 'SEQUENCE', 'PLOT', 'PLOTXY', 'PLOTX', 'PLOTY', 'PLOTYX',
   'STAR', 'LINES', 'AREA', 'BUFFER', 'BAR', 'BARS', 'VECTOR', 'BEZIER', 'QUAD', 'WMS', 'IMAGE', 'GAUGE']);
 // Shapes gl draws only in combination — the grammar checks flag by flag and
-// can't see this: gl draws PLOT charts only on an aggregated grid
-// (GRIDSIZE); flat's per-item PLOT (one chart per point/shape) is missing.
+// can't see this. (PLOT per item, without GRIDSIZE, is drawn since the
+// per-item PLOT port; none left for now.)
 function comboShapeGaps(flags) {
-  const gaps = [];
-  if (flags.has('PLOT') && !flags.has('GRIDSIZE')) gaps.push('PLOT per item (without GRIDSIZE)');
-  return gaps;
+  return [];
 }
 
 function assessMap(project) {

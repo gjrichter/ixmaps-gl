@@ -39,6 +39,9 @@ page. It currently implements:
   cell, class breaks and legend from the aggregated cells), dynamic sizing, glow,
   multi-point grouping, on-bubble value labels, `NORMALIZE`
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
+- **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
+  geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or one per grid
+  cell with `GRIDSIZE` (a categorical field's series, e.g. one value per year)
 - A native interactive legend (default bars, `SIMPLELEGEND`, `COMPACTLEGEND`,
   `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner `align` option;
   collapsible, collapsed by default on narrow/mobile screens)

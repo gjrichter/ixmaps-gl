@@ -3765,13 +3765,19 @@
   // ^(1/nSizePow) — note the exponent is 1/sizePow, not sizePow itself, so
   // a LARGER sizepow COMPRESSES size differences (2 ~ area/sqrt-like, 3 ~
   // volume/cube-root-like), the opposite of a naive reading of "power".
-  function valueRadius(value, zoom, style, mapOptions, flags, maxSizeValue) {
+  // .options({objectscaling}) — "dynamic": symbols grow with the zoom by
+  // 2^((zoom − reference) / dynamicScalePow); otherwise fixed
+  function objectZoomFactor(zoom, mapOptions) {
     const objectScaling = (mapOptions && mapOptions.objectscaling) || 'dynamic';
     const zoomReference = resolveZoomReference(mapOptions);
     const dynamicScalePow = resolveDynamicScalePow(mapOptions);
-    const zoomFactor = objectScaling === 'dynamic'
+    return objectScaling === 'dynamic'
       ? Math.pow(2, ((zoom == null ? zoomReference : zoom) - zoomReference) / dynamicScalePow)
       : 1;
+  }
+
+  function valueRadius(value, zoom, style, mapOptions, flags, maxSizeValue) {
+    const zoomFactor = objectZoomFactor(zoom, mapOptions);
     // Real default (maptheme.js ~line 5059) when the theme sets no
     // normalsizevalue: the dataset's own max value on the bound size
     // field (maxSizeValue, from LayerRuntime._prepare), not a fixed
@@ -3888,6 +3894,74 @@
   // valuescale (nValueScale) drives ONLY this font size, never the bubble's
   // own radius — confirmed earlier while auditing valueRadius().
   const VALUES_MIN_FONT_PX = 1;
+
+  // Per-item PLOT — flat draws one small line chart per item
+  // (maptheme.js drawChart PLOT, 22430-22481), measured on real flat
+  // (_scratch per-item PLOT page, 2026-09-26). In units of S, flat's chart
+  // unit normalX(nChartSize = 30) — twice a bubble's normal radius — times
+  // .style({scale}) and the object scaling:
+  //   point i at x = i; value v at y = (v − min)·k + h/20, k = (n−1)/(max −
+  //   min)·rangescale, h = (max − min)·k (a 5 % bottom margin), y up from
+  //   the item position, which is the first point's x;
+  //   min/max: .style({minvalue, maxvalue}), else the dataset's (flat's
+  //   nMinValuePlot/nMaxValuePlot; maxvalue "auto" → the item's own);
+  //   LINES stroke linewidth/30; AREA filled down to the value 0 level;
+  //   point markers r = 1/3 (FIXSIZE, ÷ normalsizevalue) or ½·(|v| /
+  //   max)^(1/sizepow), white outline 1/75, none for 0 values (not STACKED)
+  // → { points: [{x, y, v, r}], area: [[x, y]...] | null, bbox, lineWidth }
+  function itemPlotGeometry(values, range, style, flags, sizeMax) {
+    const n = values.length;
+    const rs = styleNum(style.rangescale) || 1;
+    const span = (range.max - range.min) || 1;
+    const k = Math.max(1, n - 1) / span * rs;
+    const h = span * k;
+    const yOf = v => (v - range.min) * k + h / 20;
+    const normal = styleNum(style.normalsizevalue) || 1;
+    const pow = resolveSizePow(style, flags);
+    const points = values.map((v, i) => {
+      if (v == null || isNaN(v)) return null;
+      let r = 0;
+      if (!(v === 0 && !flags.has('STACKED'))) {
+        r = flags.has('FIXSIZE') ? 1 / 3 / normal : 0.5 * Math.pow(Math.abs(v) / (sizeMax || 1), 1 / pow);
+      }
+      return { x: i, y: yOf(v), v, r };
+    });
+    const lineWidth = (styleNum(style.linewidth) || 1) / 30;
+    const defined = points.filter(Boolean);
+    let area = null;
+    if (flags.has('AREA') && defined.length > 1) {
+      const y0 = yOf(0);
+      area = [[defined[0].x, y0]].concat(defined.map(p => [p.x, p.y]), [[defined[defined.length - 1].x, y0]]);
+    }
+    const pad = lineWidth / 2 + 1 / 75;
+    let x0 = 0, x1 = Math.max(0, n - 1), y0b = 0, y1b = h + h / 20;
+    for (const p of defined) {
+      x0 = Math.min(x0, p.x - p.r - pad); x1 = Math.max(x1, p.x + p.r + pad);
+      y0b = Math.min(y0b, p.y - p.r - pad); y1b = Math.max(y1b, p.y + p.r + pad);
+    }
+    if (area) for (const [, y] of area) { y0b = Math.min(y0b, y); y1b = Math.max(y1b, y); }
+    return { points, area, lineWidth, bbox: { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad } };
+  }
+  // the item's chart anchor: a point, or the bounding-box center of a
+  // polygon's largest part (flat places a chart at its shape's position)
+  function itemAnchor(geometry) {
+    if (!geometry) return null;
+    if (geometry.type === 'Point') return geometry.coordinates;
+    const parts = geometry.type === 'Polygon' ? [geometry.coordinates]
+      : geometry.type === 'MultiPolygon' ? geometry.coordinates : null;
+    if (!parts || !parts.length) return null;
+    let best = null, bestArea = -1;
+    for (const poly of parts) {
+      const ring = poly[0] || [];
+      let a = 0;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
+      if (Math.abs(a) > bestArea) { bestArea = Math.abs(a); best = ring; }
+    }
+    if (!best || !best.length) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const [x, y] of best) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+    return [(minX + maxX) / 2, (minY + maxY) / 2];
+  }
 
   function roundBubbleValue(value, style) {
     const parsedDecimals = styleNum(style.valuedecimals);
@@ -6120,8 +6194,8 @@
       // per-category color here (PLOT's colorscheme is one line color,
       // not a category ramp), so just label: value per line.
       if (Array.isArray(props.values)) {
-        const categories = this._plotCategories();
-        const labels = Array.isArray(this.style.label) ? this.style.label.map(String) : categories;
+        const categories = this._isItemPlot() ? this._itemPlotLabels() : this._plotCategories();
+        const labels = this._isItemPlot() ? categories : Array.isArray(this.style.label) ? this.style.label.map(String) : categories;
         return props.values.map((v, i) => {
           if (v == null || isNaN(v)) return null;
           return `<div>${labels[i] || categories[i] || i}: ${this._formatTooltipValue(v)}${unit}</div>`;
@@ -6296,6 +6370,8 @@
       // (SIZE/QUANTILE/MEAN have no visible effect there in the real
       // engine either — confirmed, not a gap in this port).
       if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox);
+      // PLOT without GRIDSIZE: one line chart per item over its value fields
+      if (this.flags.has('PLOT') && this._isItemPlot()) return this._buildItemPlotLayers(zoom);
       if (this.flags.has('GRIDSIZE')) return this._buildGridMeshLayers(zoom, bbox);
       // CHOROPLETH is checked before the generic FEATURE dispatch — a
       // CHOROPLETH layer's own type string doesn't carry FEATURE/FEATURES
@@ -6515,6 +6591,109 @@
     // ordered category list for GRIDSIZE binning / PLOT's X axis —
     // style.values/xaxis (explicit, see _prepare) if set, else whatever
     // CATEGORICAL auto-discovered.
+    // a per-item PLOT: no GRIDSIZE grid, several value fields per item
+    _isItemPlot() {
+      return this.flags.has('PLOT') && !this.flags.has('GRIDSIZE') && String(this.binding.value || '').includes('|');
+    }
+    _itemPlotFields() {
+      return String(this.binding.value || '').split('|');
+    }
+    // x-axis labels of a per-item PLOT (style.xaxis / label, else the fields)
+    _itemPlotLabels() {
+      const fields = this._itemPlotFields();
+      const explicit = Array.isArray(this.style.xaxis) ? this.style.xaxis : typeof this.style.xaxis === 'string' ? this.style.xaxis.split('|')
+        : Array.isArray(this.style.label) ? this.style.label : null;
+      return explicit ? fields.map((f, i) => String(explicit[i] != null ? explicit[i] : f)) : fields;
+    }
+
+    _buildItemPlotLayers(zoom) {
+      const fields = this._itemPlotFields();
+      const items = [];
+      let dMin = Infinity, dMax = -Infinity;
+      for (const f of this.features) {
+        const pos = itemAnchor(f.geometry);
+        if (!pos) continue;
+        const values = fields.map(k => parseFloat(f.properties[k]));
+        for (const v of values) if (!isNaN(v)) { dMin = Math.min(dMin, v); dMax = Math.max(dMax, v); }
+        items.push({ geometry: { type: 'Point', coordinates: pos }, properties: { values, raw: f.properties } });
+      }
+      if (!items.length) return [];
+      const sMin = styleNum(this.style.minvalue), sMaxRaw = this.style.maxvalue;
+      const autoMax = String(sMaxRaw) === 'auto';
+      const sMax = styleNum(sMaxRaw);
+      const rangeFor = values => {
+        const own = values.filter(v => !isNaN(v));
+        return {
+          min: !isNaN(sMin) ? sMin : dMin,
+          max: autoMax ? (own.length ? Math.max(...own) : dMax) : !isNaN(sMax) ? sMax : dMax,
+        };
+      };
+      const sizeMax = styleNum(this.style.normalsizevalue) || Math.max(Math.abs(dMin), Math.abs(dMax)) || 1;
+      // S in screen px: twice the normal bubble radius (flat: normalX(30)
+      // vs a bubble's normalX(15)), × scale, × object scaling
+      const S = 2 * NORMAL_RADIUS_PX * (styleNum(this.style.scale) || 1) * objectZoomFactor(zoom, this.mapOptions);
+      const color = parseCssColor(Array.isArray(this.style.colorscheme) ? this.style.colorscheme[0] : this.style.colorscheme) || [0, 102, 204];
+      const fillOpacity = styleNum(this.style.fillopacity);
+      return [new IconLayer({
+        id: `ix-itemplot-${this.name}-g${this._iconGeneration}`,
+        data: items, pickable: true,
+        getPosition: d => d.geometry.coordinates,
+        getIcon: d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity),
+        // the icon is drawn in chart units (see _buildItemPlotIcon): its
+        // height in S units × S px
+        getSize: d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity).heightUnits * S,
+        sizeUnits: 'pixels',
+        updateTriggers: { getSize: [S] }
+      })];
+    }
+
+    // canvas for one per-item PLOT chart (itemPlotGeometry), RASTER px per
+    // chart unit; anchored at the chart origin (the item position)
+    _buildItemPlotIcon(values, range, sizeMax, color, fillOpacity) {
+      const RASTER = 24;
+      const key = 'itemplot|' + values.join(',') + '|' + range.min + ':' + range.max + '|' + sizeMax;
+      if (this._iconCache.has(key)) return this._iconCache.get(key);
+      const g = itemPlotGeometry(values, range, this.style, this.flags, sizeMax);
+      const { x0, x1, y0, y1 } = g.bbox;
+      const W = Math.max(2, Math.ceil((x1 - x0) * RASTER)), H = Math.max(2, Math.ceil((y1 - y0) * RASTER));
+      const px = x => (x - x0) * RASTER, py = y => (y1 - y) * RASTER;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      const rgb = color.slice(0, 3).join(',');
+      if (g.area) {
+        ctx.fillStyle = `rgba(${rgb},${isNaN(fillOpacity) ? 1 : fillOpacity})`;
+        ctx.beginPath();
+        g.area.forEach(([x, y], i) => (i ? ctx.lineTo(px(x), py(y)) : ctx.moveTo(px(x), py(y))));
+        ctx.closePath();
+        ctx.fill();
+      }
+      if (this.flags.has('LINES')) {
+        ctx.strokeStyle = `rgb(${rgb})`;
+        ctx.lineWidth = g.lineWidth * RASTER;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        let open = false;
+        for (const p of g.points) {
+          if (!p) { open = false; continue; }
+          if (open) ctx.lineTo(px(p.x), py(p.y)); else { ctx.moveTo(px(p.x), py(p.y)); open = true; }
+        }
+        ctx.stroke();
+      }
+      for (const p of g.points) {
+        if (!p || !(p.r > 0)) continue;
+        ctx.beginPath();
+        ctx.arc(px(p.x), py(p.y), p.r * RASTER, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgb(${rgb})`;
+        ctx.fill();
+        ctx.lineWidth = RASTER / 75;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+      }
+      const icon = { url: canvas.toDataURL(), width: W, height: H, anchorX: px(0), anchorY: py(0), id: key, heightUnits: y1 - y0 };
+      return this._cacheIcon(key, icon);
+    }
+
     _plotCategories() {
       const explicit = Array.isArray(this.style.values) ? this.style.values
         : Array.isArray(this.style.xaxis) ? this.style.xaxis : null;
@@ -7835,7 +8014,7 @@
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, parseCsvText, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius,
+    fetchLayerData, parseCsvText, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;

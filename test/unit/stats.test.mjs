@@ -418,3 +418,27 @@ test('cellAggregatedValues: DIFFERENCE over the aggregated series, last dropped;
   assert.deepEqual(plain(G.cellAggregatedValues({ sums: [7], counts: [1] }, flags('DIFFERENCE'), {})), [7], 'one value: unchanged');
   assert.deepEqual(plain(G.cellAggregatedValues(cell, flags(), {})), [10, 15, 12]);
 });
+
+// ---- per-item PLOT (flat drawChart PLOT, measured on real flat)
+test('itemPlotGeometry: flat\'s per-item PLOT layout in chart units (x step 1, y span (n−1)·rangescale, 5 % bottom margin)', () => {
+  const g = G.itemPlotGeometry([1, 2, 3, 4, 5], { min: 1, max: 5 }, {}, flags('PLOT', 'LINES', 'FIXSIZE'), 5);
+  assert.deepEqual(plain(g.points.map(p => [p.x, +p.y.toFixed(3)])), [[0, 0.2], [1, 1.2], [2, 2.2], [3, 3.2], [4, 4.2]], 'measured: v=1 at 0.2 S, 1 S per unit');
+  assert.ok(g.points.every(p => Math.abs(p.r - 1 / 3) < 1e-9), 'FIXSIZE markers r = S/3');
+  const g3 = G.itemPlotGeometry([1, 2, 3], { min: 1, max: 5 }, {}, flags('PLOT', 'LINES', 'FIXSIZE'), 5);
+  assert.deepEqual(plain(g3.points.map(p => +p.y.toFixed(3))), [0.1, 0.6, 1.1], 'n=3: half a unit per value step (flat: 176.8 px of 353.7)');
+  const rs = G.itemPlotGeometry([1, 2, 3, 4, 5], { min: 1, max: 5 }, { rangescale: 2 }, flags('PLOT', 'FIXSIZE'), 5);
+  assert.deepEqual(plain(rs.points.map(p => [p.x, +p.y.toFixed(3)])).slice(0, 2), [[0, 0.4], [1, 2.4]], 'rangescale 2 (measured: 2 S per unit, margin 0.4 S); x unchanged');
+  const free = G.itemPlotGeometry([1, 5], { min: 1, max: 5 }, {}, flags('PLOT'), 5);
+  assert.deepEqual(plain(free.points.map(p => +p.r.toFixed(4))), [+(0.5 / Math.sqrt(5)).toFixed(4), 0.5], 'without FIXSIZE: ½·√(v/max) (flat: 79.1 / 176.8 of 353.7)');
+  const zero = G.itemPlotGeometry([0, 2], { min: 0, max: 2 }, {}, flags('PLOT', 'FIXSIZE'), 2);
+  assert.equal(zero.points[0].r, 0, 'no marker for a 0 value');
+  const area = G.itemPlotGeometry([2, 3], { min: 2, max: 3 }, {}, flags('PLOT', 'AREA'), 3);
+  assert.ok(area.area[0][1] < 0, 'AREA fills down to the value-0 level, below the chart origin when min > 0');
+});
+
+test('itemAnchor: a point, or the bounding-box center of a polygon\'s largest part', () => {
+  assert.deepEqual(plain(G.itemAnchor({ type: 'Point', coordinates: [9, 45] })), [9, 45]);
+  const sq = (x, y, s) => [[[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]];
+  assert.deepEqual(plain(G.itemAnchor({ type: 'MultiPolygon', coordinates: [sq(0, 0, 1), sq(10, 10, 4)] })), [12, 12]);
+  assert.equal(G.itemAnchor(null), null);
+});
