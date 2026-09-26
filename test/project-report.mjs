@@ -55,10 +55,19 @@ const GENERIC_MAP = /generic\/(mercator|orthographic)\.svg$/i;
 // Flags that pick WHAT is drawn — real ixmaps-flat's base types and the chart
 // shapes its maptheme.js drawChart() dispatches on. A missing one blocks a
 // theme; any other unsupported flag is a modifier gl ignores (FAST, LOCKED,
-// TITLE, ...) and only makes the theme "partial".
+// TITLE, BOX — the frame around a PLOT/BAR chart, ...) and only makes the
+// theme "partial".
 const SHAPE_FLAGS = new Set(['FEATURE', 'FEATURES', 'CHOROPLETH', 'CHART', 'DOT', 'BLANK', 'USER', 'PIE', 'DONUT',
   'STARBURST', 'WAFFLE', 'BUBBLE', 'SQUARE', 'LABEL', 'SYMBOL', 'SEQUENCE', 'PLOT', 'PLOTXY', 'PLOTX', 'PLOTY', 'PLOTYX',
-  'STAR', 'BOX', 'LINES', 'AREA', 'BUFFER', 'BAR', 'BARS', 'VECTOR', 'BEZIER', 'QUAD', 'WMS', 'IMAGE', 'GAUGE']);
+  'STAR', 'LINES', 'AREA', 'BUFFER', 'BAR', 'BARS', 'VECTOR', 'BEZIER', 'QUAD', 'WMS', 'IMAGE', 'GAUGE']);
+// Shapes gl draws only in combination — the grammar checks flag by flag and
+// can't see this: gl draws PLOT charts only on an aggregated grid
+// (GRIDSIZE); flat's per-item PLOT (one chart per point/shape) is missing.
+function comboShapeGaps(flags) {
+  const gaps = [];
+  if (flags.has('PLOT') && !flags.has('GRIDSIZE')) gaps.push('PLOT per item (without GRIDSIZE)');
+  return gaps;
+}
 
 function assessMap(project) {
   const m = project.map || {};
@@ -90,7 +99,8 @@ function assessTheme(theme, project) {
     else if (g.kind === 'join' && !featureLayers.has(theme.layer)) blockers.push(`joins to flat SVG map layer \`${theme.layer}\` (no FEATURE theme with that name)`);
   }
   const unsupported = findings.filter(f => f.code === 'gl-unsupported');
-  const unsupportedFlags = unsupported.filter(f => f.section === 'flags' && SHAPE_FLAGS.has(f.keyword)).map(f => f.keyword);
+  const unsupportedFlags = unsupported.filter(f => f.section === 'flags' && SHAPE_FLAGS.has(f.keyword)).map(f => f.keyword)
+    .concat(comboShapeGaps(spec.flags));
   // data.name (flat's table/cache name) and data.cache are bookkeeping flat
   // needs and gl doesn't — reported by the grammar, but no effect on output
   const IGNORABLE = new Set(['dataKeys:name', 'dataKeys:cache']);
