@@ -105,9 +105,11 @@ that can't load is skipped with a warning, the rest still load. **Code a project
 run by default** — `required` scripts, `ext` data scripts and a project's `process` functions are
 reported, not executed (only a page's own `.data({process})` runs) — and the basemap isn't switched.
 
-A page can opt in to a project's **processing scripts** (`data.ext` on a loaded file, flat's
-`ixmaps.<data.name>.after` / `.process(table, options)` contract) for script URLs under prefixes it
-lists — no built-in prefixes, and a project file's own `options.trustedscripts` is ignored:
+A page can opt in to a project's **scripts** (`data.ext`) for script URLs under prefixes it lists —
+no built-in prefixes, and a project file's own `options.trustedscripts` is ignored. Both of flat's
+script contracts work: a **processing script** on a loaded file (`ixmaps.<data.name>.after` /
+`.process(table, options)`), and a **broker** (`data.type: "ext"`), which loads the data itself in
+`ixmaps.<data.name>(theme, options)` and hands it over with `ixmaps.setExternalData(data, {type, name})`:
 
 ```js
 ixmaps.Map("map_div", {...}).options({
@@ -115,10 +117,13 @@ ixmaps.Map("map_div", {...}).options({
 })
 ```
 
-Prefixes match whole path segments; relative script paths resolve against the page. The file is
-parsed by data.js (load it before ixmaps-gl.js), and the script runs right before its own theme's
-processing. Scripts that load the data themselves (`data.type: "ext"`, brokers) and scripts that
-reach into flat's own internals (`ixmaps.parentApi`, `htmlgui_*` hooks) aren't supported. `test/project-report.mjs` shows which themes
+Prefixes match whole path segments; relative script paths resolve against the page. Data is parsed
+by data.js (load it before ixmaps-gl.js), and a script runs right before its own theme loads. The
+theme properties a broker sets from its data (flat's `szFields`, `szField100`, `szSnippet`,
+`szTitle`, `szLabelA`, `setProperties()`, …) are applied to the theme, where flat's own style keys
+would put them. A broker `data.type: "ext"` without `data.ext` calls a function the page itself
+defines (`ixmaps.<name>`, page code — no opt-in needed). Scripts that reach into flat's own
+internals (`ixmaps.parentApi`, `htmlgui_*` hooks) aren't supported. `test/project-report.mjs` shows which themes
 of your own project files gl can render.
 
 ## Quick start

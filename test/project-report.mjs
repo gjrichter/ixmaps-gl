@@ -3,8 +3,8 @@
 // ixmaps-gl could render, and which missing features block the rest.
 //
 //   node project-report.mjs [file-or-dir ...]   default: the local project folders below
-//   --trusted <url prefix> (repeatable): count data.ext processing scripts under
-//     it as runnable, as a page's .options({trustedscripts}) would make them
+//   --trusted <url prefix> (repeatable): count data.ext scripts (processing scripts,
+//     brokers) under it as runnable, as a page's .options({trustedscripts}) would
 //
 // Every theme is translated (projectThemeToDefinition) and normalized
 // (normalizeTheme) by the real engine, validated against the shared grammar
@@ -89,14 +89,15 @@ function assessTheme(theme, project) {
   const blockers = [];
   const data = def.data || {};
   // a script the PROJECT names vs a function the host PAGE defines
-  // a processing script (data.ext on a loaded file) under --trusted runs, as
+  // a data.ext script (processing script or broker) under --trusted runs, as
   // with the page's .options({trustedscripts}); relative paths resolve
   // against the page in gl — unknown here, so they count as untrusted
-  const extRuns = data.ext && data.type !== 'ext' && /^https?:/.test(String(data.ext)) && isTrustedScriptUrl(String(data.ext), TRUSTED);
+  const extRuns = data.ext && /^https?:/.test(String(data.ext)) && isTrustedScriptUrl(String(data.ext), TRUSTED);
   if (data.ext && !extRuns) blockers.push(data.type === 'ext'
-    ? 'data from a broker script the project names (`dbtableExt`, type "ext") — not supported'
+    ? 'data from a broker script the project names (`dbtableExt`, type "ext") — not run (not trusted)'
     : 'data processed by a script the project names (`dbtableExt`) — not run (not trusted)');
-  else if (data.type === 'ext') blockers.push('data from a page function `ixmaps.<name>()` (`ext`, no script)');
+  // no script: the host PAGE must define ixmaps.<name>() — gl calls it if so
+  else if (data.type === 'ext' && !data.ext) blockers.push('data from a page function `ixmaps.<name>()` (`ext`, no script — the page must define it)');
   if (data.process) blockers.push('`data.process` function — never run');
   if (!data.url && !data.obj && !data.query && data.type !== 'ext' && !data.ext) blockers.push('no data source');
   const isFeature = spec.flags.has('FEATURE') || spec.flags.has('FEATURES');

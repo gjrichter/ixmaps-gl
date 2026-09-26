@@ -221,7 +221,7 @@
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
   // v0.1.6: knows this engine's aliases, lookupfield rule, meta↔style, builder methods, project loading
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.13/dist/validate.mjs';
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.14/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -483,7 +483,17 @@
   // dataCache), so a single pending-resolver slot is enough — not a
   // registry keyed by data name like the real engine's.
   let _pendingQueryResolve = null;
-  function setExternalDataBridge(dataObj) {
+  // brokers (data.type "ext") hand their data over by name —
+  // setExternalData(data, {type, name}) — see loadBrokerData
+  const _pendingExternalData = new Map();
+  function setExternalDataBridge(dataObj, opt) {
+    const name = opt && opt.name;
+    if (name != null && _pendingExternalData.has(String(name))) {
+      const resolve = _pendingExternalData.get(String(name));
+      _pendingExternalData.delete(String(name));
+      resolve({ data: dataObj, opt });
+      return;
+    }
     if (!_pendingQueryResolve) {
       console.warn('[ixmaps-gl] ixmaps.setExternalData called with no pending .data({query}) fetch — ignored');
       return;
@@ -551,8 +561,7 @@
   // .options({trustedscripts: [url prefixes]}) and the script's resolved
   // URL is under one of them — off by default, no built-in prefixes, and a
   // project file can't set it (applyProjectMap drops the key). Scripts
-  // that load the data themselves (data.type "ext", brokers) aren't
-  // supported yet.
+  // that load the data themselves (data.type "ext"): see loadBrokerData.
   const _warnedUntrustedScripts = new Set();
   const _scriptTextCache = new Map();
   // flat: a bare name ("process_data") is story-root relative, ".js" added;
@@ -604,6 +613,159 @@
       if (!fn) throw new Error(`[ixmaps-gl] data.ext script ${url} defines neither ixmaps.${name}.after nor ixmaps.${name}.process`);
       return fn.call(ns, table, { name, type: dataConfig.type, url: dataConfig.url, ext: dataConfig.ext }) || table;
     };
+  }
+
+  // Broker scripts (data.type "ext") — flat's contract (htmlgui.js
+  // htmlgui_loadExternalData): the script (data.ext, trusted like a
+  // processing script) defines ixmaps.<data.name>(theme, options), which
+  // loads the data itself and hands it over with
+  // ixmaps.setExternalData(data, {type, name}); a type other than
+  // "dbtable"/"jsondb" is parsed by data.js. Without data.ext the PAGE
+  // defines ixmaps.<name> (page code — no trust needed). Brokers also set
+  // theme properties from the data (the latest date column as value field,
+  // "aggiornato al …" as snippet, …): `theme` is a stand-in for flat's
+  // MapTheme that records every write — applyBrokerThemePatch turns them
+  // into the definition keys flat's parseStyle reads them from.
+  const BROKER_TIMEOUT_MS = 120000;
+  const BROKER_THEME_FIELDS = ['szFields', 'szFieldsA', 'szField100', 'szSizeField', 'szValueField', 'szItemField',
+    'szSelectionField', 'szFilter', 'szTitle', 'szSnippet', 'szDescription', 'szLabelA', 'szXaxisA',
+    'colorScheme', 'origColorScheme', 'nClipFrames', 'nGridX'];
+  function makeBrokerTheme(spec) {
+    const b = spec.binding || {}, st = spec.style || {}, m = spec.meta || {};
+    const arr = v => (v == null ? undefined : Array.isArray(v) ? v.slice() : String(v).split('|'));
+    const values = {
+      szId: spec.name, szFields: b.value, szFieldsA: arr(b.value), szField100: b.field100,
+      szSizeField: b.size, szValueField: st.valuefield, szItemField: b.id, szSelectionField: b.id,
+      szFilter: spec.filter, szTitle: m.title, szSnippet: m.snippet, szDescription: m.description,
+      szLabelA: arr(st.label), szXaxisA: arr(st.xaxis), colorScheme: st.colorscheme, origColorScheme: st.colorscheme,
+      nClipFrames: st.clipframes, nGridX: st.gridx,
+    };
+    const writes = {}, styleWrites = {};
+    const style = new Proxy(Object.assign({}, st), {
+      set(t, k, v) { t[k] = v; styleWrites[k] = v; return true; },
+    });
+    // flat: style.setProperties(obj) → parseStyle; setProperties({field(s),
+    // field100, ...}) sets the fields, then the rest as style
+    Object.defineProperty(style, 'setProperties', { value: obj => { Object.assign(styleWrites, obj); } });
+    const theme = new Proxy(values, {
+      get(t, k) {
+        if (k === 'style') return style;
+        if (k === 'setProperties') {
+          return obj => {
+            const o = Object.assign({}, obj);
+            if (o.field != null || o.fields != null) writes.szFields = o.field != null ? o.field : o.fields;
+            if (o.field100 != null) writes.szField100 = o.field100;
+            delete o.field; delete o.fields; delete o.field100;
+            Object.assign(styleWrites, o);
+          };
+        }
+        return t[k];
+      },
+      set(t, k, v) { t[k] = v; if (BROKER_THEME_FIELDS.includes(k)) writes[k] = v; return true; },
+    });
+    return { theme, patch: () => ({ writes: Object.assign({}, writes), style: Object.assign({}, styleWrites) }) };
+  }
+  // a theme definition (flat's shape) with a broker's theme writes applied —
+  // written where they win in normalizeTheme (binding aliases over style
+  // keys over .field()), after dropping other aliases of the same target
+  function applyBrokerThemePatch(def, patch) {
+    const w = (patch && patch.writes) || {}, sw = (patch && patch.style) || {};
+    const out = Object.assign({}, def, { binding: Object.assign({}, def.binding), style: Object.assign({}, def.style), meta: Object.assign({}, def.meta) });
+    const list = v => (Array.isArray(v) ? v.join('|') : v);
+    const setTarget = (target, alias, v) => {
+      for (const [k, t] of Object.entries(FLAT_BINDING_ALIASES)) {
+        if (t !== target) continue;
+        delete out.binding[k];
+        delete out.style[k];
+      }
+      if (target === 'theme.field') delete out.field;
+      if (target === 'theme.field100') delete out.field100;
+      out.binding[alias] = v;
+    };
+    if (w.szFieldsA !== undefined || w.szFields !== undefined) setTarget('theme.field', 'value', list(w.szFieldsA !== undefined ? w.szFieldsA : w.szFields));
+    if (w.szField100 !== undefined) setTarget('theme.field100', 'value100', list(w.szField100));
+    if (w.szSizeField !== undefined) setTarget('style.sizefield', 'size', w.szSizeField);
+    if (w.szValueField !== undefined) setTarget('style.valuefield', 'valuefield', w.szValueField);
+    if (w.szItemField !== undefined) setTarget('style.itemfield', 'itemfield', w.szItemField);
+    if (w.szFilter !== undefined) out.style.filter = w.szFilter;
+    if (w.szLabelA !== undefined) out.style.label = w.szLabelA;
+    if (w.szXaxisA !== undefined) out.style.xaxis = w.szXaxisA;
+    if (w.nClipFrames !== undefined) out.style.clipframes = w.nClipFrames;
+    if (w.nGridX !== undefined) out.style.gridx = w.nGridX;
+    const cs = w.origColorScheme !== undefined ? w.origColorScheme : w.colorScheme;
+    if (cs !== undefined) out.style.colorscheme = cs;
+    // style keys given via style / style.setProperties: flat reads the meta
+    // vocabulary (title, snippet, description) from style too
+    for (const [k, v] of Object.entries(sw)) {
+      if (k === 'title' || k === 'snippet' || k === 'description') out.meta[k] = v;
+      else out.style[k] = v;
+    }
+    if (w.szTitle !== undefined) out.meta.title = w.szTitle;
+    if (w.szSnippet !== undefined) out.meta.snippet = w.szSnippet;
+    if (w.szDescription !== undefined) out.meta.description = w.szDescription;
+    return out;
+  }
+  function externalDataToTable(data, opt) {
+    const type = String((opt && opt.type) || 'dbtable');
+    if (data && typeof data.json === 'function') return Promise.resolve(data); // a data.js Table
+    if (/^jsondb$/i.test(type)) return Promise.resolve(new global.Data.Table(data));
+    return new Promise((resolve, reject) => {
+      global.Data.object({ source: data, type, error: e => reject(new Error(`[ixmaps-gl] setExternalData: data.js import failed: ${e}`)) })
+        .import(table => resolve(table));
+    });
+  }
+  // → { rows, patch } for a broker theme (spec: its normalizeTheme result)
+  async function loadBrokerData(spec, engineOptions) {
+    const dataConfig = spec.data;
+    const name = dataConfig.name;
+    if (!name) throw new Error('[ixmaps-gl] a broker theme (data.type "ext") needs data.name — the function ixmaps.<name>(theme, options)');
+    requireDataJs('ext');
+    let text = null, url = null;
+    if (dataConfig.ext) {
+      url = resolveScriptUrl(dataConfig.ext);
+      if (!isTrustedScriptUrl(url, engineOptions && engineOptions.trustedscripts)) {
+        throw new Error(`[ixmaps-gl] broker script ${url} not run — not under .options({trustedscripts: [...]})`);
+      }
+      if (!_scriptTextCache.has(url)) {
+        _scriptTextCache.set(url, fetch(url).then(r => {
+          if (!r.ok) throw new Error(`[ixmaps-gl] failed to fetch broker script ${url}: ${r.status}`);
+          return r.text();
+        }));
+      }
+      text = await _scriptTextCache.get(url);
+    }
+    // without a script, ixmaps.<name> must be a function the page defined —
+    // never gl's own API, which a project could otherwise call by name
+    if (text == null && (_engineIxmapsApi.has(String(name)) || String(name) === 'setExternalData')) {
+      throw new Error(`[ixmaps-gl] broker name "${name}" is an ixmaps-gl API function, not a page-defined data provider`);
+    }
+    const { theme, patch } = makeBrokerTheme(spec);
+    const key = String(name);
+    if (_pendingExternalData.has(key)) throw new Error(`[ixmaps-gl] broker ${name}: another theme is still waiting for data of that name`);
+    let timer = null;
+    const handed = new Promise((resolve, reject) => {
+      timer = setTimeout(() => {
+        _pendingExternalData.delete(key);
+        reject(new Error(`[ixmaps-gl] broker ixmaps.${name}() did not call ixmaps.setExternalData(data, {name: "${name}"}) within ${BROKER_TIMEOUT_MS / 1000}s`));
+      }, BROKER_TIMEOUT_MS);
+      _pendingExternalData.set(key, v => { clearTimeout(timer); resolve(v); });
+    });
+    try {
+      // run the script right before its own call (see loadProcessingScript)
+      if (text != null) new Function(text + '\n//# sourceURL=' + url)();
+      const fn = global.ixmaps && global.ixmaps[name];
+      if (typeof fn !== 'function') throw new Error(`[ixmaps-gl] broker ${url || 'page'}: ixmaps.${name} is not a function`);
+      fn.call(global.ixmaps, theme, { name, type: 'ext', ext: dataConfig.ext, theme, setData: global.ixmaps.setExternalData });
+    } catch (e) {
+      // the call failed: stop waiting (no late timeout rejection)
+      clearTimeout(timer);
+      _pendingExternalData.delete(key);
+      handed.catch(() => {});
+      throw e;
+    }
+    const { data, opt } = await handed;
+    const table = await externalDataToTable(data, opt);
+    return { rows: table.json(), patch: patch() };
   }
 
   async function fetchLayerData(dataConfig, binding, engineOptions) {
@@ -1174,7 +1336,7 @@
   // edit it by hand; `npm run unit` fails when it drifts.
   // ---------------------------------------------------------------
   // <grammar:binding-aliases>
-  // generated from ixmaps-grammar 0.1.13 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
+  // generated from ixmaps-grammar 0.1.14 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
   const FLAT_BINDING_ALIASES = {
     "aggregation": "style.aggregationfield",
     "aggregationfield": "style.aggregationfield",
@@ -1236,7 +1398,7 @@
   // both — so .style({tooltip}) is a tooltip and .meta({fillopacity}) a style
   // property. GENERATED by test/sync-grammar.mjs — do not edit.
   // <grammar:meta-keys>
-  // generated from ixmaps-grammar 0.1.13 — 5 meta keys
+  // generated from ixmaps-grammar 0.1.14 — 5 meta keys
   const FLAT_META_KEYS = ["description","name","snippet","title","tooltip"];
   // </grammar:meta-keys>
 
@@ -1316,8 +1478,8 @@
   //                          → def.field/field100
   // A modern theme.data{} wins over the style keys (flat applies it later).
   // Code a project names (data.ext scripts, data.process functions) is kept
-  // as data; only a data.ext processing script under the page's
-  // .options({trustedscripts}) ever runs (see loadProcessingScript).
+  // as data; only data.ext scripts under the page's .options({trustedscripts})
+  // ever run (see loadProcessingScript, loadBrokerData).
   // ---------------------------------------------------------------
   const PROJECT_DATA_KEYS = {
     dbtable: 'name', dbtableUrl: 'url', dbtableType: 'type', dbtableExt: 'ext',
@@ -1732,7 +1894,8 @@
       for (const lb of this._layerBuilders) {
         // flat applies its style.dbtable* data translation to EVERY theme
         // (htmlgui.js newTheme), not only to project files
-        const spec = normalizeTheme(projectThemeToDefinition(lb.definition()));
+        const def = projectThemeToDefinition(lb.definition());
+        let spec = normalizeTheme(def);
         // .data({obj}) is already in-memory (no network cost to "re-
         // fetch"), and its object identity can't be captured in a
         // JSON.stringify key without serializing the whole table — skip
@@ -1748,7 +1911,14 @@
         // arms can reach it, and .obj sources get a distinct identity tag
         // instead of colliding with each other under one 'null' entry.
         let raw, cacheKey;
-        if (spec.data && spec.data.obj) {
+        if (spec.data && spec.data.type === 'ext') {
+          // a broker also sets theme properties — re-normalize with them;
+          // not cached: the theme writes belong to this theme
+          const { rows, patch } = await loadBrokerData(spec, this._engineOptions);
+          spec = normalizeTheme(applyBrokerThemePatch(def, patch));
+          raw = rowsResult(rows, spec.binding);
+          cacheKey = 'ext:' + spec.name + ':' + spec.data.name;
+        } else if (spec.data && spec.data.obj) {
           raw = await fetchLayerData(spec.data, spec.binding, this._engineOptions);
           cacheKey = 'obj:' + spec.name;
         } else {
@@ -2353,12 +2523,20 @@
       // by defineLayer and loadProject. Purely additive, see defineLayer.
       async function defineFromDefinition(def) {
         if (validation) validation.definition(def);
-        const spec = normalizeTheme(projectThemeToDefinition(def));
-        const raw = await fetchLayerData(spec.data, spec.binding, builder._engineOptions);
+        const pdef = projectThemeToDefinition(def);
+        let spec = normalizeTheme(pdef);
+        let raw;
+        if (spec.data && spec.data.type === 'ext') {
+          const { rows, patch } = await loadBrokerData(spec, builder._engineOptions);
+          spec = normalizeTheme(applyBrokerThemePatch(pdef, patch));
+          raw = rowsResult(rows, spec.binding);
+        } else {
+          raw = await fetchLayerData(spec.data, spec.binding, builder._engineOptions);
+        }
         const filtered = applyWhereFilter(raw, spec.filter);
         const fc = filtered.type === 'Table' ? joinChoroplethFeatures(spec, filtered, runtimes) : filtered;
         const rt = new LayerRuntime(spec, fc, builder._engineOptions);
-        rt._dataSourceKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
+        rt._dataSourceKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj), broker: spec.data && spec.data.type === 'ext' ? spec.name + ':' + spec.data.name : undefined });
         runtimes.push(rt);
         _globalThemeRegistry.set(rt.name, rt);
         if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
@@ -2384,9 +2562,9 @@
       //     order (a CHOROPLETH needs its FEATURE layer first). A theme that
       //     fails is skipped with a warning; the others still load.
       //   - never run: project.required/require scripts, data.process
-      //     functions, broker scripts (data.type "ext"); a data.ext
-      //     processing script only under the page's .options({trustedscripts})
-      //     (see loadProcessingScript) — noted / reported by the validator.
+      //     functions; data.ext scripts (processing scripts and brokers)
+      //     only under the page's .options({trustedscripts}) (see
+      //     loadProcessingScript, loadBrokerData) — noted / reported.
       // Flags are matched as substrings, like flat (szFlag.match(/add/i)).
       async function applyProject(project, flags) {
         if (!project || typeof project !== 'object') throw new Error('[ixmaps-gl] loadProject: not a project object');
@@ -7459,6 +7637,9 @@
     // carried over from a page's own pre-load `ixmaps.validate = ...`
     validate: _preloadValidate
   };
+  // gl's own API names — a project's broker name must not call these
+  // (loadBrokerData: a page-function broker is PAGE code, not engine API)
+  const _engineIxmapsApi = new Set(Object.keys(global.ixmaps));
   // Bare globals, not namespaced under ixmaps — matches the real engine's
   // own convention (see their shared comment above) of exposing these
   // directly on window for inline-HTML/onclick callers, not only via a
@@ -7468,7 +7649,7 @@
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     normalizeTheme, projectThemeToDefinition, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
-    resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript,
+    resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,

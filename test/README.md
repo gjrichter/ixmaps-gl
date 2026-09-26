@@ -110,7 +110,7 @@ recorded into `.cache/` like any remote file.
 
 ```bash
 node project-report.mjs [file-or-dir ...]   # default: the local ixmaps-flat project folders
-node project-report.mjs --trusted https://gjrichter.github.io/   # count processing scripts under a prefix as runnable
+node project-report.mjs --trusted https://gjrichter.github.io/   # count data.ext scripts under a prefix as runnable
 ```
 
 Runs every theme of every real ixmaps-flat project file (`*.json` with `themes`) through

@@ -103,3 +103,91 @@ test('loadProcessingScript: missing data.name or missing process function are er
   const run = await loadProcessingScript({ name: 'Nope', type: 'csv', ext: P }, trusted);
   assert.throws(() => run({}), /defines neither ixmaps\.Nope\.after nor ixmaps\.Nope\.process/);
 });
+
+// ---- broker scripts (data.type "ext")
+
+function brokerEngine(scripts) {
+  const e = loadEngine(scripts);
+  // data.js stand-in: a Table is anything with json(); Data.object parses "csv"
+  e.win.Data = {
+    object: ({ source }) => ({ import: cb => cb({ json: () => String(source).trim().split('\n').slice(1).map(l => { const [k, v] = l.split(','); return { k, v: Number(v) }; }) }) }),
+    Table: function (o) { this.o = o; this.json = () => o.records; },
+  };
+  e.win.setTimeout = setTimeout; e.win.clearTimeout = clearTimeout;
+  return e;
+}
+const brokerSpec = (G, def) => G.normalizeTheme(G.projectThemeToDefinition(def));
+
+test('broker: a trusted script loads its data, hands it over by name, and its theme writes are applied', async () => {
+  const B = 'https://gjrichter.github.io/viz/broker.js';
+  const e = brokerEngine({
+    [B]: `ixmaps.COVID_LAST = function (theme, options) {
+      setTimeout(function () {
+        theme.szFields = "2020-03-02"; theme.szFieldsA = ["2020-03-02"]; theme.szSnippet = "aggiornato al 2020-03-02";
+        theme.style.colorscheme = ["#ff0000"];
+        ixmaps.setExternalData("k,v\\na,1\\nb,2", { type: "csv", name: options.name });
+      }, 5);
+    };`,
+  });
+  const def = { layer: 'x', type: 'CHART|BUBBLE', field: '$item$', style: { dbtable: 'COVID_LAST', dbtableType: 'ext', dbtableExt: B, lookupfield: 'lat|lon' } };
+  const spec = brokerSpec(e, def);
+  const { rows, patch } = await e.loadBrokerData(spec, { trustedscripts: ['https://gjrichter.github.io/'] });
+  assert.deepEqual(JSON.parse(JSON.stringify(rows)), [{ k: 'a', v: 1 }, { k: 'b', v: 2 }]);
+  const spec2 = e.normalizeTheme(e.applyBrokerThemePatch(e.projectThemeToDefinition(def), patch));
+  assert.equal(spec2.binding.value, '2020-03-02', 'the field the broker set wins over the project\'s field');
+  assert.equal(spec2.meta.snippet, 'aggiornato al 2020-03-02');
+  assert.deepEqual(JSON.parse(JSON.stringify(spec2.style.colorscheme)), ['#ff0000']);
+  assert.equal(spec2.binding.position, 'lat|lon', 'the position binding is untouched');
+});
+
+test('broker: setProperties / style.setProperties (flat MapTheme API) are applied as fields and style keys', async () => {
+  const B = 'https://gjrichter.github.io/viz/b2.js';
+  const e = brokerEngine({
+    [B]: `ixmaps.ODS = function (theme, options) {
+      options.theme.setProperties({ fields: "a|b", field100: "tot" });
+      options.theme.style.setProperties({ snippet: "al 2021-01-01", xaxis: "x1|x2" });
+      ixmaps.setExternalData({ records: [{ a: 1 }] }, { type: "jsonDB", name: "ODS" });
+    };`,
+  });
+  const def = { layer: 'x', type: 'CHART|BUBBLE', binding: { value: 'old', geo: 'lat|lon' }, data: { name: 'ODS', type: 'ext', ext: B } };
+  const { rows, patch } = await e.loadBrokerData(brokerSpec(e, def), { trustedscripts: ['https://gjrichter.github.io/viz/'] });
+  assert.deepEqual(JSON.parse(JSON.stringify(rows)), [{ a: 1 }], 'jsonDB → data.js Table');
+  const spec2 = e.normalizeTheme(e.applyBrokerThemePatch(e.projectThemeToDefinition(def), patch));
+  assert.equal(spec2.binding.value, 'a|b', 'binding.value "old" replaced');
+  assert.equal(spec2.binding.field100, 'tot');
+  assert.equal(spec2.meta.snippet, 'al 2021-01-01');
+  assert.equal(spec2.style.xaxis, 'x1|x2');
+});
+
+test('broker: an untrusted script is not fetched; a page-defined ixmaps.<name> (no data.ext) runs without trust', async () => {
+  const B = 'https://other.example.com/b.js';
+  const e = brokerEngine({ [B]: 'ixmaps.X = function () {};' });
+  const spec = brokerSpec(e, { layer: 'x', type: 'CHART|BUBBLE', data: { name: 'X', type: 'ext', ext: B } });
+  await assert.rejects(e.loadBrokerData(spec, { trustedscripts: ['https://gjrichter.github.io/'] }), /not run — not under \.options\(\{trustedscripts/);
+  assert.equal(e.fetched.length, 0);
+  e.win.ixmaps.PAGEFN = function (theme, options) { e.win.ixmaps.setExternalData({ records: [{ n: 1 }] }, { type: 'jsondb', name: options.name }); };
+  const pspec = brokerSpec(e, { layer: 'y', type: 'CHART|BUBBLE', data: { name: 'PAGEFN', type: 'ext' } });
+  const { rows } = await e.loadBrokerData(pspec, undefined);
+  assert.deepEqual(JSON.parse(JSON.stringify(rows)), [{ n: 1 }]);
+});
+
+test('broker: missing data.name or a script that defines no function are errors', async () => {
+  const B = 'https://gjrichter.github.io/viz/none.js';
+  const e = brokerEngine({ [B]: '/* nothing */' });
+  const trusted = { trustedscripts: ['https://gjrichter.github.io/'] };
+  await assert.rejects(e.loadBrokerData(brokerSpec(e, { layer: 'x', data: { type: 'ext', ext: B } }), trusted), /needs data\.name/);
+  await assert.rejects(e.loadBrokerData(brokerSpec(e, { layer: 'x', data: { name: 'Nope', type: 'ext', ext: B } }), trusted), /ixmaps\.Nope is not a function/);
+});
+
+test('setExternalData without a waiting broker or query is ignored with a warning', () => {
+  const e = brokerEngine({});
+  e.win.ixmaps.setExternalData({}, { name: 'nobody' });
+  assert.ok(e.warnings.some(w => w.includes('no pending')));
+});
+
+test('broker: without a script, a project can\'t call ixmaps-gl\'s own API by name', async () => {
+  const e = brokerEngine({});
+  for (const name of ['loadProject', 'Map', 'layer', 'setExternalData', 'setProjectJSON']) {
+    await assert.rejects(e.loadBrokerData(brokerSpec(e, { layer: 'x', data: { name, type: 'ext' } }), undefined), /is an ixmaps-gl API function/, name);
+  }
+});
