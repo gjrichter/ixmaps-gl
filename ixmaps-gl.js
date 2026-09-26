@@ -221,7 +221,7 @@
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
   // v0.1.6: knows this engine's aliases, lookupfield rule, meta↔style, builder methods, project loading
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.12/dist/validate.mjs';
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.13/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -542,9 +542,79 @@
     return fn(table, dataConfig) || table;
   }
 
-  async function fetchLayerData(dataConfig, binding) {
+  // Project processing scripts (data.ext on a loaded file) — flat's
+  // contract (htmlgui.js htmlgui_loadExternalData): the file is parsed by
+  // data.js, the script is loaded as text and run, and the Table goes
+  // through ixmaps.<data.name>.after(table, options) or, without one,
+  // .process(table, options); a returned value replaces the table.
+  // Code a PROJECT names is run only when the page opts in with
+  // .options({trustedscripts: [url prefixes]}) and the script's resolved
+  // URL is under one of them — off by default, no built-in prefixes, and a
+  // project file can't set it (applyProjectMap drops the key). Scripts
+  // that load the data themselves (data.type "ext", brokers) aren't
+  // supported yet.
+  const _warnedUntrustedScripts = new Set();
+  const _scriptTextCache = new Map();
+  // flat: a bare name ("process_data") is story-root relative, ".js" added;
+  // gl resolves every script against the page
+  function resolveScriptUrl(ext) {
+    let s = String(ext).trim();
+    if (!s.includes('/') && !/\.js(\?|$)/.test(s)) s += '.js';
+    return new URL(s, (global.document && global.document.baseURI) || undefined).href;
+  }
+  // prefix match on whole path segments: "…/gjrichter" doesn't admit
+  // "…/gjrichter-other/"; the URL parser has already resolved "..", %2e
+  function isTrustedScriptUrl(url, trusted) {
+    if (!Array.isArray(trusted)) return false;
+    return trusted.some(p => {
+      if (typeof p !== 'string' || !p.trim()) return false;
+      let prefix;
+      try { prefix = new URL(p.trim(), (global.document && global.document.baseURI) || undefined).href; } catch (e) { return false; }
+      if (!url.startsWith(prefix)) return false;
+      return prefix.endsWith('/') || url.length === prefix.length || '/?#'.includes(url[prefix.length]);
+    });
+  }
+  // the processor for a data.ext processing script, or null when there is
+  // none or it isn't trusted (warned once per script)
+  async function loadProcessingScript(dataConfig, trusted) {
+    if (!dataConfig.ext || dataConfig.type === 'ext' || typeof dataConfig.ext !== 'string' || /function/.test(dataConfig.ext)) return null;
+    const url = resolveScriptUrl(dataConfig.ext);
+    if (!isTrustedScriptUrl(url, trusted)) {
+      if (!_warnedUntrustedScripts.has(url)) {
+        _warnedUntrustedScripts.add(url);
+        console.warn(`[ixmaps-gl] data.ext script ${url} not run — not under .options({trustedscripts: [...]}); the data is used unprocessed`);
+      }
+      return null;
+    }
+    if (!dataConfig.name) throw new Error(`[ixmaps-gl] data.ext script ${url} needs data.name (it defines ixmaps.<name>.process)`);
+    if (!_scriptTextCache.has(url)) {
+      _scriptTextCache.set(url, fetch(url).then(r => {
+        if (!r.ok) throw new Error(`[ixmaps-gl] failed to fetch data.ext script ${url}: ${r.status}`);
+        return r.text();
+      }));
+    }
+    const text = await _scriptTextCache.get(url);
+    const name = dataConfig.name;
+    // run the script right before its own call, never ahead: several
+    // scripts define the same ixmaps.<name>.process (flat evals each time)
+    return table => {
+      new Function(text + '\n//# sourceURL=' + url)();
+      const ns = global.ixmaps && global.ixmaps[name];
+      const fn = ns && (typeof ns.after === 'function' ? ns.after : typeof ns.process === 'function' ? ns.process : null);
+      if (!fn) throw new Error(`[ixmaps-gl] data.ext script ${url} defines neither ixmaps.${name}.after nor ixmaps.${name}.process`);
+      return fn.call(ns, table, { name, type: dataConfig.type, url: dataConfig.url, ext: dataConfig.ext }) || table;
+    };
+  }
+
+  async function fetchLayerData(dataConfig, binding, engineOptions) {
     if (!dataConfig || (!dataConfig.url && !dataConfig.urls && !dataConfig.query && !dataConfig.obj)) {
       throw new Error('[ixmaps-gl] layer .data() needs a url, urls, query, or obj');
+    }
+    // processing scripts run on csv files only (loadProcessingScript) — say
+    // so instead of silently using the data unprocessed
+    if (dataConfig.ext && dataConfig.type !== 'csv' && !_warnedUntrustedScripts.has('type:' + dataConfig.ext)) {
+      _warnedUntrustedScripts.add('type:' + dataConfig.ext);
+      console.warn(`[ixmaps-gl] data.ext script ${dataConfig.ext} not run — processing scripts are supported for csv data only (type "${dataConfig.type}")`);
     }
 
     // .data({obj: table, type: 'jsondb'}) — an already-in-memory data.js
@@ -612,8 +682,11 @@
         return resp.text();
       }));
       let rows;
-      if (dataConfig.process) {
-        requireDataJs('process');
+      // a trusted project processing script wins over data.process, as the
+      // script's ixmaps.<name>.process replaces the registered one in flat
+      const scriptProcess = await loadProcessingScript(dataConfig, engineOptions && engineOptions.trustedscripts);
+      if (dataConfig.process || scriptProcess) {
+        requireDataJs(scriptProcess ? 'ext' : 'process');
         // data.js parses (as flat does); several urls append their records
         // Data.object(...).import(cb): data.js may first load its CSV
         // parser (PapaParse), so the Table arrives via the callback
@@ -624,7 +697,7 @@
         const table = tables[0];
         for (const t of tables.slice(1)) table.records = table.records.concat(t.records);
         table.table.records = table.records.length;
-        rows = runDataProcess(table, dataConfig).json();
+        rows = (scriptProcess ? scriptProcess(table) : runDataProcess(table, dataConfig)).json();
       } else {
         rows = [].concat(...texts.map(parseCsvText));
       }
@@ -1101,7 +1174,7 @@
   // edit it by hand; `npm run unit` fails when it drifts.
   // ---------------------------------------------------------------
   // <grammar:binding-aliases>
-  // generated from ixmaps-grammar 0.1.12 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
+  // generated from ixmaps-grammar 0.1.13 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
   const FLAT_BINDING_ALIASES = {
     "aggregation": "style.aggregationfield",
     "aggregationfield": "style.aggregationfield",
@@ -1163,7 +1236,7 @@
   // both — so .style({tooltip}) is a tooltip and .meta({fillopacity}) a style
   // property. GENERATED by test/sync-grammar.mjs — do not edit.
   // <grammar:meta-keys>
-  // generated from ixmaps-grammar 0.1.12 — 5 meta keys
+  // generated from ixmaps-grammar 0.1.13 — 5 meta keys
   const FLAT_META_KEYS = ["description","name","snippet","title","tooltip"];
   // </grammar:meta-keys>
 
@@ -1243,7 +1316,8 @@
   //                          → def.field/field100
   // A modern theme.data{} wins over the style keys (flat applies it later).
   // Code a project names (data.ext scripts, data.process functions) is kept
-  // as data and never run — the validator reports it.
+  // as data; only a data.ext processing script under the page's
+  // .options({trustedscripts}) ever runs (see loadProcessingScript).
   // ---------------------------------------------------------------
   const PROJECT_DATA_KEYS = {
     dbtable: 'name', dbtableUrl: 'url', dbtableType: 'type', dbtableExt: 'ext',
@@ -1675,11 +1749,11 @@
         // instead of colliding with each other under one 'null' entry.
         let raw, cacheKey;
         if (spec.data && spec.data.obj) {
-          raw = await fetchLayerData(spec.data, spec.binding);
+          raw = await fetchLayerData(spec.data, spec.binding, this._engineOptions);
           cacheKey = 'obj:' + spec.name;
         } else {
-          cacheKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, process: spec.data && spec.data.process && String(spec.data.process) });
-          if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(spec.data, spec.binding));
+          cacheKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, process: spec.data && spec.data.process && String(spec.data.process), ext: spec.data && spec.data.ext, name: spec.data && spec.data.ext ? spec.data.name : undefined });
+          if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(spec.data, spec.binding, this._engineOptions));
           raw = await dataCache.get(cacheKey);
         }
         const filtered = applyWhereFilter(raw, spec.filter);
@@ -2280,7 +2354,7 @@
       async function defineFromDefinition(def) {
         if (validation) validation.definition(def);
         const spec = normalizeTheme(projectThemeToDefinition(def));
-        const raw = await fetchLayerData(spec.data, spec.binding);
+        const raw = await fetchLayerData(spec.data, spec.binding, builder._engineOptions);
         const filtered = applyWhereFilter(raw, spec.filter);
         const fc = filtered.type === 'Table' ? joinChoroplethFeatures(spec, filtered, runtimes) : filtered;
         const rt = new LayerRuntime(spec, fc, builder._engineOptions);
@@ -2309,8 +2383,10 @@
       //     style.name/meta.name replaces the theme of that name. Defined in
       //     order (a CHOROPLETH needs its FEATURE layer first). A theme that
       //     fails is skipped with a warning; the others still load.
-      //   - never run: project.required/require scripts, data.ext scripts,
-      //     data.process functions (noted / reported by the validator).
+      //   - never run: project.required/require scripts, data.process
+      //     functions, broker scripts (data.type "ext"); a data.ext
+      //     processing script only under the page's .options({trustedscripts})
+      //     (see loadProcessingScript) — noted / reported by the validator.
       // Flags are matched as substrings, like flat (szFlag.match(/add/i)).
       async function applyProject(project, flags) {
         if (!project || typeof project !== 'object') throw new Error('[ixmaps-gl] loadProject: not a project object');
@@ -2373,7 +2449,12 @@
           if (Number.isFinite(lat) && Number.isFinite(lng)) jumpLive(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: flatToMapLibreZoom(z) } : {}));
           else if (Number.isFinite(z)) jumpLive({ zoom: flatToMapLibreZoom(z) });
         }
-        if (m.options && typeof m.options === 'object') Object.assign(builder._engineOptions, m.options);
+        // a project can't authorize its own scripts — trustedscripts is the page's
+        if (m.options && typeof m.options === 'object') {
+          const o = Object.assign({}, m.options);
+          if ('trustedscripts' in o) { delete o.trustedscripts; report.notes.push('the project\'s options.trustedscripts is ignored — only the page can set it'); }
+          Object.assign(builder._engineOptions, o);
+        }
         if (m.scaleParam && m.scaleParam.normalSizeScale != null) builder._engineOptions.normalSizeScale = m.scaleParam.normalSizeScale;
         if (m.basemap) report.notes.push(`basemap "${m.basemap}" not switched (ixmaps-gl keeps the map's own basemap)`);
       }
@@ -7387,6 +7468,7 @@
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     normalizeTheme, projectThemeToDefinition, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
+    resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,

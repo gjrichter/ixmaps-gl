@@ -101,9 +101,24 @@ loads a real ixmaps-flat project — an object, a JSON string or a URL — the w
 ones, `replace` swaps themes by `style.name`/`meta.name`, `themeonly`/`maponly`/`keepview`
 work as in flat. Themes in flat's older shape (data source in `style.dbtable*`, value field at
 the top level) are translated first. It resolves to `{ themes, skipped, notes }`: a theme
-that can't load is skipped with a warning, the rest still load. **Nothing a project names is
-ever run** — `required` scripts, `ext` data scripts and a project's `process` functions are
-reported, not executed (only a page's own `.data({process})` runs) — and the basemap isn't switched. `test/project-report.mjs` shows which themes
+that can't load is skipped with a warning, the rest still load. **Code a project names is not
+run by default** — `required` scripts, `ext` data scripts and a project's `process` functions are
+reported, not executed (only a page's own `.data({process})` runs) — and the basemap isn't switched.
+
+A page can opt in to a project's **processing scripts** (`data.ext` on a loaded file, flat's
+`ixmaps.<data.name>.after` / `.process(table, options)` contract) for script URLs under prefixes it
+lists — no built-in prefixes, and a project file's own `options.trustedscripts` is ignored:
+
+```js
+ixmaps.Map("map_div", {...}).options({
+  trustedscripts: ["https://gjrichter.github.io/viz/", "https://raw.githubusercontent.com/gjrichter/"]
+})
+```
+
+Prefixes match whole path segments; relative script paths resolve against the page. The file is
+parsed by data.js (load it before ixmaps-gl.js), and the script runs right before its own theme's
+processing. Scripts that load the data themselves (`data.type: "ext"`, brokers) and scripts that
+reach into flat's own internals (`ixmaps.parentApi`, `htmlgui_*` hooks) aren't supported. `test/project-report.mjs` shows which themes
 of your own project files gl can render.
 
 ## Quick start

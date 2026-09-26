@@ -3,6 +3,8 @@
 // ixmaps-gl could render, and which missing features block the rest.
 //
 //   node project-report.mjs [file-or-dir ...]   default: the local project folders below
+//   --trusted <url prefix> (repeatable): count data.ext processing scripts under
+//     it as runnable, as a page's .options({trustedscripts}) would make them
 //
 // Every theme is translated (projectThemeToDefinition) and normalized
 // (normalizeTheme) by the real engine, validated against the shared grammar
@@ -42,11 +44,11 @@ function projectFiles(sources) {
 }
 
 // ------------------------------------------------------------ engine + validator
-const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location: { search: '' },
+const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location: { search: '' }, URL,
   document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
 win.window = win; win.globalThis = win;
 vm.runInNewContext(fs.readFileSync(path.resolve(TEST, '..', 'ixmaps-gl.js'), 'utf8'), win, { filename: 'ixmaps-gl.js' });
-const { projectThemeToDefinition, normalizeTheme } = win.__ixmapsGlInternals;
+const { projectThemeToDefinition, normalizeTheme, isTrustedScriptUrl } = win.__ixmapsGlInternals;
 if (!fs.existsSync(VALIDATOR)) { console.error(`validator not found: ${VALIDATOR} (sibling ixmaps-grammar checkout)`); process.exit(2); }
 const { createValidator, version: grammarVersion } = await import(pathToFileURL(VALIDATOR).href);
 
@@ -87,7 +89,13 @@ function assessTheme(theme, project) {
   const blockers = [];
   const data = def.data || {};
   // a script the PROJECT names vs a function the host PAGE defines
-  if (data.ext) blockers.push('data from a script the project names (`dbtableExt`) — never run');
+  // a processing script (data.ext on a loaded file) under --trusted runs, as
+  // with the page's .options({trustedscripts}); relative paths resolve
+  // against the page in gl — unknown here, so they count as untrusted
+  const extRuns = data.ext && data.type !== 'ext' && /^https?:/.test(String(data.ext)) && isTrustedScriptUrl(String(data.ext), TRUSTED);
+  if (data.ext && !extRuns) blockers.push(data.type === 'ext'
+    ? 'data from a broker script the project names (`dbtableExt`, type "ext") — not supported'
+    : 'data processed by a script the project names (`dbtableExt`) — not run (not trusted)');
   else if (data.type === 'ext') blockers.push('data from a page function `ixmaps.<name>()` (`ext`, no script)');
   if (data.process) blockers.push('`data.process` function — never run');
   if (!data.url && !data.obj && !data.query && data.type !== 'ext' && !data.ext) blockers.push('no data source');
@@ -112,7 +120,10 @@ function assessTheme(theme, project) {
 }
 
 // ------------------------------------------------------------ run
-const sources = process.argv.slice(2).length ? process.argv.slice(2).map(p => path.resolve(p)) : DEFAULT_SOURCES;
+const argv = process.argv.slice(2);
+const TRUSTED = [];
+for (let i = argv.indexOf('--trusted'); i !== -1; i = argv.indexOf('--trusted')) TRUSTED.push(...argv.splice(i, 2).slice(1));
+const sources = argv.length ? argv.map(p => path.resolve(p)) : DEFAULT_SOURCES;
 const files = projectFiles(sources);
 const results = files.map(f => {
   const project = JSON.parse(fs.readFileSync(f, 'utf8'));
