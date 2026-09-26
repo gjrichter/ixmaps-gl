@@ -186,6 +186,40 @@ test('aggregateOnGrid: records in one cell become one item with the summed value
   assert.equal(items.find(f => !f.properties.cluster).properties.value, 7, 'a single-record cell keeps its own properties');
 });
 
+test('aggregateField100: flat\'s post-aggregation field100 on the cell sums (maptheme.js 11000-11052)', () => {
+  const f = (...x) => flags('AGGREGATE', ...x);
+  assert.equal(G.aggregateField100(5, 20, f(), {}), 25, 'percent of the sums');
+  assert.equal(G.aggregateField100(5, 0, f(), {}), 0, 'v100 not above field100min (0) → 0');
+  assert.equal(G.aggregateField100(5, 20, f(), { field100min: 25 }), 0, 'field100min');
+  assert.equal(G.aggregateField100(30, 20, f('RELATIVE'), {}), 50);
+  assert.equal(G.aggregateField100(5, 20, f('INVERT'), {}), 75);
+  assert.equal(G.aggregateField100(5, 20, f('FRACTION'), { fractionscale: 2 }), 0.5);
+  assert.equal(G.aggregateField100(5, 0, f('FRACTION'), {}), 0);
+  assert.equal(G.aggregateField100(5, 20, f('PERMILLE'), {}), 250);
+  assert.equal(G.aggregateField100(5, 20, f('PRODUCT'), {}), 100);
+  assert.equal(G.aggregateField100(33, 50, f('CALCVAL'), {}), 17);
+  assert.equal(G.aggregateField100(12, 20, f('DIFFERENCE'), {}), -8);
+  assert.equal(G.aggregateField100(30, 20, f('DIFFERENCE', 'RELATIVE'), {}), 50, 'DIFFERENCE|RELATIVE → the percent branch');
+});
+
+test('aggregateOnGrid with post: the cell\'s value is converted from the SUMS, single-record cells too', () => {
+  const r = (lng, lat, value, value100) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { value, value100, raw: {} } });
+  const post = (v, v100) => G.aggregateField100(v, v100, flags('AGGREGATE'), {});
+  const items = G.aggregateOnGrid([r(9.19, 45.46, 1, 10), r(9.19001, 45.46001, 3, 30), r(9.3, 45.5, 2, 4)], 12, 10, flags('RECT'), post);
+  assert.equal(items.find(f => f.properties.cluster).properties.value, 10, '(1+3)/(10+30)·100 — not 10 % + 10 % = 20');
+  const single = items.find(f => !f.properties.cluster);
+  assert.equal(single.properties.value, 50);
+  const raw = r(9.3, 45.5, 2, 4);
+  G.aggregateOnGrid([raw], 12, 10, flags('RECT'), post);
+  assert.equal(raw.properties.value, 2, 'the record itself is not changed');
+});
+
+test('applyField100 leaves AGGREGATE themes to the aggregation (flat computes field100 on the sums)', () => {
+  const fs_ = [feat({ a: 5, T: 20 })];
+  assert.equal(G.applyField100(fs_, { value: 'a', field100: 'T' }, flags('AGGREGATE'), {}), fs_);
+  assert.equal(G.field100Binding({ value: 'a|b' }, flags('AGGREGATE', 'DIFFERENCE')).value, 'a|b');
+});
+
 test('aggregateOnGrid without a grid width: only identical coordinates merge (flat keys by exact position)', () => {
   const items = G.aggregateOnGrid([pt(9.19, 45.46, 1), pt(9.19, 45.46, 1), pt(9.19001, 45.46, 1)], 12, null, flags());
   assert.equal(items.length, 2);
@@ -295,6 +329,42 @@ test('applyField100: percent of field100 by default; FRACTION, PERMILLE, RELATIV
   assert.equal(G.applyField100(fs_, { value: 'a', field100: 'T' }, flags('INVERT'), {})[0].properties.a, 50);
   assert.equal(G.applyField100(fs_, { value: '!a', field100: 'T' }, flags(), {})[0].properties['!a'], 25, '"!a" → T - a');
   assert.equal(G.applyField100(fs_, { value: 'a' }, flags(), {}), fs_, 'no field100 → the same features');
+});
+
+test('applyField100: DIFFERENCE (one value field) → v − field100; with RELATIVE the percent change (flat 9062)', () => {
+  const fs_ = [feat({ today: 120, yesterday: 100 }), feat({ today: 0, yesterday: 30 })];
+  const b = { value: 'today', field100: 'yesterday' };
+  assert.deepEqual(plain(G.applyField100(fs_, b, flags('DIFFERENCE'), {}).map(f => f.properties.today)), [20, 0], '0 stays 0');
+  assert.deepEqual(plain(G.applyField100(fs_, b, flags('DIFFERENCE', 'ZEROISVALUE'), {}).map(f => f.properties.today)), [20, -30], 'ZEROISVALUE: 0 − 30');
+  assert.deepEqual(plain(G.applyField100(fs_, b, flags('DIFFERENCE', 'RELATIVE'), {}).map(f => f.properties.today)), [20, 0], 'RELATIVE: 120/100·100 − 100');
+});
+
+test('applyField100: CALCVAL/CALC100 → round(v·v100/100), PRODUCT → v·v100; v when v100 is 0 (flat 9052-9058)', () => {
+  const fs_ = [feat({ p: 33, n: 50 }), feat({ p: 7, n: 0 })];
+  const b = { value: 'p', field100: 'n' };
+  assert.deepEqual(plain(G.applyField100(fs_, b, flags('CALCVAL'), {}).map(f => f.properties.p)), [17, 7], 'round(16.5) = 17');
+  assert.deepEqual(plain(G.applyField100(fs_, b, flags('CALC100'), {}).map(f => f.properties.p)), [17, 7]);
+  assert.deepEqual(plain(G.applyField100(fs_, b, flags('PRODUCT'), {}).map(f => f.properties.p)), [1650, 7]);
+});
+
+test('applyField100: AUTO100 → each value in % of the item\'s sum, not with AGGREGATE (flat 9013-9023)', () => {
+  const fs_ = [feat({ a: 1, b: 3 }), feat({ a: 0, b: 0 })];
+  const b = { value: 'a|b' };
+  assert.deepEqual(plain(G.applyField100(fs_, b, flags('AUTO100'), {}).map(f => [f.properties.a, f.properties.b])), [[25, 75], [0, 0]]);
+  assert.equal(G.applyField100(fs_, b, flags('AUTO100', 'AGGREGATE'), {}), fs_, 'AGGREGATE: unchanged (flat: __fAuto100 excludes it)');
+});
+
+test('applyField100 + field100Binding: DIFFERENCE over several fields → next minus each, last dropped (flat 9096-9112)', () => {
+  const fs_ = [feat({ d1: 10, d2: 15, d3: 12 }), feat({ d1: 0, d2: 4, d3: 4 })];
+  const b = { value: 'd1|d2|d3' };
+  const out = G.applyField100(fs_, b, flags('DIFFERENCE'), {});
+  assert.deepEqual(plain(out.map(f => [f.properties.d1, f.properties.d2])), [[5, -3], [4, 0]]);
+  assert.equal(out[0].properties.d3, 12, 'the dropped field keeps its original value');
+  const rel = G.applyField100(fs_, b, flags('DIFFERENCE', 'RELATIVE'), {});
+  assert.deepEqual(plain(rel.map(f => [f.properties.d1, f.properties.d2])), [[50, -20], [100, 0]], 'RELATIVE: % of the earlier value; from 0 → 100');
+  assert.equal(G.field100Binding(b, flags('DIFFERENCE')).value, 'd1|d2');
+  assert.equal(G.field100Binding({ value: 'a', field100: 'b' }, flags('DIFFERENCE')).value, 'a', 'one field: unchanged');
+  assert.equal(G.field100Binding(b, flags()), b);
 });
 
 test('normalizeTheme routes value100 / field100 to binding.field100', () => {

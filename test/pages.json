@@ -17,6 +17,7 @@
     "examples/bubble_categorical.html",
     "examples/bubble_range_equidistant.html",
     "examples/bubble_aggregate_sum_nosize.html",
+    "examples/bubble_aggregate_field100.html",
     "examples/bubble_range_natural.html",
     "examples/bubble_range_quantile.html",
     "examples/choropleth_autoopacity.html",
@@ -141,6 +142,10 @@
     {
       "flat": "examples/bubble_aggregate_sum_nosize_svg.html",
       "gl": "examples/bubble_aggregate_sum_nosize.html"
+    },
+    {
+      "flat": "examples/bubble_aggregate_field100_svg.html",
+      "gl": "examples/bubble_aggregate_field100.html"
     }
   ]
 }
