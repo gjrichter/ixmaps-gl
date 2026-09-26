@@ -371,3 +371,19 @@ test('normalizeTheme routes value100 / field100 to binding.field100', () => {
   const spec = G.normalizeTheme({ layer: 'x', binding: { value: 'a', value100: 'T', position: 'geometry' }, style: { type: 'CHOROPLETH' } });
   assert.equal(spec.binding.field100, 'T');
 });
+
+// ---- negative values and signs (flat: NEGATIVEISVALUE is the default; SIGN)
+test('valueRadius: a negative value is sized by its absolute value, as flat (maptheme.js 20720)', () => {
+  const style = { normalsizevalue: 100 }, opts = { objectscaling: 'fixed' };
+  assert.equal(G.valueRadius(-50, 10, style, opts, flags(), 100), G.valueRadius(50, 10, style, opts, flags(), 100));
+  assert.ok(G.valueRadius(-50, 10, style, opts, flags(), 100) > G.valueRadius(0, 10, style, opts, flags(), 100));
+});
+
+test('formatBubbleValue: DIFFERENCE / RELATIVE / SIGN put "+" before positive and "+/-" before zero values', () => {
+  const st = { valuedecimals: 0 };
+  assert.equal(G.formatBubbleValue(12, st, flags('SIGN')), '+12');
+  assert.equal(G.formatBubbleValue(0, st, flags('DIFFERENCE')), '+/-0');
+  assert.equal(G.formatBubbleValue(-7, st, flags('RELATIVE')), '-7');
+  assert.equal(G.formatBubbleValue(12, st, flags()), '12', 'no sign without the flags');
+  assert.equal(G.formatBubbleValue(12, { valuedecimals: 0, units: '%' }, flags('SIGN')), '+12%');
+});
