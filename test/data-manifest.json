@@ -31,19 +31,7 @@
   "sha256": "21135b8e36f85b24f890b0d0fdb43ced6d6edcfb68fd8c1b508191c29452087f",
   "bytes": 58294
  },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283914624": {
-  "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
-  "bytes": 860237
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283919665": {
-  "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
-  "bytes": 860237
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283925098": {
-  "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
-  "bytes": 860237
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js?_=1790283930065": {
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/js/mapscript.min.js": {
   "sha256": "7d21b85f61fceb2e51be3a68361dbd405ae32a039dffeecb4fdc9a6b9ace2566",
   "bytes": 860237
  },
@@ -127,19 +115,7 @@
   "sha256": "5ed5f2be4681bc0a2ed444e7a2f965c6416edbb1cb02236f196677e64c9565ea",
   "bytes": 23624
  },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283914521": {
-  "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
-  "bytes": 4024
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283919561": {
-  "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
-  "bytes": 4024
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283924995": {
-  "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
-  "bytes": 4024
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js?_=1790283929962": {
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/format.js": {
   "sha256": "8ca2b1d36da0bc70d9edf6b4ce2daef94dfbf501d1b7a8969e0d1f0ee48436ea",
   "bytes": 4024
  },
@@ -151,19 +127,7 @@
   "sha256": "8d6a96c2fc0e8c4283184032825023025f57898288f898f42b92150e860516a6",
   "bytes": 199846
  },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283914522": {
-  "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
-  "bytes": 23518
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283919562": {
-  "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
-  "bytes": 23518
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283924995": {
-  "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
-  "bytes": 23518
- },
- "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js?_=1790283929962": {
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/mustache.js": {
   "sha256": "a083d292e75e36adf316e8c4eb07819958723aa135721491a39e08cc5585c15f",
   "bytes": 23518
  },

@@ -70,12 +70,16 @@ fs.mkdirSync(CACHE, { recursive: true });
 // doesn't change the response and doesn't belong in the committed manifest.
 // Both are dropped from the cache key and the manifest (MapTiler only: a
 // "key" parameter elsewhere, e.g. a Google Sheet's, selects the data).
+// jQuery's cache buster (`_=<timestamp>`, how the real ixmaps-flat engine
+// loads its own scripts) makes every flat-oracle run a new URL the same way.
 function canonicalUrl(url) {
   let u;
   try { u = new URL(url); } catch (e) { return url; }
-  if (!/(^|\.)maptiler\.com$/.test(u.hostname)) return url;
-  u.searchParams.delete('mtsid');
-  u.searchParams.delete('key');
+  const buster = /^\d+$/.test(u.searchParams.get('_') || '');
+  const maptiler = /(^|\.)maptiler\.com$/.test(u.hostname);
+  if (!buster && !maptiler) return url;
+  if (buster) u.searchParams.delete('_');
+  if (maptiler) { u.searchParams.delete('mtsid'); u.searchParams.delete('key'); }
   return u.toString();
 }
 const manifest = fs.existsSync(MANIFEST) ? JSON.parse(fs.readFileSync(MANIFEST, 'utf8')) : {};
