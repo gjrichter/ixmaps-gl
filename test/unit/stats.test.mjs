@@ -387,3 +387,34 @@ test('formatBubbleValue: DIFFERENCE / RELATIVE / SIGN put "+" before positive an
   assert.equal(G.formatBubbleValue(12, st, flags()), '12', 'no sign without the flags');
   assert.equal(G.formatBubbleValue(12, { valuedecimals: 0, units: '%' }, flags('SIGN')), '+12%');
 });
+
+test('parseCsvText: quoted cells keep their commas and doubled quotes (RFC 4180, as data.js)', () => {
+  const rows = G.parseCsvText('name,cap,lat\n"Neuhardenberg PV3,4+5",58.9,52.6\n"say ""hi""",1,2\nplain,3,4\n');
+  assert.deepEqual(plain(rows), [{ name: 'Neuhardenberg PV3,4+5', cap: '58.9', lat: '52.6' }, { name: 'say "hi"', cap: '1', lat: '2' }, { name: 'plain', cap: '3', lat: '4' }]);
+  assert.deepEqual(plain(G.parseCsvText('a;b\n"x;y";2\n')), [{ a: 'x;y', b: '2' }], 'semicolon files too');
+});
+
+test('filterFlatValues: NEGATIVEISNOTVALUE clears negative value/field100 fields, drops the record with AGGREGATE (flat 9801, 10529)', () => {
+  const fs_ = [feat({ v: -3, T: 10 }), feat({ v: 4, T: -1 }), feat({ v: 5, T: 10 })];
+  const out = G.filterFlatValues(fs_, { value: 'v', field100: 'T' }, flags('NEGATIVEISNOTVALUE'));
+  assert.deepEqual(plain(out.map(f => f.properties)), [{ T: 10 }, { v: 4 }, { v: 5, T: 10 }]);
+  assert.equal(G.filterFlatValues(fs_, { value: 'v', field100: 'T' }, flags('NEGATIVEISNOTVALUE', 'AGGREGATE')).length, 1);
+  assert.equal(G.filterFlatValues(fs_, { value: 'v' }, flags()), fs_, 'default (NEGATIVEISVALUE): unchanged');
+  assert.equal(fs_[0].properties.v, -3, 'the page\'s data is not changed');
+});
+
+test('filterFlatValues: without AGGREGATE a record whose size field is 0, negative or not a number is dropped (flat 9848-9856)', () => {
+  const fs_ = [feat({ c: 'a', s: 10 }), feat({ c: 'b', s: 0 }), feat({ c: 'c', s: -2 }), feat({ c: 'd', s: 'x' })];
+  assert.deepEqual(plain(G.filterFlatValues(fs_, { value: 'c', size: 's' }, flags('CHART', 'BUBBLE')).map(f => f.properties.c)), ['a']);
+  assert.equal(G.filterFlatValues(fs_, { value: 'c', size: 's' }, flags('AGGREGATE')), fs_, 'AGGREGATE keeps them (sized by |size|)');
+  assert.equal(G.filterFlatValues(fs_, { value: 'c', size: 's' }, flags('CHOROPLETH')).length, 4, 'shapes are never dropped');
+});
+
+test('cellAggregatedValues: DIFFERENCE over the aggregated series, last dropped; RELATIVE with the field100min guard (flat 11086-11101)', () => {
+  const cell = { sums: [10, 15, 12], counts: [1, 1, 1] };
+  assert.deepEqual(plain(G.cellAggregatedValues(cell, flags('DIFFERENCE'), {})), [5, -3]);
+  assert.deepEqual(plain(G.cellAggregatedValues({ sums: [0, 4, 6], counts: [1, 1, 1] }, flags('DIFFERENCE', 'RELATIVE'), {})), [0, 50], 'from 0 (not above field100min) → 0');
+  assert.deepEqual(plain(G.cellAggregatedValues({ sums: [20, 30], counts: [2, 3] }, flags('DIFFERENCE', 'MEAN'), {})), [0], 'MEAN first: 10 → 10');
+  assert.deepEqual(plain(G.cellAggregatedValues({ sums: [7], counts: [1] }, flags('DIFFERENCE'), {})), [7], 'one value: unchanged');
+  assert.deepEqual(plain(G.cellAggregatedValues(cell, flags(), {})), [10, 15, 12]);
+});

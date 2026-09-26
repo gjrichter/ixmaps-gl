@@ -249,7 +249,7 @@
     {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
-     "count": 34935,
+     "count": 34936,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -261,13 +261,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "d402f3973de7d1fd",
-     "setDigest": "597411b292115d7e",
+     "digest": "041e3ac4d9895230",
+     "setDigest": "aa9df08bae872406",
      "columnDigests": {
-      "getColor": "c75c20354a3992e1",
-      "getIcon": "c777707761125a34",
-      "getPosition": "5f5412bb5178486f",
-      "getSize": "cb2b6262e9f230bb"
+      "getColor": "665d9d61b10427f6",
+      "getIcon": "e8da4c4681de5ec7",
+      "getPosition": "c7dd9db1c907f013",
+      "getSize": "c9742091dd1e773d"
      },
      "stats": {
       "getColor": [
@@ -709,7 +709,7 @@
     {
      "id": "ix-bubbles-power_plants-g0",
      "type": "IconLayer",
-     "count": 34935,
+     "count": 34936,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -721,13 +721,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "d5daa208c4494b7c",
-     "setDigest": "f51662ffe38d855e",
+     "digest": "580cc9ad0d5422a7",
+     "setDigest": "bbc1274f51570846",
      "columnDigests": {
-      "getColor": "c75c20354a3992e1",
-      "getIcon": "0e2e6c212a3123c6",
-      "getPosition": "5f5412bb5178486f",
-      "getSize": "09b78ec7341127db"
+      "getColor": "665d9d61b10427f6",
+      "getIcon": "d8e4c8edc80da507",
+      "getPosition": "c7dd9db1c907f013",
+      "getSize": "f35b84077bb56976"
      },
      "stats": {
       "getColor": [
@@ -1291,7 +1291,7 @@
     }
    ],
    "legend": [
-    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 965 541 Gas 1 493 051 Hydro 1 053 160 Nuclear 407 912 Wind 263 054 Oil 261 879 Solar 188 253 Biomass 34 281 Waste 14 749 Geothermal 12 688 Cogeneration 4 048 Other 3 613 Petcoke 2 425 Storage 1 712 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
+    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 965 541 Gas 1 493 051 Hydro 1 053 160 Nuclear 407 912 Wind 263 054 Oil 261 879 Solar 188 312 Biomass 34 281 Waste 14 749 Geothermal 12 688 Cogeneration 4 048 Other 3 613 Petcoke 2 425 Storage 1 712 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
    ],
    "tooltips": {
     "countries": [
@@ -1301,7 +1301,7 @@
     ],
     "power_plants": [
      "<b>Adelaide Showgrounds</b><br>Australia<br>Solar<br>1 MW",
-     "<b>Tennant Creek</b><br>Australia<br>Gas<br>17 MW",
+     "<b>ERB Candeias</b><br>Brazil<br>Biomass<br>17 MW",
      "<b>Three Gorges Dam</b><br>China<br>Hydro<br>22 500 MW"
     ]
    },
@@ -1555,7 +1555,7 @@
     {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
-     "count": 31674,
+     "count": 31675,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -1567,13 +1567,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "20e3e32444425605",
-     "setDigest": "184c8ec96430ff03",
+     "digest": "8ece491f8bf470b1",
+     "setDigest": "2ebba7f00a2fd16d",
      "columnDigests": {
-      "getColor": "f3877c786b7a055c",
-      "getIcon": "903c2ea142dcf8dd",
-      "getPosition": "a7ded36658490154",
-      "getSize": "e8647973510bf850"
+      "getColor": "5caad350d8a434f0",
+      "getIcon": "6c41c1ce880ec683",
+      "getPosition": "ba8a4efcbb8e9a7a",
+      "getSize": "e9545ca6c527566e"
      },
      "stats": {
       "getColor": [
@@ -2015,7 +2015,7 @@
     {
      "id": "ix-bubbles-power_plants-g0",
      "type": "IconLayer",
-     "count": 31674,
+     "count": 31675,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -2027,13 +2027,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "05ab97809b4704d9",
-     "setDigest": "9b90792118fce3f5",
+     "digest": "23e231913853b06c",
+     "setDigest": "a4888a33ad1570f1",
      "columnDigests": {
-      "getColor": "f3877c786b7a055c",
-      "getIcon": "b5809633f6a8d7e0",
-      "getPosition": "a7ded36658490154",
-      "getSize": "15d0db615943ecf0"
+      "getColor": "5caad350d8a434f0",
+      "getIcon": "f51ac85697a05e38",
+      "getPosition": "ba8a4efcbb8e9a7a",
+      "getSize": "e25824fb84386ebd"
      },
      "stats": {
       "getColor": [
@@ -2597,7 +2597,7 @@
     }
    ],
    "legend": [
-    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 663 575 Gas 1 331 219 Hydro 945 883 Nuclear 318 574 Wind 233 319 Oil 203 375 Solar 171 274 Biomass 32 365 Waste 13 255 Geothermal 7 658 Cogeneration 4 040 Other 3 499 Petcoke 2 397 Storage 1 603 Wave and Tidal 298 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
+    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 663 575 Gas 1 331 219 Hydro 945 883 Nuclear 318 574 Wind 233 319 Oil 203 375 Solar 171 333 Biomass 32 365 Waste 13 255 Geothermal 7 658 Cogeneration 4 040 Other 3 499 Petcoke 2 397 Storage 1 603 Wave and Tidal 298 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
    ],
    "tooltips": {
     "countries": [
@@ -2861,7 +2861,7 @@
     {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
-     "count": 34935,
+     "count": 34936,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -2873,13 +2873,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "d402f3973de7d1fd",
-     "setDigest": "597411b292115d7e",
+     "digest": "041e3ac4d9895230",
+     "setDigest": "aa9df08bae872406",
      "columnDigests": {
-      "getColor": "c75c20354a3992e1",
-      "getIcon": "c777707761125a34",
-      "getPosition": "5f5412bb5178486f",
-      "getSize": "cb2b6262e9f230bb"
+      "getColor": "665d9d61b10427f6",
+      "getIcon": "e8da4c4681de5ec7",
+      "getPosition": "c7dd9db1c907f013",
+      "getSize": "c9742091dd1e773d"
      },
      "stats": {
       "getColor": [
@@ -3321,7 +3321,7 @@
     {
      "id": "ix-bubbles-power_plants-g0",
      "type": "IconLayer",
-     "count": 34935,
+     "count": 34936,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -3333,13 +3333,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "d5daa208c4494b7c",
-     "setDigest": "f51662ffe38d855e",
+     "digest": "580cc9ad0d5422a7",
+     "setDigest": "bbc1274f51570846",
      "columnDigests": {
-      "getColor": "c75c20354a3992e1",
-      "getIcon": "0e2e6c212a3123c6",
-      "getPosition": "5f5412bb5178486f",
-      "getSize": "09b78ec7341127db"
+      "getColor": "665d9d61b10427f6",
+      "getIcon": "d8e4c8edc80da507",
+      "getPosition": "c7dd9db1c907f013",
+      "getSize": "f35b84077bb56976"
      },
      "stats": {
       "getColor": [
@@ -3903,7 +3903,7 @@
     }
    ],
    "legend": [
-    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 965 541 Gas 1 493 051 Hydro 1 053 160 Nuclear 407 912 Wind 263 054 Oil 261 879 Solar 188 253 Biomass 34 281 Waste 14 749 Geothermal 12 688 Cogeneration 4 048 Other 3 613 Petcoke 2 425 Storage 1 712 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
+    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 965 541 Gas 1 493 051 Hydro 1 053 160 Nuclear 407 912 Wind 263 054 Oil 261 879 Solar 188 312 Biomass 34 281 Waste 14 749 Geothermal 12 688 Cogeneration 4 048 Other 3 613 Petcoke 2 425 Storage 1 712 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
    ],
    "tooltips": {
     "countries": [
@@ -3913,7 +3913,7 @@
     ],
     "power_plants": [
      "<b>Adelaide Showgrounds</b><br>Australia<br>Solar<br>1 MW",
-     "<b>Tennant Creek</b><br>Australia<br>Gas<br>17 MW",
+     "<b>ERB Candeias</b><br>Brazil<br>Biomass<br>17 MW",
      "<b>Three Gorges Dam</b><br>China<br>Hydro<br>22 500 MW"
     ]
    },
