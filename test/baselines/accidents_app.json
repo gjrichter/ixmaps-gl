@@ -1877,9 +1877,7 @@
      "maxSizeValue": 24
     }
    ],
-   "legend": [
-    "Numero dei feriti per natura dell'incidente ▾ Scontro frontale-laterale 6 696feriti 6 439feriti Tamponamento 3 498feriti Investimento di pedone 2 845feriti Scontro-laterale 2 465feriti Fuoriuscita 2 369feriti Urto con ostacolo accidentale 1 360feriti Urto con veicolo in momentanea 1 286feriti Urto con veicolo in sosta 545feriti Scontro frontale 525feriti Caduta da veicolo 298feriti Frenata improvvisa 92feriti Urto con treno 1feriti Chart size: 100%"
-   ],
+   "legend": [],
    "tooltips": {
     "ITALIA_Regioni_2022": [
      ""
@@ -3768,9 +3766,7 @@
      "maxSizeValue": 24
     }
    ],
-   "legend": [
-    "Numero dei feriti per natura dell'incidente ▾ Scontro frontale-laterale 5 051feriti 4 204feriti Investimento di pedone 2 111feriti Fuoriuscita 1 944feriti Tamponamento 1 781feriti Scontro-laterale 1 734feriti Urto con veicolo in momentanea 1 011feriti Urto con ostacolo accidentale 943feriti Urto con veicolo in sosta 441feriti Scontro frontale 324feriti Caduta da veicolo 66feriti Frenata improvvisa 44feriti Urto con treno 1feriti Chart size: 100%"
-   ],
+   "legend": [],
    "tooltips": {
     "ITALIA_Regioni_2022": [
      ""
@@ -4967,9 +4963,7 @@
      "maxSizeValue": 24
     }
    ],
-   "legend": [
-    "Numero dei feriti per natura dell'incidente ▾ 9 001feriti Scontro frontale-laterale 8 978feriti Tamponamento 5 104feriti Investimento di pedone 3 491feriti Scontro-laterale 3 184feriti Fuoriuscita 2 918feriti Urto con ostacolo accidentale 1 733feriti Urto con veicolo in momentanea 1 486feriti Scontro frontale 908feriti Urto con veicolo in sosta 632feriti Caduta da veicolo 539feriti Frenata improvvisa 119feriti Urto con treno 1feriti Chart size: 100%"
-   ],
+   "legend": [],
    "tooltips": {
     "ITALIA_Regioni_2022": [
      ""
