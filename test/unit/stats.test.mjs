@@ -282,3 +282,22 @@ test('rangeClassLegendTotals: CHOROPLETH → every polygon, classed by its value
     _resolvePartsClass: v => G.resolvePartsClass(v, parts) };
   assert.deepEqual(plain(G.rangeClassLegendTotals(rt, [0, 0, 0, 0], null)), [1, 2]);
 });
+
+// ---- field100 (flat: values relative to the field100 value, maptheme.js 9044-9085)
+test('applyField100: percent of field100 by default; FRACTION, PERMILLE, RELATIVE, INVERT, "!" as flat', () => {
+  const fs_ = [feat({ a: 25, b: 0, T: 50 }), feat({ a: 5, b: 10, T: 0 })];
+  const pct = G.applyField100(fs_, { value: 'a|b', field100: 'T' }, flags(), {});
+  assert.deepEqual(plain(pct.map(f => [f.properties.a, f.properties.b])), [[50, 0], [500, 1000]], 'v100 0 → 1; a 0 value stays 0');
+  assert.equal(fs_[0].properties.a, 25, 'the page\'s data is not changed');
+  assert.equal(G.applyField100(fs_, { value: 'a', field100: 'T' }, flags('PERMILLE'), {})[0].properties.a, 500);
+  assert.equal(G.applyField100(fs_, { value: 'a', field100: 'T' }, flags('FRACTION'), { fractionscale: 10 })[0].properties.a, 5);
+  assert.equal(G.applyField100(fs_, { value: 'a', field100: 'T' }, flags('RELATIVE'), {})[0].properties.a, -50);
+  assert.equal(G.applyField100(fs_, { value: 'a', field100: 'T' }, flags('INVERT'), {})[0].properties.a, 50);
+  assert.equal(G.applyField100(fs_, { value: '!a', field100: 'T' }, flags(), {})[0].properties['!a'], 25, '"!a" → T - a');
+  assert.equal(G.applyField100(fs_, { value: 'a' }, flags(), {}), fs_, 'no field100 → the same features');
+});
+
+test('normalizeTheme routes value100 / field100 to binding.field100', () => {
+  const spec = G.normalizeTheme({ layer: 'x', binding: { value: 'a', value100: 'T', position: 'geometry' }, style: { type: 'CHOROPLETH' } });
+  assert.equal(spec.binding.field100, 'T');
+});

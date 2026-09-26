@@ -85,3 +85,18 @@ test('parseCssColor: hex and rgb()/RGB()/rgba() in any case, as the browser read
 test('resolveClassColors: an explicit list with RGB() colors', () => {
   assert.deepEqual(plain(G.resolveClassColors(['RGB(238,217,36)', '#05b1f0'], ['a', 'b'])), [[238, 217, 36], [5, 177, 240]]);
 });
+
+test('flatLegendLook: light by default, dark on dark basemaps/colors when the basemap is mostly opaque (flat legend.js)', () => {
+  const look = (...a) => plain(G.flatLegendLook(...a));
+  assert.deepEqual(look('white', 1), { dark: false, bg: 'rgba(255,255,255,0.9)' }, '"white" is a map type name, not a CSS color, for flat');
+  assert.deepEqual(look('VT_BRIGHT_LIGHT', 1), { dark: false, bg: 'rgba(255,255,255,0.9)' });
+  assert.deepEqual(look(undefined, 1), { dark: false, bg: 'rgba(255,255,255,0.9)' });
+  assert.deepEqual(look('VT_DATAVIZ_DARK', 1), { dark: true, bg: '#111' });
+  assert.deepEqual(look('satellite', 1), { dark: true, bg: '#111' });
+  assert.deepEqual(look('VT_DATAVIZ_DARK', 0.4), { dark: false, bg: 'rgba(255,255,255,0.9)' }, 'faded dark basemap → light');
+  assert.deepEqual(look('#202830', 1), { dark: true, bg: '#202830' }, 'dark CSS color → that color');
+  assert.deepEqual(look('#f5f5f0', 1), { dark: false, bg: '#f5f5f0' }, 'light CSS color → that color');
+  assert.deepEqual(look('rgba(0,0,0,0.2)', 1), { dark: false, bg: 'rgba(0,0,0,0.2)' }, 'blended against white → light');
+  assert.deepEqual(look('VT_DATAVIZ_DARK', 1, '#f5f5f0'), { dark: false, bg: '#f5f5f0' }, 'legendBackground wins');
+  assert.deepEqual(look('#0a1420', 0), { dark: true, bg: '#0a1420' }, 'dark CSS color, basemap faded: flat keeps dark text (unreadable) — light text here');
+});
