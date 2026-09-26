@@ -34,15 +34,15 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "88f88c925822ce7f",
-     "setDigest": "a0ac58be3b3a04ed",
+     "digest": "140af8c6f7869883",
+     "setDigest": "e781423dc8195716",
      "columnDigests": {
-      "getFillColor": "52cb8e9170ef133b",
+      "getFillColor": "9a7aa0bb118fc27f",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
       "getFillColor": [
-       147,
+       0,
        207
       ]
      },
@@ -613,15 +613,15 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "88f88c925822ce7f",
-     "setDigest": "a0ac58be3b3a04ed",
+     "digest": "140af8c6f7869883",
+     "setDigest": "e781423dc8195716",
      "columnDigests": {
-      "getFillColor": "52cb8e9170ef133b",
+      "getFillColor": "9a7aa0bb118fc27f",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
       "getFillColor": [
-       147,
+       0,
        207
       ]
      },
@@ -1192,15 +1192,15 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "88f88c925822ce7f",
-     "setDigest": "a0ac58be3b3a04ed",
+     "digest": "140af8c6f7869883",
+     "setDigest": "e781423dc8195716",
      "columnDigests": {
-      "getFillColor": "52cb8e9170ef133b",
+      "getFillColor": "9a7aa0bb118fc27f",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
       "getFillColor": [
-       147,
+       0,
        207
       ]
      },
