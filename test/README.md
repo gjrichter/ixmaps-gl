@@ -54,7 +54,9 @@ mostly the German accident CSVs) and replayed on every later run, so a changed r
 or a new release of an unpinned library (`maplibre-gl@5`) can't produce a false diff.
 [`data-manifest.json`](./data-manifest.json) (committed) holds each URL's SHA-256; when a
 fresh machine records a file whose hash differs, the run ends with a
-`WARNING remote data changed` line. To test against current remote data and libraries,
+`WARNING remote data changed` line. MapTiler URLs are stored without their per-load
+session id (`mtsid`) and API key, so a style is recorded once and the manifest holds no
+key. To test against current remote data and libraries,
 delete `.cache/` and run `npm run snapshot`, then review the baseline diff.
 
 ## Equivalence pairs

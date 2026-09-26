@@ -1,17 +1,9 @@
 {
- "https://api.maptiler.com/maps/bright-v2-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=681a134c-0e3c-4366-bae3-0d93a2c632de": {
+ "https://api.maptiler.com/maps/bright-v2-light/style.json": {
   "sha256": "0380b912eb5373e0ea3e74bf9ffe70a0aed1fd5993cec5360e7d522cb617b2a1",
   "bytes": 51806
  },
- "https://api.maptiler.com/maps/bright-v2-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=ab405eb6-5f99-461f-b6c5-48d78c4622b1": {
-  "sha256": "0380b912eb5373e0ea3e74bf9ffe70a0aed1fd5993cec5360e7d522cb617b2a1",
-  "bytes": 51806
- },
- "https://api.maptiler.com/maps/bright-v2-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=bde25d36-45a7-4d55-9131-2d8dcd293858": {
-  "sha256": "0380b912eb5373e0ea3e74bf9ffe70a0aed1fd5993cec5360e7d522cb617b2a1",
-  "bytes": 51806
- },
- "https://api.maptiler.com/maps/dataviz-light/style.json?key=D7iiyfgsNSCVtHuGghVu&mtsid=7437c96a-0aa7-4de1-9668-1fa0fa214d8a": {
+ "https://api.maptiler.com/maps/dataviz-light/style.json": {
   "sha256": "e4887dcf870de51e9be0a19a98ac143bf3d21cf41ed4cbd54ac9600d17abb9c0",
   "bytes": 24882
  },

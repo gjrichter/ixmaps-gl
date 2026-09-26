@@ -65,8 +65,28 @@ function serve() {
 // ------------------------------------------------------------ data cache
 
 fs.mkdirSync(CACHE, { recursive: true });
+// MapTiler adds a per-load session id (mtsid) to its URLs — every load would
+// be a new URL, never replayed and re-recorded into the manifest; its API key
+// doesn't change the response and doesn't belong in the committed manifest.
+// Both are dropped from the cache key and the manifest (MapTiler only: a
+// "key" parameter elsewhere, e.g. a Google Sheet's, selects the data).
+function canonicalUrl(url) {
+  let u;
+  try { u = new URL(url); } catch (e) { return url; }
+  if (!/(^|\.)maptiler\.com$/.test(u.hostname)) return url;
+  u.searchParams.delete('mtsid');
+  u.searchParams.delete('key');
+  return u.toString();
+}
 const manifest = fs.existsSync(MANIFEST) ? JSON.parse(fs.readFileSync(MANIFEST, 'utf8')) : {};
 let manifestDirty = false;
+for (const url of Object.keys(manifest)) {
+  const c = canonicalUrl(url);
+  if (c === url) continue;
+  if (!manifest[c]) manifest[c] = manifest[url];
+  delete manifest[url];
+  manifestDirty = true;
+}
 const cacheStats = { replayed: 0, recorded: 0, live: 0, remoteChanged: [] };
 const sha256 = b => crypto.createHash('sha256').update(b).digest('hex');
 // basemap tiles, glyphs and sprite images don't affect what is snapshotted —
@@ -82,7 +102,8 @@ async function handleRoute(route, localOrigin) {
     return route.continue();
   }
   if (!/^https?:/.test(url) || LIVE.test(url)) { cacheStats.live++; return route.continue(); }
-  const key = sha256(url).slice(0, 32);
+  const curl = canonicalUrl(url);
+  const key = sha256(curl).slice(0, 32);
   const bodyFile = path.join(CACHE, key + '.bin'), metaFile = path.join(CACHE, key + '.json');
   if (fs.existsSync(bodyFile) && fs.existsSync(metaFile)) {
     const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
@@ -97,10 +118,10 @@ async function handleRoute(route, localOrigin) {
   if (!Object.keys(headers).some(k => k.toLowerCase() === 'access-control-allow-origin')) headers['access-control-allow-origin'] = '*';
   if (resp.status() === 200) {
     fs.writeFileSync(bodyFile, body);
-    fs.writeFileSync(metaFile, JSON.stringify({ url, status: resp.status(), headers }, null, 1));
+    fs.writeFileSync(metaFile, JSON.stringify({ url: curl, status: resp.status(), headers }, null, 1));
     const digest = sha256(body);
-    if (manifest[url] && manifest[url].sha256 !== digest) cacheStats.remoteChanged.push(url);
-    if (!manifest[url] || manifest[url].sha256 !== digest) { manifest[url] = { sha256: digest, bytes: body.length }; manifestDirty = true; }
+    if (manifest[curl] && manifest[curl].sha256 !== digest) cacheStats.remoteChanged.push(curl);
+    if (!manifest[curl] || manifest[curl].sha256 !== digest) { manifest[curl] = { sha256: digest, bytes: body.length }; manifestDirty = true; }
     cacheStats.recorded++;
   }
   return route.fulfill({ status: resp.status(), headers, body });
