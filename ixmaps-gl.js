@@ -1941,6 +1941,7 @@
       }
 
       let _chainedLayers = Promise.resolve();
+      let addLegendPanel = () => {}; // set up with the legend, below
       const engineApi = {
         map,
         overlay,
@@ -2161,6 +2162,7 @@
               _globalThemeRegistry.delete(rt.meta.name);
             }
           });
+          removedRuntimes.forEach(rt => { if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel); });
           if (removed) { refresh(); notifyRedraw(); }
           return removed;
         }
@@ -2180,6 +2182,7 @@
         runtimes.push(rt);
         _globalThemeRegistry.set(rt.name, rt);
         if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
+        addLegendPanel(rt);
         refresh();
         notifyRedraw();
         return rt.name;
@@ -2529,8 +2532,14 @@
       //     class; this engine dims via IconLayer's own getColor alpha
       //     (see LayerRuntime#_iconAlpha) since these are deck.gl raster
       //     icons, not DOM/SVG nodes a CSS rule could reach.
-      if (this.mapOptions.legend === 'open' && el.parentElement) {
-        el.parentElement.style.position = el.parentElement.style.position || 'relative';
+      // Legend on/off and fold state as real ixmaps-flat reads the map
+      // option (htmlgui_flat.js:748-794): on whenever `legend` is given and
+      // isn't false/"false" ("true", "open", "", 1, …), folded for
+      // "closed", off when not given at all.
+      const legendOpt = this.mapOptions.legend;
+      const legendOn = legendOpt !== undefined && legendOpt !== null && legendOpt !== false && legendOpt !== 'false' && legendOpt !== 0 && legendOpt !== '0';
+      const legendFolded = legendOpt === 'closed';
+      {
         // Map-level `align` option positions the legend panel — a map-
         // wide placement choice, not per-theme (unlike legendtheme/
         // legendfilter above), so read once from this.mapOptions rather
@@ -2554,16 +2563,22 @@
           'bottom-right': 'right:10px;bottom:10px;'
         };
         const legendAlignCss = ALIGN_CSS[this.mapOptions.align] || ALIGN_CSS['top-right'];
-        runtimes
+        const legendApplies = rt => rt.categoryLabels && rt.categoryLabels.length && !rt.flags.has('FEATURE') && !rt.flags.has('FEATURES') && !rt.flags.has('NOLEGEND');
+        // One theme's panel — at build time for every theme, and again for a
+        // theme defined later (map.layer(...) in a myMap.then(...) chain,
+        // defineLayer, loadProject); removeTheme removes it with the theme.
+        addLegendPanel = (rt) => {
+          if (!legendOn || !el.parentElement || !legendApplies(rt)) return;
+          el.parentElement.style.position = el.parentElement.style.position || 'relative';
+          {
           // .type("...|NOLEGEND") — the fourth real legend-related type()
           // token: opts a theme OUT of the legend entirely (real engine's
           // own per-layer "skip this one" flag, distinct from the map-
           // level legend:"open"/"closed" option gating the whole panel).
           // Same free-parsing story as SIMPLELEGEND/COMPACTLEGEND above —
           // just one more flag to exclude on, no new plumbing.
-          .filter(rt => rt.categoryLabels && rt.categoryLabels.length && !rt.flags.has('FEATURE') && !rt.flags.has('FEATURES') && !rt.flags.has('NOLEGEND'))
-          .forEach((rt) => {
             const panel = document.createElement('div');
+            rt._legendPanel = panel;
             panel.className = 'ix-native-legend';
             // Opt-in via .style({legendtheme:"light"}) — a NEW, ixmaps-gl-
             // only convention (same naming pattern as the sibling
@@ -2855,7 +2870,7 @@
             // engine's own one-shot-at-redraw-time check, not a live
             // matchMedia listener.
             const MOBILE_LEGEND_BREAKPOINT = 500;
-            let collapsed = window.innerWidth < MOBILE_LEGEND_BREAKPOINT;
+            let collapsed = legendFolded || window.innerWidth < MOBILE_LEGEND_BREAKPOINT;
             function applyCollapsed() {
               bodyEl.style.display = collapsed ? 'none' : 'flex';
               panel.style.maxHeight = collapsed ? 'none' : '66%';
@@ -2937,7 +2952,9 @@
               refresh();
             });
             bodyEl.appendChild(slider);
-          });
+          }
+        };
+        runtimes.forEach(rt => addLegendPanel(rt));
       }
 
       _lastMapApi = engineApi;
