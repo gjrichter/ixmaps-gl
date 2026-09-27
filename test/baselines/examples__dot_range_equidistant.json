@@ -337,7 +337,8 @@
      "rangeClassed": true,
      "valueMin": 0,
      "valueMax": 24,
-     "valueMedian": 1
+     "valueMedian": 1,
+     "maxSizeValue": 24
     }
    ],
    "legend": [],
@@ -686,7 +687,8 @@
      "rangeClassed": true,
      "valueMin": 0,
      "valueMax": 24,
-     "valueMedian": 1
+     "valueMedian": 1,
+     "maxSizeValue": 24
     }
    ],
    "legend": [],
@@ -1035,7 +1037,8 @@
      "rangeClassed": true,
      "valueMin": 0,
      "valueMax": 24,
-     "valueMedian": 1
+     "valueMedian": 1,
+     "maxSizeValue": 24
     }
    ],
    "legend": [],

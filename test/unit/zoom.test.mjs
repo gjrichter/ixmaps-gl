@@ -27,10 +27,13 @@ test('scaleDenominatorAt: the scale of the displayed view, from a MapLibre zoom'
   near(G.scaleDenominatorAt(null), 559082264.028 / Math.pow(2, 10), 'default reference = flat zoom 10');
 });
 
-test('resolveZoomReference: normalSizeScale → the MapLibre zoom showing that scale', () => {
-  const z = G.resolveZoomReference({ normalSizeScale: '259302' });
-  near(G.scaleDenominatorAt(z), 259302, 'round trip');
-  near(G.resolveZoomReference({}), 9, 'no normalSizeScale → flat 10 = MapLibre 9');
+test('resolveZoomReference: the zoom at which FLAT\'s object scale equals normalSizeScale (read from a real flat page)', () => {
+  // flat: nTrueMapScale 236 220 472 × nZoomScale → 108 133.15 at flat zoom 12,
+  // i.e. 442 913 385 / 2^zoom (mapscript2.js 2849 compares it with normalSizeScale)
+  const flatScaleAt = mlZoom => 442913385 / Math.pow(2, G.mapLibreToFlatZoom(mlZoom));
+  near(flatScaleAt(G.flatToMapLibreZoom(12)), 108133.15, 'the measured flat scale at zoom 12');
+  near(flatScaleAt(G.resolveZoomReference({ normalSizeScale: '259302' })), 259302, 'round trip');
+  near(flatScaleAt(G.resolveZoomReference({})), 177165354, 'no normalSizeScale → flat\'s nMapScale (mapscript.js 2124)');
 });
 
 test('resolveAggregationPx / valuesHiddenByScale compare thresholds with the displayed scale', () => {

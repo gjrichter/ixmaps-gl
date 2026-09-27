@@ -29,13 +29,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0541ff45229d84ed",
-     "setDigest": "0541ff45229d84ed",
+     "digest": "dc69ab3cd3eb7765",
+     "setDigest": "dc69ab3cd3eb7765",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
       "getIcon": "db2c389e9ef30ec2",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "d6e0b2b00ff9b3dc"
+      "getSize": "df8013c499138ca4"
      },
      "stats": {
       "getColor": [
@@ -47,8 +47,8 @@
        9.2
       ],
       "getSize": [
-       80,
-       80
+       996.375183,
+       1992.750366
       ]
      },
      "sample": [
@@ -71,7 +71,7 @@
         9.18,
         45.45
        ],
-       80
+       996.375183
       ],
       [
        [
@@ -92,7 +92,7 @@
         9.19,
         45.46
        ],
-       80
+       1409.087297
       ],
       [
        [
@@ -113,7 +113,7 @@
         9.2,
         45.47
        ],
-       80
+       1992.750366
       ]
      ]
     }
@@ -232,7 +232,8 @@
      "rangeClassed": true,
      "valueMin": 5,
      "valueMax": 20,
-     "valueMedian": 10
+     "valueMedian": 10,
+     "maxSizeValue": 20
     }
    ],
    "legend": [],
@@ -403,13 +404,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0541ff45229d84ed",
-     "setDigest": "0541ff45229d84ed",
+     "digest": "99416fab83710265",
+     "setDigest": "99416fab83710265",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
       "getIcon": "db2c389e9ef30ec2",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "d6e0b2b00ff9b3dc"
+      "getSize": "4f8e26cf7b298ee9"
      },
      "stats": {
       "getColor": [
@@ -421,8 +422,8 @@
        9.2
       ],
       "getSize": [
-       80,
-       80
+       1255.354067,
+       2510.708133
       ]
      },
      "sample": [
@@ -445,7 +446,7 @@
         9.18,
         45.45
        ],
-       80
+       1255.354067
       ],
       [
        [
@@ -466,7 +467,7 @@
         9.19,
         45.46
        ],
-       80
+       1775.338747
       ],
       [
        [
@@ -487,7 +488,7 @@
         9.2,
         45.47
        ],
-       80
+       2510.708133
       ]
      ]
     }
@@ -606,7 +607,8 @@
      "rangeClassed": true,
      "valueMin": 5,
      "valueMax": 20,
-     "valueMedian": 10
+     "valueMedian": 10,
+     "maxSizeValue": 20
     }
    ],
    "legend": [],
@@ -777,13 +779,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0541ff45229d84ed",
-     "setDigest": "0541ff45229d84ed",
+     "digest": "64e97585ba1cab4b",
+     "setDigest": "64e97585ba1cab4b",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
       "getIcon": "db2c389e9ef30ec2",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "d6e0b2b00ff9b3dc"
+      "getSize": "505ee49e7c826c62"
      },
      "stats": {
       "getColor": [
@@ -795,8 +797,8 @@
        9.2
       ],
       "getSize": [
-       80,
-       80
+       790.823507,
+       1581.647014
       ]
      },
      "sample": [
@@ -819,7 +821,7 @@
         9.18,
         45.45
        ],
-       80
+       790.823507
       ],
       [
        [
@@ -840,7 +842,7 @@
         9.19,
         45.46
        ],
-       80
+       1118.393329
       ],
       [
        [
@@ -861,7 +863,7 @@
         9.2,
         45.47
        ],
-       80
+       1581.647014
       ]
      ]
     }
@@ -980,7 +982,8 @@
      "rangeClassed": true,
      "valueMin": 5,
      "valueMax": 20,
-     "valueMedian": 10
+     "valueMedian": 10,
+     "maxSizeValue": 20
     }
    ],
    "legend": [],

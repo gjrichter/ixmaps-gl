@@ -3555,15 +3555,23 @@
   // field names, and colors all come from the config + the data itself.
   // ---------------------------------------------------------------
 
-  // NORMAL_RADIUS_PX is the engine's own calibration constant: the pixel
-  // radius a symbol gets when its bound value equals normalsizevalue (or,
-  // when the theme doesn't set one, the dataset's own max value on the
-  // bound size field — see LayerRuntime._prepare's _maxSizeValue and
-  // maptheme.js ~line 5059; there is no fixed-number default in the real
-  // engine, a fallback of 50 here would be fabricated). Chosen so that
-  // our real theme's normalsizevalue=50 reproduces the prior tuned slope
-  // of 0.25 px/unit exactly (12.5 / 50 = 0.25).
-  const NORMAL_RADIUS_PX = 12.5;
+  // NORMAL_RADIUS_PX: the pixel radius of a symbol whose value equals the
+  // normal size value (normalsizevalue, else the dataset max — see
+  // LayerRuntime._prepare's _maxSizeValue) at the object-scaling reference
+  // zoom: flat's nMaxRadius = normalX(nChartSize / 2) = 15 (maptheme.js
+  // 20654). Measured against real flat on the same page (2026-09-27): the
+  // earlier hand-tuned 12.5 drew every symbol 1.2× (with the reference
+  // below, 1.3×) smaller than flat.
+  const NORMAL_RADIUS_PX = 15;
+  // Flat's own map scale, which dynamic object scaling compares with
+  // normalSizeScale (mapscript2.js 2849: dx = nTrueMapScale · nZoomScale /
+  // nNormalSizeScale), read from a real flat page: the generic Mercator
+  // map's nMapScale 177 165 354 at 72 map-PPI shown at 96 PPI (nTrueMapScale
+  // 236 220 472) × nZoomScale 1.875 at flat zoom 0 → 442 913 385 / 2^zoom —
+  // 1.262× (0.336 zoom levels) below the true Web Mercator scale. Without
+  // normalSizeScale flat's reference is nMapScale itself (mapscript.js 2124).
+  const FLAT_OBJECT_SCALE_CONSTANT = 442913385;
+  const FLAT_DEFAULT_NORMAL_SIZE_SCALE = 177165354;
   // A flat-convention zoom (see FLAT_ZOOM_OFFSET), like every zoom a page
   // passes in; flatToMapLibreZoom() before comparing with the live map.
   const DEFAULT_ZOOM_REFERENCE = 10;
@@ -3575,7 +3583,9 @@
   // 0.1 instead of a literal 0 just avoids a zero/negative-radius edge case
   // in the renderer, not a deliberate visual floor.
   const VALUE_RADIUS_MIN = 0.1;
-  const VALUE_RADIUS_MAX = 40;
+  // no ceiling either — flat's radius has none (a 40 px cap here, from the
+  // first version, cut big symbols flat draws in full)
+  const VALUE_RADIUS_MAX = Infinity;
   // Reference zoom for a real-world-METERS .style({gridwidth}): the cell
   // width is converted to world pixels at this ONE fixed zoom and the
   // grid aggregation runs at it too (see _ensureClusterIndices /
@@ -3651,10 +3661,11 @@
   // objectscaling:"dynamic" (the default, matching this engine's prior
   // always-on behavior) means symbols DO scale with zoom; anything else
   // (e.g. "fixed") means they don't — same pixel size at every zoom.
+  // the zoom at which flat's object scale equals normalSizeScale (symbols
+  // at their normal size) — see FLAT_OBJECT_SCALE_CONSTANT
   function resolveZoomReference(mapOptions) {
-    const scaleDenominator = parseFloat(mapOptions && mapOptions.normalSizeScale);
-    if (!scaleDenominator) return flatToMapLibreZoom(DEFAULT_ZOOM_REFERENCE);
-    return flatToMapLibreZoom(Math.log2(WEBMERCATOR_SCALE_CONSTANT / scaleDenominator));
+    const scaleDenominator = parseFloat(mapOptions && mapOptions.normalSizeScale) || FLAT_DEFAULT_NORMAL_SIZE_SCALE;
+    return flatToMapLibreZoom(Math.log2(FLAT_OBJECT_SCALE_CONSTANT / scaleDenominator));
   }
 
   // .options({dynamicScalePow}) — the REAL parameter name (confirmed in
@@ -3721,8 +3732,19 @@
   const AUTO_OPACITY_FLOOR = 0.1;
   const AUTO_OPACITY_HALF_LIFE_ZOOM = 1;
   const AUTO_OPACITY_EARLY_START_ZOOM = 4;
+  // the reference the auto-opacity approximation below was tuned against:
+  // the zoom showing normalSizeScale at the true Web Mercator scale, else
+  // flat zoom 10 — kept as it was when symbol sizing moved to flat's own
+  // scale (resolveZoomReference); flat's real rule (maptheme.js 13408,
+  // 0.3 + 0.7 / ln(nZoom / dx)) is not ported yet
+  function autoOpacityZoomReference(mapOptions) {
+    const scaleDenominator = parseFloat(mapOptions && mapOptions.normalSizeScale);
+    if (!scaleDenominator) return flatToMapLibreZoom(DEFAULT_ZOOM_REFERENCE);
+    return flatToMapLibreZoom(Math.log2(WEBMERCATOR_SCALE_CONSTANT / scaleDenominator));
+  }
+
   function resolveAutoFillOpacity(zoom, mapOptions) {
-    const zoomReference = resolveZoomReference(mapOptions) - AUTO_OPACITY_EARLY_START_ZOOM;
+    const zoomReference = autoOpacityZoomReference(mapOptions) - AUTO_OPACITY_EARLY_START_ZOOM;
     const z = zoom == null ? zoomReference : zoom;
     const zoomsPastNormal = Math.max(0, z - zoomReference);
     return AUTO_OPACITY_FLOOR + (1 - AUTO_OPACITY_FLOOR) * Math.pow(0.5, zoomsPastNormal / AUTO_OPACITY_HALF_LIFE_ZOOM);
@@ -3961,6 +3983,23 @@
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const [x, y] of best) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
     return [(minX + maxX) / 2, (minY + maxY) / 2];
+  }
+
+  // flat's normal size value when the theme sets no normalsizevalue
+  // (maptheme.js 20666-20690): the max of the size field when one is bound,
+  // else the max of the value (max(nMax, nMaxA[0])). CATEGORICAL without a
+  // size field (a fixed radius in flat) and AGGREGATE (flat: the max
+  // aggregated cell, zoom-dependent) keep the previous behavior: size field
+  // max, else none (→ 1); shapes (CHOROPLETH/FEATURE) draw no symbols.
+  function defaultNormalSizeValue(features, binding, flags) {
+    const symbols = !flags.has('CHOROPLETH') && !flags.has('FEATURE') && !flags.has('FEATURES');
+    const field = binding.size ? binding.size
+      : (symbols && !flags.has('CATEGORICAL') && !flags.has('AGGREGATE') && binding.value && !String(binding.value).includes('|') ? binding.value : null);
+    if (!field) return undefined;
+    return features.reduce((max, f) => {
+      const v = parseFloat(f.properties[field]);
+      return isNaN(v) ? max : Math.max(max, v);
+    }, 0);
   }
 
   function roundBubbleValue(value, style) {
@@ -5450,12 +5489,7 @@
       // (maptheme.js ~line 5059): the dataset's OWN max value on the bound
       // size field — never a fixed constant. Computed once here so
       // valueRadius() doesn't need a magic-number fallback.
-      if (this.binding.size) {
-        this._maxSizeValue = this.features.reduce((max, f) => {
-          const v = parseFloat(f.properties[this.binding.size]);
-          return isNaN(v) ? max : Math.max(max, v);
-        }, 0);
-      }
+      this._maxSizeValue = defaultNormalSizeValue(this.features, this.binding, this.flags);
 
       // Reference latitude for a real-world-METERS aggregation cell size —
       // either a bare .style({gridwidth}) OR a bare-meters (non-"px")
@@ -5814,12 +5848,7 @@
     // aggregation, same as a facet filter change.
     setSizeField(field) {
       this.binding.size = field || null;
-      this._maxSizeValue = this.binding.size
-        ? this.features.reduce((max, f) => {
-          const v = parseFloat(f.properties[this.binding.size]);
-          return isNaN(v) ? max : Math.max(max, v);
-        }, 0)
-        : 0;
+      this._maxSizeValue = defaultNormalSizeValue(this.features, this.binding, this.flags);
       if (this._usesAggregationIndex()) this._buildAggregationIndex(this._activeFeatures || this.features);
     }
 
@@ -8014,7 +8043,7 @@
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, parseCsvText, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor,
+    fetchLayerData, parseCsvText, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;
