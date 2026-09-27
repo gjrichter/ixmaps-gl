@@ -99,7 +99,11 @@
     // context for interleaved mode (deck.gl v9's own requirement,
     // supplied by MapLibre GL JS itself, nothing this engine manages).
     deck: 'https://unpkg.com/deck.gl@9.4.0/dist.min.js',
-    mustache: 'https://unpkg.com/mustache@4.2.0/mustache.min.js'
+    mustache: 'https://unpkg.com/mustache@4.2.0/mustache.min.js',
+    // loaded by default, as flat does (its resource list loads
+    // ../data.js/data.js — from its CDN build, this URL); every data format
+    // except GeoJSON/TopoJSON is read by it, see fetchLayerData
+    dataJs: 'https://cdn.jsdelivr.net/gh/gjrichter/data.js/data.js'
   };
 
   function loadScript(src) {
@@ -185,6 +189,25 @@
     console.warn(`[ixmaps-gl] this page loads maplibre-gl ${v || '(unknown version)'}; deck.gl needs >= ${MAPLIBRE_MIN_VERSION.join('.')} — loading ${LIB_URLS.maplibreJs.match(/maplibre-gl@([\d.]+)/)[1]}.x instead (it replaces window.maplibregl); remove the page's own maplibre-gl <script> tag`);
     return false;
   }
+  // data.js, unless the page has it already: .options({datajs: url}) loads
+  // another build, .options({datajs: false}) none (CSV then falls back to
+  // this engine's own parser; other formats need it). A failed load is a
+  // warning, not an error — the fallback still reads CSV/GeoJSON/TopoJSON.
+  let _dataJsPromise = null;
+  function ensureDataJs(engineOptions) {
+    if (global.Data) return Promise.resolve(true);
+    const opt = engineOptions && engineOptions.datajs;
+    if (opt === false || opt === 'false') return Promise.resolve(false);
+    if (!_dataJsPromise) {
+      const url = typeof opt === 'string' && opt ? opt : LIB_URLS.dataJs;
+      _dataJsPromise = loadScript(url).then(() => !!global.Data, e => {
+        console.warn(`[ixmaps-gl] data.js could not be loaded (${url}) — CSV, GeoJSON and TopoJSON are read by ixmaps-gl itself, other formats need data.js`);
+        return false;
+      });
+    }
+    return _dataJsPromise;
+  }
+
   function ensureLibrariesLoaded() {
     if (!_librariesPromise) {
       _librariesPromise = Promise.all([
@@ -221,7 +244,7 @@
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
   // v0.1.6: knows this engine's aliases, lookupfield rule, meta↔style, builder methods, project loading
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.17/dist/validate.mjs';
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.18/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -485,7 +508,33 @@
   // error path below).
   function rowsResult(rows, binding) {
     if (binding && binding.lookup && !binding.position) return { type: 'Table', rows };
-    return csvRowsToFeatureCollection(rows, binding && binding.position);
+    const position = binding && binding.position;
+    if (position && !String(position).includes('|')) return geometryRowsToFeatureCollection(rows, position);
+    return csvRowsToFeatureCollection(rows, position);
+  }
+
+  // rows whose `field` holds a GeoJSON geometry (object or JSON string) →
+  // features — how data.js hands over its geo formats (KML, GML, Geobuf,
+  // FlatGeobuf, GeoPackage, GeoParquet, ...: a table with a "geometry"
+  // column), read by flat through lookupfield "geometry"
+  function geometryRowsToFeatureCollection(rows, field) {
+    const features = [];
+    let parsed = 0;
+    for (const row of rows) {
+      let g = row[field];
+      if (typeof g === 'string') {
+        try { g = JSON.parse(g); } catch (e) { g = null; }
+      }
+      if (!g || typeof g !== 'object' || !g.type) continue;
+      parsed++;
+      const properties = Object.assign({}, row);
+      delete properties[field];
+      features.push({ type: 'Feature', properties, geometry: g });
+    }
+    if (rows.length && !parsed) {
+      throw new Error(`[ixmaps-gl] .binding({geo: "${field}"}): the "${field}" column holds no GeoJSON geometry — for point data use "LATFIELD|LONFIELD"`);
+    }
+    return sanitizeGeoJSON({ type: 'FeatureCollection', features });
   }
 
   // Bridges the real ixmaps runtime's ixmaps.setExternalData(dataObj, opt)
@@ -564,9 +613,49 @@
   // own .data() runs one; loadProject strips it from project files.
   function requireDataJs(what) {
     if (!global.Data) {
-      throw new Error(`[ixmaps-gl] .data({${what}}) needs the real data.js loaded first — ` +
-        '<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"> before ixmaps-gl.js');
+      throw new Error(`[ixmaps-gl] .data({${what}}) needs data.js, which could not be loaded (see the warning above, or .options({datajs}))`);
     }
+  }
+  // a data.js Table → row objects, straight from its field list and record
+  // arrays (table.json() builds the same rows ~1.5x slower, measured on
+  // 1.2M rows)
+  function dataTableRows(table) {
+    if (!table || !Array.isArray(table.records) || !Array.isArray(table.fields)) {
+      return table && typeof table.json === 'function' ? table.json() : [];
+    }
+    const names = table.fields.map(f => f.id);
+    const rows = new Array(table.records.length);
+    for (let i = 0; i < table.records.length; i++) {
+      const rec = table.records[i], o = {};
+      for (let c = 0; c < names.length; c++) o[names[c]] = rec[c];
+      rows[i] = o;
+    }
+    return rows;
+  }
+  // parse CSV text with data.js (as flat) → a Table
+  function dataJsCsvTable(text) {
+    return new Promise((resolve, reject) => {
+      global.Data.object({ source: text, type: 'csv', error: e => reject(new Error(`[ixmaps-gl] data.js CSV import failed: ${e}`)) })
+        .import(table => resolve(table));
+    });
+  }
+  // load a URL of any data.js format through its Broker, as flat's
+  // htmlgui_loadExternalData does → a Table. data.js can give up without
+  // calling either callback (e.g. "feed not kml") — a timeout turns that
+  // into an error instead of a map that never finishes loading.
+  const DATAJS_LOAD_TIMEOUT_MS = 180000;
+  function dataJsLoadTable(url, type) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`[ixmaps-gl] data.js did not deliver ${url} (${type}) within ${DATAJS_LOAD_TIMEOUT_MS / 1000}s — see its console messages`)), DATAJS_LOAD_TIMEOUT_MS);
+      new global.Data.Broker({})
+        .addSource(url, type)
+        .error(e => { clearTimeout(timer); reject(new Error(`[ixmaps-gl] data.js failed to load ${url} (${type}): ${e}`)); })
+        .realize(dataA => {
+          clearTimeout(timer);
+          if (dataA && dataA[0]) resolve(dataA[0]);
+          else reject(new Error(`[ixmaps-gl] data.js returned no data for ${url}`));
+        });
+    });
   }
   function runDataProcess(table, dataConfig) {
     const fn = typeof dataConfig.process === 'function' ? dataConfig.process : new Function(`return (${dataConfig.process});`)();
@@ -605,8 +694,9 @@
       return prefix.endsWith('/') || url.length === prefix.length || '/?#'.includes(url[prefix.length]);
     });
   }
-  // the processor for a data.ext processing script, or null when there is
-  // none or it isn't trusted (warned once per script)
+  // the processor for a data.ext processing script (on csv or any
+  // data.js-loaded table), or null when there is none or it isn't trusted
+  // (warned once per script)
   async function loadProcessingScript(dataConfig, trusted) {
     if (!dataConfig.ext || dataConfig.type === 'ext' || typeof dataConfig.ext !== 'string' || /function/.test(dataConfig.ext)) return null;
     const url = resolveScriptUrl(dataConfig.ext);
@@ -796,9 +886,9 @@
     }
     // processing scripts run on csv files only (loadProcessingScript) — say
     // so instead of silently using the data unprocessed
-    if (dataConfig.ext && dataConfig.type !== 'csv' && !_warnedUntrustedScripts.has('type:' + dataConfig.ext)) {
+    if (dataConfig.ext && /^(geojson|topojson)$/.test(dataConfig.type) && !_warnedUntrustedScripts.has('type:' + dataConfig.ext)) {
       _warnedUntrustedScripts.add('type:' + dataConfig.ext);
-      console.warn(`[ixmaps-gl] data.ext script ${dataConfig.ext} not run — processing scripts are supported for csv data only (type "${dataConfig.type}")`);
+      console.warn(`[ixmaps-gl] data.ext script ${dataConfig.ext} not run — processing scripts work on tables (csv and the data.js formats), not on ${dataConfig.type} features`);
     }
 
     // .data({obj: table, type: 'jsondb'}) — an already-in-memory data.js
@@ -869,20 +959,20 @@
       // a trusted project processing script wins over data.process, as the
       // script's ixmaps.<name>.process replaces the registered one in flat
       const scriptProcess = await loadProcessingScript(dataConfig, engineOptions && engineOptions.trustedscripts);
-      if (dataConfig.process || scriptProcess) {
-        requireDataJs(scriptProcess ? 'ext' : 'process');
-        // data.js parses (as flat does); several urls append their records
+      if (global.Data) {
+        // data.js parses (as flat does); several urls append their records.
         // Data.object(...).import(cb): data.js may first load its CSV
         // parser (PapaParse), so the Table arrives via the callback
-        const tables = await Promise.all(texts.map(text => new Promise((resolve, reject) => {
-          global.Data.object({ source: text, type: 'csv', error: e => reject(new Error(`[ixmaps-gl] data.js CSV import failed: ${e}`)) })
-            .import(table => resolve(table));
-        })));
-        const table = tables[0];
+        const tables = await Promise.all(texts.map(dataJsCsvTable));
+        let table = tables[0];
         for (const t of tables.slice(1)) table.records = table.records.concat(t.records);
-        table.table.records = table.records.length;
-        rows = (scriptProcess ? scriptProcess(table) : runDataProcess(table, dataConfig)).json();
+        if (table.table) table.table.records = table.records.length;
+        if (scriptProcess) table = scriptProcess(table);
+        else if (dataConfig.process) table = runDataProcess(table, dataConfig);
+        rows = dataTableRows(table);
       } else {
+        // no data.js (.options({datajs: false}) or it failed to load)
+        if (dataConfig.process || scriptProcess) requireDataJs(scriptProcess ? 'ext' : 'process');
         rows = [].concat(...texts.map(parseCsvText));
       }
       if (dataConfig.remap) {
@@ -893,11 +983,22 @@
       return rowsResult(rows, binding);
     }
 
-    const resp = await fetch(dataConfig.url);
-    if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${dataConfig.url}: ${resp.status}`);
-    if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(await resp.json());
-    if (dataConfig.type === 'geojson') return sanitizeGeoJSON(await resp.json());
-    throw new Error(`[ixmaps-gl] unsupported data type "${dataConfig.type}" (topojson/geojson/csv implemented)`);
+    if (dataConfig.type === 'topojson' || dataConfig.type === 'geojson') {
+      // read by this engine itself: features directly (data.js would turn
+      // them into a table with a geometry column, and back)
+      const resp = await fetch(dataConfig.url);
+      if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${dataConfig.url}: ${resp.status}`);
+      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(await resp.json());
+      return sanitizeGeoJSON(await resp.json());
+    }
+    // every other format (json, jsonstat, ndjson, rss, kml, gml, geobuf,
+    // flatgeobuf, geopackage, parquet, ...) through data.js, as flat
+    requireDataJs(`type: "${dataConfig.type}"`);
+    let table = await dataJsLoadTable(dataConfig.url, dataConfig.type);
+    const scriptProcess = await loadProcessingScript(dataConfig, engineOptions && engineOptions.trustedscripts);
+    if (scriptProcess) table = scriptProcess(table);
+    else if (dataConfig.process) table = runDataProcess(table, dataConfig);
+    return rowsResult(dataTableRows(table), binding);
   }
 
   // ---------------------------------------------------------------
@@ -1358,7 +1459,7 @@
   // edit it by hand; `npm run unit` fails when it drifts.
   // ---------------------------------------------------------------
   // <grammar:binding-aliases>
-  // generated from ixmaps-grammar 0.1.17 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
+  // generated from ixmaps-grammar 0.1.18 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
   const FLAT_BINDING_ALIASES = {
     "aggregation": "style.aggregationfield",
     "aggregationfield": "style.aggregationfield",
@@ -1420,7 +1521,7 @@
   // both — so .style({tooltip}) is a tooltip and .meta({fillopacity}) a style
   // property. GENERATED by test/sync-grammar.mjs — do not edit.
   // <grammar:meta-keys>
-  // generated from ixmaps-grammar 0.1.17 — 5 meta keys
+  // generated from ixmaps-grammar 0.1.18 — 5 meta keys
   const FLAT_META_KEYS = ["description","name","snippet","title","tooltip"];
   // </grammar:meta-keys>
 
@@ -1887,7 +1988,7 @@
       // trip — MapLibre/deck.gl/Mustache + MapLibre's own
       // CSS, all in parallel; a no-op per-library for anything a page's
       // own <script>/<link> tags already loaded (see ensureLibrariesLoaded).
-      await ensureLibrariesLoaded();
+      await Promise.all([ensureLibrariesLoaded(), ensureDataJs(this._engineOptions)]);
 
       // opt-in grammar validation (see startValidation) — only now, after
       // the library load, have .options() calls chained onto ixmaps.Map()
@@ -8043,7 +8144,7 @@
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, parseCsvText, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;

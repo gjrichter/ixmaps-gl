@@ -88,12 +88,22 @@ work when given in `.style()` too. The layer builder has all of flat's methods, 
 while anything that isn't a plain number (`"auto"`, `"12px"`) stays as given.
 A page's own data processing function (`.data({process})` or `.process()`, as a function or
 its `toString()`) runs like in flat: after loading, it gets the data as a data.js Table
-(`column()`, `addColumn()`, …) and returns it, or nothing to keep the changed table. The page
-loads the real data.js for it (`<script src=".../data.js">` before ixmaps-gl.js, as for
-`.data({query})`), and a CSV is then parsed by data.js, as flat does.
+(`column()`, `addColumn()`, …) and returns it, or nothing to keep the changed table.
 The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.
+
+### Data formats and data.js
+
+Like flat, ixmaps-gl loads the real [data.js](https://github.com/gjrichter/data.js) by default
+(from flat's CDN URL, alongside MapLibre and deck.gl), unless the page has it already;
+`.options({datajs: url})` loads another build, `.options({datajs: false})` none. It reads every
+`.data({url, type})` format data.js knows — `csv`, `json`, `jsondb`, `jsonstat`, `ndjson`/`jsonl`,
+`rss`, `kml`, `gml`, `geobuf`, `pbf`, `flatgeobuf`/`fgb`, `geopackage`/`gpkg`, `parquet` — and hands
+the table to `.data({process})`, `.data({query})` and project scripts, as flat does. A data.js geo
+format comes as a table with a `geometry` column; `.binding({geo: "geometry"})` turns it into
+points, lines or polygons. GeoJSON and TopoJSON are read by ixmaps-gl itself (features directly),
+and without data.js CSV falls back to ixmaps-gl's own parser (same rows, ~10 % faster on 1.2M rows).
 
 ### Loading ixmaps-flat project files
 
@@ -121,7 +131,7 @@ ixmaps.Map("map_div", {...}).options({
 ```
 
 Prefixes match whole path segments; relative script paths resolve against the page. Data is parsed
-by data.js (load it before ixmaps-gl.js), and a script runs right before its own theme loads. The
+by data.js, and a script runs right before its own theme loads. The
 theme properties a broker sets from its data (flat's `szFields`, `szField100`, `szSnippet`,
 `szTitle`, `szLabelA`, `setProperties()`, …) are applied to the theme, where flat's own style keys
 would put them. A broker `data.type: "ext"` without `data.ext` calls a function the page itself

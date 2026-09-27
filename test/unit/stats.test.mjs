@@ -442,3 +442,22 @@ test('itemAnchor: a point, or the bounding-box center of a polygon\'s largest pa
   assert.deepEqual(plain(G.itemAnchor({ type: 'MultiPolygon', coordinates: [sq(0, 0, 1), sq(10, 10, 4)] })), [12, 12]);
   assert.equal(G.itemAnchor(null), null);
 });
+
+// ---- data.js tables and geometry columns
+test('dataTableRows: a data.js Table → row objects from its fields and record arrays (as table.json())', () => {
+  const table = { fields: [{ id: 'a' }, { id: 'b' }], records: [['1', 'x'], ['2', 'y']], json() { throw new Error('not used'); } };
+  assert.deepEqual(plain(G.dataTableRows(table)), [{ a: '1', b: 'x' }, { a: '2', b: 'y' }]);
+  assert.deepEqual(plain(G.dataTableRows({ json: () => [{ z: 1 }] })), [{ z: 1 }], 'other shapes: json()');
+});
+
+test('geometryRowsToFeatureCollection: a geometry column (JSON string or object) → features, as data.js hands over its geo formats', () => {
+  const rows = [
+    { name: 'a', geometry: JSON.stringify({ type: 'Point', coordinates: [9, 45] }) },
+    { name: 'b', geometry: { type: 'LineString', coordinates: [[0, 0], [1, 1]] } },
+    { name: 'c', geometry: 'not json' },
+  ];
+  const fc = G.geometryRowsToFeatureCollection(rows, 'geometry');
+  assert.deepEqual(plain(fc.features.map(f => [f.properties.name, f.geometry.type])), [['a', 'Point'], ['b', 'LineString']]);
+  assert.equal(fc.features[0].properties.geometry, undefined, 'the geometry column is not kept as a property');
+  assert.throws(() => G.geometryRowsToFeatureCollection([{ geometry: '' }], 'geometry'), /holds no GeoJSON geometry/);
+});
