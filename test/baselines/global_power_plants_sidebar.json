@@ -23,7 +23,8 @@
       "getFillColor": [
        28,
        43,
-       54
+       54,
+       255
       ],
       "getLineColor": [
        42,
@@ -31,7 +32,6 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
-      "opacity": 1,
       "stroked": true
      },
      "columns": [
@@ -1326,7 +1326,8 @@
       "getFillColor": [
        28,
        43,
-       54
+       54,
+       255
       ],
       "getLineColor": [
        42,
@@ -1334,7 +1335,6 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
-      "opacity": 1,
       "stroked": true
      },
      "columns": [
@@ -2629,7 +2629,8 @@
       "getFillColor": [
        28,
        43,
-       54
+       54,
+       255
       ],
       "getLineColor": [
        42,
@@ -2637,7 +2638,6 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
-      "opacity": 1,
       "stroked": true
      },
      "columns": [

@@ -27,7 +27,9 @@ This engine is under active, compatibility-driven development: every gap found b
 pointing a real ixmaps page at it gets fixed **in the engine**, never by rewriting the
 page. It currently implements:
 
-- **FEATURE / FEATURES** — polygon/line rendering from GeoJSON/TopoJSON
+- **FEATURE / FEATURES** — polygon/line rendering from GeoJSON/TopoJSON and the data.js geo
+  formats; `featureupper`/`featurelower` hide the layer outside their scales, and, as in flat, a
+  FEATURE theme out of scale loads its data only once it comes into scale (for that view)
 - **CHOROPLETH** — polygon fill from a bound value: single-field numeric range
   (equal-interval, QUANTILE, NATURAL/Jenks breaks) or multi-field DOMINANT
   (per-polygon argmax, plain/`PERCENTOFMEAN`/`DEVIATION`) or COMPOSECOLOR (additive or
@@ -37,7 +39,8 @@ page. It currently implements:
   bubble-map pipeline: AGGREGATE on ixmaps-flat's grid (hexagonal, or square with
   `RECT`; cell width from `aggregation`/`gridwidth`/`gridwidthpx`, values summed per
   cell, class breaks and legend from the aggregated cells), dynamic sizing, glow,
-  multi-point grouping, on-bubble value labels, `NORMALIZE`
+  multi-point grouping, on-bubble value labels, `NORMALIZE`, chart boxes (`BOX`, `CIRCULARBOX`)
+  with the item title above or below (`TITLE`, `BOTTOMTITLE`), between `boxlower` and `boxupper`
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
   geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or one per grid
@@ -60,8 +63,9 @@ Zoom numbers in the ixmaps API are ixmaps-flat's, i.e. Leaflet's (256px tiles):
 `.view({center, zoom})`, `view([lat, lng], zoom)`, the `zoom` of a project map
 (`loadProject`/`setProjectJSON`) and the `zoom` `getProjectString()` returns. MapLibre
 works on 512px tiles, so ixmaps-gl shows ixmaps zoom *z* at MapLibre zoom *z* − 1 — the
-same area a flat page shows. Map scales (`aggregation` and `valueupper` thresholds,
-`normalSizeScale`) are computed from the zoom that is actually displayed. Code that talks
+same area a flat page shows. Map scales (`aggregation`, `valueupper`, `featureupper`/`featurelower`
+and `boxupper`/`boxlower` thresholds, `normalSizeScale`) are computed from the zoom that is
+actually displayed. Code that talks
 to the MapLibre map directly (`api.map.getZoom()`, `jumpTo`) sees MapLibre zooms.
 
 ### Theme normalization
@@ -92,6 +96,13 @@ its `toString()`) runs like in flat: after loading, it gets the data as a data.j
 The alias table is generated from the shared grammar (`test/sync-grammar.mjs`); targets
 this engine doesn't implement yet (`colorfield`, `timefield`, `titlefield`, …) are resolved
 but unused. It never mutates the page's own objects. Unit tests: `cd test && npm run unit`.
+
+### World copies
+
+At an extreme zoom-out MapLibre repeats the world side by side, and the themes are repeated on
+every copy (flat repeats only its basemap tiles). `.options({worldcopies: false})` draws the
+world once, but MapLibre then also stops the zoom-out where the world gets narrower than the
+window.
 
 ### Data formats and data.js
 
@@ -134,9 +145,15 @@ Prefixes match whole path segments; relative script paths resolve against the pa
 by data.js, and a script runs right before its own theme loads. The
 theme properties a broker sets from its data (flat's `szFields`, `szField100`, `szSnippet`,
 `szTitle`, `szLabelA`, `setProperties()`, …) are applied to the theme, where flat's own style keys
-would put them. A broker `data.type: "ext"` without `data.ext` calls a function the page itself
-defines (`ixmaps.<name>`, page code — no opt-in needed). Scripts that reach into flat's own
-internals (`ixmaps.parentApi`, `htmlgui_*` hooks) aren't supported. `test/project-report.mjs` shows which themes
+would put them. As in flat, a broker whose function the page itself already defines
+(`ixmaps.<name>`, page code — no opt-in needed) is called directly, and gets `data.ext` (or the
+`data.url`) as `options.ext`, its data URL; only otherwise is `data.ext` loaded as the broker's
+script. For brokers that query by view, like flat's bbox data providers, ixmaps-gl has flat's
+`ixmaps.getBoundingBox()`, `ixmaps.refreshTheme(id)` (loads the theme's data again, in place),
+`ixmaps.setTitle(html)`/`setTitleBox(text, color)`, `ixmaps.getThemeObj(id).fVisible` (false for a
+FEATURE theme out of scale) and calls a page's `ixmaps.htmlgui_onZoomAndPan(zoom)` after each zoom
+or pan. Scripts that reach further into flat's internals (`ixmaps.parentApi`, other `htmlgui_*`
+hooks) aren't supported. `test/project-report.mjs` shows which themes
 of your own project files gl can render.
 
 ## Quick start

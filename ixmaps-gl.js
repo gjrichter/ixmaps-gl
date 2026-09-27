@@ -244,7 +244,7 @@
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
   // v0.1.6: knows this engine's aliases, lookupfield rule, meta↔style, builder methods, project loading
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.18/dist/validate.mjs';
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.19/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
@@ -746,7 +746,7 @@
     const b = spec.binding || {}, st = spec.style || {}, m = spec.meta || {};
     const arr = v => (v == null ? undefined : Array.isArray(v) ? v.slice() : String(v).split('|'));
     const values = {
-      szId: spec.name, szFields: b.value, szFieldsA: arr(b.value), szField100: b.field100,
+      szId: spec.name, szName: spec.name, szFields: b.value, szFieldsA: arr(b.value), szField100: b.field100,
       szSizeField: b.size, szValueField: st.valuefield, szItemField: b.id, szSelectionField: b.id,
       szFilter: spec.filter, szTitle: m.title, szSnippet: m.snippet, szDescription: m.description,
       szLabelA: arr(st.label), szXaxisA: arr(st.xaxis), colorScheme: st.colorscheme, origColorScheme: st.colorscheme,
@@ -832,9 +832,16 @@
     const name = dataConfig.name;
     if (!name) throw new Error('[ixmaps-gl] a broker theme (data.type "ext") needs data.name — the function ixmaps.<name>(theme, options)');
     requireDataJs('ext');
+    // flat's .data({url, type: "ext"}) keeps the url as data.ext
+    // (htmlgui_flat.js 1803-1804)
+    const ext = dataConfig.ext || dataConfig.url;
     let text = null, url = null;
-    if (dataConfig.ext) {
-      url = resolveScriptUrl(dataConfig.ext);
+    // flat calls a function the page already defined (ixmaps.<name>) and
+    // loads data.ext as its script only when there is none (htmlgui.js
+    // 3459-3497) — so a page provider gets data.ext as its data url
+    const pageFn = global.ixmaps && typeof global.ixmaps[name] === 'function' && !_engineIxmapsApi.has(String(name));
+    if (ext && !pageFn) {
+      url = resolveScriptUrl(ext);
       if (!isTrustedScriptUrl(url, engineOptions && engineOptions.trustedscripts)) {
         throw new Error(`[ixmaps-gl] broker script ${url} not run — not under .options({trustedscripts: [...]})`);
       }
@@ -867,7 +874,7 @@
       if (text != null) new Function(text + '\n//# sourceURL=' + url)();
       const fn = global.ixmaps && global.ixmaps[name];
       if (typeof fn !== 'function') throw new Error(`[ixmaps-gl] broker ${url || 'page'}: ixmaps.${name} is not a function`);
-      fn.call(global.ixmaps, theme, { name, type: 'ext', ext: dataConfig.ext, theme, setData: global.ixmaps.setExternalData });
+      fn.call(global.ixmaps, theme, { name, type: 'ext', ext, theme, setData: global.ixmaps.setExternalData });
     } catch (e) {
       // the call failed: stop waiting (no late timeout rejection)
       clearTimeout(timer);
@@ -1350,6 +1357,55 @@
   // once per successful build(), just before it returns engineApi below.
   let _lastMapApi = null;
 
+  // flat's ixmaps.getBoundingBox() (htmlgui_sync_Leaflet_VT.js
+  // htmlMap_getBounds): [{lat, lng} south-west, {lat, lng} north-east] of
+  // the view, latitude clamped to ±85.05, longitude not capped. Set by the
+  // last build(): a broker (data.type "ext") is called while its map is
+  // still building, so until the MapLibre map exists the bounds come from
+  // the requested view and the container size (MapLibre's 512 px tiles).
+  let _boundsSource = null;
+  function viewBounds(lat, lng, mlZoom, width, height) {
+    const world = 512 * Math.pow(2, mlZoom);
+    const x = (lng + 180) / 360 * world;
+    const s = Math.sin(Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 180);
+    const y = (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * world;
+    const lngAt = px => px / world * 360 - 180;
+    const latAt = py => Math.atan(Math.sinh(Math.PI * (1 - 2 * py / world))) * 180 / Math.PI;
+    return [{ lat: latAt(y + height / 2), lng: lngAt(x - width / 2) }, { lat: latAt(y - height / 2), lng: lngAt(x + width / 2) }];
+  }
+  function getBoundingBox() {
+    const b = _boundsSource ? _boundsSource() : null;
+    if (!b) return null;
+    return [{ lat: Math.max(b[0].lat, -85.05), lng: b[0].lng }, { lat: Math.min(b[1].lat, 85.05), lng: b[1].lng }];
+  }
+
+  // flat's ixmaps.setTitle(html) / setTitleBox(text, color) (htmlgui.js
+  // 1311-1331): a message line over the last built map, same markup as
+  // flat's default (legend not aligned left); '' clears it.
+  let _titleHost = null;
+  function setTitle(szTitle) {
+    if (!_titleHost) return;
+    let box = _titleHost.querySelector(':scope > .ixmaps-gl-title');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'ixmaps-gl-title';
+      box.style.cssText = 'position:absolute;top:11px;left:0;z-index:3;pointer-events:none;';
+      _titleHost.appendChild(box);
+    }
+    box.innerHTML = szTitle
+      ? "<div style='position:relative;left:100px;top:2px;font-style:arial,helvetica;font-size:22px'>" + szTitle + '</div>'
+      : '';
+  }
+  function setTitleBox(szTitle, szColor) {
+    setTitle("<span style='display:inline-flex;align-items:center;height:38px;box-sizing:border-box;padding:0 12px;border:1px solid #46494c;border-radius:8px;font-size:14px;font-family:courier new,Raleway,arial,helvetica;background:" + (szColor || 'rgba(255,255,255,0.95)') + ';color:' + (szColor ? '#fff' : '#222') + "'>" + szTitle + '</span>');
+  }
+  // flat's ixmaps.refreshTheme(szId): reloads the theme's data on the last
+  // built map (a broker is called again) — see engineApi.refreshTheme
+  function refreshTheme(szId) {
+    if (!_lastMapApi || !_lastMapApi.refreshTheme) return;
+    _lastMapApi.refreshTheme(szId).catch(err => console.error('[ixmaps-gl] refreshTheme:', err));
+  }
+
   class LayerBuilder {
     constructor(name) {
       this.name = name;
@@ -1459,7 +1515,7 @@
   // edit it by hand; `npm run unit` fails when it drifts.
   // ---------------------------------------------------------------
   // <grammar:binding-aliases>
-  // generated from ixmaps-grammar 0.1.18 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
+  // generated from ixmaps-grammar 0.1.19 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
   const FLAT_BINDING_ALIASES = {
     "aggregation": "style.aggregationfield",
     "aggregationfield": "style.aggregationfield",
@@ -1521,7 +1577,7 @@
   // both — so .style({tooltip}) is a tooltip and .meta({fillopacity}) a style
   // property. GENERATED by test/sync-grammar.mjs — do not edit.
   // <grammar:meta-keys>
-  // generated from ixmaps-grammar 0.1.18 — 5 meta keys
+  // generated from ixmaps-grammar 0.1.19 — 5 meta keys
   const FLAT_META_KEYS = ["description","name","snippet","title","tooltip"];
   // </grammar:meta-keys>
 
@@ -1669,7 +1725,7 @@
   // every clean value.) A linewidth list is typed element by element.
   const STYLE_NUMBER_KEYS = ['linewidth', 'fillopacity', 'scale', 'classes', 'valuedecimals', 'normalsizevalue',
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
-    'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx'];
+    'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -1984,6 +2040,15 @@
       const splash = this._engineOptions.splash === false ? null
         : showSplash(el, this._engineOptions.splashText || 'loading…');
 
+      // ixmaps.getBoundingBox()/setTitle() for brokers called below, before
+      // the MapLibre map exists (same default view as the map gets)
+      _titleHost = el;
+      const initialZoom = this._viewZoom != null && this._viewZoom !== '' ? flatToMapLibreZoom(Number(this._viewZoom)) : 8;
+      {
+        const [vLat, vLng] = this._viewCenter || [45.5, 9.2];
+        _boundsSource = () => viewBounds(Number(vLat), Number(vLng), initialZoom, el.clientWidth, el.clientHeight);
+      }
+
       // fast local check (missing container) before the network round
       // trip — MapLibre/deck.gl/Mustache + MapLibre's own
       // CSS, all in parallel; a no-op per-library for anything a page's
@@ -2034,7 +2099,11 @@
         // arms can reach it, and .obj sources get a distinct identity tag
         // instead of colliding with each other under one 'null' entry.
         let raw, cacheKey;
-        if (spec.data && spec.data.type === 'ext') {
+        const deferred = deferredFeatureLoad(spec, initialZoom);
+        if (deferred) {
+          raw = { type: 'FeatureCollection', features: [] };
+          cacheKey = 'deferred:' + spec.name;
+        } else if (spec.data && spec.data.type === 'ext') {
           // a broker also sets theme properties — re-normalize with them;
           // not cached: the theme writes belong to this theme
           const { rows, patch } = await loadBrokerData(spec, this._engineOptions);
@@ -2058,6 +2127,8 @@
         // sharing the SAME data, not just the one the sidebar was built
         // against.
         rt._dataSourceKey = cacheKey;
+        rt._definition = def; // for refreshTheme
+        rt._deferredLoad = deferred;
         runtimes.push(rt);
         _globalThemeRegistry.set(rt.name, rt);
         // See findRuntime's own comment on the three real theme-id
@@ -2095,8 +2166,39 @@
         // customAttribution's own required-credit behavior for a REAL
         // basemap is left untouched.
         ...(mapTypeColor ? { attributionControl: false } : {}),
-        ...(this._attributionText ? { customAttribution: this._attributionText } : {})
+        ...(this._attributionText ? { customAttribution: this._attributionText } : {}),
+        // MapLibre's default (true) is kept: with false it also stops the
+        // zoom-out where the world gets narrower than the window, so a
+        // world map can't open fully zoomed out. The deck.gl overlay takes
+        // its `repeat` from map.getRenderWorldCopies(), so the themes are
+        // drawn on every world copy too (flat draws them once; only its
+        // basemap tiles wrap). .options({worldcopies: false}) draws the
+        // world once, at the cost of that zoom limit.
+        renderWorldCopies: this._engineOptions.worldcopies !== false
       });
+      _boundsSource = () => {
+        const b = map.getBounds();
+        return [{ lat: b.getSouth(), lng: b.getWest() }, { lat: b.getNorth(), lng: b.getEast() }];
+      };
+
+      // flat's page hook ixmaps.htmlgui_onZoomAndPan(nZoom), called after
+      // a zoom or a pan of more than 10 px (mapscript2.js 6445-6454) — a
+      // broker re-queries its data from it. Read at call time: pages wrap
+      // it after loading. flat passes its SVG zoom scale; this passes the
+      // flat zoom level, the one value gl has.
+      {
+        let last = null;
+        map.on('moveend', () => {
+          const hook = global.ixmaps && global.ixmaps.htmlgui_onZoomAndPan;
+          const z = map.getZoom(), c = map.getCenter(), prev = last;
+          last = { z, c };
+          if (typeof hook !== 'function' || !prev) return;
+          const p = map.project(c), q = map.project(prev.c);
+          if (z === prev.z && Math.abs(p.x - q.x) <= 10 && Math.abs(p.y - q.y) <= 10) return;
+          try { hook.call(global.ixmaps, mapLibreToFlatZoom(z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); }
+        });
+        map.once('load', () => { last = { z: map.getZoom(), c: map.getCenter() }; });
+      }
 
       // Tooltip resolution is per-runtime (each theme's own meta.tooltip
       // template), not generic — a layer id exactly matches one of the
@@ -2638,6 +2740,23 @@
           });
           if (removed) { refresh(); notifyRedraw(); }
           return removed;
+        },
+        // flat's refreshTheme (maptheme.js Themes.refreshTheme): the
+        // theme's data is loaded again — a broker is called again — and
+        // replaces the old features in place (draw order, legend, style
+        // changes and facet filters kept). A broker's theme writes from
+        // its first call stay; later calls only bring new data.
+        refreshTheme: async (name) => {
+          const targets = runtimes.filter(r => r.name === name && r._definition);
+          for (const rt of targets) {
+            const spec = normalizeTheme(rt._definition);
+            const raw = spec.data && spec.data.type === 'ext'
+              ? rowsResult((await loadBrokerData(spec, builder._engineOptions)).rows, rt._specBinding)
+              : await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions);
+            const filtered = applyWhereFilter(raw, spec.filter);
+            rt.replaceFeatures(filtered.type === 'Table' ? joinChoroplethFeatures(spec, filtered, runtimes) : filtered);
+          }
+          if (targets.length) { refresh(); notifyRedraw(); }
         }
       };
 
@@ -2649,7 +2768,10 @@
         const pdef = projectThemeToDefinition(def);
         let spec = normalizeTheme(pdef);
         let raw;
-        if (spec.data && spec.data.type === 'ext') {
+        const deferred = deferredFeatureLoad(spec, map.getZoom());
+        if (deferred) {
+          raw = { type: 'FeatureCollection', features: [] };
+        } else if (spec.data && spec.data.type === 'ext') {
           const { rows, patch } = await loadBrokerData(spec, builder._engineOptions);
           spec = normalizeTheme(applyBrokerThemePatch(pdef, patch));
           raw = rowsResult(rows, spec.binding);
@@ -2659,6 +2781,8 @@
         const filtered = applyWhereFilter(raw, spec.filter);
         const fc = filtered.type === 'Table' ? joinChoroplethFeatures(spec, filtered, runtimes) : filtered;
         const rt = new LayerRuntime(spec, fc, builder._engineOptions);
+        rt._definition = pdef; // for refreshTheme
+        rt._deferredLoad = deferred;
         rt._dataSourceKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj), broker: spec.data && spec.data.type === 'ext' ? spec.name + ':' + spec.data.name : undefined });
         runtimes.push(rt);
         _globalThemeRegistry.set(rt.name, rt);
@@ -2918,7 +3042,20 @@
         notifyRedraw();
       }
 
+      // a FEATURE theme out of scale at its definition gets its data once
+      // it comes into scale (see deferredFeatureLoad) — for that view
+      function loadDeferredThemes() {
+        const z = map.getZoom();
+        runtimes.forEach(rt => {
+          if (!rt._deferredLoad || featuresHiddenByScale(rt.style, z)) return;
+          rt._deferredLoad = false;
+          engineApi.refreshTheme(rt.name).catch(err => console.error(`[ixmaps-gl] loading theme "${rt.name}":`, err));
+        });
+      }
+      map.on('moveend', loadDeferredThemes);
+
       map.on('load', () => {
+        loadDeferredThemes();
         refresh();
         hideSplash(splash);
         const initialOpacity = parseFloat(this._engineOptions.basemapopacity);
@@ -3184,7 +3321,7 @@
             // aggregation" reading (style.valuefield, falling back to
             // the bound size field); anything else (plain CATEGORICAL,
             // no SUM) falls back to a per-category record COUNT.
-            const useSum = rt.flags.has('SUM') && rt.style.valuefield;
+            const useSum = flatFlag(rt.flags, 'SUM') && rt.style.valuefield;
             const valueField = rt.style.valuefield || rt.binding.size;
             // legendunits wins over the theme's general-purpose units
             // (used elsewhere for tooltips, e.g. _renderItemChartHtml) —
@@ -3308,7 +3445,9 @@
             // expressed in absolute px instead of a % of an elastic track.
             const COMPACT_MAX_BAR_PX = 70;
             renderRows = function() {
-              rowsEl.innerHTML = order.map(i => {
+              // flat drops the rows without a count once any row has one
+              // (legend.js 754-760, 787-789: fCountBars && !count)
+              rowsEl.innerHTML = order.filter(i => !(maxTotal > 0) || totals[i]).map(i => {
                 const rgb = rt.categoryColorsRgb[i];
                 const color = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
                 const marked = rt._markedClasses.has(i);
@@ -4132,6 +4271,59 @@
   // that's clipupper, out of scope) hide once the map is zoomed out past
   // this scale-denominator threshold, since at that scale the bubbles are
   // too small/numerous for a value label to be legible or useful anyway.
+  // .style({featureupper, featurelower}) on a FEATURE theme — flat's
+  // scale gate (maptheme.js 2609-2611, 8250-8260): the theme is hidden at
+  // scales above featureupper and at or below featurelower ("1:200000" or
+  // a bare denominator, __scanScaleValue 2021)
+  function featuresHiddenByScale(style, zoom) {
+    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
+    const upper = denom(style.featureupper), lower = denom(style.featurelower);
+    if (!upper && !lower) return false;
+    const scale = scaleDenominatorAt(zoom);
+    return (lower && scale <= lower) || (upper && scale > upper);
+  }
+
+  // flat's realize() returns before loading any data for a FEATURE theme
+  // out of scale (maptheme.js 8250-8260) and loads it once the theme comes
+  // into scale — for the view of that moment, the bbox a broker queries
+  function deferredFeatureLoad(spec, zoom) {
+    return !!(spec.flags && (spec.flags.has('FEATURE') || spec.flags.has('FEATURES')) && featuresHiddenByScale(spec.style, zoom));
+  }
+
+  // flat tests type flags as substrings (szFlag.match(/SUM/)), so a
+  // compound token counts too: "BOTTOMTITLESUM" is BOTTOMTITLE, TITLE and SUM
+  function flatFlag(flags, name) {
+    for (const f of flags) if (f.includes(name)) return true;
+    return false;
+  }
+  // flat's BOX block (maptheme.js 18758-18760): the box — and its title —
+  // is removed at scales above boxupper or below boxlower
+  function boxHiddenByScale(style, zoom) {
+    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
+    const upper = denom(style.boxupper), lower = denom(style.boxlower);
+    const scale = scaleDenominatorAt(zoom);
+    return !!((upper && scale > upper) || (lower && scale < lower));
+  }
+  // flat's map.Dom.wrapText: words onto lines no wider than widthPx (a word
+  // wider than that gets a line of its own)
+  let _measureCtx = null;
+  function titleTextWidth(text, fontPx) {
+    if (!_measureCtx && typeof document !== 'undefined') _measureCtx = document.createElement('canvas').getContext('2d');
+    if (!_measureCtx) return text.length * fontPx * 0.55;
+    _measureCtx.font = fontPx + 'px arial';
+    return _measureCtx.measureText(text).width;
+  }
+  function wrapTitleLines(text, fontPx, widthPx) {
+    const width = w => titleTextWidth(w, fontPx);
+    const lines = [];
+    for (const word of String(text).split(/\s+/).filter(Boolean)) {
+      const last = lines.length ? lines[lines.length - 1] + ' ' + word : null;
+      if (last !== null && width(last) <= widthPx) lines[lines.length - 1] = last;
+      else lines.push(word);
+    }
+    return lines.join('\n');
+  }
+
   function valuesHiddenByScale(style, zoom) {
     const m = /^1:(\d+(?:\.\d+)?)$/.exec(style.valueupper || '');
     if (!m) return false;
@@ -5527,6 +5719,7 @@
       // reads it back off the runtime.
       this._filterExpr = spec.filter || '';
       this.mapOptions = mapOptions || {};
+      this._specBinding = spec.binding;
       this.features = applyField100(filterFlatValues(fc.features, this.binding, this.flags), this.binding, this.flags, this.style);
       this.binding = field100Binding(this.binding, this.flags);
       this._iconCache = new Map();
@@ -5912,6 +6105,22 @@
     // source to read from (a real page's un-AGGREGATE-flagged BUBBLE type
     // still needs to render, just without any clustering — see
     // _computeAggregatedItems's own AGGREGATE check for that half).
+    // refreshTheme: new data for this theme, prepared as in the
+    // constructor; the facet and runtime filters stay active
+    replaceFeatures(fc) {
+      const facetFilters = this.facetFilters, runtimeFilterExpr = this._runtimeFilterExpr;
+      this.binding = this._specBinding;
+      this.features = applyField100(filterFlatValues(fc.features, this.binding, this.flags), this.binding, this.flags, this.style);
+      this.binding = field100Binding(this.binding, this.flags);
+      this._iconCache.clear();
+      this._glowIconCache.clear();
+      this._clusterIndices = null;
+      this._prepare();
+      this.facetFilters = facetFilters;
+      this._runtimeFilterExpr = runtimeFilterExpr;
+      this._rebuildActiveFeatures();
+    }
+
     _usesAggregationIndex() {
       return (this.flags.has('AGGREGATE') || (this.flags.has('CHART') && this.flags.has('SYMBOL'))) && !this.flags.has('GRIDSIZE');
     }
@@ -6524,7 +6733,9 @@
       // unmatched polygon, so the donor's fill serves no purpose once
       // superseded.
       if (this._isChoroplethGeometryDonor) return [];
-      if (this.flags.has('FEATURE') || this.flags.has('FEATURES')) return this._buildFeaturesLayers();
+      if (this.flags.has('FEATURE') || this.flags.has('FEATURES')) {
+        return featuresHiddenByScale(this.style, liveZoom) ? [] : this._buildFeaturesLayers();
+      }
       if (this.flags.has('CHART') && this.flags.has('SYMBOL')) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
       console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
       return [];
@@ -6542,10 +6753,11 @@
         // A FEATURES/FEATURE base layer has one flat fill color for every
         // polygon (style.colorscheme[0], or plain style.colorscheme) —
         // unlike CHOROPLETH, there's no per-feature classification here.
-        getFillColor: filled ? hexOrNamedToRgb(raw) : [0, 0, 0, 0],
-        getLineColor: this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [130, 130, 130],
+        // flat puts fillopacity into the shape's fill-opacity only
+        // (maptheme.js 13407, 14071-14078): the outline stays opaque
+        getFillColor: filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0],
+        getLineColor: this.style.linecolor ? hexOrNamedToRgb(styleLineColor(this.style.linecolor)) : [130, 130, 130],
         lineWidthMinPixels: styleNum(this.style.linewidth) || 1,
-        opacity: styleNum(this.style.fillopacity) || 1,
         // Confirmed live (2026-09-21, deck.gl v9.4/MapLibre-globe upgrade):
         // this layer's fill rendered with a moire/hatching pattern of
         // "holes" ONLY under globe projection, never flat Mercator —
@@ -6639,7 +6851,7 @@
       // evidence mode "isolate", the default (7715) — or grayed with
       // style.evidence "isolate_gray". ("highlight", flat's highlight list,
       // is shown grayed too here.) COMPOSECOLOR has no classes.
-      const lineRgb = this.style.linecolor ? hexOrNamedToRgb(this.style.linecolor) : [255, 255, 255];
+      const lineRgb = this.style.linecolor ? hexOrNamedToRgb(styleLineColor(this.style.linecolor)) : [255, 255, 255];
       const evidenceMode = String(this.style.evidence || 'isolate');
       const unmarkedEvidence = d => {
         if (!this._markedClasses.size || this._onMarksChanged || this._markedClasses.has(d.properties.cat)) return null;
@@ -7189,7 +7401,7 @@
       });
 
       const fillColor = (resolveColorScheme(this.style.colorscheme, ['']) || ['rgba(255,255,255,0.3)'])[0] || 'rgba(255,255,255,0.3)';
-      const borderColor = Array.isArray(this.style.linecolor) ? this.style.linecolor[0] : this.style.linecolor;
+      const borderColor = styleLineColor(this.style.linecolor);
       const borderWidth = styleNum(this.style.linewidth);
       const cellPx = this._gridCellPx;
       const icon = this._buildGridSquareIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx);
@@ -7202,6 +7414,31 @@
         getSize: cellPx,
         sizeUnits: 'pixels'
       })];
+    }
+
+    // BOX (see the BOX block in _buildChartLayers): a rectangle icon
+    // w×h px, rounded corners rx, stroke sw px; drawn at twice the size
+    _buildBoxIcon(w, h, rx, sw, look) {
+      const q = v => Math.max(0.5, Math.round(v * 2) / 2);
+      const W = q(w), H = q(h), R = Math.round(rx * 2) / 2, S = Math.round(sw * 4) / 4;
+      const key = `box|${W}|${H}|${R}|${S}|${look.fill}|${look.fillOpacity}|${look.stroke}|${look.strokeOpacity}`;
+      if (this._iconCache.has(key)) return this._iconCache.get(key);
+      const k = 2, pad = Math.ceil(S * k / 2) + 1;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(W * k) + pad * 2; canvas.height = Math.ceil(H * k) + pad * 2;
+      const ctx = canvas.getContext('2d');
+      const path = () => {
+        ctx.beginPath();
+        const x = pad, y = pad, ww = W * k, hh = H * k, rr = Math.min(R * k, ww / 2, hh / 2);
+        ctx.moveTo(x + rr, y); ctx.arcTo(x + ww, y, x + ww, y + hh, rr); ctx.arcTo(x + ww, y + hh, x, y + hh, rr);
+        ctx.arcTo(x, y + hh, x, y, rr); ctx.arcTo(x, y, x + ww, y, rr); ctx.closePath();
+      };
+      path();
+      ctx.globalAlpha = look.fillOpacity; ctx.fillStyle = look.fill; ctx.fill();
+      if (look.stroke && S > 0) { ctx.globalAlpha = look.strokeOpacity; ctx.strokeStyle = look.stroke; ctx.lineWidth = S * k; ctx.stroke(); }
+      // getSize is the icon's height: the padding is part of it
+      const icon = { url: canvas.toDataURL(), width: canvas.width, height: canvas.height, anchorX: canvas.width / 2, anchorY: canvas.height / 2, id: key };
+      return this._cacheIcon(key, icon);
     }
 
     _buildGridSquareIcon(fillColor, borderColor, borderWidth, cellPx) {
@@ -7603,7 +7840,7 @@
       // bubble icons, which never had one — computed once here (a
       // per-theme constant, not per-record) rather than inside the
       // getIcon callback below.
-      const singleBorderColorRgb = this.style.linecolor && this.style.linecolor !== 'none' ? hexOrNamedToRgb(this.style.linecolor) : null;
+      const singleBorderColorRgb = this.style.linecolor && styleLineColor(this.style.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(this.style.linecolor)) : null;
       const singleBorderWidthPx = styleNum(this.style.linewidth) || 0;
 
       // GLOW: gradient-texture halo (see _getGlowIcon for why this diverges
@@ -7625,6 +7862,112 @@
         }));
       }
 
+      // BOX / CIRCULARBOX with TITLE / BOTTOMTITLE — flat's BOX block
+      // (maptheme.js 18446-18481, 18756-18925), measured on flat's SVG.
+      // u = flat's normalX(1) on screen (its nDynamicObjectScale, the object
+      // zoom factor here), r = the chart (bubble) radius, the normal chart
+      // is 30u wide. Margin: min(2m, m·2r/30u), m = boxmargin (2) · u.
+      //  - CIRCULARBOX: a circle of radius 1.1·r + margin, boxcolor
+      //    (#eeeeee) at boxopacity, stroke #dddddd one SVG unit (u/20);
+      //    title centered at x + u/2, wrapped to the circle's width.
+      //  - BOX: a rectangle around the chart AND its title (its top
+      //    trimmed by 0.1 font when titled), plus the margin, boxcolor (white) at
+      //    boxopacity, stroke bordercolor (#bbbbbb) at 0.3 opacity
+      //    (borderstyle solid/dotted/dashed: opaque, none: no stroke),
+      //    borderwidth (1) · 0.2 · 2r/30 wide, corners borderradius ·
+      //    min(u, 2r/30); title left-aligned at the chart's left edge
+      //    (align "right": right edge), wrapped to the chart's width.
+      // Title: the item's title field (a grid cell merging more than 3
+      // items: "(n)", maptheme.js 11883), font 5u·textscale in textcolor
+      // (#888888) over a half-opaque white halo (stroke font/7); its first
+      // baseline one font below the box (BOTTOMTITLE) or 0.7 font above it.
+      // Box and title are removed outside boxupper/boxlower.
+      const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(this.style, liveZoom);
+      const circular = flatFlag(this.flags, 'CIRCULAR');
+      const unitPx = objectZoomFactor(liveZoom, this.mapOptions);
+      const boxMarginU = styleNum(this.style.boxmargin) || 2;
+      const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title;
+      const titleFontPx = 5 * unitPx * (styleNum(this.style.textscale) || styleNum(this.style.valuescale) || 1);
+      const bottomTitle = flatFlag(this.flags, 'BOTTOMTITLE');
+      const alignRight = /right/.test(String(this.style.align || ''));
+      const boxLayout = boxShown ? combined.map(d => {
+        const r = valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+        const margin = Math.min(2 * boxMarginU * unitPx, boxMarginU * r / 15);
+        const boxR = circular ? r * 1.1 + margin : r;
+        let title = null;
+        if (titleShown) {
+          const raw = d.properties.raw;
+          const n = d.properties.counts ? d.properties.recordCounts.reduce((x, c) => x + c, 0) : (d.properties.point_count || 1);
+          const text = n > 3 ? '(' + n + ')' : (raw && raw[this.binding.title] != null ? String(raw[this.binding.title]) : '');
+          if (text) {
+            const f = titleFontPx;
+            const lines = wrapTitleLines(text, f, boxR * 2).split('\n');
+            const width = Math.max(...lines.map(l => titleTextWidth(l, f)));
+            // first baseline; lines go down one font each
+            const base = bottomTitle ? boxR + f : -boxR - 0.7 * f - (lines.length - 1) * f;
+            const x = circular ? unitPx / 2 : (alignRight ? r : -r);
+            const anchor = circular ? 'middle' : (alignRight ? 'end' : 'start');
+            const x0 = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
+            // arial: ascent 0.905, descent 0.212 of the font size
+            title = { text: lines.join('\n'), x, anchor, top: base - 0.8 * f,
+              extent: [x0, base - 0.905 * f, x0 + width, base + (lines.length - 1) * f + 0.212 * f] };
+          }
+        }
+        let rect = null;
+        if (!circular) {
+          const e = [-r, -r, r, r];
+          // with a title flat trims 0.1 font off the top of chart + title
+          if (title) { e[0] = Math.min(e[0], title.extent[0]); e[1] = Math.min(e[1], title.extent[1]) + 0.1 * titleFontPx; e[2] = Math.max(e[2], title.extent[2]); e[3] = Math.max(e[3], title.extent[3]); }
+          rect = [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin];
+        }
+        return { d, r, boxR, rect, title };
+      }) : null;
+      if (boxShown && circular) {
+        const boxRgb = hexOrNamedToRgb(this.style.boxcolor || '#eeeeee');
+        const boxAlpha = Math.round(255 * (styleNum(this.style.boxopacity) || 1));
+        const borderRgb = hexOrNamedToRgb(this.style.bordercolor || '#dddddd');
+        layers.push(new ScatterplotLayer({
+          id: `ix-box-${this.name}`,
+          data: boxLayout, pickable: false,
+          getPosition: b => b.d.geometry.coordinates,
+          getRadius: b => b.boxR,
+          radiusUnits: 'pixels',
+          stroked: true,
+          getFillColor: [...boxRgb.slice(0, 3), boxAlpha],
+          getLineColor: [...borderRgb.slice(0, 3), 255],
+          getLineWidth: unitPx / 20,
+          lineWidthUnits: 'pixels',
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      } else if (boxShown) {
+        const borderStyle = String(this.style.borderstyle || '');
+        const boxLook = {
+          fill: this.style.boxcolor || 'white',
+          fillOpacity: styleNum(this.style.boxopacity) || 1,
+          stroke: borderStyle === 'none' ? null : styleLineColor(this.style.bordercolor) || '#bbbbbb',
+          strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3,
+        };
+        const borderWidth = styleNum(this.style.borderwidth) || 1;
+        const borderRadius = styleNum(this.style.borderradius);
+        boxLayout.forEach(b => {
+          b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
+            isNaN(borderRadius) ? 0 : borderRadius * Math.min(unitPx, b.r * 2 / 30),
+            borderWidth * 0.2 * b.r * 2 / 30, boxLook);
+        });
+        layers.push(new IconLayer({
+          id: `ix-box-${this.name}-g${this._iconGeneration}`,
+          data: boxLayout, pickable: false,
+          getPosition: b => b.d.geometry.coordinates,
+          getIcon: b => b.icon,
+          // the icon is drawn at 2× with a stroke padding around the box
+          getSize: b => b.icon.height / 2,
+          getPixelOffset: b => [(b.rect[0] + b.rect[2]) / 2, (b.rect[1] + b.rect[3]) / 2],
+          sizeUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+
       layers.push(new IconLayer({
         id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
         data: combined, pickable: true,
@@ -7638,6 +7981,30 @@
         billboard: true,
         parameters: ICON_LAYER_GLOBE_PARAMETERS
       }));
+
+      const titleData = boxLayout ? boxLayout.filter(b => b.title) : [];
+      if (titleData.length) {
+        layers.push(new TextLayer({
+          id: `ix-titles-${this.name}`,
+          data: titleData, pickable: false,
+          getPosition: b => b.d.geometry.coordinates,
+          getText: b => b.title.text,
+          getSize: titleFontPx,
+          sizeUnits: 'pixels',
+          fontFamily: 'arial',
+          characterSet: 'auto',
+          lineHeight: 1,
+          getColor: [...hexOrNamedToRgb(this.style.textcolor || '#888888').slice(0, 3), 255],
+          fontSettings: { sdf: true },
+          outlineWidth: 1 / 7,
+          outlineColor: [255, 255, 255, 128],
+          getTextAnchor: b => b.title.anchor,
+          // top of the text ≈ first baseline − 0.8 font
+          getAlignmentBaseline: 'top',
+          getPixelOffset: b => [b.title.x, b.title.top],
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
 
       // VALUES: bold value label centered on each bubble (see
       // formatBubbleValue/valuesFontSizePx above). Labels are their own
@@ -7763,6 +8130,11 @@
     const NAMED = { gray: [128, 128, 128], grey: [128, 128, 128], black: [0, 0, 0], white: [255, 255, 255] };
     return parseCssColor(v) || NAMED[v] || [130, 130, 130];
   }
+  // style.linecolor may be a list (the dialog's ["#dd8800"]); flat strokes
+  // with its LAST entry (maptheme.js 1597-1599)
+  function styleLineColor(v) {
+    return Array.isArray(v) ? v[v.length - 1] : v;
+  }
 
   // Unlike this engine's tooltip/description HTML (deliberately raw,
   // real-page-authored markup — see _buildTooltipContext/the legend's own
@@ -7789,7 +8161,11 @@
       szName: rt.name,
       szFilter: rt._filterExpr || '',
       szFlag: Array.from(rt.flags).join('|'),
-      fVisible: !rt._hidden
+      // flat's fVisible is false for a FEATURE theme outside its
+      // featureupper/featurelower scales too (maptheme.js 2609-2611) — a
+      // broker reads it to skip refreshing a hidden theme
+      fVisible: !rt._hidden && !((rt.flags.has('FEATURE') || rt.flags.has('FEATURES'))
+        && _lastMapApi && _lastMapApi.map && featuresHiddenByScale(rt.style, _lastMapApi.map.getZoom()))
     };
   }
 
@@ -8122,7 +8498,7 @@
   global.ixmaps = {
     layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON, loadProject,
-    markThemeClass, unmarkThemeClass,
+    markThemeClass, unmarkThemeClass, getBoundingBox, setTitle, setTitleBox, refreshTheme,
     // carried over from a page's own pre-load `ixmaps.validate = ...`
     validate: _preloadValidate
   };

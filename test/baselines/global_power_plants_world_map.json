@@ -23,7 +23,8 @@
       "getFillColor": [
        28,
        43,
-       54
+       54,
+       255
       ],
       "getLineColor": [
        42,
@@ -31,7 +32,6 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
-      "opacity": 1,
       "stroked": true
      },
      "columns": [
@@ -261,13 +261,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0b704cd8eb57c482",
-     "setDigest": "7f03b28dc8bf7a5e",
+     "digest": "310c09b0efee5a72",
+     "setDigest": "f8655d9b631d560c",
      "columnDigests": {
       "getColor": "665d9d61b10427f6",
       "getIcon": "e8da4c4681de5ec7",
       "getPosition": "c7dd9db1c907f013",
-      "getSize": "b71b9a17803e124d"
+      "getSize": "585b859ce6d25ed2"
      },
      "stats": {
       "getColor": [
@@ -280,7 +280,7 @@
       ],
       "getSize": [
        1.1,
-       116.013178
+       58.006589
       ]
      },
      "sample": [
@@ -721,13 +721,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "a6a638471b248237",
-     "setDigest": "ceaf62358beac428",
+     "digest": "f2b3d461854c837b",
+     "setDigest": "c66a10b7d3994c85",
      "columnDigests": {
       "getColor": "665d9d61b10427f6",
       "getIcon": "d8e4c8edc80da507",
       "getPosition": "c7dd9db1c907f013",
-      "getSize": "198236d226cedba3"
+      "getSize": "fe4196997fc40be8"
      },
      "stats": {
       "getColor": [
@@ -740,7 +740,7 @@
       ],
       "getSize": [
        0.2,
-       21.093305
+       10.546653
       ]
      },
      "sample": [
@@ -1329,7 +1329,8 @@
       "getFillColor": [
        28,
        43,
-       54
+       54,
+       255
       ],
       "getLineColor": [
        42,
@@ -1337,7 +1338,6 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
-      "opacity": 1,
       "stroked": true
      },
      "columns": [
@@ -1567,13 +1567,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "aceeeb6021267fe4",
-     "setDigest": "97ffb6e026f6443d",
+     "digest": "db7400b2c7e724b5",
+     "setDigest": "38ac98e68dca4610",
      "columnDigests": {
       "getColor": "5caad350d8a434f0",
       "getIcon": "6c41c1ce880ec683",
       "getPosition": "ba8a4efcbb8e9a7a",
-      "getSize": "1eb28c64da83ce38"
+      "getSize": "d7a86e5a4abb62c1"
      },
      "stats": {
       "getColor": [
@@ -1586,7 +1586,7 @@
       ],
       "getSize": [
        1.1,
-       146.167445
+       73.083722
       ]
      },
      "sample": [
@@ -2027,13 +2027,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "6bbb204c2f319ebe",
-     "setDigest": "e8cfa63248a55b5b",
+     "digest": "9c9c819d612b02ba",
+     "setDigest": "489a817ecb5895d5",
      "columnDigests": {
       "getColor": "5caad350d8a434f0",
       "getIcon": "f51ac85697a05e38",
       "getPosition": "ba8a4efcbb8e9a7a",
-      "getSize": "795a22eb3079bd9c"
+      "getSize": "993beabc9acb887a"
      },
      "stats": {
       "getColor": [
@@ -2046,7 +2046,7 @@
       ],
       "getSize": [
        0.2,
-       26.575899
+       13.28795
       ]
      },
      "sample": [
@@ -2635,7 +2635,8 @@
       "getFillColor": [
        28,
        43,
-       54
+       54,
+       255
       ],
       "getLineColor": [
        42,
@@ -2643,7 +2644,6 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
-      "opacity": 1,
       "stroked": true
      },
      "columns": [
@@ -2873,13 +2873,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0b704cd8eb57c482",
-     "setDigest": "7f03b28dc8bf7a5e",
+     "digest": "310c09b0efee5a72",
+     "setDigest": "f8655d9b631d560c",
      "columnDigests": {
       "getColor": "665d9d61b10427f6",
       "getIcon": "e8da4c4681de5ec7",
       "getPosition": "c7dd9db1c907f013",
-      "getSize": "b71b9a17803e124d"
+      "getSize": "585b859ce6d25ed2"
      },
      "stats": {
       "getColor": [
@@ -2892,7 +2892,7 @@
       ],
       "getSize": [
        1.1,
-       116.013178
+       58.006589
       ]
      },
      "sample": [
@@ -3333,13 +3333,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "a6a638471b248237",
-     "setDigest": "ceaf62358beac428",
+     "digest": "f2b3d461854c837b",
+     "setDigest": "c66a10b7d3994c85",
      "columnDigests": {
       "getColor": "665d9d61b10427f6",
       "getIcon": "d8e4c8edc80da507",
       "getPosition": "c7dd9db1c907f013",
-      "getSize": "198236d226cedba3"
+      "getSize": "fe4196997fc40be8"
      },
      "stats": {
       "getColor": [
@@ -3352,7 +3352,7 @@
       ],
       "getSize": [
        0.2,
-       21.093305
+       10.546653
       ]
      },
      "sample": [
