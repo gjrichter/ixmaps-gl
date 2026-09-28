@@ -2,9 +2,8 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Unfälle 2020-2024 — ixmaps-gl demo</title>
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
-<script src="ixmaps-gl.js"></script>
+<title>ISTAT - Microdati Incidenti 2019-2021</title>
+<script src="../ixmaps-gl.js"></script>
 <style>
   html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F5F5F4; }
 
@@ -19,22 +18,13 @@
   #status {
     position: absolute; top: 1em; left: 1em; z-index: 10;
     background: rgba(255,255,255,0.9); padding: 0.4em 0.8em; border-radius: 4px; font-size: 0.85em;
-    display: flex; align-items: center; gap: 0.6em;
   }
-  #status .spinner {
-    width: 14px; height: 14px; flex: none;
-    border: 2px solid rgba(0,0,0,0.15); border-top-color: #0088dd;
-    border-radius: 50%; animation: status-spin 0.8s linear infinite;
-  }
-  @keyframes status-spin { to { transform: rotate(360deg); } }
 
   h1 { font-size: 1.5em; margin: 0 0 0.3em 0; color: #222; font-weight: 600; }
   #sidebar p { font-size: 1em; color: #333; margin: 0.5em 0; }
   #sidebar a { color: #0088dd; }
   #sidebar label { font-size: 1em; display: flex; align-items: center; gap: 0.4em; margin: 0.4em 0; cursor: pointer; }
   #sidebar input[type=checkbox] { accent-color: #888; }
-
-  #grid-size-row { display: none; align-items: center; gap: 0.5em; margin: 0.3em 0 0.6em 1.6em; }
 
   #filter-div {
     margin: 0.6em 0; padding: 0.35em 0.6em; font-size: 0.85em;
@@ -47,6 +37,7 @@
     cursor: pointer; font-size: 0.85em; padding: 0 0.5em;
   }
 
+  /* on-map size slider */
   #onmap-buttons { position: absolute; bottom: 2em; left: 1.5em; z-index: 5; }
   #onmap-buttons .row {
     display: flex; align-items: center; gap: 0.4em; background: rgba(255,255,255,0.85);
@@ -55,10 +46,12 @@
 
   hr { border: none; border-top: 1px solid #ddd; margin: 1em 0; }
 
-  /* overrides ixmaps.data.showFacets' own injected dark default
-     (.ix-facet-* classes) with this page's light theme — see
-     ixmaps-gl.js's ensureFacetStyles comment for why a page's own
-     same-specificity rule reliably wins here. */
+  /* facets — overrides ixmaps.data.showFacets' own injected DARK default
+     stylesheet (.ix-facet-* classes, see ixmaps-gl.js's ensureFacetStyles)
+     with this page's original light theme. Works because that default
+     stylesheet is inserted as <head>'s FIRST child specifically so a
+     page's own same-specificity rules (declared normally, later in
+     source order) win — see its own comment. */
   #show-facets-div { margin-top: 0.5em; }
   .ix-facet { margin-bottom: 0.9em; }
   .ix-facet-header {
@@ -95,7 +88,7 @@
 <body>
 
 <div id="map_div"></div>
-<div id="status"><span class="spinner"></span>lade Unfall Daten von 2020 bis 2024 ...</div>
+<div id="status">caricando ...</div>
 
 <div id="onmap-buttons">
   <div class="row">
@@ -107,13 +100,16 @@
 </div>
 
 <div id="sidebar">
-  <h1>Unfälle 2020 - 2024<br>Unfallart vereinfacht</h1>
-  <p>Daten: <a href="https://unfallatlas.statistikportal.de/" target="_blank">Unfallatlas Deutschland</a> — Unfallorte 2020-2024 (&gt;1.200.000 Ereignisse)</p>
+  <h1>ISTAT - Microdati Incidenti<br>2019 - 2021</h1>
+  <p>Analisi di dati di incidenti certificati dell'ISTAT, accessibili via
+     <a href="https://sicurezza.servizirl.it/web/polizia-locale/geomis/" target="_blank">GEOMIS</a>
+     (Monitoraggio Incidentalità Stradale) della Regione Lombardia</p>
 
-  <label><input type="checkbox" id="curvesCheckBox"> Unfälle pro Jahr</label>
+  <label><input type="checkbox" id="sizeFieldCheckBox" checked> visualizza numero di feriti</label>
+  <label><input type="checkbox" id="curvesCheckBox"> incidenti/feriti per anno</label>
 
-  <div id="grid-size-row">
-    <input type="range" min="10" max="200" step="5" value="100" id="slGridSize" style="width:120px;cursor:pointer;accent-color:#0088dd">
+  <div id="grid-size-row" style="display:none;align-items:center;gap:0.5em;margin:0.3em 0 0.6em 1.6em;">
+    <input type="range" min="40" max="200" step="5" value="100" id="slGridSize" style="width:120px;cursor:pointer;accent-color:#0088dd">
     <span style="opacity:0.65;font-size:0.85em">grandezza griglia</span>
   </div>
 
@@ -127,23 +123,16 @@
   <div id="show-facets-div"></div>
 
   <footer>
-    Daten: Unfallatlas Deutschland (Statistisches Bundesamt).<br>
-    Prototipo ixmaps-gl — port di index_embed_Germania_Incidenti_2020_2024.
+    Dati: ISTAT / GEOMIS Regione Lombardia via AREU.<br>
+    Prototipo ixmaps-gl — facet browser ricostruito su deck.gl.
   </footer>
 </div>
 
 <!--
   Layer/theme/map definitions below are copied VERBATIM (identifiers,
-  type flags, style values, binding field names) from the original ixmaps
-  page (index_embed_Germania_Incidenti_2020_2024_tipo_simple_years_curve_incidenti.html)
-  wherever the config format is portable 1:1 — the ONE deliberate
-  deviation is .data(): the real page loads via a custom query() function
-  calling Data.provider()/ixmaps.setExternalData() (real data.js/ixmaps-
-  flat runtime APIs this standalone engine doesn't implement or load).
-  This engine's own multi-source CSV idiom (.data({urls, type:'csv',
-  remap})) achieves the same practical result — all 5 yearly CSVs merged,
-  UKATEGORIE/UTYP1 remapped to labels — see ixmaps-gl.js's
-  fetchLayerData for the exact mechanism.
+  structure, string values) from the original ixmaps page
+  (index_embed_ISTAT_incidenti_NATURA_2019_2022_simple_VT_KDE.html) —
+  same declarative config, only the executing engine differs.
 -->
 <script>
   __setColors = objTheme => {
@@ -162,162 +151,133 @@
     }
   };
 
-  // Verbatim from the real source page (index_embed_Germania_Incidenti_
-  // 2020_2024_tipo_simple_years_curve_incidenti.html) — runs against the
-  // REAL data.js (loaded above), not a reimplementation. Only
-  // ixmaps.setExternalData's hand-off is bridged by ixmaps-gl.js
-  // (see fetchLayerData / setExternalDataBridge there); everything else
-  // here — Data.provider(), addSource(), subtable(), append(),
-  // column().map() — is the real library doing real work.
-  var queryData = function(themeObj, options) {
-
-    var szUrl5 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2020_LinRef.csv.gz";
-    var szUrl4 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2021_LinRef.csv.gz";
-    var szUrl3 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2022_LinRef.csv.gz";
-    var szUrl2 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2023_LinRef.csv.gz";
-    var szUrl1 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2024_LinRef.csv.gz";
-    var broker = Data.provider()
-      .addSource(szUrl1, "csv")
-      .addSource(szUrl2, "csv")
-      .addSource(szUrl3, "csv")
-      .addSource(szUrl4, "csv")
-      .addSource(szUrl5, "csv")
-      .realize(
-        function(dataA) {
-
-          for ( i=0; i<dataA.length; i++){
-            dataA[i] = dataA[i].subtable({"fields": ['UART','UJAHR','UKATEGORIE','UTYP1','IstRad','IstFuss','IstKrad','IstGkfz','XGCSWGS84','YGCSWGS84']});
-          }
-          dataA[0].append(dataA[1]);
-          dataA[0].append(dataA[2]);
-          dataA[0].append(dataA[3]);
-          dataA[0].append(dataA[4]);
-
-          dataA[0].column("UKATEGORIE").map(function(value){
-            if (value == 1) {return "Tote";}
-            if (value == 2) {return "Schwerverletzte";}
-            if (value == 3) {return "Leichtverletzte";}
-            return value;
-          });
-
-          dataA[0].column("UTYP1").map(function(value){
-            if (value == 1) {return "Fahrunfall";}
-            if (value == 2) {return "Abbiegeunfall";}
-            if (value == 3) {return "Einbiegen / Kreuzen-Unfall";}
-            if (value == 4) {return "Überschreiten-Unfall";}
-            if (value == 5) {return "Unfall durch ruhenden Verkehr";}
-            if (value == 6) {return "Unfall im Längsverkehr";}
-            if (value == 7) {return "sonstiger Unfall";}
-            return value;
-          });
-
-          options.type = "dbtable";
-          ixmaps.setExternalData(dataA[0], options);
-        });
-
-  };
-
-  var __UNFALL_QUERY_DATA = { name: "themeDataObj", query: queryData.toString(), cache: "true" };
-
-  var __incidenti_natura =
-    ixmaps.layer("Natura_Incidenti_2022", layer => layer
-      .data(__UNFALL_QUERY_DATA)
-      .type("GLOW|CHART|SYMBOL|VALUES|SEQUENCE|STAR|SORT|DOWN|SIZEP1|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|TEXTLEGEND|RECT|CLIPTOGEOBOUNDS")
+  var __georef_reg =
+    ixmaps.layer("ITALIA_Regioni_2022", layer => layer
+      .data({
+        url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/regioni_2022/Reg01012022_s_WGS84.topojson.gz",
+        type: "topojson"
+      })
       .binding({
-        position: "YGCSWGS84|XGCSWGS84",
-        value: "UART",
-        title: "UART"
+        id: "COD_REG",
+        position: "geometry"
       })
+      .filter("WHERE DEN_REG = Lombardia")
+      .type("FEATURES|NOLEGEND")
       .style({
-        colorscheme: [
-          "#888888", "#0066cc", "#0066cc", "#ddbb22", "#88dd88",
-          "#ddbb22", "#ff0088", "#ddbb22", "#ddbb22", "#ddbb22"
-        ],
-        values: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
-        label: [
-          "Unfall anderer Art", "anfahrend/ruhend", "vorausfahrend/wartend", "seitlich",
-          "frontal", "kreuzend", "Fussgaenger", "auf Hindernis",
-          "abkommen nach rechts", "abkommen nach links"
-        ],
-        opacity: 1,
-        fillopacity: 0.9,
-        shadow: "false",
-        showdata: "true",
-        units: "",
-        scale: 1,
-        normalsizevalue: 20,
-        valuescale: 1,
-        valuedecimals: 0,
-        clipparts: 10,
-        maxcharts: 100000,
-        aggregation: ["1:1", "3px", "1:200000", "50"],
-        clipupper: "1:1000000",
-        valuesupper: "1:10000",
-        name: "chart"
-      })
-      .meta({
-        title: "Unfall Art<br>2020 - 2024",
-        tooltip: "<h3>{{theme.title}}</h3><br>{{theme.item.chart}}",
-        splash: "lade Unfall Daten von 2020 bis 2024 ..."
+        colorscheme: ["none"],
+        linecolor: "gray",
+        linewidth: "2",
+        sizefield: "Shape_Area"
       })
     );
 
-  var __incidenti_curves_years_incidenti =
+  var __incidenti_natura =
+    ixmaps.layer("AREU", layer => layer
+      .data({
+        url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz",
+        type: "topojson"
+      })
+      .type("CHART|SYMBOL|GLOW|SEQUENCE|STAR|SORT|DOWN|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES|COMPACTLEGEND|RECT|CLIPTOGEOBOUNDS")
+      .binding({
+        position: "geometry",
+        value: "NATURA_INC",
+        size: "FERITI"
+      })
+      .style({
+        colorscheme: __setColors.toString(),
+        opacity: "1",
+        fillopacity: "0.9",
+        shadow: "false",
+        showdata: "true",
+        units: "feriti",
+        refreshtimeout: "0",
+        scale: "1",
+        normalsizevalue: "75",
+        sizepow: "1.2",
+        valuescale: "1.5",
+        valuedecimals: "0",
+        textcolor: "white",
+        aggregation: [
+          "1:1", "3px",
+          "1:200000", "25"],
+        clipupper: "1:1000000",
+        valueupper: "1:200000",
+        name: "chart"
+      })
+      .meta({
+        title: "Numero dei feriti per natura dell'incidente",
+        tooltip: "<h3 style='margin:0;'><b>{{theme.title}}</h3></b><br>{{theme.item.chart}}",
+        splash: "scaricando dati ..."
+      })
+    );
+
+  // "incidenti/feriti per anno" toggle — verbatim from the original
+  // page's own two layers (index_embed_ISTAT_incidenti_NATURA_2019_2022_
+  // simple_VT_KDE.html): a per-grid-cell mini line+area chart of FERITI
+  // across 2019/2020/2021, plus its grid-mesh companion showing the
+  // aggregation cells themselves. Both start hidden (see
+  // curvesCheckBox below) — this is an opt-in overlay, not shown by
+  // default, matching the real page's own unchecked initial state.
+  var __incidenti_curves_years =
     ixmaps.layer("Mercator", layer => layer
-      .data(__UNFALL_QUERY_DATA)
-      .binding({ position: "YGCSWGS84|XGCSWGS84", value: "UJAHR" })
-      .type("CHART|SYMBOL|PLOT|LINES|AREA|LASTARROW|SPLINE|CATEGORICAL|BOX|XAXIS|FIXSIZE|GRIDSIZE|ZEROISNOTVALUE|AGGREGATE|RECT|SUM|NOSORT|NOLEGEND|CLIPTOGEOBOUNDS")
+      .data({ name: "themeDataObj", url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz", type: "topojson", cache: "true" })
+      .binding({ position: "geometry", value: "ANNO", size: "FERITI" })
+      .type("CHART|SYMBOL|PLOT|LINES|AREA|SPLINE|LASTARROW|CATEGORICAL|BOX|XAXIS|FIXSIZE|GRIDSIZE|ZEROISVALUE|AGGREGATE|RECT|SUM|NOSORT|NOLEGEND")
       .style({
         name: "curves_incidenti",
         colorscheme: ["#666666"],
         fillopacity: "0.05",
         shadow: "true",
-        values: ["2020", "2021", "2022", "2023", "2024"],
-        label: ["2020", "2021", "2022", "2023", "2024"],
-        xaxis: ["2020", "2021", "2022", "2023", "2024"],
+        values: ["2019", "2020", "2021"],
+        label: ["2019", "2020", "2021"],
+        xaxis: ["2019", "2020", "2021"],
         normalsizevalue: "20",
-        scale: "0.9",
+        scale: "1.0",
         rangescale: "1",
-        linewidth: "2",
+        linewidth: "1.5",
         markersize: "5",
-        offsetx: "-18",
-        offsety: "-0",
+        offsetx: "-12",
+        offsety: "-10",
         boxopacity: "0.001",
         bordercolor: "none",
         valuescale: "1",
         gridwidthpx: "100"
       })
-      .meta({ title: "Unfälle pro Jahr", splash: "scaricando dati ..." })
+      .meta({
+        title: "Numero dei feriti per anno",
+        tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}",
+        splash: "scaricando dati ..."
+      })
     );
 
   var __incidenti_curves_grid =
     ixmaps.layer("AREU", layer => layer
-      .data(__UNFALL_QUERY_DATA)
-      .binding({ position: "YGCSWGS84|XGCSWGS84", value: "UJAHR" })
-      .type("CHART|SYMBOL|SIZE|NOOUTLIER|ZEROISNOTVALUE|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE|NOLEGEND|CLIPTOGEOBOUNDS")
+      .data({ name: "themeDataObj", url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz", type: "topojson", cache: "true" })
+      .binding({ position: "geometry", value: "ANNO" })
+      .type("CHART|SYMBOL|SIZE|NOOUTLIER|ZEROISNOTVALUE|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE|NOLEGEND")
       .style({
         name: "grid",
-        colorscheme: ["rgba(255,255,255,0.1)"],
+        colorscheme: ["rgba(255,255,255,0.3)"],
         symbols: ["square"],
         linecolor: ["black"],
         linewidth: ["0.2"],
         gridwidthpx: "100"
       })
-      .meta({ title: "Unfälle Grid", splash: "scaricando dati ..." })
+      .meta({ title: "Incidenti Bergamo 2002-2024", splash: "scaricando dati ..." })
     );
 
-  var __lat = 48.13784063596002, __lon = 11.571941415250901, __zoom = 13.63;
+  var __lat = 45.48583653917475, __lon = 9.201889135059465, __zoom = 11.6;
 
   var _mapPromise = ixmaps.Map("map_div", {
       mapService: "leaflet_vt",
       mapType: "VT_BRIGHT_LIGHT",
-      name: "map",
+      name: "SIF_2022",
       mode: "pan",
       width: "100%",
       height: "100%",
       legend: "false",
       tools: "true",
-      search: "Germany",
+      search: "Italy",
       about: "test"
     },
     map => map
@@ -325,18 +285,19 @@
     .options({
       featurescaling: "true",
       objectscaling: "dynamic",
-      normalSizeScale: "50000",
-      dynamicScalePow: "1.8",
-      flushChartDraw: "1000000",
-      basemapopacity: "0.7",
+      normalSizeScale: "259302",
+      dynamicScalePow: "3",
+      flushChartDraw: "100000",
+      basemapopacity: "0.8",
       panhidden: "false"
     })
     .local("loading data ...", "...")
-    .attribution("Unfallatlas Deutschland (Statistisches Bundesamt)")
-    .legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>Unfälle 2020 - 2024</h2></div>")
+    .attribution("ISTAT / GEOMIS Regione Lombardia via AREU")
+    //.legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>ISTAT - Microdati Incidenti 2019 - 2021</div>")
+    .layer(__georef_reg)
     .layer(__incidenti_natura)
     .layer(__incidenti_curves_grid)
-    .layer(__incidenti_curves_years_incidenti)
+    .layer(__incidenti_curves_years)
   );
 
   // ---------------------------------------------------------------
@@ -344,17 +305,32 @@
   // (ixmaps.data.getFacets/showFacets, window.__setFacetFilter/
   // __setFilter/__removeFacets — same names as real ixmaps-flat's
   // ui/js/tools/facet.js + show_facets.js, ported into ixmaps-gl.js
-  // itself). Field list trimmed to what this dataset's CSV columns
-  // actually carry; UART's .style({label:[...]}) German display names
-  // are handled automatically by showFacets via facet.valuesLabels.
+  // itself). A page using these needs no rendering/wiring code of its
+  // own — only its own field list, theme id, and the small "active
+  // filter" chip display (the real engine also leaves that one to the
+  // page — no dedicated getter beyond a facet's own isActive/
+  // activeClause).
   // ---------------------------------------------------------------
 
   const THEME_ID = "chart";
+
   const FACET_FIELDS = [
-    "UART", "UJAHR", "UKATEGORIE", "UTYP1", "UMONAT", "USTUNDE", "UWOCHENTAG",
-    "ULICHTVERH", "IstStrassenzustand", "IstRad", "IstPKW", "IstFuss", "IstKrad", "IstGkfz", "IstSonstige"
+    "NATURA_INC", "VEICOLO_A", "VEICOLO_B", "ORA", "COMUNE", "PROVINCIA",
+    "ORGANO_COO", "LOCALIZZAZ", "DENOMINAZI", "TRONCO_STR", "TIPO_STRAD",
+    "PAVIMENTAZ", "INTERSEZIO", "FONDO_STRA", "SEGNALETIC", "CONDIZIONI",
+    "VEICOLO_C", "CIRCO_INCO", "CIRCO_DIFE", "CIRCO_COND", "CIRCO_IN_1",
+    "CIRCO_DI_1", "CIRCO_CO_1", "MORTI_24H", "MORTI_DOPO", "FERITI",
+    "NOME_STRAD", "TIPO_COORD", "MORTI_FERI", "ANNO", "COMUNE_LAB",
+    "PROVINCIA_", "GIORNO", "MESE", "FLAG_COORD"
   ];
 
+  // No explicit sizeField override needed here — getFacets' own default
+  // (see ixmaps-gl.js's rt.getFacets comment) already reads the theme's
+  // OWN binding.size, gated by ixmaps.data.fShowFacetValues, matching
+  // real facet.js's own behavior exactly (facet.js:565-568): weighting
+  // and bubble size share ONE field, so the sizeFieldCheckBox below only
+  // needs to call api.setSizeField — that alone keeps facet weighting in
+  // sync too, via the same onRedraw -> renderFacets loop already wired.
   function renderFacets(api) {
     const facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
     ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
@@ -383,6 +359,10 @@
       renderFacets(api);
       api.onRedraw(() => renderFacets(api));
 
+      document.getElementById('sizeFieldCheckBox').addEventListener('change', e => {
+        api.setSizeField(THEME_ID, e.target.checked ? "FERITI" : null);
+      });
+
       document.getElementById('clear-filter-btn').addEventListener('click', () => {
         api.clearAllFacetFilters(THEME_ID);
       });
@@ -391,6 +371,9 @@
         api.setThemeStyle(THEME_ID, { scale: e.target.value });
       });
 
+      // "incidenti/feriti per anno" — the per-grid-cell curves overlay and
+      // its grid-mesh companion toggle together (checked = both visible)
+      // and start hidden, matching the real page's own unchecked default.
       api.setThemeVisible('curves_incidenti', false);
       api.setThemeVisible('grid', false);
 
@@ -405,7 +388,7 @@
         api.setThemeStyle('grid', { gridwidthpx: e.target.value });
       });
     })
-    .catch(err => { document.getElementById('status').textContent = 'Fehler: ' + err.message; console.error(err); });
+    .catch(err => { document.getElementById('status').textContent = 'errore: ' + err.message; console.error(err); });
 </script>
 
 </body>

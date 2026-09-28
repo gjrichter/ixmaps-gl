@@ -1,5 +1,5 @@
 {
- "page": "germany_accidents_app.html",
+ "page": "stage/germany_accidents_app.html",
  "views": [
   {
    "label": "initial",

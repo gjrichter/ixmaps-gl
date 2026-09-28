@@ -1,19 +1,19 @@
 {
-  "$comment": "Pages the regression harness snapshots (paths relative to the repo root). Only pages that load the LOCAL ixmaps-gl.js belong here \u2014 the real-ixmaps-flat reference/comparison pages (roma_incidenti_pericolosita_sidebar.html, examples/* copy.html, examples/*_svg.html), the index pages and _scratch_* pages are excluded on purpose. zoomSteps: extra views relative to the page's own initial zoom (aggregation depends on zoom). knownBroken: pages that currently fail for a known, recorded reason \u2014 still run every time and reported as KNOWN (not a failure); the runner says so when one starts working again. equivalent: [twin, original] pairs \u2014 the twin writes the same map with another (flat) spelling; their whole output (every layer, theme, legend, tooltip) must be identical, which checks that an alias really means the same thing. flatOracle: {flat, gl} pairs \u2014 the same map on the REAL ixmaps-flat engine and on gl; `node run.mjs --flat-oracle` compares flat's computed classes (breaks, colors, value range) with gl's baseline and reports every difference.",
+  "$comment": "Pages the regression harness snapshots (paths relative to the repo root). Only pages that load the LOCAL ixmaps-gl.js belong here \u2014 the real-ixmaps-flat reference/comparison pages (stage/roma_incidenti_pericolosita_sidebar.html, examples/* copy.html, examples/*_svg.html), the index pages and _scratch_* pages are excluded on purpose. zoomSteps: extra views relative to the page's own initial zoom (aggregation depends on zoom). knownBroken: pages that currently fail for a known, recorded reason \u2014 still run every time and reported as KNOWN (not a failure); the runner says so when one starts working again. equivalent: [twin, original] pairs \u2014 the twin writes the same map with another (flat) spelling; their whole output (every layer, theme, legend, tooltip) must be identical, which checks that an alias really means the same thing. flatOracle: {flat, gl} pairs \u2014 the same map on the REAL ixmaps-flat engine and on gl; `node run.mjs --flat-oracle` compares flat's computed classes (breaks, colors, value range) with gl's baseline and reports every difference.",
   "zoomSteps": [
     1,
     -1
   ],
   "pages": [
-    "accidents_app.html",
-    "demo_accidents.html",
-    "germany_accidents_app.html",
-    "global_power_plants_sidebar.html",
-    "global_power_plants_world_map.html",
-    "ixmaps-loader_70.html",
-    "mappa_stranieri_30.html",
-    "roma_incidenti_pericolosita_sidebar_gl.html",
-    "uk_collisions_2023.html",
+    "stage/accidents_app.html",
+    "stage/demo_accidents.html",
+    "stage/germany_accidents_app.html",
+    "stage/global_power_plants_sidebar.html",
+    "stage/global_power_plants_world_map.html",
+    "stage/ixmaps-loader_70.html",
+    "stage/mappa_stranieri_30.html",
+    "stage/roma_incidenti_pericolosita_sidebar_gl.html",
+    "stage/uk_collisions_2023.html",
     "examples/bubble_categorical.html",
     "examples/bubble_range_equidistant.html",
     "examples/bubble_aggregate_sum_nosize.html",
@@ -39,7 +39,7 @@
     "examples/alias_choropleth_dominant_deviation_density.html",
     "examples/alias_geo_choropleth_range_quantile.html",
     "examples/alias_style_lookupfield_choropleth_dopacity.html",
-    "alias_lookupfield_uk_collisions_2023.html",
+    "stage/alias_lookupfield_uk_collisions_2023.html",
     "examples/alias_meta_in_style_dot_categorical.html",
     "examples/alias_style_in_meta_dot_categorical.html",
     "examples/alias_field_method_bubble_range_quantile.html",
@@ -78,8 +78,8 @@
       "examples/choropleth_dopacity.html"
     ],
     [
-      "alias_lookupfield_uk_collisions_2023.html",
-      "uk_collisions_2023.html"
+      "stage/alias_lookupfield_uk_collisions_2023.html",
+      "stage/uk_collisions_2023.html"
     ],
     [
       "examples/alias_meta_in_style_dot_categorical.html",

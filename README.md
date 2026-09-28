@@ -187,8 +187,16 @@ of your own project files gl can render.
 
 ## Quick start
 
+Load the engine from jsDelivr, pinned to a release tag (or `@main` for the latest commit):
+
 ```html
-<script src="ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.1.0/ixmaps-gl.js"></script>
+```
+
+or use a local copy (`<script src="ixmaps-gl.js"></script>`). A minimal page:
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.1.0/ixmaps-gl.js"></script>
 <div id="map_div" style="position:absolute;inset:0;"></div>
 
 <script>
@@ -206,7 +214,7 @@ of your own project files gl can render.
 </script>
 ```
 
-See [`demo_accidents.html`](./demo_accidents.html) for a minimal working page copied
+See [`demo_accidents.html`](./stage/demo_accidents.html) for a minimal working page copied
 verbatim (config included) from a real ixmaps page — the only change is which script
 provides `ixmaps.layer`/`ixmaps.Map`.
 
@@ -247,14 +255,14 @@ For checking page files before they run, use the static checker in ixmaps-gramma
 
 | Page | What it shows |
 |---|---|
-| [`demo_accidents.html`](./demo_accidents.html) | Minimal quick-start example |
-| [`accidents_app.html`](./accidents_app.html) / [`germany_accidents_app.html`](./germany_accidents_app.html) | Full app with a facets sidebar (standard facets API) |
-| [`global_power_plants_world_map.html`](./global_power_plants_world_map.html) | Native legend, globe projection toggle |
-| [`global_power_plants_sidebar.html`](./global_power_plants_sidebar.html) | Same dataset with a facets sidebar instead of the native legend |
-| [`mappa_stranieri_30.html`](./mappa_stranieri_30.html) | Symbol shapes, city picker, runtime `changeThemeStyle` filtering, light legend theme |
-| [`roma_incidenti_pericolosita_sidebar_gl.html`](./roma_incidenti_pericolosita_sidebar_gl.html) | AGGREGATE on a gridwidth grid, facets sidebar |
-| [`roma_incidenti_pericolosita_sidebar.html`](./roma_incidenti_pericolosita_sidebar.html) | The same page on the **real** ixmaps-flat engine, kept for side-by-side reference |
-| [`uk_collisions_2023.html`](./uk_collisions_2023.html), [`ixmaps-loader_70.html`](./ixmaps-loader_70.html) | Additional real-page compatibility tests |
+| [`demo_accidents.html`](./stage/demo_accidents.html) | Minimal quick-start example |
+| [`accidents_app.html`](./stage/accidents_app.html) / [`germany_accidents_app.html`](./stage/germany_accidents_app.html) | Full app with a facets sidebar (standard facets API) |
+| [`global_power_plants_world_map.html`](./stage/global_power_plants_world_map.html) | Native legend, globe projection toggle |
+| [`global_power_plants_sidebar.html`](./stage/global_power_plants_sidebar.html) | Same dataset with a facets sidebar instead of the native legend |
+| [`mappa_stranieri_30.html`](./stage/mappa_stranieri_30.html) | Symbol shapes, city picker, runtime `changeThemeStyle` filtering, light legend theme |
+| [`roma_incidenti_pericolosita_sidebar_gl.html`](./stage/roma_incidenti_pericolosita_sidebar_gl.html) | AGGREGATE on a gridwidth grid, facets sidebar |
+| [`roma_incidenti_pericolosita_sidebar.html`](./stage/roma_incidenti_pericolosita_sidebar.html) | The same page on the **real** ixmaps-flat engine, kept for side-by-side reference |
+| [`uk_collisions_2023.html`](./stage/uk_collisions_2023.html), [`ixmaps-loader_70.html`](./stage/ixmaps-loader_70.html) | Additional real-page compatibility tests |
 | [`examples/`](./examples) | Smaller feature-by-feature test pages (choropleth classing modes, bubble ranges, etc.) |
 
 Serve any of these with a static file server (they fetch remote data over HTTPS, so
