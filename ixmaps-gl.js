@@ -2274,6 +2274,36 @@
     `;
     document.head.appendChild(style);
   }
+  // the data-loading message (see setDataLoading)
+  function ensureLoadingStyle() {
+    if (typeof document === 'undefined' || document.getElementById('ixmaps-gl-loading-style')) return;
+    const style = document.createElement('style');
+    style.id = 'ixmaps-gl-loading-style';
+    style.textContent = `
+      .ixmaps-gl-loading { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:7;
+        display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:8px; pointer-events:none;
+        background:rgba(255,255,255,0.9); box-shadow:0 2px 10px rgba(0,0,0,0.18);
+        font:14px/1.2 -apple-system,Arial,sans-serif; color:#333; }
+      .ixmaps-gl-loading-spin { width:18px; height:18px; border-radius:50%; border:3px solid rgba(46,125,230,0.25);
+        border-top-color:#2e7de6; animation:ixmaps-gl-spin 0.8s linear infinite; }
+      @keyframes ixmaps-gl-spin { to { transform:rotate(360deg); } }
+    `;
+    document.head.appendChild(style);
+  }
+  // flat's Dictionary.getLocalText (mapscript.js 5631-5648) over the page's
+  // .local(text, translation) pairs: the whole text, else word by word
+  // (a word's entry is written in quotes, 'word')
+  function makeLocalText(locals) {
+    const dict = {};
+    (locals || []).forEach(a => {
+      if (a && typeof a[0] === 'object' && a[0]) Object.assign(dict, a[0]);
+      else if (a && a.length >= 2) dict[a[0]] = a[1];
+    });
+    return text => {
+      if (dict[text] !== undefined) return String(dict[text]);
+      return String(text).split(' ').map(w => (dict["'" + w + "'"] !== undefined ? String(dict["'" + w + "'"]) : w)).join(' ');
+    };
+  }
   function showSplash(el, text) {
     ensureSplashStyle();
     // Checks the actual RENDERED position, not el.style (the inline
@@ -2671,7 +2701,10 @@
       // alone would make `.find()` return whichever of the two happens to
       // come FIRST in `runtimes` for every layer id, not the one that
       // actually produced it.
+      // the theme of each drawn deck.gl layer, by its final id (refreshLayers)
+      const layerRuntimeById = new Map();
       function findRuntimeForLayerId(layerId) {
+        if (layerRuntimeById.has(layerId)) return layerRuntimeById.get(layerId);
         // icon-atlas-based layer ids (ix-bubbles-/ix-glow-/ix-plot-/
         // ix-grid-) carry a rotating "-gN" generation suffix (see
         // ICON_ATLAS_RESET_AFTER) — strip it before matching so
@@ -2995,6 +3028,7 @@
       let addLegendPanel = () => {}; // set up with the legend, below
       let updateSubTheme = () => {};
       let layoutLegends = () => {}; // set up with the legend, below
+      let setDataLoading = () => {}; // set up with the loads, below
       const engineApi = {
         map,
         overlay,
@@ -3290,12 +3324,48 @@
       // takes the named table, or waits for it. The features are replaced
       // in place. Broker calls in flight are counted (pendingLoads).
       let pendingLoads = 0;
+      // flat's loading message while a theme's external data loads
+      // (htmlgui.js 3446-3448: showLoadingArray(["loading data ...", " ... "])
+      // for every broker load, hidden when its data is handed over; none
+      // with the silent / loadsilent options): a spinner and the text,
+      // translated by the page's .local() dictionary, centred on the map
+      const optFlag = v => v === true || v === 'true' || v === 1 || v === '1';
+      const loadSilent = [this.mapOptions, this._engineOptions].some(o => o && (optFlag(o.silent) || optFlag(o.loadsilent)));
+      const localText = makeLocalText(this._locals);
+      let loadingEl = null, loadingTimer = null;
+      // only loads of themes shown at this scale count: a broker that waits
+      // for other data (the page's section merge, empty at the national
+      // view) behind an out-of-scale theme kept the message up for good
+      setDataLoading = () => {
+        if (loadSilent || !el.parentElement) return;
+        const z = map.getZoom();
+        const shownLoading = runtimes.some(r => r._brokerLoading > 0 && !r._hidden && !themeHiddenByScale(r.flags, r.style, z));
+        if (shownLoading) {
+          if (!loadingEl) {
+            ensureLoadingStyle();
+            loadingEl = document.createElement('div');
+            loadingEl.className = 'ixmaps-gl-loading';
+            loadingEl.innerHTML = '<span class="ixmaps-gl-loading-spin"></span><span class="ixmaps-gl-loading-text"></span>';
+            el.appendChild(loadingEl);
+          }
+          const msgs = [localText('loading data ...'), localText(' ... ')];
+          let i = 0;
+          loadingEl.querySelector('.ixmaps-gl-loading-text').textContent = msgs[0];
+          loadingEl.style.display = 'flex';
+          clearInterval(loadingTimer);
+          // flat alternates its messages
+          loadingTimer = setInterval(() => { i = (i + 1) % msgs.length; if (loadingEl) loadingEl.querySelector('.ixmaps-gl-loading-text').textContent = msgs[i].trim() ? msgs[i] : msgs[0]; }, 1500);
+        } else if (loadingEl) {
+          clearInterval(loadingTimer);
+          loadingEl.style.display = 'none';
+        }
+      };
       async function loadNamedTheme(rt, force) {
         const spec = normalizeTheme(rt._definition);
         const name = String(spec.data.name);
         const broker = brokerTheme(spec);
         rt._loading = (rt._loading || 0) + 1;
-        if (broker) pendingLoads++;
+        if (broker) { pendingLoads++; rt._brokerLoading = (rt._brokerLoading || 0) + 1; setDataLoading(); }
         try {
           let table = namedTable(name), patch = null;
           if (broker && (force || !table)) {
@@ -3315,7 +3385,7 @@
           else console.error(`[ixmaps-gl] theme "${themeIdOf(rt)}": no data —`, err);
         } finally {
           rt._loading--;
-          if (broker) pendingLoads--;
+          if (broker) { pendingLoads--; rt._brokerLoading--; setDataLoading(); }
         }
       }
       function namedThemeFeatures(spec, rows, binding) {
@@ -3339,6 +3409,7 @@
           spec = pspec;
         }
         rt.replaceFeatures(namedThemeFeatures(spec, rows, rt._specBinding));
+        if (glDebug()) console.info(`[ixmaps-gl debug] data for ${themeIdOf(rt)}: ${rows.length} rows → ${rt.features.length} features`);
         // the legend is built from the theme's classes: build it again
         if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel);
         rt._legendPanel = null;
@@ -3567,6 +3638,7 @@
         const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
         const globeCenter = proj.type === 'globe' ? map.getCenter() : null;
         let layers = [];
+        const layerOwner = new Map();
         // a choropleth whose sub-theme is active is not drawn: in flat the
         // sub-theme re-paints the SAME map shapes (fill and fill-opacity),
         // so it replaces the parent's colors rather than lying over them
@@ -3577,7 +3649,12 @@
           // USER charts are drawn once the map stands still (see
           // _buildUserChartLayers)
           rt._viewMoving = viewMoving;
-          try { layers.push(...rt.buildDeckLayers(zoom, bbox, liveZoom, globeCenter)); rt._drawError = null; } catch (err) {
+          try {
+            const built = rt.buildDeckLayers(zoom, bbox, liveZoom, globeCenter);
+            built.forEach(l => layerOwner.set(l, rt));
+            layers.push(...built);
+            rt._drawError = null;
+          } catch (err) {
             if (!rt._drawError) console.error(`[ixmaps-gl] theme "${themeIdOf(rt)}" not drawn:`, err);
             rt._drawError = err;
           }
@@ -3589,6 +3666,24 @@
         // shapes lie under the charts — in theme order among themselves
         const isShape = l => /^ix-(features|choropleth|shadow)-/.test(l.id);
         layers = layers.filter(isShape).concat(layers.filter(l => !isShape(l)));
+        // every deck.gl layer id once: two themes of one layer name and type
+        // (the page's comune points and comune polygons, both FEATURES on
+        // "ITALIA_Comuni_…") made two ix-features-… layers with the same id,
+        // and deck.gl matched both to one layer state — polygons drawn with
+        // another layer's vertices, triangles across the map until the next
+        // redraw. A repeated id gets ~2, ~3 … in theme order (stable between
+        // redraws); layerRuntimeById maps the final id to its theme for
+        // tooltips and clicks.
+        const seenIds = new Map();
+        layerRuntimeById.clear();
+        layers = layers.map(l => {
+          const n = (seenIds.get(l.id) || 0) + 1;
+          seenIds.set(l.id, n);
+          const owner = layerOwner.get(l);
+          const out = n > 1 ? l.clone({ id: l.id + '~' + n }) : l;
+          if (owner) layerRuntimeById.set(out.id, owner);
+          return out;
+        });
         if (glDebug()) {
           const order = layers.map(l => l.id).join(' < ');
           if (order !== refreshLayers._lastOrder) { refreshLayers._lastOrder = order; console.info('[ixmaps-gl debug] draw order (bottom → top): ' + order); }
@@ -3685,6 +3780,7 @@
       function refresh() {
         refreshLayers();
         layoutLegends();
+        setDataLoading();
         notifyRedraw();
       }
 
@@ -4418,6 +4514,64 @@
       }
 
       _lastMapApi = engineApi;
+      // ?ixgl-debug: ixmaps.__glDebug.check() reports, for the moment it is
+      // called, every theme's geometry problems (invalid or mixed-dimension
+      // coordinates, a shape far larger than the theme's others) and what
+      // deck.gl draws
+      if (glDebug()) {
+        const extentOf = g => {
+          let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, bad = 0;
+          const dims = new Set();
+          const walk = c => {
+            if (typeof c[0] === 'number') {
+              dims.add(c.length);
+              if (!isFinite(c[0]) || !isFinite(c[1]) || Math.abs(c[0]) > 180 || Math.abs(c[1]) > 90) { bad++; return; }
+              x0 = Math.min(x0, c[0]); x1 = Math.max(x1, c[0]); y0 = Math.min(y0, c[1]); y1 = Math.max(y1, c[1]);
+            } else c.forEach(walk);
+          };
+          walk(g.coordinates || []);
+          return { size: Math.max(x1 - x0, y1 - y0), bad, dims: [...dims], bbox: [x0, y0, x1, y1].map(v => +v.toFixed(5)) };
+        };
+        const pageIx = pageIxmaps() || global.ixmaps;
+        pageIx.__glDebug = {
+          api: engineApi,
+          check() {
+            const report = runtimes.map(rt => {
+              const feats = (rt.features || []).filter(f => f && f.geometry && f.geometry.type !== 'Point');
+              const ext = feats.map(f => [f, extentOf(f.geometry)]);
+              const sizes = ext.map(e => e[1].size).filter(isFinite).sort((a, b) => a - b);
+              const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : 0;
+              const dims = new Set(); ext.forEach(e => e[1].dims.forEach(d => dims.add(d)));
+              const idOf = f => { const p = f.properties || {}; const r = p.raw || p; return r[rt.binding.id] != null ? r[rt.binding.id] : (r[rt.binding.lookup] != null ? r[rt.binding.lookup] : ''); };
+              const suspects = ext.filter(([f, e]) => e.bad || (median && e.size > median * 50))
+                .slice(0, 10).map(([f, e]) => ({ id: idOf(f), type: f.geometry.type, parts: f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates.length : 1, extentDeg: +e.size.toFixed(4), bbox: e.bbox, invalidCoords: e.bad }));
+              return { theme: themeIdOf(rt), shapes: feats.length, medianExtentDeg: +median.toFixed(5), coordDims: [...dims], suspects };
+            }).filter(r => r.shapes);
+            // what deck.gl draws right now: each layer's own data, scanned
+            // like the themes (the choropleth's data is rebuilt per redraw)
+            const deckNow = overlay._deck || overlay.deck;
+            const drawn = deckNow ? deckNow.props.layers.map(l => {
+              const d = l.props.data;
+              const feats = Array.isArray(d) ? d : (d && d.features) || [];
+              const polys = feats.filter(f => f && f.geometry && f.geometry.type !== 'Point');
+              let note = '';
+              if (polys.length) {
+                const ext = polys.map(f => extentOf(f.geometry));
+                const sizes = ext.map(e => e.size).filter(isFinite).sort((a, b) => a - b);
+                const med = sizes.length ? sizes[Math.floor(sizes.length / 2)] : 0;
+                const bad = ext.filter(e => e.bad || (med && e.size > med * 50)).length;
+                const dims = new Set(); ext.forEach(e => e.dims.forEach(x => dims.add(x)));
+                note = `, dims ${[...dims].join('/')}, ${bad} suspect`;
+              }
+              return l.id + ' (' + feats.length + note + ')';
+            }) : [];
+            const lines = report.map(r => `${r.theme}: ${r.shapes} shapes, median extent ${r.medianExtentDeg}°, dims ${r.coordDims.join('/')}`
+              + r.suspects.map(x => `\n   suspect ${x.id} ${x.type}(${x.parts} parts) extent ${x.extentDeg}° bbox [${x.bbox.join(', ')}]${x.invalidCoords ? ' invalid coords: ' + x.invalidCoords : ''}`).join(''));
+            console.info('[ixmaps-gl debug] check\n' + lines.join('\n') + '\n drawn: ' + drawn.join(', '));
+            return { report, drawn };
+          }
+        };
+      }
       _resolveMapReady(engineApi);
       resolveBuilt();
       namedLoads.forEach(rt => { listenNamedData(rt); if (!rt._deferredLoad) loadNamedTheme(rt, false); });
@@ -7022,6 +7176,8 @@
     // refreshTheme: new data for this theme, prepared as in the
     // constructor; the facet and runtime filters stay active
     replaceFeatures(fc) {
+      // new data → new deck.gl layers (see _dataLayerId)
+      this._dataGen = (this._dataGen || 0) + 1;
       const facetFilters = this.facetFilters, runtimeFilterExpr = this._runtimeFilterExpr;
       this.binding = this._specBinding;
       this.features = applyField100(filterFlatValues(this._withDensity(fc.features), this.binding, this.flags), this.binding, this.flags, this.style);
@@ -7034,6 +7190,15 @@
       this._runtimeFilterExpr = runtimeFilterExpr;
       this._rebuildActiveFeatures();
     }
+
+    // A shape layer's deck.gl id carries its data generation: when the
+    // theme's features are replaced (a broker's partial fgb load, a FEATURE
+    // layer's new sections re-joined into its choropleth) deck.gl builds a
+    // fresh layer instead of updating the old one in place — updates in
+    // place, arriving over each other during heavy zooming/panning, left
+    // triangles across sections (colour gradients spanning the map) until
+    // the next redraw.
+    _dataLayerId(base) { return this._dataGen ? `${base}-d${this._dataGen}` : base; }
 
     _usesAggregationIndex() {
       return (this.flags.has('AGGREGATE') || (this.flags.has('CHART') && (this.flags.has('SYMBOL') || this.flags.has('USER')))) && !this.flags.has('GRIDSIZE');
@@ -7683,7 +7848,7 @@
       const shadow = filled && flatShadowOn(this.style, this.features.length, zoom)
         ? this._buildShadowLayers(hexOrNamedToRgb(raw), zoom, bbox) : [];
       return shadow.concat([new GeoJsonLayer({
-        id: `ix-features-${this.name}`,
+        id: this._dataLayerId(`ix-features-${this.name}`),
         data: { type: 'FeatureCollection', features: this.features },
         // linecolor "none": no outline (a FEATURES theme of points with
         // colorscheme and linecolor "none" draws nothing, as flat)
@@ -7745,13 +7910,13 @@
       }
       const gray = Math.round(Math.min(255, 0.1 * (rgb[0] + rgb[1] + rgb[2])));
       const edge = (w, a) => new GeoJsonLayer({
-        id: `ix-shadow-${this.name}-${w}`, data: this._shadowCache.data, pickable: false,
+        id: this._dataLayerId(`ix-shadow-${this.name}-${w}`), data: this._shadowCache.data, pickable: false,
         filled: false, stroked: true, getLineColor: [gray, gray, gray, Math.round(255 * a)],
         lineWidthUnits: 'pixels', getLineWidth: w * blur / 3, lineJointRounded: true,
         parameters: { depthCompare: 'always' }
       });
       return [new GeoJsonLayer({
-        id: `ix-shadow-${this.name}`, data: this._shadowCache.data, pickable: false,
+        id: this._dataLayerId(`ix-shadow-${this.name}`), data: this._shadowCache.data, pickable: false,
         filled: true, stroked: false, getFillColor: [gray, gray, gray, 128],
         parameters: { depthCompare: 'always' }
       }), edge(12, 0.05), edge(6, 0.105), edge(3, 0.176)];
@@ -7836,7 +8001,7 @@
       };
       const grayOf = ([r, g, b]) => { const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b); return [y, y, y]; };
       return [new GeoJsonLayer({
-        id: `ix-choropleth-${this.name}`,
+        id: this._dataLayerId(`ix-choropleth-${this.name}`),
         data: { type: 'FeatureCollection', features: data },
         pickable: true,
         stroked: true,
