@@ -59,7 +59,7 @@
     {
      "id": "ix-glow-AREU-g0",
      "type": "IconLayer",
-     "count": 40101,
+     "count": 26072,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -71,13 +71,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b124be62a9d9f55f",
-     "setDigest": "7245aa13953d8dd7",
+     "digest": "0f4e5ee8eb36287b",
+     "setDigest": "c3c29b827fdad4a6",
      "columnDigests": {
-      "getColor": "8c70452c95eed0eb",
-      "getIcon": "372cd4b4afd3803b",
-      "getPosition": "dc725bf2de88f64e",
-      "getSize": "395a9f60d860b375"
+      "getColor": "abb8b4318b8bf633",
+      "getIcon": "8ab32dd29f87d9c7",
+      "getPosition": "1ce27551c94ae21a",
+      "getSize": "5b7a26aed3a6648d"
      },
      "stats": {
       "getColor": [
@@ -89,8 +89,8 @@
        9.893034
       ],
       "getSize": [
-       0.9,
-       179.697376
+       1.1,
+       275.758117
       ]
      },
      "sample": [
@@ -236,50 +236,29 @@
         "width": 64
        },
        [
-        9.6699,
-        45.70535
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.84876,
-        45.690481
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
         9.18609,
         45.55476
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2416,
+        45.50492
        ],
        1.1
       ],
@@ -341,27 +320,6 @@
         "width": 64
        },
        [
-        9.215043,
-        45.532041
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
         9.24246,
         45.3339
        ],
@@ -383,50 +341,8 @@
         "width": 64
        },
        [
-        8.982461,
-        45.772794
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
         9.0668,
         45.73107
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.22432,
-        45.75723
        ],
        1.1
       ],
@@ -509,8 +425,92 @@
         "width": 64
        },
        [
-        9.16527,
-        45.47595
+        9.663655,
+        45.647812
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.868795,
+        45.278599
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        8.69395,
+        45.71351
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.647992,
+        45.422345
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.862907,
+        45.413648
        ],
        1.1
       ]
@@ -519,7 +519,7 @@
     {
      "id": "ix-bubbles-AREU-g0",
      "type": "IconLayer",
-     "count": 40101,
+     "count": 26072,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -531,13 +531,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "831e658494aada5b",
-     "setDigest": "fdb5154982ed56dc",
+     "digest": "7bf225264c6656e2",
+     "setDigest": "d1a93b01d0e57a0a",
      "columnDigests": {
-      "getColor": "8c70452c95eed0eb",
-      "getIcon": "374547ea21122a3d",
-      "getPosition": "dc725bf2de88f64e",
-      "getSize": "2060eb81842ee4eb"
+      "getColor": "abb8b4318b8bf633",
+      "getIcon": "ed2fb67ff6741dcb",
+      "getPosition": "1ce27551c94ae21a",
+      "getSize": "23147b58d96feb47"
      },
      "stats": {
       "getColor": [
@@ -550,7 +550,7 @@
       ],
       "getSize": [
        0.2,
-       39.93275
+       61.279582
       ]
      },
      "sample": [
@@ -696,50 +696,29 @@
         "width": 48
        },
        [
-        9.6699,
-        45.70535
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.84876,
-        45.690481
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
         9.18609,
         45.55476
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2416,
+        45.50492
        ],
        0.2
       ],
@@ -801,27 +780,6 @@
         "width": 48
        },
        [
-        9.215043,
-        45.532041
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
         9.24246,
         45.3339
        ],
@@ -843,50 +801,8 @@
         "width": 48
        },
        [
-        8.982461,
-        45.772794
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
         9.0668,
         45.73107
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.22432,
-        45.75723
        ],
        0.2
       ],
@@ -969,8 +885,92 @@
         "width": 48
        },
        [
-        9.16527,
-        45.47595
+        9.663655,
+        45.647812
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.868795,
+        45.278599
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        8.69395,
+        45.71351
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.647992,
+        45.422345
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.862907,
+        45.413648
        ],
        0.2
       ]
@@ -1105,8 +1105,8 @@
     ],
     "AREU": [
      "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 1 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 34 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 12 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 27 feriti</div>"
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Caduta da veicolo: 1 feriti</div>",
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 47 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 24 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 23 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 11 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 24 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 8 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in sosta: 4 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 49 feriti</div>"
     ]
    },
    "validation": null
@@ -1169,7 +1169,7 @@
     {
      "id": "ix-glow-AREU-g0",
      "type": "IconLayer",
-     "count": 21898,
+     "count": 21901,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -1181,13 +1181,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "d7e0eeca26dcaf50",
-     "setDigest": "6303d02480f13dd6",
+     "digest": "c43c53baf34f9345",
+     "setDigest": "2b51ae9033ad87bc",
      "columnDigests": {
-      "getColor": "4d8252caa638065c",
-      "getIcon": "a732173c799bd183",
-      "getPosition": "d39febf997480bda",
-      "getSize": "936995032caaaca3"
+      "getColor": "cd8dbdedac350a5d",
+      "getIcon": "585dcd50a8bdaf69",
+      "getPosition": "953607cc146d26ba",
+      "getSize": "3c65a148034aa632"
      },
      "stats": {
       "getColor": [
@@ -1195,12 +1195,12 @@
        255
       ],
       "getPosition": [
-       8.838456,
-       9.541466
+       8.838505,
+       9.54122
       ],
       "getSize": [
        1.1,
-       224.90761
+       227.89647
       ]
      },
      "sample": [
@@ -1264,6 +1264,27 @@
        [
         9.18609,
         45.55476
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.2416,
+        45.50492
        ],
        1.1
       ],
@@ -1409,8 +1430,50 @@
         "width": 64
        },
        [
-        9.22041,
-        45.54789
+        8.84594,
+        45.31875
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.30476,
+        45.53884
        ],
        1.1
       ],
@@ -1560,76 +1623,13 @@
         45.53991
        ],
        1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-0,102,204",
-        "url": "#332e7561:8594",
-        "width": 64
-       },
-       [
-        8.903028,
-        45.620704
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-0,102,204",
-        "url": "#332e7561:8594",
-        "width": 64
-       },
-       [
-        9.325394,
-        45.527154
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
-        9.419748,
-        45.613017
-       ],
-       1.1
       ]
      ]
     },
     {
      "id": "ix-bubbles-AREU-g0",
      "type": "IconLayer",
-     "count": 21898,
+     "count": 21901,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -1641,13 +1641,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "07547cc094d0e6d5",
-     "setDigest": "44f47a1e3a88add8",
+     "digest": "06d0664c904ba14e",
+     "setDigest": "1d33df7989134548",
      "columnDigests": {
-      "getColor": "4d8252caa638065c",
-      "getIcon": "735112f88872becd",
-      "getPosition": "d39febf997480bda",
-      "getSize": "a3a3bee9d2f81b9d"
+      "getColor": "cd8dbdedac350a5d",
+      "getIcon": "f9f463389a6ad7e0",
+      "getPosition": "953607cc146d26ba",
+      "getSize": "4d5c6fd6e9ef6aa0"
      },
      "stats": {
       "getColor": [
@@ -1655,12 +1655,12 @@
        255
       ],
       "getPosition": [
-       8.838456,
-       9.541466
+       8.838505,
+       9.54122
       ],
       "getSize": [
        0.2,
-       49.979469
+       50.64366
       ]
      },
      "sample": [
@@ -1724,6 +1724,27 @@
        [
         9.18609,
         45.55476
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.2416,
+        45.50492
        ],
        0.2
       ],
@@ -1869,8 +1890,50 @@
         "width": 48
        },
        [
-        9.22041,
-        45.54789
+        8.84594,
+        45.31875
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.30476,
+        45.53884
        ],
        0.2
       ],
@@ -2018,69 +2081,6 @@
        [
         9.03251,
         45.53991
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-0,102,204-0.9-none-0",
-        "url": "#e1808d02:1626",
-        "width": 48
-       },
-       [
-        8.903028,
-        45.620704
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-0,102,204-0.9-none-0",
-        "url": "#e1808d02:1626",
-        "width": 48
-       },
-       [
-        9.325394,
-        45.527154
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
-        9.419748,
-        45.613017
        ],
        0.2
       ]
@@ -2216,7 +2216,7 @@
     "AREU": [
      "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
      "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in sosta: 1 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 35 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 12 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 27 feriti</div>"
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 30 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 8 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 6 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 3 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 6 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con ostacolo accidentale: 9 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 13 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 25 feriti</div>"
     ]
    },
    "validation": null
@@ -2279,7 +2279,7 @@
     {
      "id": "ix-glow-AREU-g0",
      "type": "IconLayer",
-     "count": 42308,
+     "count": 42260,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -2291,13 +2291,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0f29507b8e5494b5",
-     "setDigest": "b73a7518899ad91e",
+     "digest": "cd7a074401b63143",
+     "setDigest": "b432727c19fb94af",
      "columnDigests": {
-      "getColor": "ff592c960b9d807c",
-      "getIcon": "c301726c2cc1643d",
-      "getPosition": "636fd266ad75dd23",
-      "getSize": "bfe1656a49ec6ca7"
+      "getColor": "7ee617d8ee6468a2",
+      "getIcon": "af03fb97c29b915f",
+      "getPosition": "e95b5f59f43dedfd",
+      "getSize": "f8f278dd27f8b54f"
      },
      "stats": {
       "getColor": [
@@ -2310,7 +2310,7 @@
       ],
       "getSize": [
        1.1,
-       121.079016
+       150.061224
       ]
      },
      "sample": [
@@ -2603,27 +2603,6 @@
         "width": 64
        },
        [
-        9.2416,
-        45.50492
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
         9.063172,
         45.5328
        ],
@@ -2733,13 +2712,34 @@
         45.75723
        ],
        1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        8.702046,
+        45.769144
+       ],
+       1.1
       ]
      ]
     },
     {
      "id": "ix-bubbles-AREU-g0",
      "type": "IconLayer",
-     "count": 42308,
+     "count": 42260,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -2751,13 +2751,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "09b15ff312321b0c",
-     "setDigest": "b087c6a5c11a4364",
+     "digest": "4b226eb125ad4ba7",
+     "setDigest": "ea0fe0592232b2f6",
      "columnDigests": {
-      "getColor": "ff592c960b9d807c",
-      "getIcon": "43a7af277130126d",
-      "getPosition": "636fd266ad75dd23",
-      "getSize": "7394fd0938367890"
+      "getColor": "7ee617d8ee6468a2",
+      "getIcon": "5ef077456b5834d2",
+      "getPosition": "e95b5f59f43dedfd",
+      "getSize": "013e1a7de44db14b"
      },
      "stats": {
       "getColor": [
@@ -2770,7 +2770,7 @@
       ],
       "getSize": [
        0.2,
-       26.906448
+       33.346939
       ]
      },
      "sample": [
@@ -3063,27 +3063,6 @@
         "width": 48
        },
        [
-        9.2416,
-        45.50492
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
         9.063172,
         45.5328
        ],
@@ -3191,6 +3170,27 @@
        [
         9.22432,
         45.75723
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        8.702046,
+        45.769144
        ],
        0.2
       ]
@@ -3326,7 +3326,7 @@
     "AREU": [
      "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
      "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Caduta da veicolo: 1 feriti</div>",
-     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 45 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 6 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 6 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 3 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 7 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 3 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 9 feriti</div>"
+     "<h3><b>Numero dei feriti per natura dell'incidente</h3></b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 13 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 10 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 15 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 33 feriti</div>"
     ]
    },
    "validation": null

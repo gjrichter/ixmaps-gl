@@ -20,7 +20,8 @@ const flags = (...f) => new Set(f);
 
 // ---- range classes
 test('computeRangeClasses: min/max/median, equal interval by default (flat range rules), labels via the formatter', () => {
-  const r = G.computeRangeClasses([1, 2, 3, 4, 5, 'x'].map(v => feat({ v })), { value: 'v' }, { classes: 2 }, flags(), x => `#${x}`);
+  // a feature without a data row (a polygon no record joins) is no item
+  const r = G.computeRangeClasses([1, 2, 3, 4, 5].map(v => feat({ v })).concat(feat({})), { value: 'v' }, { classes: 2 }, flags(), x => `#${x}`);
   assert.equal(r._valueMin, 1);
   assert.equal(r._valueMax, 5);
   assert.equal(r._valueMedian, 3);
@@ -42,8 +43,16 @@ test('computeRangeClasses: QUANTILE and NATURAL pick their break functions', () 
   assert.deepEqual(plain(n.partsA), withFlatMax(plain(G.naturalBreaks([1, 2, 3, 10, 11, 12], 2))));
 });
 
-test('computeRangeClasses: no numeric value at all → null (the runtime keeps nothing)', () => {
-  assert.equal(G.computeRangeClasses([feat({ v: 'a' })], { value: 'v' }, {}, flags(), String), null);
+test('computeRangeClasses: no value at all → null (the runtime keeps nothing)', () => {
+  assert.equal(G.computeRangeClasses([feat({})], { value: 'v' }, {}, flags(), String), null, 'no data row');
+  assert.equal(G.computeRangeClasses([feat({ v: 'a' })], { value: 'v' }, {}, flags('UNDEFINEDISNOTVALUE'), String), null);
+});
+
+test('computeRangeClasses: a value that is no number counts as 0 (flat, maptheme.js 9787-9793), unless UNDEFINEDISNOTVALUE; ZEROISNOTVALUE drops 0', () => {
+  const fs = [feat({ v: '' }), feat({ v: 'x' }), feat({ v: 4 })];
+  assert.equal(G.computeRangeClasses(fs, { value: 'v' }, { classes: 2 }, flags(), String)._valueMin, 0);
+  assert.equal(G.computeRangeClasses(fs, { value: 'v' }, { classes: 2 }, flags('UNDEFINEDISNOTVALUE'), String)._valueMin, 4);
+  assert.equal(G.computeRangeClasses([feat({ v: 0 }), feat({ v: 4 })], { value: 'v' }, { classes: 2 }, flags('ZEROISNOTVALUE'), String)._valueMin, 4);
 });
 
 // ---- multi-field / DOMINANT
@@ -61,6 +70,26 @@ test('computeDominantStats: mean/min over every finite value incl. 0 (mean ÷ it
   assert.deepEqual(plain(r._dominantStdDevs), [1, 2], 'flat getDeviationOfArray over the truthy pool [2,4] / [6,10]');
   const withUnjoined = G.computeDominantStats([feat({ a: 2, b: 0 }), feat({ a: 4, b: 6 }), feat({ a: 'x', b: 10 }), feat({})], { value: 'a|b' }, {});
   assert.deepEqual(plain(withUnjoined._dominantMeans), [2, 16 / 3], 'a polygon without a joined record is not an item');
+});
+
+test('computeDominantStats: with a field100 the mean is flat\'s pooled Σ field / Σ field100 · 100 (nOrigSumA / nSum100), not the mean of the percentages', () => {
+  // items already carry the percentages (applyField100): a 10/20 → 50 %, 30/80 → 37.5 %
+  const items = [feat({ a: 50, t: 20 }), feat({ a: 37.5, t: 80 })];
+  const r = G.computeDominantStats(items, { value: 'a', field100: 't' }, {}, new Set(['DOMINANT']));
+  assert.deepEqual(plain(r._dominantMeans), [40], '(10 + 30) / (20 + 80) · 100');
+  const d = G.computeDominantStats(items, { value: 'a', field100: 't' }, {}, new Set(['DOMINANT', 'DIFFERENCE']));
+  assert.deepEqual(plain(d._dominantMeans), [43.75], 'DIFFERENCE: flat keeps nSumA / nCount');
+});
+
+test('legend labels: .style({label}) names range classes and multi-field classes (flat szLabelA), else the range texts / fields', () => {
+  const feats = [feat({ v: -10 }), feat({ v: 20 })];
+  const named = G.computeRangeClasses(feats, { value: 'v' }, { colorscheme: ['red', 'blue'], label: ['down', 'up'] }, new Set(), String);
+  assert.deepEqual(plain(named.categoryDisplayLabels), ['down', 'up']);
+  const plainRanges = G.computeRangeClasses(feats, { value: 'v' }, { colorscheme: ['red', 'blue'] }, new Set(), String);
+  assert.equal(plainRanges.categoryDisplayLabels, undefined, 'the legend shows categoryLabels, the range texts');
+  const multi = G.computeMultiFieldClasses({ value: 'a|b' }, { label: ['A', 'B', 'extra'] });
+  assert.deepEqual(plain(multi.categoryDisplayLabels), ['A', 'B'], 'extra labels are dropped, as flat pops them');
+  assert.deepEqual(plain(multi.categoryLabels), ['a', 'b'], 'the class keys stay the fields');
 });
 
 test('resolveDominantClass: plain = highest raw value; PERCENTOFMEAN / DEVIATION rank relative to the field', () => {

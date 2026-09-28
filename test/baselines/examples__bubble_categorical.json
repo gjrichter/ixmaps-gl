@@ -17,7 +17,7 @@
     {
      "id": "ix-glow-AREU-g0",
      "type": "IconLayer",
-     "count": 15177,
+     "count": 15018,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -29,13 +29,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "23967d5d5202a27a",
-     "setDigest": "52a76507c99e417c",
+     "digest": "2bddfd24cfff73bc",
+     "setDigest": "eca3a7e843a316e6",
      "columnDigests": {
-      "getColor": "f71ac8df07068882",
-      "getIcon": "1a5a0a50fd987838",
-      "getPosition": "6f2208f5223199f3",
-      "getSize": "09b79af4ac9ba291"
+      "getColor": "5decb57345858034",
+      "getIcon": "dbfae30f80736fe4",
+      "getPosition": "1ef1ed592e19a95d",
+      "getSize": "9583dfde9f8e517c"
      },
      "stats": {
       "getColor": [
@@ -48,7 +48,7 @@
       ],
       "getSize": [
        1.1,
-       218.449019
+       214.649616
       ]
      },
      "sample": [
@@ -131,27 +131,6 @@
         "width": 64
        },
        [
-        9.27967,
-        45.47362
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-221,187,34",
-        "url": "#e54167ab:9970",
-        "width": 64
-       },
-       [
         9.0873,
         45.42558
        ],
@@ -194,8 +173,8 @@
         "width": 64
        },
        [
-        9.16897,
-        45.47438
+        9.18775,
+        45.44564
        ],
        1.1
       ],
@@ -322,6 +301,27 @@
        [
         9.15308,
         45.45713
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,0,136",
+        "url": "#a9f75162:7542",
+        "width": 64
+       },
+       [
+        9.16941,
+        45.52046
        ],
        1.1
       ],
@@ -477,7 +477,7 @@
     {
      "id": "ix-bubbles-AREU-g0",
      "type": "IconLayer",
-     "count": 15177,
+     "count": 15018,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -489,13 +489,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "3b562d69595d1b20",
-     "setDigest": "aafc0aadea7a7865",
+     "digest": "27ea4e29ccfc317e",
+     "setDigest": "5595bb724b06039f",
      "columnDigests": {
-      "getColor": "f71ac8df07068882",
-      "getIcon": "317fdf29cb3ab641",
-      "getPosition": "6f2208f5223199f3",
-      "getSize": "dacebc5cd7b37757"
+      "getColor": "5decb57345858034",
+      "getIcon": "d6bf68bc17fac770",
+      "getPosition": "1ef1ed592e19a95d",
+      "getSize": "ecf550cc2435cbd3"
      },
      "stats": {
       "getColor": [
@@ -508,7 +508,7 @@
       ],
       "getSize": [
        0.2,
-       48.544226
+       47.699915
       ]
      },
      "sample": [
@@ -591,27 +591,6 @@
         "width": 48
        },
        [
-        9.27967,
-        45.47362
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-221,187,34-0.9-none-0",
-        "url": "#73d6ca84:1734",
-        "width": 48
-       },
-       [
         9.0873,
         45.42558
        ],
@@ -654,8 +633,8 @@
         "width": 48
        },
        [
-        9.16897,
-        45.47438
+        9.18775,
+        45.44564
        ],
        0.2
       ],
@@ -782,6 +761,27 @@
        [
         9.15308,
         45.45713
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-255,0,136-0.9-none-0",
+        "url": "#711a504c:1522",
+        "width": 48
+       },
+       [
+        9.16941,
+        45.52046
        ],
        0.2
       ],
@@ -937,7 +937,7 @@
     {
      "id": "ix-points-values-AREU",
      "type": "TextLayer",
-     "count": 12950,
+     "count": 12799,
      "constants": {
       "fontFamily": "arial",
       "fontWeight": "bold",
@@ -952,13 +952,13 @@
       "getSize",
       "getText"
      ],
-     "digest": "358f4e42da248ca6",
-     "setDigest": "d43c23ce915eee38",
+     "digest": "54feb2a0d830fc16",
+     "setDigest": "297383585ef274ea",
      "columnDigests": {
-      "getColor": "d859164570d8a7c5",
-      "getPosition": "6f0aeaffa5b1b936",
-      "getSize": "1e78a489d1d7ccb6",
-      "getText": "8fef5d54a4e2f1de"
+      "getColor": "cfc46eeafe87ed94",
+      "getPosition": "be0e9b228ce1bddf",
+      "getSize": "f8dacf03a829e38a",
+      "getText": "e59694aae3f17a39"
      },
      "stats": {
       "getColor": [
@@ -1062,19 +1062,6 @@
        [
         9.18777,
         45.43597
-       ],
-       2.549668,
-       "1"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        9.2317,
-        45.45517
        ],
        2.549668,
        "1"
@@ -1229,6 +1216,19 @@
         30
        ],
        [
+        9.20595,
+        45.46768
+       ],
+       2.549668,
+       "1"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
         9.15486,
         45.46488
        ],
@@ -1240,7 +1240,7 @@
     {
      "id": "ix-cluster-values-AREU",
      "type": "TextLayer",
-     "count": 3292,
+     "count": 3339,
      "constants": {
       "fontFamily": "arial",
       "fontWeight": "bold",
@@ -1256,14 +1256,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "eb699306f4dec8af",
-     "setDigest": "9bff20a283f602e4",
+     "digest": "be69bc3dfba40836",
+     "setDigest": "f3f42f92643e0942",
      "columnDigests": {
-      "getColor": "43c70e5c80ee6f04",
-      "getPixelOffset": "d5b03daa80f1537c",
-      "getPosition": "a25ef9371a5736f8",
-      "getSize": "0c656c42c4ae0a52",
-      "getText": "f6b6277859dc1408"
+      "getColor": "f46ab26d91a008ba",
+      "getPixelOffset": "96a4518d27d4e585",
+      "getPosition": "c2870354feb754c3",
+      "getSize": "e40675a3496061cb",
+      "getText": "5be01bf470470ade"
      },
      "stats": {
       "getColor": [
@@ -1271,16 +1271,16 @@
        255
       ],
       "getPixelOffset": [
-       -9.743934,
-       11.978704
+       -10.613111,
+       9.659062
       ],
       "getPosition": [
-       9.066432,
-       9.308956
+       9.065915,
+       9.308918
       ],
       "getSize": [
-       1.075103,
-       12.420433
+       1.097422,
+       12.872232
       ]
      },
      "sample": [
@@ -1295,8 +1295,8 @@
         0
        ],
        [
-        9.20866,
-        45.481337
+        9.208647,
+        45.481153
        ],
        4.780627,
        "4"
@@ -1312,11 +1312,11 @@
         0
        ],
        [
-        9.23614,
-        45.508875
+        9.23615,
+        45.508748
        ],
-       3.380414,
-       "2"
+       5.855048,
+       "6"
       ],
       [
        [
@@ -1342,15 +1342,15 @@
         30
        ],
        [
-        7.393877,
-        -9.73865
+        5.862502,
+        -5.776085
        ],
        [
-        9.176142,
-        45.443634
+        9.176283,
+        45.443586
        ],
-       4.559915,
-       "18"
+       3.557281,
+       "10"
       ],
       [
        [
@@ -1359,14 +1359,14 @@
         30
        ],
        [
-        -5.384728,
-        8.370557
+        -5.303896,
+        5.227293
        ],
        [
-        9.176142,
-        45.443634
+        9.176283,
+        45.443586
        ],
-       1.861577,
+       1.948403,
        "3"
       ],
       [
@@ -1376,15 +1376,15 @@
         255
        ],
        [
-        1.423815,
-        -4.373119
+        1.078933,
+        -1.471549
        ],
        [
-        9.176142,
-        45.443634
+        9.176283,
+        45.443586
        ],
-       1.861577,
-       "3"
+       1.590864,
+       "2"
       ],
       [
        [
@@ -1393,32 +1393,15 @@
         255
        ],
        [
-        -4.768942,
-        3.757532
+        -1.637538,
+        2.020342
        ],
        [
-        9.176142,
-        45.443634
+        9.176283,
+        45.443586
        ],
-       1.861577,
+       1.948403,
        "3"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        1.335978,
-        1.983679
-       ],
-       [
-        9.176142,
-        45.443634
-       ],
-       3.224347,
-       "9"
       ],
       [
        [
@@ -1431,11 +1414,11 @@
         0
        ],
        [
-        9.162676,
-        45.469327
+        9.16267,
+        45.469297
        ],
-       8.943734,
-       "14"
+       5.344903,
+       "5"
       ],
       [
        [
@@ -1444,15 +1427,32 @@
         30
        ],
        [
-        0,
+        4.049376,
         0
        ],
        [
-        9.229695,
-        45.495945
+        9.229897,
+        45.496103
        ],
-       4.140144,
-       "3"
+       4.319334,
+       "8"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -4.049376,
+        0
+       ],
+       [
+        9.229897,
+        45.496103
+       ],
+       2.159667,
+       "2"
       ],
       [
        [
@@ -1478,15 +1478,15 @@
         30
        ],
        [
-        8.486828,
-        -4.885307
+        9.659062,
+        -9.642312
        ],
        [
-        9.194654,
-        45.495655
+        9.194553,
+        45.495573
        ],
-       3.664067,
-       "8"
+       4.865649,
+       "17"
       ],
       [
        [
@@ -1495,15 +1495,15 @@
         30
        ],
        [
-        -9.021091,
-        5.224698
+        -10.613111,
+        10.653117
        ],
        [
-        9.194654,
-        45.495655
+        9.194553,
+        45.495573
        ],
-       5.181773,
-       "16"
+       5.535128,
+       "22"
       ],
       [
        [
@@ -1512,15 +1512,83 @@
         255
        ],
        [
-        0.534263,
-        -0.339391
+        3.275065,
+        -3.252715
        ],
        [
-        9.194654,
-        45.495655
+        9.194553,
+        45.495573
        ],
-       3.664067,
-       "8"
+       2.360187,
+       "4"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -2.321015,
+        2.24191
+       ],
+       [
+        9.194553,
+        45.495573
+       ],
+       3.913927,
+       "11"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        4.243414,
+        -2.442653
+       ],
+       [
+        9.231813,
+        45.455056
+       ],
+       1.832033,
+       "2"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -4.510546,
+        2.612349
+       ],
+       [
+        9.231813,
+        45.455056
+       ],
+       2.590886,
+       "4"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0.267131,
+        -0.169695
+       ],
+       [
+        9.231813,
+        45.455056
+       ],
+       1.832033,
+       "2"
       ],
       [
        [
@@ -1550,79 +1618,11 @@
         0
        ],
        [
-        9.08555,
-        45.47745
+        9.08539,
+        45.477363
        ],
-       3.380414,
-       "2"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        6.848568,
-        -7.189922
-       ],
-       [
-        9.207243,
-        45.476644
-       ],
-       2.657612,
-       "5"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -7.650933,
-        7.91368
-       ],
-       [
-        9.207243,
-        45.476644
-       ],
-       2.657612,
-       "5"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        3.411688,
-        -2.400177
-       ],
-       [
-        9.207243,
-        45.476644
-       ],
-       2.058577,
+       4.140144,
        "3"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -2.609324,
-        1.676419
-       ],
-       [
-        9.207243,
-        45.476644
-       ],
-       3.75843,
-       "10"
       ]
      ]
     }
@@ -1733,7 +1733,7 @@
     "AREU": [
      "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
      "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 1 feriti</div>",
-     "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 18 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 16 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 19 feriti</div>"
+     "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 16 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 4 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con ostacolo accidentale: 8 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 16 feriti</div>"
     ]
    },
    "validation": null
@@ -1754,7 +1754,7 @@
     {
      "id": "ix-glow-AREU-g0",
      "type": "IconLayer",
-     "count": 11051,
+     "count": 11014,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -1766,13 +1766,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "1e15dc62b756af75",
-     "setDigest": "58e0bff21ba3e015",
+     "digest": "8977c4902d7a0cc7",
+     "setDigest": "317872d17f519ac2",
      "columnDigests": {
-      "getColor": "ab5b2f3c29856c33",
-      "getIcon": "09c53ef1c751e924",
-      "getPosition": "baf5a8a278ab8fce",
-      "getSize": "7dc1aea791108b7f"
+      "getColor": "03fc1cf7b38ef4ea",
+      "getIcon": "7c55ec33ea6ce559",
+      "getPosition": "cdc672ca06d43d9f",
+      "getSize": "5c931b7f2faf1c3c"
      },
      "stats": {
       "getColor": [
@@ -1785,7 +1785,7 @@
       ],
       "getSize": [
        1.1,
-       242.429626
+       247.758386
       ]
      },
      "sample": [
@@ -2078,8 +2078,8 @@
         "width": 64
        },
        [
-        9.19136,
-        45.45715
+        9.1827,
+        45.48106
        ],
        1.1
       ],
@@ -2183,8 +2183,8 @@
         "width": 64
        },
        [
-        9.20629,
-        45.47394
+        9.20109,
+        45.4465
        ],
        1.1
       ],
@@ -2204,8 +2204,8 @@
         "width": 64
        },
        [
-        9.20109,
-        45.4465
+        9.21336,
+        45.46761
        ],
        1.1
       ]
@@ -2214,7 +2214,7 @@
     {
      "id": "ix-bubbles-AREU-g0",
      "type": "IconLayer",
-     "count": 11051,
+     "count": 11014,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -2226,13 +2226,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "80561d15f688215b",
-     "setDigest": "6db6582405bbb95e",
+     "digest": "03f633f18e40a63e",
+     "setDigest": "eb1516436aff1df8",
      "columnDigests": {
-      "getColor": "ab5b2f3c29856c33",
-      "getIcon": "7663d2596ae0c3e1",
-      "getPosition": "baf5a8a278ab8fce",
-      "getSize": "e7d3c05a1cdb930e"
+      "getColor": "03fc1cf7b38ef4ea",
+      "getIcon": "55b884ac85858957",
+      "getPosition": "cdc672ca06d43d9f",
+      "getSize": "62f6f3da807e6861"
      },
      "stats": {
       "getColor": [
@@ -2245,7 +2245,7 @@
       ],
       "getSize": [
        0.2,
-       53.87325
+       55.057419
       ]
      },
      "sample": [
@@ -2538,8 +2538,8 @@
         "width": 48
        },
        [
-        9.19136,
-        45.45715
+        9.1827,
+        45.48106
        ],
        0.2
       ],
@@ -2643,8 +2643,8 @@
         "width": 48
        },
        [
-        9.20629,
-        45.47394
+        9.20109,
+        45.4465
        ],
        0.2
       ],
@@ -2664,8 +2664,8 @@
         "width": 48
        },
        [
-        9.20109,
-        45.4465
+        9.21336,
+        45.46761
        ],
        0.2
       ]
@@ -2674,7 +2674,7 @@
     {
      "id": "ix-points-values-AREU",
      "type": "TextLayer",
-     "count": 9671,
+     "count": 9660,
      "constants": {
       "fontFamily": "arial",
       "fontWeight": "bold",
@@ -2689,13 +2689,13 @@
       "getSize",
       "getText"
      ],
-     "digest": "c6fb417daeeacb6e",
-     "setDigest": "295c80018276bce0",
+     "digest": "100e6d392ce1bcdc",
+     "setDigest": "c1b1476e812a2e40",
      "columnDigests": {
-      "getColor": "468f56f3f990defd",
-      "getPosition": "6eadbdbdb676519f",
-      "getSize": "cc9046038663c647",
-      "getText": "1176d68777237057"
+      "getColor": "03e1ebe7f2134d6f",
+      "getPosition": "8caa1b8fb781eba1",
+      "getSize": "1500c82743aaf172",
+      "getText": "e15cdb3be2d2ada7"
      },
      "stats": {
       "getColor": [
@@ -2708,7 +2708,7 @@
       ],
       "getSize": [
        3.21238,
-       9.085983
+       15.737384
       ]
      },
      "sample": [
@@ -2771,11 +2771,11 @@
         30
        ],
        [
-        9.14618,
-        45.45952
+        9.2317,
+        45.45517
        ],
-       5.564005,
-       "3"
+       3.21238,
+       "1"
       ],
       [
        [
@@ -2802,19 +2802,6 @@
        ],
        4.542991,
        "2"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        9.20719,
-        45.47651
-       ],
-       3.21238,
-       "1"
       ],
       [
        [
@@ -2971,13 +2958,26 @@
        ],
        3.21238,
        "1"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        9.19217,
+        45.47808
+       ],
+       3.21238,
+       "1"
       ]
      ]
     },
     {
      "id": "ix-cluster-values-AREU",
      "type": "TextLayer",
-     "count": 1878,
+     "count": 1896,
      "constants": {
       "fontFamily": "arial",
       "fontWeight": "bold",
@@ -2993,14 +2993,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "7a7007ccf26d6d79",
-     "setDigest": "06554e8d89b1a424",
+     "digest": "bf82a3872ec0d2d7",
+     "setDigest": "512d637a9ecaf0a4",
      "columnDigests": {
-      "getColor": "a3265b64b9ab69e0",
-      "getPixelOffset": "2b9654686b6c18aa",
-      "getPosition": "4dc1b372512270a2",
-      "getSize": "ede73a7c118c9a24",
-      "getText": "921e2ad23673983b"
+      "getColor": "41c374e8f43f0a49",
+      "getPixelOffset": "32727bd20c250faf",
+      "getPosition": "620bb6822070129c",
+      "getSize": "ba364e3424de5fc2",
+      "getText": "4c8ca5680f195edf"
      },
      "stats": {
       "getColor": [
@@ -3008,16 +3008,16 @@
        255
       ],
       "getPixelOffset": [
-       -11.035683,
-       13.187765
+       -12.578457,
+       12.417307
       ],
       "getPosition": [
-       9.12834,
+       9.128005,
        9.252096
       ],
       "getSize": [
-       1.356427,
-       15.058031
+       1.904007,
+       15.935922
       ]
      },
      "sample": [
@@ -3062,15 +3062,32 @@
         30
        ],
        [
-        6.636495,
-        -3.824098
+        8.56614,
+        -4.931835
        ],
        [
-        9.176334,
-        45.443607
+        9.1762,
+        45.443615
        ],
-       4.730961,
-       "9"
+       5.219752,
+       "11"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        -7.649426,
+        4.441376
+       ],
+       [
+        9.1762,
+        45.443615
+       ],
+       2.725926,
+       "3"
       ],
       [
        [
@@ -3079,32 +3096,15 @@
         255
        ],
        [
-        -5.726071,
-        3.317008
+        -0.916714,
+        0.490459
        ],
        [
-        9.176334,
-        45.443607
+        9.1762,
+        45.443615
        ],
-       2.230196,
-       "2"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -0.910423,
-        0.507091
-       ],
-       [
-        9.176334,
-        45.443607
-       ],
-       2.230196,
-       "2"
+       3.519156,
+       "5"
       ],
       [
        [
@@ -3117,11 +3117,11 @@
         0
        ],
        [
-        9.162662,
-        45.469313
+        9.162676,
+        45.469327
        ],
-       6.734156,
-       "5"
+       11.268399,
+       "14"
       ],
       [
        [
@@ -3147,15 +3147,15 @@
         30
        ],
        [
-        9.459527,
-        -9.419254
+        10.645083,
+        -6.127187
        ],
        [
-        9.194602,
-        45.495626
+        9.19464,
+        45.495657
        ],
-       4.312013,
-       "9"
+       4.662164,
+       "8"
       ],
       [
        [
@@ -3164,15 +3164,15 @@
         30
        ],
        [
-        -10.71899,
-        10.74759
+        -11.170643,
+        6.47131
        ],
        [
-        9.194602,
-        45.495626
+        9.19464,
+        45.495657
        ],
-       5.926295,
-       "17"
+       6.167463,
+       "14"
       ],
       [
        [
@@ -3181,32 +3181,15 @@
         255
        ],
        [
-        3.400373,
-        -3.45522
+        0.52556,
+        -0.344123
        ],
        [
-        9.194602,
-        45.495626
+        9.19464,
+        45.495657
        ],
-       2.489542,
-       "3"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -2.14091,
-        2.126883
-       ],
-       [
-        9.194602,
-        45.495626
-       ],
-       3.802838,
-       "7"
+       4.662164,
+       "8"
       ],
       [
        [
@@ -3215,14 +3198,31 @@
         30
        ],
        [
-        5.346367,
-        -3.07755
+        0,
+        0
        ],
        [
-        9.231813,
-        45.455056
+        9.146173,
+        45.459507
        ],
-       2.308217,
+       6.734156,
+       "5"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        5.474906,
+        -6.951485
+       ],
+       [
+        9.207085,
+        45.476458
+       ],
+       1.904007,
        "2"
       ],
       [
@@ -3232,15 +3232,15 @@
         255
        ],
        [
-        -5.682931,
-        3.291353
+        -5.637399,
+        8.028442
        ],
        [
-        9.231813,
-        45.455056
+        9.207085,
+        45.476458
        ],
-       3.264312,
-       "4"
+       3.010499,
+       "5"
       ],
       [
        [
@@ -3249,14 +3249,48 @@
         255
        ],
        [
-        0.336564,
-        -0.213803
+        1.601555,
+        -4.184735
        ],
        [
-        9.231813,
-        45.455056
+        9.207085,
+        45.476458
        ],
-       2.308217,
+       1.904007,
+       "2"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -2.887933,
+        2.534945
+       ],
+       [
+        9.207085,
+        45.476458
+       ],
+       1.904007,
+       "2"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        1.448871,
+        0.572832
+       ],
+       [
+        9.207085,
+        45.476458
+       ],
+       1.904007,
        "2"
       ],
       [
@@ -3266,15 +3300,15 @@
         30
        ],
        [
-        4.903114,
+        5.819963,
         0
        ],
        [
-        9.229937,
-        45.496123
+        9.229973,
+        45.496147
        ],
-       5.112328,
-       "7"
+       6.612428,
+       "12"
       ],
       [
        [
@@ -3283,14 +3317,14 @@
         255
        ],
        [
-        -4.903114,
+        -5.819963,
         0
        ],
        [
-        9.229937,
-        45.496123
+        9.229973,
+        45.496147
        ],
-       2.732654,
+       2.699513,
        "2"
       ],
       [
@@ -3304,11 +3338,11 @@
         0
        ],
        [
-        9.161567,
-        45.460257
+        9.16161,
+        45.46028
        ],
-       5.216255,
-       "3"
+       4.259054,
+       "2"
       ],
       [
        [
@@ -3317,49 +3351,15 @@
         30
        ],
        [
-        9.227057,
-        0
+        11.867249,
+        -6.828749
        ],
        [
-        9.14345,
-        45.49391
+        9.143418,
+        45.493911
        ],
-       9.654572,
-       "25"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -9.227057,
-        0
-       ],
-       [
-        9.14345,
-        45.49391
-       ],
-       5.108719,
-       "7"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        0,
-        0
-       ],
-       [
-        9.19111,
-        45.45095
-       ],
-       6.023212,
-       "4"
+       8.093688,
+       "28"
       ]
      ]
     }
@@ -3470,7 +3470,7 @@
     "AREU": [
      "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
      "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 1 feriti</div>",
-     "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 15 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 8 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 4 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 18 feriti</div>"
+     "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 22 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 6 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(255,0,136);margin-right:0.4em;vertical-align:middle\"></span>Investimento di pedone: 3 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 5 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 9 feriti</div>"
     ]
    },
    "validation": null
@@ -3491,7 +3491,7 @@
     {
      "id": "ix-glow-AREU-g0",
      "type": "IconLayer",
-     "count": 18029,
+     "count": 18036,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -3503,13 +3503,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "6c0200498c8ccb8f",
-     "setDigest": "44fedc28bf4ff365",
+     "digest": "3835d30da587bb4b",
+     "setDigest": "eda9e03bf0134d42",
      "columnDigests": {
-      "getColor": "cc678497da5fa808",
-      "getIcon": "f10aea0ca92a3409",
-      "getPosition": "06fc988620bdcec8",
-      "getSize": "46154eae2bb5185d"
+      "getColor": "7908aad98c31e6e9",
+      "getIcon": "fda0ab18aedc96a7",
+      "getPosition": "69f110d8fc7b4579",
+      "getSize": "d4b9a442c277b4c7"
      },
      "stats": {
       "getColor": [
@@ -3522,7 +3522,7 @@
       ],
       "getSize": [
        1.1,
-       229.928526
+       226.52199
       ]
      },
      "sample": [
@@ -3731,6 +3731,48 @@
         "width": 64
        },
        [
+        9.22041,
+        45.54789
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-221,187,34",
+        "url": "#e54167ab:9970",
+        "width": 64
+       },
+       [
         9.30476,
         45.53884
        ],
@@ -3857,6 +3899,27 @@
         "width": 64
        },
        [
+        9.16686,
+        45.44401
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-0,170,170",
+        "url": "#bc5183bc:7174",
+        "width": 64
+       },
+       [
         9.18775,
         45.44564
        ],
@@ -3882,76 +3945,13 @@
         45.49159
        ],
        1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-0,170,170",
-        "url": "#bc5183bc:7174",
-        "width": 64
-       },
-       [
-        9.436043,
-        45.582838
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,0,136",
-        "url": "#a9f75162:7542",
-        "width": 64
-       },
-       [
-        9.26975,
-        45.58187
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,0,136",
-        "url": "#a9f75162:7542",
-        "width": 64
-       },
-       [
-        9.24826,
-        45.56974
-       ],
-       1.1
       ]
      ]
     },
     {
      "id": "ix-bubbles-AREU-g0",
      "type": "IconLayer",
-     "count": 18029,
+     "count": 18036,
      "constants": {
       "billboard": true,
       "pickable": true,
@@ -3963,13 +3963,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "3f4184f095ac3dca",
-     "setDigest": "86f28b866bc01025",
+     "digest": "b9e93d9709eb6007",
+     "setDigest": "83afa5487c2476f0",
      "columnDigests": {
-      "getColor": "cc678497da5fa808",
-      "getIcon": "3692633483d883b0",
-      "getPosition": "06fc988620bdcec8",
-      "getSize": "2657d117e6982523"
+      "getColor": "7908aad98c31e6e9",
+      "getIcon": "db07dbda45b04c7b",
+      "getPosition": "69f110d8fc7b4579",
+      "getSize": "341423d5317e2304"
      },
      "stats": {
       "getColor": [
@@ -3982,7 +3982,7 @@
       ],
       "getSize": [
        0.2,
-       51.095228
+       50.33822
       ]
      },
      "sample": [
@@ -4191,6 +4191,48 @@
         "width": 48
        },
        [
+        9.22041,
+        45.54789
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
+        9.33145,
+        45.51508
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-221,187,34-0.9-none-0",
+        "url": "#73d6ca84:1734",
+        "width": 48
+       },
+       [
         9.30476,
         45.53884
        ],
@@ -4317,6 +4359,27 @@
         "width": 48
        },
        [
+        9.16686,
+        45.44401
+       ],
+       0.2
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-0,170,170-0.9-none-0",
+        "url": "#fbf44a4:1586",
+        "width": 48
+       },
+       [
         9.18775,
         45.44564
        ],
@@ -4342,76 +4405,13 @@
         45.49159
        ],
        0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-0,170,170-0.9-none-0",
-        "url": "#fbf44a4:1586",
-        "width": 48
-       },
-       [
-        9.436043,
-        45.582838
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,0,136-0.9-none-0",
-        "url": "#711a504c:1522",
-        "width": 48
-       },
-       [
-        9.26975,
-        45.58187
-       ],
-       0.2
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,0,136-0.9-none-0",
-        "url": "#711a504c:1522",
-        "width": 48
-       },
-       [
-        9.24826,
-        45.56974
-       ],
-       0.2
       ]
      ]
     },
     {
      "id": "ix-points-values-AREU",
      "type": "TextLayer",
-     "count": 14906,
+     "count": 14900,
      "constants": {
       "fontFamily": "arial",
       "fontWeight": "bold",
@@ -4426,13 +4426,13 @@
       "getSize",
       "getText"
      ],
-     "digest": "ccc6c88c388d82cd",
-     "setDigest": "c27480f0a1eeaae7",
+     "digest": "242817afe60afcba",
+     "setDigest": "e927ff41bea7bbe4",
      "columnDigests": {
-      "getColor": "067d3b5000b91382",
-      "getPosition": "774e48375cfa3cb4",
-      "getSize": "7b6ded794a6a5e70",
-      "getText": "85fce251415575ca"
+      "getColor": "b44e8eef7e1e79b6",
+      "getPosition": "3f82ad3d0307f1b5",
+      "getSize": "282b7290c5e99542",
+      "getText": "4cf85ff427424e30"
      },
      "stats": {
       "getColor": [
@@ -4534,19 +4534,6 @@
         30
        ],
        [
-        9.28423,
-        45.58172
-       ],
-       2.023673,
-       "1"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
         9.29531,
         45.58938
        ],
@@ -4573,6 +4560,19 @@
         30
        ],
        [
+        9.26606,
+        45.56278
+       ],
+       2.023673,
+       "1"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
         9.2948,
         45.57947
        ],
@@ -4588,19 +4588,6 @@
        [
         9.30342,
         45.57929
-       ],
-       2.023673,
-       "1"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        9.27221,
-        45.57868
        ],
        2.023673,
        "1"
@@ -4640,19 +4627,6 @@
        [
         9.25771,
         45.56575
-       ],
-       2.023673,
-       "1"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        9.30114,
-        45.57199
        ],
        2.023673,
        "1"
@@ -4708,13 +4682,39 @@
        ],
        2.023673,
        "1"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        9.132727,
+        45.587857
+       ],
+       2.861905,
+       "2"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        9.14563,
+        45.5944
+       ],
+       2.861905,
+       "2"
       ]
      ]
     },
     {
      "id": "ix-cluster-values-AREU",
      "type": "TextLayer",
-     "count": 5196,
+     "count": 5162,
      "constants": {
       "fontFamily": "arial",
       "fontWeight": "bold",
@@ -4730,14 +4730,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "abd660032a8ad2fe",
-     "setDigest": "5070763022e92cc6",
+     "digest": "e35c66dbc354add9",
+     "setDigest": "956c3f94a61effd5",
      "columnDigests": {
-      "getColor": "94cdb5b59e78790c",
-      "getPixelOffset": "4655cb0c37fc14e7",
-      "getPosition": "cf950bfc2e9bddc6",
-      "getSize": "c6da4801632480e5",
-      "getText": "bc2a284b81a2a0de"
+      "getColor": "ad5436af13fcdd48",
+      "getPixelOffset": "6bf8284b46c6c923",
+      "getPosition": "fe90d2d2c0a9d805",
+      "getSize": "d60aa1c4f54bb35b",
+      "getText": "a4bdfa7488f65098"
      },
      "stats": {
       "getColor": [
@@ -4745,16 +4745,16 @@
        255
       ],
       "getPixelOffset": [
-       -10.299905,
-       9.256655
+       -10.231086,
+       9.283403
       ],
       "getPosition": [
-       8.942825,
+       8.94163,
        9.43588
       ],
       "getSize": [
-       1.050863,
-       9.098618
+       1.050921,
+       9.673824
       ]
      },
      "sample": [
@@ -4769,25 +4769,8 @@
         0
        ],
        [
-        9.265877,
-        45.562817
-       ],
-       3.286035,
-       "3"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        0,
-        0
-       ],
-       [
-        9.315915,
-        45.580645
+        9.265785,
+        45.562835
        ],
        2.683036,
        "2"
@@ -4799,15 +4782,15 @@
         30
        ],
        [
-        3.15352,
+        2.904472,
         0
        ],
        [
-        9.263402,
-        45.591796
+        9.316182,
+        45.580459
        ],
-       2.843256,
-       "5"
+       2.323577,
+       "3"
       ],
       [
        [
@@ -4816,15 +4799,66 @@
         255
        ],
        [
-        -3.15352,
+        -2.904472,
         0
        ],
        [
-        9.263402,
-        45.591796
+        9.316182,
+        45.580459
        ],
-       2.202377,
+       2.323577,
        "3"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        5.949166,
+        -3.422631
+       ],
+       [
+        9.263176,
+        45.591924
+       ],
+       3.203269,
+       "10"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -5.509492,
+        3.202987
+       ],
+       [
+        9.263176,
+        45.591924
+       ],
+       2.025925,
+       "4"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -0.439674,
+        0.219644
+       ],
+       [
+        9.263176,
+        45.591924
+       ],
+       2.680047,
+       "7"
       ],
       [
        [
@@ -4842,6 +4876,23 @@
        ],
        2.683036,
        "2"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.28459,
+        45.581725
+       ],
+       3.286035,
+       "3"
       ],
       [
        [
@@ -4884,6 +4935,74 @@
         30
        ],
        [
+        4.449904,
+        -4.68168
+       ],
+       [
+        9.272507,
+        45.579196
+       ],
+       1.931379,
+       "4"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -4.632675,
+        4.884642
+       ],
+       [
+        9.272507,
+        45.579196
+       ],
+       1.365691,
+       "2"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        2.090095,
+        -1.302815
+       ],
+       [
+        9.272507,
+        45.579196
+       ],
+       1.365691,
+       "2"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        -1.907324,
+        1.099853
+       ],
+       [
+        9.272507,
+        45.579196
+       ],
+       2.365447,
+       "6"
+      ],
+      [
+       [
+        30,
+        30,
+        30
+       ],
+       [
         0,
         0
        ],
@@ -4918,32 +5037,32 @@
         30
        ],
        [
-        3.510676,
+        0,
         0
        ],
        [
-        9.145622,
-        45.586375
+        9.30174,
+        45.571975
        ],
-       3.483737,
-       "8"
+       2.683036,
+       "2"
       ],
       [
        [
-        255,
-        255,
-        255
+        30,
+        30,
+        30
        ],
        [
-        -3.510676,
+        0,
         0
        ],
        [
-        9.145622,
-        45.586375
+        9.14562,
+        45.58658
        ],
-       2.133344,
-       "3"
+       5.366072,
+       "8"
       ],
       [
        [
@@ -4969,134 +5088,15 @@
         30
        ],
        [
-        6.751755,
-        -3.877512
-       ],
-       [
-        9.262992,
-        45.592005
-       ],
-       2.869844,
-       "7"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -6.651361,
-        3.873918
-       ],
-       [
-        9.262992,
-        45.592005
-       ],
-       2.656959,
-       "6"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -0.100394,
-        0.003594
-       ],
-       [
-        9.262992,
-        45.592005
-       ],
-       3.43012,
-       "10"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
         0,
         0
        ],
        [
-        9.28279,
-        45.57457
-       ],
-       2.683036,
-       "2"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        3.395333,
-        0
-       ],
-       [
-        9.306527,
-        45.581467
-       ],
-       2.149349,
-       "3"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        -3.395333,
-        0
-       ],
-       [
-        9.306527,
-        45.581467
-       ],
-       3.283185,
-       "7"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        0,
-        0
-       ],
-       [
-        9.26946,
-        45.58217
+        9.30603,
+        45.58141
        ],
        3.286035,
        "3"
-      ],
-      [
-       [
-        30,
-        30,
-        30
-       ],
-       [
-        0,
-        0
-       ],
-       [
-        9.287345,
-        45.58832
-       ],
-       2.683036,
-       "2"
       ]
      ]
     }
@@ -5207,7 +5207,7 @@
     "AREU": [
      "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 0 feriti</div>",
      "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Fuoriuscita: 1 feriti</div>",
-     "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 35 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 12 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 27 feriti</div>"
+     "<b>BUBBLE · CATEGORICAL</b><br><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro frontale-laterale: 26 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(221,187,34);margin-right:0.4em;vertical-align:middle\"></span>Scontro-laterale: 32 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,102,204);margin-right:0.4em;vertical-align:middle\"></span>Tamponamento: 12 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>Urto con veicolo in momentanea: 2 feriti</div><div><span style=\"display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(0,170,170);margin-right:0.4em;vertical-align:middle\"></span>(n/d): 27 feriti</div>"
     ]
    },
    "validation": null

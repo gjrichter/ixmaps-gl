@@ -716,14 +716,6 @@
      "section": "runtimeApi",
      "severity": "error",
      "suggestion": "getThemeObj"
-    },
-    {
-     "code": "gl-unsupported",
-     "keyword": "htmlgui_onZoomAndPan",
-     "layer": null,
-     "message": "ixmaps function \"htmlgui_onZoomAndPan\" is not implemented by ixmaps-gl",
-     "section": "runtimeApi",
-     "severity": "warning"
     }
    ]
   },
@@ -1083,14 +1075,6 @@
      "section": "runtimeApi",
      "severity": "error",
      "suggestion": "getThemeObj"
-    },
-    {
-     "code": "gl-unsupported",
-     "keyword": "htmlgui_onZoomAndPan",
-     "layer": null,
-     "message": "ixmaps function \"htmlgui_onZoomAndPan\" is not implemented by ixmaps-gl",
-     "section": "runtimeApi",
-     "severity": "warning"
     }
    ]
   }
@@ -1105,11 +1089,9 @@
   "warning: [ixmaps-gl validate] error unknown-style-key — layer \"points\": unknown style key \"opacty\" — did you mean \"opacity\"?",
   "warning: [ixmaps-gl validate] error unknown-style-key — layer \"points\": unknown style key \"strokewidth\"",
   "warning: [ixmaps-gl validate] error unknown-type-flag — layer \"points\": unknown type flag \"CATEGORICL\" — did you mean \"CATEGORICAL\"?",
-  "warning: [ixmaps-gl validate] warning gl-unsupported — ixmaps function \"htmlgui_onZoomAndPan\" is not implemented by ixmaps-gl",
   "warning: [ixmaps-gl validate] warning gl-unsupported — ixmaps function \"setMapTool\" is not implemented by ixmaps-gl",
   "warning: [ixmaps-gl validate] warning gl-unsupported — layer \"pie\": type flag \"PIE\" is not implemented by ixmaps-gl",
   "warning: [ixmaps-gl validate] warning gl-unsupported — options key \"panhidden\" is not implemented by ixmaps-gl",
-  "warning: [ixmaps-gl] changeThemeStyle: unsupported style key \"opacty\" (only \"filter\" implemented — use setThemeStyle(themeId, {...}) for other style properties)",
   "warning: [ixmaps-gl] layer \"pie\": type \"CHART|PIE|VALUES\" has no implemented renderer"
  ]
 }

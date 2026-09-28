@@ -21,10 +21,16 @@ test('flat zoom z ↔ MapLibre zoom z - 1', () => {
   assert.equal(G.mapLibreToFlatZoom(11.5), 12.5);
 });
 
-test('scaleDenominatorAt: the scale of the displayed view, from a MapLibre zoom', () => {
-  // flat at zoom 12.5 (= MapLibre 11.5): 559082264.028 / 2^12.5
-  near(G.scaleDenominatorAt(11.5), 559082264.028 / Math.pow(2, 12.5), 'MapLibre 11.5');
-  near(G.scaleDenominatorAt(null), 559082264.028 / Math.pow(2, 10), 'default reference = flat zoom 10');
+test('scaleDenominatorAt: flat\'s own map scale of the displayed view, from a MapLibre zoom', () => {
+  // the scale flat shows (and compares featureupper, chartupper, aggregation
+  // brackets … with) is 442 913 385 / 2^zoom, at any latitude — read off
+  // flat's scale bar: 1:54 067 at zoom 13 (Leipzig and Milano), 1:108 133
+  // at 12, 1:142 683 at 11.6
+  const shown = { 13: 54067, 12: 108133, 11.6: 142683 };
+  for (const [z, s] of Object.entries(shown)) {
+    assert.equal(Math.round(G.scaleDenominatorAt(G.flatToMapLibreZoom(Number(z)))), s, `flat zoom ${z}`);
+  }
+  near(G.scaleDenominatorAt(null), 442913385 / Math.pow(2, 10), 'default reference = flat zoom 10');
 });
 
 test('resolveZoomReference: the zoom at which FLAT\'s object scale equals normalSizeScale (read from a real flat page)', () => {
@@ -38,10 +44,11 @@ test('resolveZoomReference: the zoom at which FLAT\'s object scale equals normal
 
 test('resolveAggregationPx / valuesHiddenByScale compare thresholds with the displayed scale', () => {
   const agg = ['1:1', '3px', '1:500000', '1px'];
-  // flat zoom 12.5 ≈ 1:98800 → 3px; flat zoom 10 ≈ 1:546000 → 1px
+  // flat's scale: flat zoom 12.5 = 1:76 468 → 3px; 1:500000 is crossed at
+  // flat zoom 9.79 — 9.7 = 1:532 555 → 1px, 9.9 = 1:463 612 → 3px
   assert.equal(G.resolveAggregationPx(agg, G.flatToMapLibreZoom(12.5), 8).px, 3);
-  assert.equal(G.resolveAggregationPx(agg, G.flatToMapLibreZoom(10), 8).px, 1);
-  // 1:500000 is crossed between flat zoom 10 (546k) and 10.2 (476k)
-  assert.equal(G.valuesHiddenByScale({ valueupper: '1:500000' }, G.flatToMapLibreZoom(10)), true);
-  assert.equal(G.valuesHiddenByScale({ valueupper: '1:500000' }, G.flatToMapLibreZoom(10.2)), false);
+  assert.equal(G.resolveAggregationPx(agg, G.flatToMapLibreZoom(9.7), 8).px, 1);
+  assert.equal(G.resolveAggregationPx(agg, G.flatToMapLibreZoom(9.9), 8).px, 3);
+  assert.equal(G.valuesHiddenByScale({ valueupper: '1:500000' }, G.flatToMapLibreZoom(9.7)), true);
+  assert.equal(G.valuesHiddenByScale({ valueupper: '1:500000' }, G.flatToMapLibreZoom(9.9)), false);
 });

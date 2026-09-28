@@ -189,7 +189,7 @@
         if (!api || typeof api !== 'object' || !api.map) return { pending: String(api) };
         const arr = layersOf(api);
         if (!layerArrays.has(arr)) layerArrays.set(arr, ++layerArraySeq);
-        return { loaded: api.map.loaded() && !waiting, moving: api.map.isMoving(), layersRef: layerArrays.get(arr), layers: arr.length, splash: !!document.querySelector('.ixmaps-splash') };
+        return { loaded: api.map.loaded() && !waiting && !(api.pendingLoads && api.pendingLoads() > 0), moving: api.map.isMoving(), layersRef: layerArrays.get(arr), layers: arr.length, splash: !!document.querySelector('.ixmaps-splash') };
       });
     },
     async snapshot(label) {

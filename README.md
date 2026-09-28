@@ -29,11 +29,15 @@ page. It currently implements:
 
 - **FEATURE / FEATURES** — polygon/line rendering from GeoJSON/TopoJSON and the data.js geo
   formats; `featureupper`/`featurelower` hide the layer outside their scales, and, as in flat, a
-  FEATURE theme out of scale loads its data only once it comes into scale (for that view)
+  FEATURE theme out of scale loads its data only once it comes into scale (for that view);
+  flat's drop `shadow` (`shadowblur`/`shadowdx`/`shadowdy`, `maxshadow`, `shadowupper`/`shadowlower`),
+  approximated with translucent outlines since deck.gl has no blur
 - **CHOROPLETH** — polygon fill from a bound value: single-field numeric range
   (equal-interval, QUANTILE, NATURAL/Jenks breaks) or multi-field DOMINANT
-  (per-polygon argmax, plain/`PERCENTOFMEAN`/`DEVIATION`) or COMPOSECOLOR (additive or
-  `SUBTRACTIVE` color blend); plus DOPACITY/DOPACITYMIN/DOPACITYMAX/DOPACITYMINMAX for
+  (per-polygon argmax, plain/`PERCENTOFMEAN`/`DEVIATION`; with a `value100` the field means are
+  flat's pooled Σ field ÷ Σ value100) or COMPOSECOLOR (additive or
+  `SUBTRACTIVE` color blend); `HEADTAIL` breaks, `DENSITY` (value per km²), flat's
+  `ZEROISNOTVALUE`/`UNDEFINEDISNOTVALUE`; plus DOPACITY/DOPACITYMIN/DOPACITYMAX/DOPACITYMINMAX for
   value- or density-driven fill opacity
 - **CHART\|SYMBOL\|GLOW\|CATEGORICAL\|AGGREGATE\|COUNT\|RELOCATE\|VALUES** — the
   bubble-map pipeline: AGGREGATE on ixmaps-flat's grid (hexagonal, or square with
@@ -41,13 +45,19 @@ page. It currently implements:
   cell, class breaks and legend from the aggregated cells), dynamic sizing, glow,
   multi-point grouping, on-bubble value labels, `NORMALIZE`, chart boxes (`BOX`, `CIRCULARBOX`)
   with the item title above or below (`TITLE`, `BOTTOMTITLE`), between `boxlower` and `boxupper`
+- **CHART\|USER** — a page's own chart function (`style.userdraw`: `ixmaps.<name>(SVGDocument, opt)`
+  and its `_init`, as flat calls them), drawn in flat's chart units and shown as an icon at flat's size
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
   geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or one per grid
   cell with `GRIDSIZE` (a categorical field's series, e.g. one value per year)
 - A native interactive legend (default bars, `SIMPLELEGEND`, `COMPACTLEGEND`,
-  `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner `align` option;
-  collapsible, collapsed by default on narrow/mobile screens)
+  `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner or flat `align` option;
+  collapsible, collapsed by default on narrow/mobile screens). As flat's `#map-legend` it is one box:
+  the themes' legends one after the other in theme order, leaving out a theme hidden or out of scale;
+  a range theme of 5 classes or more without `label` gets flat's one-line color bar (with DOPACITY and an
+  alpha field, flat's three-row opacity grid); `style.label` names the classes; the opacity slider comes
+  with the type word `CHOROPLETH`, the size slider with `CHART`/`BUBBLE`/`DOT`, as in flat
 - A standard facets API (`ixmaps.data.getFacets`/`showFacets`,
   `window.__setFacetFilter`) for building filterable sidebars
 - Globe (orthographic) projection alongside flat Mercator
@@ -56,6 +66,25 @@ Not yet implemented: `CATEGORICAL` choropleths, and the `QUAD`/`BEZIER`/`VECTOR`
 `PIE`/`DONUT`/`WAFFLE`/`BAR` base types and SYMBOL shape variants beyond
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
+
+### Page scripts, named data and the runtime API
+
+A page's `.require(url)` scripts (page code, e.g. a user chart function) load in order before the
+layers are built. `ixmaps.map()` is the map handle as in flat — its calls wait until the map is ready —
+with `add(theme, flags)` / `replace` / `replaceTheme` / `remove`, `changeThemeStyle` for any style key,
+`getZoom()` (flat's zoom), `resize()` and `setBasemapOpacity`; the page's `htmlgui_onNewTheme(id)` and
+`htmlgui_onZoomAndPan()` (also once on load) are called (as in flat, a theme swapped in with `replace` comes last
+in the legend, while FEATURE and CHOROPLETH shapes always draw under the charts), and `map`, `getZoom` and flat's
+`formatValue` exist as globals. `.data({name})` without a URL waits for data of that name: from
+`ixmaps.setExternalData(data, {name})`, or from a broker — `.data({query, name, type: "ext"})`
+registers the query function as `ixmaps[name]` and calls it with flat's options (`ext`, `theme`,
+`setData`); a theme reloads when new data of its name arrives. Charts on a FEATURE layer are placed
+as in flat: joined by `lookup` (`lookupdigits`, `lookuptonumber`, `lookuptoupper`), the first shape of
+an id wins, a polygon's position is flat's shape center (the vertex mean in Mercator), a theme on
+`"a|b"` is placed on each layer (with `DIFFERENCE`, on the last). `aggregationscale` (alias of
+`aggregation`) picks px, meters or a grouping field by scale on flat's grid origin; `chartupper`/
+`chartlower` (else `layerupper`/`layerlower`) hide a theme outside their scales; `.filter()` takes
+flat's grammar (`WHERE a > 5 AND b NOT x`, `LIKE`, `IN`, `BETWEEN`, `$field$`, or a plain regex).
 
 ### Zoom levels
 

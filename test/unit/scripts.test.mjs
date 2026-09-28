@@ -179,10 +179,25 @@ test('broker: missing data.name or a script that defines no function are errors'
   await assert.rejects(e.loadBrokerData(brokerSpec(e, { layer: 'x', data: { name: 'Nope', type: 'ext', ext: B } }), trusted), /ixmaps\.Nope is not a function/);
 });
 
-test('setExternalData without a waiting broker or query is ignored with a warning', () => {
+test('setExternalData publishes the data by name as window[name], as flat, also without a waiting broker', async () => {
   const e = brokerEngine({});
-  e.win.ixmaps.setExternalData({}, { name: 'nobody' });
-  assert.ok(e.warnings.some(w => w.includes('no pending')));
+  e.win.ixmaps.setExternalData({ records: [{ n: 1 }] }, { type: 'jsondb', name: 'nobody' });
+  await new Promise(r => setTimeout(r, 0));
+  assert.equal(typeof e.win.nobody.json, 'function', 'a data.js Table under its name');
+  assert.deepEqual(JSON.parse(JSON.stringify(e.win.nobody.json())), [{ n: 1 }]);
+  assert.ok(!e.warnings.some(w => w.includes('no pending')));
+});
+
+test('broker: data.query is registered as ixmaps.<name> and called with the theme\'s data options', async () => {
+  const e = brokerEngine({});
+  const query = function (theme, options) {
+    ixmaps.setExternalData({ records: [{ got: options.name, url: options.url }] }, { type: 'jsondb', name: options.name });
+  };
+  const spec = brokerSpec(e, { layer: 'x', type: 'CHART|BUBBLE', data: { name: 'qdata', query: query.toString(), url: 'u.csv' } });
+  const { rows, table } = await e.loadBrokerData(spec, undefined);
+  assert.equal(typeof e.win.ixmaps.qdata, 'function');
+  assert.deepEqual(JSON.parse(JSON.stringify(rows)), [{ got: 'qdata', url: 'u.csv' }]);
+  assert.equal(e.win.qdata, table, 'the table is also window.qdata');
 });
 
 test('broker: without a script, a project can\'t call ixmaps-gl\'s own API by name', async () => {
