@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Unfälle 2020-2024 — ixmaps-gl demo</title>
+<title>Unfälle 2020-2025 — ixmaps-gl demo</title>
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
 <style>
@@ -95,7 +95,7 @@
 <body>
 
 <div id="map_div"></div>
-<div id="status"><span class="spinner"></span>lade Unfall Daten von 2020 bis 2024 ...</div>
+<div id="status"><span class="spinner"></span>lade Unfall Daten von 2020 bis 2025 ...</div>
 
 <div id="onmap-buttons">
   <div class="row">
@@ -107,8 +107,8 @@
 </div>
 
 <div id="sidebar">
-  <h1>Unfälle 2020 - 2024<br>Unfallart vereinfacht</h1>
-  <p>Daten: <a href="https://unfallatlas.statistikportal.de/" target="_blank">Unfallatlas Deutschland</a> — Unfallorte 2020-2024 (&gt;1.200.000 Ereignisse)</p>
+  <h1>Unfälle 2020 - 2025<br>Unfallart vereinfacht</h1>
+  <p>Daten: <a href="https://unfallatlas.statistikportal.de/" target="_blank">Unfallatlas Deutschland</a> — Unfallorte 2020-2025 (&gt;1.500.000 Ereignisse)</p>
 
   <label><input type="checkbox" id="curvesCheckBox"> Unfälle pro Jahr</label>
 
@@ -171,12 +171,14 @@
   // column().map() — is the real library doing real work.
   var queryData = function(themeObj, options) {
 
+    var szUrl0 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2025_LinRef.csv.gz";
     var szUrl5 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2020_LinRef.csv.gz";
     var szUrl4 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2021_LinRef.csv.gz";
     var szUrl3 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2022_LinRef.csv.gz";
     var szUrl2 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2023_LinRef.csv.gz";
     var szUrl1 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2024_LinRef.csv.gz";
     var broker = Data.provider()
+      .addSource(szUrl0, "csv")
       .addSource(szUrl1, "csv")
       .addSource(szUrl2, "csv")
       .addSource(szUrl3, "csv")
@@ -192,6 +194,7 @@
           dataA[0].append(dataA[2]);
           dataA[0].append(dataA[3]);
           dataA[0].append(dataA[4]);
+          dataA[0].append(dataA[5]);
 
           dataA[0].column("UKATEGORIE").map(function(value){
             if (value == 1) {return "Tote";}
@@ -256,9 +259,9 @@
         name: "chart"
       })
       .meta({
-        title: "Unfall Art<br>2020 - 2024",
+        title: "Unfall Art<br>2020 - 2025",
         tooltip: "<h3>{{theme.title}}</h3><br>{{theme.item.chart}}",
-        splash: "lade Unfall Daten von 2020 bis 2024 ..."
+        splash: "lade Unfall Daten von 2020 bis 2025 ..."
       })
     );
 
@@ -272,9 +275,9 @@
         colorscheme: ["#666666"],
         fillopacity: "0.05",
         shadow: "true",
-        values: ["2020", "2021", "2022", "2023", "2024"],
-        label: ["2020", "2021", "2022", "2023", "2024"],
-        xaxis: ["2020", "2021", "2022", "2023", "2024"],
+        values: ["2020", "2021", "2022", "2023", "2024", "2025"],
+        label: ["'20", "'21", "'22", "'23", "'24", "'25"],
+        xaxis: ["2020", "2021", "2022", "2023", "2024", "2025"],
         normalsizevalue: "20",
         scale: "0.9",
         rangescale: "1",
@@ -333,7 +336,7 @@
     })
     .local("loading data ...", "...")
     .attribution("Unfallatlas Deutschland (Statistisches Bundesamt)")
-    .legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>Unfälle 2020 - 2024</h2></div>")
+    .legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>Unfälle 2020 - 2025</h2></div>")
     .layer(__incidenti_natura)
     .layer(__incidenti_curves_grid)
     .layer(__incidenti_curves_years_incidenti)
