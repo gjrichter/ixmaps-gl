@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Unfälle 2023-2025 — ixmaps-gl demo</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F5F5F4; }
+
+  #map_div { position: absolute; top: 0; bottom: 0; left: 0; width: 66%; }
+
+  #sidebar {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 34%;
+    box-sizing: border-box; padding: 1em 1em 1em 1.2em; overflow: auto;
+    background: #F5F5F4; border-left: 1px solid #ddd; text-align: left;
+  }
+
+  #status {
+    position: absolute; top: 1em; left: 60px; z-index: 10; white-space: nowrap; /* clear of the map zoom buttons */
+    background: rgba(255,255,255,0.9); padding: 0.4em 0.8em; border-radius: 4px; font-size: 0.85em;
+    display: flex; align-items: center; gap: 0.6em;
+  }
+  #status .spinner {
+    width: 14px; height: 14px; flex: none;
+    border: 2px solid rgba(0,0,0,0.15); border-top-color: #0088dd;
+    border-radius: 50%; animation: status-spin 0.8s linear infinite;
+  }
+  @keyframes status-spin { to { transform: rotate(360deg); } }
+
+  h1 { font-size: 1.5em; margin: 0 0 0.3em 0; color: #222; font-weight: 600; }
+  #sidebar p { font-size: 1em; color: #333; margin: 0.5em 0; }
+  #sidebar a { color: #0088dd; }
+  #sidebar label { font-size: 1em; display: flex; align-items: center; gap: 0.4em; margin: 0.4em 0; cursor: pointer; }
+  #sidebar input[type=checkbox] { accent-color: #888; }
+
+  #grid-size-row { display: none; align-items: center; gap: 0.5em; margin: 0.3em 0 0.6em 1.6em; }
+
+  #filter-div {
+    margin: 0.6em 0; padding: 0.35em 0.6em; font-size: 0.85em;
+    background: #F7F6EF; border: 1px solid #ddd; border-radius: 4px;
+    display: none; align-items: flex-start; justify-content: space-between; gap: 0.5em;
+  }
+  #filter-div span { word-break: break-word; }
+  #filter-div button {
+    flex: none; border: 1px solid #ccc; background: #fff; border-radius: 3px;
+    cursor: pointer; font-size: 0.85em; padding: 0 0.5em;
+  }
+
+  #onmap-buttons { position: absolute; bottom: 2em; left: 1.5em; z-index: 5; }
+  #onmap-buttons .row {
+    display: flex; align-items: center; gap: 0.4em; background: rgba(255,255,255,0.85);
+    padding: 0.3em 0.7em; border-radius: 4px; font-size: 0.8em; color: #555;
+  }
+
+  hr { border: none; border-top: 1px solid #ddd; margin: 1em 0; }
+
+  /* overrides ixmaps.data.showFacets' own injected dark default
+     (.ix-facet-* classes) with this page's light theme — see
+     ixmaps-gl.js's ensureFacetStyles comment for why a page's own
+     same-specificity rule reliably wins here. */
+  #show-facets-div { margin-top: 0.5em; }
+  .ix-facet { margin-bottom: 0.9em; }
+  .ix-facet-header {
+    font-size: 1em; padding: 0.45em 0.6em; border-radius: 5px; background: #888;
+    color: #fff; margin-bottom: 0.4em;
+  }
+  .ix-facet-active .ix-facet-header { background: #884444; cursor: pointer; }
+  .ix-facet-active .ix-facet-header::after { content: " \00d7"; float: right; }
+  .ix-facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
+  .ix-facet-search input {
+    flex: 1; font-size: 0.85em; border: 1px solid #ddd; border-radius: 3px;
+    padding: 0.25em 0.5em; background: #fff;
+  }
+  .ix-facet-search button {
+    border: 1px solid #ddd; background: #fff; border-radius: 3px; cursor: pointer; font-size: 0.85em;
+  }
+  .ix-facet-bar {
+    cursor: pointer; padding: 0.3em 0.1em; border-bottom: 1px solid rgba(128,128,128,0.15);
+  }
+  .ix-facet-bar:hover { background: rgba(0,136,221,0.06); }
+  .ix-facet-bar-selected { background: rgba(136,68,68,0.08); }
+  .ix-facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; font-size: 0.95em; }
+  .ix-facet-label { color: #333; }
+  .ix-facet-count { flex: none; color: #333; font-weight: 600; white-space: nowrap; }
+  .ix-facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #ccc; }
+  .ix-facet-more {
+    margin: 0.2em 0 0.4em 0; font-size: 0.8em; padding: 0.2em 0.6em;
+    border: 1px solid #ccc; background: #fff; border-radius: 3px; cursor: pointer;
+  }
+
+  footer { font-size: 0.8em; color: #888; margin-top: 1.5em; }
+</style>
+</head>
+<body>
+
+<div id="map_div"></div>
+<div id="status"><span class="spinner"></span>lade Unfall Daten von 2023 bis 2025 ...</div>
+
+<div id="onmap-buttons">
+  <div class="row">
+    <span style="font-size:0.5em">&#9679;</span>
+    <input type="range" min="0.1" max="2" step="0.01" value="1" id="slSize" style="width:90px;cursor:pointer;accent-color:#0088dd">
+    <span style="font-size:1.4em">&#9679;</span>
+    <span style="opacity:0.65;margin-left:0.2em">grandezza grafici</span>
+  </div>
+</div>
+
+<div id="sidebar">
+  <h1>Unfälle 2023 - 2025<br>Unfallart vereinfacht</h1>
+  <p>Daten: <a href="https://unfallatlas.statistikportal.de/" target="_blank">Unfallatlas Deutschland</a> — Unfallorte 2023-2025 (&gt;800.000 Ereignisse)</p>
+
+  <label><input type="checkbox" id="curvesCheckBox"> Unfälle pro Jahr</label>
+
+  <div id="grid-size-row">
+    <input type="range" min="10" max="200" step="5" value="100" id="slGridSize" style="width:120px;cursor:pointer;accent-color:#0088dd">
+    <span style="opacity:0.65;font-size:0.85em">grandezza griglia</span>
+  </div>
+
+  <div id="filter-div">
+    <span id="filter-text"></span>
+    <button id="clear-filter-btn">&times;</button>
+  </div>
+
+  <hr>
+
+  <div id="show-facets-div"></div>
+
+  <footer>
+    Daten: Unfallatlas Deutschland (Statistisches Bundesamt).<br>
+    Prototipo ixmaps-gl — port di index_embed_Germania_Incidenti_2020_2024.
+  </footer>
+</div>
+
+<!--
+  Layer/theme/map definitions below are copied VERBATIM (identifiers,
+  type flags, style values, binding field names) from the original ixmaps
+  page (index_embed_Germania_Incidenti_2020_2024_tipo_simple_years_curve_incidenti.html)
+  wherever the config format is portable 1:1 — the ONE deliberate
+  deviation is .data(): the real page loads via a custom query() function
+  calling Data.provider()/ixmaps.setExternalData() (real data.js/ixmaps-
+  flat runtime APIs this standalone engine doesn't implement or load).
+  This engine's own multi-source CSV idiom (.data({urls, type:'csv',
+  remap})) achieves the same practical result — all 5 yearly CSVs merged,
+  UKATEGORIE/UTYP1 remapped to labels — see ixmaps-gl.js's
+  fetchLayerData for the exact mechanism.
+-->
+<script>
+  __setColors = objTheme => {
+    for (i = 0; i < objTheme.szLabelA.length; i++) {
+      if (objTheme.szLabelA[i].match(/investimento/i)) {
+        objTheme.colorScheme[i] = "#ff0088";
+      } else
+      if (objTheme.szLabelA[i].match(/tamponamento/i)) {
+        objTheme.colorScheme[i] = "#0066cc";
+      } else
+      if (objTheme.szLabelA[i].match(/scontro/i)) {
+        objTheme.colorScheme[i] = "#ddbb22";
+      } else {
+        objTheme.colorScheme[i] = "#00aaaa";
+      }
+    }
+  };
+
+  // Verbatim from the real source page (index_embed_Germania_Incidenti_
+  // 2020_2024_tipo_simple_years_curve_incidenti.html) — runs against the
+  // REAL data.js (loaded above), not a reimplementation. Only
+  // ixmaps.setExternalData's hand-off is bridged by ixmaps-gl.js
+  // (see fetchLayerData / setExternalDataBridge there); everything else
+  // here — Data.provider(), addSource(), subtable(), append(),
+  // column().map() — is the real library doing real work.
+  // Loading status: queryData below is handed to the engine as a string
+  // (queryData.toString()), so it cannot see page-scope variables — it
+  // reaches this helper via window. msg == null removes the status box.
+  // The engine's splash ("ixmaps gl / loading…", z-index 2000) covers the
+  // status box while it is up, so the message is mirrored into the
+  // splash's own text line as well.
+  window.__setLoadStatus = function(msg) {
+    var splashText = document.querySelector('.ixmaps-splash-text');
+    if (splashText && msg != null) splashText.textContent = msg;
+    var el = document.getElementById('status');
+    if (!el) return;
+    if (msg == null) { el.remove(); return; }
+    var sp = el.querySelector('.spinner');
+    el.textContent = msg;
+    if (sp) el.insertBefore(sp, el.firstChild);
+  };
+
+  // Yield to the browser so a just-set message is actually painted before
+  // the next synchronous, heavy step blocks the main thread.
+  // requestAnimationFrame is paused in background tabs, so a plain
+  // rAF-based yield would stall the load there — the timeout is a fallback.
+  window.__yieldFrame = function() {
+    return new Promise(function(resolve) {
+      var done = false;
+      var go = function() { if (!done) { done = true; resolve(); } };
+      requestAnimationFrame(function() { setTimeout(go, 0); });
+      setTimeout(go, 100);
+    });
+  };
+  window.__step = function(msg) {
+    window.__setLoadStatus(msg);
+    return window.__yieldFrame();
+  };
+
+  // data.js's broker .notify() fires only before a fetch and after the
+  // parse, so download and CSV parsing are one silent stretch. Wrap
+  // Data.Feed.__processCSVData (private data.js method — revisit if data.js
+  // changes) to announce the parse phase and yield once before it starts.
+  (function() {
+    var origProcessCSV = Data.Feed.prototype.__processCSVData;
+    Data.Feed.prototype.__processCSVData = function(csv, opt) {
+      var self = this, args = arguments;
+      var y = (((opt && (opt.source || opt.url)) || "").match(/Unfallorte(\d{4})/) || [])[1] || "";
+      window.__step("lese Unfallorte " + y + " (Parser) ...").then(function() {
+        origProcessCSV.apply(self, args);
+      });
+    };
+  })();
+
+  var queryData = function(themeObj, options) {
+
+    var szUrl0 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2025_LinRef.csv.gz";
+    var szUrl1 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2024_LinRef.csv.gz";
+    var szUrl2 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2023_LinRef.csv.gz";
+    var nLoaded = 0, nTotal = 3;
+    var broker = Data.provider()
+      .notify(function(q) {
+        var y = (q.url.match(/Unfallorte(\d{4})/) || [])[1] || "";
+        if (q.data) { nLoaded++; }
+        window.__setLoadStatus && window.__setLoadStatus(q.data
+          ? "Unfallorte " + y + " geladen (" + nLoaded + "/" + nTotal + ") ..."
+          : "lade Unfallorte " + y + " (" + (nLoaded + 1) + "/" + nTotal + ") ...");
+      })
+      .addSource(szUrl0, "csv")
+      .addSource(szUrl1, "csv")
+      .addSource(szUrl2, "csv")
+      .realize(
+        function(dataA) {
+
+          window.__step("wähle Felder ...").then(function() {
+            for ( i=0; i<dataA.length; i++){
+              dataA[i] = dataA[i].subtable({"fields": ['UART','UJAHR','UKATEGORIE','UTYP1','IstRad','IstFuss','IstKrad','IstGkfz','XGCSWGS84','YGCSWGS84']});
+            }
+            return window.__step("füge Jahre zusammen ...");
+          }).then(function() {
+            dataA[0].append(dataA[1]);
+            dataA[0].append(dataA[2]);
+            return window.__step("übersetze Kategorien ...");
+          }).then(function() {
+            dataA[0].column("UKATEGORIE").map(function(value){
+              if (value == 1) {return "Tote";}
+              if (value == 2) {return "Schwerverletzte";}
+              if (value == 3) {return "Leichtverletzte";}
+              return value;
+            });
+
+            dataA[0].column("UTYP1").map(function(value){
+              if (value == 1) {return "Fahrunfall";}
+              if (value == 2) {return "Abbiegeunfall";}
+              if (value == 3) {return "Einbiegen / Kreuzen-Unfall";}
+              if (value == 4) {return "Überschreiten-Unfall";}
+              if (value == 5) {return "Unfall durch ruhenden Verkehr";}
+              if (value == 6) {return "Unfall im Längsverkehr";}
+              if (value == 7) {return "sonstiger Unfall";}
+              return value;
+            });
+
+            options.type = "dbtable";
+            window.__dataReady = true;
+            return window.__step("zeichne Karte ...");
+          }).then(function() {
+            ixmaps.setExternalData(dataA[0], options);
+          }).catch(function(e) {
+            console.error(e);
+            window.__setLoadStatus("Fehler: " + e.message);
+          });
+        });
+
+  };
+
+  var __UNFALL_QUERY_DATA = { name: "themeDataObj", query: queryData.toString(), cache: "true" };
+
+  var __incidenti_natura =
+    ixmaps.layer("Natura_Incidenti_2022", layer => layer
+      .data(__UNFALL_QUERY_DATA)
+      .type("GLOW|CHART|SYMBOL|VALUES|SEQUENCE|STAR|SORT|DOWN|SIZEP1|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|TEXTLEGEND|RECT|CLIPTOGEOBOUNDS")
+      .binding({
+        position: "YGCSWGS84|XGCSWGS84",
+        value: "UART",
+        title: "UART"
+      })
+      .style({
+        colorscheme: [
+          "#888888", "#0066cc", "#0066cc", "#ddbb22", "#88dd88",
+          "#ddbb22", "#ff0088", "#ddbb22", "#ddbb22", "#ddbb22"
+        ],
+        values: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        label: [
+          "Unfall anderer Art", "anfahrend/ruhend", "vorausfahrend/wartend", "seitlich",
+          "frontal", "kreuzend", "Fussgaenger", "auf Hindernis",
+          "abkommen nach rechts", "abkommen nach links"
+        ],
+        opacity: 1,
+        fillopacity: 0.9,
+        shadow: "false",
+        showdata: "true",
+        units: "",
+        scale: 1,
+        normalsizevalue: 20,
+        valuescale: 1,
+        valuedecimals: 0,
+        clipparts: 10,
+        maxcharts: 100000,
+        aggregation: ["1:1", "3px", "1:200000", "50"],
+        clipupper: "1:1000000",
+        valuesupper: "1:10000",
+        name: "chart"
+      })
+      .meta({
+        title: "Unfall Art<br>2023 - 2025",
+        tooltip: "<h3>{{theme.title}}</h3><br>{{theme.item.chart}}",
+        splash: "lade Unfall Daten von 2023 bis 2025 ..."
+      })
+    );
+
+  var __incidenti_curves_years_incidenti =
+    ixmaps.layer("Mercator", layer => layer
+      .data(__UNFALL_QUERY_DATA)
+      .binding({ position: "YGCSWGS84|XGCSWGS84", value: "UJAHR" })
+      .type("CHART|SYMBOL|PLOT|LINES|AREA|LASTARROW|SPLINE|CATEGORICAL|BOX|XAXIS|FIXSIZE|GRIDSIZE|ZEROISNOTVALUE|AGGREGATE|RECT|SUM|NOSORT|NOLEGEND|CLIPTOGEOBOUNDS")
+      .style({
+        name: "curves_incidenti",
+        colorscheme: ["#666666"],
+        fillopacity: "0.05",
+        shadow: "true",
+        values: ["2023", "2024", "2025"],
+        label: ["2023", "2024", "2025"],
+        xaxis: ["2023", "2024", "2025"],
+        normalsizevalue: "20",
+        scale: "0.9",
+        rangescale: "1",
+        linewidth: "2",
+        markersize: "5",
+        offsetx: "-18",
+        offsety: "-0",
+        boxopacity: "0.001",
+        bordercolor: "none",
+        valuescale: "1",
+        gridwidthpx: "100"
+      })
+      .meta({ title: "Unfälle pro Jahr", splash: "scaricando dati ..." })
+    );
+
+  var __incidenti_curves_grid =
+    ixmaps.layer("AREU", layer => layer
+      .data(__UNFALL_QUERY_DATA)
+      .binding({ position: "YGCSWGS84|XGCSWGS84", value: "UJAHR" })
+      .type("CHART|SYMBOL|SIZE|NOOUTLIER|ZEROISNOTVALUE|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE|NOLEGEND|CLIPTOGEOBOUNDS")
+      .style({
+        name: "grid",
+        colorscheme: ["rgba(255,255,255,0.1)"],
+        symbols: ["square"],
+        linecolor: ["black"],
+        linewidth: ["0.2"],
+        gridwidthpx: "100"
+      })
+      .meta({ title: "Unfälle Grid", splash: "scaricando dati ..." })
+    );
+
+  var __lat = 51.16, __lon = 10.45, __zoom = 6.3;
+
+  var _mapPromise = ixmaps.Map("map_div", {
+      mapService: "leaflet_vt",
+      mapType: "VT_BRIGHT_LIGHT",
+      name: "map",
+      mode: "pan",
+      width: "100%",
+      height: "100%",
+      legend: "false",
+      tools: "true",
+      search: "Germany",
+      about: "test"
+    },
+    map => map
+    .view([__lat, __lon], __zoom)
+    .options({
+      featurescaling: "true",
+      objectscaling: "dynamic",
+      normalSizeScale: "50000",
+      dynamicScalePow: "3",
+      flushChartDraw: "1000000",
+      basemapopacity: "0.7",
+      panhidden: "false"
+    })
+    .local("loading data ...", "...")
+    .attribution("Unfallatlas Deutschland (Statistisches Bundesamt)")
+    .layer(__incidenti_natura)
+    .layer(__incidenti_curves_grid)
+    .layer(__incidenti_curves_years_incidenti)
+  );
+
+  // ---------------------------------------------------------------
+  // facets browser — built on ixmaps' own STANDARD facet API
+  // (ixmaps.data.getFacets/showFacets, window.__setFacetFilter/
+  // __setFilter/__removeFacets — same names as real ixmaps-flat's
+  // ui/js/tools/facet.js + show_facets.js, ported into ixmaps-gl.js
+  // itself). Field list trimmed to what this dataset's CSV columns
+  // actually carry; UART's .style({label:[...]}) German display names
+  // are handled automatically by showFacets via facet.valuesLabels.
+  // ---------------------------------------------------------------
+
+  const THEME_ID = "chart";
+  const FACET_FIELDS = [
+    "UART", "UJAHR", "UKATEGORIE", "UTYP1", "UMONAT", "USTUNDE", "UWOCHENTAG",
+    "ULICHTVERH", "IstStrassenzustand", "IstRad", "IstPKW", "IstFuss", "IstKrad", "IstGkfz", "IstSonstige"
+  ];
+
+  function renderFacets(api) {
+    const facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
+    ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
+    renderFilterDisplay(api);
+  }
+
+  function renderFilterDisplay(api) {
+    const active = api.getActiveFacetFilters(THEME_ID);
+    const parts = Object.entries(active).map(([field, clause]) => {
+      if (clause && typeof clause === 'object' && 'like' in clause) return `"${field}" LIKE "${clause.like}"`;
+      return `"${field}" = "${clause}"`;
+    });
+    const div = document.getElementById('filter-div');
+    if (parts.length) {
+      document.getElementById('filter-text').textContent = 'WHERE ' + parts.join(' AND ');
+      div.style.display = 'flex';
+    } else {
+      div.style.display = 'none';
+    }
+  }
+
+  _mapPromise
+    .then(api => {
+      renderFacets(api);
+      api.onRedraw(() => {
+        renderFacets(api);
+        if (window.__dataReady) window.__setLoadStatus(null);
+      });
+
+      document.getElementById('clear-filter-btn').addEventListener('click', () => {
+        api.clearAllFacetFilters(THEME_ID);
+      });
+
+      document.getElementById('slSize').addEventListener('input', e => {
+        api.setThemeStyle(THEME_ID, { scale: e.target.value });
+      });
+
+      api.setThemeVisible('curves_incidenti', false);
+      api.setThemeVisible('grid', false);
+
+      document.getElementById('curvesCheckBox').addEventListener('change', e => {
+        api.setThemeVisible('curves_incidenti', e.target.checked);
+        api.setThemeVisible('grid', e.target.checked);
+        document.getElementById('grid-size-row').style.display = e.target.checked ? 'flex' : 'none';
+      });
+
+      document.getElementById('slGridSize').addEventListener('input', e => {
+        api.setThemeStyle('curves_incidenti', { gridwidthpx: e.target.value });
+        api.setThemeStyle('grid', { gridwidthpx: e.target.value });
+      });
+    })
+    .catch(err => { document.getElementById('status').textContent = 'Fehler: ' + err.message; console.error(err); });
+</script>
+
+</body>
+</html>
