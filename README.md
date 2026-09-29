@@ -181,7 +181,9 @@ script. For brokers that query by view, like flat's bbox data providers, ixmaps-
 `ixmaps.getBoundingBox()`, `ixmaps.refreshTheme(id)` (loads the theme's data again, in place),
 `ixmaps.setTitle(html)`/`setTitleBox(text, color)`, `ixmaps.getThemeObj(id).fVisible` (false for a
 FEATURE theme out of scale) and calls a page's `ixmaps.htmlgui_onZoomAndPan(zoom)` after each zoom
-or pan. Scripts that reach further into flat's internals (`ixmaps.parentApi`, other `htmlgui_*`
+or pan — and also during a zoom, at the pace of the layer refresh (about every 150 ms, zoom changes only),
+so zoom-dependent page state (e.g. a basemap opacity ramp) changes in step with the scale gates
+(`featurelower`, `chartupper`, …) instead of after the gesture has ended. Scripts that reach further into flat's internals (`ixmaps.parentApi`, other `htmlgui_*`
 hooks) aren't supported. `test/project-report.mjs` shows which themes
 of your own project files gl can render.
 

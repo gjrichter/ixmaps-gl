@@ -2728,6 +2728,16 @@
       // broker re-queries its data from it. Read at call time: pages wrap
       // it after loading. flat passes its SVG zoom scale; this passes the
       // flat zoom level, the one value gl has.
+      //
+      // gl also calls it DURING a zoom (notifyZoomAndPanMidGesture, wired
+      // into the throttled refresh below), zoom changes only: the scale
+      // gates (featurelower/chartupper ...) switch on the live zoom while
+      // the gesture runs, so a page that ties something zoom-dependent to
+      // this hook (e.g. a basemap opacity ramp) must be told in the same
+      // tick — from 'moveend' alone it arrived after the gate had already
+      // flipped (FEATURE gone, basemap still at the old, faint opacity: a
+      // blank background until the zoom ended).
+      let notifyZoomAndPanMidGesture = () => {};
       {
         let last = null;
         map.on('moveend', () => {
@@ -2739,6 +2749,14 @@
           if (z === prev.z && Math.abs(p.x - q.x) <= 10 && Math.abs(p.y - q.y) <= 10) return;
           try { hook.call(global.ixmaps, mapLibreToFlatZoom(z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); }
         });
+        notifyZoomAndPanMidGesture = () => {
+          const hook = pageIxmaps() && pageIxmaps().htmlgui_onZoomAndPan;
+          if (typeof hook !== 'function' || !last) return;
+          const z = map.getZoom();
+          if (z === last.z) return; // a pan alone waits for 'moveend' (and its 10 px rule)
+          last = { z, c: map.getCenter() };
+          try { hook.call(global.ixmaps, mapLibreToFlatZoom(z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); }
+        };
         // flat calls it on the first draw too (its old zoom is unset then)
         map.once('load', () => {
           last = { z: map.getZoom(), c: map.getCenter() };
@@ -3878,10 +3896,11 @@
         const elapsed = now - lastRefreshAt;
         if (elapsed >= REFRESH_INTERVAL_MS) {
           lastRefreshAt = now;
+          notifyZoomAndPanMidGesture();
           refreshLayers();
         } else {
           clearTimeout(refreshTimer);
-          refreshTimer = setTimeout(() => { lastRefreshAt = Date.now(); refreshLayers(); }, REFRESH_INTERVAL_MS - elapsed);
+          refreshTimer = setTimeout(() => { lastRefreshAt = Date.now(); notifyZoomAndPanMidGesture(); refreshLayers(); }, REFRESH_INTERVAL_MS - elapsed);
         }
         scheduleNotifyRedraw();
       }
