@@ -1,0 +1,34 @@
+{
+  "name": "ixmaps-gl",
+  "version": "0.1.0",
+  "description": "MapLibre GL + deck.gl reimplementation of the ixmaps-flat declarative mapping engine",
+  "main": "ixmaps-gl.js",
+  "browser": "ixmaps-gl.js",
+  "unpkg": "ixmaps-gl.js",
+  "jsdelivr": "ixmaps-gl.js",
+  "files": [
+    "ixmaps-gl.js",
+    "README.md",
+    "LICENSE.txt"
+  ],
+  "keywords": [
+    "ixmaps",
+    "map",
+    "maps",
+    "thematic-map",
+    "choropleth",
+    "maplibre",
+    "deck.gl",
+    "data-visualization"
+  ],
+  "homepage": "https://github.com/gjrichter/ixmaps-gl#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gjrichter/ixmaps-gl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gjrichter/ixmaps-gl/issues"
+  },
+  "author": "Guenter Richter",
+  "license": "BSD-3-Clause"
+}
