@@ -213,6 +213,31 @@ a:hover { color: var(--blue); }
 }
 .info-close:hover { background-color: var(--soft); color: var(--ink-2); }
 
+/* Selettore comune ("Vai a un comune") — js/comune_selector.js */
+.comune-select { position: relative; margin: 10px 0 4px; }
+.comune-select-label {
+    display: block; margin-bottom: 4px;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3);
+}
+.comune-select input {
+    width: 100%; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--ink);
+    background: var(--soft); border: 1px solid var(--line-2); border-radius: var(--r-ctrl);
+    outline: none; transition: var(--transition);
+}
+.comune-select input:focus { background: var(--background-color); border-color: var(--blue-2); box-shadow: 0 0 0 3px var(--azure); }
+.comune-select ul {
+    position: absolute; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none;
+    max-height: 260px; overflow-y: auto; z-index: 5;
+    background: var(--background-color); border: 1px solid var(--line-2);
+    border-radius: var(--r-ctrl); box-shadow: var(--sh-float);
+}
+.comune-select li { padding: 6px 8px; font-size: 14px; color: var(--ink); border-radius: 6px; cursor: pointer; }
+.comune-select li.active, .comune-select li[data-pro]:hover { background: var(--azure); color: var(--azure-ink); }
+.comune-select li.comune-group, .comune-select li.comune-empty {
+    cursor: default; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3);
+}
+.comune-select li.comune-empty { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
