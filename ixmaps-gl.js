@@ -129,9 +129,45 @@
   // MapLibre 6's ES module → the window.maplibregl the engine and pages use
   // (a copy of its named exports: a module namespace is read-only)
   function loadMaplibre(src) {
+    installFileWorkerShim();
     return import(src).then(mod => {
       global.maplibregl = Object.assign({}, mod.default || {}, mod);
     }, err => { throw new Error(`[ixmaps-gl] failed to load ${src}: ${err && err.message}`); });
+  }
+  // MapLibre 6 starts its worker as a module worker; for a worker on the
+  // CDN it wraps it in a blob URL (`import "…maplibre-gl-worker.mjs"`).
+  // On a file:// page Chrome refuses every module worker from a blob URL
+  // ("Refused to cross-origin redirects of the top-level worker script" —
+  // the map never loaded), while a module worker from a data: URL works.
+  // Only there, and only for MapLibre's own wrapper, the Worker is started
+  // from the same import as a data: URL. Other workers are untouched.
+  function installFileWorkerShim() {
+    if (!global.location || global.location.protocol !== 'file:' || !global.Worker || global.Worker.__ixmapsGlFileShim) return;
+    const NativeBlob = global.Blob, NativeWorker = global.Worker;
+    const maplibreWorkerImport = new WeakMap(); // Blob → its import statement
+    const blobUrls = new Map();                 // blob: URL → import statement
+    const isMaplibreImport = t => typeof t === 'string' && /^import "https?:[^"]*\/maplibre-gl-worker(-dev)?\.mjs"$/.test(t);
+    function Blob(parts, opts) {
+      const b = new NativeBlob(parts, opts);
+      if (Array.isArray(parts) && parts.length === 1 && isMaplibreImport(parts[0])) maplibreWorkerImport.set(b, parts[0]);
+      return b;
+    }
+    Blob.prototype = NativeBlob.prototype;
+    global.Blob = Blob;
+    const nativeCreate = global.URL.createObjectURL;
+    global.URL.createObjectURL = function (obj) {
+      const u = nativeCreate.call(this, obj);
+      if (maplibreWorkerImport.has(obj)) blobUrls.set(u, maplibreWorkerImport.get(obj));
+      return u;
+    };
+    function Worker(url, opts) {
+      const imp = blobUrls.get(String(url));
+      if (imp && opts && opts.type === 'module') return new NativeWorker('data:text/javascript,' + encodeURIComponent(imp), opts);
+      return new NativeWorker(url, opts);
+    }
+    Worker.prototype = NativeWorker.prototype;
+    Worker.__ixmapsGlFileShim = true;
+    global.Worker = Worker;
   }
   function loadStylesheet(href) {
     return new Promise((resolve, reject) => {
