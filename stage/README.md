@@ -97,6 +97,25 @@ Interactive map examples built with [ixmaps-gl](https://github.com/gjrichter/ixm
 
 ---
 
+## censimenti/
+
+<div class="gallery">
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/censimenti/index_embed_italia_censimenti_compare_procom_2023.html"><img src="screenshots/censimenti--index_embed_italia_censimenti_compare_procom_2023.png" width="100%"></a><br>
+<b>Data Viz Italia — censimenti 2021–2023</b><br>
+<sub>Population change 2021–2023 by municipality, aggregated dynamically from ISTAT census sections: growth, age groups, education and foreign residents.</sub><br>
+<a href="https://gl.ixmaps.com/stage/censimenti/index_embed_italia_censimenti_compare_procom_2023.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/censimenti/index_embed_italia_censimenti_compare_procom_2023.html">see code →</a>
+</div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/censimenti/index_embed_italia_censimenti_compare_procom.html"><img src="screenshots/censimenti--index_embed_italia_censimenti_compare_procom.png" width="100%"></a><br>
+<b>Data Viz Italia — censimenti 2011–2021</b><br>
+<sub>ISTAT 2011–2021 census comparison: population, education and foreign residents by census section, aggregated to municipalities.</sub><br>
+<a href="https://gl.ixmaps.com/stage/censimenti/index_embed_italia_censimenti_compare_procom.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/censimenti/index_embed_italia_censimenti_compare_procom.html">see code →</a>
+</div>
+</div>
+
+---
+
 ## Tools
 
 Standalone tools (not map demos).
