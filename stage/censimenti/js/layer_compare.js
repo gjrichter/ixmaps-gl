@@ -442,7 +442,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart_procom_pop",
                 title: "Popolazione 2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -714,7 +714,7 @@ $Log: layer_compare.js,v $
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
                 description: "livello: sezioni di censimento, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -767,7 +767,7 @@ $Log: layer_compare.js,v $
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
                 description: "livello: <b>sezioni di censimento</b>, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -820,7 +820,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -873,7 +873,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -927,7 +927,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>educazione terzo grado </b>",
                 description: "a livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -987,7 +987,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021",
                 description: "a livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1043,7 +1043,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>fascia età da 0 a 5 anni</b>",
                 description: "livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1099,7 +1099,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>fascia età 75+ anni</b>",
                 description: "livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1160,7 +1160,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>stranieri o aploidi</b>",
                 description: "livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1218,7 +1218,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>educazione terzo grado</b>",
                 description: "livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1274,7 +1274,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>educazione secondaria</b>",
                 description: "livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1331,7 +1331,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>educazione scuola media</b>",
                 description: "livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1387,7 +1387,7 @@ $Log: layer_compare.js,v $
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021<br><b>educazione scuola elementare</b>",
                 description: "livello comunale, aggregato dinamicamente",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
             })
         );
     };
@@ -1440,7 +1440,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart_procom_all",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1477,7 +1477,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart_grid_all",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1531,7 +1531,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della popolazione 2011-2021<br><b>fascia età da 0 a 5 anni</b>",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1578,7 +1578,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1630,7 +1630,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1679,7 +1679,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1727,7 +1727,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1775,7 +1775,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1823,7 +1823,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1870,7 +1870,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1920,7 +1920,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
@@ -1970,7 +1970,7 @@ $Log: layer_compare.js,v $
             .meta({
                 name: "chart",
                 title: "Variazione della  popolazione straniera 2011-2021",
-                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+                tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}"
 
             })
         );
