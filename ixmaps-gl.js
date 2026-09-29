@@ -78,6 +78,10 @@
   // Same CDN builds every example page already pinned; centralized here
   // so bumping a version is a one-file edit, not a 13-file one.
   // ---------------------------------------------------------------
+  // this engine's release (= package.json "version", checked by
+  // test/unit/version.test.mjs); ixmaps.glVersion, and logged once at start
+  const IXMAPS_GL_VERSION = '0.1.0';
+
   const LIB_URLS = {
     // Bumped 3.6.2 -> 5.x (2026-09-21, globe-projection compat fix): native
     // globe projection (map.setProjection({type:'globe'})) needs >=5.0.1
@@ -271,6 +275,10 @@
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
       ]).then(() => {
         ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer } = global.deck);
+        // which engine and libraries this page really runs (a page may
+        // bring its own MapLibre/deck.gl — the loaded ones are named)
+        const ml = global.maplibregl && typeof global.maplibregl.getVersion === 'function' ? global.maplibregl.getVersion() : '?';
+        console.info(`[ixmaps-gl] ${IXMAPS_GL_VERSION} · MapLibre ${ml} · deck.gl ${global.deck.VERSION || '?'}`);
         // Matches the real engine's own ui/js/tools/tooltip_mustache.js,
         // which overrides Mustache.escape to identity: tooltip HTML (the
         // template itself, and this engine's own chart/data-table
@@ -9939,6 +9947,8 @@
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON, loadProject,
     markThemeClass, unmarkThemeClass, getBoundingBox, setTitle, setTitleBox, refreshTheme, formatValue: flatFormatValue,
     map: mapHandle, getZoom,
+    // this engine's version (flat's own ixmaps.version numbers flat)
+    glVersion: IXMAPS_GL_VERSION,
     // flat always has this page hook (its layer legend tool defines it,
     // ui/js/tools/layer_legend.js 702-712): pages wrap it and call the one
     // they replaced — the chain ends here
@@ -9957,6 +9967,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
+    IXMAPS_GL_VERSION,
     normalizeTheme, projectThemeToDefinition, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
