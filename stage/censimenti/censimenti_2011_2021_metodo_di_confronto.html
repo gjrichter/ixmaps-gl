@@ -1,0 +1,874 @@
+<title>Metodo di Confronto Censimenti</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,500&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     Tokens
+     ============================================================ */
+  :root {
+    --paper: #F7F8FA;
+    --paper-raised: #FFFFFF;
+    --ink: #12202E;
+    --ink-soft: #4C5C6B;
+    --ink-faint: #7C8B99;
+    --rule: #D7DEE5;
+    --rule-soft: #E6EBF0;
+    --accent: #0B5FA8;
+    --accent-deep: #073E70;
+    --accent-wash: #E9F1FA;
+    --verified: #1F7A4D;
+    --verified-wash: #EAF5EE;
+    --flag: #A83A2A;
+    --flag-wash: #FBEEEC;
+    --code-bg: #101B26;
+    --code-ink: #DCE6EE;
+    --code-accent: #7FC4FF;
+    --shadow: 0 1px 2px rgba(11, 30, 55, .04), 0 8px 24px rgba(11, 30, 55, .06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0E151D;
+      --paper-raised: #161F29;
+      --ink: #E7ECF1;
+      --ink-soft: #A9B7C4;
+      --ink-faint: #7C8B99;
+      --rule: #263441;
+      --rule-soft: #1D2933;
+      --accent: #6BB1EA;
+      --accent-deep: #9BCEF5;
+      --accent-wash: #172433;
+      --verified: #5FBE8B;
+      --verified-wash: #17271F;
+      --flag: #E0897C;
+      --flag-wash: #2A1B18;
+      --code-bg: #0A121A;
+      --code-ink: #DCE6EE;
+      --code-accent: #7FC4FF;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0E151D;
+    --paper-raised: #161F29;
+    --ink: #E7ECF1;
+    --ink-soft: #A9B7C4;
+    --ink-faint: #7C8B99;
+    --rule: #263441;
+    --rule-soft: #1D2933;
+    --accent: #6BB1EA;
+    --accent-deep: #9BCEF5;
+    --accent-wash: #172433;
+    --verified: #5FBE8B;
+    --verified-wash: #17271F;
+    --flag: #E0897C;
+    --flag-wash: #2A1B18;
+    --code-bg: #0A121A;
+    --code-ink: #DCE6EE;
+    --code-accent: #7FC4FF;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  }
+
+  /* ============================================================
+     Reset & base
+     ============================================================ */
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-wash); color: var(--accent-deep); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+
+  h1, h2, h3 {
+    font-family: 'Literata', Georgia, 'Times New Roman', serif;
+    color: var(--ink);
+    text-wrap: balance;
+    font-weight: 600;
+    line-height: 1.22;
+  }
+  code, pre, .mono, .tnum {
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============================================================
+     Page shell
+     ============================================================ */
+  .shell {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 720px);
+    gap: 56px;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; padding: 32px 20px 72px; gap: 28px; }
+  }
+
+  /* ---- masthead ---- */
+  .masthead { grid-column: 1 / -1; margin-bottom: 8px; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 20px; height: 1px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 38px);
+    margin: 14px 0 18px;
+    max-width: 20ch;
+  }
+  .lede {
+    color: var(--ink-soft);
+    font-size: 16.5px;
+    max-width: 62ch;
+    margin: 0 0 6px;
+  }
+  .lede code { font-size: .92em; }
+  .provenance {
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  .provenance b { color: var(--ink-soft); font-weight: 600; }
+
+  /* ---- stat strip ---- */
+  .stats {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 28px 0 8px;
+  }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--paper-raised);
+    padding: 18px 18px 16px;
+  }
+  .stat .n {
+    font-family: 'Literata', serif;
+    font-weight: 600;
+    font-size: 26px;
+    color: var(--accent-deep);
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+  .stat .n.good { color: var(--verified); }
+  .stat .lbl {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    line-height: 1.35;
+  }
+
+  /* ---- TOC rail ---- */
+  nav.toc {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    font-size: 13.5px;
+  }
+  nav.toc .toc-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  nav.toc a {
+    color: var(--ink-soft);
+    display: block;
+    padding: 5px 0 5px 14px;
+    border-left: 2px solid var(--rule);
+    line-height: 1.3;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); text-decoration: none; }
+  nav.toc details { border-left: 2px solid transparent; margin-left: 0; }
+  nav.toc summary { cursor: pointer; color: var(--ink); font-weight: 600; }
+  @media (max-width: 900px) {
+    nav.toc { position: static; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; background: var(--paper-raised); }
+  }
+
+  /* ============================================================
+     Article body
+     ============================================================ */
+  article { min-width: 0; }
+  section { margin: 0 0 40px; scroll-margin-top: 24px; }
+  section > h2:first-child, section > h3:first-child { margin-top: 0; }
+
+  h2 {
+    font-size: 22px;
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  h2 .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  h3 {
+    font-size: 17.5px;
+    margin: 30px 0 12px;
+    color: var(--accent-deep);
+  }
+  h3 .num { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent); margin-right: 4px; }
+
+  p { margin: 0 0 15px; max-width: 66ch; }
+  ul, ol.steps { margin: 0 0 15px; padding-left: 22px; max-width: 64ch; }
+  li { margin-bottom: 7px; }
+  strong { font-weight: 700; color: var(--ink); }
+  em { font-style: italic; }
+
+  code {
+    background: var(--rule-soft);
+    color: var(--accent-deep);
+    padding: .12em .4em;
+    border-radius: 5px;
+    font-size: .87em;
+    word-break: break-word;
+  }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 18px;
+    box-shadow: var(--shadow);
+    font-size: 13.2px;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: 1em; }
+  pre .c-fn { color: var(--code-accent); }
+  pre .c-str { color: #E9C46A; }
+  pre .c-com { color: #6B7F8F; font-style: italic; }
+
+  .diagram {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 18px;
+    font-size: 12.6px;
+    line-height: 1.6;
+    white-space: pre;
+    box-shadow: var(--shadow);
+  }
+
+  /* tables */
+  .tablewrap { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--rule); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--paper-raised); }
+  caption { caption-side: bottom; }
+  th, td {
+    padding: 9px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+  thead th {
+    background: var(--rule-soft);
+    color: var(--ink-soft);
+    font-weight: 600;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.hero td { background: var(--verified-wash); font-weight: 600; }
+  tr.hero td:first-child { color: var(--verified); }
+
+  /* callouts */
+  .callout {
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 0 0 20px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-wash);
+  }
+  .callout h4 {
+    margin: 0 0 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    font-weight: 600;
+  }
+  .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+  .callout--flag { border-left-color: var(--flag); background: var(--flag-wash); }
+  .callout--flag h4 { color: var(--flag); }
+  .callout--verified { border-left-color: var(--verified); background: var(--verified-wash); }
+  .callout--verified h4 { color: var(--verified); }
+  .callout--historical { border-left-color: var(--ink-faint); background: var(--rule-soft); }
+  .callout--historical h4 { color: var(--ink-soft); }
+  .callout ul { padding-left: 20px; }
+
+  hr.sep { border: none; border-top: 1px solid var(--rule); margin: 40px 0; }
+
+  .verified-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: .03em;
+    color: var(--verified);
+    background: var(--verified-wash);
+    padding: 2px 8px 2px 6px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .verified-tag::before { content: "✓"; font-size: 11px; }
+
+  footer.doc-foot {
+    grid-column: 1 / -1;
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  footer.doc-foot code { font-size: .95em; }
+
+  ::-webkit-scrollbar { height: 8px; width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; }
+</style>
+
+<div class="shell">
+
+  <div class="masthead">
+    <div class="eyebrow">Nota di metodo &middot; ixMaps</div>
+    <h1>Come la mappa &laquo;Popolazione 2011&ndash;2021&raquo; confronta due censimenti</h1>
+    <p class="lede">
+      Analisi del metodo di comparazione implementato in <code>index_embed_italia_censimenti_compare_procom.html</code>
+      + <code>layer_compare.js</code>. Documento verificato sui dati reali: ogni numero citato è stato
+      ricalcolato scaricando le stesse sorgenti che usa la mappa (§ 9).
+    </p>
+    <div class="provenance">
+      <span><b>Percorso:</b> <code>~/Repositories/GitHub/stage/stories/</code></span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="n good">0</span><span class="lbl">comuni 2011 orfani dal confronto</span></div>
+    <div class="stat"><span class="n">8.092&thinsp;&rarr;&thinsp;7.904</span><span class="lbl">comuni, 2011&thinsp;&rarr;&thinsp;2021</span></div>
+    <div class="stat"><span class="n">2</span><span class="lbl">comuni strutturalmente irrisolvibili (Mappano, Misiliscemi)</span></div>
+    <div class="stat"><span class="n">2,4&times;</span><span class="lbl">crescita sezioni di censimento in Trentino&ndash;Alto Adige</span></div>
+  </div>
+
+  <nav class="toc" aria-label="Indice">
+    <div class="toc-title">Indice</div>
+    <ol>
+      <li><a href="#s1">1&nbsp; Il problema</a></li>
+      <li><a href="#s2">2&nbsp; Architettura: due confronti</a></li>
+      <li><a href="#s3">3&nbsp; Struttura dei codici</a></li>
+      <li><a href="#s4">4&nbsp; La pipeline di confronto</a></li>
+      <li><a href="#s5">5&nbsp; Dove nasce il delta</a></li>
+      <li><a href="#s6">6&nbsp; Aggregazione per scala</a></li>
+      <li><a href="#s7">7&nbsp; I due casi difficili</a></li>
+      <li><a href="#s8">8&nbsp; Riepilogo</a></li>
+      <li><a href="#s9">9&nbsp; Fonti dei dati</a></li>
+      <li><a href="#s10">10&nbsp; In una frase</a></li>
+    </ol>
+  </nav>
+
+  <article>
+
+    <section id="s1">
+      <h2><span class="num">1</span> Il problema</h2>
+      <p>Confrontare il censimento 2011 con il 2021 in Italia significa affrontare tre disallineamenti simultanei:</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Disallineamento</th><th>Entità (misurata)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Codici comunali cambiati</strong> (fusioni, nuove province, passaggi di regione)</td>
+              <td>8.092 comuni nel 2011 &rarr; 7.904 nel 2021; <strong>464 codici 2011</strong> (1.251.560&nbsp;ab.) e <strong>276 codici 2021</strong> (1.221.749&nbsp;ab.) non hanno omonimo nell'altra annata</td>
+            </tr>
+            <tr>
+              <td><strong>Sezioni di censimento ridisegnate</strong></td>
+              <td>in Trentino&ndash;Alto Adige 9.979 sezioni 2011 &rarr; 23.780 nel 2021 (2,4&times;); in Valle d'Aosta 1.479 &rarr; 2.458</td>
+            </tr>
+            <tr>
+              <td><strong>Schemi di variabili diversi</strong></td>
+              <td>il tracciato 2011 (<code>P1&hellip;P140</code>, <code>ST1&hellip;</code>, <code>A&hellip;</code>, <code>E&hellip;</code>, <code>PE&hellip;</code>) e quello 2021 (<code>P1&hellip;P103</code>, <code>IT&hellip;</code>, <code>ST&hellip;</code>) coincidono solo in parte</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        La mappa non &laquo;risolve&raquo; questi problemi in modo definitivo: li affronta con una strategia a
+        <strong>due livelli territoriali</strong> e con <strong>aggregazione spaziale dipendente dalla scala</strong>,
+        che è la vera chiave del metodo.
+      </p>
+    </section>
+
+    <section id="s2">
+      <h2><span class="num">2</span> Architettura: due confronti, non uno</h2>
+      <p>La mappa contiene <strong>due temi di confronto sovrapposti</strong>, mutuamente esclusivi per scala:</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th></th><th>Tema comunale</th><th>Tema per sezioni</th></tr></thead>
+          <tbody>
+            <tr><td>nome interno</td><td><code>chart_procom_all</code></td><td><code>chart</code></td></tr>
+            <tr><td>geometria</td><td>comuni ISTAT 2022 (<code>Com01012022_s_WGS84.topojson.gz</code>) + centroidi <em>urban fabric</em> 2011 (dataset di Andrea Borruso)</td><td>basi territoriali 2011 <strong>e</strong> 2021 (<code>R{NN}_11_P</code> / <code>R{NN}_21_P</code>)</td></tr>
+            <tr><td>dati</td><td><code>all_indicatori_{2011,2021}_procom.csv.gz</code> (nazionale)</td><td><code>R{NN}_indicatori_{2011,2021}_sezioni.csv.gz</code> (per regione)</td></tr>
+            <tr><td>visibilità</td><td><code>chartlower: "1:150000"</code> &rarr; visibile <strong>solo da 1:150.000 in su</strong> (zoom out)</td><td><code>chartupper: "1:150000"</code> &rarr; visibile <strong>solo sotto 1:150.000</strong> (zoom in)</td></tr>
+            <tr><td>chiave di join</td><td><code>PROCOM</code> (codice comune)</td><td><code>SEZ2011</code> / <code>SEZ21_ID</code> (codice sezione)</td></tr>
+            <tr><td>allineamento codici</td><td><strong>sì</strong> (AP + fusioni)</td><td><strong>solo AP</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Il passaggio di consegne a 1:150.000 è la scelta progettuale centrale: il confronto per sezioni, che è
+        geometricamente fragile, viene mostrato solo quando si è abbastanza dentro da poterlo leggere come
+        <em>pattern locale</em>; il confronto comunale, robusto, copre tutte le scale superiori. Anche i poligoni
+        delle sezioni hanno <code>featureupper: "1:150000"</code>, e il caricamento delle basi territoriali è
+        <strong>per regione</strong>, ricalcolato al volo quando il centro mappa cambia regione
+        (<code>ixmaps.htmlgui_onZoomAndPan</code> &rarr; <code>__checkNewRegion</code> &rarr;
+        <code>map().replace("sezioni_2011"/"sezioni_2021", &hellip;)</code>).
+      </p>
+    </section>
+
+    <section id="s3">
+      <h2><span class="num">3</span> Struttura dei codici <small style="font-weight:400;color:var(--ink-faint);font-size:.6em;">perché il join per ID è possibile</small></h2>
+      <p>
+        Nei file ISTAT degli indicatori la chiave di sezione è la concatenazione <code>PROCOM</code> + numero di
+        sezione a 7 cifre, in entrambe le annate:
+      </p>
+      <div class="diagram">2011:  SEZ2011  = 7001 + 0000001 = 70010000001     (file separato da ';')
+2021:  SEZ21_ID = 7001 + 0000001 = 70010000001     (file separato da ',')</div>
+      <p>Il codice sfrutta esattamente questa regola per ricavare il comune da una sezione (<code>layer_compare.js:135</code>):</p>
+      <pre><code>let procom = value.substr(0, value.length - 7);</code></pre>
+      <p>
+        Le sezioni &laquo;speciali&raquo; <code>&hellip;8888888</code> (popolazione non localizzabile in una sezione)
+        vengono eliminate in entrata (<code>select("WHERE SEZ2011 NOT 888888")</code>). Sono trascurabili:
+        0,02&ndash;0,06&thinsp;% della popolazione regionale nei campioni verificati (VdA e TAA, entrambe le annate).
+      </p>
+    </section>
+
+    <section id="s4">
+      <h2><span class="num">4</span> La pipeline di confronto</h2>
+
+      <h3><span class="num">4.1</span> Livello comunale &mdash; <code>query_data_procom_all()</code> <small style="color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;font-size:.7em;">layer_compare.js:222</small></h3>
+
+      <div class="diagram">ixmaps.__getSituasComuneTranslation()        (snapshot statico SITUAS, in parallelo al Data.Broker)
+Data.Broker
+ &#9500;&#9472; all_indicatori_2011_procom.csv.gz      (8.092 righe, 59.433.744 ab.)
+ &#9492;&#9472; all_indicatori_2021_procom.csv.gz      (7.904 righe, 59.030.133 ab.)
+      &#9474;
+      &#9500;&#9472; (1) rimappa i codici 2011 con la traduzione SITUAS (report 99)
+      &#9500;&#9472; (2) condense(lead: "PROCOM")   &rarr; somma le righe 2011 confluite nello stesso comune 2021
+      &#9500;&#9472; (3) Data.Merger su PROCOM      &rarr; colonne suffissate .1 (2011) e .2 (2021)
+      &#9492;&#9472; (4) colonna derivata ST1.12</div>
+
+      <p>
+        <strong>(1) Traduzione SITUAS (report 99)</strong> &mdash; <code>ixmaps.__getSituasComuneTranslation()</code>
+        (<code>layer_compare.js:78</code>) legge <code>ixmaps.__getSituasCodes()</code> (<code>layer_compare.js:54</code>),
+        che scarica <strong>una sola volta per sessione</strong> lo snapshot statico <code>situas_codes.json</code> da
+        CDN (jsDelivr, repo <code>ixmaps-data</code>) e lo mette in cache &mdash; non interroga mai
+        <code>situas-servizi.istat.it</code> dal browser. Lo snapshot è generato da
+        <code>ixmaps-data/scripts/fetch_situas_censimenti_2011_2021.py</code>, che interroga
+        <code>situas-servizi.istat.it/publish/reportspooljson?pfun=99&amp;pdatada=31/12/2011&amp;pdataa=31/12/2021</code>
+        (individuato tramite lo strumento <code>ondata/opensituas</code>) e lo ripubblica pre-elaborato. Il report 99
+        è una tabella di traduzione <strong>già risolta</strong> dall'ISTAT stesso &mdash; un solo lookup sostituisce
+        sia il passaggio <code>AP</code> sia il passaggio <code>CS</code>/fusione, <strong>e in più
+        risolve correttamente le 14 incorporazioni</strong> (tipo <code>ES</code>, § 7.1):
+      </p>
+
+      <pre><code>data_2011.column("PROCOM").map(function (value) {
+    return newPROCOM[value] || value;
+});</code></pre>
+
+      <p>
+        Un <strong>singolo lookup</strong>, non un ciclo che segue le catene: il report 99 dà già, in un'unica riga,
+        il codice finale risolto per l'intero periodo richiesto. Seguire le catene non è necessario, e sarebbe anzi
+        sbagliato: il report elenca anche gli oltre 7.600 comuni mai cambiati come auto-mappature
+        (<code>"1001" &rarr; "1001"</code>), su cui un ciclo che insegue il valore successivo non terminerebbe mai.
+        I codici SITUAS sono stringhe a 6 cifre con zero iniziali (<code>"002114"</code>); il CSV dei censimenti usa
+        invece codici senza zero iniziali (<code>"2114"</code>) &mdash; lo script di generazione normalizza entrambi
+        i lati con la stessa convenzione <code>String(Number(...))</code>/<code>str(int(...))</code> già in uso nel
+        resto del file, così lo snapshot arriva già pronto per il lookup diretto.
+      </p>
+
+      <p>
+        Il periodo di traduzione (<code>31/12/2011 &rarr; 31/12/2021</code>, fissato nello script di
+        generazione) <strong>deve</strong> coincidere con l'annata dei dati 2021: un periodo più ampio (es. fino a
+        oggi) rimapperebbe i codici 2011 oltre il punto in cui si trova il lato 2021 del confronto, disallineandoli
+        di nuovo &mdash; per esempio il riordino sardo 2026 (§ 4.2) non va applicato qui, perché i dati 2021 non lo
+        riflettono.
+      </p>
+
+      <p>
+        Comuni nati da <em>porzioni</em> di territorio (<strong>Mappano</strong>, <code>001316</code>, 2017;
+        <strong>Misiliscemi</strong>, <code>081025</code>, 2021) <strong>non hanno un codice sorgente 2011</strong>
+        per costruzione: SITUAS li lascia correttamente senza predecessore invece di inventarne uno.
+      </p>
+
+      <p>
+        <strong>(2) <code>condense</code></strong> somma le righe 2011 che, dopo la rimappatura, puntano allo stesso
+        comune 2021: è il passaggio che realizza materialmente l'<strong>aggregazione dei comuni fusi</strong>
+        (5 comuni della Valsamoggia &rarr; 1 riga 2011 confrontabile con la riga 2021 di Valsamoggia).
+      </p>
+      <p>
+        <strong>(3) <code>Data.Merger</code></strong> produce le colonne <code>P1.1</code> (2011) e <code>P1.2</code>
+        (2021), <code>ST1.1</code>/<code>ST1.2</code>, ecc. La coppia di suffissi è ciò che i temi leggono come
+        <code>value: "P1.1|P1.2"</code>.
+      </p>
+      <p>
+        <strong>(4) <code>ST1.12</code></strong> (<code>layer_compare.js:275</code>) è la % di stranieri 2011
+        riproiettata sulla popolazione 2021: <code>floor(ST1.1 &times; P1.2 / P1.1)</code>. Nessun tema
+        attuale la usa &mdash; la tecnica <code>value100</code> in coppia descritta al § 5 è corretta anche sotto
+        aggregazione.
+      </p>
+
+      <h3><span class="num">4.2</span> Livello sezione &mdash; <code>query_data()</code> <small style="color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;font-size:.7em;">layer_compare.js:99</small></h3>
+      <p>Differisce in tre punti importanti:</p>
+      <ol class="steps">
+        <li>
+          applica <strong>solo</strong> la rimappatura <code>AP</code>, e la applica <strong>al prefisso dell'ID di
+          sezione</strong>: <code>70010000001</code> &rarr; sostituzione del solo <code>PROCOM</code> iniziale. Le
+          fusioni <strong>non</strong> vengono rimappate (il § 7.3 mostra che è la scelta giusta). La
+          fonte è <code>ixmaps.__getSituasApOnlyTranslation()</code> (<code>layer_compare.js:89</code>), che legge lo
+          stesso snapshot statico <code>situas_codes.json</code> di § 4.1 (sotto la chiave
+          <code>ap_only_translation</code>, popolata dallo script di generazione dal report SITUAS
+          <strong>129</strong> &mdash; &laquo;Variazioni amministrative e territoriali dei comuni dal 1991&raquo;,
+          tutta la storia dal 1991 a oggi in un'unica chiamata &mdash; filtrando su
+          <code>DESC_COD_VARIAZIONE.startswith("AP")</code> <strong>e</strong> data evento
+          (<code>DATA_INIZIO_AMMINISTRATIVA</code>) <code>&le; 31/12/2021</code>, lo stesso limite superiore usato
+          per il report 99, per non disallineare i due lati del confronto). Report 99 non è utilizzabile qui: è già
+          una traduzione &laquo;appiattita&raquo; che mescola <code>AP</code>+<code>CS</code>+<code>ES</code>, e non
+          può essere filtrata per tipo &mdash; userlo rimapperebbe anche le fusioni, sbagliato a livello di sezione
+          (§ 7.3).
+          <br><br>
+          Gli eventi <code>AP</code> entro il 31/12/2021 sono <strong>314</strong> successivi al 2011 (progressione:
+          1 nel 2017 &mdash; Sappada, BL&rarr;UD; 1 nel 2018 &mdash; Torre de' Busi, LC&rarr;BG; 2 nel 2021 &mdash;
+          Montecopiolo e Sassofeltrio, PU&rarr;RN &mdash; oltre ai 157 del riordino sardo 2016). Un secondo riordino
+          sardo, 155 eventi <code>AP</code> con decorrenza 01/01/2026, è escluso dal filtro sulla data perché
+          posteriore all'annata 2021 dei dati;
+        </li>
+        <li><strong>non</strong> fa <code>condense</code>: la sezione è già l'unità minima;</li>
+        <li>
+          esegue un <strong>padding bidirezionale</strong> che trasforma il merge in un <em>full outer join</em>
+          (<code>layer_compare.js:142&ndash;152</code>):
+        </li>
+      </ol>
+
+      <pre><code>var lookup1 = data_2011.lookupStringArray({key:"SEZ2011",  value:"P1"});
+var lookup2 = data_2021.lookupStringArray({key:"SEZ21_ID", value:"P1"});
+for (var i in lookup1) { if (!lookup2[i]) data_2021.addRow({"SEZ21_ID": i}); }
+for (var i in lookup2) { if (!lookup1[i]) data_2011.addRow({"SEZ2011":  i}); }</code></pre>
+
+      <p>
+        Poiché <code>Data.Merger</code> accoppia solo chiavi presenti in entrambe le tabelle, il padding garantisce
+        che <strong>l'unione</strong> delle sezioni delle due annate sopravviva al merge: le sezioni scomparse e
+        quelle nuove restano nella tabella, con il lato mancante vuoto.
+      </p>
+      <p>
+        Effetto collaterale importante: le righe di padding hanno <strong>solo</strong> la colonna ID. Il filtro
+        <code>filter_compare = 'WHERE PROCOM.2 like "*"'</code> &mdash; che nel motore ixmaps significa letteralmente
+        <em>&laquo;il campo non è vuoto&raquo;</em> (<code>maptheme.js:9418&ndash;9421</code>:
+        <code>result = this.__szValue.length</code>) &mdash; funziona quindi come test di esistenza nel 2021. Ne
+        deriva un'<strong>asimmetria</strong>: nel tema a numeri assoluti le sezioni <strong>scomparse</strong>
+        vengono scartate, mentre le sezioni <strong>nuove</strong> restano e appaiono come crescita da zero. È il
+        punto più delicato del metodo a livello di sezione (§ 8).
+      </p>
+    </section>
+
+    <section id="s5">
+      <h2><span class="num">5</span> Dove viene calcolata la differenza <small style="font-weight:400;color:var(--ink-faint);font-size:.6em;">nel motore, dopo l'aggregazione</small></h2>
+      <p>
+        Il delta non è precalcolato nei dati: è il motore SVG a calcolarlo, e <strong>l'ordine delle operazioni è
+        ciò che rende il confronto matematicamente corretto anche quando i poligoni non coincidono</strong>.
+      </p>
+      <p>In <code>maptheme.js</code> (post-load processing, righe ~10937&ndash;11045) la sequenza è:</p>
+      <ol class="steps">
+        <li><strong>aggregazione spaziale</strong> delle righe (<code>AGGREGATE|SUM</code>): somma dei valori grezzi per unità di aggregazione;</li>
+        <li>se è definito <code>value100</code>, ogni valore viene convertito in percentuale del <strong>proprio</strong> denominatore: <code>v[k] &times; 100 / v100[k]</code>;</li>
+        <li><code>DIFFERENCE</code>: <code>v[0] &larr; v[1] &minus; v[0]</code>; con <code>RELATIVE</code>: <code>v[0] &larr; 100 / v[0]_orig &times; (v[1] &minus; v[0])</code> (con guardia: se <code>v[0]_orig &le; nField100Min</code> il risultato è 0, invece di infinito).</li>
+      </ol>
+      <p>Ne seguono le tre formule effettivamente disegnate:</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Tema</th><th>binding</th><th>formula sull'unità di aggregazione <em>A</em></th></tr></thead>
+          <tbody>
+            <tr><td>variazione assoluta</td><td><code>value: "P1.1|P1.2"</code></td><td>&Sigma;<sub>A</sub>P1.2 &minus; &Sigma;<sub>A</sub>P1.1</td></tr>
+            <tr><td>variazione %</td><td><code>+ RELATIVE</code></td><td>100 &times; (&Sigma;<sub>A</sub>P1.2 &minus; &Sigma;<sub>A</sub>P1.1) / &Sigma;<sub>A</sub>P1.1</td></tr>
+            <tr><td>variazione in punti % (stranieri, istruzione)</td><td><code>value: "ST1.1|ST1.2"</code>, <code>value100: "P1.1|P1.2"</code></td><td>100 &times; &Sigma;<sub>A</sub>ST1.2/&Sigma;<sub>A</sub>P1.2 &minus; 100 &times; &Sigma;<sub>A</sub>ST1.1/&Sigma;<sub>A</sub>P1.1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <h4>Conseguenza cruciale</h4>
+        <p style="margin-bottom:0">
+          Poiché si <strong>somma prima</strong> e si fa il rapporto <strong>dopo</strong>, la variazione
+          percentuale di un'area aggregata è il rapporto <em>pooled</em> (corretto), non la media di rapporti; e
+          qualsiasi <strong>redistribuzione di popolazione tra sezioni interne alla stessa unità di aggregazione si
+          annulla esattamente</strong>. È questo, e non la rimappatura dei codici, il meccanismo che neutralizza la
+          riorganizzazione delle sezioni censuarie.
+        </p>
+      </div>
+      <p>
+        Rappresentazione: <code>userdraw: "arrowChart"</code> (plugin D3 <code>usercharts/d3/arrow_chart.js</code>)
+        disegna una freccia la cui altezza è proporzionale al valore (normalizzata su <code>normalsizevalue</code>,
+        con <code>sizepow</code> come esponente di percezione), verso l'alto/il basso secondo il segno, con i due
+        colori di <code>colorscheme</code> (<code>fadenegative</code> attenua il ramo negativo) ed etichetta
+        numerica se lo spazio basta.
+      </p>
+    </section>
+
+    <section id="s6">
+      <h2><span class="num">6</span> L'aggregazione dipendente dalla scala</h2>
+      <p>
+        <code>aggregationscale</code> è una lista di coppie <code>soglia di scala &rarr; unità di aggregazione</code>;
+        il motore (<code>maptheme.js:7943&ndash;7962</code>) scorre la lista e <strong>l'ultima soglia superata
+        vince</strong>, quindi più si esce di zoom più l'aggregazione è grossolana. Valori non numerici sono nomi di
+        campo, <code>&hellip;px</code> è una griglia in pixel schermo.
+      </p>
+      <p><strong>Tema comunale</strong> (<code>aggregationscale: ["1:1","PROCOM.1", "1:10000","50px", "1:2000000","25px", "1:7000000","REGIONE.1"]</code>):</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Scala</th><th>Unità di aggregazione</th><th>Lettura</th></tr></thead>
+          <tbody>
+            <tr><td class="num">&lt; 1:10.000</td><td><code>PROCOM.1</code></td><td>una freccia per comune</td></tr>
+            <tr><td class="num">1:10.000&ndash;1:2.000.000</td><td>griglia 50&nbsp;px</td><td>frecce per cella (comuni contigui pooled)</td></tr>
+            <tr><td class="num">1:2.000.000&ndash;1:7.000.000</td><td>griglia 25&nbsp;px</td><td>idem, celle più fitte</td></tr>
+            <tr><td class="num">&gt; 1:7.000.000</td><td><code>REGIONE.1</code></td><td>una freccia per regione</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Tema per sezioni</strong> (<code>aggregationscale: ["1:1","0", "1:10000","50px"]</code>): nessuna
+        aggregazione al massimo zoom, griglia 50&nbsp;px appena si esce. <code>RELOCATE</code> riposiziona la
+        freccia aggregata nel baricentro geografico dei punti aggregati (non al centro della cella), così le frecce
+        restano ancorate al tessuto costruito.
+      </p>
+    </section>
+
+    <section id="s7">
+      <h2><span class="num">7</span> I due casi difficili</h2>
+
+      <h3><span class="num">7.1</span> Aggregazioni di comuni <small style="color:var(--ink-faint);font-weight:400;font-size:.75em;">fusioni, nuove province &mdash; quanto funziona</small></h3>
+      <p>
+        Confrontando le due tabelle censuarie con ciascuna strategia di allineamento dei codici, ho misurato
+        quanti codici restano orfani (cioè quanta popolazione <strong>non</strong> entra nel confronto):
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Strategia di allineamento</th><th class="num">Comuni 2011 orfani</th><th class="num">Popolazione 2011 persa</th><th class="num">Comuni 2021 senza controparte</th><th class="num">Popolazione 2021</th></tr></thead>
+          <tbody>
+            <tr><td>nessuna rimappatura</td><td class="num">464</td><td class="num">1.251.560 (2,11&thinsp;%)</td><td class="num">276</td><td class="num">1.221.749</td></tr>
+            <tr><td>solo <code>AP</code></td><td class="num">307</td><td class="num">679.833 (1,14&thinsp;%)</td><td class="num">119</td><td class="num">669.208</td></tr>
+            <tr><td><code>AP</code> + <code>CS</code>/fusione</td><td class="num">30</td><td class="num">22.820 (0,04&thinsp;%)</td><td class="num">7</td><td class="num">26.907</td></tr>
+            <tr><td><code>AP</code> + <code>CS</code>/fusione + <code>ES</code></td><td class="num">16</td><td class="num">14.021 (0,02&thinsp;%)</td><td class="num">7</td><td class="num">26.907</td></tr>
+            <tr class="hero"><td><strong>SITUAS report 99 (usato dalla mappa)</strong></td><td class="num">0</td><td class="num">0 (0,00&thinsp;%)</td><td class="num">2</td><td class="num">15.784</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Con la traduzione SITUAS il confronto comunale è <strong>completo sul lato 2011</strong>: ogni comune del
+        2011 trova una controparte 2021. Rimane un solo tipo di residuo, sul lato 2021, ed è strutturale &mdash; non
+        un limite del metodo di rimappatura (vedi sotto): report 99 risolve
+        <code>AP</code> + <code>CS</code> + <code>ES</code> in un solo lookup già fornito dall'ISTAT, ed è sempre
+        aggiornato alla data richiesta (§ 4.1).
+      </p>
+
+      <div class="callout callout--flag">
+        <h4>L'unico residuo</h4>
+        <p style="margin-bottom:0">
+          <strong>Comuni nati da porzioni di territorio</strong>, per i quali un aggancio 1:1 non esiste per
+          costruzione: Misiliscemi (<code>081025</code>, 8.415&nbsp;ab., 2021, da Trapani) e Mappano
+          (<code>001316</code>, 7.369&nbsp;ab., 2017). Appaiono come crescita da zero; i comuni donatori come calo.
+          Un confronto corretto richiederebbe una riproporzionalizzazione areale, non una tabella di codici:
+          non esiste un comune &laquo;predecessore&raquo; a cui attribuire la popolazione 2011.
+        </p>
+      </div>
+
+      <p>
+        <strong>Non gestite da SITUAS</strong>: le variazioni di tipo
+        <code>AQ</code> (acquisizione di territorio, 197 comuni coinvolti su tutta la serie storica, § 9) e
+        <code>CE</code> (cessione/permuta, 197 comuni). Sono comuni che <em>restano</em> con lo stesso codice ma con
+        un perimetro diverso: il confronto li tratta come invariati. Il report SITUAS 129 (§ 4.2) <em>elenca</em>
+        con data precisa quali comuni sono coinvolti da <code>AQ</code>/<code>CE</code> &mdash; utile per
+        segnalarli &mdash; ma non fornisce (né potrebbe, essendo un cambio di perimetro e non di codice) un modo per
+        correggere numericamente la popolazione spostata. L'errore resta locale e generalmente piccolo, ma
+        silenzioso.
+      </p>
+
+      <h3><span class="num">7.2</span> Riorganizzazione delle sezioni 2011&thinsp;&rarr;&thinsp;2021 <small style="color:var(--ink-faint);font-weight:400;font-size:.75em;">quanto sono confrontabili gli ID</small></h3>
+      <p>Misure su due regioni intere (dati e geometrie ufficiali, esclusi i codici <code>&hellip;8888888</code>):</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th></th><th>Valle d'Aosta</th><th>Trentino&ndash;Alto Adige</th></tr></thead>
+          <tbody>
+            <tr><td>sezioni 2011 / 2021</td><td class="num">1.479 / 2.458</td><td class="num">9.979 / 23.780</td></tr>
+            <tr><td>ID identici nelle due annate</td><td class="num">1.390 (94,0&thinsp;% del 2011; 56,6&thinsp;% del 2021)</td><td class="num">8.964 (89,8&thinsp;% del 2011; 37,7&thinsp;% del 2021)</td></tr>
+            <tr><td>pop. 2011 in sezioni con ID condiviso</td><td class="num">99,2&thinsp;%</td><td class="num">92,8&thinsp;%</td></tr>
+            <tr><td>pop. 2021 in sezioni con ID condiviso</td><td class="num">91,7&thinsp;%</td><td class="num">87,9&thinsp;%</td></tr>
+            <tr><td>pop. media, sezioni con ID condiviso</td><td class="num">81&nbsp;ab.</td><td class="num">105&nbsp;ab.</td></tr>
+            <tr><td>pop. media, sezioni 2021 <em>nuove</em></td><td class="num">9,6&nbsp;ab.</td><td class="num">8,8&nbsp;ab.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Letture:</p>
+      <ul>
+        <li><strong>L'ID è stabile per la grande maggioranza della popolazione.</strong> Il 2021 ha molte più sezioni, ma quelle nuove sono in media dieci volte più piccole: sono soprattutto sottodivisioni e sezioni poco o non abitate.</li>
+        <li><strong>E l'ID identifica davvero lo stesso posto.</strong> Confrontando i centroidi delle sezioni con ID uguale (geometrie topojson 2011 vs 2021): distanza mediana <strong>8&nbsp;m</strong>, p90 85&nbsp;m in TAA; il 91&thinsp;% si sposta di meno di un quarto del lato equivalente della sezione. Non è coincidenza di numerazione: è continuità reale.</li>
+        <li><strong>Ma la geometria cambia comunque, spesso.</strong> Sul rapporto tra area 2021 e area 2011 a ID uguale (Valle d'Aosta): mediana 1,000, però solo il <strong>44,8&thinsp;%</strong> delle sezioni resta entro &plusmn;1&thinsp;%; il 24&thinsp;% perde oltre il 10&thinsp;% di superficie, il 20&thinsp;% ne guadagna oltre l'1&thinsp;%. Cioè: quando una sezione 2011 viene divisa, una delle figlie <strong>eredita il numero</strong> e le altre ricevono ID nuovi. Il confronto per ID su quella sezione registra un <strong>calo che è puro artefatto</strong>, bilanciato da una &laquo;sezione nuova&raquo; accanto che appare come crescita da zero.</li>
+      </ul>
+      <p>
+        Questo è precisamente il motivo per cui il tema per sezioni <strong>deve</strong> essere letto aggregato:
+        dentro una cella di 50&nbsp;px la sezione madre e le sue figlie tornano nella stessa somma e l'artefatto si
+        elide (§ 5). Il confronto per sezioni non aggregato (massimo zoom, <code>aggregationscale &rarr; 0</code>) è
+        attendibile solo dove la sezione non è stata toccata.
+      </p>
+
+      <h3><span class="num">7.3</span> Perché a livello di sezione la mappa non rimappa i comuni fusi <small style="color:var(--ink-faint);font-weight:400;font-size:.75em;">ed è corretto</small></h3>
+      <p>
+        La domanda ovvia è: perché applicare la rimappatura delle fusioni solo ai comuni e non anche al prefisso
+        degli ID di sezione? L'ho verificato in Trentino&ndash;Alto Adige (76 comuni 2011 spariti per fusione,
+        69.540&nbsp;ab., il 6,8&thinsp;% della regione):
+      </p>
+      <ul>
+        <li>rimappando il prefisso, <strong>697 su 714</strong> sezioni 2011 trovano un ID esistente nel 2021 &mdash; sembra funzionare;</li>
+        <li>ma confrontando i <strong>centroidi</strong>, quell'aggancio è <strong>spazialmente sbagliato nella maggioranza dei casi</strong>: spostamento mediano <strong>1,49 lati</strong> di sezione; solo il 41,9&thinsp;% entro un quarto di lato; il 29,7&thinsp;% oltre 5 lati di distanza.</li>
+      </ul>
+      <p>
+        Il motivo è che nel comune nato dalla fusione la numerazione delle sezioni riparte: la vecchia sezione 12
+        del comune A e la vecchia sezione 12 del comune B non possono essere entrambe la sezione 12 del comune fuso.
+        L'ID <em>esiste</em>, ma indica un altro pezzo di territorio. <strong>Rimappare il prefisso a livello di
+        sezione produrrebbe falsi accoppiamenti silenziosi</strong>: la scelta della mappa (lasciare gli ID intatti,
+        far sopravvivere entrambi i lati con il padding e lasciare che l'aggregazione spaziale li ricomponga) è la
+        più difendibile delle tre opzioni.
+      </p>
+      <p>
+        Il corollario, verificato nel codice, è che <strong>entrambe</strong> le basi territoriali (2011 e 2021)
+        vengono caricate nello stesso gruppo di layer <code>sezioni_censimento</code>
+        (<code>__georef_sez2011()</code>, <code>__georef_sez2021()</code>): così il posizionamento per
+        <code>position: "SEZ2011.1"</code> può risolvere anche gli ID esistenti in una sola delle due annate &mdash;
+        le sezioni scomparse sui poligoni 2011, quelle nuove sui poligoni 2021.
+        <em>(Questa è la lettura funzionale del perché entrambi i layer siano necessari; il meccanismo di
+        risoluzione dell'id all'interno del gruppo non è documentato nell'API.)</em>
+      </p>
+    </section>
+
+    <section id="s8">
+      <h2><span class="num">8</span> Riepilogo <small style="font-weight:400;color:var(--ink-faint);font-size:.6em;">problema &rarr; contromisura &rarr; residuo</small></h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Problema</th><th>Contromisura nella mappa</th><th>Residuo</th></tr></thead>
+          <tbody>
+            <tr><td>Comune con nuovo codice per cambio provincia</td><td>snapshot statico ISTAT SITUAS (report 99, § 4.1), singolo lookup</td><td>nessuno</td></tr>
+            <tr><td>Fusione di comuni</td><td>idem &mdash; report 99 la risolve nello stesso lookup + <code>condense</code></td><td>nessuno (comprese le 14 incorporazioni <code>ES</code>)</td></tr>
+            <tr><td>Comune nato da porzioni di territorio</td><td>nessuna contromisura possibile per costruzione</td><td>Mappano e Misiliscemi restano crescite da zero (§ 7.1)</td></tr>
+            <tr><td>Scambi/acquisizioni di territorio (<code>AQ</code>,<code>CE</code>)</td><td>report SITUAS 129 li elenca con data (utile per segnalarli)</td><td>197 + 197 comuni (tutta la serie storica) trattati come invariati &mdash; nessun metodo di codici può correggerli, serve riproporzionalizzazione areale</td></tr>
+            <tr><td>Sezione divisa in più sezioni</td><td><code>AGGREGATE|SUM</code> prima del delta + griglia 50&nbsp;px + <code>RELOCATE</code></td><td>al massimo zoom (aggregazione 0) l'artefatto è visibile</td></tr>
+            <tr><td>Sezione presente in una sola annata</td><td>padding bidirezionale &rarr; outer join; entrambe le basi territoriali caricate</td><td><code>filter_compare</code> (<code>like "*"</code> = campo non vuoto) scarta le sezioni <strong>scomparse</strong> ma tiene le <strong>nuove</strong> &rarr; bias verso la crescita nel tema a numeri assoluti</td></tr>
+            <tr><td>Denominatori piccoli nelle %</td><td><code>filter("WHERE P1.1 > 50 AND P1.2 > 50")</code> sul tema % per sezioni; guardia <code>nField100Min</code> su <code>RELATIVE</code></td><td>il filtro tiene solo il 17&ndash;19&thinsp;% delle sezioni, ma ~79&thinsp;% della popolazione 2021 (VdA, TAA): il tema % per sezioni <strong>non copre le zone poco abitate</strong>, e i comuni fusi vi scompaiono del tutto (nessuna sezione ha entrambi i lati &gt; 50)</td></tr>
+            <tr><td>Confronto di due percentuali (stranieri, istruzione)</td><td><code>value100</code> in <strong>coppia</strong> &rarr; ogni anno normalizzato sul proprio totale, dopo l'aggregazione</td><td>corretto</td></tr>
+            <tr><td>Sezioni non localizzate</td><td><code>select("&hellip; NOT 888888")</code></td><td>&lt; 0,1&thinsp;% della popolazione</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="s9">
+      <h2><span class="num">9</span> Fonti dei dati</h2>
+      <p>Sorgenti usate dalla mappa:</p>
+      <pre><code>https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ISTAT/Censimenti/2011/all_indicatori_2011_procom.csv.gz
+https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ISTAT/Censimenti/2021/all_indicatori_2021_procom.csv.gz
+https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ISTAT/Censimenti/{anno}/R{NN}_indicatori_{anno}_sezioni.csv.gz
+https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/basi_territoriali_{2011,2021}/R{NN}_{11,21}_P.topojson.gz
+https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/censimenti-2011-2021/situas_codes.json</code></pre>
+
+      <p>
+        I numeri di § 7.1 e § 7.2 sono ricalcolati scaricando queste stesse tabelle e applicando la stessa logica
+        di rimappaggio e aggregazione descritta in § 4.
+      </p>
+
+      <p>
+        Il registro ISTAT SITUAS (report 129, tutta la serie storica dal 1991) elenca, oltre agli eventi
+        <code>AP</code> usati in § 4.2, le altre categorie di variazione amministrativa: <code>AQ</code> 197,
+        <code>CE</code> 197, <code>CS</code> 342, <code>ES</code> 348, <code>CD</code> 50, <code>RN</code> 222
+        comuni coinvolti. Queste categorie non sono usate dal codice attuale (report 99 le risolve internamente
+        per <code>AP</code>+<code>CS</code>+<code>ES</code>, § 4.1); i conteggi <code>AQ</code>/<code>CE</code>
+        sono citati in § 7.1 e § 8 per quantificare il residuo non gestito dal metodo.
+      </p>
+    </section>
+
+    <section id="s10">
+      <h2><span class="num">10</span> In una frase</h2>
+      <p style="max-width:68ch;font-size:16.5px">
+        La mappa confronta i due censimenti <strong>allineando i codici comunali contro uno snapshot statico del
+        registro ISTAT SITUAS</strong> (province, fusioni e incorporazioni risolte in un solo lookup, rigenerato
+        periodicamente, § 4.1) al livello dei comuni, e <strong>rinunciando deliberatamente ad allineare le
+        sezioni</strong>, affidandosi invece a un <em>outer join</em> per ID di sezione e all'<strong>aggregazione
+        spaziale che precede il calcolo del delta</strong>: poiché si somma prima e si divide dopo, la
+        riorganizzazione delle sezioni si annulla dentro l'unità di aggregazione. È un metodo solido &mdash;
+        <span class="verified-tag">0&thinsp;% di popolazione fuori confronto a livello comunale</span> (§ 7.1),
+        residuano solo i 2 comuni nati da porzioni di territorio (Mappano, Misiliscemi),
+        strutturalmente irrisolvibili con una tabella di codici &mdash; i cui limiti restanti sono circoscritti e
+        noti: le variazioni di perimetro <code>AQ</code>/<code>CE</code> ignorate (nessun metodo di codici può
+        correggerle), e l'asimmetria del filtro <code>like "*"</code> sulle sezioni comparse/scomparse.
+      </p>
+    </section>
+
+    <footer class="doc-foot">
+      <span>Fonte: <code>censimenti_2011_2021_metodo_di_confronto.md</code> &middot; repo <code>stage/stories</code></span>
+      <span>ixMaps &middot; powered by ISTAT open data</span>
+    </footer>
+
+  </article>
+</div>
