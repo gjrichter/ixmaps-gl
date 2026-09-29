@@ -87,10 +87,14 @@
     // 5.x -> 6.x (2026-09-29): MapLibre 6 is published only as an ES
     // module (dist/maplibre-gl.mjs, named exports, no UMD bundle and no
     // window.maplibregl) — loadMaplibre imports it and provides the global.
-    // Its worker (maplibre-gl-worker.mjs next to it) is cross-origin from
-    // the CDN; MapLibre wraps it in a same-origin blob URL itself.
-    maplibreCss: 'https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css',
-    maplibreJs: 'https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs',
+    // Its worker (maplibre-gl-worker.mjs, resolved next to the module) is
+    // cross-origin from the CDN; MapLibre wraps it in a same-origin blob URL
+    // itself. Pinned to an exact version: unpkg answers a version range
+    // (@6) with a redirect, and a browser refuses a worker script that
+    // redirects ("Refused to cross-origin redirects of the top-level worker
+    // script" — the map never loaded on a file:// page).
+    maplibreCss: 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css',
+    maplibreJs: 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs',
     // Bumped 8.9.35 -> 9.4.0 (2026-09-21, globe-reprojection fix): v8's
     // interleaving (MapboxOverlay) always computed flat Web-Mercator
     // screen positions regardless of the map's actual projection —
@@ -200,7 +204,7 @@
       }
       if (i === 2) return true;
     }
-    console.warn(`[ixmaps-gl] this page loads maplibre-gl ${v || '(unknown version)'}; deck.gl needs >= ${MAPLIBRE_MIN_VERSION.join('.')} — loading ${LIB_URLS.maplibreJs.match(/maplibre-gl@([\d.]+)/)[1]}.x instead (it replaces window.maplibregl); remove the page's own maplibre-gl <script> tag`);
+    console.warn(`[ixmaps-gl] this page loads maplibre-gl ${v || '(unknown version)'}; deck.gl needs >= ${MAPLIBRE_MIN_VERSION.join('.')} — loading ${LIB_URLS.maplibreJs.match(/maplibre-gl@([\d.]+)/)[1]} instead (it replaces window.maplibregl); remove the page's own maplibre-gl <script> tag`);
     return false;
   }
   // data.js, unless the page has it already: .options({datajs: url}) loads
