@@ -1353,6 +1353,6 @@
   }
  ],
  "console": [
-  "warning: [ixmaps-gl] loadProject: map.setProjection failed (needs maplibre-gl >=5.0.1) Error: Style is not done loading.\n    at ki._checkLoaded (https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js:46:298457)\n    at ki.setProjection (https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js:46:314045)\n    at ds.set"
+  "warning: [ixmaps-gl] loadProject: map.setProjection failed (needs maplibre-gl >=5.0.1) Error: Style is not done loading.\n    at kl._checkLoaded (https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs:816:90163)\n    at kl.setProjection (https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs:816:105148)\n    at Vm."
  ]
 }

@@ -84,8 +84,13 @@
     // (5.0.0 shipped a style-spec regression, reverted in 5.0.1). Requires
     // MapLibre GL JS v4.5.1, v5, or v6 on the deck.gl side (see `deck`
     // below) — v5 satisfies that.
-    maplibreCss: 'https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css',
-    maplibreJs: 'https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js',
+    // 5.x -> 6.x (2026-09-29): MapLibre 6 is published only as an ES
+    // module (dist/maplibre-gl.mjs, named exports, no UMD bundle and no
+    // window.maplibregl) — loadMaplibre imports it and provides the global.
+    // Its worker (maplibre-gl-worker.mjs next to it) is cross-origin from
+    // the CDN; MapLibre wraps it in a same-origin blob URL itself.
+    maplibreCss: 'https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css',
+    maplibreJs: 'https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs',
     // Bumped 8.9.35 -> 9.4.0 (2026-09-21, globe-reprojection fix): v8's
     // interleaving (MapboxOverlay) always computed flat Web-Mercator
     // screen positions regardless of the map's actual projection —
@@ -116,6 +121,13 @@
       el.onerror = () => reject(new Error(`[ixmaps-gl] failed to load ${src}`));
       document.head.appendChild(el);
     });
+  }
+  // MapLibre 6's ES module → the window.maplibregl the engine and pages use
+  // (a copy of its named exports: a module namespace is read-only)
+  function loadMaplibre(src) {
+    return import(src).then(mod => {
+      global.maplibregl = Object.assign({}, mod.default || {}, mod);
+    }, err => { throw new Error(`[ixmaps-gl] failed to load ${src}: ${err && err.message}`); });
   }
   function loadStylesheet(href) {
     return new Promise((resolve, reject) => {
@@ -213,7 +225,7 @@
   function ensureLibrariesLoaded() {
     if (!_librariesPromise) {
       _librariesPromise = Promise.all([
-        pageMaplibreUsable() ? Promise.resolve() : loadScript(LIB_URLS.maplibreJs),
+        pageMaplibreUsable() ? Promise.resolve() : loadMaplibre(LIB_URLS.maplibreJs),
         pageDeckUsable() ? Promise.resolve() : loadScript(LIB_URLS.deck),
         global.Mustache ? Promise.resolve() : loadScript(LIB_URLS.mustache),
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)

@@ -1354,6 +1354,6 @@
  ],
  "console": [
   "warning: [ixmaps-gl] this page loads deck.gl 8.9.35, which has no MapLibreOverlay — loading deck.gl 9.4.0 instead (it replaces window.deck); remove the page's own deck.gl <script> tag",
-  "warning: [ixmaps-gl] this page loads maplibre-gl 3.6.2; deck.gl needs >= 4.5.1 — loading 5.x instead (it replaces window.maplibregl); remove the page's own maplibre-gl <script> tag"
+  "warning: [ixmaps-gl] this page loads maplibre-gl 3.6.2; deck.gl needs >= 4.5.1 — loading 6.x instead (it replaces window.maplibregl); remove the page's own maplibre-gl <script> tag"
  ]
 }
