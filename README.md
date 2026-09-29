@@ -193,6 +193,14 @@ Load the engine from jsDelivr, pinned to a release tag (or `@main` for the lates
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.1.0/ixmaps-gl.js"></script>
 ```
 
+or from unpkg, the npm package [`ixmaps-gl`](https://www.npmjs.com/package/ixmaps-gl)
+(`https://unpkg.com/ixmaps-gl` for the latest version; `npm install ixmaps-gl` installs the same
+browser script, which defines the global `ixmaps`):
+
+```html
+<script src="https://unpkg.com/ixmaps-gl@0.1.0/ixmaps-gl.js"></script>
+```
+
 or use a local copy (`<script src="ixmaps-gl.js"></script>`). A minimal page:
 
 ```html
