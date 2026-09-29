@@ -1480,7 +1480,7 @@
 
 <!-- iXmaps GL — deck.gl + MapLibre reimplementation, not the real ixmaps-flat/SVG engine.
      ixmaps-gl.js lazy-loads MapLibre/deck.gl/Supercluster/Mustache itself. -->
-<script src="../ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.1.0/ixmaps-gl.js"></script>
 <!-- data.js — needed outside ixmaps callbacks for pre-loading and schema analysis -->
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
 
@@ -3092,8 +3092,7 @@ async function exportMapAsHtml() {
     '</head><body>',
     '<div id="map"></div>',
     '<input type="hidden" id="size-field" value="' + escHtml(sizeField) + '">',
-    '<!-- place this file next to a copy of ixmaps-gl.js — no CDN build published yet -->',
-    '<script src="ixmaps-gl.js"><\/script>',
+    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.1.0/ixmaps-gl.js"><\/script>',
     '<script>',
     'function showToast(msg){ console.warn("[ixmaps-loader export]", msg); }', // buildLayer() calls this on a couple of fallback edge cases
     'var TABLE = { fieldFilters: {} };',

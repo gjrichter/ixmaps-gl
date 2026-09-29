@@ -5,6 +5,8 @@
 //   npm run snapshot                 (re)write the baselines  (= node run.mjs --update)
 //   node run.mjs --page dot_         only pages whose path contains "dot_"
 //   node run.mjs --engine old.js     run the pages against another ixmaps-gl.js build
+//                                    (default: this checkout's ixmaps-gl.js — also
+//                                    for pages that load the released one from jsDelivr)
 //   node run.mjs --jobs 3            pages in parallel (default 2)
 //
 // Remote data (everything not served locally, except basemap tiles/images)
@@ -36,6 +38,9 @@ const flag = n => argv.includes(n);
 const opt = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
 const UPDATE = flag('--update');
 const ENGINE = opt('--engine') ? path.resolve(opt('--engine')) : null;
+// the engine every page gets, whatever URL it loads it from (the pages load
+// the released one from jsDelivr): --engine, else this checkout's own
+const ENGINE_FILE = ENGINE || path.join(REPO, 'ixmaps-gl.js');
 const FILTER = opt('--page');
 const JOBS = Number(opt('--jobs', 2));
 const FLAT_ORACLE = flag('--flat-oracle');
@@ -99,10 +104,10 @@ const LIVE = /\.(pbf|mvt|png|jpe?g|webp|avif)(\?|$)|\/tiles?\/|\/fonts?\/|sprite
 
 async function handleRoute(route, localOrigin) {
   const url = route.request().url();
+  if (/\/ixmaps-gl\.js(\?|$)/.test(url)) {
+    return route.fulfill({ status: 200, contentType: 'text/javascript', body: fs.readFileSync(ENGINE_FILE) });
+  }
   if (url.startsWith(localOrigin)) {
-    if (ENGINE && /\/ixmaps-gl\.js(\?|$)/.test(url)) {
-      return route.fulfill({ status: 200, contentType: 'text/javascript', body: fs.readFileSync(ENGINE) });
-    }
     return route.continue();
   }
   if (!/^https?:/.test(url) || LIVE.test(url)) { cacheStats.live++; return route.continue(); }
