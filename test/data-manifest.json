@@ -239,6 +239,10 @@
   "sha256": "9f8d523ed0a3358fbef2ce48d3bd5d1fa0ea605e28306db977f01f9473379fa1",
   "bytes": 43500713
  },
+ "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/DStatis/Unfallorte2025_LinRef.csv.gz": {
+  "sha256": "818a826e6b1f4ec7d5ee5af9f66b9bd3a851105707e77058b5ecf06fa362b8e0",
+  "bytes": 42429143
+ },
  "https://tiles.basemaps.cartocdn.com/vector/carto.streets/v1/tiles.json": {
   "sha256": "119c67859c18c271f33ebbd95e06f45ddba911f2e5fa78619e12cea787385370",
   "bytes": 44256
