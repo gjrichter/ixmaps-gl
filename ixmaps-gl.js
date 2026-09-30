@@ -2148,6 +2148,36 @@
     dbtable: 'name', dbtableUrl: 'url', dbtableType: 'type', dbtableExt: 'ext',
     dbtableProcess: 'process', dbtableQuery: 'query', dbtableObj: 'obj', datacache: 'cache',
   };
+  // Every project key the engine would turn into code (new Function)
+  // is kept out, never run — a page's own .data({process, query}) and
+  // .style({colorscheme: fn.toString()}) still run. Project keys of
+  // that kind: the data processing function (data.process /
+  // style.dbtableProcess), the broker query (data.query /
+  // style.dbtableQuery — without it a data.name still reaches a
+  // provider the PAGE defined as ixmaps[name]) and a colorscheme given
+  // as a string, which resolveColorScheme evaluates as a function
+  // (an array colorscheme is data and stays).
+  const PROJECT_CODE_KEYS = [
+    ['data', 'process', 'data.process function'],
+    ['style', 'dbtableProcess', 'data.process function'],
+    ['data', 'query', 'data.query function'],
+    ['style', 'dbtableQuery', 'data.query function'],
+    ['style', 'colorscheme', 'colorscheme function', v => typeof v === 'string'],
+  ];
+  function withoutProjectCode(t, report) {
+    const found = PROJECT_CODE_KEYS.filter(([part, key, , isCode]) =>
+      t[part] && t[part][key] != null && (!isCode || isCode(t[part][key])));
+    if (!found.length) return t;
+    const copy = Object.assign({}, t);
+    found.forEach(([part, key]) => {
+      if (copy[part] === t[part]) copy[part] = Object.assign({}, t[part]);
+      delete copy[part][key];
+    });
+    const what = [...new Set(found.map(f => f[2]))].join(', ');
+    report.notes.push(`theme "${t.layer}": the project's ${what} is never run by ixmaps-gl`);
+    return copy;
+  }
+
   function projectThemeToDefinition(theme) {
     const t = theme || {};
     const style = Object.assign({}, t.style);
@@ -3609,19 +3639,6 @@
           console.warn('[ixmaps-gl] loadProject:', [...report.notes, ...report.skipped.map(x => `theme "${x.layer}" skipped — ${x.reason}`)].join('; '));
         }
         return report;
-      }
-
-      // a project file's data processing function is code the project
-      // names — kept out, never run (a page's own .data({process}) runs)
-      function withoutProjectCode(t, report) {
-        const hasData = t.data && t.data.process != null;
-        const hasStyle = t.style && t.style.dbtableProcess != null;
-        if (!hasData && !hasStyle) return t;
-        report.notes.push(`theme "${t.layer}": the project's data.process function is never run by ixmaps-gl`);
-        const copy = Object.assign({}, t);
-        if (hasData) { copy.data = Object.assign({}, t.data); delete copy.data.process; }
-        if (hasStyle) { copy.style = Object.assign({}, t.style); delete copy.style.dbtableProcess; }
-        return copy;
       }
 
       function applyProjectMap(m, f, report) {
@@ -9987,7 +10004,7 @@
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     IXMAPS_GL_VERSION,
-    normalizeTheme, projectThemeToDefinition, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
+    normalizeTheme, projectThemeToDefinition, withoutProjectCode, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,

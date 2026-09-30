@@ -14,7 +14,7 @@ const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location:
   document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
 win.window = win; win.globalThis = win;
 vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
-const { projectThemeToDefinition: toDef, normalizeTheme } = win.__ixmapsGlInternals;
+const { projectThemeToDefinition: toDef, normalizeTheme, withoutProjectCode, resolveClassColors } = win.__ixmapsGlInternals;
 const plain = v => JSON.parse(JSON.stringify(v));
 
 test('style.dbtable* keys → data{} (flat\'s own table, reversed); dbtableUrl used as is', () => {
@@ -71,4 +71,44 @@ test('"$item$" (flat: count the items) binds no value field', () => {
   const spec = normalizeTheme(toDef({ layer: 'L', field: '$item$', style: { type: 'FEATURES' } }));
   assert.equal(spec.binding.value, undefined);
   assert.equal(spec.targets['theme.field'], '$item$');
+});
+
+// withoutProjectCode: every project key the engine would turn into code is
+// dropped before the theme is defined (a page's own functions still run)
+test('project code keys are stripped: data/style process + query, string colorscheme', () => {
+  const report = { notes: [] };
+  const t = {
+    layer: 'L',
+    data: { name: 'Q', query: 'function(){ PWNED = 1 }', process: 'function(d){ return d }', url: 'd.csv' },
+    style: { type: 'CHART|BUBBLE', dbtableQuery: 'function(){}', dbtableProcess: 'function(d){}', colorscheme: '(function(o){ PWNED = 2 })', scale: 2 },
+  };
+  const before = JSON.stringify(t);
+  const out = withoutProjectCode(t, report);
+  assert.deepEqual(plain(out.data), { name: 'Q', url: 'd.csv' });
+  assert.deepEqual(plain(out.style), { type: 'CHART|BUBBLE', scale: 2 });
+  assert.equal(JSON.stringify(t), before, 'the project theme object is not mutated');
+  assert.equal(report.notes.length, 1);
+  assert.match(report.notes[0], /data\.process function, data\.query function, colorscheme function is never run/);
+});
+
+test('an array colorscheme is data and stays; a theme without code keys is returned as is', () => {
+  const report = { notes: [] };
+  const t = { layer: 'L', style: { colorscheme: ['#ff0000', '#00ff00'] }, data: { name: 'T' } };
+  assert.equal(withoutProjectCode(t, report), t);
+  assert.equal(report.notes.length, 0);
+});
+
+test('end to end: a stripped project colorscheme never runs; the query is gone from the spec', () => {
+  win.PWNED = 0;
+  const report = { notes: [] };
+  const raw = { layer: 'L', style: { type: 'CHART|BUBBLE', dbtable: 'Q', dbtableType: 'ext', dbtableQuery: 'function(){ PWNED = 1 }', colorscheme: '(function(o){ PWNED = 2 })' } };
+  // control: unstripped, the engine does evaluate a string colorscheme
+  resolveClassColors(raw.style.colorscheme, ['a', 'b'], null);
+  assert.equal(win.PWNED, 2);
+  win.PWNED = 0;
+  const spec = normalizeTheme(toDef(withoutProjectCode(raw, report)));
+  assert.equal(spec.data.query, undefined);
+  assert.equal(spec.data.name, 'Q'); // still reaches a provider the page defined as ixmaps.Q
+  resolveClassColors(spec.style.colorscheme, ['a', 'b'], null);
+  assert.equal(win.PWNED, 0);
 });

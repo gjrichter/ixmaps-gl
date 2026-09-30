@@ -155,8 +155,9 @@ ones, `replace` swaps themes by `style.name`/`meta.name`, `themeonly`/`maponly`/
 work as in flat. Themes in flat's older shape (data source in `style.dbtable*`, value field at
 the top level) are translated first. It resolves to `{ themes, skipped, notes }`: a theme
 that can't load is skipped with a warning, the rest still load. **Code a project names is not
-run by default** — `required` scripts, `ext` data scripts and a project's `process` functions are
-reported, not executed (only a page's own `.data({process})` runs) — and the basemap isn't switched.
+run by default** — `required` scripts, `ext` data scripts and a project's `process` and `query`
+functions and function-string `colorscheme`s are reported, not executed (only a page's own
+`.data({process, query})` and colorscheme functions run) — and the basemap isn't switched.
 
 A page can opt in to a project's **scripts** (`data.ext`) for script URLs under prefixes it lists —
 no built-in prefixes, and a project file's own `options.trustedscripts` is ignored. Both of flat's
