@@ -2927,8 +2927,21 @@ function ensureMap(onReady) {
 // extent on define() in this engine (confirmed: no such behavior exists in ixmaps-gl.js) — the
 // original's STATE.pendingViewRestore/"layerdraw" dance existed SOLELY to counteract that real-
 // engine behavior, so it's dropped entirely here, not reimplemented.
+// the basemap to START with: the one remembered for the current UI theme (see
+// STATE.basemapByUiTheme below), read here directly because initMapEarly() runs
+// before those vars are set — starting on the light default and switching once
+// the map is ready flashed a light basemap under the dark UI on every load
+function initialMapType() {
+  var byTheme = { dark: 'dark', light: 'light' };
+  try {
+    var saved = JSON.parse(localStorage.getItem('ixmaps-loader-basemap-by-theme') || 'null');
+    if (saved) { if (saved.dark) byTheme.dark = saved.dark; if (saved.light) byTheme.light = saved.light; }
+  } catch (e) {}
+  var key = byTheme[getCurrentUiTheme()];
+  return /dark/.test(key) ? 'VT_DATAVIZ_DARK' : 'VT_TONER_LITE';
+}
 function initMapEarly() {
-  var mapPromise = ixmaps.Map("map", {}, function(map) {
+  var mapPromise = ixmaps.Map("map", { mapType: initialMapType() }, function(map) {
     map.view([42.5, 12.5], 6)
        .options({
          objectscaling:   "dynamic",
@@ -3773,17 +3786,16 @@ function closeBasemapDropdown(e) {
     document.removeEventListener('click', closeBasemapDropdown);
   }
 }
-// GL-PORT NOTE: ixmaps-gl.js has exactly ONE hardcoded basemap style (CARTO Positron,
-// ixmaps-gl.js's own maplibregl.Map({style:...}) call) and no setMapType() or equivalent —
-// switching styles at runtime would need MapLibre's own map.setStyle(), which also tears down
-// and would need to carefully reattach the deck.gl interleaved overlay; deferred rather than
-// rushed. The picker UI, per-theme remembered choice, and #map background-color fallback all
-// still work (harmless, engine-independent) — only the actual tile swap is skipped.
+// flat's map.setMapType(id): ixmaps-gl (>= 0.2.3) maps the name onto its own keyless
+// basemaps (a "dark" name -> CARTO Dark Matter, else Positron) and swaps the style in place.
+// "Grigio" / "Grigio scuro" use the same styles as "Chiaro" / "Scuro"; they differ only in
+// the #map background behind the faded (basemapopacity 0.55) tiles, as in the flat version.
 function setBasemap(key) {
   var mapType = BASEMAP_TYPES[key];
   if (!mapType) return;
   STATE.basemap = key;
   document.getElementById('map').style.background = BASEMAP_BG[key] || '';
+  if (STATE.myMap) STATE.myMap.then(function(map) { if (map && map.setMapType) map.setMapType(mapType); });
   Array.from(document.querySelectorAll('.basemap-opt')).forEach(function(el) {
     el.classList.toggle('active', el.getAttribute('data-basemap') === key);
   });
