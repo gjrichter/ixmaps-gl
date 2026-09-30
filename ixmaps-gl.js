@@ -5283,6 +5283,16 @@
     return text;
   }
 
+  // Records behind one drawn chart item: a group's per-category record
+  // counts summed, else a Supercluster cluster's point_count, else 1.
+  // recordCounts only exists on RELOCATE groups (groupCoLocated); a plain
+  // grid group (no RELOCATE) carries counts only — read unguarded, BOX|TITLE
+  // without RELOCATE threw on the first cluster and the theme stopped drawing.
+  function groupRecordCount(props) {
+    const perCat = props.recordCounts || props.counts;
+    return perCat ? perCat.reduce((x, c) => x + c, 0) : (props.point_count || 1);
+  }
+
   function valuesFontSizePx(radiusPx, text, valueScale) {
     return Math.min(radiusPx * 0.8, radiusPx * (3.3 / Math.max(1, text.length))) * (valueScale || 1);
   }
@@ -9381,7 +9391,7 @@
         let title = null;
         if (titleShown) {
           const raw = d.properties.raw;
-          const n = d.properties.counts ? d.properties.recordCounts.reduce((x, c) => x + c, 0) : (d.properties.point_count || 1);
+          const n = groupRecordCount(d.properties);
           const text = n > 3 ? '(' + n + ')' : (raw && raw[this.binding.title] != null ? String(raw[this.binding.title]) : '');
           if (text) {
             const f = titleFontPx;
@@ -10004,7 +10014,7 @@
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     IXMAPS_GL_VERSION,
-    normalizeTheme, projectThemeToDefinition, withoutProjectCode, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
+    normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,

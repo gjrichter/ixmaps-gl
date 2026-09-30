@@ -490,3 +490,12 @@ test('geometryRowsToFeatureCollection: a geometry column (JSON string or object)
   assert.equal(fc.features[0].properties.geometry, undefined, 'the geometry column is not kept as a property');
   assert.throws(() => G.geometryRowsToFeatureCollection([{ geometry: '' }], 'geometry'), /holds no GeoJSON geometry/);
 });
+
+// groupRecordCount: records behind one drawn chart item (BOX|TITLE's "(n)")
+test('groupRecordCount: RELOCATE groups sum recordCounts, plain grid groups sum counts', () => {
+  const { groupRecordCount } = G;
+  assert.equal(groupRecordCount({ recordCounts: [2, 3], counts: [20, 30] }), 5); // RELOCATE: records, not weighted counts
+  assert.equal(groupRecordCount({ counts: [4, 0, 1] }), 5);                    // no RELOCATE: no recordCounts (threw before)
+  assert.equal(groupRecordCount({ point_count: 7 }), 7);
+  assert.equal(groupRecordCount({}), 1);
+});
