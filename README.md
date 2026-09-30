@@ -72,7 +72,7 @@ circle/square/diamond/triangle. See the top-of-file comment in
 A page's `.require(url)` scripts (page code, e.g. a user chart function) load in order before the
 layers are built. `ixmaps.map()` is the map handle as in flat — its calls wait until the map is ready —
 with `add(theme, flags)` / `replace` / `replaceTheme` / `remove`, `changeThemeStyle` for any style key,
-`getZoom()` (flat's zoom), `resize()` and `setBasemapOpacity`; the page's `htmlgui_onNewTheme(id)` and
+`getZoom()` (flat's zoom), `resize()`, `setBasemapOpacity` and `setMapType(id)` (also `setMapTypeId`, `mapType`: a basemap name reading dark/black/night/matter loads CARTO Dark Matter, any other name CARTO Positron, a color a plain background — the same rule the `mapType` option follows at start); the page's `htmlgui_onNewTheme(id)` and
 `htmlgui_onZoomAndPan()` (also once on load) are called (as in flat, a theme swapped in with `replace` comes last
 in the legend, while FEATURE and CHOROPLETH shapes always draw under the charts), and `map`, `getZoom` and flat's
 `formatValue` exist as globals. `.data({name})` without a URL waits for data of that name: from

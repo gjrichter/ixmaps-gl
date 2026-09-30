@@ -158,3 +158,14 @@ test('styleNum: the number, a list\'s first number, else NaN (as parseFloat gave
   assert.ok(Number.isNaN(styleNum('')));
   assert.equal(styleNum(undefined) || 1, 1, '`|| default` keeps working');
 });
+
+// resolveBasemapStyleUrl: a flat mapType NAME picks gl's dark or light
+// keyless basemap; a COLOR mapType stays a plain background (resolveMapTypeColor)
+test('basemap names: dark/black/night/matter -> Dark Matter, anything else -> Positron; colors stay colors', () => {
+  const { resolveBasemapStyleUrl: url, resolveMapTypeColor: color } = loadEngine();
+  for (const n of ['VT_DATAVIZ_DARK', 'CartoDB - Dark matter', 'VT_TONER_DARK', 'black_night']) assert.match(url(n), /dark-matter/, n);
+  for (const n of ['VT_TONER_LITE', 'CartoDB - Positron', 'VT_BRIGHT_LIGHT', undefined, '']) assert.match(url(n), /positron/, String(n));
+  assert.equal(color('dark'), '#1a1a1a'); // the bare word stays the #1a1a1a background it always was
+  assert.equal(color('#0b1020'), '#0b1020');
+  assert.equal(color('VT_DATAVIZ_DARK'), null);
+});

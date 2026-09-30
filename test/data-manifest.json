@@ -11,6 +11,10 @@
   "sha256": "c2fef38a1e77e9ff774dc1b21a2e931c81eab12191395be726c594404e4bf332",
   "bytes": 16656
  },
+ "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json": {
+  "sha256": "fc5bdb44e1d74c0602dd82bba3837b368fe3a96437d0edbbcf96d9dfe96b8a75",
+  "bytes": 70431
+ },
  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json": {
   "sha256": "a9e202b9696cf1734fddc2e9cd48358ee494efe99135a426323b0bc23522bc61",
   "bytes": 106878

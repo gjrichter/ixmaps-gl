@@ -1720,7 +1720,7 @@
   // htmlgui_flat.js). Its methods act on the last built map; called while
   // the map is still building, they run once it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible'];
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible'];
   const _mapHandle = {};
   for (const m of MAP_HANDLE_METHODS) {
     _mapHandle[m] = (...args) => {
@@ -2448,6 +2448,19 @@
     const named = NAMED_MAPTYPE_COLORS[t.toLowerCase()];
     return named || null;
   }
+  // A basemap NAME (flat's mapType: "VT_TONER_LITE", "VT_DATAVIZ_DARK",
+  // "CartoDB - Dark matter", ...) picks one of two keyless CARTO vector
+  // styles: dark for a name reading dark/black/night/matter, otherwise
+  // light (Positron, gl's default). A color mapType (resolveMapTypeColor)
+  // is a plain background instead and wins, so "dark" alone stays the
+  // #1a1a1a background it always was.
+  const BASEMAP_STYLE_URLS = {
+    light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  };
+  function resolveBasemapStyleUrl(mapType) {
+    return typeof mapType === 'string' && /dark|black|night|matter/i.test(mapType) ? BASEMAP_STYLE_URLS.dark : BASEMAP_STYLE_URLS.light;
+  }
   // Real ixmaps-flat's legend look (tools/legend.js 3773-3845, via
   // tools/background_theme.js): DARK when the basemap is more than half
   // opaque and the map background reads as dark — a map type naming
@@ -2718,7 +2731,7 @@
       const map = new maplibregl.Map({
         container: this.containerId,
         style: mapTypeColor ? buildBlankBackgroundStyle(mapTypeColor)
-                             : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+                             : resolveBasemapStyleUrl(this.mapOptions.mapType),
         center: [lon, lat],
         zoom: this._viewZoom != null && this._viewZoom !== '' ? flatToMapLibreZoom(Number(this._viewZoom)) : 8,
         // .attribution(a) (MapBuilder, above) was stored but never read —
@@ -3170,6 +3183,31 @@
         },
         replaceTheme: (id, layerBuilder, flag) => engineApi.replace(id, layerBuilder, flag),
         remove: (id) => { removeThemeById(id); return engineApi; },
+        // flat's map.setMapType(id) / setMapTypeId / mapType (htmlgui_flat.js
+        // mapApi): swap the basemap at runtime. MapLibre's setStyle replaces
+        // the whole style; deck.gl's interleaved overlay re-adds its own
+        // layers on 'styledata' by itself. What the new style resets is put
+        // back once it has loaded: the projection (globe), the basemap
+        // opacity (it is written into the style's paint properties).
+        setMapType: (id) => {
+          const color = resolveMapTypeColor(id);
+          const style = color ? buildBlankBackgroundStyle(color) : resolveBasemapStyleUrl(id);
+          const current = color ? null : resolveBasemapStyleUrl(builder.mapOptions.mapType);
+          const wasColor = !!resolveMapTypeColor(builder.mapOptions.mapType);
+          builder.mapOptions.mapType = id;
+          if (!color && !wasColor && style === current) return engineApi; // same style: nothing to reload
+          const projection = typeof map.getProjection === 'function' ? map.getProjection() : null;
+          map.once('style.load', () => {
+            if (projection && projection.type && typeof map.setProjection === 'function') {
+              try { map.setProjection({ type: projection.type }); } catch (e) { /* projection unsupported by this build */ }
+            }
+            applyBasemapOpacity();
+          });
+          map.setStyle(style);
+          return engineApi;
+        },
+        setMapTypeId: (id) => engineApi.setMapType(id),
+        mapType: (id) => engineApi.setMapType(id),
         setBasemapOpacity: (delta, mode) => {
           _basemapOpacity = mode === 'relative'
             ? Math.max(0, Math.min(1, _basemapOpacity + (parseFloat(delta) || 0)))
@@ -10014,7 +10052,7 @@
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     IXMAPS_GL_VERSION,
-    normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
+    normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
