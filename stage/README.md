@@ -122,9 +122,9 @@ Standalone tools (not map demos).
 
 <div class="gallery">
 <div class="card">
-<a href="https://gl.ixmaps.com/stage/ixmaps-loader_70.html"><img src="screenshots/ixmaps-loader_70.png" width="100%"></a><br>
+<a href="https://gl.ixmaps.com/app/ixmaps-loader_70.html"><img src="screenshots/ixmaps-loader_70.png" width="100%"></a><br>
 <b>iXmaps Smart Data Loader</b><br>
 <sub>Paste a URL or load a file (CSV, JSON, GeoJSON, TopoJSON, …) to inspect it and build an ixmaps layer, with optional AI-assisted configuration.</sub><br>
-<a href="https://gl.ixmaps.com/stage/ixmaps-loader_70.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/ixmaps-loader_70.html">see code →</a>
+<a href="https://gl.ixmaps.com/app/ixmaps-loader_70.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/app/ixmaps-loader_70.html">see code →</a>
 </div>
 </div>

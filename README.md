@@ -273,7 +273,7 @@ For checking page files before they run, use the static checker in ixmaps-gramma
 | [`mappa_stranieri_30.html`](./stage/mappa_stranieri_30.html) | Symbol shapes, city picker, runtime `changeThemeStyle` filtering, light legend theme |
 | [`roma_incidenti_pericolosita_sidebar_gl.html`](./stage/roma_incidenti_pericolosita_sidebar_gl.html) | AGGREGATE on a gridwidth grid, facets sidebar |
 | [`roma_incidenti_pericolosita_sidebar.html`](./stage/roma_incidenti_pericolosita_sidebar.html) | The same page on the **real** ixmaps-flat engine, kept for side-by-side reference |
-| [`uk_collisions_2023.html`](./stage/uk_collisions_2023.html), [`ixmaps-loader_70.html`](./stage/ixmaps-loader_70.html) | Additional real-page compatibility tests |
+| [`uk_collisions_2023.html`](./stage/uk_collisions_2023.html), [`app/ixmaps-loader_70.html`](./app/ixmaps-loader_70.html) | Additional real-page compatibility tests |
 | [`examples/`](./examples) | Smaller feature-by-feature test pages (choropleth classing modes, bubble ranges, etc.) |
 
 Serve any of these with a static file server (they fetch remote data over HTTPS, so
