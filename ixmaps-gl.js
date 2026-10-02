@@ -1533,10 +1533,136 @@
   //  - '2narrow'/'3narrow', '2wide'/'3wide': cumulative-step variants.
   // Channels are FLOORED, as the source's own hex encoding does
   // (hh.charAt(Math.floor(v / 16)) + hh.charAt(v % 16) truncates the
-  // fraction), and clamped to 0-255. Flat's named palettes (spectrum,
-  // viridis, tableau, ...) are not ported: null, the caller's fallback.
+  // fraction), and clamped to 0-255. The named palettes are
+  // flatPaletteScheme's; spectrum/spectral (flat's colour-wheel generator)
+  // is not ported: null, the caller's fallback.
   const FLAT_PALETTE_SCHEMES = /^(spectrum|spectral|office|mineral|minaral|pastel|harvest|fruit|kmeansp?|pimp|intense|fluo|tableau(10|20)?|viridis|plasma|magma)$/i;
   const FLAT_SWEEP_MODES = ['auto', 'linear', 'dynamic', '2colors', '2wide', '2narrow', '2low', '2high', '3colors', '3wide', '3narrow', '3low', '3high'];
+
+  // flat's named palettes (colorscheme.js 832-1177, 1197-1268), the tables
+  // copied from flat's source: ["N", "tableau", offset] takes N colors of the
+  // palette from offset on, repeating it cyclically
+  // (_circ_createPaletteColorScheme); viridis / plasma / magma are 32-stop
+  // sequential maps resampled to N stops with linear interpolation
+  // (_circ_createSequentialPaletteColorScheme). flat matches each name in
+  // three spellings only — lower, UPPER, Title ("Minaral" for mineral).
+  const FLAT_QUALITATIVE_PALETTES = {
+    office: [
+      '#9999FF', '#993366', '#FFFFCC', '#CCFFFF', '#660066', '#FF8080', '#0066CC', '#CCCCFF',
+      '#000080', '#FF00FF', '#FFFF00', '#00FFFF', '#800080', '#800000', '#008080', '#0000FF',
+      '#00CCFF', '#CCFFFF', '#CCFFCC', '#FFFF99', '#99CCFF', '#FF99CC', '#CC99FF', '#FFCC99'
+    ],
+    mineral: [
+      '#F3898B', '#7BFECD', '#B3B07B', '#49BA85', '#FEDBFE', '#847FBA', '#FEA869', '#17BCC4',
+      '#DC686D', '#28803C', '#FFFF00', '#C09B43', '#746FC0', '#9C9C9C', '#EDFEA5', '#0000FF',
+      '#00E04D', '#86A9CE', '#B37B9D', '#9FD8B3', '#FEB676', '#C09671', '#87CFFE', '#00A7C7'
+    ],
+    pastel: [
+      '#D2D2D2', '#9DC0C0', '#DFC7AA', '#A1D197', '#E2A6A6', '#CBA6CB', '#FEA4A4', '#A8ACD1',
+      '#C8D89A', '#F3C4D8', '#E9E15E', '#EEEEEE', '#C0AB79', '#E2E17F', '#B4E1FE', '#E8DDFE',
+      '#E1FEEB', '#FEF782', '#C3FFC3', '#CEFE87', '#8CFEB3', '#D2D2D2', '#9DC0C0', '#DFC7AA'
+    ],
+    harvest: [
+      '#C06549', '#FFD700', '#BDB76B', '#F7B567', '#CEC395', '#CD9B1D', '#F0E68C', '#A7AF5E',
+      '#C09058', '#8B4513', '#AC96AC', '#698B69', '#8B6914', '#8B8B00', '#FFFBC3', '#BDB056',
+      '#DCCEDB', '#FEF782', '#FEEAC6', '#FFC7AE', '#A6B655', '#DB6700', '#E5A100', '#F7D3B3'
+    ],
+    fruit: [
+      '#1F77B4', '#AEC7E8', '#FF7F0E', '#FFBB78', '#2CA02C', '#99DF8B', '#D62728', '#FF9896',
+      '#966ABE', '#C5B0D5', '#8C564B', '#C49C94', '#E377C2', '#F7B6D2', '#7E7E7E', '#C7C7C7',
+      '#BCBD22', '#DBDB8D', '#18BECF', '#9EDAE5', '#1F77B4', '#AEC7E8'
+    ],
+    kmeans: [
+      '#c17cd3', '#91c15d', '#6a70d7', '#bab440', '#513688', '#5dc67f', '#993888', '#37d8b0',
+      '#e3586f', '#36dee6', '#d66044', '#47b795', '#ab396c', '#568429', '#e07db5', '#3c7c3d',
+      '#628bd5', '#cb8832', '#ad4258', '#a2863e', '#ad4248', '#9c4629'
+    ],
+    kmeansp: [
+      '#ffd1b2', '#a5b2e9', '#effcc2', '#e1c3f8', '#acc692', '#d899b7', '#bbfdd9', '#e8a197',
+      '#8ceceb', '#fab9a0', '#6dc5b7', '#ffc0bc', '#66b8bd', '#dcc992', '#7db3c8', '#fffedb',
+      '#ffdfff', '#84b5ac', '#ffebf2', '#a2aead', '#e1f3ff', '#b5e6ff'
+    ],
+    pimp: [
+      '#b09234', '#5f3dc1', '#4ca735', '#b54ade', '#7e9a36', '#cb43b3', '#4a9f61', '#d93f76',
+      '#3a9e88', '#da4631', '#7876dc', '#d57a29', '#5e90cd', '#814b1b', '#554f95', '#396829',
+      '#c275ba', '#75702e', '#89376c', '#bf7f51', '#923432', '#d37075'
+    ],
+    intense: [
+      '#c98ab6', '#5bbb42', '#6035bd', '#9dac3c', '#c450da', '#66b888', '#d84fa9', '#44733a',
+      '#7370d7', '#d19231', '#443672', '#db4d32', '#4ca5b0', '#d5466d', '#829fdb', '#8b3b26',
+      '#506793', '#a69358', '#873987', '#4f4b21', '#d58873', '#79354c'
+    ],
+    fluo: [
+      '#ecd730', '#4ddded', '#c0ee32', '#f6ac8d', '#64ea51', '#eebd5e', '#5be9c8', '#d9db55',
+      '#77e7a1', '#c6e552', '#8ac793', '#95e354', '#a5e3ad', '#dff782', '#67ee8b', '#e2d680',
+      '#a5e47d', '#b0d490', '#9fc658', '#d1f5a5', '#b4db6c', '#c1d271'
+    ],
+    tableau: [
+      '#4e79a7', '#a0cbe8', '#f28e2b', '#ffbe7d', '#59a14f', '#8cd17d', '#b6992d', '#f1ce63',
+      '#499894', '#86bcb6', '#e15759', '#ff9d9a', '#79706e', '#bab0ac', '#d37295', '#fabfd2',
+      '#b07aa1', '#d4a6c8', '#9d7660', '#d7b5a6'
+    ],
+    tableau10: [
+      '#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B', '#E377C2', '#7F7F7F',
+      '#BCBD22', '#17BECF', '#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B',
+      '#E377C2', '#7F7F7F', '#BCBD22', '#17BECF'
+    ],
+    tableau20: [
+      '#1F77B4', '#AEC7E8', '#FF7F0E', '#FFBB78', '#2CA02C', '#98DF8A', '#D62728', '#FF9896',
+      '#9467BD', '#C5B0D5', '#8C564B', '#C49C94', '#E377C2', '#F7B6D2', '#7F7F7F', '#C7C7C7',
+      '#BCBD22', '#DBDB8D', '#17BECF', '#9EDAE5'
+    ]
+  };
+  const FLAT_SEQUENTIAL_PALETTES = {
+    viridis: [
+      '#440154', '#470D60', '#48186A', '#482475', '#472E7C', '#453882', '#424186', '#3E4C8A',
+      '#3A548C', '#365D8D', '#32658E', '#2E6D8E', '#2B758E', '#287D8E', '#25848E', '#228C8D',
+      '#1F948C', '#1E9C89', '#20A386', '#25AB82', '#2EB37C', '#3ABA76', '#48C16E', '#58C765',
+      '#69CD5B', '#7FD34E', '#93D741', '#A8DB34', '#BDDF26', '#D5E21A', '#EAE51A', '#FDE725'
+    ],
+    plasma: [
+      '#0D0887', '#220690', '#310597', '#41049D', '#4E02A2', '#5B01A5', '#6700A8', '#7501A8',
+      '#8104A7', '#8D0BA5', '#9814A0', '#A21D9A', '#AD2793', '#B6308B', '#BF3984', '#C7427C',
+      '#CF4C74', '#D6556D', '#DD5E66', '#E3685F', '#E97257', '#EF7C51', '#F3874A', '#F79143',
+      '#FA9C3C', '#FCA934', '#FDB52E', '#FDC229', '#FCCE25', '#F9DD25', '#F5EB27', '#F0F921'
+    ],
+    magma: [
+      '#000004', '#030312', '#0A0822', '#140E36', '#1E1149', '#2A115C', '#38106C', '#471078',
+      '#54137D', '#601880', '#6D1D81', '#792282', '#882781', '#942C80', '#A1307E', '#AE347B',
+      '#BD3977', '#CA3E72', '#D6456C', '#E24D66', '#EC5860', '#F3655C', '#F8745C', '#FB835F',
+      '#FD9266', '#FEA36F', '#FEB27A', '#FEC185', '#FECF92', '#FDE0A1', '#FCEEB0', '#FCFDBF'
+    ]
+  };
+  const FLAT_PALETTE_NAMES = (() => {
+    const names = {};
+    for (const key of [...Object.keys(FLAT_QUALITATIVE_PALETTES), ...Object.keys(FLAT_SEQUENTIAL_PALETTES)]) {
+      names[key] = key; names[key.toUpperCase()] = key;
+      names[key === 'mineral' ? 'Minaral' : key[0].toUpperCase() + key.slice(1)] = key;
+    }
+    return names;
+  })();
+  const hexRgb = h => [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)];
+  function flatPaletteScheme(name, nColors, offset) {
+    const key = FLAT_PALETTE_NAMES[name];
+    if (!key) return null;
+    nColors = Math.max(1, Number(nColors) || 1);
+    const seq = FLAT_SEQUENTIAL_PALETTES[key];
+    if (seq) {
+      const out = [];
+      for (let i = 0; i < nColors; i++) {
+        const pos = (nColors < 2 ? 0 : i / (nColors - 1)) * (seq.length - 1);
+        const i0 = Math.floor(pos), i1 = Math.min(seq.length - 1, i0 + 1), f = pos - i0;
+        const a = hexRgb(seq[i0]), b = hexRgb(seq[i1]);
+        out.push(a.map((v, k) => Math.round(v + (b[k] - v) * f)));
+      }
+      return out;
+    }
+    const colors = FLAT_QUALITATIVE_PALETTES[key];
+    const off = Number(offset) || 0;
+    const out = [];
+    for (let i = 0; i < nColors; i++) out.push(hexRgb(colors[(off + i) % colors.length]));
+    return out;
+  }
 
   function isGeneratedColorScheme(colorscheme) {
     return Array.isArray(colorscheme) && colorscheme.length > 0 && !isNaN(Number(colorscheme[0])) && String(colorscheme[0]).trim() !== '';
@@ -1549,6 +1675,7 @@
   }
 
   function flatColorSweep(cc1, cc2, nSteps, nParam1, nParam2) {
+    if (typeof cc1 === 'string' && FLAT_PALETTE_NAMES[cc1]) return flatPaletteScheme(cc1, nSteps, cc2);
     if (typeof cc1 === 'string' && FLAT_PALETTE_SCHEMES.test(cc1)) return null;
     nSteps = Number(nSteps);
     const [r1, g1, b1] = flatColorRgb(cc1, [255, 255, 255]);

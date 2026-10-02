@@ -51,8 +51,23 @@ test('flatColorSweep reproduces real colorscheme.js for every mode, 1-25 steps',
   assert.ok(compared > 2000, `compared ${compared} sweeps`);
 });
 
-test('flatColorSweep: named ixmaps palettes are not ported → null', () => {
-  assert.equal(G.flatColorSweep('viridis', undefined, 5), null);
+const PALETTES = ['office', 'mineral', 'pastel', 'harvest', 'fruit', 'kmeans', 'kmeansp', 'pimp', 'intense', 'fluo',
+  'tableau', 'tableau10', 'tableau20', 'viridis', 'plasma', 'magma'];
+const spellings = n => [n, n.toUpperCase(), n === 'mineral' ? 'Minaral' : n[0].toUpperCase() + n.slice(1)];
+
+test('named palettes reproduce real colorscheme.js: every palette and spelling, 1-30 colors, offsets 0-25', { skip: !flat && 'no sibling ixmaps-flat checkout' }, () => {
+  let compared = 0;
+  for (const name of PALETTES) for (const sp of spellings(name)) for (let n = 1; n <= 30; n++) for (const off of [undefined, '0', '3', '7', '25']) {
+    const want = Array.from(flat.createColorScheme(sp, off, n), c => String(c).toLowerCase());
+    const got = Array.from(G.flatColorSweep(sp, off, n), c => hex(Array.from(c)));
+    assert.deepEqual(got, want, `${sp} n=${n} offset=${off}`);
+    compared++;
+  }
+  assert.ok(compared > 7000, `compared ${compared} palettes`);
+});
+
+test('named palettes: ["9", "tableau"] are the first 9 Tableau colors; spectrum is not ported → null', () => {
+  assert.deepEqual(plain(G.flatColorSweep('tableau', undefined, 3)), [[0x4e, 0x79, 0xa7], [0xa0, 0xcb, 0xe8], [0xf2, 0x8e, 0x2b]]);
   assert.equal(G.flatColorSweep('Spectrum', 'dark', 5), null);
 });
 
