@@ -207,3 +207,16 @@ test('CATEGORICAL VALUES with valuefield = the categorical field: the class name
   assert.equal(G.categoryValueRecord({ valuefield: 'canone' }, binding, f, labels, 1), null, 'another valuefield: not the class');
   assert.equal(G.flatValueText(null, null, 4200, {}, f), '4 200');
 });
+
+test('marked legend classes on a group (flat isolate): only the marked parts, own size, at the center', () => {
+  const counts = [6, 3, 1];
+  const full = G.computeBubblePackLayout(counts, 64);
+  const iso = G.isolatedBubblePackLayout(counts, 64, new Set([1]));
+  assert.deepEqual(plain(iso.present.map(p => p.i)), [1], 'the other categories are hidden');
+  near(iso.radii[0], full.radii[1], 'the marked part keeps its size');
+  near(iso.fitScale, full.fitScale, 'and the group scale');
+  assert.deepEqual(plain(iso.offsets), [{ x: 0, y: 0 }], 'at the group center');
+  const two = G.isolatedBubblePackLayout(counts, 64, new Set([2, 0]));
+  assert.deepEqual(plain(two.present.map(p => p.i)), [0, 2], 'biggest first, the smaller on top');
+  assert.equal(G.isolatedBubblePackLayout([6, 0, 1], 64, new Set([1])), null, 'no marked category in the group');
+});

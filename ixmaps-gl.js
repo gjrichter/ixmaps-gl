@@ -6207,6 +6207,25 @@
     return { present, radii, offsets, fitScale, maxR };
   }
 
+  // A group while legend classes are marked (flat's MapTheme.markClass,
+  // maptheme.js 14339-14420, evidence "isolate" — the default): the parts
+  // of the other categories are hidden, the marked ones keep their own
+  // size and move to the group's center (the SEQUENCE transform reset to
+  // its scale only). Biggest first, so a smaller marked part stays on top.
+  // null when no marked category is in the group.
+  function isolatedBubblePackLayout(counts, size, marked) {
+    const full = computeBubblePackLayout(counts, size);
+    const keep = full.present.map((p, k) => k).filter(k => marked.has(full.present[k].i))
+      .sort((a, b) => full.radii[b] - full.radii[a]);
+    if (!keep.length) return null;
+    return {
+      present: keep.map(k => full.present[k]),
+      radii: keep.map(k => full.radii[k]),
+      offsets: keep.map(() => ({ x: 0, y: 0 })),
+      fitScale: full.fitScale, maxR: full.maxR
+    };
+  }
+
   // ---------------------------------------------------------------
   // Classification — pure functions (no LayerRuntime state): class
   // breaks for a numeric field, and which class a value falls in.
@@ -8011,7 +8030,7 @@
       return this._glowIconCache.get(key);
     }
 
-    _buildBubbleIcon(counts, colors) {
+    _buildBubbleIcon(counts, colors, marked = null) {
       // The cache key quantizes each count's RATIO to the group's total,
       // not the raw count — computeBubblePackLayout's radii are purely
       // sqrt(c/total), so two clusters with wildly different absolute
@@ -8036,13 +8055,18 @@
       // smooth.
       const total = counts.reduce((a, b) => a + b, 0) || 1;
       const RATIO_BUCKETS = 15;
-      const key = counts.map(c => Math.round((c / total) * RATIO_BUCKETS)).join('-');
+      // an isolated group shows only its marked parts, alone and at their
+      // own size: their radius (√share, 1/100 steps) keys the icon, not the
+      // coarse share buckets that can put a small marked part at 0
+      const key = counts.map(c => Math.round((c / total) * RATIO_BUCKETS)).join('-') + (marked
+        ? '|iso:' + counts.map((c, i) => (c > 0 && marked.has(i) ? i + ':' + Math.round(Math.sqrt(c / total) * 100) : null)).filter(Boolean).join(',')
+        : '');
       if (this._iconCache.has(key)) return this._iconCache.get(key);
       const size = BUBBLE_ICON_SIZE;
       const canvas = document.createElement('canvas');
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
-      const { present, radii, offsets, fitScale } = computeBubblePackLayout(counts, size);
+      const { present, radii, offsets, fitScale } = (marked && isolatedBubblePackLayout(counts, size, marked)) || computeBubblePackLayout(counts, size);
       const cx = size / 2, cy = size / 2;
       present.forEach((p, i) => {
         ctx.beginPath();
@@ -8341,6 +8365,15 @@
     // counts as marked if ANY of its constituent categories is marked —
     // a mixed cluster shouldn't dim just because one of several
     // categories inside it happens to be unmarked.
+    // the marked classes a group isolates to (isolatedBubblePackLayout),
+    // or null: none marked, a page's own mark handler, or evidence
+    // "isolate_gray" (keeps every part, dimmed via _iconAlpha)
+    _groupIsolation(d) {
+      if (!d.properties.counts || !this._markedClasses.size || this._onMarksChanged) return null;
+      if (String(this.style.evidence || 'isolate') === 'isolate_gray') return null;
+      return d.properties.counts.some((c, i) => c > 0 && this._markedClasses.has(i)) ? this._markedClasses : null;
+    }
+
     _iconAlpha(d) {
       if (!this._markedClasses.size) return 255;
       if (d.properties.counts) {
@@ -9850,7 +9883,7 @@
           id: `ix-glow-${this.name}-g${this._iconGeneration}`,
           data: combined, pickable: false,
           getPosition: d => d.geometry.coordinates,
-          getIcon: d => this._getGlowIcon(this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat]),
+          getIcon: d => this._getGlowIcon(this.categoryColorsRgb[d.properties.counts ? dominant(this._groupIsolation(d) ? d.properties.counts.map((c, i) => (this._markedClasses.has(i) ? c : 0)) : d.properties.counts) : d.properties.cat]),
           getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * (d.properties.counts ? 9 : 11),
           getColor: d => [255, 255, 255, this._iconAlpha(d)],
           ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
@@ -10000,7 +10033,7 @@
         data: combined, pickable: true,
         getPosition: d => d.geometry.coordinates,
         getIcon: d => d.properties.counts
-          ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb)
+          ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d))
           : this._buildSingleIcon(this.categoryColorsRgb[d.properties.cat], fillOpacity, this._resolveSymbolShape(d.properties), singleBorderColorRgb, singleBorderWidthPx),
         getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 2,
         getColor: d => [255, 255, 255, this._iconAlpha(d)],
@@ -10073,7 +10106,8 @@
           const outerRadiusPx = valueRadius(d.properties.total, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
           const iconSizePx = outerRadiusPx * 2; // matches the cluster IconLayer's own getSize (*2) below
           const pxPerCanvasUnit = iconSizePx / BUBBLE_ICON_SIZE;
-          const { present, radii, offsets, fitScale } = computeBubblePackLayout(counts, BUBBLE_ICON_SIZE);
+          const iso = this._groupIsolation(d);
+          const { present, radii, offsets, fitScale } = (iso && isolatedBubblePackLayout(counts, BUBBLE_ICON_SIZE, iso)) || computeBubblePackLayout(counts, BUBBLE_ICON_SIZE);
 
           present.forEach((p, i) => {
             // one part for a range-classed cell: its class value, if separate
@@ -10746,7 +10780,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION,
+    IXMAPS_GL_VERSION, computeBubblePackLayout, isolatedBubblePackLayout,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
