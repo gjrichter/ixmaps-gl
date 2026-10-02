@@ -587,6 +587,78 @@
     }
     return null;
   }
+  // ---------------------------------------------------------------
+  // flat's data cache (maptheme.js 2457-2500, themeDataCacheA): data once
+  // loaded from a source is reused by every later theme of the map with the
+  // same source — data.cache (also style.datacache, see the dbtable* table)
+  // defaults to true (fDataCache, maptheme.js 7736); cache: false reloads.
+  // The key is the fetch identity PLUS the shape the binding asks for:
+  // rowsResult() turns the same CSV rows into a Table (lookup only) or a
+  // FeatureCollection (position), so two themes reading one URL differently
+  // must not share one result.
+  // ---------------------------------------------------------------
+  // the data source itself (no shape) — also rt._dataSourceKey, which tells the
+  // facet filters which themes share one dataset (setFacetFilter)
+  function dataSourceKey(data) {
+    const d = data || {};
+    return JSON.stringify({ url: d.url, urls: d.urls, type: d.type, query: d.query,
+      process: d.process && String(d.process), ext: d.ext, name: d.ext ? d.name : undefined });
+  }
+  function dataCacheKey(data, binding) {
+    const b = binding || {};
+    return dataSourceKey(data) + '|' + (b.lookup && !b.position ? 'table' : 'pos:' + (b.position || ''));
+  }
+  function dataCacheDisabled(dataConfig) {
+    const c = dataConfig && dataConfig.cache;
+    return c === false || (typeof c === 'string' && c.trim().toLowerCase() === 'false');
+  }
+  // cache: Map key → Promise; a failed load is not kept (the next theme tries again)
+  function cachedLayerData(cache, data, binding, engineOptions, { reload = false } = {}) {
+    const key = dataCacheKey(data, binding);
+    if (reload || dataCacheDisabled(data) || !cache.has(key)) {
+      const p = fetchLayerData(data, binding, engineOptions);
+      cache.set(key, p);
+      p.catch(() => { if (cache.get(key) === p) cache.delete(key); });
+    }
+    return { key, sourceKey: dataSourceKey(data), promise: cache.get(key) };
+  }
+
+  // ---------------------------------------------------------------
+  // SHOW / ZOOMTO (flat maptheme.js 8714-8740, MapTheme.zoomTo 15664): once
+  // a theme is drawn, the map zooms to the extent of its items, then the
+  // flag is dropped — once per theme definition, not on every redraw.
+  // featuresBounds: [[west, south], [east, north]] of every coordinate, or
+  // null when there is none.
+  // ---------------------------------------------------------------
+  function featuresBounds(features) {
+    let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+    const visit = c => {
+      if (!Array.isArray(c)) return;
+      if (typeof c[0] === 'number' && typeof c[1] === 'number') {
+        if (!isFinite(c[0]) || !isFinite(c[1]) || Math.abs(c[1]) > 90) return;
+        if (c[0] < w) w = c[0]; if (c[0] > e) e = c[0];
+        if (c[1] < s) s = c[1]; if (c[1] > n) n = c[1];
+        return;
+      }
+      for (const x of c) visit(x);
+    };
+    const geom = g => {
+      if (!g) return;
+      if (g.type === 'GeometryCollection') (g.geometries || []).forEach(geom);
+      else visit(g.coordinates);
+    };
+    for (const f of features || []) geom(f && f.geometry);
+    return w === Infinity ? null : [[w, s], [e, n]];
+  }
+  // the `legend` map option as flat reads it (htmlgui_flat.js 748-794): on whenever given
+  // and not false/"false"/0
+  function legendIsOn(opt) {
+    return opt !== undefined && opt !== null && opt !== false && opt !== 'false' && opt !== 0 && opt !== '0';
+  }
+  function wantsZoomToExtent(flags) {
+    return !!flags && (flags.has('SHOW') || flags.has('ZOOMTO'));
+  }
+
   function rowsResult(rows, binding) {
     if (binding && binding.lookup && !binding.position) return { type: 'Table', rows };
     const position = (binding && binding.position) || geometryField(rows);
@@ -2653,7 +2725,9 @@
       // ones. Confirmed live as a real, not just theoretical, problem:
       // without this, a 3-layer page sharing one >1.2M-row multi-file CSV
       // source fetched all 5 files 3 SEPARATE times.
-      const dataCache = new Map();
+      // one data cache for the map's whole lifetime (flat's themeDataCacheA):
+      // build() and every later defineLayer()/refreshTheme() share it
+      const dataCache = this._dataCache = this._dataCache || new Map();
       const runtimes = [];
       // themes whose data comes by name (see namedDataTheme) start empty and
       // load on their own once the map is built, as in flat, where every
@@ -2693,9 +2767,9 @@
           raw = await fetchLayerData(spec.data, spec.binding, this._engineOptions);
           cacheKey = 'obj:' + spec.name;
         } else {
-          cacheKey = JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, process: spec.data && spec.data.process && String(spec.data.process), ext: spec.data && spec.data.ext, name: spec.data && spec.data.ext ? spec.data.name : undefined });
-          if (!dataCache.has(cacheKey)) dataCache.set(cacheKey, fetchLayerData(spec.data, spec.binding, this._engineOptions));
-          raw = await dataCache.get(cacheKey);
+          const cached = cachedLayerData(dataCache, spec.data, spec.binding, this._engineOptions);
+          cacheKey = cached.sourceKey;
+          raw = await cached.promise;
         }
         const filtered = applyWhereFilter(raw, spec.filter);
         const fc = filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered;
@@ -2709,6 +2783,7 @@
         rt._definition = def; // for refreshTheme
         rt._deferredLoad = deferred;
         rt._named = named;
+        rt._zoomToPending = wantsZoomToExtent(spec.flags);
         runtimes.push(rt);
         notifyNewTheme(rt);
         _globalThemeRegistry.set(rt.name, rt);
@@ -2765,6 +2840,10 @@
         const b = map.getBounds();
         return [{ lat: b.getSouth(), lng: b.getWest() }, { lat: b.getNorth(), lng: b.getEast() }];
       };
+      // set once by the 'load' event — NOT map.loaded(), which MapLibre turns false again
+      // whenever tiles are loading (after every pan/zoom), so a theme defined then would
+      // wait for a 'load' that never fires again (SHOW / ZOOMTO, see maybeZoomToTheme)
+      let mapHasLoaded = false;
 
       // flat's page hook ixmaps.htmlgui_onZoomAndPan(nZoom), called after
       // a zoom or a pan of more than 10 px (mapscript2.js 6445-6454) — a
@@ -3147,6 +3226,7 @@
         else map.once('idle', () => map.fire('move'));
       };
       let addLegendPanel = () => {}; // set up with the legend, below
+      let setLegendOption = () => {}; // map.setLegend(value) — set up with the legend, below
       let updateSubTheme = () => {};
       let layoutLegends = () => {}; // set up with the legend, below
       let setDataLoading = () => {}; // set up with the loads, below
@@ -3358,10 +3438,14 @@
         options: (o) => {
           if (o && typeof o === 'object') {
             Object.assign(builder._engineOptions, o);
+            // read only when the MapLibre map is created — switched here at runtime
+            if ('worldcopies' in o) map.setRenderWorldCopies(o.worldcopies !== false && o.worldcopies !== 'false');
             refresh();
           }
           return engineApi;
         },
+        // the `legend` map option at runtime (see setLegendOption)
+        setLegend: (opt) => { setLegendOption(opt); return engineApi; },
         layer: (nameOrBuilder) => {
           if (typeof nameOrBuilder !== 'string') {
             const lb = nameOrBuilder;
@@ -3413,9 +3497,14 @@
           for (const rt of targets) {
             if (rt._named) { await loadNamedTheme(rt, true); continue; }
             const spec = normalizeTheme(rt._definition);
-            const raw = await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions);
+            // flat's refresh reloads, cache or not (maptheme.js 2366: datacache = false);
+            // the fresh result also replaces the cached one for later themes
+            const raw = spec.data && spec.data.obj
+              ? await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions)
+              : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload: true }).promise;
             const filtered = applyWhereFilter(raw, spec.filter);
             rt.replaceFeatures(filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered);
+            maybeZoomToTheme(rt); // a scale-deferred theme gets its first data here
           }
           if (targets.length) { refresh(); notifyRedraw(); }
         }
@@ -3506,6 +3595,19 @@
           loadingEl.style.display = 'none';
         }
       };
+      // SHOW / ZOOMTO: zoom to the theme's extent the first time it has
+      // features on a loaded map (see featuresBounds), then never again for
+      // this definition — as flat drops the flag after its zoomTo()
+      function maybeZoomToTheme(rt) {
+        if (!rt || !rt._zoomToPending || !mapHasLoaded || !runtimes.includes(rt)) return;
+        const bounds = featuresBounds(rt.features);
+        if (!bounds) return; // no data yet (named / deferred): wait for it
+        rt._zoomToPending = false;
+        const [[w, s], [e, n]] = bounds;
+        if (w === e && s === n) map.jumpTo({ center: [w, s], zoom: Math.max(map.getZoom(), 12) });
+        else map.fitBounds(bounds, { padding: 30, animate: false, maxZoom: 16 });
+      }
+
       async function loadNamedTheme(rt, force) {
         const spec = normalizeTheme(rt._definition);
         const name = String(spec.data.name);
@@ -3523,7 +3625,7 @@
             table = await w.promise;
           }
           await built;
-          if (runtimes.includes(rt)) fillNamedTheme(rt, spec, table, patch);
+          if (runtimes.includes(rt)) { fillNamedTheme(rt, spec, table, patch); maybeZoomToTheme(rt); }
         } catch (err) {
           // a broker that hands nothing over yet is normal in flat (it may
           // wait for other data); the theme stays empty until a refresh
@@ -3604,10 +3706,16 @@
         let raw;
         const deferred = deferredFeatureLoad(spec, map.getZoom());
         const named = namedDataTheme(spec);
+        let sourceKey = null;
         if (deferred || named) {
           raw = { type: 'FeatureCollection', features: [] };
-        } else {
+        } else if (spec.data && spec.data.obj) {
+          // in memory already — nothing to cache (see build())
           raw = await fetchLayerData(spec.data, spec.binding, builder._engineOptions);
+        } else {
+          const cached = cachedLayerData(builder._dataCache, spec.data, spec.binding, builder._engineOptions);
+          sourceKey = cached.sourceKey;
+          raw = await cached.promise;
         }
         const filtered = applyWhereFilter(raw, spec.filter);
         const fc = filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered;
@@ -3615,8 +3723,9 @@
         rt._definition = pdef; // for refreshTheme
         rt._deferredLoad = deferred;
         rt._named = named;
+        rt._zoomToPending = wantsZoomToExtent(spec.flags);
         rt._dataSourceKey = named ? 'name:' + spec.data.name
-          : JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
+          : sourceKey || JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
         runtimes.push(rt);
         _globalThemeRegistry.set(rt.name, rt);
         if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
@@ -3624,6 +3733,7 @@
         notifyNewTheme(rt);
         refresh();
         notifyRedraw();
+        maybeZoomToTheme(rt); // before the map's 'load': its handler zooms pending themes
         if (named) { listenNamedData(rt); if (!deferred) loadNamedTheme(rt, false); }
         return rt.name;
       }
@@ -3930,8 +4040,10 @@
       map.on('moveend', loadDeferredThemes);
 
       map.on('load', () => {
+        mapHasLoaded = true;
         loadDeferredThemes();
         refresh();
+        runtimes.forEach(maybeZoomToTheme);
         hideSplash(splash);
         const initialOpacity = parseFloat(this._engineOptions.basemapopacity);
         if (!isNaN(initialOpacity)) { _basemapOpacity = Math.max(0, Math.min(1, initialOpacity)); applyBasemapOpacity(); }
@@ -4041,8 +4153,9 @@
       // isn't false/"false" ("true", "open", "", 1, …), folded for
       // "closed", off when not given at all.
       const legendOpt = this.mapOptions.legend;
-      const legendOn = legendOpt !== undefined && legendOpt !== null && legendOpt !== false && legendOpt !== 'false' && legendOpt !== 0 && legendOpt !== '0';
-      const legendFolded = legendOpt === 'closed';
+      // let, not const: map.setLegend(value) switches them at runtime (see setLegendOption)
+      let legendOn = legendIsOn(legendOpt);
+      let legendFolded = legendOpt === 'closed';
       {
         // Map-level `align` option positions the legend panel — a map-
         // wide placement choice, not per-theme (unlike legendtheme/
@@ -4158,6 +4271,23 @@
           }
           el.parentElement.appendChild(legendStack);
           return legendStack;
+        };
+        // map.setLegend(value): the `legend` map option at runtime, same values as
+        // ixmaps.Map(id, {legend}) — on ("true", "open", …), folded ("closed"), off
+        // (false/"false"/0/undefined). Panels are made for themes that lack one,
+        // removed when off, folded/unfolded otherwise.
+        setLegendOption = (opt) => {
+          builder.mapOptions.legend = opt;
+          legendFolded = opt === 'closed';
+          legendOn = legendIsOn(opt);
+          runtimes.forEach(rt => {
+            if (!legendOn) {
+              if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel);
+              rt._legendPanel = null;
+            } else if (!rt._legendPanel) addLegendPanel(rt);
+            else if (rt._setLegendCollapsed) rt._setLegendCollapsed(legendFolded);
+          });
+          layoutLegends();
         };
         layoutLegends = () => {
           if (!legendStack) return;
@@ -4553,6 +4683,7 @@
             }
             collapseBtn.addEventListener('click', () => { collapsed = !collapsed; applyCollapsed(); });
             applyCollapsed();
+            rt._setLegendCollapsed = c => { collapsed = !!c; applyCollapsed(); }; // setLegendOption
 
             // Selection/filter by field — opt-in via .style({legendfilter:
             // "<field>"}), e.g. "country_long" on the power-plants sample.
@@ -10062,6 +10193,7 @@
     fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     flatFormatValue,
+    dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;
