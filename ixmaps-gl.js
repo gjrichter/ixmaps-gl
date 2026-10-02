@@ -2066,7 +2066,7 @@
   // edit it by hand; `npm run unit` fails when it drifts.
   // ---------------------------------------------------------------
   // <grammar:binding-aliases>
-  // generated from ixmaps-grammar 0.1.21 (ixmaps-flat 1.0.41, eaaf2b7 2026-09-20) — 52 aliases
+  // generated from ixmaps-grammar 0.1.21 (ixmaps-flat 1.0.42, 2b978d5 2026-10-02) — 52 aliases
   const FLAT_BINDING_ALIASES = {
     "aggregation": "style.aggregationfield",
     "aggregationfield": "style.aggregationfield",
@@ -7707,6 +7707,35 @@
       return this._glowIconCache.get(key);
     }
 
+    // SHADOW on chart symbols — flat's chart drop shadow (maptheme.js 17097-17160, 18709-18749):
+    // an SVG filter that blurs the symbol by nShadowBlur (3) REAL screen pixels, offsets it by
+    // nShadowDx/Dy (1.5/2.5 px) and darkens it to 0.1 × its color at the source alpha. Here: a
+    // blurred disc as a MASK icon (tinted per item via getColor), one per size step, so the blur
+    // stays ~blurPx on screen whatever the symbol radius (a single scaled icon would blur big
+    // bubbles more). The disc spans 2/3 of the canvas: the rest is room for the blur.
+    // `shape`: the symbol's own (drawSymbolPath, as _buildSingleIcon) — flat's filter shadows
+    // whatever the symbol is, e.g. a RECT square
+    _getShadowIcon(radiusPx, blurPx, shape) {
+      shape = shape || 'circle';
+      const step = Math.max(0, Math.min(7, Math.round(Math.log2(Math.max(1, radiusPx)))));
+      const key = `shadow-${shape}-${step}-${blurPx}`;
+      if (!this._glowIconCache.has(key)) {
+        const size = 96, disc = 32, c = size / 2;
+        const sigma = Math.max(0.5, Math.min(12, blurPx * disc / Math.pow(2, step)));
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        // the disc itself is drawn off-canvas; only its blurred shadow lands at the center
+        ctx.shadowColor = 'rgba(255,255,255,1)';
+        ctx.shadowBlur = sigma * 2;
+        ctx.shadowOffsetX = size * 4;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); drawSymbolPath(ctx, shape, c - size * 4, c, disc); ctx.closePath(); ctx.fill();
+        this._glowIconCache.set(key, { url: canvas.toDataURL(), width: size, height: size, anchorX: c, anchorY: c, mask: true, id: key });
+      }
+      return this._glowIconCache.get(key);
+    }
+
     _buildBubbleIcon(counts, colors) {
       // The cache key quantizes each count's RATIO to the group's total,
       // not the raw count — computeBubblePackLayout's radii are purely
@@ -9506,6 +9535,34 @@
       const singleBorderColorRgb = this.style.linecolor && styleLineColor(this.style.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(this.style.linecolor)) : null;
       const singleBorderWidthPx = styleNum(this.style.linewidth) || 0;
 
+      const itemRgb = d => this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat] || [128, 128, 128];
+      const radiusOf = d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+
+      // SHADOW (style.shadow, flat's gate: maxshadow, shadowupper/lower — flatShadowOn): a soft
+      // drop shadow under each symbol, see _getShadowIcon
+      if (flatShadowOn(this.style, combined.length, liveZoom)) {
+        const blurPx = styleNum(this.style.shadowblur) || 3;
+        const num = (v, d) => (isNaN(styleNum(v)) ? d : styleNum(v));
+        const dx = num(this.style.shadowdx, 1.5), dy = num(this.style.shadowdy, 2.5);
+        layers.push(new IconLayer({
+          id: `ix-symbolshadow-${this.name}-g${this._iconGeneration}`,
+          data: combined, pickable: false,
+          getPosition: d => d.geometry.coordinates,
+          getIcon: d => this._getShadowIcon(radiusOf(d), blurPx, d.properties.counts ? 'circle' : this._resolveSymbolShape(d.properties)),
+          getSize: d => radiusOf(d) * 3, // disc = 2/3 of the icon → its diameter is 2r
+          getPixelOffset: [dx, dy],
+          getColor: d => {
+            const rgb = itemRgb(d);
+            const gray = Math.round(Math.min(255, 0.1 * (rgb[0] + rgb[1] + rgb[2])));
+            return [gray, gray, gray, Math.round(this._iconAlpha(d) * fillOpacity)];
+          },
+          sizeUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS,
+          updateTriggers: { getIcon: [liveZoom, blurPx], getSize: liveZoom }
+        }));
+      }
+
       // GLOW: gradient-texture halo (see _getGlowIcon for why this diverges
       // from the real engine's literal flat-circle formula). Individual
       // and cluster glows keep their own size multiplier (11 vs 9 — a lone
@@ -9518,6 +9575,20 @@
           getPosition: d => d.geometry.coordinates,
           getIcon: d => this._getGlowIcon(this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat]),
           getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * (d.properties.counts ? 9 : 11),
+          getColor: d => [255, 255, 255, this._iconAlpha(d)],
+          sizeUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      } else if (this.flags.has('AURA') && !this.flags.has('ZOOM')) {
+        // AURA (flat maptheme.js 20924-20930, the GLOW branch's `else`): a circle at 1.3 × the
+        // radius behind the symbol, in the line color (else the symbol's), at 0.3 opacity
+        layers.push(new IconLayer({
+          id: `ix-aura-${this.name}-g${this._iconGeneration}`,
+          data: combined, pickable: false,
+          getPosition: d => d.geometry.coordinates,
+          getIcon: d => this._buildSingleIcon(singleBorderColorRgb || itemRgb(d), 0.3, 'circle', null, 0),
+          getSize: d => radiusOf(d) * 2 * 1.3,
           getColor: d => [255, 255, 255, this._iconAlpha(d)],
           sizeUnits: 'pixels',
           billboard: true,
