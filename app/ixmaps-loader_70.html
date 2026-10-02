@@ -571,6 +571,13 @@
   .field-group { display: flex; flex-direction: column; gap: 4px; }
   .field-label { font-size: 11px; color: var(--muted); font-weight: 500; }
   #layer-tweaks-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .style-toggle-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .style-toggle {
+    background: var(--bg); border: 1px solid var(--border); color: var(--muted); border-radius: 6px;
+    padding: 5px 2px; font-size: 11.5px; cursor: pointer; font-family: var(--sans); white-space: nowrap;
+  }
+  .style-toggle:hover { color: var(--text); border-color: var(--muted); }
+  .style-toggle.active { color: var(--text); border-color: var(--accent); background: rgba(var(--accent-rgb), 0.14); }
   #map-card .card-body > .field-group { margin-bottom: 10px; }
   .mapcfg-val { font-family: var(--mono); color: var(--text); }
   .tweak-chip {
@@ -1472,6 +1479,18 @@
                 style="width:100%;accent-color:var(--accent)">
             </div>
 
+            <!-- style buttons: GLOW / AURA / VALUES type flags, SHADOW = style.shadow — the same state
+                 as the Modificatori chips, the chat and the editor (toggleStyleButton) -->
+            <div class="field-group" id="style-buttons-row">
+              <div class="field-label">Stile</div>
+              <div class="style-toggle-row">
+                <button type="button" class="style-toggle" data-mod="GLOW" onclick="toggleStyleButton('GLOW')" title="Alone luminoso intorno ai simboli (GLOW)">✦ Glow</button>
+                <button type="button" class="style-toggle" data-mod="AURA" onclick="toggleStyleButton('AURA')" title="Alone tenue: cerchio 1,3× nel colore della linea (AURA) — alternativo a Glow">◎ Aura</button>
+                <button type="button" class="style-toggle" data-mod="SHADOW" onclick="toggleStyleButton('SHADOW')" title="Ombra sotto i simboli (style.shadow)">◐ Ombra</button>
+                <button type="button" class="style-toggle" data-mod="VALUES" onclick="toggleStyleButton('VALUES')" title="Mostra i valori sui simboli (VALUES)">123 Valori</button>
+              </div>
+            </div>
+
             <!-- set by the chat (style modifiers / style overrides), see renderLayerTweaks() -->
             <div class="field-group" id="layer-tweaks-row" style="display:none">
               <div class="field-label">Modificatori</div>
@@ -1663,7 +1682,7 @@
 
 <!-- iXmaps GL — deck.gl + MapLibre reimplementation, not the real ixmaps-flat/SVG engine.
      ixmaps-gl.js lazy-loads MapLibre/deck.gl/Supercluster/Mustache itself. -->
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.4/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.5/ixmaps-gl.js"></script>
 <!-- data.js — needed outside ixmaps callbacks for pre-loading and schema analysis -->
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
 
@@ -2962,6 +2981,9 @@ function onVizChange() {
   // line width: only for the FEATURE-based types (lines/polygons)
   var isFeatureViz = (viz === 'feature' || viz === 'feature_categorical' || viz === 'choropleth');
   document.getElementById('line-width-row').style.display = isFeatureViz ? '' : 'none';
+  // GLOW / AURA / SHADOW / VALUES are chart-symbol effects (layer1, see applyLayerTweaks)
+  document.getElementById('style-buttons-row').style.display =
+    ['bubble', 'bivariate', 'dot', 'categorical', 'heatmap', 'hexbin_sized'].indexOf(viz) !== -1 ? '' : 'none';
 
   // value-field label and visibility per viz type
   var valueRow    = document.getElementById('value-row');
@@ -3396,7 +3418,7 @@ async function generateMapCode(options) {
     '</head>',
     '<body>',
     '<div id="map"></div>',
-    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.4/ixmaps-gl.js"><\/script>',
+    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.5/ixmaps-gl.js"><\/script>',
     '<script>',
     'ixmaps.Map("map", ' + codeLiteral(cfg.map || {}, '') + ', map => {',
     '  map.view(' + JSON.stringify(center) + ', ' + zoom + ')',
@@ -3542,7 +3564,7 @@ var CODE_LIBS = {
   // for the read-only "Mappa (HTML)" view
   html: ['xml/xml', 'css/css', 'htmlmixed/htmlmixed'].map(function(m) { return 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/' + m + '.min.js'; })
 };
-var GRAMMAR_VALIDATOR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.21/dist/validate.mjs';
+var GRAMMAR_VALIDATOR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.22/dist/validate.mjs';
 var CODE_EDITOR = { ed: null, timer: null, validator: null, validatorFailed: false, objKeys: {}, drawnNames: [], drawChain: Promise.resolve() };
 
 // recorded calls → editable definitions. Layers whose data was the in-memory table get
@@ -4784,7 +4806,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
 // choice: the chosen one replaces whatever the branch hard-coded (hexbin_sized has SUM).
 // Merges STATE.styleOverrides into `style` in place; returns the extended type string. ──
 var LAYER_MODIFIERS = {
-  GLOW: 'alone luminoso', VALUES: 'mostra valori', BOX: 'riquadro', TITLE: 'titolo (con BOX)',
+  GLOW: 'alone luminoso', AURA: 'alone tenue', VALUES: 'mostra valori', BOX: 'riquadro', TITLE: 'titolo (con BOX)',
   NOOUTLIER: 'escludi outlier', SIZELOG: 'dimensione logaritmica', FIXSIZE: 'dimensione fissa',
   NOLEGEND: 'nascondi legenda', SIMPLELEGEND: 'legenda semplice',
   SUM: 'aggregazione: somma', MEAN: 'aggregazione: media'
@@ -4794,7 +4816,8 @@ var STYLE_OVERRIDE_KEYS = {
   linecolor: 'color', bordercolor: 'color', boxcolor: 'color', textcolor: 'color',
   linewidth: 'number', textscale: 'number', valuedecimals: 'number', boxopacity: 'number',
   borderradius: 'number', units: 'string',
-  normalsizevalue: 'number'  // the value drawn at the "normal" symbol size (engine: (value/normalsizevalue)^sizepow)
+  normalsizevalue: 'number', // the value drawn at the "normal" symbol size (engine: (value/normalsizevalue)^sizepow)
+  shadow: 'string'           // "true": drop shadow under the symbols (flat's style.shadow)
 };
 function applyLayerTweaks(typeStr, style) {
   var mods = STATE.typeModifiers || [];
@@ -4810,7 +4833,35 @@ function applyLayerTweaks(typeStr, style) {
 
 // "Modificatori" row in CONFIGURAZIONE — the chat sets these, so they must stay visible and
 // removable here; hidden when nothing is active
+// "Stile" buttons — GLOW and AURA are alternatives (flat draws AURA only without GLOW)
+function toggleStyleButton(mod) {
+  if (mod === 'SHADOW') {
+    STATE.styleOverrides = STATE.styleOverrides || {};
+    if (STATE.styleOverrides.shadow) delete STATE.styleOverrides.shadow;
+    else STATE.styleOverrides.shadow = 'true';
+  } else {
+    var mods = (STATE.typeModifiers || []).slice();
+    var on = mods.indexOf(mod) === -1;
+    mods = mods.filter(function(m) { return m !== mod && !(on && ((mod === 'GLOW' && m === 'AURA') || (mod === 'AURA' && m === 'GLOW'))); });
+    if (on) mods.push(mod);
+    STATE.typeModifiers = mods;
+  }
+  renderLayerTweaks();
+  if (STATE.hasDrawnMap) drawMap();
+}
+function renderStyleButtons() {
+  Array.prototype.forEach.call(document.querySelectorAll('.style-toggle'), function(b) {
+    var mod = b.getAttribute('data-mod');
+    var on = mod === 'SHADOW'
+      ? !!(STATE.styleOverrides && STATE.styleOverrides.shadow && String(STATE.styleOverrides.shadow) !== 'false')
+      : (STATE.typeModifiers || []).indexOf(mod) !== -1;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
 function renderLayerTweaks() {
+  renderStyleButtons();
   var row = document.getElementById('layer-tweaks-row');
   var list = document.getElementById('layer-tweaks-list');
   if (!row || !list) return;
