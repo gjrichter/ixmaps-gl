@@ -19,14 +19,21 @@
 </script>
 <style>
   :root {
-    /* syntax colors for the chat's "mostra codice" view (highlight.js classes, see .hljs-*) */
-    --code-keyword:  #c792ea;
-    --code-string:   #a5e075;
-    --code-number:   #f5a97f;
-    --code-tag:      #7dcfff;
-    --code-attr:     #ffcb6b;
-    --code-comment:  #64748b;
-    --code-title:    #82aaff;
+    /* syntax colors for the code editor (CodeMirror .cm-* tokens, see .code-json-host /
+       #code-editor-html-host) — after Tokyo Night: keys and values differ by hue, the JSON
+       punctuation recedes */
+    --code-key:       #7aa2f7;
+    --code-keyword:   #bb9af7;
+    --code-string:    #9ece6a;
+    --code-number:    #ff9e64;
+    --code-tag:       #f7768e;
+    --code-attr:      #e0af68;
+    --code-comment:   #565f89;
+    --code-title:     #7aa2f7;
+    --code-punct:     #737aa2;
+    --code-gutter:    #3b4261;
+    --code-selection: #283457;
+    --code-activeline: rgba(122, 162, 247, 0.06);
     --bg:            #0d0f14;
     --surface:       #161922;
     --border:        #252a36;
@@ -60,14 +67,19 @@
      mode shade dark enough to read as body text became too dark for its own black-text chip
      use (line ~477) — not worth two variables for one "?" icon. ── */
   :root[data-theme="light"] {
-    /* syntax colors for the chat's "mostra codice" view (highlight.js classes, see .hljs-*) */
-    --code-keyword:    #8b3fd9;
-    --code-string:     #0a7d3c;
-    --code-number:     #b45309;
-    --code-tag:        #0369a1;
-    --code-attr:       #9a3412;
-    --code-comment:    #8a94a6;
-    --code-title:      #1d4ed8;
+    /* syntax colors for the code editor — after Tokyo Night Day */
+    --code-key:        #2e7de9;
+    --code-keyword:    #9854f1;
+    --code-string:     #587539;
+    --code-number:     #b15c00;
+    --code-tag:        #f52a65;
+    --code-attr:       #8c6c3e;
+    --code-comment:    #848cb5;
+    --code-title:      #2e7de9;
+    --code-punct:      #8990b3;
+    --code-gutter:     #a8aecb;
+    --code-selection:  #b7c1e3;
+    --code-activeline: rgba(46, 125, 233, 0.06);
     --bg:              #f4f5f7;
     --surface:         #ffffff;
     --border:          #dde1e8;
@@ -559,6 +571,8 @@
   .field-group { display: flex; flex-direction: column; gap: 4px; }
   .field-label { font-size: 11px; color: var(--muted); font-weight: 500; }
   #layer-tweaks-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  #map-card .card-body > .field-group { margin-bottom: 10px; }
+  .mapcfg-val { font-family: var(--mono); color: var(--text); }
   .tweak-chip {
     display: inline-flex; align-items: center; gap: 4px;
     font-family: var(--mono); font-size: 11px; color: var(--text);
@@ -641,14 +655,6 @@
     cursor: pointer;
   }
 
-  /* ── Draw button ── */
-  #draw-btn {
-    width: 100%;
-    padding: 9px;
-    font-size: 13px;
-    font-weight: 600;
-    justify-content: center;
-  }
 
   /* ── Spinner overlay ── */
   #spinner {
@@ -742,25 +748,54 @@
   #code-editor-panel.active { display: flex; }
   #code-editor-panel .chat-panel-header button.btn { padding: 3px 10px; font-size: 12px; }
   #code-editor-status { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 8px; }
-  #code-editor-host { flex: 1; min-height: 0; position: relative; }
-  #code-editor-host textarea.code-fallback {
+  .code-json-host, #code-editor-html-host { flex: 1; min-height: 0; position: relative; }
+  .code-view-switch { display: flex; align-items: center; gap: 2px; }
+  .code-view-switch button {
+    background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer;
+    font-size: 11.5px; padding: 3px 8px; font-family: var(--sans);
+  }
+  .code-view-switch button { margin-left: -1px; }
+  .code-view-switch button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+  .code-view-switch button:nth-child(3) { border-radius: 0 6px 6px 0; }
+  .code-view-switch button.active { color: var(--text); border-color: var(--accent); background: rgba(var(--accent-rgb), 0.12); }
+  .code-json-host textarea.code-fallback, #code-editor-html-host textarea.code-fallback {
     width: 100%; height: 100%; box-sizing: border-box; resize: none; border: none; outline: none;
     background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 12px; padding: 8px;
   }
-  #code-editor-host .CodeMirror {
+  .code-json-host .CodeMirror, #code-editor-html-host .CodeMirror {
     height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 12px; line-height: 1.5;
   }
-  #code-editor-host .CodeMirror-gutters { background: var(--surface); border-right: 1px solid var(--border); }
-  #code-editor-host .CodeMirror-linenumber { color: var(--muted); }
-  #code-editor-host .CodeMirror-cursor { border-left-color: var(--text); }
-  #code-editor-host .CodeMirror-selected, #code-editor-host .CodeMirror-focused .CodeMirror-selected { background: rgba(var(--accent-rgb), 0.22); }
-  #code-editor-host .CodeMirror-matchingbracket { color: var(--accent) !important; text-decoration: underline; }
-  #code-editor-host .cm-string { color: var(--code-string); }
-  #code-editor-host .cm-property, #code-editor-host .cm-string.cm-property { color: var(--code-attr); }
-  #code-editor-host .cm-number { color: var(--code-number); }
-  #code-editor-host .cm-atom { color: var(--code-keyword); }
-  #code-editor-host .cm-finding-error   { text-decoration: underline wavy var(--danger); text-underline-offset: 3px; }
-  #code-editor-host .cm-finding-warning { text-decoration: underline wavy var(--warn); text-underline-offset: 3px; }
+  .code-json-host .CodeMirror-gutters, #code-editor-html-host .CodeMirror-gutters { background: var(--bg); border-right: 1px solid var(--border); }
+  .code-json-host .CodeMirror-linenumber, #code-editor-html-host .CodeMirror-linenumber { color: var(--code-gutter); }
+  .code-json-host .CodeMirror-cursor, #code-editor-html-host .CodeMirror-cursor { border-left-color: var(--text); }
+  .code-json-host .CodeMirror-selected, .code-json-host .CodeMirror-focused .CodeMirror-selected,
+  #code-editor-html-host .CodeMirror-selected, #code-editor-html-host .CodeMirror-focused .CodeMirror-selected { background: var(--code-selection); }
+  .code-json-host .CodeMirror-matchingbracket { color: var(--accent) !important; text-decoration: underline; }
+  /* JSON tokens — three classes deep, so CodeMirror's own default theme (.cm-s-default
+     .cm-string { color: #a11 }, loaded later at runtime, same 2-class weight) can't win.
+     In JSON mode only punctuation is untokenized text: it takes the receding --code-punct. */
+  .code-json-host .CodeMirror .CodeMirror-code { color: var(--code-punct); }
+  .code-json-host .CodeMirror .cm-string { color: var(--code-string); }
+  .code-json-host .CodeMirror .cm-string.cm-property, .code-json-host .CodeMirror .cm-property { color: var(--code-key); }
+  .code-json-host .CodeMirror .cm-number { color: var(--code-number); }
+  .code-json-host .CodeMirror .cm-atom { color: var(--code-keyword); }
+  .code-json-host .CodeMirror-activeline-background { background: var(--code-activeline); }
+  /* hex color strings: a swatch in front (see addColorSwatches) */
+  .code-swatch {
+    display: inline-block; width: 0.8em; height: 0.8em; margin: 0 4px 0 1px; vertical-align: -0.05em;
+    border-radius: 2px; box-shadow: 0 0 0 1px rgba(128, 128, 128, 0.45);
+  }
+  /* HTML view (htmlmixed: tags, attributes, embedded JS/CSS) */
+  #code-editor-html-host .cm-tag, #code-editor-html-host .cm-bracket { color: var(--code-tag); }
+  #code-editor-html-host .cm-attribute, #code-editor-html-host .cm-property { color: var(--code-attr); }
+  #code-editor-html-host .cm-string, #code-editor-html-host .cm-string-2 { color: var(--code-string); }
+  #code-editor-html-host .cm-number { color: var(--code-number); }
+  #code-editor-html-host .cm-keyword, #code-editor-html-host .cm-atom, #code-editor-html-host .cm-builtin { color: var(--code-keyword); }
+  #code-editor-html-host .cm-def, #code-editor-html-host .cm-variable-2 { color: var(--code-title); }
+  #code-editor-html-host .cm-comment { color: var(--code-comment); font-style: italic; }
+  #code-editor-html-host .cm-qualifier { color: var(--code-tag); }
+  .code-json-host .cm-finding-error   { text-decoration: underline wavy var(--danger); text-underline-offset: 3px; }
+  .code-json-host .cm-finding-warning { text-decoration: underline wavy var(--warn); text-underline-offset: 3px; }
   #code-editor-findings {
     max-height: 32%; overflow-y: auto; border-top: 1px solid var(--border);
     font-size: 11.5px; line-height: 1.4; padding: 4px 0;
@@ -779,31 +814,8 @@
     display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 6px;
     background: rgba(var(--accent-rgb), 0.10); border: 1px solid rgba(var(--accent-rgb), 0.35); font-size: 12px; color: var(--text);
   }
-  #config-card.code-mode .card-body > .field-group,
-  #draw-btn.code-mode { opacity: 0.4; pointer-events: none; }
+  #config-card.code-mode .card-body > .field-group { opacity: 0.4; pointer-events: none; }
 
-  /* "mostra codice" bubble: actions on top, scrollable monospace block */
-  .chat-code-actions { display: flex; gap: 6px; margin: 6px 0 4px; }
-  .chat-code-actions button {
-    background: var(--bg); border: 1px solid var(--border); color: var(--text);
-    border-radius: 6px; padding: 3px 8px; font-size: 11.5px; cursor: pointer;
-  }
-  .chat-code-actions button:hover { border-color: var(--accent); }
-  /* highlight.js token classes, colored from the --code-* theme variables above (no hljs theme
-     stylesheet, so the light/dark switch recolors without reloading anything) */
-  .chat-code .hljs-keyword, .chat-code .hljs-literal, .chat-code .hljs-built_in { color: var(--code-keyword); }
-  .chat-code .hljs-string, .chat-code .hljs-regexp { color: var(--code-string); }
-  .chat-code .hljs-number { color: var(--code-number); }
-  .chat-code .hljs-tag, .chat-code .hljs-name, .chat-code .hljs-meta,
-  .chat-code .hljs-selector-tag, .chat-code .hljs-selector-id, .chat-code .hljs-selector-class { color: var(--code-tag); }
-  .chat-code .hljs-attr, .chat-code .hljs-attribute, .chat-code .hljs-property { color: var(--code-attr); }
-  .chat-code .hljs-comment { color: var(--code-comment); font-style: italic; }
-  .chat-code .hljs-title, .chat-code .hljs-function, .chat-code .hljs-params { color: var(--code-title); }
-  .chat-code {
-    margin: 0; max-height: 360px; overflow: auto; padding: 8px;
-    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-    font-family: var(--mono); font-size: 10.5px; line-height: 1.45; white-space: pre; color: var(--text);
-  }
   .chat-panel-input-row { display: flex; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--border); }
   .chat-panel-input-row input {
     flex: 1;
@@ -1259,6 +1271,9 @@
       <button class="btn btn-ghost" id="chat-btn" onclick="openLoaderChat()" title="Chat AI sulla mappa" style="display:none">
         💬 Chat
       </button>
+      <button class="btn btn-ghost" id="code-menu-btn" onclick="toggleCodeEditor()" title="Codice della mappa: tema (JSON, modificabile) e pagina (HTML, da salvare)" style="display:none">
+        &lt;/&gt; Codice
+      </button>
       <!-- basemap dropdown trigger -->
       <div id="basemap-wrap" style="position:relative">
         <button class="btn btn-ghost" id="basemap-btn" onclick="toggleBasemapDropdown()" title="Basemap">
@@ -1466,21 +1481,59 @@
           </div>
         </div>
 
-        <!-- Draw button -->
-        <button class="btn btn-primary" id="draw-btn" style="display:none" onclick="drawMap()">
-          🗺 Crea mappa
-        </button>
+        <!-- MAP PARAMETERS — ixmaps.Map(id, {…}) and .options({…}); two-way with the code editor's
+             "map"/"options" sections (STATE.mapConfig, see applyMapConfig) -->
+        <div class="card" id="map-card" style="display:none">
+          <div class="card-header" onclick="toggleCard(this)">
+            <span class="label">Mappa</span>
+            <span class="chevron">▶</span>
+          </div>
+          <div class="card-body" style="display:none">
+            <div class="field-group">
+              <div class="field-label">Basemap (mapType)</div>
+              <select id="mapcfg-maptype" class="field-select">
+                <option value="VT_TONER_LITE">Chiaro — VT_TONER_LITE</option>
+                <option value="VT_DATAVIZ_DARK">Scuro — VT_DATAVIZ_DARK</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Opacità basemap <span id="mapcfg-basemapopacity-val" class="mapcfg-val"></span></div>
+              <input id="mapcfg-basemapopacity" type="range" min="0" max="1" step="0.05" style="width:100%;accent-color:var(--accent)">
+            </div>
+            <div class="field-group">
+              <div class="field-label">Scala degli oggetti (objectscaling)</div>
+              <select id="mapcfg-objectscaling" class="field-select">
+                <option value="dynamic">Dinamica — crescono con lo zoom</option>
+                <option value="">Fissa</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Scala di riferimento (normalSizeScale)</div>
+              <div style="display:flex;gap:6px">
+                <input id="mapcfg-normalsizescale" type="text" class="field-input" placeholder="es. 8000000" style="flex:1;min-width:0">
+                <button type="button" class="btn btn-ghost" id="mapcfg-normalsizescale-auto" title="Dalla estensione dei dati caricati">auto</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Esponente scala dinamica (dynamicScalePow)</div>
+              <input id="mapcfg-dynamicscalepow" type="number" step="0.1" min="0" class="field-input" placeholder="predefinito">
+            </div>
+            <div class="field-group">
+              <div class="field-label">Legenda</div>
+              <select id="mapcfg-legend" class="field-select">
+                <option value="">Nessuna</option>
+                <option value="true">Aperta</option>
+                <option value="closed">Chiusa</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input id="mapcfg-worldcopies" type="checkbox" checked> Copie del mondo (worldcopies)
+              </label>
+            </div>
+          </div>
+        </div>
 
-        <!-- Export button -->
-        <button class="btn btn-ghost" id="export-btn" style="display:none;margin-top:8px;width:100%;justify-content:center" onclick="exportMapAsHtml()">
-          📤 Esporta mappa (HTML)
-        </button>
-        <button class="btn btn-ghost" id="code-btn" style="display:none;margin-top:8px;width:100%;justify-content:center" onclick="showMapCode()" title="Codice ixmaps della mappa attuale, nella chat">
-          &lt;/&gt; Mostra codice
-        </button>
-        <button class="btn btn-ghost" id="edit-code-btn" style="display:none;margin-top:8px;width:100%;justify-content:center" onclick="openCodeEditor()" title="Editor JSON dei layer, accanto alla mappa">
-          ✎ Modifica codice
-        </button>
 
       </div>
     </div>
@@ -1610,7 +1663,7 @@
 
 <!-- iXmaps GL — deck.gl + MapLibre reimplementation, not the real ixmaps-flat/SVG engine.
      ixmaps-gl.js lazy-loads MapLibre/deck.gl/Supercluster/Mustache itself. -->
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.3/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.4/ixmaps-gl.js"></script>
 <!-- data.js — needed outside ixmaps callbacks for pre-loading and schema analysis -->
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
 
@@ -1721,15 +1774,13 @@ function hide(id) { document.getElementById(id).style.display = 'none'; }
 // be shown. Fades in via opacity, never display:none — see #map's own CSS comment for why.
 function revealMap() { document.getElementById('map').classList.add('visible'); }
 
-// CONFIGURAZIONE + draw button + table: hidden until the AI-or-not question is answered
+// CONFIGURAZIONE + export/code buttons + table: hidden until the AI-or-not question is answered
 // (either way — see suggestVisualization/applySuggestion), so nothing "smart" is implied
 // before the user has actually made a choice
 function revealConfig() {
   show('config-card');
-  show('draw-btn');
-  show('export-btn');
-  show('code-btn');
-  show('edit-code-btn');
+  show('map-card');
+  renderMapCard();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1814,7 +1865,6 @@ function loadData() {
           STATE.codeMode = false; STATE.codeDefs = null; CODE_EDITOR.drawnNames = [];
           document.getElementById('code-mode-banner').style.display = 'none';
           document.getElementById('config-card').classList.remove('code-mode');
-          document.getElementById('draw-btn').classList.remove('code-mode');
           closeCodeEditor();
         }
         if (typeof renderLayerTweaks === 'function') renderLayerTweaks();
@@ -2018,6 +2068,7 @@ function analyzeSchema(rows, type) {
   show('table-btn');
   show('facets-btn');
   show('chat-btn');
+  show('code-menu-btn');
   // data for this URL is already loaded — re-enabled once the user edits the URL (see the
   // url-input 'input' listener below), so loading a different dataset still works
   document.getElementById('load-btn').disabled = true;
@@ -2777,18 +2828,9 @@ function applySuggestion(s, source, autoDrawEuristica) {
     if (!firedColorRequest) hideAIStatus();
   }
 
-  // ── auto-draw ──
-  // 'euristica' means "no AI in play" — either AI isn't configured (autoDrawEuristica: true,
-  // draw the best guess immediately, same as before this feature existed) or the user explicitly
-  // declined AI (autoDrawEuristica: false, stay on the neutral render until they act themselves)
-  var geo = hasGeoData(s);
-  if (geo) {
-    if (source === 'euristica') {
-      if (autoDrawEuristica) setTimeout(drawMap, 0);
-    } else {
-      setTimeout(drawMap, 0);
-    }
-  }
+  // ── auto-draw ── geographic data always gets its map (there is no "Crea mappa" button);
+  // autoDrawEuristica is kept for callers but no longer holds a map back
+  if (hasGeoData(s)) setTimeout(drawMap, 0);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3013,7 +3055,8 @@ function extractCoords(geom, out) {
 }
 
 // returns { minLat, maxLat, minLon, maxLon } from lat/lon fields or geometry, or null
-function computeDataBbox() {
+// rows (optional): just these records (e.g. the chat's "zoom to <value>") instead of the dataset
+function computeDataBbox(rowsArg) {
   var minLat =  Infinity, maxLat = -Infinity;
   var minLon =  Infinity, maxLon = -Infinity;
   var found = false;
@@ -3025,7 +3068,7 @@ function computeDataBbox() {
     found = true;
   }
 
-  var rows = STATE.rawData || [];
+  var rows = rowsArg || STATE.rawData || [];
   var latF = STATE.fields.find(function(f){ return f.type === 'lat'; });
   var lonF = STATE.fields.find(function(f){ return f.type === 'lon'; });
 
@@ -3124,13 +3167,16 @@ function initialMapType() {
   return /dark/.test(key) ? 'VT_DATAVIZ_DARK' : 'VT_TONER_LITE';
 }
 function initMapEarly() {
-  var mapPromise = ixmaps.Map("map", { mapType: initialMapType() }, function(map) {
-    map.view([42.5, 12.5], 6)
-       .options({
-         objectscaling:   "dynamic",
-         normalSizeScale: "8000000",
-         basemapopacity:  0.55
-       });
+  // the map's own parameters — ixmaps.Map(id, {…}) and .options({…}) — single source for the
+  // map, the "Mappa" card, the code editor's map/options sections and the generated page
+  STATE.mapConfig = {
+    map:     { mapType: initialMapType() },
+    options: { objectscaling: "dynamic", normalSizeScale: "8000000", basemapopacity: 0.55 }
+  };
+  STATE.lastView = { center: [42.5, 12.5], zoom: 6 };
+  var mapPromise = ixmaps.Map("map", Object.assign({}, STATE.mapConfig.map), function(map) {
+    map.view(STATE.lastView.center, STATE.lastView.zoom)
+       .options(Object.assign({}, STATE.mapConfig.options));
   });
 
   STATE.myMap = mapPromise;
@@ -3202,16 +3248,19 @@ function drawMap() {
     STATE.neutralThemeActive = false;
     var recorded = [];
     LAYER_RECORD = recorded;
+    LAYER_DROP_SHOW = true;
     buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opacity, chartScale, sizePow, gridWidth, lineWidth).then(function() {
       STATE.hasDrawnMap = true;
       STATE.codeLayers = recorded; // what generateMapCode() turns into ixmaps code
+      if (STATE.afterPanelDraw) { var after = STATE.afterPanelDraw; STATE.afterPanelDraw = null; after(); }
       refreshCodeEditorFromMap();
+      refreshCodeEditorHtml();
       showToast(isFirstDraw ? 'Mappa creata!' : 'Tema aggiornato!', 'ok');
     }).catch(function(err) {
       console.error('[ixmaps-loader] drawMap failed:', err);
       showToast('Errore nella costruzione della mappa', 'error');
     }).then(function() {
-      if (LAYER_RECORD === recorded) LAYER_RECORD = null;
+      if (LAYER_RECORD === recorded) { LAYER_RECORD = null; LAYER_DROP_SHOW = false; }
       hideSpinner();
       DRAW_IN_PROGRESS = false;
       if (DRAW_PENDING) { DRAW_PENDING = false; drawMap(); }
@@ -3238,9 +3287,37 @@ function drawMap() {
 // FEATURE branches (second layer defined in a .then) are captured too. ixmaps-gl's own
 // getProjectString() only carries the map view, no themes — hence this.
 var LAYER_RECORD = null;
+// SHOW / ZOOMTO make the engine zoom to a theme's extent once it is defined. The loader
+// re-defines its theme on EVERY panel change, so during those redraws (LAYER_DROP_SHOW, set by
+// drawMap around buildLayer) the flags are taken out of .type() — the view stays where the
+// user put it. The first draw after loading data (drawNeutralMap) keeps SHOW: that is the
+// zoom to the data. Code mode applies the editor's JSON literally.
+var LAYER_DROP_SHOW = false;
+function stripShowFlags(typeStr) {
+  return String(typeStr).split('|').filter(function(t) { return t !== 'SHOW' && t !== 'ZOOMTO'; }).join('|');
+}
+function withoutShow(configFn) {
+  return function(l) {
+    var p = new Proxy(l, { get: function(t, m) {
+      var v = t[m];
+      if (typeof v !== 'function') return v;
+      return function() {
+        var args = Array.prototype.slice.call(arguments);
+        if (m === 'type' && typeof args[0] === 'string') args[0] = stripShowFlags(args[0]);
+        var r = v.apply(t, args);
+        return r === t ? p : r;
+      };
+    } });
+    return configFn(p);
+  };
+}
+// the engine's own ixmaps.layer, unwrapped — for builders that only describe a definition
+// (the editor's grammar check) and must never be recorded as a drawn layer
+var ixmapsLayerUnrecorded = ixmaps.layer;
 (function() {
   var origLayer = ixmaps.layer;
   ixmaps.layer = function(name, configFn) {
+    if (LAYER_DROP_SHOW && typeof configFn === 'function') configFn = withoutShow(configFn);
     if (LAYER_RECORD && typeof configFn === 'function') {
       var calls = [];
       var stub = new Proxy({}, { get: function(t, method) {
@@ -3248,7 +3325,7 @@ var LAYER_RECORD = null;
       } });
       try { configFn(stub); LAYER_RECORD.push({ name: name, calls: calls }); } catch (e) { console.warn('[ixmaps-loader] layer code capture failed:', e); }
     }
-    return origLayer.apply(this, arguments);
+    return origLayer.call(this, name, configFn);
   };
 })();
 
@@ -3297,14 +3374,9 @@ async function generateMapCode(options) {
   }).join('\n\n');
   if (options.layersOnly) return layerCode;
 
-  var center = [42.5, 12.5], zoom = 6;
-  try {
-    var live = await STATE.myMap;
-    var c = live.map.getCenter();
-    center = [Math.round(c.lat * 1e5) / 1e5, Math.round(c.lng * 1e5) / 1e5];
-    zoom = Math.round(live.map.getZoom() * 100) / 100;
-  } catch (e) {}
-  var mapType = (STATE.basemap && BASEMAP_TYPES[STATE.basemap]) || initialMapType();
+  var view = await currentView();
+  var center = view.center, zoom = view.zoom;
+  var cfg = STATE.mapConfig || { map: {}, options: {} };
   // what shows through the semi-transparent basemap (basemapopacity 0.55) in the loader: the
   // nearest painted background behind #map (BASEMAP_BG inline, else the page's --bg)
   var mapBg = '';
@@ -3324,11 +3396,11 @@ async function generateMapCode(options) {
     '</head>',
     '<body>',
     '<div id="map"></div>',
-    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.3/ixmaps-gl.js"><\/script>',
+    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.4/ixmaps-gl.js"><\/script>',
     '<script>',
-    'ixmaps.Map("map", { mapType: ' + JSON.stringify(mapType) + ' }, map => {',
+    'ixmaps.Map("map", ' + codeLiteral(cfg.map || {}, '') + ', map => {',
     '  map.view(' + JSON.stringify(center) + ', ' + zoom + ')',
-    '     .options({ objectscaling: "dynamic", normalSizeScale: "8000000", basemapopacity: 0.55 });',
+    '     .options(' + codeLiteral(cfg.options || {}, '     ') + ');',
     '}).then(map => {',
     '  ' + indentLines(layerCode, '  '),
     '});',
@@ -3338,11 +3410,116 @@ async function generateMapCode(options) {
   ].join('\n');
 }
 
-// "</>" button: open the chat (lazy-loading it if needed) and post the code there
-function showMapCode() {
-  if (!STATE.hasDrawnMap) { showToast('Crea prima la mappa', 'error'); return; }
-  openLoaderChat(function() { window.ixmapsChatShowCode(); });
+// ═══════════════════════════════════════════════════════
+//  MAP PARAMETERS (STATE.mapConfig) — ixmaps.Map(id, map) + .options(options)
+//  One source, three editors: the "Mappa" card, the code editor's "map"/"options"/"view"
+//  sections, the basemap picker. applyMapConfig() diffs against the current config and changes
+//  only what changed, at runtime: mapType → setMapType, legend → setLegend, basemapopacity →
+//  setBasemapOpacity, the rest → map.options({...}) (the engine merges and redraws; worldcopies
+//  is switched there too). Keys gl doesn't implement are kept (they go into the saved page, for
+//  ixmaps-flat) and only flagged by the editor's grammar check.
+// ═══════════════════════════════════════════════════════
+var MAP_OPTION_DEFAULTS = { objectscaling: undefined, normalSizeScale: undefined, dynamicScalePow: undefined, worldcopies: true };
+function cloneMapConfig(c) {
+  return { map: Object.assign({}, (c && c.map) || {}), options: Object.assign({}, (c && c.options) || {}) };
 }
+function sameValue(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+
+// live center/zoom (ixmaps/flat zoom levels, rounded) — also cached in STATE.lastView
+function currentView() {
+  return Promise.resolve(STATE.myMap).then(function(live) {
+    try {
+      var c = live.map.getCenter();
+      // ixmaps zoom levels (map.view, the editor's "view"): flat's, one above MapLibre's
+      STATE.lastView = { center: [Math.round(c.lat * 1e5) / 1e5, Math.round(c.lng * 1e5) / 1e5], zoom: Math.round((live.map.getZoom() + 1) * 100) / 100 };
+    } catch (e) {}
+    return STATE.lastView;
+  });
+}
+
+// from: 'card' | 'editor' | 'picker' — that editor isn't re-rendered from the result
+function applyMapConfig(next, from) {
+  var prev = STATE.mapConfig || { map: {}, options: {} };
+  next = cloneMapConfig(next);
+  STATE.mapConfig = next;
+  var pm = prev.map || {}, nm = next.map, po = prev.options || {}, no = next.options;
+  if (from !== 'picker' && nm.mapType && !sameValue(nm.mapType, pm.mapType)) {
+    // keep the menu's basemap picker in step (it knows two looks per mapType: take the first)
+    var key = Object.keys(BASEMAP_TYPES).find(function(k) { return BASEMAP_TYPES[k] === nm.mapType; });
+    if (key) markBasemapPicker(key);
+  }
+  if (STATE.myMap) STATE.myMap.then(function(m) {
+    if (!m) return;
+    if (nm.mapType && !sameValue(nm.mapType, pm.mapType) && m.setMapType) m.setMapType(nm.mapType);
+    if (!sameValue(nm.legend, pm.legend) && m.setLegend) m.setLegend(nm.legend);
+    if (!sameValue(no.basemapopacity, po.basemapopacity) && no.basemapopacity != null && m.setBasemapOpacity) m.setBasemapOpacity(no.basemapopacity);
+    var eng = {};
+    ['objectscaling', 'normalSizeScale', 'dynamicScalePow', 'worldcopies'].forEach(function(k) {
+      if (!sameValue(no[k], po[k])) eng[k] = no[k] === undefined ? MAP_OPTION_DEFAULTS[k] : no[k];
+    });
+    if (Object.keys(eng).length && m.options) m.options(eng);
+  });
+  if (from !== 'card') renderMapCard();
+  if (from !== 'editor') refreshCodeEditorFromMap();
+  refreshCodeEditorHtml();
+}
+
+// the card shows STATE.mapConfig; its edits come back through mapConfigFromCard()
+function renderMapCard() {
+  var c = STATE.mapConfig;
+  if (!c || !document.getElementById('mapcfg-maptype')) return;
+  var mt = document.getElementById('mapcfg-maptype');
+  if (c.map.mapType && !Array.prototype.some.call(mt.options, function(o) { return o.value === c.map.mapType; })) {
+    var o = document.createElement('option'); o.value = o.textContent = c.map.mapType; mt.appendChild(o);
+  }
+  mt.value = c.map.mapType || '';
+  var op = c.options.basemapopacity != null ? c.options.basemapopacity : 1;
+  document.getElementById('mapcfg-basemapopacity').value = op;
+  document.getElementById('mapcfg-basemapopacity-val').textContent = op;
+  document.getElementById('mapcfg-objectscaling').value = c.options.objectscaling === 'dynamic' ? 'dynamic' : '';
+  document.getElementById('mapcfg-normalsizescale').value = c.options.normalSizeScale != null ? c.options.normalSizeScale : '';
+  document.getElementById('mapcfg-dynamicscalepow').value = c.options.dynamicScalePow != null ? c.options.dynamicScalePow : '';
+  var lg = c.map.legend;
+  document.getElementById('mapcfg-legend').value = lg === 'closed' ? 'closed' : (lg === undefined || lg === null || lg === false || lg === 'false' || lg === '' ? '' : 'true');
+  document.getElementById('mapcfg-worldcopies').checked = c.options.worldcopies !== false && c.options.worldcopies !== 'false';
+}
+function mapConfigFromCard() {
+  var next = cloneMapConfig(STATE.mapConfig);
+  var setOrDrop = function(obj, k, v) { if (v === '' || v == null) delete obj[k]; else obj[k] = v; };
+  next.map.mapType = document.getElementById('mapcfg-maptype').value;
+  next.options.basemapopacity = parseFloat(document.getElementById('mapcfg-basemapopacity').value);
+  setOrDrop(next.options, 'objectscaling', document.getElementById('mapcfg-objectscaling').value);
+  setOrDrop(next.options, 'normalSizeScale', document.getElementById('mapcfg-normalsizescale').value.trim());
+  var pow = document.getElementById('mapcfg-dynamicscalepow').value.trim();
+  setOrDrop(next.options, 'dynamicScalePow', pow === '' ? '' : parseFloat(pow));
+  setOrDrop(next.map, 'legend', document.getElementById('mapcfg-legend').value);
+  if (document.getElementById('mapcfg-worldcopies').checked) delete next.options.worldcopies;
+  else next.options.worldcopies = false;
+  return next;
+}
+(function() {
+  var timer = null;
+  var fromCard = function(ms) {
+    clearTimeout(timer);
+    timer = setTimeout(function() { if (STATE.mapConfig) applyMapConfig(mapConfigFromCard(), 'card'); }, ms || 0);
+  };
+  ['mapcfg-maptype', 'mapcfg-objectscaling', 'mapcfg-legend', 'mapcfg-worldcopies'].forEach(function(id) {
+    document.getElementById(id).addEventListener('change', function() { fromCard(0); });
+  });
+  document.getElementById('mapcfg-basemapopacity').addEventListener('input', function() {
+    document.getElementById('mapcfg-basemapopacity-val').textContent = this.value;
+    fromCard(80);
+  });
+  ['mapcfg-normalsizescale', 'mapcfg-dynamicscalepow'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function() { fromCard(600); });
+  });
+  document.getElementById('mapcfg-normalsizescale-auto').addEventListener('click', function() {
+    var bbox = computeDataBbox();
+    if (!bbox) { showToast('Nessuna estensione dei dati', 'error'); return; }
+    document.getElementById('mapcfg-normalsizescale').value = String(Math.round(bboxToScale(bbox)));
+    fromCard(0);
+  });
+})();
 
 // ═══════════════════════════════════════════════════════
 //  JSON LAYER EDITOR + CODE MODE
@@ -3361,9 +3538,11 @@ var CODE_LIBS = {
   css:  'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css',
   js:   'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js',
   mode: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js',
-  brackets: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js'
+  brackets: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js',
+  // for the read-only "Mappa (HTML)" view
+  html: ['xml/xml', 'css/css', 'htmlmixed/htmlmixed'].map(function(m) { return 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/' + m + '.min.js'; })
 };
-var GRAMMAR_VALIDATOR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.20/dist/validate.mjs';
+var GRAMMAR_VALIDATOR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.21/dist/validate.mjs';
 var CODE_EDITOR = { ed: null, timer: null, validator: null, validatorFailed: false, objKeys: {}, drawnNames: [], drawChain: Promise.resolve() };
 
 // recorded calls → editable definitions. Layers whose data was the in-memory table get
@@ -3423,6 +3602,7 @@ function drawCodeLayers(defs) {
           STATE.currentThemeName = defs.length ? defs[defs.length - 1].name : null;
           CODE_EDITOR.drawnNames = defs.map(function(d) { return d.name; });
           setCodeEditorStatus('✓ applicato');
+          refreshCodeEditorHtml();
         }).catch(function(err) {
           console.error('[ixmaps-loader] code layer draw failed:', err);
           renderCodeFindings((CODE_EDITOR.lastFindings || []).concat([{ severity: 'error', code: 'engine', message: 'Errore del motore: ' + (err && err.message || err) }]));
@@ -3443,7 +3623,6 @@ function enterCodeMode(defs) {
     STATE.codeMode = true;
     document.getElementById('code-mode-banner').style.display = '';
     document.getElementById('config-card').classList.add('code-mode');
-    document.getElementById('draw-btn').classList.add('code-mode');
   }
   return drawCodeLayers(defs);
 }
@@ -3453,7 +3632,6 @@ function exitCodeMode() {
   STATE.codeDefs = null;
   document.getElementById('code-mode-banner').style.display = 'none';
   document.getElementById('config-card').classList.remove('code-mode');
-  document.getElementById('draw-btn').classList.remove('code-mode');
   ensureMap(function(map) { CODE_EDITOR.drawnNames.forEach(function(n) { try { map.removeTheme(n); } catch (e) {} }); });
   CODE_EDITOR.drawnNames = [];
   closeCodeEditor();
@@ -3468,6 +3646,13 @@ function loadScriptOnce(url) {
     sc.src = url; sc.setAttribute('data-src', url);
     sc.onload = resolve; sc.onerror = function() { sc.remove(); reject(new Error('load failed: ' + url)); };
     document.head.appendChild(sc);
+  });
+}
+function loadCodeMirrorHtml() {
+  return loadCodeMirror().then(function(CM) {
+    if (CM.modes && CM.modes.htmlmixed) return CM;
+    return loadScriptOnce(CODE_LIBS.html[0]).then(function() { return loadScriptOnce(CODE_LIBS.html[1]); })
+      .then(function() { return loadScriptOnce(CODE_LIBS.html[2]); }).then(function() { return CM; });
   });
 }
 function loadCodeMirror() {
@@ -3496,13 +3681,48 @@ function loadGrammarValidator() {
 }
 
 // ── editor wrapper: CodeMirror, or a plain textarea if it can't load ──
-function makeCodeEditor(host, text) {
-  return loadCodeMirror().then(function(CM) {
-    var cm = CM(host, { value: text, mode: { name: 'javascript', json: true }, lineNumbers: true, matchBrackets: true, tabSize: 2, indentUnit: 2 });
+// a small swatch in front of every hex color string ("#4e79a7", '#fff') — e.g. a colorscheme
+// array reads as colors; kept up to date 150 ms after each change
+function addColorSwatches(cm) {
+  var marks = [], timer = null;
+  function update() {
+    marks.forEach(function(m) { m.clear(); });
+    marks = [];
+    var text = cm.getValue(), re = /["'](#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3}))["']/g, m;
+    while ((m = re.exec(text))) {
+      var sw = document.createElement('span');
+      sw.className = 'code-swatch';
+      sw.style.background = m[1];
+      marks.push(cm.setBookmark(cm.posFromIndex(m.index), { widget: sw, insertLeft: true }));
+    }
+  }
+  cm.on('change', function() { clearTimeout(timer); timer = setTimeout(update, 150); });
+  update();
+}
+
+// opts.html: read-only HTML page view (htmlmixed); default: the editable JSON view
+function makeCodeEditor(host, text, opts) {
+  opts = opts || {};
+  return (opts.html ? loadCodeMirrorHtml() : loadCodeMirror()).then(function(CM) {
+    var cm = CM(host, opts.html
+      ? { value: text, mode: 'htmlmixed', lineNumbers: true, readOnly: true, tabSize: 2 }
+      : { value: text, mode: { name: 'javascript', json: true }, lineNumbers: true, matchBrackets: true, tabSize: 2, indentUnit: 2 });
+    addColorSwatches(cm);
     var marks = [];
     return {
       get: function() { return cm.getValue(); },
-      set: function(t) { cm.setValue(t); },
+      // keepView: a panel redraw replaced the text (refreshCodeEditorFromMap) — stay where the
+      // user was scrolled/typing instead of jumping back to the top
+      set: function(t, keepView) {
+        if (t === cm.getValue()) return;
+        if (!keepView) { cm.setValue(t); return; }
+        var sc = cm.getScrollInfo(), cur = cm.getCursor();
+        cm.operation(function() {
+          cm.setValue(t);
+          cm.setCursor({ line: Math.min(cur.line, cm.lastLine()), ch: cur.ch });
+          cm.scrollTo(sc.left, sc.top);
+        });
+      },
       onChange: function(fn) { cm.on('change', fn); },
       refresh: function() { cm.refresh(); },
       clearMarks: function() { marks.forEach(function(m) { m.clear(); }); marks = []; },
@@ -3515,10 +3735,16 @@ function makeCodeEditor(host, text) {
     console.warn('[ixmaps-loader] CodeMirror unavailable, plain textarea:', e);
     var ta = document.createElement('textarea');
     ta.className = 'code-fallback'; ta.spellcheck = false; ta.value = text;
+    if (opts.html) ta.readOnly = true;
     host.appendChild(ta);
     return {
       get: function() { return ta.value; },
-      set: function(t) { ta.value = t; },
+      set: function(t, keepView) {
+        if (t === ta.value) return;
+        var top = ta.scrollTop, left = ta.scrollLeft, pos = ta.selectionStart;
+        ta.value = t;
+        if (keepView) { ta.scrollTop = top; ta.scrollLeft = left; ta.setSelectionRange(Math.min(pos, t.length), Math.min(pos, t.length)); }
+      },
       onChange: function(fn) { ta.addEventListener('input', fn); },
       refresh: function() {},
       clearMarks: function() {},
@@ -3534,12 +3760,21 @@ function buildCodeEditorPanel() {
   panel = document.createElement('div');
   panel.id = 'code-editor-panel';
   panel.innerHTML =
-    '<div class="chat-panel-header"><span>✎ Layer (JSON)<span id="code-editor-status"></span></span>' +
-    '<span style="display:flex;gap:6px;align-items:center">' +
-      '<button type="button" class="btn btn-primary" onclick="applyCodeEditor(true)" title="Applica subito (altrimenti si applica da solo quando il JSON è valido)">Applica</button>' +
-      '<button type="button" class="chat-panel-close" onclick="closeCodeEditor()" title="Chiudi (la mappa resta com\'è)">✕</button>' +
-    '</span></div>' +
-    '<div id="code-editor-host"></div>' +
+    '<div class="chat-panel-header">' +
+      '<span class="code-view-switch">' +
+        '<button type="button" data-view="theme" onclick="setCodeEditorView(\'theme\')" title="Definizione del tema (layer): modificabile, si applica alla mappa">Tema (JSON)</button>' +
+        '<button type="button" data-view="map" onclick="setCodeEditorView(\'map\')" title="Parametri della mappa: map, options, view — modificabili, come la scheda Mappa">Mappa (JSON)</button>' +
+        '<button type="button" data-view="html" onclick="setCodeEditorView(\'html\')" title="Pagina HTML autonoma della mappa attuale: sola lettura, da salvare">Pagina (HTML)</button>' +
+        '<span id="code-editor-status"></span>' +
+      '</span>' +
+      '<span style="display:flex;gap:6px;align-items:center">' +
+        '<button type="button" class="btn btn-primary" id="code-apply-btn" onclick="applyCodeEditor(true)" title="Applica subito (altrimenti si applica da solo quando il JSON è valido)">Applica</button>' +
+        '<button type="button" class="btn btn-ghost" onclick="saveMapHtml()" title="Scarica la mappa come pagina HTML autonoma">⬇ Salva</button>' +
+        '<button type="button" class="chat-panel-close" onclick="closeCodeEditor()" title="Chiudi (la mappa resta com\'è)">✕</button>' +
+      '</span></div>' +
+    '<div id="code-editor-host" class="code-json-host"></div>' +
+    '<div id="code-editor-map-host" class="code-json-host" style="display:none"></div>' +
+    '<div id="code-editor-html-host" style="display:none"></div>' +
     '<div id="code-editor-findings"></div>';
   var mapWrap = document.getElementById('map-wrap');
   mapWrap.parentNode.insertBefore(panel, mapWrap.nextSibling); // right of the map, left of the chat
@@ -3548,43 +3783,142 @@ function buildCodeEditorPanel() {
 
 function setCodeEditorStatus(t) { var el = document.getElementById('code-editor-status'); if (el) el.textContent = t ? ' · ' + t : ''; }
 
-function openCodeEditor() {
-  if (!STATE.hasDrawnMap) { showToast('Crea prima la mappa', 'error'); return; }
-  var defs = STATE.codeMode && STATE.codeDefs ? STATE.codeDefs : codeDefsFromRecorded(STATE.codeLayers);
-  if (!defs.length) { showToast('Nessun layer da modificare', 'error'); return; }
-  var text = JSON.stringify(defs, null, 2);
-  var panel = buildCodeEditorPanel();
-  panel.classList.add('active');
-  loadGrammarValidator();
-  if (CODE_EDITOR.ed) {
-    if (!STATE.codeMode) { CODE_EDITOR.suppress = true; CODE_EDITOR.ed.set(text); CODE_EDITOR.suppress = false; }
-    CODE_EDITOR.ed.refresh();
-    validateCodeEditor();
-    return;
-  }
-  setCodeEditorStatus('caricamento editor…');
-  makeCodeEditor(document.getElementById('code-editor-host'), text).then(function(ed) {
-    CODE_EDITOR.ed = ed;
-    setCodeEditorStatus('');
+// view: 'json' (default, the editable theme definition) or 'html' (read-only page)
+// ── the two editable JSON views + the read-only page ──
+//   theme: the theme definition(s) — one object, or an array when the visualization has a
+//          FEATURE base + CHOROPLETH overlay (the overlay can't exist without its base)
+//   map:   the map's own parameters { map, options, view } (STATE.mapConfig + the live view)
+//   html:  the standalone page of both (read-only, ⬇ Salva)
+// Each JSON view has its own editor, text, pending-edit guard and validation: a programmatic
+// text is remembered (lastText); the editor holds unapplied user edits exactly when its text
+// differs from it, and those are never overwritten by map/panel/card changes.
+function currentLayerDefs() {
+  return STATE.codeMode && STATE.codeDefs ? STATE.codeDefs : codeDefsFromRecorded(STATE.codeLayers);
+}
+function themeText() {
+  var l = currentLayerDefs();
+  return JSON.stringify(l.length === 1 ? l[0] : l, null, 2);
+}
+function mapText() {
+  var c = STATE.mapConfig || { map: {}, options: {} };
+  return JSON.stringify({ map: c.map, options: c.options, view: STATE.lastView }, null, 2);
+}
+var CODE_JSON_VIEWS = {
+  theme: { host: 'code-editor-host',     edKey: 'ed',    lastKey: 'lastText',    text: themeText },
+  map:   { host: 'code-editor-map-host', edKey: 'mapEd', lastKey: 'mapLastText', text: mapText }
+};
+function viewEd(kind) { return CODE_EDITOR[CODE_JSON_VIEWS[kind].edKey]; }
+function setCodeEditorText(kind, text, keepView) {
+  CODE_EDITOR.suppress = true;
+  viewEd(kind).set(text, keepView);
+  CODE_EDITOR.suppress = false;
+  CODE_EDITOR[CODE_JSON_VIEWS[kind].lastKey] = text;
+}
+function codeEditorHasPendingEdits(kind) {
+  var ed = viewEd(kind), last = CODE_EDITOR[CODE_JSON_VIEWS[kind].lastKey];
+  return !!ed && last != null && ed.get() !== last;
+}
+function normCodeView(view) { return view === 'html' ? 'html' : view === 'map' ? 'map' : 'theme'; } // 'json' = theme
+
+// the JSON editor of `kind`, created on first use
+function ensureJsonEditor(kind) {
+  var cfg = CODE_JSON_VIEWS[kind];
+  if (CODE_EDITOR[cfg.edKey]) return Promise.resolve(CODE_EDITOR[cfg.edKey]);
+  if (cfg.creating) return cfg.creating;
+  var text = cfg.text();
+  cfg.creating = makeCodeEditor(document.getElementById(cfg.host), text).then(function(ed) {
+    CODE_EDITOR[cfg.edKey] = ed;
+    CODE_EDITOR[cfg.lastKey] = text;
+    cfg.creating = null;
     ed.onChange(function() {
       if (CODE_EDITOR.suppress) return;
       setCodeEditorStatus('…');
-      clearTimeout(CODE_EDITOR.timer);
-      CODE_EDITOR.timer = setTimeout(function() { applyCodeEditor(false); }, 700);
+      clearTimeout(cfg.timer);
+      cfg.timer = setTimeout(function() { applyCodeEditor(false, kind); }, 700);
     });
+    return ed;
+  });
+  return cfg.creating;
+}
+
+// view: 'theme' (default) | 'map' | 'html' ('json' = 'theme')
+function openCodeEditor(view) {
+  if (!STATE.hasDrawnMap) { showToast('Crea prima la mappa', 'error'); return; }
+  var panel = buildCodeEditorPanel();
+  panel.classList.add('active');
+  loadGrammarValidator();
+  currentView().then(function() { setCodeEditorView(view || CODE_EDITOR.view || 'theme'); });
+}
+
+function setCodeEditorView(view) {
+  view = normCodeView(view);
+  CODE_EDITOR.view = view;
+  var panel = document.getElementById('code-editor-panel');
+  if (!panel) return;
+  Array.prototype.forEach.call(panel.querySelectorAll('.code-view-switch button'), function(b) {
+    b.classList.toggle('active', b.getAttribute('data-view') === view);
+  });
+  document.getElementById('code-editor-host').style.display = view === 'theme' ? '' : 'none';
+  document.getElementById('code-editor-map-host').style.display = view === 'map' ? '' : 'none';
+  document.getElementById('code-editor-html-host').style.display = view === 'html' ? '' : 'none';
+  document.getElementById('code-editor-findings').style.display = view === 'html' ? 'none' : '';
+  document.getElementById('code-apply-btn').style.display = view === 'html' ? 'none' : '';
+  if (view === 'html') { setCodeEditorStatus(''); refreshCodeEditorHtml(); return; }
+  ensureJsonEditor(view).then(function(ed) {
+    if (!codeEditorHasPendingEdits(view)) {
+      var text = CODE_JSON_VIEWS[view].text();
+      if (text !== ed.get()) setCodeEditorText(view, text, true);
+    }
     ed.refresh();
-    validateCodeEditor();
+    validateCodeEditor(view);
   });
 }
-// panel-driven redraw while the editor is open (not yet in code mode): show the new layers
+
+// map/panel/card changed: both JSON views follow (each only without pending edits)
 function refreshCodeEditorFromMap() {
-  var panel = document.getElementById('code-editor-panel');
-  if (STATE.codeMode || !CODE_EDITOR.ed || !panel || !panel.classList.contains('active')) return;
-  CODE_EDITOR.suppress = true;
-  CODE_EDITOR.ed.set(JSON.stringify(codeDefsFromRecorded(STATE.codeLayers), null, 2));
-  CODE_EDITOR.suppress = false;
-  validateCodeEditor();
+  if (!isCodeEditorOpen()) return;
+  Object.keys(CODE_JSON_VIEWS).forEach(function(kind) {
+    var ed = viewEd(kind);
+    if (!ed || codeEditorHasPendingEdits(kind)) return;
+    var text = CODE_JSON_VIEWS[kind].text();
+    if (text !== ed.get()) setCodeEditorText(kind, text, true);
+  });
+  if (CODE_EDITOR.view !== 'html') validateCodeEditor(CODE_EDITOR.view);
 }
+
+function isCodeEditorOpen() {
+  var panel = document.getElementById('code-editor-panel');
+  return !!(panel && panel.classList.contains('active'));
+}
+// menu bar "</> Codice"
+function toggleCodeEditor() { if (isCodeEditorOpen()) closeCodeEditor(); else openCodeEditor(); }
+
+// "Pagina (HTML)": regenerated from the drawn map — on switching to it, after every redraw and
+// after the view moved (generateMapCode reads the live center/zoom)
+function refreshCodeEditorHtml() {
+  if (CODE_EDITOR.view !== 'html' || !isCodeEditorOpen()) return;
+  generateMapCode().then(function(code) {
+    code = code || '<!-- nessun layer -->';
+    if (CODE_EDITOR.htmlEd) { CODE_EDITOR.htmlEd.set(code, true); CODE_EDITOR.htmlEd.refresh(); return; }
+    if (CODE_EDITOR.htmlLoading) return;
+    CODE_EDITOR.htmlLoading = true;
+    makeCodeEditor(document.getElementById('code-editor-html-host'), code, { html: true }).then(function(ed) {
+      CODE_EDITOR.htmlEd = ed;
+      CODE_EDITOR.htmlLoading = false;
+      ed.refresh();
+    });
+  });
+}
+(function() {
+  var t = null;
+  if (STATE.myMap) STATE.myMap.then(function(m) {
+    if (m && m.map && m.map.on) m.map.on('moveend', function() {
+      clearTimeout(t);
+      t = setTimeout(function() { currentView().then(function() { refreshCodeEditorHtml(); refreshCodeEditorFromMap(); }); }, 300);
+    });
+  });
+})();
+
 function closeCodeEditor() {
   var panel = document.getElementById('code-editor-panel');
   if (panel) panel.classList.remove('active');
@@ -3604,17 +3938,20 @@ function jsonErrorIndex(text, err) {
   return 0;
 }
 
-// → { defs, findings } — findings: {severity, code, message, layer, keyword, from, to}
-function checkCodeText(text) {
+function jsonSyntaxFinding(text, e) {
+  var at = jsonErrorIndex(text, e);
+  var line = text.slice(0, at).split('\n').length;
+  return { severity: 'error', code: 'json', message: 'JSON non valido (riga ' + line + '): ' + e.message, from: at, to: Math.min(text.length, at + 1) };
+}
+
+// Tema (JSON) → { defs, findings } — findings: {severity, code, message, layer, keyword, from, to}
+function checkThemeText(text) {
   var findings = [];
   var defs;
   try { defs = JSON.parse(text); }
-  catch (e) {
-    var at = jsonErrorIndex(text, e);
-    var line = text.slice(0, at).split('\n').length;
-    return { defs: null, findings: [{ severity: 'error', code: 'json', message: 'JSON non valido (riga ' + line + '): ' + e.message, from: at, to: Math.min(text.length, at + 1) }] };
-  }
-  if (!Array.isArray(defs)) defs = [defs];
+  catch (e) { return { defs: null, findings: [jsonSyntaxFinding(text, e)] }; }
+  if (defs && typeof defs === 'object' && !Array.isArray(defs)) defs = [defs]; // one theme
+  if (!Array.isArray(defs)) return { defs: null, findings: [{ severity: 'error', code: 'shape', message: 'il tema deve essere un oggetto (o un array di layer)' }] };
   // layer i's region in the text starts at its i-th "name" key — used to locate keys
   var starts = [], re = /"name"\s*:/g, mm;
   while ((mm = re.exec(text))) starts.push(mm.index);
@@ -3645,7 +3982,7 @@ function checkCodeText(text) {
   if (v && !findings.some(function(f) { return f.severity === 'error'; })) {
     CODE_EDITOR.sink.length = 0;
     defs.forEach(function(d, i) {
-      try { v.theme(ixmaps.layer(d.name, function(l) { CODE_APPLY_ORDER.forEach(function(m) { if (d[m] != null) l[m](d[m]); }); }).definition(), { layer: i }); }
+      try { v.theme(ixmapsLayerUnrecorded(d.name, function(l) { CODE_APPLY_ORDER.forEach(function(m) { if (d[m] != null) l[m](d[m]); }); }).definition(), { layer: i }); }
       catch (e) { findings.push({ severity: 'error', code: 'shape', layer: i, message: e.message }); }
     });
     CODE_EDITOR.sink.forEach(function(f) {
@@ -3657,11 +3994,48 @@ function checkCodeText(text) {
   return { defs: defs, findings: findings };
 }
 
-function renderCodeFindings(findings) {
+// Mappa (JSON) → { doc: {map, options, view}, findings }
+function checkMapText(text) {
+  var findings = [];
+  var doc;
+  try { doc = JSON.parse(text); }
+  catch (e) { return { doc: null, findings: [jsonSyntaxFinding(text, e)] }; }
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return { doc: null, findings: [{ severity: 'error', code: 'shape', message: 'la mappa deve essere un oggetto { map, options, view }' }] };
+  function sectionAt(key) { var m = new RegExp('"' + key + '"\\s*:').exec(text); return m ? m.index : -1; }
+  function locateIn(key, word) {
+    var from = sectionAt(key);
+    if (from < 0) return {};
+    var needle = '"' + word + '"';
+    var at = text.indexOf(needle, from + key.length + 2);
+    return at < 0 ? {} : { from: at, to: at + needle.length };
+  }
+  var mark = function(key) { var a = sectionAt(key); return a < 0 ? {} : { from: a, to: a + key.length + 2 }; };
+  Object.keys(doc).forEach(function(k) {
+    if (['map', 'options', 'view'].indexOf(k) === -1) findings.push(Object.assign({ severity: 'error', code: 'shape', message: 'sezione sconosciuta "' + k + '" (ammesse: map, options, view)' }, mark(k)));
+  });
+  ['map', 'options'].forEach(function(k) {
+    if (doc[k] != null && (typeof doc[k] !== 'object' || Array.isArray(doc[k]))) findings.push(Object.assign({ severity: 'error', code: 'shape', message: '"' + k + '" deve essere un oggetto' }, mark(k)));
+  });
+  if (doc.view != null && !(doc.view && Array.isArray(doc.view.center) && doc.view.center.length >= 2 && isFinite(doc.view.center[0]) && isFinite(doc.view.center[1]) && isFinite(doc.view.zoom))) {
+    findings.push(Object.assign({ severity: 'error', code: 'shape', message: '"view" deve essere { "center": [lat, lng], "zoom": n }' }, mark('view')));
+  }
+  var v = CODE_EDITOR.validator;
+  if (v && !findings.some(function(f) { return f.severity === 'error'; })) {
+    CODE_EDITOR.sink.length = 0;
+    try { if (doc.map) v.mapOptions(doc.map, { layer: 'map' }); } catch (e) {}
+    try { if (doc.options) v.options(doc.options, { layer: 'options' }); } catch (e) {}
+    CODE_EDITOR.sink.forEach(function(f) {
+      findings.push(Object.assign({}, f, f.keyword ? locateIn(f.layer, f.keyword) : {}));
+    });
+  }
+  return { doc: doc, findings: findings };
+}
+
+function renderCodeFindings(findings, ed) {
   CODE_EDITOR.lastFindings = findings;
   var box = document.getElementById('code-editor-findings');
   if (!box) return;
-  var ed = CODE_EDITOR.ed;
+  ed = ed || viewEd(CODE_EDITOR.view === 'map' ? 'map' : 'theme');
   if (ed) ed.clearMarks();
   var label = { error: 'errore', warning: 'avviso', info: 'info' };
   box.innerHTML = '';
@@ -3681,150 +4055,172 @@ function renderCodeFindings(findings) {
   }
 }
 
-function validateCodeEditor() {
-  if (!CODE_EDITOR.ed) return null;
+// kind: 'theme' | 'map' (default: the visible JSON view); findings shown only for the visible one
+function validateCodeEditor(kind) {
+  kind = kind || (CODE_EDITOR.view === 'map' ? 'map' : 'theme');
+  var ed = viewEd(kind);
+  if (!ed) return null;
   return loadGrammarValidator().then(function() {
-    var r = checkCodeText(CODE_EDITOR.ed.get());
-    renderCodeFindings(r.findings);
+    var r = kind === 'map' ? checkMapText(ed.get()) : checkThemeText(ed.get());
+    if (CODE_EDITOR.view === kind) renderCodeFindings(r.findings, ed);
     return r;
   });
 }
 
-// force: the Applica button (applies with warnings; errors still block — the engine would
-// only fail on them)
-function applyCodeEditor(force) {
-  var p = validateCodeEditor();
+// ── phase 3: JSON → panel without code mode ──
+// equal up to float noise (0.4 * 1.5 = 0.6000000000000001)
+function approxEqual(a, b) {
+  if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b));
+  if (typeof a === 'number' || typeof b === 'number') {
+    var x = Number(a), y = Number(b);
+    return a !== '' && b !== '' && a != null && b != null && isFinite(x) && isFinite(y) && approxEqual(x, y);
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every(function(v, i) { return approxEqual(v, b[i]); });
+  }
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    var ka = Object.keys(a).filter(function(k) { return a[k] !== undefined; }), kb = Object.keys(b).filter(function(k) { return b[k] !== undefined; });
+    return ka.length === kb.length && ka.every(function(k) { return approxEqual(a[k], b[k]); });
+  }
+  return a === b;
+}
+// edited layers vs the panel's (same count/names/data/binding/filter/meta/title): every
+// changed style key and type flag must have a panel control — then set the controls, redraw
+// from the panel, and check the drawn result equals the edit (else: code mode after all).
+var PANEL_SLIDERS = {
+  fillopacity: { id: 'fill-opacity' },
+  scale:       { id: 'chart-scale', toSlider: function(v) { return v / (STATE.baseScale || 1); } },
+  sizepow:     { id: 'size-ramp' },
+  linewidth:   { id: 'line-width' }
+};
+function tryPanelSync(edited) {
+  var base = codeDefsFromRecorded(STATE.codeLayers);
+  if (!Array.isArray(edited) || edited.length !== base.length) return false;
+  var plan = { sliders: {}, colors: null, grid: null, modsAdd: [], modsDel: [], ovSet: {}, ovDel: [] };
+  var fixedKeys = ['name', 'data', 'binding', 'filter', 'meta', 'title'];
+  var setOnce = function(obj, k, v) { if (obj[k] !== undefined && !approxEqual(obj[k], v)) return false; obj[k] = v; return true; };
+  for (var i = 0; i < base.length; i++) {
+    var b = base[i], e = edited[i] || {};
+    if (Object.keys(e).some(function(k) { return CODE_DEF_KEYS.indexOf(k) === -1; })) return false;
+    if (fixedKeys.some(function(k) { return !approxEqual(b[k], e[k]); })) return false;
+    // type: only modifier flags may come or go
+    var bt = String(b.type || '').split('|'), et = String(e.type || '').split('|');
+    var added = et.filter(function(t) { return bt.indexOf(t) === -1; }), removed = bt.filter(function(t) { return et.indexOf(t) === -1; });
+    if (added.concat(removed).some(function(t) { return !LAYER_MODIFIERS[t]; })) return false;
+    added.forEach(function(t) { if (plan.modsAdd.indexOf(t) === -1) plan.modsAdd.push(t); });
+    removed.forEach(function(t) { if (plan.modsDel.indexOf(t) === -1) plan.modsDel.push(t); });
+    // style
+    var bs = b.style || {}, es = e.style || {};
+    var keys = Object.keys(bs).concat(Object.keys(es)).filter(function(k, j, a) { return a.indexOf(k) === j; });
+    for (var j = 0; j < keys.length; j++) {
+      var k = keys[j];
+      if (approxEqual(bs[k], es[k])) continue;
+      if (PANEL_SLIDERS[k]) {
+        if (es[k] === undefined || !isFinite(Number(es[k]))) return false;
+        if (!setOnce(plan.sliders, k, Number(es[k]))) return false;
+      } else if (k === 'colorscheme') {
+        if (!Array.isArray(es[k]) || !es[k].every(function(c) { return typeof c === 'string'; })) return false;
+        if (plan.colors && !approxEqual(plan.colors, es[k])) return false;
+        plan.colors = es[k];
+      } else if (k === 'aggregation') {
+        if (!Array.isArray(es[k]) || es[k].length !== 2 || es[k][0] !== '1:1') return false;
+        if (!setOnce(plan, 'grid', String(es[k][1]))) return false;
+      } else if (STYLE_OVERRIDE_KEYS[k]) {
+        if (es[k] === undefined) { if (plan.ovDel.indexOf(k) === -1) plan.ovDel.push(k); }
+        else if (!setOnce(plan.ovSet, k, es[k])) return false;
+      } else return false;
+    }
+  }
+  // the edit is expressible — set the panel (snapshot first: a failed check restores it)
+  var snap = {
+    controls: ['fill-opacity', 'chart-scale', 'size-ramp', 'line-width', 'grid-width', 'color-scheme'].map(function(id) { return [id, document.getElementById(id).value]; }),
+    typeModifiers: (STATE.typeModifiers || []).slice(),
+    styleOverrides: Object.assign({}, STATE.styleOverrides || {}),
+    aiCategoryColors: STATE.aiCategoryColors ? Object.assign({}, STATE.aiCategoryColors) : null
+  };
+  Object.keys(plan.sliders).forEach(function(k) {
+    var cfg = PANEL_SLIDERS[k], el = document.getElementById(cfg.id);
+    el.value = String(cfg.toSlider ? cfg.toSlider(plan.sliders[k]) : plan.sliders[k]);
+  });
+  if (plan.colors) {
+    if (STATE.lastCategoryValues && STATE.lastCategoryValues.length === plan.colors.length) {
+      var map = {};
+      STATE.lastCategoryValues.forEach(function(v, n) { map[v] = plan.colors[n]; });
+      STATE.aiCategoryColors = Object.assign({}, STATE.aiCategoryColors || {}, map);
+    } else applyColorScheme(plan.colors.join(','));
+  }
+  if (plan.grid != null) document.getElementById('grid-width').value = plan.grid;
+  var mods = (STATE.typeModifiers || []).filter(function(m) { return plan.modsDel.indexOf(m) === -1; });
+  plan.modsAdd.forEach(function(m) { if (mods.indexOf(m) === -1) mods.push(m); });
+  STATE.typeModifiers = mods;
+  STATE.styleOverrides = Object.assign({}, STATE.styleOverrides || {}, plan.ovSet);
+  plan.ovDel.forEach(function(k) { delete STATE.styleOverrides[k]; });
+  renderLayerTweaks();
+  // redraw from the panel, then check it came out as typed
+  STATE.afterPanelDraw = function() {
+    if (approxEqual(codeDefsFromRecorded(STATE.codeLayers), edited)) {
+      setCodeEditorStatus('✓ applicato al pannello');
+      // the regenerated text replaces the typed one (same content, panel's own formatting)
+      CODE_EDITOR.lastText = CODE_EDITOR.ed.get();
+    } else {
+      // e.g. a slider clamped the value: the panel can't express it after all — put the panel
+      // back as it was (no leftovers for "Torna alla configurazione") and draw the edit as code
+      console.info('[ixmaps-loader] panel redraw differs from the edit — code mode');
+      snap.controls.forEach(function(c) { document.getElementById(c[0]).value = c[1]; });
+      STATE.typeModifiers = snap.typeModifiers;
+      STATE.styleOverrides = snap.styleOverrides;
+      STATE.aiCategoryColors = snap.aiCategoryColors;
+      renderLayerTweaks();
+      enterCodeMode(edited);
+    }
+  };
+  drawMap();
+  return true;
+}
+
+// kind: 'theme' | 'map' (default: the visible JSON view). Theme: an edit the panel can express
+// goes back into the panel (tryPanelSync), anything else is code mode. Map: always applied
+// directly (applyMapConfig), never code mode.
+function applyCodeEditor(force, kind) {
+  kind = kind || (CODE_EDITOR.view === 'map' ? 'map' : 'theme');
+  var ed = viewEd(kind);
+  var p = validateCodeEditor(kind);
   if (!p) return;
+  var text = ed.get();
   p.then(function(r) {
     var nErr = r.findings.filter(function(f) { return f.severity === 'error'; }).length;
-    if (!r.defs || nErr) { setCodeEditorStatus(nErr + ' errori — non applicato'); return; }
+    if ((kind === 'map' ? !r.doc : !r.defs) || nErr) { setCodeEditorStatus(nErr + ' errori — non applicato'); return; }
+    CODE_EDITOR[CODE_JSON_VIEWS[kind].lastKey] = text; // applied — later map changes may update the text again
+    if (kind === 'map') {
+      var doc = r.doc;
+      var nextCfg = { map: doc.map || {}, options: doc.options || {} };
+      if (!sameValue(cloneMapConfig(nextCfg), cloneMapConfig(STATE.mapConfig))) applyMapConfig(nextCfg, 'editor');
+      if (doc.view && Array.isArray(doc.view.center) && doc.view.zoom != null && !sameValue(doc.view, STATE.lastView)) {
+        STATE.lastView = { center: doc.view.center.slice(0, 2), zoom: doc.view.zoom };
+        STATE.myMap.then(function(m) { m.map.jumpTo({ center: [doc.view.center[1], doc.view.center[0]], zoom: doc.view.zoom - 1 }); });
+      }
+      setCodeEditorStatus('✓ applicato');
+      return;
+    }
+    if (sameValue(r.defs, currentLayerDefs())) { setCodeEditorStatus('✓ applicato'); return; }
     setCodeEditorStatus('applico…');
+    if (!STATE.codeMode && tryPanelSync(r.defs)) return;
     enterCodeMode(r.defs);
   });
 }
 
-async function exportMapAsHtml() {
-  // code mode: buildLayer() doesn't describe the map any more — export the generated page
-  if (STATE.codeMode) {
-    var code = await generateMapCode();
-    if (!code) { showToast('Nessun layer da esportare', 'error'); return; }
-    var cblob = new Blob([code], { type: 'text/html;charset=utf-8' });
-    var curl = URL.createObjectURL(cblob);
-    var ca = document.createElement('a');
-    ca.href = curl;
-    ca.download = (STATE.dataUrl.split('/').pop() || 'mappa').replace(/\.[^.]+$/, '') + '_mappa.html';
-    document.body.appendChild(ca); ca.click(); document.body.removeChild(ca);
-    URL.revokeObjectURL(curl);
-    showToast('Mappa esportata!', 'ok');
-    return;
-  }
-  if (!STATE.hasDrawnMap || !STATE.dataUrl) {
-    showToast('Crea prima la mappa', 'error');
-    return;
-  }
-
-  var viz         = document.getElementById('viz-type').value;
-  var geoField    = document.getElementById('geo-field').value;
-  var valueField  = document.getElementById('value-field').value;
-  var titleField  = document.getElementById('title-field').value;
-  var sizeField   = document.getElementById('size-field') ? document.getElementById('size-field').value : '';
-  var colorRaw    = document.getElementById('color-scheme').value;
-  var opacity     = parseFloat(document.getElementById('fill-opacity').value);
-  var chartScale  = parseFloat(document.getElementById('chart-scale').value);
-  var sizePow     = parseFloat(document.getElementById('size-ramp').value);
-  var gridWidth   = document.getElementById('grid-width').value;
-  var lineWidth   = parseFloat(document.getElementById('line-width').value);
-  var colorscheme = colorRaw.split(',').map(function(c) { return c.trim(); });
-
-  var basemapKey  = STATE.basemap || 'grey';
-  var mapBg       = BASEMAP_BG[basemapKey] || '';
-  var liveMap     = await STATE.myMap;
-  var mlCenter    = liveMap.map.getCenter();
-  var center      = [mlCenter.lat, mlCenter.lng];
-  var zoom        = liveMap.map.getZoom();
-
-  var exportState = {
-    dataUrl:          STATE.dataUrl,
-    fileType:         STATE.fileType,
-    fields:           STATE.fields,
-    geomType:         STATE.geomType,
-    dataTable:        null,
-    rawData:          null,
-    baseScale:        1,
-    aiCategoryColors: STATE.aiCategoryColors || null,
-    aiColorGradient:  null,
-    typeModifiers:    STATE.typeModifiers || [],
-    styleOverrides:   STATE.styleOverrides || {}
-  };
-
-  // helpers embedded via .toString() — always the live, current source, never hand-copied
-  var helperSrc = [
-    'var NONCATEGORICAL_NAMES = ' + NONCATEGORICAL_NAMES.toString() + ';',
-    findCategoricalField.toString(),
-    isFloatColumn.toString(),
-    fieldIsNumeric.toString(),
-    computeNormValue.toString(),
-    categoricalColorscheme.toString(),
-    getFeatureDataSource.toString(),
-    buildMapFilterClause.toString(),
-    'var AGGREGATION_METHODS = ' + JSON.stringify(AGGREGATION_METHODS) + ';',
-    applyLayerTweaks.toString(),
-    buildLayer.toString()
-  ].join('\n\n');
-
-  // GL-PORT NOTE: ixmaps-gl.js isn't published anywhere (no CDN build exists yet, unlike the real
-  // ixmaps-flat engine) — the exported page references it by a RELATIVE path, so it only works if
-  // the downloaded file is placed next to a copy of ixmaps-gl.js (same folder this loader itself
-  // runs from). Also: no basemap-switching (setMapType doesn't exist — see setBasemap()'s own
-  // note), so mapType/mapBg only sets the #map background-color fallback, not real tiles.
-  var html = [
-    '<!DOCTYPE html>',
-    '<html><head><meta charset="UTF-8">',
-    '<title>' + escHtml(STATE.dataUrl.split('/').pop() || 'mappa') + '</title>',
-    '<style>html,body{margin:0;height:100%;overflow:hidden;background:#0d0f14}#map{width:100%;height:100%' +
-      (mapBg ? ';background:' + mapBg : '') + '}</style>',
-    '</head><body>',
-    '<div id="map"></div>',
-    '<input type="hidden" id="size-field" value="' + escHtml(sizeField) + '">',
-    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.3/ixmaps-gl.js"><\/script>',
-    '<script>',
-    'function showToast(msg){ console.warn("[ixmaps-loader export]", msg); }', // buildLayer() calls this on a couple of fallback edge cases
-    'var TABLE = { fieldFilters: {} };',
-    'var STATE = ' + JSON.stringify(exportState) + ';',
-    helperSrc,
-    'var mapPromise = ixmaps.Map("map", {}, function(map) {',
-    '  map.view(' + JSON.stringify(center) + ', ' + JSON.stringify(zoom) + ')',
-    '     .options({ objectscaling: "dynamic", normalSizeScale: "8000000", basemapopacity: 0.55 });',
-    '});',
-    'mapPromise.then(function(map) {',
-    '  var dataScript = document.createElement("script");',
-    '  dataScript.src = "https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js";',
-    '  dataScript.onload = function() {',
-    '    Data.feed({ source: STATE.dataUrl, type: STATE.fileType }).load(function(table) {',
-    '      STATE.dataTable = table;',
-    '      STATE.rawData = table.json();',
-    '      buildLayer(map, ' + JSON.stringify(viz) + ', ' + JSON.stringify(geoField) + ', ' +
-        JSON.stringify(valueField) + ', ' + JSON.stringify(titleField) + ', ' + JSON.stringify(colorscheme) + ', ' +
-        JSON.stringify(opacity) + ', ' + JSON.stringify(chartScale) + ', ' + JSON.stringify(sizePow) + ', ' +
-        JSON.stringify(gridWidth) + ', ' + JSON.stringify(lineWidth) + ');',
-    '    });',
-    '  };',
-    '  document.head.appendChild(dataScript);',
-    '});',
-    '<\/script>',
-    '</body></html>'
-  ].join('\n');
-
-  var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
+// ⬇ Salva (code editor): the standalone page of the current map — the same text the editor's
+// "Mappa (HTML)" view shows (generateMapCode)
+async function saveMapHtml() {
+  var code = await generateMapCode();
+  if (!code) { showToast('Crea prima la mappa', 'error'); return; }
+  var url = URL.createObjectURL(new Blob([code], { type: 'text/html;charset=utf-8' }));
+  var a = document.createElement('a');
   a.href = url;
-  a.download = (STATE.dataUrl.split('/').pop() || 'mappa').replace(/\.[^.]+$/, '') + '_mappa.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('Mappa esportata!', 'ok');
+  a.download = (STATE.dataUrl.split('/').pop() || 'mappa').replace(/\.[^.]+$/, '').replace(/[^\w.-]+/g, '_') + '_ixmaps.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  showToast('Mappa salvata', 'ok');
 }
 
 // initial, "dumb" render right after data loads — plain neutral blue dots/lines, no
@@ -3875,7 +4271,6 @@ function drawNeutralMap() {
           fillopacity: geomType === 'polygon' ? 0.3 : 0,
           linecolor:   NEUTRAL_BLUE,
           linewidth:   geomType === 'line' ? 1.5 : 0.8,
-          showdata:    "true"
         });
       }));
     } else {
@@ -3885,7 +4280,7 @@ function drawNeutralMap() {
         .binding(binding)
         .filter(whereClause)
         .type("CHART|DOT|SHOW")
-        .style({ colorscheme: [NEUTRAL_BLUE], scale: 1, fillopacity: 0.75, showdata: "true" });
+        .style({ colorscheme: [NEUTRAL_BLUE], scale: 1, fillopacity: 0.75 });
       }));
     }
     defined.then(function() {
@@ -3977,6 +4372,14 @@ function scheduleMapFilterUpdate() {
 // Debounced (unlike the original) since these fire on 'input' — continuously while dragging —
 // and a full rebuild per tick would be a real, visible stutter, not just "slightly less snappy".
 var LIVE_STYLE_TIMER = null;
+// panel controls apply immediately (no "Crea mappa" button): one redraw per burst of changes —
+// drawMap() itself also folds a change arriving mid-draw into one follow-up draw (DRAW_PENDING).
+// Programmatic .value changes (chat, AI) fire no events, so they don't draw twice.
+function scheduleLiveRedraw(ms) {
+  if (!STATE.rawData || STATE.codeMode || !hasGeoData(STATE.suggestion)) return;
+  clearTimeout(LIVE_STYLE_TIMER);
+  LIVE_STYLE_TIMER = setTimeout(drawMap, ms == null ? 150 : ms);
+}
 function applyLiveThemeStyle(prop, value) {
   if (!STATE.mapReady || !STATE.currentThemeName) return;
   clearTimeout(LIVE_STYLE_TIMER);
@@ -4078,7 +4481,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       normalsizevalue: String(normVal),
       scale:           0.4 * chartScale,
       sizepow:         sizePow,
-      showdata:        "true"
     };
 
   } else if (viz === 'categorical') {
@@ -4106,7 +4508,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       normalsizevalue: "1",
       scale:           0.5 * chartScale,
       fillopacity:     opacity,
-      showdata:        "true"
     };
 
   } else if (viz === 'dot') {
@@ -4117,7 +4518,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       colorscheme: colorscheme,
       scale:       0.3 * chartScale,
       fillopacity: opacity,
-      showdata:    "true"
     };
 
   } else if (viz === 'bivariate') {
@@ -4147,7 +4547,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
         scale:           0.4 * chartScale,
         sizepow:         sizePow,
         fillopacity:     opacity,
-        showdata:        "true"
       };
     } else {
       typeStr = "CHART|SYMBOL|AGGREGATE|SHOW";
@@ -4159,7 +4558,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
         scale:           0.4 * chartScale,
         sizepow:         sizePow,
         fillopacity:     opacity,
-        showdata:        "true"
       };
     }
     tooltip = '{{' + titleField + '}}: {{' + valueField + '}} / {{' + sizeFieldSel + '}}';
@@ -4171,7 +4569,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       colorscheme:  colorscheme,
       aggregation:  ["1:1", gridWidth],
       fillopacity:  opacity,
-      showdata:     "true"
     };
 
   } else if (viz === 'hexbin_sized') {
@@ -4186,7 +4583,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       scale:           0.4 * chartScale,
       sizepow:         sizePow,
       fillopacity:     opacity,
-      showdata:        "true"
     };
 
   } else if (viz === 'choropleth') {
@@ -4195,14 +4591,14 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
         .data(getFeatureDataSource())
         .binding({ position: 'geometry', id: titleField })
         .type("FEATURE|SHOW")
-        .style({ colorscheme: ["#888"], fillopacity: 0.15, linecolor: "#555", linewidth: hasLineWidth ? lineWidth : 0.5, showdata: "true" });
+        .style({ colorscheme: ["#888"], fillopacity: 0.15, linecolor: "#555", linewidth: hasLineWidth ? lineWidth : 0.5 });
       })).then(function() {
         return map.defineLayer(ixmaps.layer('choropleth', function(l) { l
           .data({ obj: table, type: "jsondb" })
           .binding({ lookup: titleField, value: valueField })
           .filter(whereClause)
           .type("CHOROPLETH|QUANTILE")
-          .style({ colorscheme: colorscheme, fillopacity: opacity, showdata: "true" })
+          .style({ colorscheme: colorscheme, fillopacity: opacity })
           .meta({ tooltip: tooltip })
           .title(valueField);
         }));
@@ -4214,7 +4610,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       typeStr = "CHART|SYMBOL|SIZE|AGGREGATE|VALUES";
       binding = { position: geoBinding, value: valueField, size: valueField };
       STATE.baseScale = 0.5;
-      style = { colorscheme: colorscheme, fillopacity: opacity, normalsizevalue: "1000", scale: 0.5 * chartScale, sizepow: sizePow, showdata: "true" };
+      style = { colorscheme: colorscheme, fillopacity: opacity, normalsizevalue: "1000", scale: 0.5 * chartScale, sizepow: sizePow };
     }
 
   } else if (viz === 'feature') {
@@ -4247,7 +4643,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
           fillopacity: fillop,
           linecolor:   featLinecolor,
           linewidth:   linewidth,
-          showdata:    "true"
         })
         .meta({ tooltip: '{{' + titleField + '}}' })
         .title(titleField);
@@ -4273,7 +4668,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       .data(getFeatureDataSource())
       .binding({ position: 'geometry', id: titleField })
       .type("FEATURE|SHOW")
-      .style({ colorscheme: ['#888888'], fillopacity: fillop, linecolor: '#888888', linewidth: linewidth, showdata: "true" });
+      .style({ colorscheme: ['#888888'], fillopacity: fillop, linecolor: '#888888', linewidth: linewidth });
     })).then(function() {
       return map.defineLayer(ixmaps.layer('feature_val', function(l) { l
         .data({ obj: table, type: "jsondb" })
@@ -4284,13 +4679,11 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
           colorscheme: colorscheme,
           fillopacity: fillop,
           linewidth:   linewidth,
-          showdata:    "true"
         } : {
           colorscheme: categoricalColorscheme(catValsFeat),
           values:      catValsFeat,
           fillopacity: fillop,
           linewidth:   linewidth,
-          showdata:    "true"
         })
         .meta({ tooltip: featTooltip })
         .title(valueField);
@@ -4318,7 +4711,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
           .binding({ position: 'geometry' })
           .filter(whereClause)
           .type("FEATURE|SHOW")
-          .style({ colorscheme: colorschemeFb, fillopacity: fillopFb, linecolor: linecolorFb, linewidth: linewidthFb, showdata: "true" })
+          .style({ colorscheme: colorschemeFb, fillopacity: fillopFb, linecolor: linecolorFb, linewidth: linewidthFb })
           .meta({ tooltip: '{{' + titleField + '}}' })
           .title(titleField);
         })).then(function() { STATE.currentThemeName = "feature"; });
@@ -4353,7 +4746,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
         fillopacity: fillop2,
         linecolor:   '#888888',
         linewidth:   linewidth2,
-        showdata:    "true"
       });
     })).then(function() {
       // layer 2: CHOROPLETH|CATEGORICAL overlay from Data.Table (colors + tooltips)
@@ -4367,7 +4759,6 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
           values:      catVals,
           fillopacity: fillop2,
           linewidth:   linewidth2,
-          showdata:    "true"
         })
         .meta({ tooltip: catTooltip })
         .title(valueField);
@@ -4532,15 +4923,23 @@ function closeBasemapDropdown(e) {
 // basemaps (a "dark" name -> CARTO Dark Matter, else Positron) and swaps the style in place.
 // "Grigio" / "Grigio scuro" use the same styles as "Chiaro" / "Scuro"; they differ only in
 // the #map background behind the faded (basemapopacity 0.55) tiles, as in the flat version.
-function setBasemap(key) {
-  var mapType = BASEMAP_TYPES[key];
-  if (!mapType) return;
+// the picker's own state (active entry, #map background) — without touching the map
+function markBasemapPicker(key) {
   STATE.basemap = key;
   document.getElementById('map').style.background = BASEMAP_BG[key] || '';
-  if (STATE.myMap) STATE.myMap.then(function(map) { if (map && map.setMapType) map.setMapType(mapType); });
   Array.from(document.querySelectorAll('.basemap-opt')).forEach(function(el) {
     el.classList.toggle('active', el.getAttribute('data-basemap') === key);
   });
+}
+function setBasemap(key) {
+  var mapType = BASEMAP_TYPES[key];
+  if (!mapType) return;
+  markBasemapPicker(key);
+  if (STATE.mapConfig) {
+    var next = cloneMapConfig(STATE.mapConfig);
+    next.map.mapType = mapType;
+    applyMapConfig(next, 'picker');
+  } else if (STATE.myMap) STATE.myMap.then(function(map) { if (map && map.setMapType) map.setMapType(mapType); });
   STATE.basemapByUiTheme[getCurrentUiTheme()] = key;
   try { localStorage.setItem(BASEMAP_BY_UI_THEME_KEY, JSON.stringify(STATE.basemapByUiTheme)); } catch(e) {}
   toggleBasemapDropdown(false);
@@ -4726,6 +5125,8 @@ function applyDefaultConfig(fields, type) {
   onVizChange();
   populateConfigFields(fields);
   revealConfig();
+  // no "Crea mappa" button any more: geographic data always gets its map
+  if (hasGeoData(STATE.suggestion)) setTimeout(drawMap, 0);
 }
 
 // no AI involved here, but heuristicSuggestion() → findCategoricalField() is the exact same
@@ -5761,18 +6162,18 @@ document.getElementById('url-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') loadData();
 });
 
-// Auto-redraw when config fields change (only if map already exists)
+// Auto-redraw when config selects change — through scheduleLiveRedraw (debounced, ignored in
+// code mode and for data without geography). The sliders and the grid-width text field are NOT
+// here: they redraw live on 'input' (applyLiveThemeStyle / the grid-width listener below), so a
+// 'change' on release/blur would only draw the same map a second time.
 (function() {
-  // fill-opacity/chart-scale/size-ramp are NOT here — they go through applyLiveThemeStyle's own
-  // debounced rebuild instead (see the dedicated 'input' listeners below)
   var configIds = ['viz-type', 'geo-field', 'value-field', 'size-field', 'title-field',
-                   'lookup-field', 'color-scheme', 'grid-width', 'line-width'];
+                   'lookup-field', 'color-scheme'];
   configIds.forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
-    var evt = (el.tagName === 'INPUT' && el.type === 'range') ? 'change' : 'change';
-    el.addEventListener(evt, function() {
-      if (STATE.mapReady) setTimeout(drawMap, 0);
+    el.addEventListener('change', function() {
+      if (STATE.mapReady) scheduleLiveRedraw();
     });
   });
 })();
@@ -5787,6 +6188,19 @@ document.getElementById('chart-scale').addEventListener('input', function() {
 });
 document.getElementById('size-ramp').addEventListener('input', function() {
   applyLiveThemeStyle('sizepow', this.value);
+});
+document.getElementById('line-width').addEventListener('input', function() {
+  applyLiveThemeStyle('linewidth', this.value);
+});
+// "20px" = screen pixels; a bare number is METERS in the engine (flat's convention, see
+// resolveAggregationPx) — and it is also what the field holds halfway through typing "30px"
+// ("3" = 3 m cells, expensive). So px values apply after 500 ms, bare numbers only after a
+// longer pause; anything else (incomplete, e.g. "30p") waits for the next keystroke.
+document.getElementById('grid-width').addEventListener('input', function() {
+  var v = this.value.trim();
+  if (/^\d+(\.\d+)?\s*px$/i.test(v)) scheduleLiveRedraw(500);
+  else if (/^\d+(\.\d+)?$/.test(v)) scheduleLiveRedraw(1200);
+  else clearTimeout(LIVE_STYLE_TIMER);
 });
 
 // Sample URLs helper — right click on load button

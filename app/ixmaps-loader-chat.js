@@ -72,10 +72,10 @@
       '(es. <em>"colora per popolazione"</em>, <em>"cambia tipo in choropleth"</em>, <em>"dimensiona per superficie"</em>, ' +
       '<em>"tooltip nome"</em>), impostare l\'<strong>aggregazione spaziale</strong> (es. <em>"cambia tipo in hexbin"</em>, ' +
       '<em>"griglia 20px"</em>, <em>"aggrega con la media"</em>), aggiungere <strong>modificatori di stile</strong> ' +
-      '(es. <em>"aggiungi glow"</em>, <em>"mostra i valori"</em>, <em>"linee bianche"</em>, <em>"dimensione normale 1"</em>), <strong>filtrare</strong> i dati (es. <em>"filtra dove popolazione &gt; 1000000"</em>, ' +
+      '(es. <em>"aggiungi glow"</em>, <em>"mostra i valori"</em>, <em>"linee bianche"</em>, <em>"dimensione normale 1"</em>), <strong>spostare la mappa</strong> (es. <em>"zoom su Milano"</em>, <em>"vai in Norvegia"</em>), <strong>filtrare</strong> i dati (es. <em>"filtra dove popolazione &gt; 1000000"</em>, ' +
       '<em>"rimuovi i filtri"</em>), rispondere a domande sui dati caricati, oppure eseguire richieste libere ' +
       '(con una chiave AI configurata), anche <strong>analizzare i dati</strong> (es. <em>"analizza i dati"</em>, <em>"quale paese ha più capacità solare?"</em>; ' +
-      'il <strong>codice</strong> della mappa: <em>"mostra codice"</em>, <em>"codice del layer"</em>, <em>"modifica codice"</em> (editor JSON); senza AI: <em>"statistiche"</em>, <em>"statistiche di capacity"</em>, <em>"quanti Solar in primary_fuel"</em>). ' +
+      'il <strong>codice</strong> della mappa nell\'editor (anche dal menu <strong>&lt;/&gt; Codice</strong>): <em>"mostra codice"</em> (pagina HTML), <em>"modifica codice"</em> (tema JSON); senza AI: <em>"statistiche"</em>, <em>"statistiche di capacity"</em>, <em>"quanti Solar in primary_fuel"</em>). ' +
       '<span style="color:var(--muted)">Per le analisi l\'AI riceve statistiche aggregate e risultati di query sui dati (mai le righe complete). ↑/↓ richiama i comandi precedenti.</span>');
   }
 
@@ -667,6 +667,7 @@
       '{"action":"set_aggregation","method":"SUM|MEAN|COUNT"} — how aggregated points/cells combine their values (sum, mean/average, count of records). MAX/MIN are not supported: use "answer" to say so.',
       '{"action":"set_filter","filters":[{"field":"<exact field name>","term":"<term>"}, ...]} — filter the map/table to only matching rows. term syntax: ">N" "<N" ">=N" "<=N" "=N" "!=N" for a numeric comparison against N, or plain text for a case-insensitive substring match (e.g. a region/category name), or "*wildcard*" using * and ? as wildcards.',
       '{"action":"clear_filter"} — remove all active filters',
+      '{"action":"zoom_to_place","place":"<place name, as the user wrote it>"} — move/zoom the map to a named place (city, region, country, or a value of a text field in the data)',
       '{"action":"match_colors"} — give the current value field\'s values/classes semantically meaningful colors (e.g. energy source → its typical color, land use → its typical map color)',
       '{"action":"answer","text":"<answer, in Italian>"} — anything else: data questions and analyses (based on the field profile and your query results — never invent numbers that neither shows), or requests you cannot fulfill',
       'field MUST be exactly one of: ' + fieldNames.join(', '),
@@ -726,7 +727,7 @@
   }
 
   function applyStructuredAction(action, msgEl) {
-    if (STATE.codeMode && action.action !== 'answer') setTimeout(codeModeNote, 0);
+    if (STATE.codeMode && action.action !== 'answer' && action.action !== 'zoom_to_place' && action.action !== 'query') setTimeout(codeModeNote, 0);
     var field = (STATE.fields || []).find(function (f) { return f.name === action.field; });
 
     if (action.action === 'set_value_field' && field) {
@@ -782,6 +783,9 @@
     } else if (action.action === 'match_colors') {
       msgEl.parentNode.removeChild(msgEl); // matchColorsCommand appends its own messages
       matchColorsCommand();
+    } else if (action.action === 'zoom_to_place' && action.place) {
+      msgEl.parentNode.removeChild(msgEl); // the command appends its own messages
+      zoomToPlaceCommand(String(action.place));
     } else if (action.action === 'answer') {
       msgEl.innerHTML = formatAnswer(action.text || '');
     } else {
@@ -794,6 +798,8 @@
   // fuzzy-matchers below) and always gives a meaningful response even when it "fails" (missing
   // value field, no AI key) — so it always counts as handled, no AI-classifier fallthrough.
   var COMMAND_PATTERNS = [
+    // "zoom to Milano", "vai a Milano", "zoom su Lombardia", "portami in Norvegia" — view only
+    { ro: true, re: /^\s*(?:zoom(?:a)?\s+(?:to|on|su|sulla|sul|sull'|a|in)|zoomma\s+(?:su|a)|vai\s+(?:a|in|su)|portami\s+(?:a|in|su)|centra(?:\s+la\s+mappa)?\s+su|go\s+to|fly\s+to|naviga\s+(?:a|verso)|navigate\s+to)\s+(.+?)\s*$/i, handler: function (m) { return zoomToPlaceCommand(m[1]); } },
     // "modifica codice" / "edit code" → the JSON layer editor (main file, openCodeEditor)
     { ro: true, re: /^\s*(?:modifica|edita|apri\s+l'editor\s+del|edit|open)\s+(?:il\s+|the\s+)?(?:codice|code|json|layer)(?:\s+(?:del|dei)\s+layer)?\s*[?.!]?\s*$/i, handler: function () { return editCodeCommand(); } },
     // before the generic "dimensiona/size …" pattern below, which would otherwise try "normale 1" as a field name
@@ -843,81 +849,92 @@
     var p = document.getElementById('chat-panel');
     if (p) p.classList.remove('active');
   };
-  // ── "mostra codice": the current map as a standalone ixmaps page (generateMapCode() in the
-  // main file, from the layers drawMap() just defined), with copy + download ──
-  function showCodeCommand(layersOnly) {
-    if (!STATE.hasDrawnMap) { appendMessage('assistant', 'Crea prima la mappa.'); return true; }
-    appendMessage('assistant', '<em style="color:var(--muted)">…</em>');
+  // ── zoom to a place: first the loaded data (records whose text field equals the name, e.g.
+  // country_long "Norway" — local, no network, and it means what the dataset means by it), then
+  // OSM Nominatim (only the typed name is sent; at most one request per second, per its usage
+  // policy). Only changes the view — fine in code mode too. ──
+  function normName(v) {
+    return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  }
+  function placeInData(place) {
+    var key = normName(place);
+    if (!key || !window.STATE || !STATE.rawData) return null;
+    var best = null;
+    (STATE.fields || []).filter(function (f) { return f.type === 'str' || f.type === 'code'; }).forEach(function (f) {
+      var rows = STATE.rawData.filter(function (r) { return normName(r[f.name]) === key; });
+      if (rows.length && (!best || rows.length > best.rows.length)) best = { field: f.name, value: rows[0][f.name], rows: rows };
+    });
+    if (!best) return null;
+    var bb = computeDataBbox(best.rows);
+    return bb ? Object.assign(best, { bounds: [[bb.minLon, bb.minLat], [bb.maxLon, bb.maxLat]] }) : null;
+  }
+  var lastGeocode = 0;
+  function geocodePlace(place) {
+    var wait = Math.max(0, lastGeocode + 1000 - Date.now());
+    return new Promise(function (r) { setTimeout(r, wait); }).then(function () {
+      lastGeocode = Date.now();
+      return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=it&q=' + encodeURIComponent(place));
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (list) {
+      var hit = list && list[0];
+      if (!hit) return null;
+      var b = (hit.boundingbox || []).map(parseFloat); // [south, north, west, east]
+      return {
+        label: hit.display_name,
+        bounds: b.length === 4 && b.every(isFinite) ? [[b[2], b[0]], [b[3], b[1]]] : null,
+        center: [parseFloat(hit.lon), parseFloat(hit.lat)]
+      };
+    });
+  }
+  function zoomMapTo(bounds, center) {
+    return STATE.myMap.then(function (m) {
+      if (bounds && (bounds[0][0] !== bounds[1][0] || bounds[0][1] !== bounds[1][1])) {
+        m.map.fitBounds(bounds, { padding: 40, maxZoom: 14, duration: 600 });
+      } else {
+        m.map.flyTo({ center: center || bounds[0], zoom: 12, duration: 600 });
+      }
+    });
+  }
+  function zoomToPlaceCommand(place) {
+    place = String(place || '').replace(/[?.!,;]+$/, '').trim();
+    if (!place) return false;
+    var inData = placeInData(place);
+    if (inData) {
+      zoomMapTo(inData.bounds);
+      appendMessage('assistant', 'Zoom su <strong>' + escHtml(String(inData.value)) + '</strong> — ' +
+        inData.rows.length.toLocaleString() + ' record con ' + escHtml(inData.field) + ' = ' + escHtml(String(inData.value)) + '.');
+      return true;
+    }
+    appendMessage('assistant', '<em style="color:var(--muted)">Cerco «' + escHtml(place) + '»…</em>');
     var msgEl = document.getElementById('chat-panel-messages').lastElementChild;
-    generateMapCode({ layersOnly: layersOnly }).then(function (code) {
-      if (!code) { msgEl.innerHTML = 'Nessun layer da mostrare.'; return; }
-      msgEl.classList.add('chat-msg-table');
-      msgEl.innerHTML = (layersOnly
-        ? 'Codice dei layer (<code>map.layer(…)</code>, da usare dentro <code>ixmaps.Map(…).then(map =&gt; { … })</code>):'
-        : 'Pagina HTML autonoma con la mappa attuale (vista, basemap, layer, filtri, modificatori). I dati vengono caricati dall\'URL originale.') +
-        '<div class="chat-code-actions"><button type="button" data-act="copy">⧉ Copia</button><button type="button" data-act="download">⬇ Scarica</button><button type="button" data-act="edit" title="Editor JSON dei layer accanto alla mappa">✎ Modifica</button></div>' +
-        '<pre class="chat-code"></pre>';
-      var pre = msgEl.querySelector('pre');
-      pre.textContent = code;
-      // colored once highlight.js is there; plain text (still fine) if it can't load
-      loadHighlighter().then(function (hljs) {
-        try {
-          pre.innerHTML = hljs.highlight(code, { language: layersOnly ? 'javascript' : 'xml', ignoreIllegals: true }).value;
-        } catch (e) { console.warn('[ixmaps-loader chat] highlighting failed:', e); }
-      }, function () {});
-      var fileName = (STATE.dataUrl.split('/').pop() || 'mappa').replace(/\.[^.]+$/, '').replace(/[^\w.-]+/g, '_') + (layersOnly ? '_layer.js' : '_ixmaps.html');
-      msgEl.querySelector('[data-act="copy"]').onclick = function () {
-        var btn = this;
-        navigator.clipboard.writeText(code).then(function () { btn.textContent = '✓ Copiato'; },
-          function () { btn.textContent = 'Copia non riuscita'; });
-      };
-      msgEl.querySelector('[data-act="edit"]').onclick = function () { editCodeCommand(); };
-      msgEl.querySelector('[data-act="download"]').onclick = function () {
-        var url = URL.createObjectURL(new Blob([code], { type: layersOnly ? 'text/javascript' : 'text/html;charset=utf-8' }));
-        var a = document.createElement('a');
-        a.href = url; a.download = fileName;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-      };
-      var list = document.getElementById('chat-panel-messages');
-      list.scrollTop = list.scrollHeight;
+    geocodePlace(place).then(function (hit) {
+      if (!hit) { msgEl.innerHTML = 'Non ho trovato «' + escHtml(place) + '», né nei dati né in OpenStreetMap.'; return; }
+      zoomMapTo(hit.bounds, hit.center);
+      msgEl.innerHTML = 'Zoom su <strong>' + escHtml(place) + '</strong> <span style="color:var(--muted)">(' + escHtml(hit.label) + ' — © OpenStreetMap)</span>';
     }).catch(function (err) {
-      msgEl.innerHTML = 'Errore nella generazione del codice: ' + escHtml(err && err.message || String(err));
+      msgEl.innerHTML = 'Ricerca del luogo non riuscita: ' + escHtml(err && err.message || String(err));
     });
     return true;
   }
-  // highlight.js (cdnjs, common bundle: xml + javascript), fetched on first use only.
-  // Rejects if it can't load — callers then just keep the plain text.
-  var HLJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
-  var hljsPromise = null;
-  function loadHighlighter() {
-    if (window.hljs) return Promise.resolve(window.hljs);
-    if (!hljsPromise) {
-      hljsPromise = new Promise(function (resolve, reject) {
-        var sc = document.createElement('script');
-        sc.src = HLJS_URL;
-        sc.onload = function () { window.hljs ? resolve(window.hljs) : reject(new Error('hljs missing')); };
-        sc.onerror = function () { hljsPromise = null; reject(new Error('highlight.js failed to load')); };
-        document.head.appendChild(sc);
-      });
-    }
-    return hljsPromise;
-  }
 
+  // ── code: always the docked editor (main file, openCodeEditor) — "mostra codice" opens its
+  // "Mappa (HTML)" view, "codice del layer" / "modifica codice" the editable "Tema (JSON)" view ──
+  function showCodeCommand(layersOnly) {
+    if (!STATE.hasDrawnMap) { appendMessage('assistant', 'Crea prima la mappa.'); return true; }
+    openCodeEditor(layersOnly ? 'json' : 'html');
+    appendMessage('assistant', layersOnly
+      ? 'Editor aperto accanto alla mappa, vista <strong>Tema (JSON)</strong>: le modifiche valide si applicano da sole.'
+      : 'Editor aperto accanto alla mappa, vista <strong>Mappa (HTML)</strong>: la pagina autonoma della mappa attuale — <strong>⬇ Salva</strong> la scarica.');
+    return true;
+  }
   // code mode (JSON layer editor applied): panel-changing commands still update the panel
   // state, but the map shows the edited layers until "Torna alla configurazione" — say so
   function codeModeNote() {
     appendMessage('assistant', '<span style="color:var(--muted)">Modalità codice attiva: la modifica vale per la configurazione e si vedrà tornando a essa (pulsante nel pannello). Per cambiare la mappa ora, modifica il JSON nell\'editor.</span>');
   }
-  function editCodeCommand() {
-    if (!STATE.hasDrawnMap) { appendMessage('assistant', 'Crea prima la mappa.'); return true; }
-    openCodeEditor();
-    appendMessage('assistant', 'Editor aperto accanto alla mappa: le modifiche al JSON si applicano da sole quando sono valide (o con <strong>Applica</strong>). Errori e avvisi della grammatica ixmaps compaiono sotto l\'editor.');
-    return true;
-  }
-
-  // the "</>" button in the config panel (showMapCode() in the main file)
-  window.ixmapsChatShowCode = function () { showCodeCommand(false); };
+  function editCodeCommand() { return showCodeCommand(true); }
 
   window.ixmapsChatIsOpen = function () {
     var p = document.getElementById('chat-panel');
