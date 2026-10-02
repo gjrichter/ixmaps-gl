@@ -408,13 +408,15 @@ test('valueRadius: a negative value is sized by its absolute value, as flat (map
   assert.ok(G.valueRadius(-50, 10, style, opts, flags(), 100) > G.valueRadius(0, 10, style, opts, flags(), 100));
 });
 
-test('formatBubbleValue: DIFFERENCE / RELATIVE / SIGN put "+" before positive and "+/-" before zero values', () => {
+test('flatValueText: DIFFERENCE / RELATIVE / SIGN put "+" before positive and "+/-" before zero values', () => {
   const st = { valuedecimals: 0 };
-  assert.equal(G.formatBubbleValue(12, st, flags('SIGN')), '+12');
-  assert.equal(G.formatBubbleValue(0, st, flags('DIFFERENCE')), '+/-0');
-  assert.equal(G.formatBubbleValue(-7, st, flags('RELATIVE')), '-7');
-  assert.equal(G.formatBubbleValue(12, st, flags()), '12', 'no sign without the flags');
-  assert.equal(G.formatBubbleValue(12, { valuedecimals: 0, units: '%' }, flags('SIGN')), '+12%');
+  const t = (v, style, f) => G.flatValueText(null, null, v, style, f);
+  assert.equal(t(12, st, flags('SIGN')), '+12');
+  assert.equal(t(0, st, flags('DIFFERENCE')), '+/-0');
+  assert.equal(t(-7, st, flags('RELATIVE')), '-7.0', "flat: valuedecimals 0 is `||`'s default, 1 decimal below 1 — negatives too");
+  assert.equal(t(12, st, flags()), '12', 'no sign without the flags');
+  // flat stores the unit with a leading space (maptheme.js 9675)
+  assert.equal(t(12, { valuedecimals: 0, units: '%' }, flags('SIGN')), '+12 %');
 });
 
 test('parseCsvText: quoted cells keep their commas and doubled quotes (RFC 4180, as data.js)', () => {

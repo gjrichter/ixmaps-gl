@@ -1256,14 +1256,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "7b7f0d9ea88ca50c",
-     "setDigest": "26c472d3c2b47bc3",
+     "digest": "2f5585c880fa3162",
+     "setDigest": "ca7733d5ac686ae2",
      "columnDigests": {
       "getColor": "5c756269b496fab3",
       "getPixelOffset": "7e02f4d8f4940054",
       "getPosition": "6744cd0a1289cf87",
       "getSize": "ca9b545e23c2dd69",
-      "getText": "1de886e392e16c7f"
+      "getText": "b2b925e7c7776ccf"
      },
      "stats": {
       "getColor": [
@@ -2969,14 +2969,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "2ee36f7bbdb6f3e8",
-     "setDigest": "d935286402d414cf",
+     "digest": "7fd3953e119b2c93",
+     "setDigest": "7c4b8b1760e01b0b",
      "columnDigests": {
       "getColor": "3ceee0114dc73acd",
       "getPixelOffset": "abe16fb6fa32c461",
       "getPosition": "8f763cd4d553e32b",
       "getSize": "cbf43a30d139f326",
-      "getText": "3abdec358ca1ea89"
+      "getText": "80eb680bd91d2457"
      },
      "stats": {
       "getColor": [
@@ -4378,13 +4378,13 @@
       "getSize",
       "getText"
      ],
-     "digest": "9841b57ac0381bed",
-     "setDigest": "7516e0e429e9a0a1",
+     "digest": "39b859bbd5dff63c",
+     "setDigest": "07159e270fbe9e81",
      "columnDigests": {
       "getColor": "20dac816c49e59d8",
       "getPosition": "68d2fedf9cf44607",
       "getSize": "6b7cdc67d1c8aa4c",
-      "getText": "5ee698920ab9b93b"
+      "getText": "b098d1d6ceeae089"
      },
      "stats": {
       "getColor": [
@@ -4682,14 +4682,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "d426095d6b3b86f5",
-     "setDigest": "b237713a32742de7",
+     "digest": "536896a45dcc7701",
+     "setDigest": "406fdcafda4c647d",
      "columnDigests": {
       "getColor": "06ec62d9a90eecb1",
       "getPixelOffset": "8cf253635e119600",
       "getPosition": "a68540081b96527a",
       "getSize": "0c1aac8128b6e805",
-      "getText": "7f1acb0b3869e5d7"
+      "getText": "e0dd55b57e0cb75b"
      },
      "stats": {
       "getColor": [
@@ -4844,7 +4844,7 @@
         45.56791
        ],
        1.130126,
-       "35"
+       "36"
       ],
       [
        [
@@ -4861,7 +4861,7 @@
         45.581509
        ],
        1.176589,
-       "38"
+       "39"
       ],
       [
        [

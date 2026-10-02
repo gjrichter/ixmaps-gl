@@ -2883,9 +2883,9 @@
     }
    ],
    "legend": [
-    "Slight ▾ 0.00 - 1 170.00 79 276.00 Chart size: 100%",
-    "Serious ▾ 1.00 - 292.00 23 421.00 Chart size: 100%",
-    "Fatal ▾ 1.00 - 7.00 1 520.00 Chart size: 100%"
+    "Slight ▾ 1 ... 1 162 Chart size: 100%",
+    "Serious ▾ 1 ... 292 Chart size: 100%",
+    "Fatal ▾ 1 ... 7 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [
@@ -5788,9 +5788,9 @@
     }
    ],
    "legend": [
-    "Slight ▾ 1.00 - 379.01 59 545.00 Chart size: 100%",
-    "Serious ▾ 1.00 - 105.00 17 789.00 Chart size: 100%",
-    "Fatal ▾ 1.00 - 5.00 1 196.00 Chart size: 100%"
+    "Slight ▾ 1 ... 379 Chart size: 100%",
+    "Serious ▾ 1 ... 105 Chart size: 100%",
+    "Fatal ▾ 1 ... 5 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [
@@ -8693,9 +8693,9 @@
     }
    ],
    "legend": [
-    "Slight ▾ 0.00 - 3 200.00 79 290.00 Chart size: 100%",
-    "Serious ▾ 1.00 - 691.01 23 434.00 Chart size: 100%",
-    "Fatal ▾ 1.00 - 12.00 1 522.00 Chart size: 100%"
+    "Slight ▾ 1 ... 3 199 Chart size: 100%",
+    "Serious ▾ 1 ... 691 Chart size: 100%",
+    "Fatal ▾ 1 ... 12 Chart size: 100%"
    ],
    "tooltips": {
     "slight": [

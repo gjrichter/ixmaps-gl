@@ -42,9 +42,19 @@ page. It currently implements:
 - **CHART\|SYMBOL\|GLOW\|CATEGORICAL\|AGGREGATE\|COUNT\|RELOCATE\|VALUES** — the
   bubble-map pipeline: AGGREGATE on ixmaps-flat's grid (hexagonal, or square with
   `RECT`; cell width from `aggregation`/`gridwidth`/`gridwidthpx`, values summed per
-  cell, class breaks and legend from the aggregated cells), dynamic sizing, glow,
+  cell, class breaks and legend from the aggregated cells), dynamic sizing, glow (between
+  `glowlower` and `glowupper`),
   multi-point grouping, on-bubble value labels, `NORMALIZE`, chart boxes (`BOX`, `CIRCULARBOX`)
   with the item title above or below (`TITLE`, `BOTTOMTITLE`), between `boxlower` and `boxupper`
+- **CHART\|LABEL** — flat's value label: a rounded box sized by the bubble radius of the size value
+  in the item color, with `VALUES` the value in bold; with `TEXTONLY` only the text, over a halo of
+  the theme color
+- Chart values (`VALUES`, labels) as flat prints them: the `valuefield` value, flat's number format
+  (thousands with spaces, `valuedecimals`, years without breaks), `units` after a space
+- `align` (`left`, `2left`, `right`, `above`, `below`, …) and `offsetx`/`offsety` move a whole
+  chart — symbol, glow, shadow, box, title and value — as flat does
+- A range theme of at most two classes gets flat's one-row legend (the value range, or for a
+  `$item$` count the label or field name)
 - **CHART\|USER** — a page's own chart function (`style.userdraw`: `ixmaps.<name>(SVGDocument, opt)`
   and its `_init`, as flat calls them), drawn in flat's chart units and shown as an icon at flat's size
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)

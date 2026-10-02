@@ -118,3 +118,92 @@ test('shadow gate: style.shadow true, at most maxshadow (1000) shapes, within sh
   assert.equal(G.flatShadowOn({ shadow: true, shadowupper: '1:1000000' }, 21, ml(6.28)), false, '1:5.7M is above 1:1M');
   assert.equal(G.flatShadowOn({ shadow: true, shadowlower: '1:1000000' }, 21, ml(12)), false, '1:108 133 is below 1:1M');
 });
+
+test('glow gate: glowupper / glowlower (flat: the halo at scales <= glowupper and >= glowlower, both inclusive)', () => {
+  const ml = flatZoom => G.flatToMapLibreZoom(flatZoom);
+  // flat zoom 10 = 1:432 533, 12 = 1:108 133, 13 = 1:54 067
+  assert.equal(G.glowHiddenByScale({}, ml(13)), false, 'no gate: always');
+  assert.equal(G.glowHiddenByScale({ glowlower: '1:100000' }, ml(12)), false, '1:108 133 >= 1:100 000: glow');
+  assert.equal(G.glowHiddenByScale({ glowlower: '1:100000' }, ml(13)), true, '1:54 067 < 1:100 000: no glow');
+  assert.equal(G.glowHiddenByScale({ glowupper: '1:200000' }, ml(10)), true, '1:432 533 > 1:200 000: no glow');
+  assert.equal(G.glowHiddenByScale({ glowupper: '1:200000' }, ml(12)), false);
+});
+
+test('CHART|LABEL routes to the symbol chart pipeline (flat: the BUBBLE/SQUARE/LABEL branch)', () => {
+  assert.equal(G.isSymbolChart(flags('CHART', 'LABEL', 'VALUES', 'TEXTONLY')), true);
+  assert.equal(G.isSymbolChart(flags('CHART', 'SYMBOL')), true);
+  assert.equal(G.isSymbolChart(flags('CHART', 'USER')), true);
+  assert.equal(G.isSymbolChart(flags('LABEL')), false, 'CHART is required');
+  assert.equal(G.isSymbolChart(flags('CHART', 'PIE')), false);
+});
+
+test('chart position: align / offsetx / offsety, as measured on flat (the chart group moved by -ptNull)', () => {
+  const off = (style, g) => plain(G.flatChartAlignOffset(style, g));
+  // flat's bbox radii include the stroke
+  const nearPair = (a, b, msg) => { near(a[0], b[0], msg + ' x', 0.15); near(a[1], b[1], msg + ' y', 0.15); };
+  const u = 14.357; // flat's normalX(1) on screen at the test view (nDynamicObjectScale)
+  // TEXTONLY label (concessioni_demaniali "2left"): +2r, flat's translate 54.23 units x 0.718
+  nearPair(off({ align: '2left' }, { unit: u, half: 10, orig: 10 }), [20, 0], 'TEXTONLY 2left');
+  // BUBBLE r = 119.04: ptNull.y left by the branch is r + 5 units
+  const bub = r => ({ unit: u, half: r, orig: r + 5 * u });
+  nearPair(off({ align: 'left' }, bub(119.04)), [190.72, 0], 'BUBBLE left (flat 190.72)');
+  nearPair(off({ align: '2left' }, bub(119.04)), [309.76, 0], 'BUBBLE 2left (flat 309.76)');
+  nearPair(off({ offsetx: 10 }, bub(119.04)), [-143.57, 0], 'BUBBLE offsetx 10 (flat -143.57)');
+  nearPair(off({ offsety: 5 }, bub(119.04)), [0, 71.79], 'BUBBLE offsety 5 (flat 71.79)');
+  nearPair(off({ align: '2left', offsetx: 10, offsety: 5 }, bub(119.04)), [309.76, 71.79], 'align overrides offsetx, keeps offsety');
+  // SYMBOL: h is the normal radius (15 units), the offsets scale with r / chart size
+  const sym = r => ({ unit: u, half: 15 * u, orig: r + 5 * u, symbolScale: r / (30 * u) });
+  nearPair(off({ align: '2left' }, sym(118.4)), [405.55, 0], 'SYMBOL 2left (flat 405.55)');
+  nearPair(off({ align: '23right' }, sym(119.04)), [-143.57, 0], 'SYMBOL 23right (flat -143.57)');
+  nearPair(off({ offsetx: 10, offsety: 5 }, sym(119.04)), [-39.68, 19.84], 'SYMBOL offsets (flat -39.68, 19.84)');
+  nearPair(off({ align: 'above' }, bub(10)), [0, -(10 + 5 * u)], 'above: moved up');
+  assert.deepEqual(off({}, bub(10)), [0, 0]);
+  assert.equal(G.flatChartBranch(flags('CHART', 'SYMBOL')), 'symbol');
+  const bubbleFlags = flags('CHART', 'BUBBLE', 'SYMBOL'); Object.defineProperty(bubbleFlags, 'typeString', { value: 'CHART|BUBBLE' });
+  assert.equal(G.flatChartBranch(bubbleFlags), 'bubble');
+  assert.equal(G.flatChartBranch(flags('CHART', 'LABEL', 'TEXTONLY')), 'bubble');
+});
+
+test('flat chart colors: ColorScheme.getDerivateColor / ChartColors.textColor (colorscheme.js 46-116)', () => {
+  assert.deepEqual(plain(G.flatDerivateRgb([200, 100, 50], 0.7)), [140, 70, 35]);
+  assert.deepEqual(plain(G.flatDerivateRgb([10, 100, 200], 1.5)), [135, 150, 255], 'brighten: channels lifted to 90 first, capped at 255');
+  assert.deepEqual(plain(G.flatDerivateRgb([255, 10, 10], 3)), [255, 243, 243], 'a channel >= 250: factor max(0.9 f, 1.1) = 2.7');
+  assert.deepEqual(plain(G.flatChartTextRgb([221, 221, 221])), [132, 132, 132], 'light: x 0.6');
+  assert.deepEqual(plain(G.flatChartTextRgb([30, 60, 90])), [255, 255, 255], 'dark: x 3');
+});
+
+test('chart value text: valuefield value, flat grouping, unit with its leading space', () => {
+  const st = { valuefield: 'canone', units: '€', valuedecimals: '0' };
+  // read off flat: "339 296 €", "352 €"
+  assert.equal(G.flatValueText({ canone: '339296' }, null, 1, st, flags()), '339 296 €');
+  assert.equal(G.flatValueText({ canone: '352.4' }, null, 1, st, flags()), '352 €');
+  assert.equal(G.flatValueText({ canone: '0.42' }, null, 1, st, flags()), '0.4 €', 'valuedecimals 0 is flat\'s `||` default: 1 decimal below 1');
+  assert.equal(G.flatValueText({ canone: 'n.d.' }, null, 1, st, flags()), 'n.d.', 'a non-number prints as is');
+  assert.equal(G.flatValueText({}, null, 1234, { units: '.km' }, flags()), '1 234.km', 'a unit starting with "." gets no space');
+  assert.equal(G.flatValueText({}, null, 5, { units: 'abcdef' }, flags()), '5', 'units over 5 characters are left out');
+  assert.equal(G.flatValueText({}, 'Rimini', 5, { valuefield: '$title$' }, flags()), 'Rimini');
+  assert.equal(G.flatValueText({}, null, 3, {}, flags('SIGN')), '+3');
+  assert.equal(G.flatValueText(null, null, 0, { valuedecimals: 2 }, flags()), '0', 'flat prints 0 as is');
+  assert.equal(G.flatValueText(null, null, 2021, {}, flags(), { noBreaks: true }), '2021', 'NOBREAKS (years)');
+  assert.equal(G.flatValueText(null, null, 0.5, {}, flags(), { maxValue: 1 }), '0.5');
+  assert.equal(G.flatValueText(null, null, 1, {}, flags(), { maxValue: 1 }), '1.0', 'max value <= 1: one decimal');
+  assert.equal(G.flatNoBreaks(1990, 2023), true);
+});
+
+test('CATEGORICAL bubble VALUES: the size value when size is bound to a field (flat)', () => {
+  const binding = { value: 'type', size: 'canone' };
+  const v = G.resolveAggregateValue(binding, flags('CHART', 'BUBBLE', 'CATEGORICAL'), { type: 'TURISTICO', canone: '40850' });
+  assert.equal(v, 40850);
+  assert.equal(G.flatValueText({ type: 'TURISTICO', canone: '40850' }, null, v, { units: '€' }, flags('CATEGORICAL')), '40 850 €');
+});
+
+test('CATEGORICAL VALUES with valuefield = the categorical field: the class name, also for an aggregated part', () => {
+  const st = { valuefield: 'type', units: '€' }, binding = { value: 'type', size: 'canone' }, f = flags('CHART', 'BUBBLE', 'CATEGORICAL', 'AGGREGATE');
+  const labels = ['TURISTICO RICREATIVO', 'VARIO'];
+  assert.equal(G.flatValueText({ type: 'VARIO', canone: '120' }, null, 120, st, f), 'VARIO', 'a record prints its own valuefield value');
+  const rec = G.categoryValueRecord(st, binding, f, labels, 1);
+  assert.equal(G.flatValueText(rec, null, 4200, st, f), 'VARIO', 'an aggregated part prints its class name');
+  assert.equal(G.categoryValueRecord({}, binding, f, labels, 1), null, 'no valuefield: the value');
+  assert.equal(G.categoryValueRecord({ valuefield: 'canone' }, binding, f, labels, 1), null, 'another valuefield: not the class');
+  assert.equal(G.flatValueText(null, null, 4200, {}, f), '4 200');
+});

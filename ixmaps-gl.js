@@ -47,7 +47,8 @@
 // binding.lookup — see joinChoroplethFeatures. HEADTAIL breaks are flat's
 // (headTailBreaks); LOG/POW2/POW3 are recognized type flags but not
 // implemented, see KNOWN_INERT_FLAGS. CHART|USER draws a page's own chart
-// function (style.userdraw, _buildUserChartLayers). These
+// function (style.userdraw, _buildUserChartLayers), CHART|LABEL flat's
+// value label, boxed or TEXTONLY (_buildLabelChartLayers). These
 // base types are dispatched by buildDeckLayers in the real engine's own
 // precedence order — DOT is checked first because the real engine's DOT
 // bypasses the whole drawChart/modifier pipeline rather than being
@@ -2439,7 +2440,7 @@
   const STYLE_NUMBER_KEYS = ['linewidth', 'fillopacity', 'scale', 'classes', 'valuedecimals', 'normalsizevalue',
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
     'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale', 'rangecentervalue',
-    'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow'];
+    'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -3041,7 +3042,7 @@
         // no-op.
         const base = layerId.replace(/-g\d+$/, '');
         return runtimes.find(r => {
-          if (base === `ix-bubbles-${r.name}`) return r.flags.has('CHART') && (r.flags.has('SYMBOL') || r.flags.has('USER'));
+          if (base === `ix-bubbles-${r.name}`) return isSymbolChart(r.flags);
           if (base === `ix-dot-${r.name}`) return r.flags.has('DOT');
           if (base === `ix-choropleth-${r.name}`) return r.flags.has('CHOROPLETH');
           if (base === `ix-features-${r.name}`) return r.flags.has('FEATURE') || r.flags.has('FEATURES');
@@ -4636,6 +4637,36 @@
             // form: SPACE there is flat's plain "." thousands.
             const flatCompactLegend = rt._rangeClassed && !flatFlag(rt.flags, 'CATEGORICAL') && !flatFlag(rt.flags, 'PLOT')
               && (rt.partsA || []).length >= 5 && !(Array.isArray(rt.style.label) && rt.style.label.length);
+            // flat's single-color legend (legend.js 765-769, 1039-1046): a range
+            // theme of at most 2 classes without label/ranges, not
+            // CATEGORICAL, is one row — the swatch and "min ... max unit",
+            // or, when every value is 1 (a "$item$" count), its label or
+            // value field
+            const flatSingleRowLegend = rt._rangeClassed && !flatFlag(rt.flags, 'CATEGORICAL') && !flatFlag(rt.flags, 'PLOT')
+              && (rt.partsA || []).length <= 2 && !(Array.isArray(rt.style.label) && rt.style.label.length)
+              && !(Array.isArray(rt.style.ranges) && rt.style.ranges.length);
+            if (flatSingleRowLegend) {
+              renderRows = function() {
+                const rgb = rt.categoryColorsRgb[0] || [128, 128, 128];
+                const unit = String(rt.style.legendunits || rt.style.units || '').replace(/ /g, '&nbsp;');
+                const vMin = styleNum(rt.style.minvalue) || rt._valueMin, vMax = styleNum(rt.style.maxvalue) || rt._valueMax;
+                const label = rt.style.label != null && !Array.isArray(rt.style.label) ? String(rt.style.label) : String(rt.binding.value || '');
+                const text = vMin !== 1 || vMax !== 1
+                  ? flatFormatValue(vMin, 2, 'BLANK') + ' &nbsp;... ' + flatFormatValue(vMax, 2, 'BLANK') + ' ' + unit
+                  : label;
+                const marked = rt._markedClasses.has(0);
+                rowsEl.innerHTML = '<div class="ix-legend-row" data-idx="0" style="display:flex;align-items:center;gap:5px;padding:4px 3px;cursor:pointer;border-radius:4px;'
+                  + 'background:' + (marked ? legendColors.rowMarked : 'transparent') + ';">'
+                  + '<span style="flex:0 0 auto;width:1.6em;height:0.8em;background:rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ');"></span>'
+                  + '<span>' + text + '</span></div>';
+                rowsEl.querySelectorAll('.ix-legend-row').forEach(row => {
+                  row.addEventListener('click', () => {
+                    if (rt._markedClasses.has(0)) window.ixmaps.unmarkThemeClass(rt.name, 0);
+                    else window.ixmaps.markThemeClass(rt.name, 0);
+                  });
+                });
+              };
+            } else
             if (flatCompactLegend) {
               renderRows = function() {
                 const n = rt.categoryColorsRgb.length;
@@ -5559,26 +5590,6 @@
     }, 0);
   }
 
-  function roundBubbleValue(value, style) {
-    const parsedDecimals = styleNum(style.valuedecimals);
-    const decimals = !isNaN(parsedDecimals) ? parsedDecimals : (value < 1 ? 1 : 0);
-    return decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
-  }
-
-  // DIFFERENCE, RELATIVE and SIGN: a positive value gets "+", zero "+/-"
-  // (maptheme.js 20990-21017, "make a positive sign, if positive value is
-  // result of a diff operation")
-  function formatBubbleValue(value, style, flags) {
-    const rounded = roundBubbleValue(value, style);
-    const unit = style.units || '';
-    const text = unit.length && unit.length <= 5 ? rounded + unit : rounded;
-    if (flags && (flags.has('DIFFERENCE') || flags.has('RELATIVE') || flags.has('SIGN'))) {
-      if (value === 0) return '+/-' + text;
-      if (value > 0) return '+' + text;
-    }
-    return text;
-  }
-
   // Records behind one drawn chart item: a group's per-category record
   // counts summed, else a Supercluster cluster's point_count, else 1.
   // recordCounts only exists on RELOCATE groups (groupCoLocated); a plain
@@ -5591,6 +5602,130 @@
 
   function valuesFontSizePx(radiusPx, text, valueScale) {
     return Math.min(radiusPx * 0.8, radiusPx * (3.3 / Math.max(1, text.length))) * (valueScale || 1);
+  }
+
+  // the themes drawn by the symbol chart pipeline (_buildChartLayers): flat's
+  // BUBBLE/SQUARE/LABEL branch (maptheme.js 20647-20652), symbols, user charts
+  function isSymbolChart(flags) {
+    return flags.has('CHART') && (flags.has('SYMBOL') || flags.has('USER') || flags.has('LABEL'));
+  }
+
+  // flat's __formatValue (mapscript.js 6268-6365) as maptheme's formatValue
+  // calls it: 0 and values beyond ±10^12 as they are, else rounded twice
+  // (one decimal more, then the precision — 25.446 → 25.45 → 25.5),
+  // thousands grouped with spaces unless noBreaks (formatValue's NOBREAKS
+  // for a theme of values within 1000-3000, i.e. years: maptheme.js 26364)
+  function flatGroupedValue(value, decimals, noBreaks) {
+    if (!isFinite(value)) return String(value);
+    if (value === 0) return '0';
+    if (value > 1e12 || value < -1e12) return String(value);
+    const clip = Math.pow(10, decimals);
+    const flatRounded = Math.round(Number(value.toFixed(decimals + 1)) * clip) / clip;
+    const [intPart, dec] = flatRounded.toFixed(decimals).split('.');
+    const grouped = noBreaks ? intPart : intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return dec ? `${grouped}.${dec}` : grouped;
+  }
+  // maptheme.js formatValue's NOBREAKS switch (26368): theme min > 999 and max < 3000
+  function flatNoBreaks(vMin, vMax) {
+    return vMin > 999 && vMax < 3000;
+  }
+
+  // flat's chart position (maptheme.js 24441-24530 and 24603, the non-PLOT,
+  // non-grid case), measured on flat: the chart group is moved by −ptNull.
+  //   ptNull = (offsetx, −offsety) · unit · symbolScale — unit is flat's
+  //   normalX(1) on screen (object zoom × style.scale), symbolScale the
+  //   SYMBOL branch's r / chart size (21993), 1 for BUBBLE/LABEL
+  //   then align overwrites/adds: o is the chart's own ptNull.y as its
+  //   branch left it (ptNullOrig — BUBBLE/LABEL and SYMBOL: r + 5 units,
+  //   TEXTONLY: r; 21111, 23204), h half the chart size (BUBBLE/LABEL:
+  //   the item's radius, SYMBOL: the theme's normal radius)
+  // So "left" puts the chart's left edge o to the right of the point (and
+  // drops offsetx), "2left" one more h. Returns deck.gl's pixel offset.
+  function flatChartAlignOffset(style, g) {
+    const num = v => (isNaN(styleNum(v)) ? 0 : styleNum(v));
+    const sym = g.symbolScale || 1;
+    let x = num(style.offsetx) * g.unit * sym, y = -num(style.offsety) * g.unit * sym;
+    const a = String(style.align || '');
+    if (a) {
+      const h = g.half, o = g.orig;
+      if (/center/.test(a)) y = 0;
+      if (/bottom/.test(a)) y = o || h * 2 / 5;
+      if (/above/.test(a)) y = o || h;
+      if (/2above/.test(a)) y += h;
+      if (/below/.test(a)) y = -(o || h);
+      if (/2below/.test(a)) y -= h;
+      if (/top/.test(a)) y = -(o || h);
+      if (/left/.test(a)) x = -(o || h);
+      if (/2left/.test(a)) x -= h;
+      if (/right/.test(a)) x = o || h;
+      if (/2right/.test(a)) x += h;
+      if (/23right/.test(a)) x = h * 2 / 3;
+      if (/baseline/.test(a)) y += h * 2 / 5;
+    }
+    return [-x || 0, -y || 0];
+  }
+  // which of flat's chart branches draws a symbol-pipeline theme: BUBBLE /
+  // SQUARE / LABEL (maptheme.js 20647) come before SYMBOL (21122)
+  function flatChartBranch(flags) {
+    const t = flags.typeString != null ? flags.typeString : [...flags].join('|');
+    return /BUBBLE|SQUARE|LABEL/.test(t) ? 'bubble' : 'symbol';
+  }
+
+  // flat's ColorScheme.getDerivateColor (colorscheme.js 46-75): each
+  // channel × f, floored, capped at 255; brightening (f > 1) first lifts
+  // every channel to at least 90 and, with one at 250 or more, uses
+  // max(0.9 f, 1.1)
+  function flatDerivateRgb(rgb, f) {
+    let [r, g, b] = rgb;
+    if (f > 1) {
+      r = Math.max(r, 90); g = Math.max(g, 90); b = Math.max(b, 90);
+      if (r >= 250 || g >= 250 || b >= 250) f = Math.max(f * 0.9, 1.1);
+    }
+    return [r, g, b].map(c => Math.min(255, Math.floor(c * f)));
+  }
+  // ChartColors.textColor (colorscheme.js 104-116): darker on light colors
+  function flatChartTextRgb(rgb) {
+    return flatDerivateRgb(rgb, rgb[0] + rgb[1] + rgb[2] > 450 ? 0.6 : 3);
+  }
+
+  // a chart's VALUES text (maptheme.js 20979-21017): an explicit valuefield
+  // prints that field of the record ($title$: the title; a non-number as
+  // is), else the value; numbers formatted with valuedecimals (flat's `||`:
+  // 0 or unset → 1 decimal below 1 — or when the max value is at most 1 —
+  // else none) plus the unit, which flat stores with a leading space unless
+  // it starts with "." (9675) and appends only up to 5 characters.
+  // A CATEGORICAL bubble prints its size value when size is bound to a
+  // field (its value, see resolveAggregateValue), as flat does; with
+  // valuefield set to its categorical field, the class name
+  // (_categoryValueRecord for an aggregated part).
+  // pure: the record an aggregated part of category i stands for in its
+  // value text — with style.valuefield the theme's CATEGORICAL field, flat
+  // prints the class name (the records' own valuefield value); else none
+  function categoryValueRecord(style, binding, flags, labels, i) {
+    const field = style.valuefield;
+    if (!field || field !== binding.value || !flags.has('CATEGORICAL') || !labels || labels[i] == null) return null;
+    return { [field]: labels[i] };
+  }
+  function flatValueText(raw, title, value, style, flags, opts = {}) {
+    const units = style.units ? String(style.units) : '';
+    const unit = units ? (units[0] === '.' ? '' : ' ') + units : '';
+    const unitText = unit.length <= 5 ? unit : '';
+    const dec = v => styleNum(style.valuedecimals) || ((v < 1 || (opts.maxValue != null && opts.maxValue <= 1)) ? 1 : 0);
+    const signed = (v, text) => {
+      if (flags && (flags.has('DIFFERENCE') || flags.has('RELATIVE') || flags.has('SIGN'))) {
+        if (v === 0) return '+/-' + text;
+        if (v > 0) return '+' + text;
+      }
+      return text;
+    };
+    const field = style.valuefield;
+    if (field === '$title$') return title != null ? String(title) : '';
+    if (field && raw && raw[field] != null && raw[field] !== '') {
+      if (isNaN(raw[field])) return String(raw[field]);
+      const v = Number(raw[field]);
+      return signed(v, flatGroupedValue(v, styleNum(style.valuedecimals) || (v < 1 ? 1 : 0), opts.noBreaks) + unitText);
+    }
+    return signed(value, flatGroupedValue(value, dec(value), opts.noBreaks) + unitText);
   }
 
   // .style({valueupper: "1:200000"}) — the real engine's fHideValues gate
@@ -5621,6 +5756,16 @@
     if (!upper && !lower) return false;
     const scale = scaleDenominatorAt(zoom);
     return !!((upper && scale > upper) || (lower && scale <= lower));
+  }
+  // .style({glowupper, glowlower}) — flat's glow gate (maptheme.js
+  // 1726-1734, 16986-16990): the GLOW halo is drawn at scales at or below
+  // glowupper and at or above glowlower (both inclusive)
+  function glowHiddenByScale(style, zoom) {
+    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
+    const upper = denom(style.glowupper), lower = denom(style.glowlower);
+    if (!upper && !lower) return false;
+    const scale = scaleDenominatorAt(zoom);
+    return !!((upper && scale > upper) || (lower && scale < lower));
   }
   function themeHiddenByScale(flags, style, zoom) {
     return (flags.has('FEATURE') || flags.has('FEATURES')) ? featuresHiddenByScale(style, zoom) : chartHiddenByScale(style, zoom);
@@ -6773,6 +6918,8 @@
     const fields = String(binding.value).split('|');
     const valueOf = flags && flags.has('DIFFERENCE') && fields.length > 1
       ? p => cellAggregatedValues({ sums: fields.map(k => parseFloat(p[k]) || 0), counts: fields.map(() => 1) }, flags, style)[0]
+      // "$item$" is flat's record count: 1 per record
+      : binding.value === '$item$' ? () => 1
       : p => (p && Object.keys(p).length ? flatNumber(p[binding.value], flags) : NaN);
     const values = features
       .map(f => valueOf(f.properties))
@@ -7488,7 +7635,8 @@
           properties: {
             value: this._seriesDifference ? seriesValue(f.properties) : this._resolveAggregateValue(f.properties),
             ...(this._seriesDifference ? { series: seriesOf(f.properties) } : {}),
-            ...(this._classSeparate ? { classValue: parseFloat(f.properties[this.binding.value]) || 0 } : {}),
+            // "$item$": flat's record count, 1 per record
+            ...(this._classSeparate ? { classValue: this.binding.value === '$item$' ? 1 : parseFloat(f.properties[this.binding.value]) || 0 } : {}),
             ...(this._aggregateField100 ? { value100: parseFloat(f.properties[f100]) || 0 } : {}),
             raw: f.properties
           }
@@ -7603,7 +7751,7 @@
     _dataLayerId(base) { return this._dataGen ? `${base}-d${this._dataGen}` : base; }
 
     _usesAggregationIndex() {
-      return (this.flags.has('AGGREGATE') || (this.flags.has('CHART') && (this.flags.has('SYMBOL') || this.flags.has('USER')))) && !this.flags.has('GRIDSIZE');
+      return (this.flags.has('AGGREGATE') || isSymbolChart(this.flags)) && !this.flags.has('GRIDSIZE');
     }
 
     _rebuildActiveFeatures() {
@@ -8178,11 +8326,10 @@
       // flat's __formatValue (mapscript.js 6268ff) rounds twice: first to
       // one decimal more (toFixed), then to the precision (Math.round) —
       // 25.446 → "25.45" → 25.5, where a single toFixed(1) gives 25.4
-      const clip = Math.pow(10, decimals);
-      const flatRounded = Math.round(Number(num.toFixed(decimals + 1)) * clip) / clip;
-      const [intPart, dec] = flatRounded.toFixed(decimals).split('.');
-      const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-      return dec ? `${grouped}.${dec}` : grouped;
+      // 0 keeps its decimals here (the class labels follow flat's legend
+      // toFixed(2), legend.js 636), unlike the chart values' formatValue
+      if (num === 0) return num.toFixed(decimals);
+      return flatGroupedValue(num, decimals);
     }
 
     // Per-icon alpha for the legend's isolate-on-click behavior (see
@@ -8267,7 +8414,7 @@
       // USER charts (a page's own chart function, style.userdraw) go the
       // chart pipeline too, drawn by _buildUserChartLayers (bubbles when the
       // page has no such function)
-      if (this.flags.has('CHART') && (this.flags.has('SYMBOL') || this.flags.has('USER'))) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
+      if (isSymbolChart(this.flags)) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
       console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
       return [];
     }
@@ -9651,6 +9798,7 @@
         const userLayers = this._buildUserChartLayers(combined, liveZoom, sizeValueOf);
         if (userLayers) return layers.concat(userLayers);
       }
+      if (this.flags.has('LABEL')) return layers.concat(this._buildLabelChartLayers(combined, zoom, liveZoom, sizeValueOf));
       const fillOpacity = styleNum(this.style.fillopacity) || 0.85;
       // .style({linecolor, linewidth}) — an individual icon's own border,
       // see _buildSingleIcon's own comment. Real ixmaps-flat symbol
@@ -9664,6 +9812,8 @@
 
       const itemRgb = d => this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat] || [128, 128, 128];
       const radiusOf = d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+      // align / offsetx / offsety: the whole chart moves (flatChartAlignOffset)
+      const alignOf = this._chartAlignFn(liveZoom, radiusOf);
 
       // SHADOW (style.shadow, flat's gate: maxshadow, shadowupper/lower — flatShadowOn): a soft
       // drop shadow under each symbol, see _getShadowIcon
@@ -9677,7 +9827,7 @@
           getPosition: d => d.geometry.coordinates,
           getIcon: d => this._getShadowIcon(radiusOf(d), blurPx, d.properties.counts ? 'circle' : this._resolveSymbolShape(d.properties)),
           getSize: d => radiusOf(d) * 3, // disc = 2/3 of the icon → its diameter is 2r
-          getPixelOffset: [dx, dy],
+          getPixelOffset: alignOf.active ? d => { const o = alignOf(d); return [o[0] + dx, o[1] + dy]; } : [dx, dy],
           getColor: d => {
             const rgb = itemRgb(d);
             const gray = Math.round(Math.min(255, 0.1 * (rgb[0] + rgb[1] + rgb[2])));
@@ -9695,7 +9845,7 @@
       // and cluster glows keep their own size multiplier (11 vs 9 — a lone
       // point and a packed cluster read differently at the same radius)
       // but share one sorted layer, same as the main bubbles below.
-      if (this.flags.has('GLOW')) {
+      if (this.flags.has('GLOW') && !glowHiddenByScale(this.style, liveZoom)) {
         layers.push(new IconLayer({
           id: `ix-glow-${this.name}-g${this._iconGeneration}`,
           data: combined, pickable: false,
@@ -9703,6 +9853,7 @@
           getIcon: d => this._getGlowIcon(this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat]),
           getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * (d.properties.counts ? 9 : 11),
           getColor: d => [255, 255, 255, this._iconAlpha(d)],
+          ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
           sizeUnits: 'pixels',
           billboard: true,
           parameters: ICON_LAYER_GLOBE_PARAMETERS
@@ -9717,6 +9868,7 @@
           getIcon: d => this._buildSingleIcon(singleBorderColorRgb || itemRgb(d), 0.3, 'circle', null, 0),
           getSize: d => radiusOf(d) * 2 * 1.3,
           getColor: d => [255, 255, 255, this._iconAlpha(d)],
+          ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
           sizeUnits: 'pixels',
           billboard: true,
           parameters: ICON_LAYER_GLOBE_PARAMETERS
@@ -9787,7 +9939,21 @@
         const boxRgb = hexOrNamedToRgb(this.style.boxcolor || '#eeeeee');
         const boxAlpha = Math.round(255 * (styleNum(this.style.boxopacity) || 1));
         const borderRgb = hexOrNamedToRgb(this.style.bordercolor || '#dddddd');
-        layers.push(new ScatterplotLayer({
+        // ScatterplotLayer has no pixel offset: a moved chart (align,
+        // offsetx/offsety) gets its circle as an icon
+        if (alignOf.active) layers.push(new IconLayer({
+          id: `ix-box-${this.name}-g${this._iconGeneration}`,
+          data: boxLayout, pickable: false,
+          getPosition: b => b.d.geometry.coordinates,
+          getIcon: b => this._buildSingleIcon(boxRgb, boxAlpha / 255, 'circle', borderRgb,
+            Math.round(unitPx / 20 * BUBBLE_ICON_SIZE / Math.max(1, 2 * b.boxR) * 4) / 4),
+          getSize: b => b.boxR * 2,
+          getPixelOffset: b => alignOf(b.d),
+          sizeUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+        else layers.push(new ScatterplotLayer({
           id: `ix-box-${this.name}`,
           data: boxLayout, pickable: false,
           getPosition: b => b.d.geometry.coordinates,
@@ -9822,7 +9988,7 @@
           getIcon: b => b.icon,
           // the icon is drawn at 2× with a stroke padding around the box
           getSize: b => b.icon.height / 2,
-          getPixelOffset: b => [(b.rect[0] + b.rect[2]) / 2, (b.rect[1] + b.rect[3]) / 2],
+          getPixelOffset: b => { const o = alignOf(b.d); return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
           sizeUnits: 'pixels',
           billboard: true,
           parameters: ICON_LAYER_GLOBE_PARAMETERS
@@ -9838,6 +10004,7 @@
           : this._buildSingleIcon(this.categoryColorsRgb[d.properties.cat], fillOpacity, this._resolveSymbolShape(d.properties), singleBorderColorRgb, singleBorderWidthPx),
         getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 2,
         getColor: d => [255, 255, 255, this._iconAlpha(d)],
+        ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
         sizeUnits: 'pixels',
         billboard: true,
         parameters: ICON_LAYER_GLOBE_PARAMETERS
@@ -9862,13 +10029,13 @@
           getTextAnchor: b => b.title.anchor,
           // top of the text ≈ first baseline − 0.8 font
           getAlignmentBaseline: 'top',
-          getPixelOffset: b => [b.title.x, b.title.top],
+          getPixelOffset: b => { const o = alignOf(b.d); return [b.title.x + o[0], b.title.top + o[1]]; },
           parameters: ICON_LAYER_GLOBE_PARAMETERS
         }));
       }
 
       // VALUES: bold value label centered on each bubble (see
-      // formatBubbleValue/valuesFontSizePx above). Labels are their own
+      // flatValueText/valuesFontSizePx above). Labels are their own
       // layers, added last in the array so they draw on top of every icon
       // layer (a small bubble's label can still show over a bigger
       // neighboring bubble's icon — a known, accepted gap). Entries whose
@@ -9877,14 +10044,16 @@
       // small to bother" gate.
       if (this.flags.has('VALUES') && !valuesHiddenByScale(this.style, zoom)) {
         const valueScale = styleNum(this.style.valuescale) || 1;
+        const textOpts = this._valueTextOpts();
 
         const pointLabels = individual.reduce((out, d) => {
           const radius = valueRadius(d.properties.value, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
           // flat's VALUES label prints the value (nValuesA), not the size
-          const text = formatBubbleValue(d.properties.classValue !== undefined ? d.properties.classValue : d.properties.value, this.style, this.flags);
+          const text = flatValueText(d.properties.raw, this.binding.title && d.properties.raw ? d.properties.raw[this.binding.title] : undefined,
+            d.properties.classValue !== undefined ? d.properties.classValue : d.properties.value, this.style, this.flags, textOpts);
           const fontSize = valuesFontSizePx(radius, text, valueScale);
           if (fontSize > VALUES_MIN_FONT_PX) {
-            out.push({ geometry: d.geometry, text, fontSize, color: resolveTextColor(this.style, contrastTextColor(this.categoryColorsRgb[d.properties.cat])) });
+            out.push({ geometry: d.geometry, text, fontSize, color: resolveTextColor(this.style, contrastTextColor(this.categoryColorsRgb[d.properties.cat])), pixelOffset: alignOf(d) });
           }
           return out;
         }, []);
@@ -9908,14 +10077,14 @@
 
           present.forEach((p, i) => {
             // one part for a range-classed cell: its class value, if separate
-            const text = formatBubbleValue(d.properties.classTotal !== undefined && present.length === 1 ? d.properties.classTotal : p.c, this.style, this.flags);
+            const text = flatValueText(this._categoryValueRecord(p.i), null, d.properties.classTotal !== undefined && present.length === 1 ? d.properties.classTotal : p.c, this.style, this.flags, textOpts);
             const subRadiusPx = radii[i] * fitScale * pxPerCanvasUnit;
             const fontSize = valuesFontSizePx(subRadiusPx, text, valueScale);
             if (fontSize > VALUES_MIN_FONT_PX) {
               out.push({
                 geometry: d.geometry, text, fontSize,
                 color: resolveTextColor(this.style, contrastTextColor(this.categoryColorsRgb[p.i])),
-                pixelOffset: [offsets[i].x * fitScale * pxPerCanvasUnit, offsets[i].y * fitScale * pxPerCanvasUnit]
+                pixelOffset: [offsets[i].x * fitScale * pxPerCanvasUnit + alignOf(d)[0], offsets[i].y * fitScale * pxPerCanvasUnit + alignOf(d)[1]]
               });
             }
           });
@@ -9934,10 +10103,207 @@
           getTextAnchor: 'middle',
           getAlignmentBaseline: 'center'
         };
-        if (pointLabels.length) layers.push(new TextLayer({ id: `ix-points-values-${this.name}`, data: pointLabels, ...textLayerCommonProps }));
+        if (pointLabels.length) layers.push(new TextLayer({ id: `ix-points-values-${this.name}`, data: pointLabels, ...(alignOf.active ? { getPixelOffset: d => d.pixelOffset } : {}), ...textLayerCommonProps }));
         if (groupLabels.length) layers.push(new TextLayer({ id: `ix-cluster-values-${this.name}`, data: groupLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps }));
       }
 
+      return layers;
+    }
+
+    // flat's chart position for this build (flatChartAlignOffset): a
+    // function item → pixel offset, the same for every part of one chart
+    // (symbol, glow, shadow, box, title, value text). unit is flat's
+    // normalX(1) on screen, the object zoom × style.scale.
+    _chartAlignFn(liveZoom, radiusOf, textOnly = false) {
+      const st = this.style;
+      const none = () => [0, 0];
+      none.active = false;
+      if (!st.align && !styleNum(st.offsetx) && !styleNum(st.offsety)) return none;
+      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
+      const symbol = flatChartBranch(this.flags) === 'symbol';
+      const normalR = NORMAL_RADIUS_PX * unit; // flat's normalX(chart size / 2)
+      const cache = new Map();
+      const fn = d => {
+        let v = cache.get(d);
+        if (v) return v;
+        const r = radiusOf(d);
+        v = flatChartAlignOffset(st, { unit, symbolScale: symbol ? r / (2 * normalR) : 1, half: symbol ? normalR : r, orig: r + (textOnly ? 0 : 5 * unit) });
+        cache.set(d, v);
+        return v;
+      };
+      fn.active = true;
+      return fn;
+    }
+
+    // the record an aggregated part of category i stands for in its value
+    // text: with style.valuefield the theme's categorical field, flat prints
+    // the class name (the records' own valuefield value) — otherwise none
+    _categoryValueRecord(i) { return categoryValueRecord(this.style, this.binding, this.flags, this.categoryLabels, i); }
+
+    // value-text options (flatValueText): flat's formatValue NOBREAKS for a
+    // theme of values within 1000-3000, the max value for the decimals
+    _valueTextOpts() {
+      // the range stats (_valueMin/_valueMax, per zoom for AGGREGATE) when
+      // there are any, else the value field's range over the data (cached)
+      let vMin = this._valueMin, vMax = this._valueMax;
+      if (vMin === undefined) {
+        if (this._valueTextRangeFor !== this.features) {
+          let lo = Infinity, hi = -Infinity;
+          const field = this.binding.value;
+          for (const f of this.features || []) {
+            const v = field === '$item$' ? 1 : parseFloat(f.properties && f.properties[field]);
+            if (isNaN(v)) continue;
+            if (v < lo) lo = v;
+            if (v > hi) hi = v;
+          }
+          this._valueTextRangeFor = this.features;
+          this._valueTextRange = [lo, hi];
+        }
+        [vMin, vMax] = this._valueTextRange;
+      }
+      return { noBreaks: flatNoBreaks(vMin, vMax), maxValue: styleNum(this.style.normalsizevalue) || (isFinite(vMax) ? vMax : undefined) };
+    }
+
+    // CHART|LABEL (maptheme.js 20647-21037), at the chart radius r of the
+    // size value:
+    //  - LABEL: a rounded rectangle 2.05r wide and 1.6·f high (f = min(0.8r,
+    //    3.4r / the value's text length)) from −r and −0.83f, corners 2r/15
+    //    (normalX(2r / normal radius)), in the item color at fillopacity
+    //    (default 1), stroked in linecolor or the color × 0.7 (NOLINES: none)
+    //    linewidth (0.1) · unit · √(r / normal radius) wide (OUTLINE:
+    //    unit · min(1, r / normal radius)), opaque with OUTLINE or a
+    //    linecolor, else 1 below fillopacity 0.5, 0.3 above; with VALUES the
+    //    text in bold, min(0.8r, 3.3r / its length) · valuescale, in
+    //    valuecolor / textcolor, else ChartColors.textColor of a class
+    //    color (white for a single-color theme). Flat's drop shadow rects
+    //    (20950) never draw: they need fOrigShadow without fShadow, which
+    //    the shadow gate (16740-16745) leaves equal.
+    //  - LABEL|TEXTONLY: no box, only an invisible hit rect (the
+    //    hover/tooltip target) and, with VALUES, the text at r·0.8·valuescale
+    //    in normal weight, valuecolor/textcolor (else black), over a halo in
+    //    the item color (stroke font/7, opacity 0.5).
+    // Both moved by the chart position (flatChartAlignOffset). The text is
+    // the hover target of TEXTONLY, the box of LABEL.
+    _buildLabelChartLayers(combined, zoom, liveZoom, sizeValueOf) {
+      const textOnly = this.flags.has('TEXTONLY');
+      const showValues = this.flags.has('VALUES') && !valuesHiddenByScale(this.style, zoom);
+      if (textOnly && !showValues) return [];
+      const radiusOf = d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+      const alignOf = this._chartAlignFn(liveZoom, radiusOf, textOnly);
+      const valueScale = styleNum(this.style.valuescale) || 1;
+      const textOverride = this.style.valuecolor || this.style.textcolor;
+      const opts = this._valueTextOpts();
+      const itemRgb = props => this.categoryColorsRgb[props.counts ? dominant(props.counts) : props.cat] || [128, 128, 128];
+      const valueOf = props => (props.counts ? props.total : (props.classValue !== undefined ? props.classValue : props.value));
+      const textOf = props => flatValueText(props.counts ? this._categoryValueRecord(dominant(props.counts)) : props.raw,
+        this.binding.title && props.raw ? props.raw[this.binding.title] : undefined, valueOf(props), this.style, this.flags, opts);
+
+      if (textOnly) {
+        const textRgb = textOverride ? hexOrNamedToRgb(textOverride) : [0, 0, 0];
+        const labels = [];
+        for (const d of combined) {
+          const r = radiusOf(d);
+          const fontSize = r * 0.8 * valueScale;
+          if (!(fontSize > 0)) continue;
+          labels.push({ ...d, text: textOf(d.properties), fontSize, halo: itemRgb(d.properties), pixelOffset: alignOf(d) });
+        }
+        // TextLayer's outlineColor is one per layer: a layer per halo color
+        const byHalo = new Map();
+        for (const l of labels) {
+          const key = l.halo.slice(0, 3).join(',');
+          if (!byHalo.has(key)) byHalo.set(key, []);
+          byHalo.get(key).push(l);
+        }
+        return [...byHalo.values()].map((data, i) => new TextLayer({
+          // the ix-bubbles- id (generation-like suffix) routes hover/click to this theme
+          id: `ix-bubbles-${this.name}-g${i}`,
+          data, pickable: true,
+          getPosition: d => d.geometry.coordinates,
+          getText: d => d.text,
+          getSize: d => d.fontSize,
+          getColor: d => [...textRgb.slice(0, 3), this._iconAlpha(d)],
+          getPixelOffset: d => d.pixelOffset,
+          sizeUnits: 'pixels',
+          fontFamily: 'arial',
+          fontWeight: 'normal',
+          characterSet: 'auto',
+          fontSettings: { sdf: true },
+          outlineWidth: 1 / 7,
+          outlineColor: [...data[0].halo.slice(0, 3), 128],
+          getTextAnchor: 'middle',
+          getAlignmentBaseline: 'center',
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+
+      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1);
+      const normalR = NORMAL_RADIUS_PX * unit;
+      const fillOpacity = styleNum(this.style.fillopacity) || 1;
+      const lineWidth = styleNum(this.style.linewidth) || 0.1;
+      const outline = flatFlag(this.flags, 'OUTLINE');
+      const lineColor = this.style.linecolor && styleLineColor(this.style.linecolor) !== 'none' ? styleLineColor(this.style.linecolor) : null;
+      const noLines = flatFlag(this.flags, 'NOLINES');
+      const strokeOpacity = outline || lineColor ? 1 : (fillOpacity < 0.5 ? 1 : 0.3);
+      const multiColor = (this.categoryColorsRgb || []).length > 1;
+      const css = rgb => `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+      // the box is sized by the value's own text, not the valuefield's
+      const boxStyle = Object.assign({}, this.style, { valuefield: undefined });
+      const boxes = [], texts = [];
+      for (const d of combined) {
+        const r = radiusOf(d);
+        if (!(r > 0)) continue;
+        const props = d.properties;
+        const rgb = itemRgb(props);
+        const boxText = flatValueText(null, null, valueOf(props), boxStyle, this.flags, opts);
+        const f = Math.min(r * 0.8, r * 3.4 / Math.max(1, boxText.length));
+        const ratio = r / normalR;
+        const icon = this._buildBoxIcon(2.05 * r, 1.6 * f, 2 * r / 15,
+          outline ? unit * Math.min(1, ratio) : unit * lineWidth * Math.sqrt(ratio),
+          { fill: css(rgb), fillOpacity, stroke: noLines ? null : (lineColor || css(flatDerivateRgb(rgb, 0.7))), strokeOpacity });
+        const o = alignOf(d);
+        // the box's center relative to the chart's: x from −r to 1.05r, y from −0.83f to 0.77f
+        boxes.push({ ...d, icon, pixelOffset: [o[0] + 0.025 * r, o[1] - 0.03 * f] });
+        if (showValues) {
+          const text = textOf(props);
+          const fontSize = Math.min(r * 0.8, r * 3.3 / Math.max(1, text.length)) * valueScale;
+          const color = textOverride ? hexOrNamedToRgb(textOverride) : (multiColor ? flatChartTextRgb(rgb) : [255, 255, 255]);
+          if (fontSize > 0) texts.push({ ...d, text, fontSize, color, pixelOffset: o });
+        }
+      }
+      const layers = [];
+      if (boxes.length) {
+        layers.push(new IconLayer({
+          id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
+          data: boxes, pickable: true,
+          getPosition: d => d.geometry.coordinates,
+          getIcon: d => d.icon,
+          // the icon is drawn at 2× with a stroke padding around the box
+          getSize: d => d.icon.height / 2,
+          getPixelOffset: d => d.pixelOffset,
+          getColor: d => [255, 255, 255, this._iconAlpha(d)],
+          sizeUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+      if (texts.length) {
+        layers.push(new TextLayer({
+          id: `ix-labels-${this.name}`,
+          data: texts, pickable: false,
+          getPosition: d => d.geometry.coordinates,
+          getText: d => d.text,
+          getSize: d => d.fontSize,
+          getColor: d => [...d.color.slice(0, 3), this._iconAlpha(d)],
+          getPixelOffset: d => d.pixelOffset,
+          sizeUnits: 'pixels',
+          fontFamily: 'arial',
+          fontWeight: 'bold',
+          characterSet: 'auto',
+          getTextAnchor: 'middle',
+          getAlignmentBaseline: 'center',
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
       return layers;
     }
 
@@ -10388,8 +10754,8 @@
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, formatBubbleValue, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
-    applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
+    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     flatFormatValue,
     dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn,
   };
