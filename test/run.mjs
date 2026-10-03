@@ -392,7 +392,7 @@ async function worker() {
     if (known) {
       r.known = true;
       if (r.error) console.log(`KNOWN ${p} — ${r.error}`);
-      else console.log(`KNOWN ${p} — now runs without error; remove it from knownBroken in pages.json and run npm run snapshot`);
+      else console.log(`KNOWN ${p} — ${known} (not compared; when that no longer applies, remove it from knownBroken in pages.json and run npm run snapshot)`);
       continue;
     }
     if (UPDATE) {

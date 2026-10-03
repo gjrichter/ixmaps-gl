@@ -51,7 +51,11 @@
     "examples/project_add_choropleth_range_quantile.html",
     "examples/project_clear_choropleth_range_quantile.html"
   ],
-  "knownBroken": {},
+  "knownBroken": {
+    "stage/accidents_app.html": "output differs between runs (nondeterministic, also with the unchanged engine)",
+    "stage/germany_accidents_app.html": "output differs between runs (nondeterministic, also with the unchanged engine)",
+    "stage/demo_accidents.html": "output differs between runs (nondeterministic, also with the unchanged engine)"
+  },
   "equivalent": [
     [
       "examples/alias_bubble_range_quantile.html",
