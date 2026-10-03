@@ -2644,6 +2644,39 @@
   }
 
   // ---------------------------------------------------------------
+  // flat's map attribution (ui/html/mappage.html #attribution-div): the
+  // page's text bottom left on the map; hidden while empty ("null" counts
+  // as empty, htmlgui_flat.js 522-526). Here a MapLibre control in the
+  // bottom-left corner, styled like MapLibre's own attribution (the
+  // basemap credit, bottom right — same line, same pill: white, 12px
+  // radius, 12px/20px Helvetica Neue, links rgba(0,0,0,0.75)).
+  // ---------------------------------------------------------------
+  let _attributionCss = false;
+  function createAttribution(map) {
+    if (!_attributionCss && typeof document !== 'undefined') {
+      _attributionCss = true;
+      const css = document.createElement('style');
+      css.textContent = '.ixmaps-gl-attribution a{color:rgba(0,0,0,0.75);text-decoration:none}'
+        + '.ixmaps-gl-attribution a:hover{color:inherit;text-decoration:underline}';
+      document.head.appendChild(css);
+    }
+    const box = document.createElement('div');
+    box.className = 'maplibregl-ctrl ixmaps-gl-attribution';
+    box.style.cssText = 'background:#fff;border-radius:12px;padding:2px 8px;min-height:20px;box-sizing:content-box;'
+      + 'font:12px/20px "Helvetica Neue",Arial,Helvetica,sans-serif;color:#000;display:none;';
+    map.addControl({ onAdd: () => box, onRemove: () => box.remove() }, 'bottom-left');
+    let text = '';
+    return {
+      set(t) {
+        text = t == null || t === 'null' ? '' : String(t);
+        box.innerHTML = text;
+        box.style.display = text ? 'block' : 'none';
+      },
+      get() { return text; }
+    };
+  }
+
+  // ---------------------------------------------------------------
   // Hover tooltips and the click-to-pin tooltip of a map, built once per map
   // by MapBuilder.build(). ctx: the builder (its map options, for the
   // tooltip look), the MapLibre map, its container element and
@@ -3587,7 +3620,13 @@
     // needs (a chart library, a user chart) — page code, like a <script>
     // tag; loaded in order before the layers (see loadRequiredScripts)
     require(url) { this._required = (this._required || []).concat(url); return this; }
-    attribution(a) { this._attributionText = a; return this; }
+    // flat's .attribution(text): the page's attribution, bottom left on the
+    // map (createAttribution) — also after the map is built
+    attribution(a) {
+      this._attributionText = a;
+      if (this._setAttribution) this._setAttribution(a);
+      return this;
+    }
     legend(html) { this._legendHtml = html; return this; }
     // GL-PORT COMPAT: real ixmaps-flat's map.layer(name) returns a NEW
     // per-layer builder for a .data()...define() chain on the LAYER
@@ -3781,13 +3820,10 @@
                              : resolveBasemapStyleUrl(this.mapOptions.mapType),
         center: [lon, lat],
         zoom: this._viewZoom != null && this._viewZoom !== '' ? flatToMapLibreZoom(Number(this._viewZoom)) : 8,
-        // .attribution(a) (MapBuilder, above) was stored but never read —
-        // unlike .legend()'s parallel _legendHtml, which the splash/legend
-        // block below actually renders. MapLibre's own AttributionControl
-        // is added automatically (not disabled anywhere in this file) and
-        // accepts extra text via customAttribution, appended alongside the
-        // basemap's own required CARTO/OpenStreetMap credit rather than
-        // replacing it.
+        // MapLibre's own AttributionControl (bottom right) keeps the
+        // basemap's required CARTO/OpenStreetMap credit; the page's own
+        // .attribution() goes bottom left, as flat shows it
+        // (createAttribution).
         //
         // A color `mapType` (mapTypeColor truthy — see
         // buildBlankBackgroundStyle above) has no real basemap at all, so
@@ -3798,7 +3834,6 @@
         // customAttribution's own required-credit behavior for a REAL
         // basemap is left untouched.
         ...(mapTypeColor ? { attributionControl: false } : {}),
-        ...(this._attributionText ? { customAttribution: this._attributionText } : {}),
         // MapLibre's default (true) is kept: with false it also stops the
         // zoom-out where the world gets narrower than the window, so a
         // world map can't open fully zoomed out. The deck.gl overlay takes
@@ -3912,6 +3947,10 @@
       map.addControl(overlay);
       map.addControl(new maplibregl.NavigationControl(), 'top-left');
       tooltips.mount();
+      // the page's attribution (.attribution(), Map option attribution)
+      const attributionBox = createAttribution(map);
+      attributionBox.set(this._attributionText != null ? this._attributionText : this.mapOptions.attribution);
+      this._setAttribution = text => attributionBox.set(text);
 
       if (this._legendHtml && el.parentElement) {
         const legendEl = document.createElement('div');
@@ -4083,6 +4122,11 @@
         mapType: (id) => engineApi.setMapType(id),
         // flat's getMapTypeId(): the basemap type name in use
         getMapTypeId: () => String(builder.mapOptions.mapType || ''),
+        // flat's attribution (htmlgui.js htmlgui_set/getAttributionString)
+        setAttribution: (text) => { builder.attribution(text); return engineApi; },
+        // flat's map handle ixmaps.map().attribution(text) (htmlgui_flat.js 1381)
+        attribution: (text) => engineApi.setAttribution(text),
+        getAttribution: () => attributionBox.get(),
         setBasemapOpacity: (delta, mode) => {
           _basemapOpacity = mode === 'relative'
             ? Math.max(0, Math.min(1, _basemapOpacity + (parseFloat(delta) || 0)))
@@ -10819,7 +10863,7 @@
   // htmlgui_flat.js). Its methods act on the last built map; called while
   // the map is still building, they run once it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible'];
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'attribution'];
   const _mapHandle = {};
   for (const m of MAP_HANDLE_METHODS) {
     _mapHandle[m] = (...args) => {
@@ -11420,6 +11464,10 @@
     // handle's methods on the last built map
     getCenter: () => (_lastMapApi && _lastMapApi.map ? _lastMapApi.map.getCenter() : null),
     getMapTypeId: () => (_lastMapApi && _lastMapApi.getMapTypeId ? _lastMapApi.getMapTypeId() : ''),
+    // flat's attribution: ixmaps.setAttribution(text) and its htmlgui_ pair
+    setAttribution: (text) => { if (_lastMapApi && _lastMapApi.setAttribution) _lastMapApi.setAttribution(text); },
+    htmlgui_setAttributionString: (text) => { if (_lastMapApi && _lastMapApi.setAttribution) _lastMapApi.setAttribution(text); },
+    htmlgui_getAttributionString: () => (_lastMapApi && _lastMapApi.getAttribution ? _lastMapApi.getAttribution() : ''),
     changeThemeStyle: (szMap, szId, szStyle, szFlag) => _mapHandle.changeThemeStyle(szId, szStyle, szFlag),
     removeTheme: (szMap, szId) => _mapHandle.remove(szId),
     setBasemapOpacity: (szMap, nOpacity, szMode) => _mapHandle.setBasemapOpacity(nOpacity, szMode),
