@@ -1,6 +1,6 @@
 {
   "name": "ixmaps-gl",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "MapLibre GL + deck.gl reimplementation of the ixmaps-flat declarative mapping engine",
   "main": "ixmaps-gl.js",
   "browser": "ixmaps-gl.js",
