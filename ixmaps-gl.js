@@ -2677,8 +2677,8 @@
     };
     const pinnedTooltipEl = document.createElement('div');
     pinnedTooltipEl.style.cssText = 'position:absolute;top:0;left:0;z-index:6;display:none;' +
-      'pointer-events:auto;max-width:320px;max-height:320px;overflow:auto;' +
-      'padding:0.6em 1.6em 0.6em 0.7em;font-size:0.85em;';
+      'pointer-events:auto;max-width:440px;max-height:360px;overflow:auto;' +
+      'padding:0.6em 1.6em 0.6em 0.7em;font-size:1em;';
 
     function updatePinnedTooltipPosition() {
       if (!pinned) return;
@@ -2775,7 +2775,7 @@
         const rt = findRuntimeForLayerId(layer.id);
         if (!rt) return null;
         const html = rt.buildTooltipHtml(object);
-        return html ? { html, style: Object.assign({ fontSize: '0.85em', padding: '0.5em 0.7em', maxWidth: '320px' }, tooltipLook()) } : null;
+        return html ? { html, style: Object.assign({ fontSize: '1em', padding: '0.5em 0.7em', maxWidth: '440px' }, tooltipLook()) } : null;
     }
     function clickFor(picked) {
         const info = picked && Object.assign({}, picked, { object: pickedFeature(picked.object) });
@@ -7269,7 +7269,10 @@
       const geometry = { type: 'Point', coordinates: [ll.lng, ll.lat] };
       const hasClass = cell.first.properties.classValue !== undefined;
       let props = cell.n > 1
-        ? { cluster: true, point_count: cell.n, value: cell.value, ...(hasClass ? { classValue: cell.classValue } : {}) }
+        // titleRaw: the cell's first record — flat titles an aggregated
+        // item by it (itemTitle)
+        ? { cluster: true, point_count: cell.n, value: cell.value, ...(hasClass ? { classValue: cell.classValue } : {}),
+            titleRaw: cell.first.properties.raw || cell.first.properties }
         : cell.first.properties;
       if (cell.series && cell.n > 1) props = Object.assign({}, props, { series: cell.series });
       // a field aggregation's cell key (the field value): the categories of
@@ -7335,6 +7338,7 @@
       let cell = cells.get(key);
       if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, cx: snapped.x, cy: snapped.y, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0), classTotal: undefined }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
+      if (!cell.titleRaw) cell.titleRaw = f.properties.titleRaw || f.properties.raw || null;
       cell.counts[f.properties.cat] += f.properties.value;
       if (f.properties.classValue !== undefined) cell.classTotal = (cell.classTotal || 0) + f.properties.classValue;
       // point_count is the aggregated-record count of a multi-record
@@ -7348,7 +7352,8 @@
       const ll = atCellCenter && cellPx ? worldPixelToLngLat(cell.cx, cell.cy, zoom) : worldPixelToLngLat(cell.sumX / cell.n, cell.sumY / cell.n, zoom);
       return {
         geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
-        properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts, ...(cell.classTotal !== undefined ? { classTotal: cell.classTotal } : {}) }
+        properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts, ...(cell.classTotal !== undefined ? { classTotal: cell.classTotal } : {}),
+          ...(cell.titleRaw ? { titleRaw: cell.titleRaw } : {}) }
       };
     });
   }
@@ -8253,14 +8258,31 @@
     //     only available for an individual, unaggregated point — an
     //     aggregated/grouped bubble has no single underlying record to
     //     tabulate, so it resolves to an empty string there.
+    // an item's title as flat gives it (maptheme.js 11838-11886): the title
+    // field of its record — of an aggregated item its first record; an
+    // aggregated grid cell (no aggregation field) of more than 3 records,
+    // or without a title, is titled "(n)"
+    _itemTitle(props) {
+      const raw = props.raw || props.titleRaw;
+      const title = this.binding.title && raw && raw[this.binding.title] != null ? String(raw[this.binding.title]) : '';
+      const aggregated = !!(props.counts || props.cluster);
+      if (aggregated && this._clusterRadiusPx && !this._clusterField) {
+        const n = groupRecordCount(props);
+        if (!title || n > 3) return '(' + n + ')';
+      }
+      return title;
+    }
+
     buildTooltipHtml(object) {
-      if (!this.meta.tooltip) return null;
+      // no .meta({tooltip}): flat's default template (tooltip_mustache.js 394)
+      // — the theme title, the item's title and its chart
+      const template = this.meta.tooltip || FLAT_DEFAULT_TOOLTIP;
       if (!global.Mustache) {
-        console.warn('[ixmaps-gl] .meta({tooltip}) is set but Mustache.js is not loaded — ' +
+        console.warn('[ixmaps-gl] tooltips need Mustache.js, which is not loaded — ' +
           'include https://unpkg.com/mustache@4.2.0/mustache.min.js before ixmaps-gl.js.');
         return null;
       }
-      return global.Mustache.render(this.meta.tooltip, this._buildTooltipContext(object));
+      return global.Mustache.render(template, this._buildTooltipContext(object));
     }
 
     _buildTooltipContext(object) {
@@ -8281,9 +8303,7 @@
             label: isGroup ? '' : (this.categoryDisplayLabels ? (this.categoryDisplayLabels[props.cat] || '') : ''),
             // flat: the item's title is its titlefield value (binding title/
             // titlefield, e.g. the comune name); else the class label
-            title: isGroup ? '' : (this.binding.title && props.raw && props.raw[this.binding.title] != null
-              ? String(props.raw[this.binding.title])
-              : (this.categoryDisplayLabels ? (this.categoryDisplayLabels[props.cat] || '') : '')),
+            title: this._itemTitle(props) || (isGroup ? '' : (this.categoryDisplayLabels ? (this.categoryDisplayLabels[props.cat] || '') : '')),
             count: isGroup ? (props.recordCounts ? props.recordCounts.reduce((a, c) => a + c, 0) : '') : 1,
             class: isGroup ? '' : props.cat
           }
@@ -8316,11 +8336,16 @@
     // breakdown, one line per present category, each with its own legend
     // color swatch and its OWN value (never summed across categories).
     _renderItemChartHtml(props) {
+      const unitOf = this.style.units ? ' ' + this.style.units : '';
+      // an AGGREGATE CATEGORICAL choropleth polygon: its sum per category
+      if (props.parts) {
+        const labels = this.categoryDisplayLabels || this.categoryLabels || [];
+        return tooltipTable(props.parts.map((v, i) => (v > 0 ? { rgb: this.categoryColorsRgb[i], label: labels[i] || '(n/d)', value: this._formatTooltipValue(v) + unitOf } : null)).filter(Boolean));
+      }
       if (this.flags.has('CHOROPLETH') && (this.flags.has('DOMINANT') || this.flags.has('COMPOSECOLOR')) && props.raw) {
         return this._renderMultiFieldBarsHtml(props.raw);
       }
-      const swatch = rgb => `<span style="display:inline-block;width:0.7em;height:0.7em;border-radius:50%;background:rgb(${rgb.join(',')});margin-right:0.4em;vertical-align:middle"></span>`;
-      const unit = this.style.units ? ' ' + this.style.units : '';
+      const unit = unitOf;
 
       // PLOT|GRIDSIZE curve cells: properties.values is an array parallel
       // to _plotCategories() (e.g. one FERITI sum per year), not a single
@@ -8330,10 +8355,10 @@
       if (Array.isArray(props.values)) {
         const categories = this._isItemPlot() ? this._itemPlotLabels() : this._plotCategories();
         const labels = this._isItemPlot() ? categories : Array.isArray(this.style.label) ? this.style.label.map(String) : categories;
-        return props.values.map((v, i) => {
+        return tooltipTable(props.values.map((v, i) => {
           if (v == null || isNaN(v)) return null;
-          return `<div>${labels[i] || categories[i] || i}: ${this._formatTooltipValue(v)}${unit}</div>`;
-        }).filter(Boolean).join('');
+          return { rgb: null, label: labels[i] || categories[i] || i, value: this._formatTooltipValue(v) + unit };
+        }).filter(Boolean));
       }
 
       if (props.counts) {
@@ -8352,19 +8377,17 @@
         // zoom until something resets it. Root cause of the "trackpad
         // zoom sometimes just stops updating" reports.
         const labels = this.categoryDisplayLabels || this.categoryLabels || [];
-        return labels.map((label, i) => {
+        return tooltipTable(labels.map((label, i) => {
           if (!(props.counts[i] > 0)) return null;
-          const rgb = this.categoryColorsRgb[i];
-          return `<div>${swatch(rgb)}${label || '(n/d)'}: ${this._formatTooltipValue(props.counts[i])}${unit}</div>`;
-        }).filter(Boolean).join('');
+          return { rgb: this.categoryColorsRgb[i], label: label || '(n/d)', value: this._formatTooltipValue(props.counts[i]) + unit };
+        }).filter(Boolean));
       }
       if (props.cat != null) {
         const label = this.categoryDisplayLabels ? (this.categoryDisplayLabels[props.cat] || '') : '';
         const rgb = this.categoryColorsRgb ? this.categoryColorsRgb[props.cat] : null;
         // no bound size field (e.g. a plain DOT|CATEGORICAL layer) -> just
         // the category label, no ": undefined" value suffix
-        const valueSuffix = this._hasValue(props.value) ? `: ${this._formatTooltipValue(props.value)}${unit}` : '';
-        return `<div>${rgb ? swatch(rgb) : ''}${label}${valueSuffix}</div>`;
+        return tooltipTable([{ rgb, label, value: this._hasValue(props.value) ? this._formatTooltipValue(props.value) + unit : '' }]);
       }
       return '';
     }
@@ -8425,7 +8448,7 @@
         .filter(k => k !== 'geometry')
         .map(k => `<tr><td style="padding:0 0.6em 0 0;color:#888">${k}</td><td>${this._isNumericValue(raw[k]) ? this._formatTooltipValue(raw[k]) : raw[k]}</td></tr>`)
         .join('');
-      return `<table style="font-size:0.85em;border-collapse:collapse">${rows}</table>`;
+      return `<table style="font-size:0.95em;border-collapse:collapse">${rows}</table>`;
     }
 
     _isNumericValue(v) {
@@ -8691,7 +8714,7 @@
             geometry: f.geometry,
             properties: {
               // no part above 0: no item in flat, not painted
-              value: agg ? agg.value : undefined, raw: agg ? f.properties : {}, cat: agg ? agg.index : null,
+              value: agg ? agg.value : undefined, raw: agg ? f.properties : {}, cat: agg ? agg.index : null, parts: agg ? agg.parts : undefined,
               dopacityAlpha: agg && dopacityActive ? dominantDopacityAlpha(this.style, this.flags, agg.value, aggMaxA[agg.index]) : null
             }
           };
@@ -9720,7 +9743,8 @@
         return {
           geometry: f.geometry,
           properties: { counts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value,
-            ...(f.properties.classValue !== undefined ? { classTotal: f.properties.classValue } : {}) }
+            ...(f.properties.classValue !== undefined ? { classTotal: f.properties.classValue } : {}),
+            ...(f.properties.titleRaw ? { titleRaw: f.properties.titleRaw } : {}) }
         };
       });
       return { individual, groups };
@@ -10091,9 +10115,7 @@
         const boxR = circular ? r * 1.1 + margin : r;
         let title = null;
         if (titleShown) {
-          const raw = d.properties.raw;
-          const n = groupRecordCount(d.properties);
-          const text = n > 3 ? '(' + n + ')' : (raw && raw[this.binding.title] != null ? String(raw[this.binding.title]) : '');
+          const text = this._itemTitle(d.properties);
           if (text) {
             const f = titleFontPx;
             const lines = wrapTitleLines(text, f, boxR * 2).split('\n');
@@ -10761,6 +10783,29 @@
 
   // flat's page hook ixmaps.htmlgui_onNewTheme(szId), called when a theme
   // is created (maptheme.js 927) — with the theme's id (its name)
+  // flat's tooltip for a theme without its own template (ui/js/tools/
+  // tooltip_mustache.js 394)
+  // tooltip_mustache.js 394) — the same parts, structured: the theme title
+  // as h2, the item title as h3, the chart (tooltipTable) below
+  // (inline styles throughout: a page's own h2 / table / td rules must not
+  // restyle the tooltip)
+  const FLAT_DEFAULT_TOOLTIP = "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>{{theme.title}}</h2>"
+    + "{{#theme.item.title}}<h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>{{theme.item.title}}</h3>{{/theme.item.title}}"
+    + "{{theme.item.chart}}";
+  // {{theme.item.chart}} as a table: per row a color swatch (or none), the
+  // label (left, one line) and the value (right-aligned)
+  function tooltipTable(rows) {
+    if (!rows.length) return '';
+    const swatch = rgb => (rgb ? `<span style="display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(${rgb.slice(0, 3).join(',')})"></span>` : '');
+    const td = 'border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;';
+    return '<table style="border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15">'
+      + rows.map(r => '<tr>'
+        + `<td style="${td}padding:0.05em 0.4em 0.05em 0;vertical-align:middle">${swatch(r.rgb)}</td>`
+        // one line: a long label ends in an ellipsis (full text as its title)
+        + `<td style="${td}padding:0.05em 0.8em 0.05em 0;text-align:left"><span title="${escapeHtml(String(r.label).replace(/<[^>]*>/g, ''))}" style="display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom">${r.label}</span></td>`
+        + `<td style="${td}padding:0.05em 0;text-align:right;white-space:nowrap">${r.value}</td></tr>`).join('')
+      + '</table>';
+  }
   function themeIdOf(rt) {
     return (rt.style && rt.style.name) || (rt.meta && rt.meta.name) || rt.name;
   }
@@ -11401,7 +11446,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout,
+    IXMAPS_GL_VERSION, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

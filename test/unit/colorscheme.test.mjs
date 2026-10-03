@@ -139,3 +139,13 @@ test('legend row labels: values from the data are escaped, the page\'s style.lab
   assert.equal(G.scaleDenom(undefined), 0);
 });
 function plainArr(a) { return JSON.parse(JSON.stringify(a)); }
+
+test('tooltip chart table: a row per part — swatch, label left, value right-aligned', () => {
+  const html = G.tooltipTable([{ rgb: [91, 187, 235], label: 'M1', value: '1 885 € ' }, { rgb: null, label: '2021', value: '7' }]);
+  assert.match(html, /^<table/);
+  assert.equal((html.match(/<tr>/g) || []).length, 2);
+  assert.match(html, /background:rgb\(91,187,235\)/);
+  assert.match(html, /text-align:right[^>]*>1 885 € <\/td>/);
+  assert.match(html, /text-align:left[^>]*><span title="M1"/);
+  assert.equal(G.tooltipTable([]), '', 'no rows: nothing');
+});
