@@ -2206,6 +2206,7 @@
     'style.alphafield': ['binding', 'alpha'],
     'style.alphafield100': ['binding', 'alpha100'],
     'style.valuefield': ['style', 'valuefield'],
+    'style.timefield': ['binding', 'time'], // setThemeTimeFrame, see LayerRuntime.setTimeFrame
     'style.titlefield': ['binding', 'title'], // {{theme.item.title}}, see _buildTooltipContext
     // the lookup key's normalization (flatLookupKey): flat's newTheme moves
     // binding.tonumber / digits / … into these style keys (htmlgui.js 1712)
@@ -2371,7 +2372,8 @@
   const STYLE_NUMBER_KEYS = ['linewidth', 'fillopacity', 'scale', 'classes', 'valuedecimals', 'normalsizevalue',
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
     'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale', 'rangecentervalue',
-    'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety'];
+    'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety', 'gridx', 'boxmargin', 'borderwidth',
+    'borderradius'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -2677,6 +2679,40 @@
   }
 
   // ---------------------------------------------------------------
+  // Embedded YouTube players in tooltips (data fields carrying <iframe
+  // src=".../embed/ID">) are replaced by a thumbnail with a play button; the
+  // real iframe is created on click. Keeps tooltips light, and a removed
+  // video or a refused embed (e.g. error 153 on file:// pages) degrades to a
+  // thumbnail that opens YouTube in a new tab instead of a broken player.
+  const YT_IFRAME_RE = /<iframe\b[^>]*?\bsrc\s*=\s*["']?(?:https?:)?\/\/(?:www\.)?youtube(?:-nocookie)?\.com\/embed\/([\w-]{6,})[^"'\s>]*["']?[^>]*>\s*<\/iframe>/gi;
+  function youtubeClickToPlay(html) {
+    if (!html || html.indexOf('youtube') < 0) return html;
+    return html.replace(YT_IFRAME_RE, (m, id) => {
+      const w = (/\bwidth\s*=\s*["']?(\d+)/i.exec(m) || [])[1] || 240;
+      const h = (/\bheight\s*=\s*["']?(\d+)/i.exec(m) || [])[1] || 180;
+      return '<div class="ixgl-yt" data-yt="' + id + '" data-w="' + w + '" data-h="' + h + '" ' +
+        'style="position:relative;width:' + w + 'px;height:' + h + 'px;cursor:pointer;background:#000 url(https://i.ytimg.com/vi/' + id + '/hqdefault.jpg) center/cover" ' +
+        'title="play"><span style="position:absolute;left:50%;top:50%;width:48px;height:34px;margin:-17px 0 0 -24px;' +
+        'border-radius:8px;background:rgba(220,0,0,0.9)"></span><span style="position:absolute;left:50%;top:50%;margin:-9px 0 0 -6px;' +
+        'border-style:solid;border-width:9px 0 9px 15px;border-color:transparent transparent transparent #fff"></span></div>';
+    });
+  }
+  if (typeof document !== 'undefined' && typeof document.addEventListener === 'function' && !global.__ixglYtClick) {
+    global.__ixglYtClick = true;
+    document.addEventListener('click', e => {
+      const el = e.target.closest && e.target.closest('.ixgl-yt');
+      if (!el) return;
+      e.stopPropagation();
+      const f = document.createElement('iframe');
+      f.width = el.dataset.w; f.height = el.dataset.h; f.frameBorder = '0';
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.allowFullscreen = true;
+      f.referrerPolicy = 'strict-origin-when-cross-origin';
+      f.src = 'https://www.youtube.com/embed/' + el.dataset.yt + '?autoplay=1&rel=0';
+      el.replaceWith(f);
+    }, true);
+  }
+
   // Hover tooltips and the click-to-pin tooltip of a map, built once per map
   // by MapBuilder.build(). ctx: the builder (its map options, for the
   // tooltip look), the MapLibre map, its container element and
@@ -4216,6 +4252,18 @@
             refresh();
           }
         },
+        // flat's ixmaps.setThemeTimeFrame(szId, min, max): show only the
+        // records whose timefield lies in [min, max) (ms or Date-
+        // parsable). null min+max clears. szId null/undefined = every theme
+        // that has a timefield (flat: one call updates all themes at once).
+        setThemeTimeFrame: (themeId, min, max) => {
+          const targets = themeId == null ? runtimes.filter(r => r.binding && r.binding.time) : (() => {
+            const rt = findRuntime(themeId);
+            return rt ? siblingRuntimes(rt).filter(r => r.binding && r.binding.time) : [];
+          })();
+          targets.forEach(rt => rt.setTimeFrame(min, max));
+          if (targets.length) refresh();
+        },
         // shows/hides a whole theme (all the deck.gl layers its
         // buildDeckLayers would otherwise produce) without touching its
         // data or style — for toggle controls like the real page's
@@ -5179,6 +5227,8 @@
   // earlier hand-tuned 12.5 drew every symbol 1.2× (with the reference
   // below, 1.3×) smaller than flat.
   const NORMAL_RADIUS_PX = 15;
+  // largest BOX side (px) still drawn as a canvas icon (at 2×), see _buildBoxIcon
+  const BOX_ICON_MAX_PX = 2048;
   // Flat's own map scale, which dynamic object scaling compares with
   // normalSizeScale (mapscript2.js 2849: dx = nTrueMapScale · nZoomScale /
   // nNormalSizeScale), read from a real flat page: the generic Mercator
@@ -5425,6 +5475,16 @@
 
   function valueRadius(value, zoom, style, mapOptions, flags, maxSizeValue) {
     const zoomFactor = objectZoomFactor(zoom, mapOptions);
+    // FIXSIZE (a symbol chart; PLOT / GRIDSIZE size their markers
+    // themselves): one radius for every item, whatever its value — the
+    // normal radius ÷ normalsizevalue, half of it for BUBBLE (maptheme.js
+    // 20711, 21847; measured on flat: PNRR "details", r = 1.5 units at
+    // scale 0.1)
+    if (flags && flags.has('FIXSIZE') && !flags.has('PLOT') && !flags.has('GRIDSIZE')) {
+      const fixed = NORMAL_RADIUS_PX * (styleNum(style.scale) || 1) / (styleNum(style.normalsizevalue) || 1)
+        * (flatChartBranch(flags) === 'bubble' ? 0.5 : 1);
+      return Math.max(VALUE_RADIUS_MIN, Math.min(VALUE_RADIUS_MAX, fixed * zoomFactor));
+    }
     // Real default (maptheme.js ~line 5059) when the theme sets no
     // normalsizevalue: the dataset's own max value on the bound size
     // field (maxSizeValue, from LayerRuntime._prepare), not a fixed
@@ -5629,6 +5689,8 @@
     const field = binding.size ? binding.size
       : (symbols && !flags.has('CATEGORICAL') && !flags.has('AGGREGATE') && binding.value && !String(binding.value).includes('|') ? binding.value : null);
     if (!field) return undefined;
+    // "$item$": every record counts 1
+    if (field === '$item$') return features.length ? 1 : 0;
     return features.reduce((max, f) => {
       const v = parseFloat(f.properties[field]);
       return isNaN(v) ? max : Math.max(max, v);
@@ -6228,6 +6290,13 @@
   // researched safe range (~1480-2980 distinct 48px icons before a real
   // device's WebGL MAX_TEXTURE_SIZE is at risk).
   const ICON_ATLAS_RESET_AFTER = 3000;
+  // The same reset by icon AREA: a few large icons (BOX rectangles around
+  // MULTIQUAD grids, hundreds of px each, new sizes at every zoom) fill
+  // deck.gl's 1024 px wide atlas long before 3000 icons — on the PNRR
+  // page a dozen boxes doubled it per zoom step, until it passed WebGL's
+  // MAX_TEXTURE_SIZE (16384) and the boxes drew black. 2 Mpx leaves room
+  // for the atlas's row-packing waste (measured ~2×) below that limit.
+  const ICON_ATLAS_AREA_RESET_AFTER = 2 * 1024 * 1024;
 
   // Shared packing layout for a multi-category group's sub-bubbles — used
   // both to draw the packed icon raster (_buildBubbleIcon) and to position
@@ -6270,6 +6339,56 @@
       offsets: keep.map(() => ({ x: 0, y: 0 })),
       fitScale: full.fitScale, maxR: full.maxR
     };
+  }
+
+  // MULTIQUAD / MULTISQUARE (flat maptheme.js 18648-18690): the items at
+  // one position, in drawing order, fill quads around it — the k-th at
+  // square = ⌊√k⌋, (k − square², square) while that is within the square,
+  // else (square, square − (k − square² − square)); once square reaches
+  // gridx, rows of gridx go on upward (k % gridx, ⌊k / gridx⌋). Steps of
+  // 2 · normal radius · rangescale (flat's chart size, measured on the PNRR
+  // page); y up. Returns per item its pixel offset and index, and per
+  // position's first item the extent [minX, minY, maxX, maxY] of the
+  // offsets there (flat sizes the BOX around all of them).
+  function multiQuadOffsets(items, normalRadiusPx, rangeScale, gridX) {
+    const step = 2 * normalRadiusPx * (rangeScale || 1);
+    const count = new Map(), offset = new Map(), index = new Map(), first = new Map(), extent = new Map();
+    for (const d of items) {
+      const c = d.geometry && d.geometry.coordinates;
+      const key = c ? c[0] + ',' + c[1] : '';
+      const k = count.get(key) || 0;
+      count.set(key, k + 1);
+      index.set(d, k);
+      if (k === 0) { first.set(key, d); extent.set(d, [0, 0, 0, 0]); }
+      let x = 0, y = 0;
+      if (k > 0) {
+        const square = Math.floor(Math.sqrt(k));
+        if (square < (gridX || Infinity)) {
+          const line = k - square * square;
+          x = line <= square ? line : square;
+          y = line <= square ? square : square - (line - square);
+        } else {
+          x = k % gridX;
+          y = Math.floor(k / gridX);
+        }
+      }
+      offset.set(d, [x * step, -y * step]);
+      const e = extent.get(first.get(key));
+      e[0] = Math.min(e[0], x * step); e[1] = Math.min(e[1], -y * step);
+      e[2] = Math.max(e[2], x * step); e[3] = Math.max(e[3], -y * step);
+    }
+    return { offset, index, extent };
+  }
+
+  // A pixel offset [dx, dy] (y down) from lngLat at MapLibre zoom `zoom`,
+  // as lng/lat (Web Mercator, 512 px world tiles) — for shapes too large
+  // for an icon, drawn in map coordinates (rebuilt with every refresh).
+  function pixelOffsetLngLat(lngLat, offset, zoom) {
+    const world = 512 * Math.pow(2, zoom);
+    const lat0 = lngLat[1] * Math.PI / 180;
+    const y = (0.5 - Math.log(Math.tan(Math.PI / 4 + lat0 / 2)) / (2 * Math.PI)) * world + offset[1];
+    const lat = (2 * Math.atan(Math.exp((0.5 - y / world) * 2 * Math.PI)) - Math.PI / 2) * 180 / Math.PI;
+    return [lngLat[0] + offset[0] * 360 / world, lat];
   }
 
   // CHART|SYMBOL|SEQUENCE (flat maptheme.js 21184-21300, 21790-21925,
@@ -7194,9 +7313,13 @@
   //    set (e.g. roma: summed Pericolosita, normalized to 0..1).
   // (flat's per-item nSize holds a record count in that last case, but it
   // is not what draws a value-based symbol.)
+  // "$item$" (as size or value) is flat's record count: 1 per record — it
+  // is no column (read as one, every record was 0 and a LABEL|TEXTONLY
+  // theme's text 0.08 px high).
   function resolveAggregateValue(binding, flags, props) {
+    if (binding.size === '$item$') return 1;
     if (binding.size) return parseFloat(props[binding.size]) || 0;
-    if (flags.has('CATEGORICAL') || binding.value == null) return 1;
+    if (flags.has('CATEGORICAL') || binding.value == null || binding.value === '$item$') return 1;
     return parseFloat(props[binding.value]) || 0;
   }
 
@@ -7481,6 +7604,7 @@
       // ICON_ATLAS_RESET_AFTER for why this is necessary at all).
       this._iconGeneration = 0;
       this._iconsSinceAtlasReset = 0;
+      this._iconAreaSinceAtlasReset = 0;
       this._prepare();
     }
 
@@ -7503,9 +7627,11 @@
     _cacheIcon(key, icon) {
       if (!this._iconCache.has(key)) {
         this._iconsSinceAtlasReset++;
-        if (this._iconsSinceAtlasReset > ICON_ATLAS_RESET_AFTER) {
+        this._iconAreaSinceAtlasReset += (icon.width || 0) * (icon.height || 0);
+        if (this._iconsSinceAtlasReset > ICON_ATLAS_RESET_AFTER || this._iconAreaSinceAtlasReset > ICON_ATLAS_AREA_RESET_AFTER) {
           this._iconGeneration++;
           this._iconsSinceAtlasReset = 0;
+          this._iconAreaSinceAtlasReset = 0;
         }
       }
       if (this._iconCache.size >= ICON_CACHE_MAX) {
@@ -7646,6 +7772,10 @@
       // a page could in principle use both at once, though no current
       // ported page does.
       this._runtimeFilterExpr = '';
+      // flat's setThemeTimeFrame(id, min, max): records whose style.timefield
+      // value lies in [min, max) — null = no time filter. AND'd with the
+      // filters above in _rebuildActiveFeatures.
+      this._timeFrame = null;
 
       // GRIDSIZE layers (PLOT curves-chart, or its grid-mesh companion)
       // also carry AGGREGATE in their type string, but they bin into a
@@ -7842,6 +7972,44 @@
       this._rebuildActiveFeatures();
     }
 
+    // setThemeTimeFrame: min/max in ms or any Date-parsable value; a null /
+    // NaN bound is open-ended, both null clears the frame.
+    setTimeFrame(min, max) {
+      const toMs = v => (v == null || v === '' ? NaN : (typeof v === 'number' ? v : new Date(v).getTime()));
+      const lo = toMs(min), hi = toMs(max);
+      // flat: with the slider at its start position (frame starts at or
+      // before the earliest record) every item is shown, not just the first window
+      const field = this.binding && this.binding.time;
+      if (field && !isNaN(lo)) {
+        if (this._timeMin === undefined) {
+          let m = Infinity;
+          for (const f of this.features) {
+            const v = f.properties && f.properties[field];
+            const t = typeof v === 'number' ? v : new Date(v).getTime();
+            if (!isNaN(t) && t < m) m = t;
+          }
+          this._timeMin = m;
+        }
+        if (lo <= this._timeMin) { this._timeFrame = null; this._rebuildActiveFeatures(); return; }
+      }
+      this._timeFrame = isNaN(lo) && isNaN(hi) ? null : { min: lo, max: hi };
+      this._rebuildActiveFeatures();
+    }
+
+    // predicate over a record's properties for the active time frame
+    _timePredicate() {
+      const tf = this._timeFrame;
+      if (!tf) return null;
+      const field = this.binding && this.binding.time;
+      if (!field) return null;
+      return props => {
+        const v = props && props[field];
+        const t = typeof v === 'number' ? v : new Date(v).getTime();
+        if (isNaN(t)) return false;
+        return (isNaN(tf.min) || t >= tf.min) && (isNaN(tf.max) || t < tf.max);
+      };
+    }
+
     // `_featuresByCategory` (plain per-category bucketing — NOT yet
     // grid-aggregated; that's a separate, later step gated by AGGREGATE
     // alone, see _computeAggregatedItems) is needed whenever this runtime
@@ -7872,7 +8040,8 @@
     replaceFeatures(fc) {
       // new data → new deck.gl layers (see _dataLayerId)
       this._dataGen = (this._dataGen || 0) + 1;
-      const facetFilters = this.facetFilters, runtimeFilterExpr = this._runtimeFilterExpr;
+      this._timeMin = undefined;
+      const facetFilters = this.facetFilters, runtimeFilterExpr = this._runtimeFilterExpr, timeFrame = this._timeFrame;
       this.binding = this._specBinding;
       this.features = applyField100(filterFlatValues(this._withDensity(fc.features), this.binding, this.flags), this.binding, this.flags, this.style);
       this.binding = field100Binding(this.binding, this.flags);
@@ -7882,6 +8051,7 @@
       this._prepare();
       this.facetFilters = facetFilters;
       this._runtimeFilterExpr = runtimeFilterExpr;
+      this._timeFrame = timeFrame;
       this._rebuildActiveFeatures();
     }
 
@@ -7894,6 +8064,27 @@
     // the next redraw.
     _dataLayerId(base) { return this._dataGen ? `${base}-d${this._dataGen}` : base; }
 
+    // deck.gl compares a layer's data by reference: a new object makes it
+    // re-process every polygon (on the PNRR page ~300 ms per refresh for
+    // 8 000 comuni, at every pan tick). Polygon data that doesn't depend
+    // on the view is therefore handed over as the same object until its
+    // inputs change.
+    _featureCollection() {
+      if (!this._featuresFC || this._featuresFC.features !== this.features) {
+        this._featuresFC = { type: 'FeatureCollection', features: this.features };
+      }
+      return this._featuresFC;
+    }
+    // the same for derived data: build() runs only when an entry of key
+    // (compared by identity) differs from the last call's
+    _cachedPolygonData(slot, key, build) {
+      const last = this[slot];
+      if (last && last.key.length === key.length && last.key.every((v, i) => v === key[i])) return last.data;
+      const data = build();
+      this[slot] = { key, data };
+      return data;
+    }
+
     _usesAggregationIndex() {
       return (this.flags.has('AGGREGATE') || isSymbolChart(this.flags)) && !this.flags.has('GRIDSIZE');
     }
@@ -7905,8 +8096,10 @@
       if (isAggregatedCategoricalChoropleth(this)) {
         const expr = this._runtimeFilterExpr;
         const clauses = Array.from(this.facetFilters.entries());
-        if (!expr && !clauses.length) { this._activeFeatures = null; return; }
-        const pred = expr ? flatFilterPredicate(String(expr)) : null;
+        const timePred = this._timePredicate();
+        if (!expr && !clauses.length && !timePred) { this._activeFeatures = null; return; }
+        const wherePred = expr ? flatFilterPredicate(String(expr)) : null;
+        const pred = wherePred && timePred ? (r => wherePred(r) && timePred(r)) : (wherePred || timePred);
         this._activeFeatures = this.features.map(f => {
           const rows = f.properties && f.properties[AGGREGATED_ROWS];
           if (!rows) return f;
@@ -7924,11 +8117,13 @@
       // comment) if one is active — reusing applyWhereFilter, the SAME
       // parser the layer's load-time .filter(expr) already uses, just
       // invoked again here instead of once at build time.
-      const base = this._runtimeFilterExpr
+      let base = this._runtimeFilterExpr
         ? applyWhereFilter({ type: 'FeatureCollection', features: this.features }, this._runtimeFilterExpr).features
         : this.features;
+      const timePred = this._timePredicate();
+      if (timePred) base = base.filter(f => timePred(f.properties));
       if (this.facetFilters.size === 0) {
-        this._activeFeatures = this._runtimeFilterExpr ? base : null;
+        this._activeFeatures = (this._runtimeFilterExpr || timePred) ? base : null;
       } else {
         const clauses = Array.from(this.facetFilters.entries());
         this._activeFeatures = base.filter(f =>
@@ -8326,7 +8521,7 @@
           'include https://unpkg.com/mustache@4.2.0/mustache.min.js before ixmaps-gl.js.');
         return null;
       }
-      return global.Mustache.render(template, this._buildTooltipContext(object));
+      return youtubeClickToPlay(global.Mustache.render(template, this._buildTooltipContext(object)));
     }
 
     _buildTooltipContext(object) {
@@ -8623,7 +8818,7 @@
         ? this._buildShadowLayers(hexOrNamedToRgb(raw), zoom, bbox) : [];
       return shadow.concat([new GeoJsonLayer({
         id: this._dataLayerId(`ix-features-${this.name}`),
-        data: { type: 'FeatureCollection', features: this.features },
+        data: this._featureCollection(),
         // linecolor "none": no outline (a FEATURES theme of points with
         // colorscheme and linecolor "none" draws nothing, as flat)
         stroked: styleLineColor(this.style.linecolor) !== 'none',
@@ -8735,65 +8930,73 @@
       // AGGREGATE CATEGORICAL: every polygon's parts and dominant class
       // (aggregatedCategoricalClass), the biggest part per class over all
       // polygons for the opacity (flat's nMaxA)
-      const aggCat = isAggregatedCategoricalChoropleth(this) && this.categoryIndexByLabel;
-      let aggOf = null, aggMaxA = null;
-      if (aggCat) {
-        const nCats = this.categoryLabels.length;
-        aggOf = new Map();
-        aggMaxA = new Array(nCats).fill(0);
-        source.forEach(f => {
-          const rows = f.properties && f.properties[AGGREGATED_ROWS];
-          if (!rows) return;
-          const agg = aggregatedCategoricalClass(rows, this.binding, this.flags, this.categoryIndexByLabel, nCats);
-          if (!agg) return;
-          aggOf.set(f, agg);
-          agg.parts.forEach((v, i) => { if (v > aggMaxA[i]) aggMaxA[i] = v; });
-        });
-      }
-      const data = source.map(f => {
+      // the polygons' classes don't depend on the view or on marked
+      // classes (those only change the colors, see updateTriggers below):
+      // the data is rebuilt only when its inputs change
+      const dataKey = [source, this._dataGen, this.categoryIndexByLabel, this.partsA, this._classSeparate,
+        dopacityActive ? baseOpacity : null, JSON.stringify(this.style), JSON.stringify(this.binding)];
+      const collection = this._cachedPolygonData('_choroplethData', dataKey, () => {
+        const aggCat = isAggregatedCategoricalChoropleth(this) && this.categoryIndexByLabel;
+        let aggOf = null, aggMaxA = null;
         if (aggCat) {
-          const agg = aggOf.get(f);
+          const nCats = this.categoryLabels.length;
+          aggOf = new Map();
+          aggMaxA = new Array(nCats).fill(0);
+          source.forEach(f => {
+            const rows = f.properties && f.properties[AGGREGATED_ROWS];
+            if (!rows) return;
+            const agg = aggregatedCategoricalClass(rows, this.binding, this.flags, this.categoryIndexByLabel, nCats);
+            if (!agg) return;
+            aggOf.set(f, agg);
+            agg.parts.forEach((v, i) => { if (v > aggMaxA[i]) aggMaxA[i] = v; });
+          });
+        }
+        const data = source.map(f => {
+          if (aggCat) {
+            const agg = aggOf.get(f);
+            return {
+              type: 'Feature',
+              geometry: f.geometry,
+              properties: {
+                // no part above 0: no item in flat, not painted
+                value: agg ? agg.value : undefined, raw: agg ? f.properties : {}, cat: agg ? agg.index : null, parts: agg ? agg.parts : undefined,
+                dopacityAlpha: agg && dopacityActive ? dominantDopacityAlpha(this.style, this.flags, agg.value, aggMaxA[agg.index]) : null
+              }
+            };
+          }
+          if (isComposeColor) {
+            return {
+              type: 'Feature',
+              geometry: f.geometry,
+              properties: { raw: f.properties, composedColor: this._resolveComposedColor(f.properties) }
+            };
+          }
+          if (isDominant) {
+            const dom = this._resolveDominantClass(f.properties);
+            const value = dom ? dom.value : undefined;
+            return {
+              type: 'Feature',
+              geometry: f.geometry,
+              properties: {
+                value, raw: f.properties, cat: dom ? dom.index : null,
+                dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(f, value, baseOpacity) : null
+              }
+            };
+          }
+          // a polygon without a data row is no item in flat: no value
+          const hasRow = f.properties && Object.keys(f.properties).length > 0;
+          const value = hasRow ? flatNumber(f.properties[this.binding.value], this.flags) : NaN;
+          const cat = this._resolveClassIndex(value);
           return {
             type: 'Feature',
             geometry: f.geometry,
             properties: {
-              // no part above 0: no item in flat, not painted
-              value: agg ? agg.value : undefined, raw: agg ? f.properties : {}, cat: agg ? agg.index : null, parts: agg ? agg.parts : undefined,
-              dopacityAlpha: agg && dopacityActive ? dominantDopacityAlpha(this.style, this.flags, agg.value, aggMaxA[agg.index]) : null
-            }
-          };
-        }
-        if (isComposeColor) {
-          return {
-            type: 'Feature',
-            geometry: f.geometry,
-            properties: { raw: f.properties, composedColor: this._resolveComposedColor(f.properties) }
-          };
-        }
-        if (isDominant) {
-          const dom = this._resolveDominantClass(f.properties);
-          const value = dom ? dom.value : undefined;
-          return {
-            type: 'Feature',
-            geometry: f.geometry,
-            properties: {
-              value, raw: f.properties, cat: dom ? dom.index : null,
+              value, raw: f.properties, cat,
               dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(f, value, baseOpacity) : null
             }
           };
-        }
-        // a polygon without a data row is no item in flat: no value
-        const hasRow = f.properties && Object.keys(f.properties).length > 0;
-        const value = hasRow ? flatNumber(f.properties[this.binding.value], this.flags) : NaN;
-        const cat = this._resolveClassIndex(value);
-        return {
-          type: 'Feature',
-          geometry: f.geometry,
-          properties: {
-            value, raw: f.properties, cat,
-            dopacityAlpha: dopacityActive ? this._resolveDopacityAlpha(f, value, baseOpacity) : null
-          }
-        };
+        });
+        return { type: 'FeatureCollection', features: data };
       });
       // A marked class (legend row click / ixmaps.markThemeClass) as real
       // ixmaps-flat shows it on a choropleth (MapTheme.markClass,
@@ -8815,9 +9018,13 @@
         return evidenceMode === 'isolate' ? 'hide' : 'gray';
       };
       const grayOf = ([r, g, b]) => { const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b); return [y, y, y]; };
+      // deck.gl re-runs the color accessors only for new data or a changed trigger
+      const colorKey = JSON.stringify([[...this._markedClasses], !!this._onMarksChanged, evidenceMode,
+        this.categoryColorsRgb, fallbackRgb, classAlpha, lineRgb]);
       return [new GeoJsonLayer({
         id: this._dataLayerId(`ix-choropleth-${this.name}`),
-        data: { type: 'FeatureCollection', features: data },
+        data: collection,
+        updateTriggers: { getFillColor: colorKey, getLineColor: colorKey },
         pickable: true,
         stroked: true,
         filled: true,
@@ -10063,7 +10270,16 @@
       const itemRgb = d => this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat] || [128, 128, 128];
       const radiusOf = d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
       // align / offsetx / offsety: the whole chart moves (flatChartAlignOffset)
-      const alignOf = this._chartAlignFn(liveZoom, radiusOf);
+      // MULTIQUAD / MULTISQUARE: the items at one position side by side
+      // (multiQuadOffsets), added to the chart position
+      const baseAlign = this._chartAlignFn(liveZoom, radiusOf);
+      const multi = flatFlag(this.flags, 'MULTIQUAD') || flatFlag(this.flags, 'MULTISQUARE')
+        ? multiQuadOffsets(combined, NORMAL_RADIUS_PX * objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1),
+          styleNum(this.style.rangescale) || 1, styleNum(this.style.gridx) || 0)
+        : null;
+      const alignOf = multi
+        ? Object.assign(d => { const a = baseAlign(d), m = multi.offset.get(d) || [0, 0]; return [a[0] + m[0], a[1] + m[1]]; }, { active: true })
+        : baseAlign;
 
       // SHADOW (style.shadow, flat's gate: maxshadow, shadowupper/lower — flatShadowOn): a soft
       // drop shadow under each symbol, see _getShadowIcon
@@ -10145,28 +10361,42 @@
       // (#888888) over a half-opaque white halo (stroke font/7); its first
       // baseline one font below the box (BOTTOMTITLE) or 0.7 font above it.
       // Box and title are removed outside boxupper/boxlower.
+      // Flat draws box and title in the chart group, which is scaled by
+      // style.scale: the units below are u · scale. Its size measure W is
+      // the chart's width (2r; with MULTIQUAD the width of the whole grid
+      // at the position, the box enclosing all of it); flat's chart size
+      // is 30 units.
       const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(this.style, liveZoom);
       const circular = flatFlag(this.flags, 'CIRCULAR');
-      const unitPx = objectZoomFactor(liveZoom, this.mapOptions);
+      const unitPx = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1);
       const boxMarginU = styleNum(this.style.boxmargin) || 2;
       const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title;
       const titleFontPx = 5 * unitPx * (styleNum(this.style.textscale) || styleNum(this.style.valuescale) || 1);
+      // flat: fill-opacity (boxopacity || 1) on the raw style value — the
+      // usual string "0" is transparent; typed here, a given 0 is too
+      const boxOpacity = isNaN(styleNum(this.style.boxopacity)) ? 1 : styleNum(this.style.boxopacity);
       const bottomTitle = flatFlag(this.flags, 'BOTTOMTITLE');
       const alignRight = /right/.test(String(this.style.align || ''));
-      const boxLayout = boxShown ? combined.map(d => {
+      // with MULTIQUAD only the first item of a position gets its box/title
+      const boxLayout = boxShown ? combined.filter(d => !multi || multi.index.get(d) === 0).map(d => {
         const r = valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
-        const margin = Math.min(2 * boxMarginU * unitPx, boxMarginU * r / 15);
+        const ext = multi ? multi.extent.get(d) : [0, 0, 0, 0];
+        const chart = [ext[0] - r, ext[1] - r, ext[2] + r, ext[3] + r];
+        const w = chart[2] - chart[0];
+        const margin = Math.min(2 * boxMarginU * unitPx, boxMarginU * w / 30);
         const boxR = circular ? r * 1.1 + margin : r;
         let title = null;
         if (titleShown) {
           const text = this._itemTitle(d.properties);
           if (text) {
             const f = titleFontPx;
-            const lines = wrapTitleLines(text, f, boxR * 2).split('\n');
+            const lines = wrapTitleLines(text, f, circular ? boxR * 2 : w).split('\n');
             const width = Math.max(...lines.map(l => titleTextWidth(l, f)));
             // first baseline; lines go down one font each
-            const base = bottomTitle ? boxR + f : -boxR - 0.7 * f - (lines.length - 1) * f;
-            const x = circular ? unitPx / 2 : (alignRight ? r : -r);
+            const base = circular
+              ? (bottomTitle ? boxR + f : -boxR - 0.7 * f - (lines.length - 1) * f)
+              : (bottomTitle ? chart[3] + f : chart[1] - 0.7 * f - (lines.length - 1) * f);
+            const x = circular ? unitPx / 2 : (alignRight ? chart[2] : chart[0]);
             const anchor = circular ? 'middle' : (alignRight ? 'end' : 'start');
             const x0 = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
             // arial: ascent 0.905, descent 0.212 of the font size
@@ -10176,16 +10406,16 @@
         }
         let rect = null;
         if (!circular) {
-          const e = [-r, -r, r, r];
+          const e = chart.slice();
           // with a title flat trims 0.1 font off the top of chart + title
           if (title) { e[0] = Math.min(e[0], title.extent[0]); e[1] = Math.min(e[1], title.extent[1]) + 0.1 * titleFontPx; e[2] = Math.max(e[2], title.extent[2]); e[3] = Math.max(e[3], title.extent[3]); }
           rect = [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin];
         }
-        return { d, r, boxR, rect, title };
+        return { d, r, w, boxR, rect, title };
       }) : null;
       if (boxShown && circular) {
         const boxRgb = hexOrNamedToRgb(this.style.boxcolor || '#eeeeee');
-        const boxAlpha = Math.round(255 * (styleNum(this.style.boxopacity) || 1));
+        const boxAlpha = Math.round(255 * boxOpacity);
         const borderRgb = hexOrNamedToRgb(this.style.bordercolor || '#dddddd');
         // ScatterplotLayer has no pixel offset: a moved chart (align,
         // offsetx/offsety) gets its circle as an icon
@@ -10218,20 +10448,47 @@
         const borderStyle = String(this.style.borderstyle || '');
         const boxLook = {
           fill: this.style.boxcolor || 'white',
-          fillOpacity: styleNum(this.style.boxopacity) || 1,
+          fillOpacity: boxOpacity,
           stroke: borderStyle === 'none' ? null : styleLineColor(this.style.bordercolor) || '#bbbbbb',
           strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3,
         };
         const borderWidth = styleNum(this.style.borderwidth) || 1;
         const borderRadius = styleNum(this.style.borderradius);
-        boxLayout.forEach(b => {
+        const strokeOf = b => borderWidth * 0.2 * b.w / 30;
+        // a box larger than BOX_ICON_MAX_PX (a MULTIQUAD grid of thousands
+        // of items) would need a huge canvas: it is drawn as a polygon in
+        // map coordinates instead (square corners)
+        const bigBox = b => Math.max(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1]) > BOX_ICON_MAX_PX;
+        const iconBoxes = boxLayout.filter(b => !bigBox(b)), polygonBoxes = boxLayout.filter(bigBox);
+        iconBoxes.forEach(b => {
           b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
-            isNaN(borderRadius) ? 0 : borderRadius * Math.min(unitPx, b.r * 2 / 30),
-            borderWidth * 0.2 * b.r * 2 / 30, boxLook);
+            isNaN(borderRadius) ? 0 : borderRadius * Math.min(unitPx, b.w / 30),
+            strokeOf(b), boxLook);
         });
-        layers.push(new IconLayer({
+        if (polygonBoxes.length) {
+          const fillRgb = hexOrNamedToRgb(boxLook.fill);
+          const strokeRgb = boxLook.stroke ? hexOrNamedToRgb(boxLook.stroke) : null;
+          layers.push(new GeoJsonLayer({
+            id: `ix-box-polygons-${this.name}`,
+            data: polygonBoxes.map(b => {
+              const o = alignOf(b.d), c = b.d.geometry.coordinates, r = b.rect;
+              const at = (x, y) => pixelOffsetLngLat(c, [x + o[0], y + o[1]], liveZoom);
+              return { type: 'Feature', properties: { stroke: strokeOf(b) },
+                geometry: { type: 'Polygon', coordinates: [[at(r[0], r[1]), at(r[2], r[1]), at(r[2], r[3]), at(r[0], r[3]), at(r[0], r[1])]] } };
+            }),
+            pickable: false,
+            filled: boxLook.fillOpacity > 0,
+            stroked: !!strokeRgb,
+            getFillColor: [...fillRgb.slice(0, 3), Math.round(255 * boxLook.fillOpacity)],
+            getLineColor: strokeRgb ? [...strokeRgb.slice(0, 3), Math.round(255 * boxLook.strokeOpacity)] : [0, 0, 0, 0],
+            getLineWidth: f => f.properties.stroke,
+            lineWidthUnits: 'pixels',
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        }
+        if (iconBoxes.length) layers.push(new IconLayer({
           id: `ix-box-${this.name}-g${this._iconGeneration}`,
-          data: boxLayout, pickable: false,
+          data: iconBoxes, pickable: false,
           getPosition: b => b.d.geometry.coordinates,
           getIcon: b => b.icon,
           // the icon is drawn at 2× with a stroke padding around the box
@@ -10816,6 +11073,7 @@
   //  - themes: getThemeObj (flat's theme object, with its data table and
   //    the items on the map), getThemeDefinitionObj, getThemes,
   //    changeThemeStyle / removeTheme / setBasemapOpacity (map name first),
+  //    setThemeTimeFrame (themeId, min, max),
   //    refreshTheme, markThemeClass / unmarkThemeClass
   //  - data: ixmaps.data (facets: getFacets, showFacets, …), the
   //    embeddedSVG.window tables (setExternalData is with the data loading)
@@ -10863,7 +11121,7 @@
   // htmlgui_flat.js). Its methods act on the last built map; called while
   // the map is still building, they run once it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'attribution'];
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'setThemeTimeFrame', 'attribution'];
   const _mapHandle = {};
   for (const m of MAP_HANDLE_METHODS) {
     _mapHandle[m] = (...args) => {
@@ -11090,6 +11348,7 @@
     const style = Object.assign({}, rt.style);
     if (rt.binding.size && !style.sizefield) style.sizefield = rt.binding.size;
     if (rt.binding.title && !style.titlefield) style.titlefield = rt.binding.title;
+    if (rt.binding.time && !style.timefield) style.timefield = rt.binding.time;
     style.type = rt.flags.typeString != null ? rt.flags.typeString : [...rt.flags].join('|');
     const data = Object.assign({}, rt._definition && rt._definition.data);
     if (!data.name) data.name = themeDataName(rt);
@@ -11470,6 +11729,8 @@
     htmlgui_getAttributionString: () => (_lastMapApi && _lastMapApi.getAttribution ? _lastMapApi.getAttribution() : ''),
     changeThemeStyle: (szMap, szId, szStyle, szFlag) => _mapHandle.changeThemeStyle(szId, szStyle, szFlag),
     removeTheme: (szMap, szId) => _mapHandle.remove(szId),
+    // flat's time slider: show the records of a theme (null = all themes) whose timefield lies in [min, max)
+    setThemeTimeFrame: (szId, nMin, nMax) => _mapHandle.setThemeTimeFrame(szId, nMin, nMax),
     setBasemapOpacity: (szMap, nOpacity, szMode) => _mapHandle.setBasemapOpacity(nOpacity, szMode),
     // this engine's version (flat's own ixmaps.version numbers flat)
     glVersion: IXMAPS_GL_VERSION,
@@ -11494,7 +11755,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout,
+    IXMAPS_GL_VERSION, youtubeClickToPlay, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, multiQuadOffsets, pixelOffsetLngLat,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

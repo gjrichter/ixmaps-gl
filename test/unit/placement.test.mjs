@@ -273,3 +273,58 @@ test('CHOROPLETH|DOMINANT|CATEGORICAL|AGGREGATE: a polygon takes the class of it
   near(G.dominantDopacityAlpha({ dopacityscale: 0.5, dopacitypow: 3 }, f, 1e6, 8e9), 0.5 * Math.cbrt(1e6 / 8e9), 'DOPACITYMAX');
   assert.equal(G.dominantDopacityAlpha({ dopacityscale: 2 }, f, 8e9, 8e9), 0.9, 'capped');
 });
+
+test('MULTIQUAD: items at one position fill quads, then rows of gridx upward (flat, PNRR "details")', () => {
+  const at = (x, y) => ({ geometry: { type: 'Point', coordinates: [x, y] } });
+  const items = Array.from({ length: 405 }, () => at(12.49, 41.9)).concat([at(9.19, 45.46)]);
+  // flat: r = 17.17 px, steps 37.8 px = 2 · r · rangescale 1.1
+  const { offset, index, extent } = G.multiQuadOffsets(items, 17.17, 1.1, 20);
+  const step = 2 * 17.17 * 1.1;
+  const cell = i => plain(offset.get(items[i]).map(v => Math.round(v / step)));
+  assert.deepEqual([cell(0), cell(1), cell(2), cell(3)], [[0, 0], [0, -1], [1, -1], [1, 0]], 'measured on flat: (0,0) (0,-1) (1,-1) (1,0)');
+  assert.deepEqual(cell(4), [0, -2], 'the next quad starts on top');
+  assert.deepEqual(cell(400), [0, -20], 'from 20 x 20 on: rows of gridx upward');
+  assert.deepEqual(cell(404), [4, -20]);
+  assert.equal(index.get(items[405]), 0, 'another position starts again');
+  near(offset.get(items[3])[0], 37.774, 'step = 2 r rangescale', 0.01);
+  // the BOX encloses the whole grid of a position: 20 columns, 21 rows up
+  assert.deepEqual(plain(extent.get(items[0]).map(v => Math.round(v / step))), [0, -20, 19, 0], 'grid extent at the first item');
+  assert.deepEqual(plain(extent.get(items[405])), [0, 0, 0, 0], 'a single item: no extent');
+  assert.equal(extent.get(items[1]), undefined, 'only the first item of a position carries it');
+});
+
+test('pixelOffsetLngLat: pixel offsets as lng/lat in Web Mercator (512 px world)', () => {
+  near(G.pixelOffsetLngLat([0, 0], [256, 0], 0)[0], 180, 'half the world at zoom 0', 1e-9);
+  near(G.pixelOffsetLngLat([12.49, 41.9], [0, 0], 14)[1], 41.9, 'no offset: same latitude', 1e-9);
+  const up = G.pixelOffsetLngLat([12.49, 41.9], [0, -1000], 14), down = G.pixelOffsetLngLat([12.49, 41.9], [0, 1000], 14);
+  assert.ok(up[1] > 41.9 && down[1] < 41.9, 'y down on screen is south');
+  // 1000 px at zoom 14 ≈ 1000 · 360 / (512 · 2^14) · cos(lat) degrees of latitude
+  near(up[1] - 41.9, 1000 * 360 / (512 * 2 ** 14) * Math.cos(41.9 * Math.PI / 180), 'mercator scale', 2e-4);
+});
+
+test('FIXSIZE: one radius for every symbol, the normal radius / normalsizevalue (flat)', () => {
+  const f = flags('CHART', 'SYMBOL', 'FIXSIZE', 'CATEGORICAL');
+  const st = { scale: 0.1, normalsizevalue: 1 }, opts = { objectscaling: 'fixed' };
+  assert.equal(G.valueRadius(5, 10, st, opts, f, 1), G.valueRadius(5e6, 10, st, opts, f, 1), 'independent of the value');
+  near(G.valueRadius(5e6, 10, st, opts, f, 1), 1.5, 'normal radius 15 · scale 0.1');
+  const plot = flags('CHART', 'SYMBOL', 'PLOT', 'FIXSIZE', 'GRIDSIZE');
+  assert.notEqual(G.valueRadius(5, 10, st, opts, plot, 1), G.valueRadius(5e6, 10, st, opts, plot, 1), 'PLOT/GRIDSIZE size their markers themselves');
+});
+
+test('polygon data is handed to deck.gl as the same object until its inputs change (pan speed)', () => {
+  const rt = { features: [{ id: 1 }] };
+  const fc = G.LayerRuntime.prototype._featureCollection;
+  const a = fc.call(rt);
+  assert.equal(fc.call(rt), a, 'same features: same FeatureCollection');
+  rt.features = [{ id: 2 }];
+  assert.notEqual(fc.call(rt), a, 'new features: new FeatureCollection');
+  const cached = G.LayerRuntime.prototype._cachedPolygonData;
+  let builds = 0;
+  const build = () => ({ n: ++builds });
+  const src = [];
+  const d1 = cached.call(rt, '_slot', [src, 'style'], build);
+  assert.equal(cached.call(rt, '_slot', [src, 'style'], build), d1, 'equal key: no rebuild');
+  assert.notEqual(cached.call(rt, '_slot', [src, 'other'], build), d1, 'changed key entry: rebuilt');
+  assert.notEqual(cached.call(rt, '_slot', [[], 'other'], build).n, 2, 'new source array: rebuilt');
+  assert.equal(builds, 3);
+});
