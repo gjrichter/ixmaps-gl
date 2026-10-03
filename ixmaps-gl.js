@@ -2780,6 +2780,206 @@
   }
 
   // ---------------------------------------------------------------
+  // Hover tooltips and the click-to-pin tooltip of a map, built once per map
+  // by MapBuilder.build(). ctx: the builder (its map options, for the
+  // tooltip look), the MapLibre map, its container element and
+  // findRuntimeForLayerId (the theme of a drawn deck.gl layer). Returns the
+  // overlay's getTooltip / onClick handlers and mount(), which adds the
+  // pinned tooltip to the page and keeps it on its place while the map moves.
+  // ---------------------------------------------------------------
+  function createTooltips(ctx) {
+    const { builder, map, el, findRuntimeForLayerId } = ctx;
+    // Click-to-pin tooltip: matches the real ixmaps engine's own
+    // click-pins-the-tooltip convention in pan mode (a hover tooltip is
+    // transient; a click keeps one visible until dismissed). This is a
+    // separate DOM element from deck.gl's own hover tooltip (so hovering
+    // a DIFFERENT bubble still shows a normal transient tooltip even
+    // while one is pinned) — its content is a snapshot of buildTooltipHtml
+    // at click time (not live-updating), but its screen POSITION is kept
+    // in sync with the map on every pan/zoom via map.project().
+    let pinned = null; // { runtime, object, lngLat }
+    // Tooltip look, like the legend's (flatLegendLook): flat's light
+    // tooltip (tooltip_mustache.js: white 0.95, #444 text, thin black
+    // border, 5px radius) on light basemaps, this engine's dark tooltip
+    // on dark ones. Read when shown, so options set later (a
+    // myMap.then(...).options({basemapopacity})) count.
+    const tooltipLook = () => {
+      const o = parseFloat(builder._engineOptions.basemapopacity);
+      const look = flatLegendLook(builder.mapOptions.mapType, isNaN(o) ? 1 : o, builder.mapOptions.legendBackground || builder.mapOptions.legendbackground);
+      return look.dark
+        ? { background: 'rgb(41,50,60)', color: 'rgb(200,205,214)', border: 'none', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }
+        : { background: 'rgba(255,255,255,0.95)', color: '#444', border: '0.5px solid black', borderRadius: '5px',
+            boxShadow: 'rgba(0,0,0,0.2) 0px 2px 4px 0px, rgba(0,0,0,0.19) 0px 3px 10px 0px' };
+    };
+    const pinnedTooltipEl = document.createElement('div');
+    pinnedTooltipEl.style.cssText = 'position:absolute;top:0;left:0;z-index:6;display:none;' +
+      'pointer-events:auto;max-width:320px;max-height:320px;overflow:auto;' +
+      'padding:0.6em 1.6em 0.6em 0.7em;font-size:0.85em;';
+
+    function updatePinnedTooltipPosition() {
+      if (!pinned) return;
+      const pt = map.project(pinned.lngLat);
+      pinnedTooltipEl.style.transform = `translate(${pt.x + 10}px, ${pt.y - 10}px)`;
+    }
+
+    // A stable per-geometry anchor coordinate for the identity check
+    // below — only a Point's OWN coordinates are an [lng,lat] pair;
+    // Polygon/MultiPolygon nest rings of them, so the first ring's
+    // first vertex stands in instead (stable across rebuilds for the
+    // same underlying feature, same as the Point case: this.features'
+    // geometry references don't change shape between
+    // _buildChoroplethLayers calls, only the wrapping properties do).
+    function anchorCoordOf(geometry) {
+      if (!geometry) return null;
+      if (geometry.type === 'Point') return geometry.coordinates;
+      if (geometry.type === 'Polygon') return geometry.coordinates[0] && geometry.coordinates[0][0];
+      if (geometry.type === 'MultiPolygon') return geometry.coordinates[0] && geometry.coordinates[0][0] && geometry.coordinates[0][0][0];
+      return null;
+    }
+
+    // Identity check for "is this hovered object the same one that's
+    // pinned" — object references are rebuilt from scratch on every
+    // redraw (new individual/group arrays each buildDeckLayers call), so
+    // reference equality never works here. Same layer + same geometry
+    // position is a reasonable proxy: individual points and aggregated
+    // groups alike are keyed by position within a layer, matching how
+    // clustering itself already treats "same position" as "same thing".
+    function isSameAsPinned(layerId, object) {
+      if (pinned.layerId !== layerId) return false;
+      const a = anchorCoordOf(object.geometry);
+      const b = anchorCoordOf(pinned.object.geometry);
+      if (!a || !b) return false;
+      return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9;
+    }
+
+    // content lives in its own child so re-rendering (innerHTML) never
+    // wipes out the unpin button below (a sibling, not a descendant of it)
+    const pinnedContentEl = document.createElement('div');
+    pinnedTooltipEl.appendChild(pinnedContentEl);
+
+    function renderPinnedTooltip() {
+      if (!pinned) { pinnedTooltipEl.style.display = 'none'; return; }
+      const html = pinned.runtime.buildTooltipHtml(pinned.object);
+      if (!html) { pinned = null; pinnedTooltipEl.style.display = 'none'; return; }
+      pinnedContentEl.innerHTML = html;
+      Object.assign(pinnedTooltipEl.style, tooltipLook());
+      pinnedTooltipEl.style.display = 'block';
+      updatePinnedTooltipPosition();
+    }
+
+    const unpinBtn = document.createElement('button');
+    unpinBtn.type = 'button';
+    unpinBtn.setAttribute('aria-label', 'chiudi');
+    unpinBtn.title = 'chiudi';
+    unpinBtn.textContent = '×';
+    unpinBtn.style.cssText = 'position:absolute;top:5px;right:5px;width:1.5em;height:1.5em;padding:0;' +
+      'display:flex;align-items:center;justify-content:center;border:none;border-radius:50%;' +
+      'background:rgba(255,255,255,0.18);color:inherit;font-size:1em;line-height:1;font-weight:bold;cursor:pointer';
+    unpinBtn.addEventListener('mouseenter', () => { unpinBtn.style.background = 'rgba(255,255,255,0.35)'; });
+    unpinBtn.addEventListener('mouseleave', () => { unpinBtn.style.background = 'rgba(255,255,255,0.18)'; });
+    unpinBtn.addEventListener('click', () => { pinned = null; pinnedTooltipEl.style.display = 'none'; });
+    pinnedTooltipEl.style.position = 'absolute';
+    pinnedTooltipEl.appendChild(unpinBtn);
+
+    // deck.gl's own default hover tooltip is only recomputed on pointer-
+    // move events, not on click — so right after a click, it's still
+    // showing whatever it rendered from the hover that was already
+    // active (the same item we just pinned), and won't hide itself just
+    // because getTooltip would now return null for it. Nothing re-asks
+    // it until the next real mousemove. Force it closed here instead —
+    // deferred one frame so it wins even if deck.gl's own click handling
+    // touches the tooltip DOM in the same tick.
+    function hideDefaultHoverTooltip() {
+      requestAnimationFrame(() => {
+        const defaultTooltipEl = el.parentElement && el.parentElement.querySelector('.deck-tooltip');
+        if (defaultTooltipEl) defaultTooltipEl.style.display = 'none';
+      });
+    }
+
+    let tooltipErrorLogged = false;
+    // a USER chart's picked item is {d, icon} (see _buildUserChartLayers):
+    // the feature is its d
+    function pickedFeature(o) { return o && o.icon && o.d ? o.d : o; }
+    function tooltipFor({ object: picked, layer }) {
+        const object = pickedFeature(picked);
+        if (!object || !layer) return null;
+        // suppress the hover tooltip ONLY for the specific item that's
+        // pinned (showing both would just duplicate the same content) —
+        // every OTHER item still gets its normal hover preview even
+        // while something else stays pinned
+        if (pinned && isSameAsPinned(layer.id, object)) return null;
+        const rt = findRuntimeForLayerId(layer.id);
+        if (!rt) return null;
+        const html = rt.buildTooltipHtml(object);
+        return html ? { html, style: Object.assign({ fontSize: '0.85em', padding: '0.5em 0.7em', maxWidth: '320px' }, tooltipLook()) } : null;
+    }
+    function clickFor(picked) {
+        const info = picked && Object.assign({}, picked, { object: pickedFeature(picked.object) });
+        if (info && info.object && info.layer) {
+          const rt = findRuntimeForLayerId(info.layer.id);
+          if (rt) {
+            // Only a Point geometry's own coordinates ARE an
+            // [lng,lat] pair (every point/bubble/dot/chart-cluster
+            // layer) — a CHOROPLETH polygon's geometry.coordinates is
+            // a nested array of RINGS, which map.project() below
+            // can't accept (confirmed live: threw MapLibre's own
+            // "LngLatLike argument must be..." error). The `||
+            // info.coordinate` fallback this used to lean on never
+            // actually ran for a polygon — a nested array is truthy,
+            // so the left side always "won" — which is the real bug
+            // this fixes: the pinned tooltip stuck at its default
+            // top:0/left:0 (never got a real position because
+            // updatePinnedTooltipPosition's map.project() threw
+            // before setting one), AND that same uncaught exception,
+            // thrown from inside deck.gl's own click-dispatch
+            // callback, left deck.gl's pointer-interaction state
+            // corrupted enough to block all further pan/zoom —
+            // confirmed live, both symptoms disappear together once
+            // this stops throwing. info.coordinate (the actual
+            // clicked map location, provided regardless of feature
+            // geometry type) anchors every non-Point case correctly.
+            const lngLat = (info.object.geometry && info.object.geometry.type === 'Point')
+              ? info.object.geometry.coordinates
+              : info.coordinate;
+            pinned = { runtime: rt, object: info.object, lngLat, layerId: info.layer.id };
+            renderPinnedTooltip();
+            hideDefaultHoverTooltip();
+            return true;
+          }
+        }
+        // clicked empty map space (or a non-tooltippable layer) -> unpin
+        pinned = null;
+        pinnedTooltipEl.style.display = 'none';
+        return false;
+    }
+    // An exception thrown from these callbacks runs inside deck.gl's
+    // own render frame / event dispatch and leaves its frame and
+    // interaction state broken — the map stopped showing new layers
+    // after zooms and pans (a USER chart's hover threw on every frame
+    // the mouse was over an arrow, see pickedFeature). Both are guarded.
+    function getTooltip(info) {
+      try { return tooltipFor(info); } catch (err) {
+        if (!tooltipErrorLogged) { tooltipErrorLogged = true; console.error('[ixmaps-gl] tooltip failed:', err); }
+        return null;
+      }
+    }
+    function onClick(info) {
+      try { return clickFor(info); } catch (err) {
+        console.error('[ixmaps-gl] click failed:', err);
+        return false;
+      }
+    }
+    function mount() {
+      map.on('move', updatePinnedTooltipPosition);
+      if (el.parentElement) {
+        el.parentElement.style.position = el.parentElement.style.position || 'relative';
+        el.parentElement.appendChild(pinnedTooltipEl);
+      }
+    }
+    return { getTooltip, onClick, mount };
+  }
+
+  // ---------------------------------------------------------------
   // The map's native interactive legend, built once per map by
   // MapBuilder.build(). ctx: the builder (its map options), the MapLibre
   // map, its container element, the deck.gl overlay, the runtimes, the
@@ -3832,112 +4032,8 @@
         });
       }
 
-      // Click-to-pin tooltip: matches the real ixmaps engine's own
-      // click-pins-the-tooltip convention in pan mode (a hover tooltip is
-      // transient; a click keeps one visible until dismissed). This is a
-      // separate DOM element from deck.gl's own hover tooltip (so hovering
-      // a DIFFERENT bubble still shows a normal transient tooltip even
-      // while one is pinned) — its content is a snapshot of buildTooltipHtml
-      // at click time (not live-updating), but its screen POSITION is kept
-      // in sync with the map on every pan/zoom via map.project().
-      let pinned = null; // { runtime, object, lngLat }
-      // Tooltip look, like the legend's (flatLegendLook): flat's light
-      // tooltip (tooltip_mustache.js: white 0.95, #444 text, thin black
-      // border, 5px radius) on light basemaps, this engine's dark tooltip
-      // on dark ones. Read when shown, so options set later (a
-      // myMap.then(...).options({basemapopacity})) count.
-      const tooltipLook = () => {
-        const o = parseFloat(this._engineOptions.basemapopacity);
-        const look = flatLegendLook(this.mapOptions.mapType, isNaN(o) ? 1 : o, this.mapOptions.legendBackground || this.mapOptions.legendbackground);
-        return look.dark
-          ? { background: 'rgb(41,50,60)', color: 'rgb(200,205,214)', border: 'none', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }
-          : { background: 'rgba(255,255,255,0.95)', color: '#444', border: '0.5px solid black', borderRadius: '5px',
-              boxShadow: 'rgba(0,0,0,0.2) 0px 2px 4px 0px, rgba(0,0,0,0.19) 0px 3px 10px 0px' };
-      };
-      const pinnedTooltipEl = document.createElement('div');
-      pinnedTooltipEl.style.cssText = 'position:absolute;top:0;left:0;z-index:6;display:none;' +
-        'pointer-events:auto;max-width:320px;max-height:320px;overflow:auto;' +
-        'padding:0.6em 1.6em 0.6em 0.7em;font-size:0.85em;';
-
-      function updatePinnedTooltipPosition() {
-        if (!pinned) return;
-        const pt = map.project(pinned.lngLat);
-        pinnedTooltipEl.style.transform = `translate(${pt.x + 10}px, ${pt.y - 10}px)`;
-      }
-
-      // A stable per-geometry anchor coordinate for the identity check
-      // below — only a Point's OWN coordinates are an [lng,lat] pair;
-      // Polygon/MultiPolygon nest rings of them, so the first ring's
-      // first vertex stands in instead (stable across rebuilds for the
-      // same underlying feature, same as the Point case: this.features'
-      // geometry references don't change shape between
-      // _buildChoroplethLayers calls, only the wrapping properties do).
-      function anchorCoordOf(geometry) {
-        if (!geometry) return null;
-        if (geometry.type === 'Point') return geometry.coordinates;
-        if (geometry.type === 'Polygon') return geometry.coordinates[0] && geometry.coordinates[0][0];
-        if (geometry.type === 'MultiPolygon') return geometry.coordinates[0] && geometry.coordinates[0][0] && geometry.coordinates[0][0][0];
-        return null;
-      }
-
-      // Identity check for "is this hovered object the same one that's
-      // pinned" — object references are rebuilt from scratch on every
-      // redraw (new individual/group arrays each buildDeckLayers call), so
-      // reference equality never works here. Same layer + same geometry
-      // position is a reasonable proxy: individual points and aggregated
-      // groups alike are keyed by position within a layer, matching how
-      // clustering itself already treats "same position" as "same thing".
-      function isSameAsPinned(layerId, object) {
-        if (pinned.layerId !== layerId) return false;
-        const a = anchorCoordOf(object.geometry);
-        const b = anchorCoordOf(pinned.object.geometry);
-        if (!a || !b) return false;
-        return Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9;
-      }
-
-      // content lives in its own child so re-rendering (innerHTML) never
-      // wipes out the unpin button below (a sibling, not a descendant of it)
-      const pinnedContentEl = document.createElement('div');
-      pinnedTooltipEl.appendChild(pinnedContentEl);
-
-      function renderPinnedTooltip() {
-        if (!pinned) { pinnedTooltipEl.style.display = 'none'; return; }
-        const html = pinned.runtime.buildTooltipHtml(pinned.object);
-        if (!html) { pinned = null; pinnedTooltipEl.style.display = 'none'; return; }
-        pinnedContentEl.innerHTML = html;
-        Object.assign(pinnedTooltipEl.style, tooltipLook());
-        pinnedTooltipEl.style.display = 'block';
-        updatePinnedTooltipPosition();
-      }
-
-      const unpinBtn = document.createElement('button');
-      unpinBtn.type = 'button';
-      unpinBtn.setAttribute('aria-label', 'chiudi');
-      unpinBtn.title = 'chiudi';
-      unpinBtn.textContent = '×';
-      unpinBtn.style.cssText = 'position:absolute;top:5px;right:5px;width:1.5em;height:1.5em;padding:0;' +
-        'display:flex;align-items:center;justify-content:center;border:none;border-radius:50%;' +
-        'background:rgba(255,255,255,0.18);color:inherit;font-size:1em;line-height:1;font-weight:bold;cursor:pointer';
-      unpinBtn.addEventListener('mouseenter', () => { unpinBtn.style.background = 'rgba(255,255,255,0.35)'; });
-      unpinBtn.addEventListener('mouseleave', () => { unpinBtn.style.background = 'rgba(255,255,255,0.18)'; });
-      unpinBtn.addEventListener('click', () => { pinned = null; pinnedTooltipEl.style.display = 'none'; });
-      pinnedTooltipEl.style.position = 'absolute';
-      pinnedTooltipEl.appendChild(unpinBtn);
-
-      // deck.gl's own default hover tooltip is only recomputed on pointer-
-      // move events, not on click — so right after a click, it's still
-      // showing whatever it rendered from the hover that was already
-      // active (the same item we just pinned), and won't hide itself just
-      // because getTooltip would now return null for it. Nothing re-asks
-      // it until the next real mousemove. Force it closed here instead —
-      // deferred one frame so it wins even if deck.gl's own click handling
-      // touches the tooltip DOM in the same tick.
-      function hideDefaultHoverTooltip() {
-        requestAnimationFrame(() => {
-          const defaultTooltipEl = el.parentElement && el.parentElement.querySelector('.deck-tooltip');
-          if (defaultTooltipEl) defaultTooltipEl.style.display = 'none';
-        });
-      }
+      // hover / click-to-pin tooltips: createTooltips
+      const tooltips = createTooltips({ builder: this, map, el, findRuntimeForLayerId });
 
       const overlay = new MapLibreOverlay({
         interleaved: true,
@@ -3945,88 +4041,13 @@
         // pointer becomes a hand over anything pickable (bubbles/points),
         // so hovering something clickable actually looks clickable
         getCursor: ({ isDragging, isHovering }) => (isDragging ? 'grabbing' : (isHovering ? 'pointer' : 'grab')),
-        // An exception thrown from these callbacks runs inside deck.gl's
-        // own render frame / event dispatch and leaves its frame and
-        // interaction state broken — the map stopped showing new layers
-        // after zooms and pans (a USER chart's hover threw on every frame
-        // the mouse was over an arrow, see pickedFeature). Both are guarded.
-        getTooltip: (info) => {
-          try { return tooltipFor(info); } catch (err) {
-            if (!tooltipErrorLogged) { tooltipErrorLogged = true; console.error('[ixmaps-gl] tooltip failed:', err); }
-            return null;
-          }
-        },
-        onClick: (info) => {
-          try { return clickFor(info); } catch (err) {
-            console.error('[ixmaps-gl] click failed:', err);
-            return false;
-          }
-        }
+        // (guarded: see createTooltips)
+        getTooltip: tooltips.getTooltip,
+        onClick: tooltips.onClick
       });
-      let tooltipErrorLogged = false;
-      // a USER chart's picked item is {d, icon} (see _buildUserChartLayers):
-      // the feature is its d
-      function pickedFeature(o) { return o && o.icon && o.d ? o.d : o; }
-      function tooltipFor({ object: picked, layer }) {
-          const object = pickedFeature(picked);
-          if (!object || !layer) return null;
-          // suppress the hover tooltip ONLY for the specific item that's
-          // pinned (showing both would just duplicate the same content) —
-          // every OTHER item still gets its normal hover preview even
-          // while something else stays pinned
-          if (pinned && isSameAsPinned(layer.id, object)) return null;
-          const rt = findRuntimeForLayerId(layer.id);
-          if (!rt) return null;
-          const html = rt.buildTooltipHtml(object);
-          return html ? { html, style: Object.assign({ fontSize: '0.85em', padding: '0.5em 0.7em', maxWidth: '320px' }, tooltipLook()) } : null;
-      }
-      function clickFor(picked) {
-          const info = picked && Object.assign({}, picked, { object: pickedFeature(picked.object) });
-          if (info && info.object && info.layer) {
-            const rt = findRuntimeForLayerId(info.layer.id);
-            if (rt) {
-              // Only a Point geometry's own coordinates ARE an
-              // [lng,lat] pair (every point/bubble/dot/chart-cluster
-              // layer) — a CHOROPLETH polygon's geometry.coordinates is
-              // a nested array of RINGS, which map.project() below
-              // can't accept (confirmed live: threw MapLibre's own
-              // "LngLatLike argument must be..." error). The `||
-              // info.coordinate` fallback this used to lean on never
-              // actually ran for a polygon — a nested array is truthy,
-              // so the left side always "won" — which is the real bug
-              // this fixes: the pinned tooltip stuck at its default
-              // top:0/left:0 (never got a real position because
-              // updatePinnedTooltipPosition's map.project() threw
-              // before setting one), AND that same uncaught exception,
-              // thrown from inside deck.gl's own click-dispatch
-              // callback, left deck.gl's pointer-interaction state
-              // corrupted enough to block all further pan/zoom —
-              // confirmed live, both symptoms disappear together once
-              // this stops throwing. info.coordinate (the actual
-              // clicked map location, provided regardless of feature
-              // geometry type) anchors every non-Point case correctly.
-              const lngLat = (info.object.geometry && info.object.geometry.type === 'Point')
-                ? info.object.geometry.coordinates
-                : info.coordinate;
-              pinned = { runtime: rt, object: info.object, lngLat, layerId: info.layer.id };
-              renderPinnedTooltip();
-              hideDefaultHoverTooltip();
-              return true;
-            }
-          }
-          // clicked empty map space (or a non-tooltippable layer) -> unpin
-          pinned = null;
-          pinnedTooltipEl.style.display = 'none';
-          return false;
-      }
       map.addControl(overlay);
       map.addControl(new maplibregl.NavigationControl(), 'top-left');
-      map.on('move', updatePinnedTooltipPosition);
-
-      if (el.parentElement) {
-        el.parentElement.style.position = el.parentElement.style.position || 'relative';
-        el.parentElement.appendChild(pinnedTooltipEl);
-      }
+      tooltips.mount();
 
       if (this._legendHtml && el.parentElement) {
         const legendEl = document.createElement('div');
