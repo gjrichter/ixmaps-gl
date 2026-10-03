@@ -2779,6 +2779,716 @@
     };
   }
 
+  // ---------------------------------------------------------------
+  // The map's native interactive legend, built once per map by
+  // MapBuilder.build(). ctx: the builder (its map options), the MapLibre
+  // map, its container element, the deck.gl overlay, the runtimes, the
+  // engine API and its refresh hooks. Returns the four hooks the map
+  // calls: addLegendPanel(rt), setLegendOption(value), updateSubTheme(rt),
+  // layoutLegends().
+  // ---------------------------------------------------------------
+  function createLegend(ctx) {
+    const { builder, map, el, overlay, runtimes, engineApi, built, refresh, scheduleRefresh, notifyRedraw } = ctx;
+    let addLegendPanel = () => {};
+    let setLegendOption = () => {};
+    let updateSubTheme = () => {};
+    let layoutLegends = () => {};
+
+    // NATIVE INTERACTIVE LEGEND — real ixmaps-flat's legend.js
+    // (makeColorLegendHTMLLong) builds, per CATEGORICAL-ish theme: a
+    // title/snippet header, one row per category (color swatch + a bar
+    // proportional to that category's own total + right-aligned
+    // formatted value), a description/source footer, and a per-theme
+    // "Chart size" 25-200% slider — all read directly off source
+    // (ui/js/tools/legend.js:594-1037/3196-3393, ui/js/htmlgui.js:2196/
+    // 2208 for markThemeClass/unmarkThemeClass, ui/css/legend.css for
+    // the selected-row highlight) rather than guessed from the
+    // screenshot alone. Gated on `legend:"open"` — the one real map
+    // option this engine's own createMap already threads through as
+    // builder.mapOptions (see mapOptions.legend below) — since there's no
+    // toolbar toggle button here to open/close it later the way the
+    // real engine's own chrome does.
+    //
+    // Deliberate divergences from the real implementation, both
+    // reasoned rather than accidental:
+    //   - Real legend.js does a full innerHTML rebuild on every single
+    //     theme redraw (even a bare click-toggle). renderRows() below
+    //     only rebuilds the ROWS (swatch/bar/value/highlight) — cheap,
+    //     and the only part that can actually change post-load (marks,
+    //     or an AGGREGATE theme's dataset-wide totals, which this port
+    //     doesn't yet let change post-load anyway) — rather than
+    //     tearing down and rebuilding title/snippet/description/slider
+    //     too, which never change. Same visible result, less DOM churn.
+    //   - Real "isolate_gray" mode dims non-marked SVG paths via a CSS
+    //     class; this engine dims via IconLayer's own getColor alpha
+    //     (see LayerRuntime#_iconAlpha) since these are deck.gl raster
+    //     icons, not DOM/SVG nodes a CSS rule could reach.
+    // Legend on/off and fold state as real ixmaps-flat reads the map
+    // option (htmlgui_flat.js:748-794): on whenever `legend` is given and
+    // isn't false/"false" ("true", "open", "", 1, …), folded for
+    // "closed", off when not given at all.
+    const legendOpt = builder.mapOptions.legend;
+    // let, not const: map.setLegend(value) switches them at runtime (see setLegendOption)
+    let legendOn = legendIsOn(legendOpt);
+    let legendFolded = legendOpt === 'closed';
+    {
+      // Map-level `align` option positions the legend panel — a map-
+      // wide placement choice, not per-theme (unlike legendtheme/
+      // legendfilter above), so read once from builder.mapOptions rather
+      // than per-runtime. Real ixmaps-flat ALSO has an `align` map
+      // option (ui/js/htmlgui_flat.js) controlling legend position, but
+      // its value shape is a free-form regex-matched left/right/center/
+      // top/bottom/pixel-prefixed string tied to a static in-page DOM
+      // panel — a different layout model from this panel's own
+      // position:absolute floating-overlay-over-the-map-canvas
+      // approach. This port reuses the real OPTION NAME but adapts the
+      // VALUE SHAPE to plain four-corner tokens matching how this panel
+      // is actually positioned — a deliberate divergence, same
+      // reasoning already applied to style.legendfilter's own name/
+      // shape choice earlier this session. Default "top-right" per
+      // explicit request (real engine's own fallback is right-anchored
+      // too, just without an opinion on vertical placement).
+      const ALIGN_CSS = {
+        'top-left': 'left:10px;top:10px;',
+        'top-right': 'right:10px;top:10px;',
+        'bottom-left': 'left:10px;bottom:10px;',
+        'bottom-right': 'right:10px;bottom:10px;'
+      };
+      // gl's four corners, else flat's own values (htmlgui_flat.js
+      // 421-470): "…left" → left (the part before "left", else 55px), 12px
+      // from the top; "…right" → right (else 25px); "center" / "top" → top
+      // center
+      const flatAlignCss = align => {
+        const a = String(align || '');
+        if (/left/.test(a)) return 'left:' + (a.split('left')[0] || '55px') + ';top:12px;';
+        if (/right/.test(a)) return 'right:' + (a.split('right')[0] || '25px') + ';top:10px;';
+        if (a === 'center' || a === 'top') return 'left:50%;transform:translateX(-50%);top:10px;';
+        return null;
+      };
+      const legendAlignCss = ALIGN_CSS[builder.mapOptions.align] || flatAlignCss(builder.mapOptions.align) || ALIGN_CSS['top-right'];
+      // Real ixmaps-flat's SUB-THEME (MapTheme.createSubTheme,
+      // maptheme.js 14284-14292 / 15010-15160; map.Themes.enableSubThemes
+      // defaults to true): marking fields of a multi-field choropleth
+      // (DOMINANT/COMPOSECOLOR, not CHART) paints a new theme over the
+      // original — one field: CHOROPLETH|LOG|DOPACITY on that field, white
+      // → the field's color in 7 steps, dopacityscale 2, dopacitypow 1,
+      // keeping DOPACITY(→DOPACITYMAX)/AGGREGATE/GROUP/SUM/ZEROISVALUE/
+      // VALUES; several fields: the original type on just those fields
+      // and colors. It reuses the original's joined polygons, has no
+      // legend and stays out of the theme registry (its name
+      // "<layer>::subtheme" also keeps its deck.gl layer id apart), so
+      // markThemeClass/removeTheme still address the original.
+      const subThemeCapable = rt => rt.flags.has('CHOROPLETH') && !rt.flags.has('CHART') && (rt.flags.has('DOMINANT') || rt.flags.has('COMPOSECOLOR'));
+      const toHex = c => Array.isArray(c) ? '#' + c.slice(0, 3).map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('') : c;
+      updateSubTheme = (rt) => {
+        if (rt._subTheme) {
+          const i = runtimes.indexOf(rt._subTheme);
+          if (i >= 0) runtimes.splice(i, 1);
+          rt._subTheme = null;
+        }
+        const fields = String(rt.binding.value || '').split('|');
+        const marks = [...rt._markedClasses].filter(i => i >= 0 && i < fields.length).sort((a, b) => a - b);
+        if (marks.length) {
+          const colors = (rt.categoryColorsRgb || []).map(toHex);
+          const labels = rt.categoryDisplayLabels || rt.categoryLabels || fields;
+          const kept = ['DOPACITY', 'AGGREGATE', 'GROUP', 'SUM', 'ZEROISVALUE', 'VALUES']
+            .filter(f => [...rt.flags].some(x => x.startsWith(f) && (f !== 'DOPACITY' || /^DOPACITY/.test(x))))
+            .map(f => (f === 'DOPACITY' ? 'DOPACITYMAX' : f));
+          let def;
+          if (marks.length > 1) {
+            def = {
+              layer: rt.name + '::subtheme',
+              binding: (b => { delete b.field100; delete b.value100; return b; })(Object.assign({}, rt.binding, { value: marks.map(i => fields[i]).join('|') })),
+              style: Object.assign({}, rt.style, { type: [...rt.flags].concat(['SUBTHEME', 'NOLEGEND']).join('|'),
+                colorscheme: marks.map(i => colors[i]), values: marks.map(i => labels[i]) }),
+              meta: { title: 'actual selection' }
+            };
+          } else {
+            const i = marks[0];
+            const binding = Object.assign({}, rt.binding, { value: fields[i] });
+            delete binding.alpha; delete binding.alpha100;
+            // rt.features already carry the field100 result — drop it and
+            // every alias of it, or normalizeTheme would apply it again
+            delete binding.field100; delete binding.value100;
+            def = {
+              layer: rt.name + '::subtheme',
+              binding,
+              style: { type: ['CHOROPLETH', 'LOG', 'DOPACITY', 'NOLEGEND', 'SUBTHEME'].concat(kept).join('|'),
+                colorscheme: ['7', 'white', colors[i]], dopacityscale: 2, dopacitypow: 1,
+                units: rt.style.units, linecolor: rt.style.linecolor, linewidth: rt.style.linewidth },
+              meta: { title: 'actual selection' }
+            };
+          }
+          const sub = new LayerRuntime(normalizeTheme(def), { type: 'FeatureCollection', features: rt.features }, builder._engineOptions);
+          sub._isSubTheme = true;
+          runtimes.splice(runtimes.indexOf(rt) + 1, 0, sub);
+          rt._subTheme = sub;
+        }
+        refresh();
+        notifyRedraw();
+      };
+      // the stack of the theme panels — flat shows one theme's legend
+      // after the other in #map-legend, separated by a line, and leaves
+      // out a theme hidden, out of scale or not yet drawn
+      let legendStack = null;
+      const legendStackEl = shadow => {
+        if (legendStack && legendStack.parentNode) return legendStack;
+        legendStack = document.createElement('div');
+        legendStack.className = 'ix-legend-stack';
+        legendStack.style.cssText = 'position:absolute;' + legendAlignCss + 'z-index:6;width:280px;'
+          + 'display:flex;flex-direction:column;max-height:calc(100% - 24px);overflow-y:auto;'
+          + 'border-radius:6px;box-shadow:' + shadow + ';pointer-events:auto;';
+        if (!document.getElementById('ix-legend-stack-css')) {
+          const css = document.createElement('style');
+          css.id = 'ix-legend-stack-css';
+          css.textContent = '.ix-legend-stack>.ix-native-legend:not([data-ixoff])~.ix-native-legend:not([data-ixoff]){border-top:1px solid rgba(128,128,128,.35)}';
+          document.head.appendChild(css);
+        }
+        el.parentElement.appendChild(legendStack);
+        return legendStack;
+      };
+      // map.setLegend(value): the `legend` map option at runtime, same values as
+      // ixmaps.Map(id, {legend}) — on ("true", "open", …), folded ("closed"), off
+      // (false/"false"/0/undefined). Panels are made for themes that lack one,
+      // removed when off, folded/unfolded otherwise.
+      setLegendOption = (opt) => {
+        builder.mapOptions.legend = opt;
+        legendFolded = opt === 'closed';
+        legendOn = legendIsOn(opt);
+        runtimes.forEach(rt => {
+          if (!legendOn) {
+            if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel);
+            rt._legendPanel = null;
+          } else if (!rt._legendPanel) addLegendPanel(rt);
+          else if (rt._setLegendCollapsed) rt._setLegendCollapsed(legendFolded);
+        });
+        layoutLegends();
+      };
+      layoutLegends = () => {
+        if (!legendStack) return;
+        const z = map.getZoom();
+        let shown = 0;
+        [...legendStack.children].forEach(panel => {
+          const rt = panel._ixRuntime;
+          const off = !rt || rt._hidden || themeHiddenByScale(rt.flags, rt.style, z);
+          if (off) { panel.setAttribute('data-ixoff', ''); panel.style.display = 'none'; }
+          else { panel.removeAttribute('data-ixoff'); panel.style.display = 'flex'; shown++; }
+        });
+        legendStack.style.display = shown ? 'flex' : 'none';
+      };
+      const legendApplies = rt => rt.categoryLabels && rt.categoryLabels.length && !rt.flags.has('FEATURE') && !rt.flags.has('FEATURES') && !rt.flags.has('NOLEGEND');
+      // One theme's panel — at build time for every theme, and again for a
+      // theme defined later (map.layer(...) in a myMap.then(...) chain,
+      // defineLayer, loadProject); removeTheme removes it with the theme.
+      addLegendPanel = (rt) => {
+        // marking a class (legend row, or ixmaps.markThemeClass from a
+        // page) redraws — for every theme, legend panel or not
+        rt._triggerRedraw = () => { refresh(); };
+        if (subThemeCapable(rt)) rt._onMarksChanged = () => updateSubTheme(rt);
+        if (!legendOn || !el.parentElement || !legendApplies(rt)) return;
+        el.parentElement.style.position = el.parentElement.style.position || 'relative';
+        {
+        // .type("...|NOLEGEND") — the fourth real legend-related type()
+        // token: opts a theme OUT of the legend entirely (real engine's
+        // own per-layer "skip this one" flag, distinct from the map-
+        // level legend:"open"/"closed" option gating the whole panel).
+        // Same free-parsing story as SIMPLELEGEND/COMPACTLEGEND above —
+        // just one more flag to exclude on, no new plumbing.
+          const panel = document.createElement('div');
+          rt._legendPanel = panel;
+          panel.className = 'ix-native-legend';
+          // Opt-in via .style({legendtheme:"light"}) — a NEW, ixmaps-gl-
+          // only convention (same naming pattern as the sibling
+          // legendfilter/legendunits keys added earlier this session):
+          // real ixmaps-flat's legend.js has no such switch, this panel
+          // is entirely this port's own construction. Default ("dark")
+          // preserves the original always-dark panel exactly; "light" is
+          // for pages using a light basemap (e.g. CARTO Positron) where
+          // a dark semi-transparent panel reads as a mismatched dark
+          // patch rather than legend chrome. Every other hardcoded panel
+          // color below (rows, bar track, filter <select>) is expressed
+          // in terms of this one palette so the two variants stay in
+          // sync — no separate light/dark branch anywhere else.
+          // flat's look (flatLegendLook) unless the page picks one with
+          // this engine's own legendtheme
+          const opacityOpt = parseFloat(builder._engineOptions.basemapopacity);
+          const flatLook = flatLegendLook(builder.mapOptions.mapType, isNaN(opacityOpt) ? 1 : opacityOpt, builder.mapOptions.legendBackground || builder.mapOptions.legendbackground);
+          const isLightLegend = rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !flatLook.dark);
+          const legendColors = isLightLegend
+            ? { bg: 'rgba(255,255,255,0.92)', fg: '#1a1a1a', shadow: '0 2px 10px rgba(0,0,0,0.18)',
+                rowMarked: 'rgba(0,0,0,0.08)', track: 'rgba(0,0,0,0.08)',
+                selectBg: 'rgba(0,0,0,0.04)', selectBorder: 'rgba(0,0,0,0.2)' }
+            : { bg: 'rgba(28,30,34,0.92)', fg: '#eee', shadow: '0 2px 10px rgba(0,0,0,0.45)',
+                rowMarked: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.08)',
+                selectBg: 'rgba(255,255,255,0.08)', selectBorder: 'rgba(255,255,255,0.25)' };
+          if (!rt.style.legendtheme) legendColors.bg = flatLook.bg;
+          // max-height:66% resolves against el.parentElement's own
+          // height (the map container, which always has a definite
+          // height for the map itself to render into) since this panel
+          // is absolutely positioned inside it — a plain percentage on
+          // an absolutely-positioned element's height IS legal CSS as
+          // long as its containing block has a definite height, which
+          // this one does. display:flex column + min-height:0 on the
+          // ROWS wrapper below (not this outer panel) is what makes
+          // only the row list scroll while the header/description/
+          // slider stay fixed in place — a flex child won't actually
+          // shrink to fit and scroll internally without min-height:0,
+          // it just overflows its flex parent instead.
+          // one box for every theme, as flat's #map-legend (legend.js
+          // 2200-2460): the panels stack in the legend stack in theme
+          // order, a line between them (see layoutLegends)
+          panel.style.cssText = 'position:relative;flex:0 0 auto;'
+            + 'display:flex;flex-direction:column;'
+            + 'background:' + legendColors.bg + ';color:' + legendColors.fg + ';font:12px/1.4 -apple-system,Arial,sans-serif;'
+            + 'padding:10px 12px 12px;pointer-events:auto;';
+          const stack = legendStackEl(legendColors.shadow);
+          const at = runtimes.indexOf(rt);
+          const next = [...stack.children].find(c => runtimes.indexOf(c._ixRuntime) > at);
+          panel._ixRuntime = rt;
+          stack.insertBefore(panel, next || null);
+
+          // SUM+valuefield mirrors the real engine's own "SUM style
+          // aggregation" reading (style.valuefield, falling back to
+          // the bound size field); anything else (plain CATEGORICAL,
+          // no SUM) falls back to a per-category record COUNT.
+          const useSum = flatFlag(rt.flags, 'SUM') && rt.style.valuefield;
+          const valueField = rt.style.valuefield || rt.binding.size;
+          // legendunits wins over the theme's general-purpose units
+          // (used elsewhere for tooltips, e.g. _renderItemChartHtml) —
+          // a page may want a different/no unit string specifically on
+          // the legend's own value column. Appended as-is (no extra
+          // space injected), matching how style.units/legendunits are
+          // themselves authored with their own leading space (e.g.
+          // " MW") in real pages.
+          const legendUnit = rt.style.legendunits || rt.style.units || '';
+          // row labels go into innerHTML: the page's own .style({label})
+          // stays HTML, as in flat; categories read from the data are
+          // escaped (a value could carry markup)
+          const labels = legendRowLabels(rt);
+          // .type("...|TEXTLEGEND") — the FIFTH real legend-related
+          // type() token: title/snippet/description text only, no
+          // category rows at all (swatches, bars, chips — none of it),
+          // per explicit correction. Everything below that builds the
+          // rows/totals/onRedraw-recompute wiring is skipped outright
+          // rather than built-then-hidden — there is nothing for any of
+          // it to feed once no rows ever render. The country-filter
+          // dropdown and Chart-size slider stay: neither is a
+          // "categorical item" or "colorscheme swatch", both are
+          // independent controls unrelated to the row list.
+          const isTextOnly = rt.flags.has('TEXTLEGEND');
+
+          // Map-view-aware per explicit request: totals reflect only
+          // what's CURRENTLY on screen (the map's own bounds, plus the
+          // same far-hemisphere exclusion _buildChartLayers itself
+          // applies under globe projection — see isOnVisibleHemisphere)
+          // rather than the whole dataset — recomputed on every redraw
+          // (engineApi.onRedraw, below) so panning/zooming/rotating
+          // updates the bars and values live, the same way the actual
+          // rendered bubbles change. Same simple rectangular bbox
+          // membership test _computeAggregatedItems's own non-AGGREGATE
+          // branch uses (no antimeridian wraparound handling — matches
+          // that existing convention, not a new gap this introduces).
+          let totals, maxTotal, order, rowsScroll;
+          // No-op default: TEXTLEGEND never reassigns this (see below),
+          // so the LATER unconditional-looking `renderRows()` call
+          // safely does nothing rather than needing its own isTextOnly
+          // guard at every call site.
+          let renderRows = () => {};
+          if (!isTextOnly) {
+          function computeTotals() {
+            const bounds = map.getBounds();
+            const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+            const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
+            const globeCenter = proj.type === 'globe' ? map.getCenter() : null;
+            totals = new Array(rt.categoryLabels.length).fill(0);
+            if (rt._rangeClassed) { totals = rangeClassLegendTotals(rt, bbox, globeCenter); maxTotal = Math.max(0, ...totals); order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]); return; }
+            // _activeFeatures (set by setFacetFilter/clearFacetFilter,
+            // e.g. the country-select dropdown below) is the facet-
+            // filtered subset when a filter is active, null otherwise —
+            // reading it here keeps the legend's own numbers consistent
+            // with whatever the country filter is currently narrowing
+            // the map down to, not just with the viewport/hemisphere.
+            (rt._activeFeatures || rt.features).forEach(f => {
+              const idx = rt.categoryIndexByLabel ? rt.categoryIndexByLabel.get(f.properties[rt.binding.value]) : null;
+              if (idx == null) return;
+              const [lng, lat] = f.geometry.coordinates;
+              if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
+              if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
+              totals[idx] += useSum ? (parseFloat(f.properties[valueField]) || 0) : 1;
+            });
+            maxTotal = Math.max(0, ...totals);
+            order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
+          }
+          computeTotals();
+
+          // Only THIS wrapper scrolls (flex:1 1 auto + min-height:0 lets
+          // it shrink to whatever's left of the panel's own 66%-height
+          // cap once the fixed header/description/slider take their
+          // share, then overflow-y:auto scrolls just the row list) —
+          // the header above and description/slider below stay put.
+          rowsScroll = document.createElement('div');
+          rowsScroll.style.cssText = 'flex:1 1 auto;min-height:0;overflow-y:auto;';
+          const rowsEl = document.createElement('div');
+          rowsEl.className = 'ix-legend-rows';
+          // .type("...|SIMPLELEGEND") — real ixmaps-flat's OTHER legend
+          // variant (confirmed against a real-engine screenshot, per
+          // explicit correction): swatch + label chips only, no bar, no
+          // value column. SIMPLELEGEND is just another pipe-delimited
+          // type() token — MapBuilder#type() already puts every token
+          // into this.flags regardless of whether anything reads it, so
+          // no new parsing was needed, only this render-mode branch.
+          // flex-wrap here (vs. the bar mode's block rows) — chips wrap
+          // to the panel's own width the same loose way the real
+          // engine's screenshot shows (an uneven number of chips per
+          // row, driven by each label's own text length, not a fixed
+          // column grid).
+          // .type("...|COMPACTLEGEND") — the THIRD real legend variant
+          // (again confirmed against a real-engine screenshot, per
+          // explicit correction): the bar-mode's own two-line label/bar/
+          // value row, but wrapped into a multi-column flex-wrap grid
+          // instead of one full-width row per category — each item's
+          // own width follows its content (a bigger value's longer bar
+          // makes its own item wider, so fewer fit per line; Coal alone
+          // filled its own row in the reference screenshot while the
+          // smaller categories packed 3-4 per row) rather than a fixed
+          // column count.
+          if (rt.flags.has('SIMPLELEGEND') || rt.flags.has('COMPACTLEGEND')) {
+            rowsEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+          }
+          rowsScroll.appendChild(rowsEl);
+
+          // Two lines per row — label on its own full-width line, then
+          // swatch+bar+value below — per explicit correction: a single
+          // shared line left too little room for the bar to read as
+          // proportional (it was squeezed between the label text and a
+          // fixed-width value column). The bar itself lives inside a
+          // flex:1 "track" div sized to whatever's left after the fixed
+          // swatch/value columns, and is a PERCENTAGE of that track's
+          // own width (not a pixel value) — real formula's per-unit-
+          // factor/cap (legend.js:980-984/946-950) collapses to a plain
+          // linear percentage-of-max once the bar's available width
+          // isn't a fixed constant this code has to guess at.
+          const isSimple = rt.flags.has('SIMPLELEGEND');
+          const isCompact = rt.flags.has('COMPACTLEGEND');
+          // Compact mode's bar can't use the full-width mode's
+          // percentage-of-flex-track trick (there's no full-width track
+          // to be a percentage OF once the row itself is content-sized,
+          // not stretched) — a plain pixel width, proportional to value
+          // and capped, same shape as the full-width formula just
+          // expressed in absolute px instead of a % of an elastic track.
+          const COMPACT_MAX_BAR_PX = 70;
+          // flat's compact legend (legend.js makeColorLegendHTML, the
+          // "compact" mode the theme legends use, 1212-1257): a range
+          // theme of 5 classes or more without labels is one line of
+          // color patches with the value range below; DOPACITY with an
+          // alpha field adds two paler lines (opacity 1/2, 1/3) and the
+          // alpha max, "↓" and min to their right (1062-1205). The
+          // legend's own __formatValue (legend.js 451-553) has no SPACE
+          // form: SPACE there is flat's plain "." thousands.
+          const flatCompactLegend = rt._rangeClassed && !flatFlag(rt.flags, 'CATEGORICAL') && !flatFlag(rt.flags, 'PLOT')
+            && (rt.partsA || []).length >= 5 && !(Array.isArray(rt.style.label) && rt.style.label.length);
+          // flat's single-color legend (legend.js 765-769, 1039-1046): a range
+          // theme of at most 2 classes without label/ranges, not
+          // CATEGORICAL, is one row — the swatch and "min ... max unit",
+          // or, when every value is 1 (a "$item$" count), its label or
+          // value field
+          const flatSingleRowLegend = rt._rangeClassed && !flatFlag(rt.flags, 'CATEGORICAL') && !flatFlag(rt.flags, 'PLOT')
+            && (rt.partsA || []).length <= 2 && !(Array.isArray(rt.style.label) && rt.style.label.length)
+            && !(Array.isArray(rt.style.ranges) && rt.style.ranges.length);
+          if (flatSingleRowLegend) {
+            renderRows = function() {
+              const rgb = rt.categoryColorsRgb[0] || [128, 128, 128];
+              const unit = String(rt.style.legendunits || rt.style.units || '').replace(/ /g, '&nbsp;');
+              const vMin = styleNum(rt.style.minvalue) || rt._valueMin, vMax = styleNum(rt.style.maxvalue) || rt._valueMax;
+              const label = rt.style.label != null && !Array.isArray(rt.style.label) ? String(rt.style.label) : String(rt.binding.value || '');
+              const text = vMin !== 1 || vMax !== 1
+                ? flatFormatValue(vMin, 2, 'BLANK') + ' &nbsp;... ' + flatFormatValue(vMax, 2, 'BLANK') + ' ' + unit
+                : label;
+              const marked = rt._markedClasses.has(0);
+              rowsEl.innerHTML = '<div class="ix-legend-row" data-idx="0" style="display:flex;align-items:center;gap:5px;padding:4px 3px;cursor:pointer;border-radius:4px;'
+                + 'background:' + (marked ? legendColors.rowMarked : 'transparent') + ';">'
+                + '<span style="flex:0 0 auto;width:1.6em;height:0.8em;background:rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ');"></span>'
+                + '<span>' + text + '</span></div>';
+              rowsEl.querySelectorAll('.ix-legend-row').forEach(row => {
+                row.addEventListener('click', () => {
+                  if (rt._markedClasses.has(0)) unmarkRuntimeClass(rt, 0);
+                  else markRuntimeClass(rt, 0);
+                });
+              });
+            };
+          } else
+          if (flatCompactLegend) {
+            renderRows = function() {
+              const n = rt.categoryColorsRgb.length;
+              const withAlpha = flatFlag(rt.flags, 'DOPACITY') && rt.binding.alpha && rt._alphaMax;
+              const nLines = withAlpha ? 3 : 1;
+              const dec = rt.style.decimals != null ? parseInt(rt.style.decimals, 10) : 2;
+              const unit = rt.style.legendunits || rt.style.units || '';
+              const ranges = Array.isArray(rt.style.ranges) && rt.style.ranges.length ? rt.style.ranges.map(Number) : null;
+              const vMin = ranges ? ranges[0] : rt._valueMin, vMax = ranges ? ranges[ranges.length - 1] : rt._valueMax;
+              let html = '<div style="display:grid;grid-template-columns:repeat(' + n + ',1fr)' + (withAlpha ? ' auto' : '') + ';gap:1px;align-items:center;">';
+              for (let line = 0; line < nLines; line++) {
+                for (let c = 0; c < n; c++) {
+                  const ix = flatFlag(rt.flags, 'INVERT') ? n - c - 1 : c;
+                  const rgb = rt.categoryColorsRgb[ix];
+                  const part = rt.partsA[ix];
+                  const title = part ? flatFormatValue(part.min, dec, '') + unit + ' ... ' + flatFormatValue(part.max, dec, '') + unit : '';
+                  const marked = rt._markedClasses.has(ix);
+                  html += '<span class="ix-legend-row" data-idx="' + ix + '" title="' + title + '" style="cursor:pointer;height:14px;'
+                    + 'background:rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ');opacity:' + (1 / (line + 1)) + ';'
+                    + (marked ? 'outline:2px solid ' + legendColors.fg + ';outline-offset:-2px;' : '') + '"></span>';
+                }
+                if (withAlpha) {
+                  const txt = line === 0 ? flatFormatValue(rt._alphaMax, 0, 'BLANK')
+                    : line === 1 ? '&#8595; ' + (rt.style.alphavalueunits || '') : flatFormatValue(rt._alphaMin || 0, 0, 'BLANK');
+                  html += '<span style="padding-left:0.5em;white-space:nowrap;">' + txt + '</span>';
+                }
+              }
+              html += '</div><div style="display:flex;justify-content:space-between;margin-top:3px;' + (withAlpha ? 'margin-right:4em;' : '') + '">'
+                + '<span>' + flatFormatValue(vMin, dec, '') + (unit ? ' ' + unit : '') + '</span>'
+                + '<span>' + flatFormatValue(vMax, dec, '') + (unit && unit.length <= 3 ? ' ' + unit : '') + '</span></div>';
+              rowsEl.innerHTML = html;
+              rowsEl.querySelectorAll('.ix-legend-row').forEach(cell => {
+                cell.addEventListener('click', () => {
+                  const idx = parseInt(cell.dataset.idx, 10);
+                  if (rt._markedClasses.has(idx)) unmarkRuntimeClass(rt, idx);
+                  else markRuntimeClass(rt, idx);
+                });
+              });
+            };
+          } else
+          renderRows = function() {
+            // flat drops the rows without a count once any row has one
+            // (legend.js 754-760, 787-789: fCountBars && !count)
+            rowsEl.innerHTML = order.filter(i => !(maxTotal > 0) || totals[i]).map(i => {
+              const rgb = rt.categoryColorsRgb[i];
+              const color = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+              const marked = rt._markedClasses.has(i);
+              const dimmed = rt._markedClasses.size > 0 && !marked;
+              const rowStyle = 'padding:4px 3px;border-radius:4px;cursor:pointer;opacity:' + (dimmed ? 0.4 : 1) + ';'
+                + 'background:' + (marked ? legendColors.rowMarked : 'transparent') + ';';
+              if (isSimple) {
+                // Swatch + label only, no bar/value — see rowsEl's own
+                // comment above for why (SIMPLELEGEND).
+                return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle
+                  + 'display:inline-flex;align-items:center;gap:5px;padding:4px 8px;">'
+                  + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
+                  + '<span>' + labels[i] + '</span>'
+                  + '</div>';
+              }
+              const pct = maxTotal ? Math.max(0, Math.min(100, (totals[i] / maxTotal) * 100)) : 0;
+              if (isCompact) {
+                // Same two-line label/bar/value shape as full-width bar
+                // mode below, just content-sized (flex:0 0 auto, no
+                // min-width:0 flex-1 track) so multiple items pack onto
+                // one line inside rowsEl's own flex-wrap — see
+                // COMPACTLEGEND's own comment on rowsEl above.
+                const barPx = Math.max(2, (pct / 100) * COMPACT_MAX_BAR_PX);
+                return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle + 'flex:0 0 auto;">'
+                  + '<div style="margin-bottom:3px;white-space:nowrap;">' + labels[i] + '</div>'
+                  + '<div style="display:flex;align-items:center;gap:6px;">'
+                  + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
+                  + '<span style="flex:0 0 auto;width:' + barPx + 'px;height:6px;background:' + color + ';border-radius:3px;"></span>'
+                  + '<span style="flex:0 0 auto;white-space:nowrap;">' + rt._formatTooltipValue(totals[i]) + legendUnit + '</span>'
+                  + '</div>'
+                  + '</div>';
+              }
+              return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle + '">'
+                + '<div style="margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + labels[i] + '</div>'
+                + '<div style="display:flex;align-items:center;gap:6px;">'
+                + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
+                + '<span style="flex:1 1 auto;min-width:0;height:6px;background:' + legendColors.track + ';border-radius:3px;overflow:hidden;">'
+                + '<span style="display:block;height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px;"></span>'
+                + '</span>'
+                + '<span style="flex:0 0 auto;text-align:right;min-width:60px;">' + rt._formatTooltipValue(totals[i]) + legendUnit + '</span>'
+                + '</div>'
+                + '</div>';
+            }).join('');
+            // GL-PORT COMPAT: real ixmaps-flat's row markup wires its
+            // click handler inline (onclick="ixmaps.markThemeClass(...)"
+            // — legend.js:817), toggle decided by the caller. Same
+            // split here: the toggle check lives in this click
+            // handler, the actual add/remove-and-redraw primitive is
+            // markRuntimeClass/unmarkRuntimeClass, which the globals
+            // ixmaps.markThemeClass/unmarkThemeClass also use — so a
+            // page's OWN custom UI drives this exact legend too. The
+            // rows pass their runtime itself: its .layer() name may be
+            // shared with other themes of the page.
+            rowsEl.querySelectorAll('.ix-legend-row').forEach(rowEl => {
+              rowEl.addEventListener('click', () => {
+                const idx = parseInt(rowEl.dataset.idx, 10);
+                if (rt._markedClasses.has(idx)) unmarkRuntimeClass(rt, idx);
+                else markRuntimeClass(rt, idx);
+              });
+            });
+          };
+
+          // Recompute+re-render on EVERY redraw, not just mark toggles —
+          // this is what makes the legend map-view-aware: a plain pan/
+          // zoom/rotate fires this too (via the map's own 'move'
+          // listener -> scheduleRefresh -> notifyRedraw, debounced the
+          // same 400ms as the facets sidebar's own onRedraw use), same
+          // signal already used elsewhere in this file for "the visible
+          // data just changed, recompute".
+          engineApi.onRedraw(() => { computeTotals(); renderRows(); });
+          }
+
+          // rt._triggerRedraw: see its own doc comment on LayerRuntime
+          // (set here rather than at construction time since refresh()
+          // doesn't exist yet when the runtime is built). Kept
+          // unconditional (even for TEXTLEGEND, which never registers
+          // the onRedraw recompute above) — a page can still call
+          // ixmaps.markThemeClass/unmarkThemeClass directly with no
+          // visual row list to click, and that should still redraw the
+          // MAP's own dim/isolate effect even without a legend UI for
+          // it, matching real-engine global-API availability regardless
+          // of legend style.
+          rt._triggerRedraw = () => { refresh(); };
+
+          // Header row (title/snippet + collapse toggle) always stays
+          // visible; everything else lives in `bodyEl`, hidden/shown as
+          // a single unit by the toggle below — collapsing shows just
+          // the title bar, matching the real engine's own fold/unfold
+          // behavior (ixmaps.legendState + the "legend-folded" CSS
+          // class, ui/js/tools/legend.js) even though this port toggles
+          // via a plain display swap on one wrapper div rather than a
+          // shared stylesheet class (this panel has no external CSS at
+          // all — everything here is inline-styled, unlike the real
+          // engine's DOM/CSS-class-driven legend).
+          const header = document.createElement('div');
+          header.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:6px;';
+          const headerText = document.createElement('div');
+          headerText.style.cssText = 'min-width:0;flex:1 1 auto;';
+          let headerHtml = '';
+          if (rt.meta.title) headerHtml += '<div style="font-weight:600;font-size:13px;margin-bottom:2px;">' + rt.meta.title + '</div>';
+          if (rt.meta.snippet) headerHtml += '<div style="opacity:0.75;">' + rt.meta.snippet + '</div>';
+          headerText.innerHTML = headerHtml;
+          header.appendChild(headerText);
+          const collapseBtn = document.createElement('button');
+          collapseBtn.type = 'button';
+          collapseBtn.style.cssText = 'flex:0 0 auto;background:transparent;border:none;color:inherit;'
+            + 'font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;opacity:0.7;';
+          header.appendChild(collapseBtn);
+          panel.appendChild(header);
+
+          const bodyEl = document.createElement('div');
+          bodyEl.style.cssText = 'display:flex;flex-direction:column;min-height:0;flex:1 1 auto;margin-top:8px;';
+          panel.appendChild(bodyEl);
+
+          // Collapsed by default under the real engine's own narrow-
+          // screen legend threshold (ui/js/tools/legend.js: `if
+          // (window.innerWidth < 500) ixmaps.legend.hide()`) — reusing
+          // that concrete precedent rather than picking an arbitrary
+          // "mobile" breakpoint of this port's own invention. Checked
+          // once at panel-build time, not on resize — matching the real
+          // engine's own one-shot-at-redraw-time check, not a live
+          // matchMedia listener.
+          const MOBILE_LEGEND_BREAKPOINT = 500;
+          let collapsed = legendFolded || window.innerWidth < MOBILE_LEGEND_BREAKPOINT;
+          function applyCollapsed() {
+            bodyEl.style.display = collapsed ? 'none' : 'flex';
+            collapseBtn.textContent = collapsed ? '▸' : '▾';
+            collapseBtn.title = collapsed ? 'Expand legend' : 'Collapse legend';
+          }
+          collapseBtn.addEventListener('click', () => { collapsed = !collapsed; applyCollapsed(); });
+          applyCollapsed();
+          rt._setLegendCollapsed = c => { collapsed = !!c; applyCollapsed(); }; // setLegendOption
+
+          // Selection/filter by field — opt-in via .style({legendfilter:
+          // "<field>"}), e.g. "country_long" on the power-plants sample.
+          // A NEW, ixmaps-gl-only convention: real ixmaps-flat's own
+          // style.filterfield names the DEFAULT field an unqualified
+          // .filter("text") search term matches against (maptheme.js:
+          // 1275-1276/7359-7362) — a different concept entirely, so this
+          // deliberately uses its own name rather than overloading that
+          // one. Options come from the FULL dataset (a world-spanning
+          // bbox, not the current viewport) and stay fixed regardless of
+          // pan/zoom — unlike the map-view-aware category totals below,
+          // a picker whose own choices kept shrinking as you panned
+          // would make it impossible to select a country not currently
+          // in view. Selecting a value reuses the engine's own existing
+          // facet-filter primitive (engineApi.setFacetFilter/
+          // clearFacetFilter — already propagates to sibling runtimes
+          // sharing the same data source and calls refresh()), so this
+          // is UI wiring only, no new filtering logic.
+          const filterField = rt.style.legendfilter;
+          if (filterField) {
+            const facet = engineApi.getFacets(rt.name, [filterField], { bbox: [-180, -85, 180, 85] })[0];
+            const values = (facet && facet.type === 'textual')
+              ? facet.values.slice().sort((a, b) => String(a).localeCompare(String(b)))
+              : [];
+            const filterEl = document.createElement('select');
+            filterEl.style.cssText = 'width:100%;margin-bottom:8px;background:' + legendColors.selectBg + ';'
+              + 'color:' + legendColors.fg + ';border:1px solid ' + legendColors.selectBorder + ';border-radius:4px;padding:4px 6px;font:inherit;';
+            filterEl.innerHTML = '<option value="">All (' + values.length + ')</option>'
+              + values.map(v => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join('');
+            filterEl.addEventListener('change', () => {
+              if (filterEl.value) engineApi.setFacetFilter(rt.name, filterField, filterEl.value);
+              else engineApi.clearFacetFilter(rt.name, filterField);
+            });
+            bodyEl.appendChild(filterEl);
+          }
+
+          if (!isTextOnly) { bodyEl.appendChild(rowsScroll); renderRows(); }
+
+          if (rt.meta.description) {
+            const desc = document.createElement('div');
+            desc.style.cssText = 'margin-top:8px;font-size:11px;opacity:0.8;';
+            // Raw HTML, matching the real engine's own description
+            // rendering and this engine's existing .legend(html)/
+            // tooltip conventions (e.g. _buildTooltipContext) — real
+            // pages already embed their own source-citation markup
+            // inside meta.description (see the power-plants sample).
+            desc.innerHTML = rt.meta.description;
+            bodyEl.appendChild(desc);
+          }
+
+          // Chart-size slider — real engine's own range (legend.js:
+          // 3196-3202), 100% == scale:1, wired to changeThemeStyle(
+          // themeId,"scale:"+pct/100,"set")+redrawTheme there; this
+          // engine's equivalent is rt.setStyle({scale}) + refresh(),
+          // the same primitive engineApi.setThemeStyle uses above.
+          // CHOROPLETH themes get an OPACITY slider instead, as in flat
+          // (legend.js ~3190: 0-100%, fillopacity·100, default 90;
+          // changeThemeStyle("fillopacity:"+pct/100,"set") + redraw).
+          // (flat labels a VECTOR theme's size slider "Line width" — gl has
+          // no VECTOR themes.)
+          // Flat tests the words (legend.js 2533-2535): a "CHOROPLETHE"
+          // theme has neither slider.
+          const typeWords = rt.flags.typeString != null ? rt.flags.typeString : [...rt.flags].join('|');
+          const isOpacitySlider = /\bCHOROPLETH\b/.test(typeWords);
+          const hasSlider = isOpacitySlider || /\bCHART\b|\bBUBBLE\b|\bDOT\b/.test(typeWords);
+          if (hasSlider) {
+          const sliderRow = document.createElement('div');
+          sliderRow.style.cssText = 'margin-top:10px;font-size:11px;opacity:0.8;';
+          const fillPct = Math.round(styleNum(rt.style.fillopacity) * 100);
+          const initialPct = isOpacitySlider
+            ? (Number.isFinite(fillPct) ? Math.max(0, Math.min(100, fillPct)) : 90)
+            : Math.round((styleNum(rt.style.scale) || 1) * 100);
+          const sliderLabel = isOpacitySlider ? 'Opacity' : 'Chart size';
+          sliderRow.innerHTML = sliderLabel + ': <span class="ix-legend-scale-val">' + initialPct + '</span>%';
+          bodyEl.appendChild(sliderRow);
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.min = isOpacitySlider ? '0' : '25';
+          slider.max = isOpacitySlider ? '100' : '200';
+          slider.value = String(initialPct);
+          slider.style.cssText = 'width:100%;margin-top:2px;';
+          slider.addEventListener('input', () => {
+            const pct = parseInt(slider.value, 10);
+            sliderRow.querySelector('.ix-legend-scale-val').textContent = pct;
+            rt.setStyle(isOpacitySlider ? { fillopacity: pct / 100 } : { scale: pct / 100 });
+            refresh();
+          });
+          bodyEl.appendChild(slider);
+          }
+        }
+      };
+      runtimes.forEach(rt => addLegendPanel(rt));
+    }
+    return { addLegendPanel, setLegendOption, updateSubTheme, layoutLegends };
+  }
+
   class MapBuilder {
     constructor(containerId, options) {
       this.containerId = containerId;
@@ -4337,698 +5047,10 @@
         });
       }
 
-      // NATIVE INTERACTIVE LEGEND — real ixmaps-flat's legend.js
-      // (makeColorLegendHTMLLong) builds, per CATEGORICAL-ish theme: a
-      // title/snippet header, one row per category (color swatch + a bar
-      // proportional to that category's own total + right-aligned
-      // formatted value), a description/source footer, and a per-theme
-      // "Chart size" 25-200% slider — all read directly off source
-      // (ui/js/tools/legend.js:594-1037/3196-3393, ui/js/htmlgui.js:2196/
-      // 2208 for markThemeClass/unmarkThemeClass, ui/css/legend.css for
-      // the selected-row highlight) rather than guessed from the
-      // screenshot alone. Gated on `legend:"open"` — the one real map
-      // option this engine's own createMap already threads through as
-      // this.mapOptions (see mapOptions.legend below) — since there's no
-      // toolbar toggle button here to open/close it later the way the
-      // real engine's own chrome does.
-      //
-      // Deliberate divergences from the real implementation, both
-      // reasoned rather than accidental:
-      //   - Real legend.js does a full innerHTML rebuild on every single
-      //     theme redraw (even a bare click-toggle). renderRows() below
-      //     only rebuilds the ROWS (swatch/bar/value/highlight) — cheap,
-      //     and the only part that can actually change post-load (marks,
-      //     or an AGGREGATE theme's dataset-wide totals, which this port
-      //     doesn't yet let change post-load anyway) — rather than
-      //     tearing down and rebuilding title/snippet/description/slider
-      //     too, which never change. Same visible result, less DOM churn.
-      //   - Real "isolate_gray" mode dims non-marked SVG paths via a CSS
-      //     class; this engine dims via IconLayer's own getColor alpha
-      //     (see LayerRuntime#_iconAlpha) since these are deck.gl raster
-      //     icons, not DOM/SVG nodes a CSS rule could reach.
-      // Legend on/off and fold state as real ixmaps-flat reads the map
-      // option (htmlgui_flat.js:748-794): on whenever `legend` is given and
-      // isn't false/"false" ("true", "open", "", 1, …), folded for
-      // "closed", off when not given at all.
-      const legendOpt = this.mapOptions.legend;
-      // let, not const: map.setLegend(value) switches them at runtime (see setLegendOption)
-      let legendOn = legendIsOn(legendOpt);
-      let legendFolded = legendOpt === 'closed';
-      {
-        // Map-level `align` option positions the legend panel — a map-
-        // wide placement choice, not per-theme (unlike legendtheme/
-        // legendfilter above), so read once from this.mapOptions rather
-        // than per-runtime. Real ixmaps-flat ALSO has an `align` map
-        // option (ui/js/htmlgui_flat.js) controlling legend position, but
-        // its value shape is a free-form regex-matched left/right/center/
-        // top/bottom/pixel-prefixed string tied to a static in-page DOM
-        // panel — a different layout model from this panel's own
-        // position:absolute floating-overlay-over-the-map-canvas
-        // approach. This port reuses the real OPTION NAME but adapts the
-        // VALUE SHAPE to plain four-corner tokens matching how this panel
-        // is actually positioned — a deliberate divergence, same
-        // reasoning already applied to style.legendfilter's own name/
-        // shape choice earlier this session. Default "top-right" per
-        // explicit request (real engine's own fallback is right-anchored
-        // too, just without an opinion on vertical placement).
-        const ALIGN_CSS = {
-          'top-left': 'left:10px;top:10px;',
-          'top-right': 'right:10px;top:10px;',
-          'bottom-left': 'left:10px;bottom:10px;',
-          'bottom-right': 'right:10px;bottom:10px;'
-        };
-        // gl's four corners, else flat's own values (htmlgui_flat.js
-        // 421-470): "…left" → left (the part before "left", else 55px), 12px
-        // from the top; "…right" → right (else 25px); "center" / "top" → top
-        // center
-        const flatAlignCss = align => {
-          const a = String(align || '');
-          if (/left/.test(a)) return 'left:' + (a.split('left')[0] || '55px') + ';top:12px;';
-          if (/right/.test(a)) return 'right:' + (a.split('right')[0] || '25px') + ';top:10px;';
-          if (a === 'center' || a === 'top') return 'left:50%;transform:translateX(-50%);top:10px;';
-          return null;
-        };
-        const legendAlignCss = ALIGN_CSS[this.mapOptions.align] || flatAlignCss(this.mapOptions.align) || ALIGN_CSS['top-right'];
-        // Real ixmaps-flat's SUB-THEME (MapTheme.createSubTheme,
-        // maptheme.js 14284-14292 / 15010-15160; map.Themes.enableSubThemes
-        // defaults to true): marking fields of a multi-field choropleth
-        // (DOMINANT/COMPOSECOLOR, not CHART) paints a new theme over the
-        // original — one field: CHOROPLETH|LOG|DOPACITY on that field, white
-        // → the field's color in 7 steps, dopacityscale 2, dopacitypow 1,
-        // keeping DOPACITY(→DOPACITYMAX)/AGGREGATE/GROUP/SUM/ZEROISVALUE/
-        // VALUES; several fields: the original type on just those fields
-        // and colors. It reuses the original's joined polygons, has no
-        // legend and stays out of the theme registry (its name
-        // "<layer>::subtheme" also keeps its deck.gl layer id apart), so
-        // markThemeClass/removeTheme still address the original.
-        const subThemeCapable = rt => rt.flags.has('CHOROPLETH') && !rt.flags.has('CHART') && (rt.flags.has('DOMINANT') || rt.flags.has('COMPOSECOLOR'));
-        const toHex = c => Array.isArray(c) ? '#' + c.slice(0, 3).map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('') : c;
-        updateSubTheme = (rt) => {
-          if (rt._subTheme) {
-            const i = runtimes.indexOf(rt._subTheme);
-            if (i >= 0) runtimes.splice(i, 1);
-            rt._subTheme = null;
-          }
-          const fields = String(rt.binding.value || '').split('|');
-          const marks = [...rt._markedClasses].filter(i => i >= 0 && i < fields.length).sort((a, b) => a - b);
-          if (marks.length) {
-            const colors = (rt.categoryColorsRgb || []).map(toHex);
-            const labels = rt.categoryDisplayLabels || rt.categoryLabels || fields;
-            const kept = ['DOPACITY', 'AGGREGATE', 'GROUP', 'SUM', 'ZEROISVALUE', 'VALUES']
-              .filter(f => [...rt.flags].some(x => x.startsWith(f) && (f !== 'DOPACITY' || /^DOPACITY/.test(x))))
-              .map(f => (f === 'DOPACITY' ? 'DOPACITYMAX' : f));
-            let def;
-            if (marks.length > 1) {
-              def = {
-                layer: rt.name + '::subtheme',
-                binding: (b => { delete b.field100; delete b.value100; return b; })(Object.assign({}, rt.binding, { value: marks.map(i => fields[i]).join('|') })),
-                style: Object.assign({}, rt.style, { type: [...rt.flags].concat(['SUBTHEME', 'NOLEGEND']).join('|'),
-                  colorscheme: marks.map(i => colors[i]), values: marks.map(i => labels[i]) }),
-                meta: { title: 'actual selection' }
-              };
-            } else {
-              const i = marks[0];
-              const binding = Object.assign({}, rt.binding, { value: fields[i] });
-              delete binding.alpha; delete binding.alpha100;
-              // rt.features already carry the field100 result — drop it and
-              // every alias of it, or normalizeTheme would apply it again
-              delete binding.field100; delete binding.value100;
-              def = {
-                layer: rt.name + '::subtheme',
-                binding,
-                style: { type: ['CHOROPLETH', 'LOG', 'DOPACITY', 'NOLEGEND', 'SUBTHEME'].concat(kept).join('|'),
-                  colorscheme: ['7', 'white', colors[i]], dopacityscale: 2, dopacitypow: 1,
-                  units: rt.style.units, linecolor: rt.style.linecolor, linewidth: rt.style.linewidth },
-                meta: { title: 'actual selection' }
-              };
-            }
-            const sub = new LayerRuntime(normalizeTheme(def), { type: 'FeatureCollection', features: rt.features }, builder._engineOptions);
-            sub._isSubTheme = true;
-            runtimes.splice(runtimes.indexOf(rt) + 1, 0, sub);
-            rt._subTheme = sub;
-          }
-          refresh();
-          notifyRedraw();
-        };
-        // the stack of the theme panels — flat shows one theme's legend
-        // after the other in #map-legend, separated by a line, and leaves
-        // out a theme hidden, out of scale or not yet drawn
-        let legendStack = null;
-        const legendStackEl = shadow => {
-          if (legendStack && legendStack.parentNode) return legendStack;
-          legendStack = document.createElement('div');
-          legendStack.className = 'ix-legend-stack';
-          legendStack.style.cssText = 'position:absolute;' + legendAlignCss + 'z-index:6;width:280px;'
-            + 'display:flex;flex-direction:column;max-height:calc(100% - 24px);overflow-y:auto;'
-            + 'border-radius:6px;box-shadow:' + shadow + ';pointer-events:auto;';
-          if (!document.getElementById('ix-legend-stack-css')) {
-            const css = document.createElement('style');
-            css.id = 'ix-legend-stack-css';
-            css.textContent = '.ix-legend-stack>.ix-native-legend:not([data-ixoff])~.ix-native-legend:not([data-ixoff]){border-top:1px solid rgba(128,128,128,.35)}';
-            document.head.appendChild(css);
-          }
-          el.parentElement.appendChild(legendStack);
-          return legendStack;
-        };
-        // map.setLegend(value): the `legend` map option at runtime, same values as
-        // ixmaps.Map(id, {legend}) — on ("true", "open", …), folded ("closed"), off
-        // (false/"false"/0/undefined). Panels are made for themes that lack one,
-        // removed when off, folded/unfolded otherwise.
-        setLegendOption = (opt) => {
-          builder.mapOptions.legend = opt;
-          legendFolded = opt === 'closed';
-          legendOn = legendIsOn(opt);
-          runtimes.forEach(rt => {
-            if (!legendOn) {
-              if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel);
-              rt._legendPanel = null;
-            } else if (!rt._legendPanel) addLegendPanel(rt);
-            else if (rt._setLegendCollapsed) rt._setLegendCollapsed(legendFolded);
-          });
-          layoutLegends();
-        };
-        layoutLegends = () => {
-          if (!legendStack) return;
-          const z = map.getZoom();
-          let shown = 0;
-          [...legendStack.children].forEach(panel => {
-            const rt = panel._ixRuntime;
-            const off = !rt || rt._hidden || themeHiddenByScale(rt.flags, rt.style, z);
-            if (off) { panel.setAttribute('data-ixoff', ''); panel.style.display = 'none'; }
-            else { panel.removeAttribute('data-ixoff'); panel.style.display = 'flex'; shown++; }
-          });
-          legendStack.style.display = shown ? 'flex' : 'none';
-        };
-        const legendApplies = rt => rt.categoryLabels && rt.categoryLabels.length && !rt.flags.has('FEATURE') && !rt.flags.has('FEATURES') && !rt.flags.has('NOLEGEND');
-        // One theme's panel — at build time for every theme, and again for a
-        // theme defined later (map.layer(...) in a myMap.then(...) chain,
-        // defineLayer, loadProject); removeTheme removes it with the theme.
-        addLegendPanel = (rt) => {
-          // marking a class (legend row, or ixmaps.markThemeClass from a
-          // page) redraws — for every theme, legend panel or not
-          rt._triggerRedraw = () => { refresh(); };
-          if (subThemeCapable(rt)) rt._onMarksChanged = () => updateSubTheme(rt);
-          if (!legendOn || !el.parentElement || !legendApplies(rt)) return;
-          el.parentElement.style.position = el.parentElement.style.position || 'relative';
-          {
-          // .type("...|NOLEGEND") — the fourth real legend-related type()
-          // token: opts a theme OUT of the legend entirely (real engine's
-          // own per-layer "skip this one" flag, distinct from the map-
-          // level legend:"open"/"closed" option gating the whole panel).
-          // Same free-parsing story as SIMPLELEGEND/COMPACTLEGEND above —
-          // just one more flag to exclude on, no new plumbing.
-            const panel = document.createElement('div');
-            rt._legendPanel = panel;
-            panel.className = 'ix-native-legend';
-            // Opt-in via .style({legendtheme:"light"}) — a NEW, ixmaps-gl-
-            // only convention (same naming pattern as the sibling
-            // legendfilter/legendunits keys added earlier this session):
-            // real ixmaps-flat's legend.js has no such switch, this panel
-            // is entirely this port's own construction. Default ("dark")
-            // preserves the original always-dark panel exactly; "light" is
-            // for pages using a light basemap (e.g. CARTO Positron) where
-            // a dark semi-transparent panel reads as a mismatched dark
-            // patch rather than legend chrome. Every other hardcoded panel
-            // color below (rows, bar track, filter <select>) is expressed
-            // in terms of this one palette so the two variants stay in
-            // sync — no separate light/dark branch anywhere else.
-            // flat's look (flatLegendLook) unless the page picks one with
-            // this engine's own legendtheme
-            const opacityOpt = parseFloat(this._engineOptions.basemapopacity);
-            const flatLook = flatLegendLook(this.mapOptions.mapType, isNaN(opacityOpt) ? 1 : opacityOpt, this.mapOptions.legendBackground || this.mapOptions.legendbackground);
-            const isLightLegend = rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !flatLook.dark);
-            const legendColors = isLightLegend
-              ? { bg: 'rgba(255,255,255,0.92)', fg: '#1a1a1a', shadow: '0 2px 10px rgba(0,0,0,0.18)',
-                  rowMarked: 'rgba(0,0,0,0.08)', track: 'rgba(0,0,0,0.08)',
-                  selectBg: 'rgba(0,0,0,0.04)', selectBorder: 'rgba(0,0,0,0.2)' }
-              : { bg: 'rgba(28,30,34,0.92)', fg: '#eee', shadow: '0 2px 10px rgba(0,0,0,0.45)',
-                  rowMarked: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.08)',
-                  selectBg: 'rgba(255,255,255,0.08)', selectBorder: 'rgba(255,255,255,0.25)' };
-            if (!rt.style.legendtheme) legendColors.bg = flatLook.bg;
-            // max-height:66% resolves against el.parentElement's own
-            // height (the map container, which always has a definite
-            // height for the map itself to render into) since this panel
-            // is absolutely positioned inside it — a plain percentage on
-            // an absolutely-positioned element's height IS legal CSS as
-            // long as its containing block has a definite height, which
-            // this one does. display:flex column + min-height:0 on the
-            // ROWS wrapper below (not this outer panel) is what makes
-            // only the row list scroll while the header/description/
-            // slider stay fixed in place — a flex child won't actually
-            // shrink to fit and scroll internally without min-height:0,
-            // it just overflows its flex parent instead.
-            // one box for every theme, as flat's #map-legend (legend.js
-            // 2200-2460): the panels stack in the legend stack in theme
-            // order, a line between them (see layoutLegends)
-            panel.style.cssText = 'position:relative;flex:0 0 auto;'
-              + 'display:flex;flex-direction:column;'
-              + 'background:' + legendColors.bg + ';color:' + legendColors.fg + ';font:12px/1.4 -apple-system,Arial,sans-serif;'
-              + 'padding:10px 12px 12px;pointer-events:auto;';
-            const stack = legendStackEl(legendColors.shadow);
-            const at = runtimes.indexOf(rt);
-            const next = [...stack.children].find(c => runtimes.indexOf(c._ixRuntime) > at);
-            panel._ixRuntime = rt;
-            stack.insertBefore(panel, next || null);
-
-            // SUM+valuefield mirrors the real engine's own "SUM style
-            // aggregation" reading (style.valuefield, falling back to
-            // the bound size field); anything else (plain CATEGORICAL,
-            // no SUM) falls back to a per-category record COUNT.
-            const useSum = flatFlag(rt.flags, 'SUM') && rt.style.valuefield;
-            const valueField = rt.style.valuefield || rt.binding.size;
-            // legendunits wins over the theme's general-purpose units
-            // (used elsewhere for tooltips, e.g. _renderItemChartHtml) —
-            // a page may want a different/no unit string specifically on
-            // the legend's own value column. Appended as-is (no extra
-            // space injected), matching how style.units/legendunits are
-            // themselves authored with their own leading space (e.g.
-            // " MW") in real pages.
-            const legendUnit = rt.style.legendunits || rt.style.units || '';
-            // row labels go into innerHTML: the page's own .style({label})
-            // stays HTML, as in flat; categories read from the data are
-            // escaped (a value could carry markup)
-            const labels = legendRowLabels(rt);
-            // .type("...|TEXTLEGEND") — the FIFTH real legend-related
-            // type() token: title/snippet/description text only, no
-            // category rows at all (swatches, bars, chips — none of it),
-            // per explicit correction. Everything below that builds the
-            // rows/totals/onRedraw-recompute wiring is skipped outright
-            // rather than built-then-hidden — there is nothing for any of
-            // it to feed once no rows ever render. The country-filter
-            // dropdown and Chart-size slider stay: neither is a
-            // "categorical item" or "colorscheme swatch", both are
-            // independent controls unrelated to the row list.
-            const isTextOnly = rt.flags.has('TEXTLEGEND');
-
-            // Map-view-aware per explicit request: totals reflect only
-            // what's CURRENTLY on screen (the map's own bounds, plus the
-            // same far-hemisphere exclusion _buildChartLayers itself
-            // applies under globe projection — see isOnVisibleHemisphere)
-            // rather than the whole dataset — recomputed on every redraw
-            // (engineApi.onRedraw, below) so panning/zooming/rotating
-            // updates the bars and values live, the same way the actual
-            // rendered bubbles change. Same simple rectangular bbox
-            // membership test _computeAggregatedItems's own non-AGGREGATE
-            // branch uses (no antimeridian wraparound handling — matches
-            // that existing convention, not a new gap this introduces).
-            let totals, maxTotal, order, rowsScroll;
-            // No-op default: TEXTLEGEND never reassigns this (see below),
-            // so the LATER unconditional-looking `renderRows()` call
-            // safely does nothing rather than needing its own isTextOnly
-            // guard at every call site.
-            let renderRows = () => {};
-            if (!isTextOnly) {
-            function computeTotals() {
-              const bounds = map.getBounds();
-              const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
-              const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
-              const globeCenter = proj.type === 'globe' ? map.getCenter() : null;
-              totals = new Array(rt.categoryLabels.length).fill(0);
-              if (rt._rangeClassed) { totals = rangeClassLegendTotals(rt, bbox, globeCenter); maxTotal = Math.max(0, ...totals); order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]); return; }
-              // _activeFeatures (set by setFacetFilter/clearFacetFilter,
-              // e.g. the country-select dropdown below) is the facet-
-              // filtered subset when a filter is active, null otherwise —
-              // reading it here keeps the legend's own numbers consistent
-              // with whatever the country filter is currently narrowing
-              // the map down to, not just with the viewport/hemisphere.
-              (rt._activeFeatures || rt.features).forEach(f => {
-                const idx = rt.categoryIndexByLabel ? rt.categoryIndexByLabel.get(f.properties[rt.binding.value]) : null;
-                if (idx == null) return;
-                const [lng, lat] = f.geometry.coordinates;
-                if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
-                if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
-                totals[idx] += useSum ? (parseFloat(f.properties[valueField]) || 0) : 1;
-              });
-              maxTotal = Math.max(0, ...totals);
-              order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
-            }
-            computeTotals();
-
-            // Only THIS wrapper scrolls (flex:1 1 auto + min-height:0 lets
-            // it shrink to whatever's left of the panel's own 66%-height
-            // cap once the fixed header/description/slider take their
-            // share, then overflow-y:auto scrolls just the row list) —
-            // the header above and description/slider below stay put.
-            rowsScroll = document.createElement('div');
-            rowsScroll.style.cssText = 'flex:1 1 auto;min-height:0;overflow-y:auto;';
-            const rowsEl = document.createElement('div');
-            rowsEl.className = 'ix-legend-rows';
-            // .type("...|SIMPLELEGEND") — real ixmaps-flat's OTHER legend
-            // variant (confirmed against a real-engine screenshot, per
-            // explicit correction): swatch + label chips only, no bar, no
-            // value column. SIMPLELEGEND is just another pipe-delimited
-            // type() token — MapBuilder#type() already puts every token
-            // into this.flags regardless of whether anything reads it, so
-            // no new parsing was needed, only this render-mode branch.
-            // flex-wrap here (vs. the bar mode's block rows) — chips wrap
-            // to the panel's own width the same loose way the real
-            // engine's screenshot shows (an uneven number of chips per
-            // row, driven by each label's own text length, not a fixed
-            // column grid).
-            // .type("...|COMPACTLEGEND") — the THIRD real legend variant
-            // (again confirmed against a real-engine screenshot, per
-            // explicit correction): the bar-mode's own two-line label/bar/
-            // value row, but wrapped into a multi-column flex-wrap grid
-            // instead of one full-width row per category — each item's
-            // own width follows its content (a bigger value's longer bar
-            // makes its own item wider, so fewer fit per line; Coal alone
-            // filled its own row in the reference screenshot while the
-            // smaller categories packed 3-4 per row) rather than a fixed
-            // column count.
-            if (rt.flags.has('SIMPLELEGEND') || rt.flags.has('COMPACTLEGEND')) {
-              rowsEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
-            }
-            rowsScroll.appendChild(rowsEl);
-
-            // Two lines per row — label on its own full-width line, then
-            // swatch+bar+value below — per explicit correction: a single
-            // shared line left too little room for the bar to read as
-            // proportional (it was squeezed between the label text and a
-            // fixed-width value column). The bar itself lives inside a
-            // flex:1 "track" div sized to whatever's left after the fixed
-            // swatch/value columns, and is a PERCENTAGE of that track's
-            // own width (not a pixel value) — real formula's per-unit-
-            // factor/cap (legend.js:980-984/946-950) collapses to a plain
-            // linear percentage-of-max once the bar's available width
-            // isn't a fixed constant this code has to guess at.
-            const isSimple = rt.flags.has('SIMPLELEGEND');
-            const isCompact = rt.flags.has('COMPACTLEGEND');
-            // Compact mode's bar can't use the full-width mode's
-            // percentage-of-flex-track trick (there's no full-width track
-            // to be a percentage OF once the row itself is content-sized,
-            // not stretched) — a plain pixel width, proportional to value
-            // and capped, same shape as the full-width formula just
-            // expressed in absolute px instead of a % of an elastic track.
-            const COMPACT_MAX_BAR_PX = 70;
-            // flat's compact legend (legend.js makeColorLegendHTML, the
-            // "compact" mode the theme legends use, 1212-1257): a range
-            // theme of 5 classes or more without labels is one line of
-            // color patches with the value range below; DOPACITY with an
-            // alpha field adds two paler lines (opacity 1/2, 1/3) and the
-            // alpha max, "↓" and min to their right (1062-1205). The
-            // legend's own __formatValue (legend.js 451-553) has no SPACE
-            // form: SPACE there is flat's plain "." thousands.
-            const flatCompactLegend = rt._rangeClassed && !flatFlag(rt.flags, 'CATEGORICAL') && !flatFlag(rt.flags, 'PLOT')
-              && (rt.partsA || []).length >= 5 && !(Array.isArray(rt.style.label) && rt.style.label.length);
-            // flat's single-color legend (legend.js 765-769, 1039-1046): a range
-            // theme of at most 2 classes without label/ranges, not
-            // CATEGORICAL, is one row — the swatch and "min ... max unit",
-            // or, when every value is 1 (a "$item$" count), its label or
-            // value field
-            const flatSingleRowLegend = rt._rangeClassed && !flatFlag(rt.flags, 'CATEGORICAL') && !flatFlag(rt.flags, 'PLOT')
-              && (rt.partsA || []).length <= 2 && !(Array.isArray(rt.style.label) && rt.style.label.length)
-              && !(Array.isArray(rt.style.ranges) && rt.style.ranges.length);
-            if (flatSingleRowLegend) {
-              renderRows = function() {
-                const rgb = rt.categoryColorsRgb[0] || [128, 128, 128];
-                const unit = String(rt.style.legendunits || rt.style.units || '').replace(/ /g, '&nbsp;');
-                const vMin = styleNum(rt.style.minvalue) || rt._valueMin, vMax = styleNum(rt.style.maxvalue) || rt._valueMax;
-                const label = rt.style.label != null && !Array.isArray(rt.style.label) ? String(rt.style.label) : String(rt.binding.value || '');
-                const text = vMin !== 1 || vMax !== 1
-                  ? flatFormatValue(vMin, 2, 'BLANK') + ' &nbsp;... ' + flatFormatValue(vMax, 2, 'BLANK') + ' ' + unit
-                  : label;
-                const marked = rt._markedClasses.has(0);
-                rowsEl.innerHTML = '<div class="ix-legend-row" data-idx="0" style="display:flex;align-items:center;gap:5px;padding:4px 3px;cursor:pointer;border-radius:4px;'
-                  + 'background:' + (marked ? legendColors.rowMarked : 'transparent') + ';">'
-                  + '<span style="flex:0 0 auto;width:1.6em;height:0.8em;background:rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ');"></span>'
-                  + '<span>' + text + '</span></div>';
-                rowsEl.querySelectorAll('.ix-legend-row').forEach(row => {
-                  row.addEventListener('click', () => {
-                    if (rt._markedClasses.has(0)) unmarkRuntimeClass(rt, 0);
-                    else markRuntimeClass(rt, 0);
-                  });
-                });
-              };
-            } else
-            if (flatCompactLegend) {
-              renderRows = function() {
-                const n = rt.categoryColorsRgb.length;
-                const withAlpha = flatFlag(rt.flags, 'DOPACITY') && rt.binding.alpha && rt._alphaMax;
-                const nLines = withAlpha ? 3 : 1;
-                const dec = rt.style.decimals != null ? parseInt(rt.style.decimals, 10) : 2;
-                const unit = rt.style.legendunits || rt.style.units || '';
-                const ranges = Array.isArray(rt.style.ranges) && rt.style.ranges.length ? rt.style.ranges.map(Number) : null;
-                const vMin = ranges ? ranges[0] : rt._valueMin, vMax = ranges ? ranges[ranges.length - 1] : rt._valueMax;
-                let html = '<div style="display:grid;grid-template-columns:repeat(' + n + ',1fr)' + (withAlpha ? ' auto' : '') + ';gap:1px;align-items:center;">';
-                for (let line = 0; line < nLines; line++) {
-                  for (let c = 0; c < n; c++) {
-                    const ix = flatFlag(rt.flags, 'INVERT') ? n - c - 1 : c;
-                    const rgb = rt.categoryColorsRgb[ix];
-                    const part = rt.partsA[ix];
-                    const title = part ? flatFormatValue(part.min, dec, '') + unit + ' ... ' + flatFormatValue(part.max, dec, '') + unit : '';
-                    const marked = rt._markedClasses.has(ix);
-                    html += '<span class="ix-legend-row" data-idx="' + ix + '" title="' + title + '" style="cursor:pointer;height:14px;'
-                      + 'background:rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ');opacity:' + (1 / (line + 1)) + ';'
-                      + (marked ? 'outline:2px solid ' + legendColors.fg + ';outline-offset:-2px;' : '') + '"></span>';
-                  }
-                  if (withAlpha) {
-                    const txt = line === 0 ? flatFormatValue(rt._alphaMax, 0, 'BLANK')
-                      : line === 1 ? '&#8595; ' + (rt.style.alphavalueunits || '') : flatFormatValue(rt._alphaMin || 0, 0, 'BLANK');
-                    html += '<span style="padding-left:0.5em;white-space:nowrap;">' + txt + '</span>';
-                  }
-                }
-                html += '</div><div style="display:flex;justify-content:space-between;margin-top:3px;' + (withAlpha ? 'margin-right:4em;' : '') + '">'
-                  + '<span>' + flatFormatValue(vMin, dec, '') + (unit ? ' ' + unit : '') + '</span>'
-                  + '<span>' + flatFormatValue(vMax, dec, '') + (unit && unit.length <= 3 ? ' ' + unit : '') + '</span></div>';
-                rowsEl.innerHTML = html;
-                rowsEl.querySelectorAll('.ix-legend-row').forEach(cell => {
-                  cell.addEventListener('click', () => {
-                    const idx = parseInt(cell.dataset.idx, 10);
-                    if (rt._markedClasses.has(idx)) unmarkRuntimeClass(rt, idx);
-                    else markRuntimeClass(rt, idx);
-                  });
-                });
-              };
-            } else
-            renderRows = function() {
-              // flat drops the rows without a count once any row has one
-              // (legend.js 754-760, 787-789: fCountBars && !count)
-              rowsEl.innerHTML = order.filter(i => !(maxTotal > 0) || totals[i]).map(i => {
-                const rgb = rt.categoryColorsRgb[i];
-                const color = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-                const marked = rt._markedClasses.has(i);
-                const dimmed = rt._markedClasses.size > 0 && !marked;
-                const rowStyle = 'padding:4px 3px;border-radius:4px;cursor:pointer;opacity:' + (dimmed ? 0.4 : 1) + ';'
-                  + 'background:' + (marked ? legendColors.rowMarked : 'transparent') + ';';
-                if (isSimple) {
-                  // Swatch + label only, no bar/value — see rowsEl's own
-                  // comment above for why (SIMPLELEGEND).
-                  return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle
-                    + 'display:inline-flex;align-items:center;gap:5px;padding:4px 8px;">'
-                    + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
-                    + '<span>' + labels[i] + '</span>'
-                    + '</div>';
-                }
-                const pct = maxTotal ? Math.max(0, Math.min(100, (totals[i] / maxTotal) * 100)) : 0;
-                if (isCompact) {
-                  // Same two-line label/bar/value shape as full-width bar
-                  // mode below, just content-sized (flex:0 0 auto, no
-                  // min-width:0 flex-1 track) so multiple items pack onto
-                  // one line inside rowsEl's own flex-wrap — see
-                  // COMPACTLEGEND's own comment on rowsEl above.
-                  const barPx = Math.max(2, (pct / 100) * COMPACT_MAX_BAR_PX);
-                  return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle + 'flex:0 0 auto;">'
-                    + '<div style="margin-bottom:3px;white-space:nowrap;">' + labels[i] + '</div>'
-                    + '<div style="display:flex;align-items:center;gap:6px;">'
-                    + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
-                    + '<span style="flex:0 0 auto;width:' + barPx + 'px;height:6px;background:' + color + ';border-radius:3px;"></span>'
-                    + '<span style="flex:0 0 auto;white-space:nowrap;">' + rt._formatTooltipValue(totals[i]) + legendUnit + '</span>'
-                    + '</div>'
-                    + '</div>';
-                }
-                return '<div class="ix-legend-row" data-idx="' + i + '" style="' + rowStyle + '">'
-                  + '<div style="margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + labels[i] + '</div>'
-                  + '<div style="display:flex;align-items:center;gap:6px;">'
-                  + '<span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:' + color + ';"></span>'
-                  + '<span style="flex:1 1 auto;min-width:0;height:6px;background:' + legendColors.track + ';border-radius:3px;overflow:hidden;">'
-                  + '<span style="display:block;height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px;"></span>'
-                  + '</span>'
-                  + '<span style="flex:0 0 auto;text-align:right;min-width:60px;">' + rt._formatTooltipValue(totals[i]) + legendUnit + '</span>'
-                  + '</div>'
-                  + '</div>';
-              }).join('');
-              // GL-PORT COMPAT: real ixmaps-flat's row markup wires its
-              // click handler inline (onclick="ixmaps.markThemeClass(...)"
-              // — legend.js:817), toggle decided by the caller. Same
-              // split here: the toggle check lives in this click
-              // handler, the actual add/remove-and-redraw primitive is
-              // markRuntimeClass/unmarkRuntimeClass, which the globals
-              // ixmaps.markThemeClass/unmarkThemeClass also use — so a
-              // page's OWN custom UI drives this exact legend too. The
-              // rows pass their runtime itself: its .layer() name may be
-              // shared with other themes of the page.
-              rowsEl.querySelectorAll('.ix-legend-row').forEach(rowEl => {
-                rowEl.addEventListener('click', () => {
-                  const idx = parseInt(rowEl.dataset.idx, 10);
-                  if (rt._markedClasses.has(idx)) unmarkRuntimeClass(rt, idx);
-                  else markRuntimeClass(rt, idx);
-                });
-              });
-            };
-
-            // Recompute+re-render on EVERY redraw, not just mark toggles —
-            // this is what makes the legend map-view-aware: a plain pan/
-            // zoom/rotate fires this too (via the map's own 'move'
-            // listener -> scheduleRefresh -> notifyRedraw, debounced the
-            // same 400ms as the facets sidebar's own onRedraw use), same
-            // signal already used elsewhere in this file for "the visible
-            // data just changed, recompute".
-            engineApi.onRedraw(() => { computeTotals(); renderRows(); });
-            }
-
-            // rt._triggerRedraw: see its own doc comment on LayerRuntime
-            // (set here rather than at construction time since refresh()
-            // doesn't exist yet when the runtime is built). Kept
-            // unconditional (even for TEXTLEGEND, which never registers
-            // the onRedraw recompute above) — a page can still call
-            // ixmaps.markThemeClass/unmarkThemeClass directly with no
-            // visual row list to click, and that should still redraw the
-            // MAP's own dim/isolate effect even without a legend UI for
-            // it, matching real-engine global-API availability regardless
-            // of legend style.
-            rt._triggerRedraw = () => { refresh(); };
-
-            // Header row (title/snippet + collapse toggle) always stays
-            // visible; everything else lives in `bodyEl`, hidden/shown as
-            // a single unit by the toggle below — collapsing shows just
-            // the title bar, matching the real engine's own fold/unfold
-            // behavior (ixmaps.legendState + the "legend-folded" CSS
-            // class, ui/js/tools/legend.js) even though this port toggles
-            // via a plain display swap on one wrapper div rather than a
-            // shared stylesheet class (this panel has no external CSS at
-            // all — everything here is inline-styled, unlike the real
-            // engine's DOM/CSS-class-driven legend).
-            const header = document.createElement('div');
-            header.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:6px;';
-            const headerText = document.createElement('div');
-            headerText.style.cssText = 'min-width:0;flex:1 1 auto;';
-            let headerHtml = '';
-            if (rt.meta.title) headerHtml += '<div style="font-weight:600;font-size:13px;margin-bottom:2px;">' + rt.meta.title + '</div>';
-            if (rt.meta.snippet) headerHtml += '<div style="opacity:0.75;">' + rt.meta.snippet + '</div>';
-            headerText.innerHTML = headerHtml;
-            header.appendChild(headerText);
-            const collapseBtn = document.createElement('button');
-            collapseBtn.type = 'button';
-            collapseBtn.style.cssText = 'flex:0 0 auto;background:transparent;border:none;color:inherit;'
-              + 'font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;opacity:0.7;';
-            header.appendChild(collapseBtn);
-            panel.appendChild(header);
-
-            const bodyEl = document.createElement('div');
-            bodyEl.style.cssText = 'display:flex;flex-direction:column;min-height:0;flex:1 1 auto;margin-top:8px;';
-            panel.appendChild(bodyEl);
-
-            // Collapsed by default under the real engine's own narrow-
-            // screen legend threshold (ui/js/tools/legend.js: `if
-            // (window.innerWidth < 500) ixmaps.legend.hide()`) — reusing
-            // that concrete precedent rather than picking an arbitrary
-            // "mobile" breakpoint of this port's own invention. Checked
-            // once at panel-build time, not on resize — matching the real
-            // engine's own one-shot-at-redraw-time check, not a live
-            // matchMedia listener.
-            const MOBILE_LEGEND_BREAKPOINT = 500;
-            let collapsed = legendFolded || window.innerWidth < MOBILE_LEGEND_BREAKPOINT;
-            function applyCollapsed() {
-              bodyEl.style.display = collapsed ? 'none' : 'flex';
-              collapseBtn.textContent = collapsed ? '▸' : '▾';
-              collapseBtn.title = collapsed ? 'Expand legend' : 'Collapse legend';
-            }
-            collapseBtn.addEventListener('click', () => { collapsed = !collapsed; applyCollapsed(); });
-            applyCollapsed();
-            rt._setLegendCollapsed = c => { collapsed = !!c; applyCollapsed(); }; // setLegendOption
-
-            // Selection/filter by field — opt-in via .style({legendfilter:
-            // "<field>"}), e.g. "country_long" on the power-plants sample.
-            // A NEW, ixmaps-gl-only convention: real ixmaps-flat's own
-            // style.filterfield names the DEFAULT field an unqualified
-            // .filter("text") search term matches against (maptheme.js:
-            // 1275-1276/7359-7362) — a different concept entirely, so this
-            // deliberately uses its own name rather than overloading that
-            // one. Options come from the FULL dataset (a world-spanning
-            // bbox, not the current viewport) and stay fixed regardless of
-            // pan/zoom — unlike the map-view-aware category totals below,
-            // a picker whose own choices kept shrinking as you panned
-            // would make it impossible to select a country not currently
-            // in view. Selecting a value reuses the engine's own existing
-            // facet-filter primitive (engineApi.setFacetFilter/
-            // clearFacetFilter — already propagates to sibling runtimes
-            // sharing the same data source and calls refresh()), so this
-            // is UI wiring only, no new filtering logic.
-            const filterField = rt.style.legendfilter;
-            if (filterField) {
-              const facet = engineApi.getFacets(rt.name, [filterField], { bbox: [-180, -85, 180, 85] })[0];
-              const values = (facet && facet.type === 'textual')
-                ? facet.values.slice().sort((a, b) => String(a).localeCompare(String(b)))
-                : [];
-              const filterEl = document.createElement('select');
-              filterEl.style.cssText = 'width:100%;margin-bottom:8px;background:' + legendColors.selectBg + ';'
-                + 'color:' + legendColors.fg + ';border:1px solid ' + legendColors.selectBorder + ';border-radius:4px;padding:4px 6px;font:inherit;';
-              filterEl.innerHTML = '<option value="">All (' + values.length + ')</option>'
-                + values.map(v => '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>').join('');
-              filterEl.addEventListener('change', () => {
-                if (filterEl.value) engineApi.setFacetFilter(rt.name, filterField, filterEl.value);
-                else engineApi.clearFacetFilter(rt.name, filterField);
-              });
-              bodyEl.appendChild(filterEl);
-            }
-
-            if (!isTextOnly) { bodyEl.appendChild(rowsScroll); renderRows(); }
-
-            if (rt.meta.description) {
-              const desc = document.createElement('div');
-              desc.style.cssText = 'margin-top:8px;font-size:11px;opacity:0.8;';
-              // Raw HTML, matching the real engine's own description
-              // rendering and this engine's existing .legend(html)/
-              // tooltip conventions (e.g. _buildTooltipContext) — real
-              // pages already embed their own source-citation markup
-              // inside meta.description (see the power-plants sample).
-              desc.innerHTML = rt.meta.description;
-              bodyEl.appendChild(desc);
-            }
-
-            // Chart-size slider — real engine's own range (legend.js:
-            // 3196-3202), 100% == scale:1, wired to changeThemeStyle(
-            // themeId,"scale:"+pct/100,"set")+redrawTheme there; this
-            // engine's equivalent is rt.setStyle({scale}) + refresh(),
-            // the same primitive engineApi.setThemeStyle uses above.
-            // CHOROPLETH themes get an OPACITY slider instead, as in flat
-            // (legend.js ~3190: 0-100%, fillopacity·100, default 90;
-            // changeThemeStyle("fillopacity:"+pct/100,"set") + redraw).
-            // (flat labels a VECTOR theme's size slider "Line width" — gl has
-            // no VECTOR themes.)
-            // Flat tests the words (legend.js 2533-2535): a "CHOROPLETHE"
-            // theme has neither slider.
-            const typeWords = rt.flags.typeString != null ? rt.flags.typeString : [...rt.flags].join('|');
-            const isOpacitySlider = /\bCHOROPLETH\b/.test(typeWords);
-            const hasSlider = isOpacitySlider || /\bCHART\b|\bBUBBLE\b|\bDOT\b/.test(typeWords);
-            if (hasSlider) {
-            const sliderRow = document.createElement('div');
-            sliderRow.style.cssText = 'margin-top:10px;font-size:11px;opacity:0.8;';
-            const fillPct = Math.round(styleNum(rt.style.fillopacity) * 100);
-            const initialPct = isOpacitySlider
-              ? (Number.isFinite(fillPct) ? Math.max(0, Math.min(100, fillPct)) : 90)
-              : Math.round((styleNum(rt.style.scale) || 1) * 100);
-            const sliderLabel = isOpacitySlider ? 'Opacity' : 'Chart size';
-            sliderRow.innerHTML = sliderLabel + ': <span class="ix-legend-scale-val">' + initialPct + '</span>%';
-            bodyEl.appendChild(sliderRow);
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.min = isOpacitySlider ? '0' : '25';
-            slider.max = isOpacitySlider ? '100' : '200';
-            slider.value = String(initialPct);
-            slider.style.cssText = 'width:100%;margin-top:2px;';
-            slider.addEventListener('input', () => {
-              const pct = parseInt(slider.value, 10);
-              sliderRow.querySelector('.ix-legend-scale-val').textContent = pct;
-              rt.setStyle(isOpacitySlider ? { fillopacity: pct / 100 } : { scale: pct / 100 });
-              refresh();
-            });
-            bodyEl.appendChild(slider);
-            }
-          }
-        };
-        runtimes.forEach(rt => addLegendPanel(rt));
-      }
+      // the native legend: createLegend (its four hooks are what the rest
+      // of the map calls — panels, the legend option, sub-themes, layout)
+      ({ addLegendPanel, setLegendOption, updateSubTheme, layoutLegends } =
+        createLegend({ builder, map, el, overlay, runtimes, engineApi, built, refresh, scheduleRefresh, notifyRedraw }));
 
       _lastMapApi = engineApi;
       // ?ixgl-debug: ixmaps.__glDebug.check() reports, for the moment it is
