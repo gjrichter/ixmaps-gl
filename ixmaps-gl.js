@@ -1972,91 +1972,6 @@
     }
   }
 
-  // flat's page hook ixmaps.htmlgui_onNewTheme(szId), called when a theme
-  // is created (maptheme.js 927) — with the theme's id (its name)
-  function themeIdOf(rt) {
-    return (rt.style && rt.style.name) || (rt.meta && rt.meta.name) || rt.name;
-  }
-  function notifyNewTheme(rt) {
-    const hook = pageIxmaps() && pageIxmaps().htmlgui_onNewTheme;
-    if (typeof hook !== 'function') return;
-    try { hook.call(global.ixmaps, themeIdOf(rt)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onNewTheme:', e); }
-  }
-
-  // flat's ixmaps.map() — the running map's handle (htmlgui.js 173ff,
-  // htmlgui_flat.js). Its methods act on the last built map; called while
-  // the map is still building, they run once it is ready.
-  const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible'];
-  const _mapHandle = {};
-  for (const m of MAP_HANDLE_METHODS) {
-    _mapHandle[m] = (...args) => {
-      if (_lastMapApi) { const r = _lastMapApi[m](...args); return r === _lastMapApi ? _mapHandle : r; }
-      _mapReady.then(api => api[m](...args));
-      return _mapHandle;
-    };
-  }
-  _mapHandle.getZoom = () => (_lastMapApi ? _lastMapApi.getZoom() : undefined);
-  _mapHandle.getThemeObj = id => getThemeObj(id);
-  function mapHandle() { return _mapHandle; }
-
-  // flat's ixmaps.formatValue(value, precision, flag) (ui/js/tools/format.js),
-  // which user chart scripts call: thousands separated by "." (BLANK: a
-  // space), the decimals after "," (BLANK: "."), CEIL / FLOOR rounding
-  function flatFormatPart(nPart, szLeading) {
-    szLeading = szLeading || '';
-    let szPart = '';
-    if (nPart < 100) szPart += szLeading;
-    if (nPart < 10) szPart += szLeading;
-    if (nPart === 0) szPart += szLeading;
-    else szPart += String(nPart);
-    return szPart;
-  }
-  function flatFormatValue(nValue, nPrecision, szFlag) {
-    nValue = Number(nValue);
-    if (!isFinite(nValue) || !isFinite(nPrecision)) return String(nValue);
-    if (nValue === 0) return String(nValue);
-    if (nValue > 1000000000000 || nValue < -1000000000000) return String(nValue);
-    nPrecision = Math.max(0, nPrecision || 0);
-    if (nValue > 0.0000001 && nPrecision > 0) {
-      while (Number(nValue.toFixed(nPrecision - 1)) === 0) nPrecision++;
-    }
-    let v = Number(nValue.toFixed(nPrecision + 1));
-    const clip = Math.pow(10, nPrecision);
-    if (szFlag && /CEIL/.test(szFlag)) v = Math.ceil(v * clip) / clip;
-    else if (szFlag && /FLOOR/.test(szFlag)) v = Math.floor(v * clip) / clip;
-    else v = Math.round(v * clip) / clip;
-    let szDecimals = String(v);
-    if (/\./.test(szDecimals)) {
-      szDecimals = szDecimals.split('.')[1];
-      while (szDecimals.length < nPrecision) szDecimals += '0';
-    } else szDecimals = '';
-    let szReturn = v < 0 ? '-' : '';
-    let szLeading = '';
-    let n = Math.floor(Math.abs(v));
-    if (!szFlag || !/NOBREAKS/.test(szFlag)) {
-      let nClip = 1000;
-      while (n > nClip) nClip *= 1000;
-      nClip /= 1000;
-      let szBreak = ' ';
-      while (nClip >= 1000) {
-        const nPart = Math.floor(n / nClip);
-        szReturn += flatFormatPart(nPart, szLeading);
-        n = n % nClip;
-        nClip /= 1000;
-        if (nPart) {
-          szLeading = '0';
-          szBreak = szFlag && /SPACE/.test(szFlag) ? '<span style="font-size:0.5em;">&nbsp;</span>' : szFlag && /BLANK/.test(szFlag) ? '&nbsp;' : '.';
-        }
-        szReturn += szBreak;
-      }
-    }
-    szReturn += flatFormatPart(n, szLeading);
-    if (!szReturn.length || szReturn === '-') szReturn += '0';
-    if (szDecimals.length && szDecimals !== '00') szReturn += (szFlag && /BLANK/.test(szFlag) ? '.' : ',') + szDecimals;
-    return szReturn;
-  }
-
   // ---- USER charts: a page's own chart function (style.userdraw) ----
   // flat calls ixmaps.<userdraw>_init(SVGDocument, {target, theme}) once
   // per realize (maptheme.js 17000-17050) and ixmaps.<userdraw>(SVGDocument,
@@ -2101,57 +2016,6 @@
   // packs them into one texture (1024 px wide), which must stay well below
   // the GPU's texture size limit — see _userChartIcon
   const USER_CHART_ATLAS_AREA = 1024 * 8192;
-  function getZoom() { return _lastMapApi ? _lastMapApi.getZoom() : undefined; }
-
-  // flat's ixmaps.getBoundingBox() (htmlgui_sync_Leaflet_VT.js
-  // htmlMap_getBounds): [{lat, lng} south-west, {lat, lng} north-east] of
-  // the view, latitude clamped to ±85.05, longitude not capped. Set by the
-  // last build(): a broker (data.type "ext") is called while its map is
-  // still building, so until the MapLibre map exists the bounds come from
-  // the requested view and the container size (MapLibre's 512 px tiles).
-  let _boundsSource = null;
-  function viewBounds(lat, lng, mlZoom, width, height) {
-    const world = 512 * Math.pow(2, mlZoom);
-    const x = (lng + 180) / 360 * world;
-    const s = Math.sin(Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 180);
-    const y = (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * world;
-    const lngAt = px => px / world * 360 - 180;
-    const latAt = py => Math.atan(Math.sinh(Math.PI * (1 - 2 * py / world))) * 180 / Math.PI;
-    return [{ lat: latAt(y + height / 2), lng: lngAt(x - width / 2) }, { lat: latAt(y - height / 2), lng: lngAt(x + width / 2) }];
-  }
-  function getBoundingBox() {
-    const b = _boundsSource ? _boundsSource() : null;
-    if (!b) return null;
-    return [{ lat: Math.max(b[0].lat, -85.05), lng: b[0].lng }, { lat: Math.min(b[1].lat, 85.05), lng: b[1].lng }];
-  }
-
-  // flat's ixmaps.setTitle(html) / setTitleBox(text, color) (htmlgui.js
-  // 1311-1331): a message line over the last built map, same markup as
-  // flat's default (legend not aligned left); '' clears it.
-  let _titleHost = null;
-  function setTitle(szTitle) {
-    if (!_titleHost) return;
-    let box = _titleHost.querySelector(':scope > .ixmaps-gl-title');
-    if (!box) {
-      box = document.createElement('div');
-      box.className = 'ixmaps-gl-title';
-      box.style.cssText = 'position:absolute;top:11px;left:0;z-index:3;pointer-events:none;';
-      _titleHost.appendChild(box);
-    }
-    box.innerHTML = szTitle
-      ? "<div style='position:relative;left:100px;top:2px;font-style:arial,helvetica;font-size:22px'>" + szTitle + '</div>'
-      : '';
-  }
-  function setTitleBox(szTitle, szColor) {
-    setTitle("<span style='display:inline-flex;align-items:center;height:38px;box-sizing:border-box;padding:0 12px;border:1px solid #46494c;border-radius:8px;font-size:14px;font-family:courier new,Raleway,arial,helvetica;background:" + (szColor || 'rgba(255,255,255,0.95)') + ';color:' + (szColor ? '#fff' : '#222') + "'>" + szTitle + '</span>');
-  }
-  // flat's ixmaps.refreshTheme(szId): reloads the theme's data on the last
-  // built map (a broker is called again) — see engineApi.refreshTheme
-  function refreshTheme(szId) {
-    if (!_lastMapApi || !_lastMapApi.refreshTheme) return;
-    _lastMapApi.refreshTheme(szId).catch(err => console.error('[ixmaps-gl] refreshTheme:', err));
-  }
-
   class LayerBuilder {
     constructor(name) {
       this.name = name;
@@ -10865,6 +10729,9 @@
   // nothing here authored that string. Escaped before going into
   // innerHTML so a stray `<`/`&`/quote in a source field can't break the
   // option markup (or worse).
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
   // a legend's row labels as HTML: the page's .style({label}) as given,
   // values from the data escaped
   function legendRowLabels(rt) {
@@ -10872,9 +10739,162 @@
     if (display && display !== rt.categoryLabels) return display;
     return (rt.categoryLabels || []).map(v => escapeHtml(v));
   }
-  function escapeHtml(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  // ===============================================================
+  // FLAT-COMPATIBILITY API — what a page written for ixmaps-flat calls on
+  // the global `ixmaps` object; it acts on the last built map:
+  //  - page hooks gl calls: htmlgui_onNewTheme, htmlgui_onDrawTheme,
+  //    htmlgui_onZoomAndPan
+  //  - the map handle ixmaps.map() and its methods (MAP_HANDLE_METHODS)
+  //  - view: getZoom, getCenter, getMapTypeId, getBoundingBox
+  //  - themes: getThemeObj (flat's theme object, with its data table and
+  //    the items on the map), getThemeDefinitionObj, getThemes,
+  //    changeThemeStyle / removeTheme / setBasemapOpacity (map name first),
+  //    refreshTheme, markThemeClass / unmarkThemeClass
+  //  - data: ixmaps.data (facets: getFacets, showFacets, …), the
+  //    embeddedSVG.window tables (setExternalData is with the data loading)
+  //  - projects: getProjectString, setProjectJSON, loadProject
+  //  - page UI: setTitle, setTitleBox, formatValue; message,
+  //    filterThemeItems and highlightThemeItems are accepted but not ported
+  // The object itself is assembled at the end of this section (global.ixmaps).
+  // ===============================================================
+
+  // flat's page hook ixmaps.htmlgui_onNewTheme(szId), called when a theme
+  // is created (maptheme.js 927) — with the theme's id (its name)
+  function themeIdOf(rt) {
+    return (rt.style && rt.style.name) || (rt.meta && rt.meta.name) || rt.name;
   }
+  function notifyNewTheme(rt) {
+    const hook = pageIxmaps() && pageIxmaps().htmlgui_onNewTheme;
+    if (typeof hook !== 'function') return;
+    try { hook.call(global.ixmaps, themeIdOf(rt)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onNewTheme:', e); }
+  }
+
+  // flat's ixmaps.map() — the running map's handle (htmlgui.js 173ff,
+  // htmlgui_flat.js). Its methods act on the last built map; called while
+  // the map is still building, they run once it is ready.
+  const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible'];
+  const _mapHandle = {};
+  for (const m of MAP_HANDLE_METHODS) {
+    _mapHandle[m] = (...args) => {
+      if (_lastMapApi) { const r = _lastMapApi[m](...args); return r === _lastMapApi ? _mapHandle : r; }
+      _mapReady.then(api => api[m](...args));
+      return _mapHandle;
+    };
+  }
+  _mapHandle.getZoom = () => (_lastMapApi ? _lastMapApi.getZoom() : undefined);
+  _mapHandle.getThemeObj = id => getThemeObj(id);
+  function mapHandle() { return _mapHandle; }
+
+  // flat's ixmaps.formatValue(value, precision, flag) (ui/js/tools/format.js),
+  // which user chart scripts call: thousands separated by "." (BLANK: a
+  // space), the decimals after "," (BLANK: "."), CEIL / FLOOR rounding
+  function flatFormatPart(nPart, szLeading) {
+    szLeading = szLeading || '';
+    let szPart = '';
+    if (nPart < 100) szPart += szLeading;
+    if (nPart < 10) szPart += szLeading;
+    if (nPart === 0) szPart += szLeading;
+    else szPart += String(nPart);
+    return szPart;
+  }
+  function flatFormatValue(nValue, nPrecision, szFlag) {
+    nValue = Number(nValue);
+    if (!isFinite(nValue) || !isFinite(nPrecision)) return String(nValue);
+    if (nValue === 0) return String(nValue);
+    if (nValue > 1000000000000 || nValue < -1000000000000) return String(nValue);
+    nPrecision = Math.max(0, nPrecision || 0);
+    if (nValue > 0.0000001 && nPrecision > 0) {
+      while (Number(nValue.toFixed(nPrecision - 1)) === 0) nPrecision++;
+    }
+    let v = Number(nValue.toFixed(nPrecision + 1));
+    const clip = Math.pow(10, nPrecision);
+    if (szFlag && /CEIL/.test(szFlag)) v = Math.ceil(v * clip) / clip;
+    else if (szFlag && /FLOOR/.test(szFlag)) v = Math.floor(v * clip) / clip;
+    else v = Math.round(v * clip) / clip;
+    let szDecimals = String(v);
+    if (/\./.test(szDecimals)) {
+      szDecimals = szDecimals.split('.')[1];
+      while (szDecimals.length < nPrecision) szDecimals += '0';
+    } else szDecimals = '';
+    let szReturn = v < 0 ? '-' : '';
+    let szLeading = '';
+    let n = Math.floor(Math.abs(v));
+    if (!szFlag || !/NOBREAKS/.test(szFlag)) {
+      let nClip = 1000;
+      while (n > nClip) nClip *= 1000;
+      nClip /= 1000;
+      let szBreak = ' ';
+      while (nClip >= 1000) {
+        const nPart = Math.floor(n / nClip);
+        szReturn += flatFormatPart(nPart, szLeading);
+        n = n % nClip;
+        nClip /= 1000;
+        if (nPart) {
+          szLeading = '0';
+          szBreak = szFlag && /SPACE/.test(szFlag) ? '<span style="font-size:0.5em;">&nbsp;</span>' : szFlag && /BLANK/.test(szFlag) ? '&nbsp;' : '.';
+        }
+        szReturn += szBreak;
+      }
+    }
+    szReturn += flatFormatPart(n, szLeading);
+    if (!szReturn.length || szReturn === '-') szReturn += '0';
+    if (szDecimals.length && szDecimals !== '00') szReturn += (szFlag && /BLANK/.test(szFlag) ? '.' : ',') + szDecimals;
+    return szReturn;
+  }
+
+  function getZoom() { return _lastMapApi ? _lastMapApi.getZoom() : undefined; }
+
+  // flat's ixmaps.getBoundingBox() (htmlgui_sync_Leaflet_VT.js
+  // htmlMap_getBounds): [{lat, lng} south-west, {lat, lng} north-east] of
+  // the view, latitude clamped to ±85.05, longitude not capped. Set by the
+  // last build(): a broker (data.type "ext") is called while its map is
+  // still building, so until the MapLibre map exists the bounds come from
+  // the requested view and the container size (MapLibre's 512 px tiles).
+  let _boundsSource = null;
+  function viewBounds(lat, lng, mlZoom, width, height) {
+    const world = 512 * Math.pow(2, mlZoom);
+    const x = (lng + 180) / 360 * world;
+    const s = Math.sin(Math.max(-85.05, Math.min(85.05, lat)) * Math.PI / 180);
+    const y = (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * world;
+    const lngAt = px => px / world * 360 - 180;
+    const latAt = py => Math.atan(Math.sinh(Math.PI * (1 - 2 * py / world))) * 180 / Math.PI;
+    return [{ lat: latAt(y + height / 2), lng: lngAt(x - width / 2) }, { lat: latAt(y - height / 2), lng: lngAt(x + width / 2) }];
+  }
+  function getBoundingBox() {
+    const b = _boundsSource ? _boundsSource() : null;
+    if (!b) return null;
+    return [{ lat: Math.max(b[0].lat, -85.05), lng: b[0].lng }, { lat: Math.min(b[1].lat, 85.05), lng: b[1].lng }];
+  }
+
+  // flat's ixmaps.setTitle(html) / setTitleBox(text, color) (htmlgui.js
+  // 1311-1331): a message line over the last built map, same markup as
+  // flat's default (legend not aligned left); '' clears it.
+  let _titleHost = null;
+  function setTitle(szTitle) {
+    if (!_titleHost) return;
+    let box = _titleHost.querySelector(':scope > .ixmaps-gl-title');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'ixmaps-gl-title';
+      box.style.cssText = 'position:absolute;top:11px;left:0;z-index:3;pointer-events:none;';
+      _titleHost.appendChild(box);
+    }
+    box.innerHTML = szTitle
+      ? "<div style='position:relative;left:100px;top:2px;font-style:arial,helvetica;font-size:22px'>" + szTitle + '</div>'
+      : '';
+  }
+  function setTitleBox(szTitle, szColor) {
+    setTitle("<span style='display:inline-flex;align-items:center;height:38px;box-sizing:border-box;padding:0 12px;border:1px solid #46494c;border-radius:8px;font-size:14px;font-family:courier new,Raleway,arial,helvetica;background:" + (szColor || 'rgba(255,255,255,0.95)') + ';color:' + (szColor ? '#fff' : '#222') + "'>" + szTitle + '</span>');
+  }
+  // flat's ixmaps.refreshTheme(szId): reloads the theme's data on the last
+  // built map (a broker is called again) — see engineApi.refreshTheme
+  function refreshTheme(szId) {
+    if (!_lastMapApi || !_lastMapApi.refreshTheme) return;
+    _lastMapApi.refreshTheme(szId).catch(err => console.error('[ixmaps-gl] refreshTheme:', err));
+  }
+
 
   // GL-PORT COMPAT: real ixmaps-flat's ixmaps.getThemeObj(szId) — a
   // global lookup by theme id, independent of which map built it — looked
