@@ -20,8 +20,9 @@
 // from the same bound value by default, or from .binding({alpha,
 // alpha100}) when set (alpha100:"$density$" divides by the polygon's
 // own geodesic area — see _prepareAlphaField/_resolveDopacityAlpha).
-// CATEGORICAL choropleths aren't implemented, see
-// _buildChoroplethLayers), and the CHART|SYMBOL|
+// AGGREGATE CATEGORICAL on one field paints each polygon in its records'
+// dominant category; a plain CATEGORICAL choropleth is not implemented,
+// see _buildChoroplethLayers), and the CHART|SYMBOL|
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
@@ -1464,8 +1465,53 @@
   function featureAreaKm2(f) {
     return f._flatAreaKm2 !== undefined ? f._flatAreaKm2 : geodesicPolygonAreaKm2(f.geometry);
   }
+  // .type("CHOROPLETH|CATEGORICAL|AGGREGATE") on ONE value field (e.g.
+  // DOMINANT over the categories of "missione"): flat aggregates every
+  // record of a polygon into a part per category — the sum of the size
+  // field (else the record count, resolveAggregateValue) — and paints the
+  // dominant part's class (maptheme.js 13520-13565)
+  const AGGREGATED_ROWS = Symbol('ixmaps-gl aggregated rows');
+  function isAggregatedCategoricalChoropleth(spec) {
+    const flags = spec.flags;
+    return !!(flags && flags.has('CHOROPLETH') && flags.has('CATEGORICAL') && flags.has('AGGREGATE')
+      && spec.binding && spec.binding.value && !String(spec.binding.value).includes('|'));
+  }
+  // a polygon's parts (sum per category) and its dominant one: the biggest
+  // part above 0, the first of equal ones; null without any
+  function aggregatedCategoricalClass(rows, binding, flags, indexByLabel, nCats) {
+    const parts = new Array(nCats).fill(0);
+    for (const row of rows) {
+      const i = indexByLabel.get(String(row[binding.value]));
+      if (i == null) continue;
+      parts[i] += resolveAggregateValue(binding, flags, row);
+    }
+    let index = -1;
+    parts.forEach((v, i) => { if (v > 0 && (index < 0 || v > parts[index])) index = i; });
+    return index < 0 ? null : { parts, index, value: parts[index] };
+  }
+  // flat's DOMINANT opacity (maptheme.js 13567-13628): from the dominant
+  // part v and the biggest part of that class over all polygons, max —
+  // DOPACITYMAX dopacityscale · (v / max)^(1/dopacitypow), DOPACITYLOGMAX
+  // log v / log max, plain DOPACITY log(dopacityscale · v) / log max;
+  // below 0.0001 → 0, at most 0.9
+  function dominantDopacityAlpha(style, flags, v, max) {
+    const scale = styleNum(style.dopacityscale) || 1;
+    const pow = 1 / (styleNum(style.dopacitypow) || 1);
+    let o;
+    if (flags.has('DOPACITYLOGMAX')) o = Math.log(v) / Math.log(max);
+    else if (flags.has('DOPACITYMAX') || flags.has('DOPACITYPOWMAX')) o = scale * Math.pow(v, pow) / Math.pow(max, pow);
+    else o = Math.log(scale * v) / Math.log(max);
+    if (!(o >= 0.0001)) o = 0;
+    return Math.min(0.9, o);
+  }
+
   function joinChoroplethFeatures(spec, table, runtimes) {
-    const geomRt = runtimes.find(r => r.name === spec.name && (r.flags.has('FEATURE') || r.flags.has('FEATURES')));
+    // a page can define several FEATURE layers of one name — e.g. the
+    // comuni as polygons and as center points (for chart positions); flat
+    // paints every shape of the layer with a matching id, so the polygons
+    // are the ones that show: prefer a base with polygon geometry
+    const bases = runtimes.filter(r => r.name === spec.name && (r.flags.has('FEATURE') || r.flags.has('FEATURES')));
+    const geomRt = bases.find(r => (r.features || []).some(f => f.geometry && /Polygon/.test(f.geometry.type))) || bases[0];
     if (!geomRt) {
       throw new Error(`[ixmaps-gl] CHOROPLETH layer "${spec.name}" needs a FEATURE base layer with the same name, .layer()'d earlier on the map`);
     }
@@ -1487,6 +1533,27 @@
     const lookupField = spec.binding.lookup;
     if (!idField || !lookupField) {
       throw new Error(`[ixmaps-gl] CHOROPLETH layer "${spec.name}" needs .binding({lookup}), and its FEATURE base needs .binding({id})`);
+    }
+    // an AGGREGATE CATEGORICAL choropleth sums ALL the rows of a polygon
+    // per category (aggregatedCategoricalClass) — every row is kept, under
+    // AGGREGATED_ROWS (not enumerable: the first row stays the polygon's
+    // properties for the tooltip and filters)
+    if (isAggregatedCategoricalChoropleth(spec)) {
+      const groups = new Map();
+      for (const row of table.rows) {
+        const key = String(row[lookupField]);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      }
+      return {
+        type: 'FeatureCollection',
+        features: geomRt.features.map(f => {
+          const rows = groups.get(String(f.properties[idField]));
+          const properties = rows ? Object.assign({}, rows[0]) : {};
+          if (rows) Object.defineProperty(properties, AGGREGATED_ROWS, { value: rows });
+          return { type: 'Feature', geometry: f.geometry, properties, _flatAreaKm2: flatShapeAreaKm2(geomRt, f) };
+        })
+      };
     }
     const rowsByKey = new Map(table.rows.map(row => [String(row[lookupField]), row]));
     // Unmatched polygons (no CSV row for that id) keep their geometry with
@@ -2923,6 +2990,9 @@
         // theme addressed only by its meta.name, same bug different
         // resolution path.
         if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
+        // flat's theme id is style.name (maptheme szId) — several themes
+        // can share one .layer() name (a page's features + charts + texts)
+        if (themeIdOf(rt) !== rt.name) _globalThemeRegistry.set(themeIdOf(rt), rt);
         if (named) namedLoads.push(rt);
        } catch (err) {
         console.error(`[ixmaps-gl] theme "${lb.name}" skipped:`, err);
@@ -3416,6 +3486,8 @@
         },
         setMapTypeId: (id) => engineApi.setMapType(id),
         mapType: (id) => engineApi.setMapType(id),
+        // flat's getMapTypeId(): the basemap type name in use
+        getMapTypeId: () => String(builder.mapOptions.mapType || ''),
         setBasemapOpacity: (delta, mode) => {
           _basemapOpacity = mode === 'relative'
             ? Math.max(0, Math.min(1, _basemapOpacity + (parseFloat(delta) || 0)))
@@ -3857,6 +3929,7 @@
         runtimes.push(rt);
         _globalThemeRegistry.set(rt.name, rt);
         if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
+        if (themeIdOf(rt) !== rt.name) _globalThemeRegistry.set(themeIdOf(rt), rt);
         addLegendPanel(rt);
         notifyNewTheme(rt);
         refresh();
@@ -4139,8 +4212,25 @@
         refresh();
       });
 
+      // flat's page hook ixmaps.htmlgui_onDrawTheme(szId), called when a
+      // theme has been drawn: here once per settled redraw, for every
+      // shown theme, with its id. Not re-entered when the hook itself
+      // changes a theme (changeThemeStyle → refresh → here again).
+      let inDrawThemeHook = false;
+      function callDrawThemeHooks() {
+        const hook = pageIxmaps() && pageIxmaps().htmlgui_onDrawTheme;
+        if (typeof hook !== 'function' || inDrawThemeHook) return;
+        inDrawThemeHook = true;
+        try {
+          for (const rt of runtimes.slice()) {
+            if (rt._hidden) continue;
+            try { hook.call(global.ixmaps, themeIdOf(rt)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onDrawTheme:', e); }
+          }
+        } finally { inDrawThemeHook = false; }
+      }
       function notifyRedraw() {
         redrawListeners.forEach(cb => { try { cb(); } catch (err) { console.error('[ixmaps-gl] onRedraw callback failed:', err); } });
+        callDrawThemeHooks();
       }
 
       // For explicit, discrete API calls (setFacetFilter, setSizeField,
@@ -4514,7 +4604,10 @@
             // themselves authored with their own leading space (e.g.
             // " MW") in real pages.
             const legendUnit = rt.style.legendunits || rt.style.units || '';
-            const labels = rt.categoryDisplayLabels || rt.categoryLabels;
+            // row labels go into innerHTML: the page's own .style({label})
+            // stays HTML, as in flat; categories read from the data are
+            // escaped (a value could carry markup)
+            const labels = legendRowLabels(rt);
             // .type("...|TEXTLEGEND") — the FIFTH real legend-related
             // type() token: title/snippet/description text only, no
             // category rows at all (swatches, bars, chips — none of it),
@@ -4661,8 +4754,8 @@
                   + '<span>' + text + '</span></div>';
                 rowsEl.querySelectorAll('.ix-legend-row').forEach(row => {
                   row.addEventListener('click', () => {
-                    if (rt._markedClasses.has(0)) window.ixmaps.unmarkThemeClass(rt.name, 0);
-                    else window.ixmaps.markThemeClass(rt.name, 0);
+                    if (rt._markedClasses.has(0)) unmarkRuntimeClass(rt, 0);
+                    else markRuntimeClass(rt, 0);
                   });
                 });
               };
@@ -4701,8 +4794,8 @@
                 rowsEl.querySelectorAll('.ix-legend-row').forEach(cell => {
                   cell.addEventListener('click', () => {
                     const idx = parseInt(cell.dataset.idx, 10);
-                    if (rt._markedClasses.has(idx)) window.ixmaps.unmarkThemeClass(rt.name, idx);
-                    else window.ixmaps.markThemeClass(rt.name, idx);
+                    if (rt._markedClasses.has(idx)) unmarkRuntimeClass(rt, idx);
+                    else markRuntimeClass(rt, idx);
                   });
                 });
               };
@@ -4759,15 +4852,16 @@
               // — legend.js:817), toggle decided by the caller. Same
               // split here: the toggle check lives in this click
               // handler, the actual add/remove-and-redraw primitive is
-              // the module-level ixmaps.markThemeClass/unmarkThemeClass
-              // (see their own comment) — so a page's OWN custom UI
-              // calling those same two globals drives this exact legend
-              // too, not just these rows.
+              // markRuntimeClass/unmarkRuntimeClass, which the globals
+              // ixmaps.markThemeClass/unmarkThemeClass also use — so a
+              // page's OWN custom UI drives this exact legend too. The
+              // rows pass their runtime itself: its .layer() name may be
+              // shared with other themes of the page.
               rowsEl.querySelectorAll('.ix-legend-row').forEach(rowEl => {
                 rowEl.addEventListener('click', () => {
                   const idx = parseInt(rowEl.dataset.idx, 10);
-                  if (rt._markedClasses.has(idx)) window.ixmaps.unmarkThemeClass(rt.name, idx);
-                  else window.ixmaps.markThemeClass(rt.name, idx);
+                  if (rt._markedClasses.has(idx)) unmarkRuntimeClass(rt, idx);
+                  else markRuntimeClass(rt, idx);
                 });
               });
             };
@@ -5627,7 +5721,7 @@
   }
   // maptheme.js formatValue's NOBREAKS switch (26368): theme min > 999 and max < 3000
   function flatNoBreaks(vMin, vMax) {
-    return vMin > 999 && vMax < 3000;
+    return Number.isFinite(vMin) && Number.isFinite(vMax) && vMin > 999 && vMax < 3000;
   }
 
   // flat's chart position (maptheme.js 24441-24530 and 24603, the non-PLOT,
@@ -5737,9 +5831,13 @@
   // scale gate (maptheme.js 2609-2611, 8250-8260): the theme is hidden at
   // scales above featureupper and at or below featurelower ("1:200000" or
   // a bare denominator, __scanScaleValue 2021)
+  // a scale style value ("1:200000" or a bare denominator, flat's
+  // __scanScaleValue, maptheme.js 2021) as its denominator; 0 when unset
+  function scaleDenom(v) {
+    return (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
+  }
   function featuresHiddenByScale(style, zoom) {
-    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
-    const upper = denom(style.featureupper), lower = denom(style.featurelower);
+    const upper = scaleDenom(style.featureupper), lower = scaleDenom(style.featurelower);
     if (!upper && !lower) return false;
     const scale = scaleDenominatorAt(zoom);
     return (lower && scale <= lower) || (upper && scale > upper);
@@ -5750,9 +5848,8 @@
   // chartupper and at or below chartlower; layerupper / layerlower stand in
   // for them when unset (1774-1779)
   function chartHiddenByScale(style, zoom) {
-    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
-    const upper = denom(style.chartupper != null ? style.chartupper : style.layerupper);
-    const lower = denom(style.chartlower != null ? style.chartlower : style.layerlower);
+    const upper = scaleDenom(style.chartupper != null ? style.chartupper : style.layerupper);
+    const lower = scaleDenom(style.chartlower != null ? style.chartlower : style.layerlower);
     if (!upper && !lower) return false;
     const scale = scaleDenominatorAt(zoom);
     return !!((upper && scale > upper) || (lower && scale <= lower));
@@ -5761,8 +5858,7 @@
   // 1726-1734, 16986-16990): the GLOW halo is drawn at scales at or below
   // glowupper and at or above glowlower (both inclusive)
   function glowHiddenByScale(style, zoom) {
-    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
-    const upper = denom(style.glowupper), lower = denom(style.glowlower);
+    const upper = scaleDenom(style.glowupper), lower = scaleDenom(style.glowlower);
     if (!upper && !lower) return false;
     const scale = scaleDenominatorAt(zoom);
     return !!((upper && scale > upper) || (lower && scale < lower));
@@ -5784,8 +5880,7 @@
     const on = style.shadow === true || style.shadow === 'true' || style.shadow === 1 || style.shadow === '1';
     if (!on) return false;
     if (count > (isNaN(styleNum(style.maxshadow)) ? 1000 : styleNum(style.maxshadow))) return false;
-    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
-    const upper = denom(style.shadowupper), lower = denom(style.shadowlower);
+    const upper = scaleDenom(style.shadowupper), lower = scaleDenom(style.shadowlower);
     const scale = scaleDenominatorAt(zoom);
     return !((upper && scale > upper) || (lower && scale < lower));
   }
@@ -5799,8 +5894,7 @@
   // flat's BOX block (maptheme.js 18758-18760): the box — and its title —
   // is removed at scales above boxupper or below boxlower
   function boxHiddenByScale(style, zoom) {
-    const denom = v => (v == null || v === '' ? 0 : Number(String(v).includes(':') ? String(v).split(':')[1] : v)) || 0;
-    const upper = denom(style.boxupper), lower = denom(style.boxlower);
+    const upper = scaleDenom(style.boxupper), lower = scaleDenom(style.boxlower);
     const scale = scaleDenominatorAt(zoom);
     return !!((upper && scale > upper) || (lower && scale < lower));
   }
@@ -6133,8 +6227,9 @@
   // functionally deleted.
   const DIMMED_ICON_ALPHA = 8;
 
-  // deck.gl 8.9.35's IconLayer auto-packing atlas (icon-manager.ts) has NO
-  // eviction and NO cap of its own: its texture is 1024px wide (fixed) but
+  // deck.gl's IconLayer auto-packing atlas (icon-manager.ts, read and
+  // measured on 8.9.35; the guards below are kept for 9.x, not re-measured
+  // there) has NO eviction and NO cap of its own: its texture is 1024px wide (fixed) but
   // grows TALLER via power-of-two resize forever, for every distinct icon
   // id ever seen, for the lifetime of the layer — confirmed by reading
   // that file directly. There is no "atlas full" code path; it just keeps
@@ -6224,6 +6319,74 @@
       offsets: keep.map(() => ({ x: 0, y: 0 })),
       fitScale: full.fitScale, maxR: full.maxR
     };
+  }
+
+  // CHART|SYMBOL|SEQUENCE (flat maptheme.js 21184-21300, 21790-21925,
+  // 22296-22395): one symbol per category part of a chart, in category
+  // order or sorted (SORT: DOWN biggest first, UP smallest first), parts
+  // of value 0 left out. radiusOf(v) is the part's radius (flat: max radius
+  // · (v / max value)^(1/sizepow)). Placement:
+  //  - STAR: the first part is the center (star radius R = its radius); each
+  //    further part (with UP every part) sits on a circle around it, at
+  //    R + r (×1.5 EXPAND, ×2 EXPANDMAX, ×rangescale), stepping the angle
+  //    by f = 90° − asin(√((R+r)² − r²) / (R+r)) before and after it, so
+  //    neighbours touch; UP: radius R·(1 + parts/5), the angle step of the
+  //    7th part on divided by 1 + 2r/maxRadius; with EXPAND|SORT|UP,
+  //    R = (EXPANDMAX ? 2 : 0.5) · maxRadius · √(biggest / max value)
+  //    (LINEAR/SIZEP1: linear), COMPRESS halves it (COMPRESSMAX quarter)
+  //  - HORZ: side by side from the center to the right
+  //  - otherwise (or CENTER): all on the center
+  // Returns the parts in drawing order: { i, v, r, x, y } (pixels, y down).
+  function sequenceLayout(counts, flags, radiusOf, opts = {}) {
+    const has = f => flatFlag(flags, f);
+    const word = w => [...flags].some(f => new RegExp('\\b' + w + '\\b').test(f));
+    let order = counts.map((v, i) => ({ i, v }));
+    if (word('SORT')) {
+      if (word('UP')) order.sort((a, b) => a.v - b.v);
+      else if (word('DOWN')) order.sort((a, b) => b.v - a.v);
+    }
+    const parts = [];
+    const star = has('STAR') && !has('CENTER'), horz = has('HORZ') && !has('CENTER');
+    const up = word('UP');
+    const maxR = opts.maxRadius || 0;
+    const nStarParts = opts.nParts || counts.length;
+    let angle = 0, starR = null, x = 0;
+    order.forEach((p, k) => {
+      if (!p.v) return;
+      const r = radiusOf(p.v);
+      if (!(r > 0)) return;
+      let px = 0, py = 0;
+      if (star) {
+        if (starR === null) {
+          starR = r;
+          if (has('EXPAND') && word('SORT') && up) {
+            const big = order[order.length - 1].v, mv = opts.maxValue || big || 1;
+            starR = (has('EXPANDMAX') ? 2 : 0.5) * maxR * (has('LINEAR') || has('SIZEP1') ? big / mv : Math.sqrt(big / mv));
+          }
+          if (has('COMPRESS')) starR *= has('COMPRESSMAX') ? 0.25 : 0.5;
+        }
+        if (parts.length > 0 || up) {
+          const c = starR + r;
+          const b = Math.sqrt(Math.max(0, c * c - r * r));
+          let f = 90 - Math.asin(Math.min(1, b / c)) / Math.PI * 180;
+          let dist = starR + r;
+          if (up) {
+            if (k > 5) f /= (1 + 2 * (r / (maxR || r)));
+            dist = starR * (1 + nStarParts / 5);
+          }
+          if (opts.rangeScale) dist *= opts.rangeScale;
+          else dist = has('EXPANDMAX') ? dist * 2 : (has('EXPAND') ? dist * 1.5 : dist);
+          angle += f;
+          px = Math.cos(angle / 180 * Math.PI) * dist;
+          py = Math.sin(angle / 180 * Math.PI) * dist;
+          angle += f;
+        }
+      } else if (horz) {
+        x += r; px = x; x += r;
+      }
+      parts.push({ i: p.i, v: p.v, r, x: px, y: py });
+    });
+    return parts;
   }
 
   // ---------------------------------------------------------------
@@ -7180,7 +7343,7 @@
         key = `${snapped.x}:${snapped.y}`;
       }
       let cell = cells.get(key);
-      if (!cell) { cell = { snapped, sumX: 0, sumY: 0, n: 0, value: 0, classValue: 0, value100: 0, series: null, first: f }; cells.set(key, cell); }
+      if (!cell) { cell = { key, snapped, sumX: 0, sumY: 0, n: 0, value: 0, classValue: 0, value100: 0, series: null, first: f }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
       cell.value += f.properties.value;
       if (f.properties.classValue !== undefined) cell.classValue += f.properties.classValue;
@@ -7202,6 +7365,9 @@
         ? { cluster: true, point_count: cell.n, value: cell.value, ...(hasClass ? { classValue: cell.classValue } : {}) }
         : cell.first.properties;
       if (cell.series && cell.n > 1) props = Object.assign({}, props, { series: cell.series });
+      // a field aggregation's cell key (the field value): the categories of
+      // one cell are merged by it (groupCoLocated), not by their positions
+      if (field) props = Object.assign({}, props, { aggKey: cell.key });
       if (post) {
         props = Object.assign({}, props);
         if (hasClass) props.classValue = post(cell.n > 1 ? cell.classValue : props.classValue, cell.value100, props.series);
@@ -7234,7 +7400,7 @@
     }
   }
 
-  function groupCoLocated(clusterFeatures, zoom, clusterRadiusPx, nCategories, flags) {
+  function groupCoLocated(clusterFeatures, zoom, clusterRadiusPx, nCategories, flags, atCellCenter = false) {
     // Merge tolerance MUST track the same theme-driven, scale-dependent
     // aggregation width the clustering itself just used (clusterRadiusPx,
     // set by _ensureClusterIndices right before this runs) — not an
@@ -7256,9 +7422,11 @@
       // recomputes ptPos as the mean of ptPosA regardless of which
       // grid produced the grouping key).
       const snapped = cellPx ? snapToAggregationGrid(p.x, p.y, cellPx, flags, zoom) : p;
-      const key = `${snapped.x}:${snapped.y}`;
+      // a field aggregation's categories each sit at the mean of their own
+      // records — merged by the field value, not by (float) position
+      const key = f.properties.aggKey != null ? f.properties.aggKey : `${snapped.x}:${snapped.y}`;
       let cell = cells.get(key);
-      if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0), classTotal: undefined }; cells.set(key, cell); }
+      if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, cx: snapped.x, cy: snapped.y, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0), classTotal: undefined }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
       cell.counts[f.properties.cat] += f.properties.value;
       if (f.properties.classValue !== undefined) cell.classTotal = (cell.classTotal || 0) + f.properties.classValue;
@@ -7269,7 +7437,8 @@
       cell.recordCounts[f.properties.cat] += (f.properties.point_count || 1);
     });
     return Array.from(cells.values()).map(cell => {
-      const ll = worldPixelToLngLat(cell.sumX / cell.n, cell.sumY / cell.n, zoom);
+      // without RELOCATE flat's cell item sits at the cell center
+      const ll = atCellCenter && cellPx ? worldPixelToLngLat(cell.cx, cell.cy, zoom) : worldPixelToLngLat(cell.sumX / cell.n, cell.sumY / cell.n, zoom);
       return {
         geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
         properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts, ...(cell.classTotal !== undefined ? { classTotal: cell.classTotal } : {}) }
@@ -7424,7 +7593,7 @@
         this._gridRefLat = (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
       }
 
-      if (this.flags.has('DOMINANT') && this.binding.value) {
+      if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this)) {
         // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
         // (binding.value is a pipe-joined field list, e.g. one CSV column
         // per age band for the same year/sex — same pipe convention
@@ -7774,6 +7943,26 @@
     }
 
     _rebuildActiveFeatures() {
+      // An AGGREGATE CATEGORICAL choropleth filters the RECORDS of each
+      // polygon (as its .filter() does before the join), then sums them —
+      // not the polygons by their first record
+      if (isAggregatedCategoricalChoropleth(this)) {
+        const expr = this._runtimeFilterExpr;
+        const clauses = Array.from(this.facetFilters.entries());
+        if (!expr && !clauses.length) { this._activeFeatures = null; return; }
+        const pred = expr ? flatFilterPredicate(String(expr)) : null;
+        this._activeFeatures = this.features.map(f => {
+          const rows = f.properties && f.properties[AGGREGATED_ROWS];
+          if (!rows) return f;
+          const kept = rows.filter(r => (!pred || pred(r)) && clauses.every(([field, clause]) => matchesFacetClause(r[field], clause)));
+          const properties = kept.length ? Object.assign({}, kept[0]) : {};
+          if (kept.length) Object.defineProperty(properties, AGGREGATED_ROWS, { value: kept });
+          const out = { type: 'Feature', geometry: f.geometry, properties };
+          if (f._flatAreaKm2 !== undefined) out._flatAreaKm2 = f._flatAreaKm2;
+          return out;
+        });
+        return;
+      }
       // Base set: this.features narrowed by the runtime WHERE-filter
       // (changeThemeStyle's own mechanism, see _runtimeFilterExpr's own
       // comment) if one is active — reusing applyWhereFilter, the SAME
@@ -8470,8 +8659,11 @@
         // unlike CHOROPLETH, there's no per-feature classification here.
         // flat puts fillopacity into the shape's fill-opacity only
         // (maptheme.js 13407, 14071-14078): the outline stays opaque
-        getFillColor: filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0],
-        getLineColor: this.style.linecolor ? hexOrNamedToRgb(styleLineColor(this.style.linecolor)) : [130, 130, 130],
+        // (a fill color's own alpha — rgba(…, 0.5) — times fillopacity)
+        getFillColor: filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * cssColorAlpha(raw) * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0],
+        getLineColor: this.style.linecolor
+          ? withAlpha(hexOrNamedToRgb(styleLineColor(this.style.linecolor)), cssColorAlpha(styleLineColor(this.style.linecolor)))
+          : [130, 130, 130],
         lineWidthMinPixels: styleNum(this.style.linewidth) || 1,
         // Confirmed live (2026-09-21, deck.gl v9.4/MapLibre-globe upgrade):
         // this layer's fill rendered with a moire/hatching pattern of
@@ -8540,9 +8732,10 @@
     // — plain/PERCENTOFMEAN/DEVIATION); or COMPOSECOLOR's per-polygon
     // BLEND across the same piped fields (_resolveComposedColor — no
     // single winning class, so no `cat`/tooltip chart line, just the
-    // blended color directly). CATEGORICAL choropleths (exact-match,
-    // single field) aren't implemented — no ported config uses that
-    // combination yet. Geometry + properties are already the joined
+    // blended color directly); AGGREGATE CATEGORICAL on one field — the
+    // dominant category of each polygon's records (aggregatedCategoricalClass).
+    // A plain CATEGORICAL choropleth (exact match of one row's value) is not
+    // implemented. Geometry + properties are already the joined
     // FeatureCollection from joinChoroplethFeatures. `zoom` is only used
     // for style.fillopacity:"auto" (see resolveAutoFillOpacity) — every
     // other branch here is zoom-independent.
@@ -8565,7 +8758,37 @@
       // DOPACITY/COMPOSECOLOR branches.
       const dopacityActive = !isComposeColor &&
         (this.flags.has('DOPACITY') || this.flags.has('DOPACITYMIN') || this.flags.has('DOPACITYMAX') || this.flags.has('DOPACITYMINMAX'));
+      // AGGREGATE CATEGORICAL: every polygon's parts and dominant class
+      // (aggregatedCategoricalClass), the biggest part per class over all
+      // polygons for the opacity (flat's nMaxA)
+      const aggCat = isAggregatedCategoricalChoropleth(this) && this.categoryIndexByLabel;
+      let aggOf = null, aggMaxA = null;
+      if (aggCat) {
+        const nCats = this.categoryLabels.length;
+        aggOf = new Map();
+        aggMaxA = new Array(nCats).fill(0);
+        source.forEach(f => {
+          const rows = f.properties && f.properties[AGGREGATED_ROWS];
+          if (!rows) return;
+          const agg = aggregatedCategoricalClass(rows, this.binding, this.flags, this.categoryIndexByLabel, nCats);
+          if (!agg) return;
+          aggOf.set(f, agg);
+          agg.parts.forEach((v, i) => { if (v > aggMaxA[i]) aggMaxA[i] = v; });
+        });
+      }
       const data = source.map(f => {
+        if (aggCat) {
+          const agg = aggOf.get(f);
+          return {
+            type: 'Feature',
+            geometry: f.geometry,
+            properties: {
+              // no part above 0: no item in flat, not painted
+              value: agg ? agg.value : undefined, raw: agg ? f.properties : {}, cat: agg ? agg.index : null,
+              dopacityAlpha: agg && dopacityActive ? dominantDopacityAlpha(this.style, this.flags, agg.value, aggMaxA[agg.index]) : null
+            }
+          };
+        }
         if (isComposeColor) {
           return {
             type: 'Feature',
@@ -8604,7 +8827,14 @@
       // evidence mode "isolate", the default (7715) — or grayed with
       // style.evidence "isolate_gray". ("highlight", flat's highlight list,
       // is shown grayed too here.) COMPOSECOLOR has no classes.
-      const lineRgb = this.style.linecolor ? hexOrNamedToRgb(styleLineColor(this.style.linecolor)) : [255, 255, 255];
+      // linecolor "none": no outline; a class color "none" (an explicit
+      // colorscheme list) leaves its polygons unpainted, an rgba() class
+      // color keeps its alpha — as flat's SVG fill does
+      const lineColorRaw = this.style.linecolor ? styleLineColor(this.style.linecolor) : null;
+      const lineRgb = lineColorRaw ? withAlpha(hexOrNamedToRgb(lineColorRaw), cssColorAlpha(lineColorRaw)) : [255, 255, 255];
+      const cs = this.style.colorscheme;
+      const classAlpha = Array.isArray(cs) && cs.length && !/^\d+$/.test(String(cs[0])) ? cs.map(cssColorAlpha) : null;
+      const alphaOfClass = i => (classAlpha && i != null && classAlpha[i] != null ? classAlpha[i] : 1);
       const evidenceMode = String(this.style.evidence || 'isolate');
       const unmarkedEvidence = d => {
         if (!this._markedClasses.size || this._onMarksChanged || this._markedClasses.has(d.properties.cat)) return null;
@@ -8624,7 +8854,8 @@
           const evidence = unmarkedEvidence(d);
           if (evidence === 'hide') return [0, 0, 0, 0];
           if (evidence === 'gray') return [...grayOf(rgb), 90];
-          return d.properties.dopacityAlpha != null ? [...rgb, Math.round(d.properties.dopacityAlpha * 255)] : rgb;
+          const a = alphaOfClass(d.properties.cat);
+          return d.properties.dopacityAlpha != null ? [...rgb.slice(0, 3), Math.round(d.properties.dopacityAlpha * a * 255)] : withAlpha(rgb, a);
         },
         // a per-polygon accessor only while a class is isolated
         getLineColor: this._markedClasses.size && !this._onMarksChanged && evidenceMode === 'isolate'
@@ -9568,6 +9799,14 @@
       });
 
       const doRelocate = this.flags.has('RELOCATE');
+      // SEQUENCE: flat's AGGREGATE cell is ONE chart with a part per
+      // category (RELOCATE only moves it to the records' mean position) —
+      // every category of a cell, single records included, in one group
+      if (flatFlag(this.flags, 'SEQUENCE') && this.flags.has('CATEGORICAL')) {
+        const groups = groupCoLocated(clusterFeatures.concat(individual), effectiveZoom, this._clusterRadiusPx,
+          this.categoryLabels ? this.categoryLabels.length : 1, this.flags, !doRelocate);
+        return { individual: [], groups };
+      }
       // without RELOCATE a cell's item already sits at the cell center
       // (aggregateOnGrid)
       const groups = doRelocate ? this._groupCoLocated(clusterFeatures, effectiveZoom) : clusterFeatures.map(f => {
@@ -9832,6 +10071,9 @@
         if (userLayers) return layers.concat(userLayers);
       }
       if (this.flags.has('LABEL')) return layers.concat(this._buildLabelChartLayers(combined, zoom, liveZoom, sizeValueOf));
+      if (flatFlag(this.flags, 'SEQUENCE') && this.flags.has('CATEGORICAL') && this.flags.has('AGGREGATE')) {
+        return layers.concat(this._buildSequenceChartLayers(combined, zoom, liveZoom));
+      }
       const fillOpacity = styleNum(this.style.fillopacity) || 0.85;
       // .style({linecolor, linewidth}) — an individual icon's own border,
       // see _buildSingleIcon's own comment. Real ixmaps-flat symbol
@@ -10144,6 +10386,164 @@
       return layers;
     }
 
+    // flat's nAllMaxValue for a SEQUENCE chart (maptheme.js 13211-13215):
+    // the biggest category part of any chart at this aggregation — over
+    // the whole dataset, not the view; cached per zoom
+    _sequenceMaxValue(zoom) {
+      if (this._seqMaxFor !== this._clusterIndices) { this._seqMaxFor = this._clusterIndices; this._seqMax = new Map(); }
+      if (!this._seqMax.has(zoom)) {
+        const { groups } = this._computeAggregatedItems([-180, -90, 180, 90], zoom);
+        let max = 0;
+        groups.forEach(g => g.properties.counts.forEach(c => { if (c > max) max = c; }));
+        this._seqMax.set(zoom, max || 1);
+      }
+      return this._seqMax.get(zoom);
+    }
+
+    // CHART|SYMBOL|SEQUENCE on an AGGREGATE CATEGORICAL theme: each cell is
+    // one chart of a symbol per category part (sequenceLayout), as flat's
+    // SYMBOL branch draws it (maptheme.js 21122-22400):
+    //  - part radius: max radius · (v / max value)^(1/sizepow), max value =
+    //    normalsizevalue, else the biggest part of any chart (21793)
+    //  - circle in the category color at fillopacity, stroked in linecolor
+    //    linewidth · unit · min(2r / max radius, 0.2) wide (21966)
+    //  - GLOW (and AURA): with SORT only around the first part, else around
+    //    every part (22009)
+    //  - marked legend classes: the other parts hidden, the marked ones
+    //    back on the center (14339-14420, evidence "isolate"); with
+    //    "isolate_gray" the others dimmed
+    //  - STAR: the center part drawn last, on top of its satellites (23145)
+    //  - VALUES: each part's value (COUNT: its records; valuefield: the class name)
+    //  - align / offsets as the SYMBOL branch: half size the normal radius
+    // A part's pick object carries its chart's properties (tooltip).
+    _buildSequenceChartLayers(charts, zoom, liveZoom) {
+      const st = this.style;
+      const seqMax = this._sequenceMaxValue(zoom);
+      const partRadius = v => valueRadius(v, liveZoom, st, this.mapOptions, this.flags, seqMax);
+      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
+      const normalR = NORMAL_RADIUS_PX * unit;
+      const nCats = this.categoryLabels ? this.categoryLabels.length : 1;
+      const marking = this._markedClasses.size && !this._onMarksChanged;
+      const gray = marking && String(st.evidence || 'isolate') === 'isolate_gray';
+      const sorted = [...this.flags].some(f => /\bSORT\b/.test(f));
+      const fillOpacity = styleNum(st.fillopacity) || 0.85;
+      const borderRgb = st.linecolor && styleLineColor(st.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(st.linecolor)) : null;
+      const lineWidth = styleNum(st.linewidth) || 1;
+      const symbols = Array.isArray(st.symbols) ? st.symbols : null;
+      const shapeOf = i => { const sh = symbols && (symbols[i] || symbols[0]); return /^(circle|square|diamond|triangle)$/.test(sh) ? sh : 'circle'; };
+      const colorOf = i => this.categoryColorsRgb[i] || [128, 128, 128];
+      const parts = [], glows = [];
+      for (const d of charts) {
+        let layout = sequenceLayout(d.properties.counts, this.flags, partRadius, { maxRadius: normalR, maxValue: seqMax, nParts: nCats, rangeScale: styleNum(st.rangescale) || 0 });
+        if (!layout.length) continue;
+        // GLOW belongs to the first part (sorted) or to every part, and
+        // hides with it when its class is not marked
+        const glowParts = new Set(sorted ? [layout[0].i] : layout.map(p => p.i));
+        if (marking && !gray) {
+          layout = layout.filter(p => this._markedClasses.has(p.i)).map(p => ({ ...p, x: 0, y: 0 }));
+          if (!layout.length) continue;
+        }
+        // the chart's own ptNull.y: the last part's radius + 5 units (23204)
+        d._seqLast = layout[layout.length - 1].r;
+        const items = layout.map(p => {
+          const item = { geometry: d.geometry, properties: d.properties, chart: d, part: p };
+          if (glowParts.has(p.i)) glows.push(item);
+          return item;
+        });
+        // STAR: the first part (its center) is put on top at the end (23145)
+        if (flatFlag(this.flags, 'STAR') && items.length > 1) items.push(items.shift());
+        parts.push(...items);
+      }
+      const alignOf = this._chartAlignFn(liveZoom, d => (d.chart || d)._seqLast || 0);
+      const offsetOf = item => { const o = alignOf(item.chart); return [o[0] + item.part.x, o[1] + item.part.y]; };
+      const alphaOf = item => (gray && !this._markedClasses.has(item.part.i) ? DIMMED_ICON_ALPHA : 255);
+      const layers = [];
+      if (glows.length && this.flags.has('GLOW') && !glowHiddenByScale(st, liveZoom)) {
+        layers.push(new IconLayer({
+          id: `ix-glow-${this.name}-g${this._iconGeneration}`,
+          data: glows, pickable: false,
+          getPosition: d => d.geometry.coordinates,
+          getIcon: d => this._getGlowIcon(colorOf(d.part.i)),
+          getSize: d => d.part.r * 11,
+          getPixelOffset: offsetOf,
+          getColor: d => [255, 255, 255, alphaOf(d)],
+          sizeUnits: 'pixels', billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      } else if (glows.length && this.flags.has('AURA') && !glowHiddenByScale(st, liveZoom)) {
+        layers.push(new IconLayer({
+          id: `ix-aura-${this.name}-g${this._iconGeneration}`,
+          data: glows, pickable: false,
+          getPosition: d => d.geometry.coordinates,
+          getIcon: d => this._buildSingleIcon(borderRgb || colorOf(d.part.i), 0.3, 'circle', null, 0),
+          getSize: d => d.part.r * 2 * 1.3,
+          getPixelOffset: offsetOf,
+          getColor: d => [255, 255, 255, alphaOf(d)],
+          sizeUnits: 'pixels', billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+      layers.push(new IconLayer({
+        id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
+        data: parts, pickable: true,
+        getPosition: d => d.geometry.coordinates,
+        // the stroke, in the icon raster's pixels (the icon is drawn at 2r)
+        getIcon: d => this._buildSingleIcon(colorOf(d.part.i), fillOpacity, shapeOf(d.part.i), borderRgb,
+          borderRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0),
+        getSize: d => d.part.r * 2,
+        getPixelOffset: offsetOf,
+        getColor: d => [255, 255, 255, alphaOf(d)],
+        sizeUnits: 'pixels', billboard: true,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      }));
+      // VALUES on each part (maptheme.js 22188-22250): the part's value — with
+      // COUNT its record count, with valuefield on the categorical field the
+      // class name — formatted with valuedecimals (else none) plus the unit;
+      // font min(1, 3.2 / L) · r · valuescale, L the length of the theme's
+      // biggest value text (szMaxText), normal weight, in valuecolor /
+      // textcolor, else ChartColors.textColor of the part color
+      if (this.flags.has('VALUES') && !valuesHiddenByScale(st, zoom)) {
+        const valueScale = styleNum(st.valuescale) || 1;
+        const { noBreaks } = this._valueTextOpts();
+        const units = st.units ? String(st.units) : '';
+        const unit = units ? (units[0] === '.' ? '' : ' ') + units : '';
+        const unitText = unit.length <= 5 ? unit : '';
+        const dec = styleNum(st.valuedecimals) || 0;
+        const fmt = v => flatGroupedValue(v, dec, noBreaks) + unitText;
+        const maxLen = fmt(seqMax).length;
+        const textOverride = st.valuecolor || st.textcolor;
+        const counting = flatFlag(this.flags, 'COUNT');
+        const labels = [];
+        parts.forEach(d => {
+          const rec = this._categoryValueRecord(d.part.i);
+          const name = rec ? String(rec[st.valuefield]) : null;
+          const t = counting && d.properties.recordCounts ? d.properties.recordCounts[d.part.i] : d.part.v;
+          const text = name != null ? name : fmt(t);
+          const L = Math.max((name != null ? name.length : 0) + 1, maxLen);
+          const fontSize = Math.min(1, 3.2 / L) * d.part.r * valueScale;
+          if (fontSize > VALUES_MIN_FONT_PX) {
+            labels.push({ geometry: d.geometry, text, fontSize, pixelOffset: offsetOf(d), alpha: alphaOf(d),
+              color: textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(colorOf(d.part.i)) });
+          }
+        });
+        if (labels.length) {
+          layers.push(new TextLayer({
+            id: `ix-cluster-values-${this.name}`,
+            data: labels, pickable: false,
+            getPosition: d => d.geometry.coordinates,
+            getText: d => d.text,
+            getSize: d => d.fontSize,
+            getColor: d => [...d.color.slice(0, 3), d.alpha],
+            getPixelOffset: d => d.pixelOffset,
+            sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
+            characterSet: 'auto',
+            getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+          }));
+        }
+      }
+      return layers;
+    }
+
     // flat's chart position for this build (flatChartAlignOffset): a
     // function item → pixel offset, the same for every part of one chart
     // (symbol, glow, shadow, box, title, value text). unit is flat's
@@ -10387,6 +10787,23 @@
     }
   }
 
+  // a color's own opacity, 0..1, as SVG paints it in flat: "none" (SVG's
+  // no paint — a polygon with only its outline, or a class not painted)
+  // 0, rgba()/hsla() its alpha, #rrggbbaa / #rgba its alpha digits, else 1
+  function cssColorAlpha(v) {
+    if (typeof v !== 'string') return 1;
+    const c = v.trim().toLowerCase();
+    if (c === 'none' || c === 'transparent') return 0;
+    const m = c.match(/^(?:rgba|hsla)\([^)]*,\s*([\d.]+%?)\s*\)$/) || c.match(/^(?:rgb|hsl)a?\([^)]*\/\s*([\d.]+%?)\s*\)$/);
+    if (m) return Math.max(0, Math.min(1, m[1].endsWith('%') ? parseFloat(m[1]) / 100 : parseFloat(m[1])));
+    const h = c.match(/^#(?:[0-9a-f]{3}([0-9a-f])|[0-9a-f]{6}([0-9a-f]{2}))$/);
+    if (h) return parseInt(h[1] ? h[1] + h[1] : h[2], 16) / 255;
+    return 1;
+  }
+  // [r, g, b] with an alpha 0..1 — the plain [r, g, b] (opaque) when it is 1
+  function withAlpha(rgb, a) {
+    return a >= 1 ? rgb.slice(0, 3) : [...rgb.slice(0, 3), Math.round(255 * Math.max(0, a))];
+  }
   function hexOrNamedToRgb(v) {
     const NAMED = { gray: [128, 128, 128], grey: [128, 128, 128], black: [0, 0, 0], white: [255, 255, 255] };
     return parseCssColor(v) || NAMED[v] || [130, 130, 130];
@@ -10405,6 +10822,13 @@
   // nothing here authored that string. Escaped before going into
   // innerHTML so a stray `<`/`&`/quote in a source field can't break the
   // option markup (or worse).
+  // a legend's row labels as HTML: the page's .style({label}) as given,
+  // values from the data escaped
+  function legendRowLabels(rt) {
+    const display = rt.categoryDisplayLabels;
+    if (display && display !== rt.categoryLabels) return display;
+    return (rt.categoryLabels || []).map(v => escapeHtml(v));
+  }
   function escapeHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
@@ -10415,19 +10839,131 @@
   // definition wins" caveat). Returns null for an unknown id, same as the
   // real engine, rather than throwing.
   function getThemeObj(szId) {
-    const rt = _globalThemeRegistry.get(szId);
+    // no id: flat's current theme — here the one a page's facets were
+    // built for (its own facet script sets ixmaps.filterThemeId), else the
+    // last chart / choropleth theme
+    let rt = szId != null ? _globalThemeRegistry.get(szId) : null;
+    if (szId == null) {
+      const pid = pageIxmaps() && pageIxmaps().filterThemeId;
+      rt = (pid != null && _globalThemeRegistry.get(pid))
+        || [..._globalThemeRegistry.values()].reverse().find(r => r.flags.has('CHART') || r.flags.has('CHOROPLETH')) || null;
+    }
     if (!rt) return null;
+    const rgbHex = c => '#' + c.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+    let items = null;
+    const onMap = () => items || (items = themeItemsOnMap(rt));
     return {
-      szId: rt.name,
+      // flat's theme id (style.name) — a .layer() name may be shared by
+      // several themes of a page
+      szId: themeIdOf(rt),
       szName: rt.name,
-      szFilter: rt._filterExpr || '',
+      // the filter in force: a runtime one (changeThemeStyle "filter")
+      // replaces the definition's
+      szFilter: rt._runtimeFilterExpr || rt._filterExpr || '',
       szFlag: Array.from(rt.flags).join('|'),
       // flat's fVisible is false for a FEATURE theme outside its
       // featureupper/featurelower scales too (maptheme.js 2609-2611) — a
       // broker reads it to skip refreshing a hidden theme
-      fVisible: !rt._hidden && !(_lastMapApi && _lastMapApi.map && themeHiddenByScale(rt.flags, rt.style, _lastMapApi.map.getZoom()))
+      fVisible: !rt._hidden && !(_lastMapApi && _lastMapApi.map && themeHiddenByScale(rt.flags, rt.style, _lastMapApi.map.getZoom())),
+      nScale: styleNum(rt.style.scale) || 1,
+      szUnits: rt.style.units || '',
+      // flat stores the unit with a leading space unless it starts with "."
+      szUnit: rt.style.units ? (String(rt.style.units)[0] === '.' ? '' : ' ') + rt.style.units : '',
+      szTitleField: rt.binding.title || null,
+      szFieldsA: rt.binding.value ? String(rt.binding.value).split('|') : [],
+      szSizeField: rt.binding.size || null,
+      // the classes, as flat's facet / legend scripts read them:
+      // colorScheme by class, nStringToValueA value → class + 1,
+      // szLabelA / szValuesA the style's label / values lists
+      colorScheme: (rt.categoryColorsRgb || []).map(rgbHex),
+      nStringToValueA: rt.categoryLabels ? Object.fromEntries(rt.categoryLabels.map((v, i) => [v, i + 1])) : {},
+      szLabelA: Array.isArray(rt.style.label) ? rt.style.label.map(String) : (rt.categoryDisplayLabels || null),
+      szValuesA: Array.isArray(rt.style.values) ? rt.style.values.map(String) : null,
+      partsA: rt.partsA || [],
+      // flat's own data surface, as a page's own facet / list scripts
+      // (flat's ui/js/tools facet.js, list.js) read it: the theme's data
+      // table (objTheme.dbTable/dbFields/dbRecords — records as arrays in
+      // field order) and the items on the map (indexA → itemA[i].dbIndexA,
+      // the records of each item). Here one item holds every record of
+      // the theme within the current view (shown, in scale, facet filters
+      // applied) — computed when read
+      get objTheme() { return themeDbTable(rt); },
+      // computed once per theme object (a page's loop reads itemA per record)
+      get indexA() { return onMap().indexA; },
+      get itemA() { return onMap().itemA; }
     };
   }
+  const _warnedOnce = new Set();
+  function warnOnce(key, msg) { if (!_warnedOnce.has(key)) { _warnedOnce.add(key); console.info(msg); } }
+  // the theme's records as flat's dbFields/dbRecords (cached per data)
+  function themeDbTable(rt) {
+    const features = rt.features || [];
+    if (rt._dbTableFor === features) return rt._dbTable;
+    const rowOf = f => (f.properties && f.properties.raw) || f.properties || {};
+    const names = [];
+    const seen = new Set();
+    for (const f of features.slice(0, 1000)) for (const k of Object.keys(rowOf(f))) if (!seen.has(k)) { seen.add(k); names.push(k); }
+    const indexOf = new Map();
+    const dbRecords = features.map((f, i) => { indexOf.set(f, i); const row = rowOf(f); return names.map(k => (row[k] == null ? '' : row[k])); });
+    rt._dbTableFor = features;
+    rt._dbIndexOf = indexOf;
+    const dbFields = names.map(id => ({ id, typ: 0, width: 16, decimals: 0 }));
+    // dbTable: data.js Table's own table header ({records, fields} counts)
+    rt._dbTable = { dbTable: { records: dbRecords.length, fields: dbFields.length }, dbFields, dbRecords };
+    return rt._dbTable;
+  }
+  // the records on the map now: none for a hidden / out of scale theme,
+  // else the (facet-filtered) records within the view
+  function themeItemsOnMap(rt) {
+    themeDbTable(rt);
+    const map = _lastMapApi && _lastMapApi.map;
+    const shown = map && !rt._hidden && !themeHiddenByScale(rt.flags, rt.style, map.getZoom());
+    if (!shown) return { indexA: [], itemA: {} };
+    const b = map.getBounds();
+    const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+    const dbIndexA = [];
+    for (const f of (rt._activeFeatures || rt.features || [])) {
+      const g = f.geometry;
+      if (g && g.type === 'Point' && !pointInBbox(g, bbox)) continue;
+      const i = rt._dbIndexOf.get(f);
+      if (i != null) dbIndexA.push(i);
+    }
+    return { indexA: ['view'], itemA: { view: { dbIndexA } } };
+  }
+  // flat's ixmaps.getThemeDefinitionObj(szId): the theme's definition —
+  // type, style (sizefield/valuefield as flat names them), meta
+  function getThemeDefinitionObj(szId) {
+    const rt = _globalThemeRegistry.get(szId);
+    if (!rt) return null;
+    const style = Object.assign({}, rt.style);
+    if (rt.binding.size && !style.sizefield) style.sizefield = rt.binding.size;
+    if (rt.binding.value && !style.field) style.field = rt.binding.value;
+    if (rt.binding.title && !style.titlefield) style.titlefield = rt.binding.title;
+    style.type = rt.flags.typeString != null ? rt.flags.typeString : [...rt.flags].join('|');
+    const data = Object.assign({}, rt._definition && rt._definition.data);
+    if (!data.name) data.name = themeDataName(rt);
+    return { layer: rt.name, type: style.type, field: rt.binding.value, data, style, meta: Object.assign({}, rt.meta) };
+  }
+  // a theme's data table name — flat keeps named data tables in its map
+  // window (ixmaps.embeddedSVG.window[name], read by a page's own list
+  // scripts): the .data({name}) given, else one made from the theme id
+  function themeDataName(rt) {
+    const d = rt._definition && rt._definition.data;
+    return (d && d.name) || ('themeData_' + String(themeIdOf(rt)).replace(/\W/g, '_'));
+  }
+  // flat's ixmaps.embeddedSVG.window: here only its named data tables, as
+  // data.js Table objects {table, fields, records} of the themes' data
+  const embeddedSVG = {
+    window: new Proxy({}, {
+      get(target, key) {
+        if (typeof key !== 'string') return undefined;
+        const rt = [...new Set(_globalThemeRegistry.values())].find(r => themeDataName(r) === key);
+        if (!rt) return undefined;
+        const t = themeDbTable(rt);
+        return { table: t.dbTable, fields: t.dbFields, records: t.dbRecords };
+      }
+    })
+  };
 
   // GL-PORT COMPAT: real ixmaps-flat's global ixmaps.markThemeClass(szId,
   // index)/unmarkThemeClass(szId, index) (htmlgui.js:2196/2208 — a bare
@@ -10444,7 +10980,15 @@
   // here instead of redrawing.
   function markThemeClass(szId, index) {
     const rt = _globalThemeRegistry.get(szId);
-    if (!rt) return;
+    if (rt) markRuntimeClass(rt, index);
+  }
+  function unmarkThemeClass(szId, index) {
+    const rt = _globalThemeRegistry.get(szId);
+    if (rt) unmarkRuntimeClass(rt, index);
+  }
+  // the legend's own rows mark their theme directly: its .layer() name
+  // may be shared with other themes of the page
+  function markRuntimeClass(rt, index) {
     // flat: a non-CHART theme (choropleth) marks ONE class at a time —
     // MapTheme.markClass unmarks the previous class first (maptheme.js
     // 14301-14305); chart themes can mark several
@@ -10454,9 +10998,7 @@
     if (rt._onMarksChanged) rt._onMarksChanged();
     else if (rt._triggerRedraw) rt._triggerRedraw();
   }
-  function unmarkThemeClass(szId, index) {
-    const rt = _globalThemeRegistry.get(szId);
-    if (!rt) return;
+  function unmarkRuntimeClass(rt, index) {
     rt._markedClasses.delete(index);
     if (rt._onMarksChanged) rt._onMarksChanged();
     else if (rt._triggerRedraw) rt._triggerRedraw();
@@ -10759,13 +11301,30 @@
     layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON, loadProject,
     markThemeClass, unmarkThemeClass, getBoundingBox, setTitle, setTitleBox, refreshTheme, formatValue: flatFormatValue,
-    map: mapHandle, getZoom,
+    map: mapHandle, getZoom, getThemeDefinitionObj, embeddedSVG,
+    // flat's theme list: the theme objects of every theme
+    getThemes: () => [...new Set(_globalThemeRegistry.values())].map(rt => getThemeObj(themeIdOf(rt))).filter(Boolean),
+    // flat shows a short status message on the map; not ported
+    message: () => {},
+    // flat's item highlight / item filter (facet histogram hovers): not ported
+    filterThemeItems: () => warnOnce('filterThemeItems', '[ixmaps-gl] ixmaps.filterThemeItems is not supported yet'),
+    highlightThemeItems: () => warnOnce('highlightThemeItems', '[ixmaps-gl] ixmaps.highlightThemeItems is not supported yet'),
+    // flat's global forms with the map name first (htmlgui.js) — the map
+    // handle's methods on the last built map
+    getCenter: () => (_lastMapApi && _lastMapApi.map ? _lastMapApi.map.getCenter() : null),
+    getMapTypeId: () => (_lastMapApi && _lastMapApi.getMapTypeId ? _lastMapApi.getMapTypeId() : ''),
+    changeThemeStyle: (szMap, szId, szStyle, szFlag) => _mapHandle.changeThemeStyle(szId, szStyle, szFlag),
+    removeTheme: (szMap, szId) => _mapHandle.remove(szId),
+    setBasemapOpacity: (szMap, nOpacity, szMode) => _mapHandle.setBasemapOpacity(nOpacity, szMode),
     // this engine's version (flat's own ixmaps.version numbers flat)
     glVersion: IXMAPS_GL_VERSION,
     // flat always has this page hook (its layer legend tool defines it,
     // ui/js/tools/layer_legend.js 702-712): pages wrap it and call the one
     // they replaced — the chain ends here
     htmlgui_onZoomAndPan: function (nZoom) {},
+    // flat calls it when a theme is drawn (htmlgui.js) — pages wrap it
+    // (statistics, facets); called after each settled redraw, notifyRedraw
+    htmlgui_onDrawTheme: function (szId) {},
     // carried over from a page's own pre-load `ixmaps.validate = ...`
     validate: _preloadValidate
   };
@@ -10780,7 +11339,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, computeBubblePackLayout, isolatedBubblePackLayout,
+    IXMAPS_GL_VERSION, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

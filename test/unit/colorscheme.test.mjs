@@ -115,3 +115,27 @@ test('flatLegendLook: light by default, dark on dark basemaps/colors when the ba
   assert.deepEqual(look('VT_DATAVIZ_DARK', 1, '#f5f5f0'), { dark: false, bg: '#f5f5f0' }, 'legendBackground wins');
   assert.deepEqual(look('#0a1420', 0), { dark: true, bg: '#0a1420' }, 'dark CSS color, basemap faded: flat keeps dark text (unreadable) — light text here');
 });
+
+test('cssColorAlpha: SVG "none" paints nothing, rgba / #rrggbbaa keep their alpha (flat)', () => {
+  assert.equal(G.cssColorAlpha('none'), 0);
+  assert.equal(G.cssColorAlpha('rgba(255,255,255,0.5)'), 0.5);
+  assert.equal(G.cssColorAlpha('rgba(155, 155, 155, 0.3)'), 0.3);
+  assert.equal(G.cssColorAlpha('rgb(1 2 3 / 25%)'), 0.25);
+  assert.equal(G.cssColorAlpha('#ff000080'), 128 / 255);
+  assert.equal(G.cssColorAlpha('#f008'), 136 / 255);
+  assert.equal(G.cssColorAlpha('#5BBBEB'), 1);
+  assert.equal(G.cssColorAlpha('rgb(1,2,3)'), 1);
+  assert.equal(G.cssColorAlpha('green'), 1);
+});
+
+test('legend row labels: values from the data are escaped, the page\'s style.label stays HTML', () => {
+  const data = ['<img src=x onerror=alert(1)>', 'A & B'];
+  assert.deepEqual(plainArr(G.legendRowLabels({ categoryLabels: data, categoryDisplayLabels: data })),
+    ['&lt;img src=x onerror=alert(1)&gt;', 'A &amp; B']);
+  assert.deepEqual(plainArr(G.legendRowLabels({ categoryLabels: data, categoryDisplayLabels: ['<b>One</b>', 'Two'] })), ['<b>One</b>', 'Two']);
+  assert.equal(G.scaleDenom('1:250000'), 250000);
+  assert.equal(G.scaleDenom('250000'), 250000);
+  assert.equal(G.scaleDenom(''), 0);
+  assert.equal(G.scaleDenom(undefined), 0);
+});
+function plainArr(a) { return JSON.parse(JSON.stringify(a)); }

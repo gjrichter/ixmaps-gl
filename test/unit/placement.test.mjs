@@ -188,6 +188,7 @@ test('chart value text: valuefield value, flat grouping, unit with its leading s
   assert.equal(G.flatValueText(null, null, 0.5, {}, flags(), { maxValue: 1 }), '0.5');
   assert.equal(G.flatValueText(null, null, 1, {}, flags(), { maxValue: 1 }), '1.0', 'max value <= 1: one decimal');
   assert.equal(G.flatNoBreaks(1990, 2023), true);
+  assert.equal(G.flatNoBreaks(Infinity, -Infinity), false, 'no numeric values (a text value field): breaks');
 });
 
 test('CATEGORICAL bubble VALUES: the size value when size is bound to a field (flat)', () => {
@@ -219,4 +220,56 @@ test('marked legend classes on a group (flat isolate): only the marked parts, ow
   const two = G.isolatedBubblePackLayout(counts, 64, new Set([2, 0]));
   assert.deepEqual(plain(two.present.map(p => p.i)), [0, 2], 'biggest first, the smaller on top');
   assert.equal(G.isolatedBubblePackLayout([6, 0, 1], 64, new Set([1])), null, 'no marked category in the group');
+});
+
+test('SEQUENCE|STAR layout, as measured on flat (PNRR regions, Lombardia, radius / object scale)', () => {
+  // flat chart_reg: normalsizevalue 2e9, SIZEP2, max radius 15 units; parts in units of the object scale
+  // M1..M6 from flat's radii / object scale (14.63, 29.01, 20.41, 26.06, 15.21, 17.27): v = 2e9 · (r / 15)²
+  const counts = [14.63, 29.01, 20.41, 26.06, 15.21, 17.27].map(r => 2e9 * (r / 15) ** 2);
+  const f = flags('CHART', 'SYMBOL', 'SEQUENCE', 'STAR', 'SORT', 'DOWN', 'SIZEP2', 'CATEGORICAL', 'AGGREGATE');
+  const radiusOf = v => 15 * Math.sqrt(v / 2e9);
+  const parts = G.sequenceLayout(counts, f, radiusOf, { maxRadius: 15 });
+  assert.deepEqual(plain(parts.map(p => p.i)), [1, 3, 2, 5, 4, 0], 'SORT DOWN: biggest first, it is the center');
+  assert.deepEqual([parts[0].x, parts[0].y], [0, 0]);
+  near(parts[0].r, 29.01, 'center radius (flat 9.04 / 0.3116)', 0.05);
+  // the next part touches the center at the half angle it spans: flat (15.1, 8.1) / 0.3116
+  near(parts[1].x, 48.5, 'first satellite x', 0.3);
+  near(parts[1].y, 26.0, 'first satellite y', 0.3);
+  near(Math.hypot(parts[1].x, parts[1].y), parts[0].r + parts[1].r, 'tangent');
+  const ex = G.sequenceLayout(counts, new Set([...f, 'EXPAND']), radiusOf, { maxRadius: 15 });
+  near(Math.hypot(ex[1].x, ex[1].y), 1.5 * (ex[0].r + ex[1].r), 'EXPAND: 1.5 × the distance');
+  const noStar = G.sequenceLayout([0, 2, 1], flags('SEQUENCE'), v => v, {});
+  assert.deepEqual(plain(noStar), [{ i: 1, v: 2, r: 2, x: 0, y: 0 }, { i: 2, v: 1, r: 1, x: 0, y: 0 }], 'no layout flag: on the center, zero parts left out');
+  const horz = G.sequenceLayout([1, 2], flags('SEQUENCE', 'HORZ'), v => v, {});
+  assert.deepEqual(plain(horz.map(p => p.x)), [1, 4], 'HORZ: side by side');
+});
+
+test('SEQUENCE on a field aggregation: the categories of one field value form one chart', () => {
+  // two categories of one comune, each at the (float) mean of its own records
+  const feats = [
+    { geometry: { type: 'Point', coordinates: [12.4963655, 41.9027835] }, properties: { cat: 0, value: 5, point_count: 2, aggKey: 'f:058091' } },
+    { geometry: { type: 'Point', coordinates: [12.4963655000001, 41.9027834999999] }, properties: { cat: 2, value: 7, point_count: 3, aggKey: 'f:058091' } },
+    { geometry: { type: 'Point', coordinates: [12.4963655000001, 41.9027834999999] }, properties: { cat: 1, value: 1, aggKey: 'f:058032' } },
+  ];
+  const groups = G.groupCoLocated(feats, 9, null, 3, flags('CHART', 'SYMBOL', 'SEQUENCE', 'CATEGORICAL', 'AGGREGATE'));
+  assert.equal(groups.length, 2, 'merged by the field value, not by position');
+  const roma = groups.find(g => g.properties.counts[0] === 5);
+  assert.deepEqual(plain(roma.properties.counts), [5, 0, 7]);
+  assert.deepEqual(plain(roma.properties.recordCounts), [2, 0, 3]);
+});
+
+test('CHOROPLETH|DOMINANT|CATEGORICAL|AGGREGATE: a polygon takes the class of its biggest category sum (flat)', () => {
+  const binding = { value: 'missione', size: 'importo' };
+  const f = flags('CHOROPLETH', 'DOMINANT', 'CATEGORICAL', 'AGGREGATE', 'SUM', 'DOPACITYMAX');
+  assert.equal(G.isAggregatedCategoricalChoropleth({ flags: f, binding }), true);
+  assert.equal(G.isAggregatedCategoricalChoropleth({ flags: f, binding: { value: 'a|b' } }), false, 'multi-field DOMINANT is the other mode');
+  const idx = new Map([['M1', 0], ['M2', 1], ['M3', 2]]);
+  const rows = [{ missione: 'M1', importo: '10' }, { missione: 'M2', importo: '7' }, { missione: 'M2', importo: '8' }, { missione: 'M9', importo: '99' }];
+  const agg = G.aggregatedCategoricalClass(rows, binding, f, idx, 3);
+  assert.deepEqual(plain(agg.parts), [10, 15, 0], 'sum of the size field per category, unknown values left out');
+  assert.equal(agg.index, 1);
+  assert.equal(G.aggregatedCategoricalClass([{ missione: 'M1', importo: '0' }], binding, f, idx, 3), null, 'no part above 0: no item');
+  // flat: dopacityscale · (v / max)^(1/dopacitypow), at most 0.9
+  near(G.dominantDopacityAlpha({ dopacityscale: 0.5, dopacitypow: 3 }, f, 1e6, 8e9), 0.5 * Math.cbrt(1e6 / 8e9), 'DOPACITYMAX');
+  assert.equal(G.dominantDopacityAlpha({ dopacityscale: 2 }, f, 8e9, 8e9), 0.9, 'capped');
 });

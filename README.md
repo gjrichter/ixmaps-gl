@@ -36,7 +36,8 @@ page. It currently implements:
   (equal-interval, QUANTILE, NATURAL/Jenks breaks) or multi-field DOMINANT
   (per-polygon argmax, plain/`PERCENTOFMEAN`/`DEVIATION`; with a `value100` the field means are
   flat's pooled Σ field ÷ Σ value100) or COMPOSECOLOR (additive or
-  `SUBTRACTIVE` color blend); `HEADTAIL` breaks, `DENSITY` (value per km²), flat's
+  `SUBTRACTIVE` color blend) or, with `CATEGORICAL|AGGREGATE` on one field, the dominant category of
+  each polygon's records (sum of the size field per category); `HEADTAIL` breaks, `DENSITY` (value per km²), flat's
   `ZEROISNOTVALUE`/`UNDEFINEDISNOTVALUE`; plus DOPACITY/DOPACITYMIN/DOPACITYMAX/DOPACITYMINMAX for
   value- or density-driven fill opacity
 - **CHART\|SYMBOL\|GLOW\|CATEGORICAL\|AGGREGATE\|COUNT\|RELOCATE\|VALUES** — the
@@ -55,6 +56,9 @@ page. It currently implements:
   chart — symbol, glow, shadow, box, title and value — as flat does
 - A range theme of at most two classes gets flat's one-row legend (the value range, or for a
   `$item$` count the label or field name)
+- **CHART\|SYMBOL\|SEQUENCE** on AGGREGATE CATEGORICAL data — one chart per cell (or aggregation
+  field value) with a symbol per category, laid out as flat does (`STAR`, `HORZ`, centered), with
+  flat's part sizes, glow and value labels
 - **CHART\|USER** — a page's own chart function (`style.userdraw`: `ixmaps.<name>(SVGDocument, opt)`
   and its `_init`, as flat calls them), drawn in flat's chart units and shown as an icon at flat's size
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
@@ -72,7 +76,7 @@ page. It currently implements:
   `window.__setFacetFilter`) for building filterable sidebars
 - Globe (orthographic) projection alongside flat Mercator
 
-Not yet implemented: `CATEGORICAL` choropleths, and the `QUAD`/`BEZIER`/`VECTOR`/
+Not yet implemented: plain (non-AGGREGATE) `CATEGORICAL` choropleths, and the `QUAD`/`BEZIER`/`VECTOR`/
 `PIE`/`DONUT`/`WAFFLE`/`BAR` base types and SYMBOL shape variants beyond
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
