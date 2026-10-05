@@ -328,3 +328,17 @@ test('polygon data is handed to deck.gl as the same object until its inputs chan
   assert.notEqual(cached.call(rt, '_slot', [[], 'other'], build).n, 2, 'new source array: rebuilt');
   assert.equal(builds, 3);
 });
+
+test('symbolsFlagCompat: flat matches flags as substrings, so SYMBOLS is a SYMBOL chart; only "label" symbols make it a LABEL chart (PNRR region sums)', () => {
+  const set = (...f) => new Set(f);
+  const label = G.symbolsFlagCompat(set('CHART', 'SYMBOLS', 'TEXTONLY'), { symbols: ['label'] });
+  assert.ok(label.has('LABEL') && !label.has('SYMBOL'), 'symbols: ["label"] → the LABEL chart');
+  const circle = G.symbolsFlagCompat(set('CHART', 'SYMBOLS'), { symbols: ['circle', 'square'] });
+  assert.ok(circle.has('SYMBOL') && !circle.has('LABEL'), 'other symbols → SYMBOL');
+  assert.ok(G.symbolsFlagCompat(set('CHART', 'SYMBOLS'), {}).has('SYMBOL'), 'no symbols given → SYMBOL');
+  const plain = set('CHART', 'SYMBOL');
+  assert.equal(G.symbolsFlagCompat(plain, { symbols: ['label'] }), plain, 'SYMBOL / LABEL themes are untouched');
+  const input = set('CHART', 'SYMBOLS');
+  G.symbolsFlagCompat(input, { symbols: ['label'] });
+  assert.ok(!input.has('LABEL'), 'the spec flags are not mutated');
+});

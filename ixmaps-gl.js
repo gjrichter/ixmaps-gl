@@ -21,8 +21,8 @@
 // alpha100}) when set (alpha100:"$density$" divides by the polygon's
 // own geodesic area — see _prepareAlphaField/_resolveDopacityAlpha).
 // AGGREGATE CATEGORICAL on one field paints each polygon in its records'
-// dominant category; a plain CATEGORICAL choropleth is not implemented,
-// see _buildChoroplethLayers), and the CHART|SYMBOL|
+// dominant category; a plain CATEGORICAL choropleth matches each polygon's
+// raw value against the categories, see _buildChoroplethLayers), and the CHART|SYMBOL|
 // GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES pipeline (categorical
 // clustering + sizing + glow + multi-bubble grouping + on-bubble value
 // labels, generalized to however many distinct category values the DATA
@@ -2373,7 +2373,7 @@
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
     'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale', 'rangecentervalue',
     'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety', 'gridx', 'boxmargin', 'borderwidth',
-    'borderradius'];
+    'borderradius', 'maxcharts'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -2637,6 +2637,69 @@
     return { dark: false, bg: 'rgba(255,255,255,0.9)' };
   }
 
+  // ---------------------------------------------------------------
+  // Effective basemap darkness — what the map canvas actually shows,
+  // not what its name suggests. flatLegendLook's name-plus-opacity
+  // heuristic assumes the faded (basemapopacity <= 0.5) basemap blends
+  // against a WHITE page, so a dark basemap faded to half goes light;
+  // on a page with a dark background it reads dark all the same, and
+  // tooltips/legends styled light stick out (the exact bug fixed here).
+  // Rule: an explicit color (legendBackground, a color mapType) stays
+  // authoritative as before; with a real basemap style, a DARK style
+  // background means dark — except when it is faded to
+  // basemapopacity <= 0.5, where the mix is mostly the page background
+  // behind the semi-transparent canvas and THAT decides (dark page ->
+  // still dark; white page -> flat's washed-out light look). A light
+  // style background reads light however it is faded (flat's own rule).
+  // Falls back to the name heuristic while no style exists.
+  // ---------------------------------------------------------------
+  function styleBackgroundColorOf(map) {
+    try {
+      const style = map && map.getStyle && map.getStyle();
+      if (!style || !style.layers) return null;
+      for (const layer of style.layers) {
+        if (layer.type !== 'background') continue;
+        const paint = layer.paint || {};
+        const color = paint['background-color'] != null ? paint['background-color'] : (paint.background != null ? paint.background : null);
+        // the blank background substituted for a color mapType IS the page's
+        // requested background and never faded (see applyBasemapOpacity)
+        return { color: color, faded: layer.id !== BLANK_BACKGROUND_LAYER_ID };
+      }
+    } catch (e) { /* no style (yet) */ }
+    return null;
+  }
+
+  function pageBackgroundColorOf(el) {
+    let node = el;
+    while (node && node.nodeType === 1 && node !== document.documentElement) {
+      const m = String(getComputedStyle(node).backgroundColor)
+        .match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,/\s]+([\d.]+))?\s*\)/i);
+      if (m && (m[4] === undefined || +m[4] > 0)) return [+m[1], +m[2], +m[3]];
+      node = node.parentElement;
+    }
+    return [255, 255, 255]; // the page default
+  }
+
+  function effectiveMapDark(map, el, basemapOpacity, mapType, legendBackground) {
+    const id = legendBackground || mapType;
+    if (flatIsCssColorValue(id)) return flatIsDarkColor(id);
+    const base = styleBackgroundColorOf(map);
+    const rgb = base && base.color != null ? parseCssColor(String(base.color)) : null;
+    if (!rgb) {
+      // no style (yet): the name heuristic, exactly as before
+      return flatLegendLook(mapType, basemapOpacity, legendBackground).dark;
+    }
+    const o = isNaN(basemapOpacity) ? 1 : Math.max(0, Math.min(1, basemapOpacity));
+    if (flatIsDarkColor('rgb(' + rgb.map(Math.round).join(',') + ')')) {
+      // a dark basemap faded to half or less shows mostly the page background
+      // behind the canvas - so at that point the PAGE decides (dark page ->
+      // still dark; white page -> the washed-out flat look stays light)
+      return (base.faded && o <= 0.5) ? flatIsDarkColor('rgb(' + pageBackgroundColorOf(el).map(Math.round).join(',') + ')') : true;
+    }
+    // a light basemap reads light however it is faded - flat's own rule
+    return false;
+  }
+
   function buildBlankBackgroundStyle(color) {
     return {
       version: 8,
@@ -2722,6 +2785,12 @@
   // ---------------------------------------------------------------
   function createTooltips(ctx) {
     const { builder, map, el, findRuntimeForLayerId } = ctx;
+    // the effective (rendered) dark/light probe for tooltip and legend —
+    // the builder carries it so the legend look (built later, without the
+    // map element at hand) can ask the same question
+    builder.__effectiveDark = function (basemapOpacity, mapType, legendBackground) {
+      return effectiveMapDark(map, el, basemapOpacity, mapType, legendBackground);
+    };
     // Click-to-pin tooltip: matches the real ixmaps engine's own
     // click-pins-the-tooltip convention in pan mode (a hover tooltip is
     // transient; a click keeps one visible until dismissed). This is a
@@ -2731,28 +2800,101 @@
     // at click time (not live-updating), but its screen POSITION is kept
     // in sync with the map on every pan/zoom via map.project().
     let pinned = null; // { runtime, object, lngLat }
-    // Tooltip look, like the legend's (flatLegendLook): flat's light
-    // tooltip (tooltip_mustache.js: white 0.95, #444 text, thin black
-    // border, 5px radius) on light basemaps, this engine's dark tooltip
-    // on dark ones. Read when shown, so options set later (a
+    // Tooltip look, like the legend's: flat's light tooltip
+    // (tooltip_mustache.js: white 0.95, #444 text, thin black border, 5px
+    // radius) on light basemaps, this engine's dark tooltip on dark ones —
+    // decided by the EFFECTIVE map darkness (style background vs page
+    // background, see effectiveMapDark), not the basemap name alone. Read
+    // when shown, so options set later (a
     // myMap.then(...).options({basemapopacity})) count.
-    const tooltipLook = () => {
+    const tooltipIsDark = () => {
       const o = parseFloat(builder._engineOptions.basemapopacity);
-      const look = flatLegendLook(builder.mapOptions.mapType, isNaN(o) ? 1 : o, builder.mapOptions.legendBackground || builder.mapOptions.legendbackground);
-      return look.dark
-        ? { background: 'rgb(41,50,60)', color: 'rgb(200,205,214)', border: 'none', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }
-        : { background: 'rgba(255,255,255,0.95)', color: '#444', border: '0.5px solid black', borderRadius: '5px',
-            boxShadow: 'rgba(0,0,0,0.2) 0px 2px 4px 0px, rgba(0,0,0,0.19) 0px 3px 10px 0px' };
+      const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
+      return typeof builder.__effectiveDark === 'function'
+        ? builder.__effectiveDark(isNaN(o) ? 1 : o, builder.mapOptions.mapType, legendBackground)
+        : flatLegendLook(builder.mapOptions.mapType, isNaN(o) ? 1 : o, legendBackground).dark;
     };
+    // flat's tooltip look (tooltip_mustache.js 118/151-154): arial narrow,
+    // the font size clamped to 11..14px; light: white 0.95, #444 text, thin
+    // black border; dark: rgba(50,50,50,0.95), #555 border (text light for
+    // readability — flat leaves its #444 on dark and only adapts the panel).
+    // line-height is declared so hover (deck.gl's .deck-tooltip stylesheet
+    // gives it 20px) and the pinned tooltip (a bare div that would inherit
+    // the page's 'normal') render the same content identically
+    const tooltipLook = () => {
+      const fontsize = Math.min(14, Math.max(11, (22 / 1200 * (global.innerWidth || 1200))));
+      const fonts = { fontFamily: 'arial narrow, system', fontSize: fontsize + 'px', lineHeight: '20px' };
+      return tooltipIsDark()
+        ? Object.assign(fonts, { background: 'rgba(50,50,50,0.95)', color: 'rgb(200,205,214)', border: '0.5px solid #555', borderRadius: '5px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)' })
+        : Object.assign(fonts, { background: 'rgba(255,255,255,0.95)', color: '#444', border: '0.5px solid black', borderRadius: '5px',
+            boxShadow: 'rgba(0,0,0,0.2) 0px 2px 4px 0px, rgba(0,0,0,0.19) 0px 3px 10px 0px' });
+    };
+    // flat's content pane (tooltip_mustache.js 124): the whole tooltip
+    // content scrolls inside its own padded pane — a close button outside
+    // the pane stays visible while it scrolls, and the scrollbar clears
+    // the content by a small right margin
+    const TOOLTIP_PANE_STYLE = 'margin:0.5em;max-height:360px;overflow:auto';
+    const tooltipPaneHtml = (html) => `<div style="${TOOLTIP_PANE_STYLE}">${html}</div>`;
     const pinnedTooltipEl = document.createElement('div');
     pinnedTooltipEl.style.cssText = 'position:absolute;top:0;left:0;z-index:6;display:none;' +
-      'pointer-events:auto;max-width:440px;max-height:360px;overflow:auto;' +
-      'padding:0.6em 1.6em 0.6em 0.7em;font-size:1em;';
+      'pointer-events:auto;max-width:440px;padding:0.5em 0.7em 0.5em 0.5em;';
+
+    // flat's own tooltip placement (tooltip_mustache.js 145-148): flip it
+    // to the left/above the anchor when there is no room right/below, then
+    // clamp it into the window — a tooltip must always be completely
+    // visible (an element larger than the viewport ends up at its edge)
+    function keepTooltipVisible(tipEl, x, y) {
+      const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+      const vw = global.innerWidth || 1200, vh = global.innerHeight || 800;
+      let tx = x > vw / 2 ? x - w - 30 : x + 30;
+      let ty = y > vh / 2 ? y - h - 20 : y + 20;
+      tx = Math.min(Math.max(8, tx), Math.max(8, vw - w - 8));
+      ty = Math.min(Math.max(8, ty), Math.max(8, vh - h - 8));
+      const transform = `translate(${Math.round(tx)}px, ${Math.round(ty)}px)`;
+      tipEl.style.transform = transform;
+      return transform;
+    }
 
     function updatePinnedTooltipPosition() {
       if (!pinned) return;
       const pt = map.project(pinned.lngLat);
-      pinnedTooltipEl.style.transform = `translate(${pt.x + 10}px, ${pt.y - 10}px)`;
+      keepTooltipVisible(pinnedTooltipEl, pt.x, pt.y);
+    }
+
+    // hover tooltip: deck.gl pins it at the pointer without any viewport
+    // logic (it overflows the right/bottom edge there) — watch the element's
+    // style mutations and re-place it inside the window every time deck
+    // moves it. Our own write is recognized and skipped (lastSetTransform).
+    let __hoverTooltipWatch = null;
+    function watchHoverTooltip() {
+      if (__hoverTooltipWatch || !el.parentElement) return;
+      const host = el.parentElement;
+      const attach = (tipEl) => {
+        let lastSetTransform = null;
+        const mo = new MutationObserver(() => {
+          if (tipEl.style.display === 'none' || !tipEl.textContent.trim()) return;
+          const t = tipEl.style.transform;
+          if (!t || t === lastSetTransform) return;
+          const m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(t);
+          if (!m) return;
+          lastSetTransform = keepTooltipVisible(tipEl, +m[1], +m[2]);
+        });
+        mo.observe(tipEl, { attributes: true, attributeFilter: ['style'] });
+        __hoverTooltipWatch = mo;
+      };
+      const existing = host.querySelector('.deck-tooltip');
+      if (existing) { attach(existing); return; }
+      const creation = new MutationObserver((muts, obs) => {
+        for (const mu of muts) for (const n of mu.addedNodes) {
+          if (n.nodeType === 1 && n.classList && n.classList.contains('deck-tooltip')) {
+            attach(n);
+            obs.disconnect();
+            return;
+          }
+        }
+      });
+      creation.observe(host, { childList: true, subtree: true });
     }
 
     // A stable per-geometry anchor coordinate for the identity check
@@ -2786,13 +2928,19 @@
     }
 
     // content lives in its own child so re-rendering (innerHTML) never
-    // wipes out the unpin button below (a sibling, not a descendant of it)
+    // content lives in its own child so re-rendering (innerHTML) never
+    // wipes out the unpin button below (a sibling, not a descendant of it).
+    // The content child sits inside a scroll PANE (flat's own tooltip
+    // structure): the pane scrolls, the close button outside it does not
+    const pinnedPaneEl = document.createElement('div');
+    pinnedPaneEl.style.cssText = TOOLTIP_PANE_STYLE;
     const pinnedContentEl = document.createElement('div');
-    pinnedTooltipEl.appendChild(pinnedContentEl);
+    pinnedPaneEl.appendChild(pinnedContentEl);
+    pinnedTooltipEl.appendChild(pinnedPaneEl);
 
     function renderPinnedTooltip() {
       if (!pinned) { pinnedTooltipEl.style.display = 'none'; return; }
-      const html = pinned.runtime.buildTooltipHtml(pinned.object);
+      const html = pinned.runtime.buildTooltipHtml(pinned.object, tooltipIsDark());
       if (!html) { pinned = null; pinnedTooltipEl.style.display = 'none'; return; }
       pinnedContentEl.innerHTML = html;
       Object.assign(pinnedTooltipEl.style, tooltipLook());
@@ -2833,7 +2981,15 @@
     // a USER chart's picked item is {d, icon} (see _buildUserChartLayers):
     // the feature is its d
     function pickedFeature(o) { return o && o.icon && o.d ? o.d : o; }
+    // flat's map tool 'pan' (Map option mode:"pan", Api.setMapTool): pure
+    // navigation — no hover tooltip there (flat's own hover-tooltip paths
+    // run only for the ""/info/clickinfo tool types, mapscript2.js 5232).
+    // The click-to-pin tooltip stays: it is this engine's equivalent of
+    // flat's info popup, so a click still shows the permanent tooltip.
+    const isPanMode = () => /^\s*pan\s*$/i.test(String(builder.mapOptions.mode || ''));
+
     function tooltipFor({ object: picked, layer }) {
+        if (isPanMode()) return null;
         const object = pickedFeature(picked);
         if (!object || !layer) return null;
         // suppress the hover tooltip ONLY for the specific item that's
@@ -2843,8 +2999,10 @@
         if (pinned && isSameAsPinned(layer.id, object)) return null;
         const rt = findRuntimeForLayerId(layer.id);
         if (!rt) return null;
-        const html = rt.buildTooltipHtml(object);
-        return html ? { html, style: Object.assign({ fontSize: '1em', padding: '0.5em 0.7em', maxWidth: '440px' }, tooltipLook()) } : null;
+        const html = rt.buildTooltipHtml(object, tooltipIsDark());
+        // same layout as the pinned tooltip: the content in flat's scroll
+        // pane, the shared look (fonts included) on the container
+        return html ? { html: tooltipPaneHtml(html), style: Object.assign({ padding: '0.5em 0.7em', maxWidth: '440px' }, tooltipLook()) } : null;
     }
     function clickFor(picked) {
         const info = picked && Object.assign({}, picked, { object: pickedFeature(picked.object) });
@@ -2904,6 +3062,7 @@
     }
     function mount() {
       map.on('move', updatePinnedTooltipPosition);
+      watchHoverTooltip();
       if (el.parentElement) {
         el.parentElement.style.position = el.parentElement.style.position || 'relative';
         el.parentElement.appendChild(pinnedTooltipEl);
@@ -3109,7 +3268,10 @@
         });
         legendStack.style.display = shown ? 'flex' : 'none';
       };
-      const legendApplies = rt => rt.categoryLabels && rt.categoryLabels.length && !rt.flags.has('FEATURE') && !rt.flags.has('FEATURES') && !rt.flags.has('NOLEGEND');
+      // a plain FEATURE(S) base layer has one flat fill (no classes); FEATURE|CATEGORICAL
+      // is coloured per category (see _buildFeaturesLayers), so it gets a legend
+      const legendApplies = rt => rt.categoryLabels && rt.categoryLabels.length
+        && (!(rt.flags.has('FEATURE') || rt.flags.has('FEATURES')) || rt.flags.has('CATEGORICAL')) && !rt.flags.has('NOLEGEND');
       // One theme's panel — at build time for every theme, and again for a
       // theme defined later (map.layer(...) in a myMap.then(...) chain,
       // defineLayer, loadProject); removeTheme removes it with the theme.
@@ -3145,8 +3307,16 @@
           // flat's look (flatLegendLook) unless the page picks one with
           // this engine's own legendtheme
           const opacityOpt = parseFloat(builder._engineOptions.basemapopacity);
-          const flatLook = flatLegendLook(builder.mapOptions.mapType, isNaN(opacityOpt) ? 1 : opacityOpt, builder.mapOptions.legendBackground || builder.mapOptions.legendbackground);
-          const isLightLegend = rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !flatLook.dark);
+          const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
+          const flatLook = flatLegendLook(builder.mapOptions.mapType, isNaN(opacityOpt) ? 1 : opacityOpt, legendBackground);
+          // effective darkness (style background vs page background, see
+          // effectiveMapDark): a dark basemap faded to <= 0.5 over a DARK
+          // page still reads dark — flatLegendLook's name heuristic would
+          // wrongly switch the panel (and the tooltip) to light there
+          const looksDark = typeof builder.__effectiveDark === 'function'
+            ? builder.__effectiveDark(isNaN(opacityOpt) ? 1 : opacityOpt, builder.mapOptions.mapType, legendBackground)
+            : flatLook.dark;
+          const isLightLegend = rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !looksDark);
           const legendColors = isLightLegend
             ? { bg: 'rgba(255,255,255,0.92)', fg: '#1a1a1a', shadow: '0 2px 10px rgba(0,0,0,0.18)',
                 rowMarked: 'rgba(0,0,0,0.08)', track: 'rgba(0,0,0,0.08)',
@@ -3154,7 +3324,10 @@
             : { bg: 'rgba(28,30,34,0.92)', fg: '#eee', shadow: '0 2px 10px rgba(0,0,0,0.45)',
                 rowMarked: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.08)',
                 selectBg: 'rgba(255,255,255,0.08)', selectBorder: 'rgba(255,255,255,0.25)' };
-          if (!rt.style.legendtheme) legendColors.bg = flatLook.bg;
+          // the panel bg follows the same effective decision (flatLegendLook
+          // would hand the dark look a light bg here: its dark branch never
+          // ran for this map, its light bg would clash with dark rows/text)
+          if (!rt.style.legendtheme) legendColors.bg = looksDark ? '#111' : flatLook.bg;
           // max-height:66% resolves against el.parentElement's own
           // height (the map container, which always has a definite
           // height for the map itself to render into) since this panel
@@ -3244,7 +3417,11 @@
             (rt._activeFeatures || rt.features).forEach(f => {
               const idx = rt.categoryIndexByLabel ? rt.categoryIndexByLabel.get(f.properties[rt.binding.value]) : null;
               if (idx == null) return;
-              const [lng, lat] = f.geometry.coordinates;
+              // a polygon (FEATURE|CATEGORICAL) is counted at its first vertex
+              let pt = f.geometry && f.geometry.coordinates;
+              while (Array.isArray(pt) && Array.isArray(pt[0])) pt = pt[0];
+              if (!Array.isArray(pt)) return;
+              const [lng, lat] = pt;
               if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
               if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
               totals[idx] += useSum ? (parseFloat(f.properties[valueField]) || 0) : 1;
@@ -3681,6 +3858,8 @@
       this._layerBuilders.push(nameOrBuilder);
       return this;
     }
+    // .Layer() — alias of .layer()
+    Layer(nameOrBuilder) { return this.layer(nameOrBuilder); }
     // GL-PORT COMPAT: real ixmaps-flat's map.on("layerdraw", cb) — only
     // "layerdraw" is actually wired up (see build()'s own note on how
     // it's translated into onRedraw + a synthetic per-runtime event); any
@@ -3879,6 +4058,16 @@
         // world once, at the cost of that zoom limit.
         renderWorldCopies: this._engineOptions.worldcopies !== false
       });
+      // ixmaps.Map(id, {mapProjection}): flat's orthographic map is MapLibre's
+      // native globe here (same mapping as loadProject, applyProjectMap);
+      // "ortographic" is the spelling flat pages commonly carry. Any other
+      // value stays mercator.
+      if (/^(orth?ographic|globe)$/i.test(String(this.mapOptions.mapProjection || '').trim())) {
+        map.once('style.load', () => {
+          try { map.setProjection({ type: 'globe' }); }
+          catch (e) { console.warn('[ixmaps-gl] mapProjection "globe": map.setProjection failed (needs maplibre-gl >=5.0.1)', e); }
+        });
+      }
       _boundsSource = () => {
         const b = map.getBounds();
         return [{ lat: b.getSouth(), lng: b.getWest() }, { lat: b.getNorth(), lng: b.getEast() }];
@@ -3973,9 +4162,11 @@
       const overlay = new MapLibreOverlay({
         interleaved: true,
         layers: [],
-        // pointer becomes a hand over anything pickable (bubbles/points),
-        // so hovering something clickable actually looks clickable
-        getCursor: ({ isDragging, isHovering }) => (isDragging ? 'grabbing' : (isHovering ? 'pointer' : 'grab')),
+        // pointer becomes a hand over anything pickable (bubbles/points), so
+        // hovering something clickable actually looks clickable — except in
+        // the 'pan' input mode, where nothing responds to hovering
+        getCursor: ({ isDragging, isHovering }) =>
+          (isDragging ? 'grabbing' : ((isHovering && !/^\s*pan\s*$/i.test(String(this.mapOptions.mode || ''))) ? 'pointer' : 'grab')),
         // (guarded: see createTooltips)
         getTooltip: tooltips.getTooltip,
         onClick: tooltips.onClick
@@ -4349,6 +4540,8 @@
           };
           return lb;
         },
+        // .Layer() — alias of .layer()
+        Layer: (nameOrBuilder) => engineApi.layer(nameOrBuilder),
         // Real ixmaps-flat's loadProject (htmlgui.js loadProject →
         // setProjectJSON → continueSetProjectJSON): src is a project object,
         // a JSON string, or a URL (fetched as DATA — nothing a project names
@@ -4681,7 +4874,15 @@
         const svg = String(m.map || '');
         if (svg && !/generic\/(mercator|orthographic)\.svg$/i.test(svg)) report.notes.push(`flat SVG map "${svg.split('/').pop()}" is not available in ixmaps-gl — mercator used`);
         if (typeof map.setProjection === 'function') {
-          try { map.setProjection({ type: /orthographic\.svg$/i.test(svg) ? 'globe' : 'mercator' }); }
+          try {
+            map.setProjection({ type: /orthographic\.svg$/i.test(svg) ? 'globe' : 'mercator' });
+            // the layers are projection-dependent (globe: far-hemisphere cull,
+            // chart placement) and are otherwise rebuilt only by a pan: rebuild
+            // now, and again once the new projection has rendered
+            refreshLayers();
+            map.triggerRepaint();
+            map.once('idle', refreshLayers);
+          }
           catch (e) { console.warn('[ixmaps-gl] loadProject: map.setProjection failed (needs maplibre-gl >=5.0.1)', e); }
         } else {
           console.warn('[ixmaps-gl] loadProject: map.setProjection not available on the loaded maplibre-gl build (needs >=5.0.1) — projection unchanged');
@@ -7417,7 +7618,12 @@
         key = `${snapped.x}:${snapped.y}`;
       }
       let cell = cells.get(key);
-      if (!cell) { cell = { key, snapped, sumX: 0, sumY: 0, n: 0, value: 0, classValue: 0, value100: 0, series: null, first: f }; cells.set(key, cell); }
+      if (!cell) { cell = { key, snapped, sumX: 0, sumY: 0, n: 0, value: 0, classValue: 0, value100: 0, series: null, first: f, raws: null }; cells.set(key, cell); }
+      // the members' own records, for the tooltip's {{theme.item.data}}
+      // (flat's __add_data tables them, numbered, up to 50)
+      if (f.properties.raw && (!cell.raws || cell.raws.length < 50)) {
+        (cell.raws = cell.raws || []).push(f.properties.raw);
+      }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
       cell.value += f.properties.value;
       if (f.properties.classValue !== undefined) cell.classValue += f.properties.classValue;
@@ -7439,7 +7645,8 @@
         // titleRaw: the cell's first record — flat titles an aggregated
         // item by it (itemTitle)
         ? { cluster: true, point_count: cell.n, value: cell.value, ...(hasClass ? { classValue: cell.classValue } : {}),
-            titleRaw: cell.first.properties.raw || cell.first.properties }
+            titleRaw: cell.first.properties.raw || cell.first.properties,
+            ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}) }
         : cell.first.properties;
       if (cell.series && cell.n > 1) props = Object.assign({}, props, { series: cell.series });
       // a field aggregation's cell key (the field value): the categories of
@@ -7506,6 +7713,18 @@
       if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, cx: snapped.x, cy: snapped.y, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0), classTotal: undefined }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
       if (!cell.titleRaw) cell.titleRaw = f.properties.titleRaw || f.properties.raw || null;
+      // the members' own records, for the tooltip's {{theme.item.data}} —
+      // flat's __add_data tables them (numbered, up to 50) for aggregated
+      // items too; references only, so no copy is made. A member can itself
+      // be a pre-aggregated cluster node, whose records it carries in raws
+      if (!cell.raws) cell.raws = [];
+      if (cell.raws.length < 50) {
+        if (f.properties.raw) cell.raws.push(f.properties.raw);
+        else if (f.properties.raws) for (const r of f.properties.raws) {
+          if (cell.raws.length >= 50) break;
+          cell.raws.push(r);
+        }
+      }
       cell.counts[f.properties.cat] += f.properties.value;
       if (f.properties.classValue !== undefined) cell.classTotal = (cell.classTotal || 0) + f.properties.classValue;
       // point_count is the aggregated-record count of a multi-record
@@ -7520,6 +7739,7 @@
       return {
         geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
         properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts, ...(cell.classTotal !== undefined ? { classTotal: cell.classTotal } : {}),
+          ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}),
           ...(cell.titleRaw ? { titleRaw: cell.titleRaw } : {}) }
       };
     });
@@ -7564,13 +7784,25 @@
     return count;
   }
 
+  // flat matches type flags as substrings (szFlag.match(/SYMBOL/)), so a
+  // "SYMBOLS" flag (PNRR pages) is a SYMBOL chart there. With only the symbol
+  // "label" (maptheme.js 21833: the value as text, TEXTONLY: text alone) it is
+  // the LABEL chart this engine draws as _buildLabelChartLayers.
+  function symbolsFlagCompat(flags, style) {
+    if (!flags.has('SYMBOLS') || flags.has('SYMBOL') || flags.has('LABEL')) return flags;
+    const out = new Set(flags);
+    const symbols = [].concat((style && style.symbols) || []);
+    out.add(symbols.length && symbols.every(v => String(v) === 'label') ? 'LABEL' : 'SYMBOL');
+    return out;
+  }
+
   class LayerRuntime {
     // spec: a normalizeTheme() result — never a raw LayerBuilder
     constructor(spec, fc, mapOptions) {
       this.name = spec.name;
       this.binding = spec.binding;
-      this.flags = spec.flags;
       this.style = spec.style;
+      this.flags = symbolsFlagCompat(spec.flags, spec.style);
       this.meta = spec.meta;
       // GL-PORT COMPAT: retained only for ixmaps.getThemeObj()'s szFilter
       // (real ixmaps-flat global compat shim, see _globalThemeRegistry) —
@@ -8493,10 +8725,11 @@
     //     formatting) instead of an inline SVG chart — one line per present
     //     category, each showing ITS OWN value, never summed across
     //     categories (same rule as the VALUES bubble labels).
-    //   - theme.item.data (a table of the hovered record's raw fields) is
-    //     only available for an individual, unaggregated point — an
-    //     aggregated/grouped bubble has no single underlying record to
-    //     tabulate, so it resolves to an empty string there.
+    //   - theme.item.data (a table of the hovered record's raw fields)
+    //     tables an individual point's record, and an aggregated item's
+    //     member records (numbered, up to 50 — flat's __add_data does the
+    //     same); only a group without retained records (cluster-level
+    //     groups) resolves to an empty string there.
     // an item's title as flat gives it (maptheme.js 11838-11886): the title
     // field of its record — of an aggregated item its first record; an
     // aggregated grid cell (no aggregation field) of more than 3 records,
@@ -8512,7 +8745,7 @@
       return title;
     }
 
-    buildTooltipHtml(object) {
+    buildTooltipHtml(object, fDark) {
       // no .meta({tooltip}): flat's default template (tooltip_mustache.js 394)
       // — the theme title, the item's title and its chart
       const template = this.meta.tooltip || FLAT_DEFAULT_TOOLTIP;
@@ -8521,11 +8754,16 @@
           'include https://unpkg.com/mustache@4.2.0/mustache.min.js before ixmaps-gl.js.');
         return null;
       }
-      return youtubeClickToPlay(global.Mustache.render(template, this._buildTooltipContext(object)));
+      return youtubeClickToPlay(global.Mustache.render(template, this._buildTooltipContext(object, fDark)));
     }
 
-    _buildTooltipContext(object) {
-      const props = object.properties;
+    _buildTooltipContext(object, fDark) {
+      let props = object.properties;
+      // a FEATURE|CATEGORICAL polygon is the raw data record itself, not the
+      // {raw, cat, value} wrapper the other layer kinds build
+      if (props && !props.raw && (this.flags.has('FEATURE') || this.flags.has('FEATURES')) && this.flags.has('CATEGORICAL')) {
+        props = { raw: props, cat: this._resolveClassIndex(props[this.binding.value]) };
+      }
       const isGroup = !!props.counts;
       const chartHtml = this._renderItemChartHtml(props);
 
@@ -8537,7 +8775,7 @@
           chart: chartHtml,
           item: {
             chart: chartHtml,
-            data: isGroup ? '' : this._renderItemDataTableHtml(props.raw),
+            data: isGroup ? this._renderGroupDataTableHtml(props.raws, fDark) : this._renderItemDataTableHtml(props.raw, fDark),
             value: this._hasValue(isGroup ? props.total : props.value) ? this._formatTooltipValue(isGroup ? props.total : props.value) : '',
             label: isGroup ? '' : (this.categoryDisplayLabels ? (this.categoryDisplayLabels[props.cat] || '') : ''),
             // flat: the item's title is its titlefield value (binding title/
@@ -8680,14 +8918,49 @@
     }
 
     // theme.item.data approximation — a plain field:value table of the
-    // hovered record's own raw properties (individual points only).
-    _renderItemDataTableHtml(raw) {
+    // hovered record's own raw properties (individual points only) — flat's
+    // own row markup (tooltip_mustache.js 568-590, main.css .tooltip): the
+    // field name right-aligned, the value left, a dotted rule above the
+    // value, the table at 0.85em with flat's min-width. Light is flat
+    // exactly (#cccccc labels, #000000 values, dotted black); dark keeps
+    // the same visibility hierarchy inverted - DIM labels, BRIGHT values -
+    // with its own colors, a dotted #555 rule and #888 record pills
+    _renderItemDataTableHtml(raw, fDark) {
       if (!raw) return '';
+      const value = fDark ? '#e0e4ea' : '#000000';
+      const label = fDark ? '#787d85' : '#cccccc';
+      const rule = fDark ? '#555' : 'black';
       const rows = Object.keys(raw)
         .filter(k => k !== 'geometry')
-        .map(k => `<tr><td style="padding:0 0.6em 0 0;color:#888">${k}</td><td>${this._isNumericValue(raw[k]) ? this._formatTooltipValue(raw[k]) : raw[k]}</td></tr>`)
+        .map(k => `<tr><td></td><td style="text-align:right;vertical-align:top;color:${label}">${k}</td>` +
+          `<td style="text-align:left;vertical-align:top;color:${value};padding:0 0.2em 0 0.8em;border-top:dotted ${rule} 0.1px">` +
+          `${this._isNumericValue(raw[k]) ? this._formatTooltipValue(raw[k]) : raw[k]}</td></tr>`)
         .join('');
-      return `<table style="font-size:0.95em;border-collapse:collapse">${rows}</table>`;
+      return `<table style="font-size:0.85em;min-width:300px;border-collapse:collapse">${rows}</table>`;
+    }
+
+    // an aggregated item's own records, numbered, up to 50 — like real
+    // flat's __add_data (tooltip_mustache.js 490-570: one numbered block
+    // per record when the item holds more than one). A single-record
+    // group renders like an individual point.
+    _renderGroupDataTableHtml(raws, fDark) {
+      if (!raws || !raws.length) return '';
+      if (raws.length === 1) return this._renderItemDataTableHtml(raws[0], fDark);
+      const value = fDark ? '#e0e4ea' : '#000000';
+      const label = fDark ? '#787d85' : '#cccccc';
+      const rule = fDark ? '#555' : 'black';
+      const pill = fDark ? '#888' : 'black';
+      const rows = raws.slice(0, 50).map((raw, d) =>
+        '<tr><td style="font-size:1em;">&nbsp;</td></tr>' +
+        `<tr><td style="font-size:1.5em;border:solid ${pill} 1px;border-radius:1em;padding:0.1em 0.4em 0em 0.3em">${d + 1}</td></tr>` +
+        Object.keys(raw)
+          .filter(k => k !== 'geometry')
+          .map(k => `<tr><td></td><td style="text-align:right;vertical-align:top;color:${label}">${k}</td>` +
+            `<td style="text-align:left;vertical-align:top;color:${value};padding:0 0.2em 0 0.8em;border-top:dotted ${rule} 0.1px">` +
+            `${this._isNumericValue(raw[k]) ? this._formatTooltipValue(raw[k]) : raw[k]}</td></tr>`)
+          .join('')
+      ).join('');
+      return `<table style="font-size:0.85em;min-width:300px;border-collapse:collapse">${rows}</table>`;
     }
 
     _isNumericValue(v) {
@@ -8814,11 +9087,19 @@
       const cs = this.style.colorscheme;
       const raw = Array.isArray(cs) ? cs[0] : cs;
       const filled = raw !== 'none';
+      // FEATURE|CATEGORICAL: polygons coloured by their category (flat colours
+      // each shape by its class), not one flat fill
+      const byCategory = filled && this.flags.has('CATEGORICAL') && this.categoryIndexByLabel && this.binding.value
+        && this.categoryColorsRgb && this.categoryColorsRgb.length;
+      const catAlpha = Math.round(255 * (styleNum(this.style.fillopacity) || 1));
+      const nodataRgb = parseCssColor(this.style.nodatacolor) || [255, 255, 255];
       const shadow = filled && flatShadowOn(this.style, this.features.length, zoom)
         ? this._buildShadowLayers(hexOrNamedToRgb(raw), zoom, bbox) : [];
       return shadow.concat([new GeoJsonLayer({
         id: this._dataLayerId(`ix-features-${this.name}`),
         data: this._featureCollection(),
+        // FEATURE|CATEGORICAL polygons carry the data record: hover / click tooltips
+        pickable: !!byCategory,
         // linecolor "none": no outline (a FEATURES theme of points with
         // colorscheme and linecolor "none" draws nothing, as flat)
         stroked: styleLineColor(this.style.linecolor) !== 'none',
@@ -8829,7 +9110,13 @@
         // flat puts fillopacity into the shape's fill-opacity only
         // (maptheme.js 13407, 14071-14078): the outline stays opaque
         // (a fill color's own alpha — rgba(…, 0.5) — times fillopacity)
-        getFillColor: filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * cssColorAlpha(raw) * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0],
+        ...(byCategory ? { updateTriggers: { getFillColor: JSON.stringify(this.categoryColorsRgb) } } : {}),
+        getFillColor: byCategory
+          ? f => {
+            const cat = this._resolveClassIndex(f.properties[this.binding.value]);
+            return [...(cat != null ? this.categoryColorsRgb[cat] : nodataRgb).slice(0, 3), catAlpha];
+          }
+          : filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * cssColorAlpha(raw) * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0],
         getLineColor: this.style.linecolor
           ? withAlpha(hexOrNamedToRgb(styleLineColor(this.style.linecolor)), cssColorAlpha(styleLineColor(this.style.linecolor)))
           : [130, 130, 130],
@@ -8903,8 +9190,8 @@
     // single winning class, so no `cat`/tooltip chart line, just the
     // blended color directly); AGGREGATE CATEGORICAL on one field — the
     // dominant category of each polygon's records (aggregatedCategoricalClass).
-    // A plain CATEGORICAL choropleth (exact match of one row's value) is not
-    // implemented. Geometry + properties are already the joined
+    // A plain CATEGORICAL choropleth matches the raw value of the polygon's
+    // row against the category labels. Geometry + properties are already the joined
     // FeatureCollection from joinChoroplethFeatures. `zoom` is only used
     // for style.fillopacity:"auto" (see resolveAutoFillOpacity) — every
     // other branch here is zoom-independent.
@@ -8985,7 +9272,10 @@
           }
           // a polygon without a data row is no item in flat: no value
           const hasRow = f.properties && Object.keys(f.properties).length > 0;
-          const value = hasRow ? flatNumber(f.properties[this.binding.value], this.flags) : NaN;
+          // CATEGORICAL matches the raw value against the category labels
+          // (a text value has no numeric form: flatNumber would give NaN)
+          const rawVal = hasRow ? f.properties[this.binding.value] : undefined;
+          const value = this.categoryIndexByLabel ? rawVal : (hasRow ? flatNumber(rawVal, this.flags) : NaN);
           const cat = this._resolveClassIndex(value);
           return {
             type: 'Feature',
@@ -10097,7 +10387,11 @@
         this._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
       }
 
-      this._aggregateStatsCache = { zoom, outlier, normalize, breaks };
+      // flat's default normalsizevalue is the largest aggregated size (maptheme.js 5021-5022)
+      let sizeMax = 0;
+      for (const v of rawSizeTotals) if (Math.abs(v) > sizeMax) sizeMax = Math.abs(v);
+
+      this._aggregateStatsCache = { zoom, outlier, normalize, breaks, sizeMax };
       return this._aggregateStatsCache;
     }
 
@@ -10121,6 +10415,12 @@
       // _computeAggregatedItems below — a plain (non-AGGREGATE)
       // BUBBLE/CHART theme never reads them.
       if (this.flags.has('AGGREGATE')) this._ensureClusterIndices(zoom);
+      // AGGREGATE sums without a normalsizevalue: flat's default is the
+      // largest aggregated value (defaultNormalSizeValue leaves it unset, the
+      // sizes depend on the aggregation)
+      if (this.flags.has('AGGREGATE') && !this.flags.has('CATEGORICAL') && !styleNum(this.style.normalsizevalue) && !this.binding.size) {
+        this._maxSizeValue = this._ensureAggregateStats(zoom).sizeMax || undefined;
+      }
       let { individual, groups } = this._computeAggregatedItems(bbox, zoom);
       // Far-hemisphere cull under globe projection — see
       // isOnVisibleHemisphere's own comment for why this is needed at
@@ -10137,7 +10437,7 @@
       }
       const layers = [];
 
-      if (this.flags.has('NOOUTLIER') || this.flags.has('NORMALIZE') || this._rangeClassed) {
+      if (this.flags.has('NOOUTLIER')|| this.flags.has('NORMALIZE') || this._rangeClassed) {
         const stats = this._ensureAggregateStats(zoom);
 
         // the quantity NOOUTLIER/NORMALIZE/classes act on: the separate
@@ -10248,6 +10548,10 @@
       // _buildTooltipContext's own `isGroup` check already uses).
       const sizeValueOf = d => d.properties.counts ? d.properties.total : d.properties.value;
       const combined = individual.concat(groups).sort((a, b) => sizeValueOf(a) - sizeValueOf(b));
+      // maxcharts: like the flat engine (maptheme.js nMaxCharts), draw only the
+      // biggest N items — combined is ascending, so drop from the front
+      const maxCharts = Math.round(styleNum(this.style.maxcharts)) || 0;
+      if (maxCharts > 0 && combined.length > maxCharts) combined.splice(0, combined.length - maxCharts);
       if (this.flags.has('USER')) {
         const userLayers = this._buildUserChartLayers(combined, liveZoom, sizeValueOf);
         if (userLayers) return layers.concat(userLayers);
@@ -10508,7 +10812,9 @@
           ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d))
           : this._buildSingleIcon(this.categoryColorsRgb[d.properties.cat], fillOpacity, this._resolveSymbolShape(d.properties), singleBorderColorRgb, singleBorderWidthPx),
         getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 2,
-        getColor: d => [255, 255, 255, this._iconAlpha(d)],
+        // group icons bake a fixed 0.9 alpha; an explicit fillopacity scales it
+        // so a near-transparent theme doesn't show opaque 1-px-cell clusters
+        getColor: d => [255, 255, 255, Math.round(this._iconAlpha(d) * (d.properties.counts && this.style.fillopacity != null ? fillOpacity : 1))],
         ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
         sizeUnits: 'pixels',
         billboard: true,
@@ -11708,7 +12014,7 @@
   }
 
   global.ixmaps = {
-    layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
+    layer, Layer: layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON, loadProject,
     markThemeClass, unmarkThemeClass, getBoundingBox, setTitle, setTitleBox, refreshTheme, formatValue: flatFormatValue,
     map: mapHandle, getZoom, getThemeDefinitionObj, embeddedSVG,
@@ -11755,7 +12061,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, youtubeClickToPlay, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, multiQuadOffsets, pixelOffsetLngLat,
+    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, multiQuadOffsets, pixelOffsetLngLat,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
