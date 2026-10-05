@@ -571,6 +571,14 @@
   .field-group { display: flex; flex-direction: column; gap: 4px; }
   .field-label { font-size: 11px; color: var(--muted); font-weight: 500; }
   #layer-tweaks-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* a file dragged over the page (loadLocalFile) */
+  body.file-drag-over::after {
+    content: "📂 Rilascia il file per caricarlo";
+    position: fixed; inset: 12px; z-index: 5000; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px dashed var(--accent); border-radius: 12px;
+    background: rgba(var(--accent-rgb), 0.08); color: var(--text); font-size: 18px; font-weight: 600;
+  }
   .style-toggle-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
   .style-toggle {
     background: var(--bg); border: 1px solid var(--border); color: var(--muted); border-radius: 6px;
@@ -1266,6 +1274,11 @@
       <button class="btn btn-primary" id="load-btn" onclick="loadData()">
         ⬇ Carica
       </button>
+      <button class="btn btn-ghost" id="local-file-btn" onclick="openLocalFilePicker()" title="Apri un file locale (o trascinalo sulla pagina): CSV, JSON, GeoJSON, TopoJSON, KML, JSON-stat, (Geo)Parquet, GeoPackage, FlatGeobuf, Geobuf — anche .gz">
+        📂 File
+      </button>
+      <input type="file" id="local-file-input" style="display:none"
+        accept=".csv,.tsv,.txt,.json,.geojson,.topojson,.jsonl,.ndjson,.kml,.gml,.xml,.parquet,.geoparquet,.gpkg,.fgb,.pbf,.geobuf,.gz">
       <button class="btn btn-ghost" id="panel-btn" onclick="togglePanel()" title="Nascondi/mostra pannello">
         ☰
       </button>
@@ -1852,12 +1865,22 @@ function loadData() {
 
   STATE.dataUrl = url;
 
+  STATE.localFile = null;
+  document.getElementById('url-input').placeholder = document.getElementById('url-input').getAttribute('data-placeholder') || document.getElementById('url-input').placeholder;
+
   detectType(url, function(type) {
     STATE.fileType = type;
     showSpinner('Caricamento ' + type.toUpperCase() + '…');
 
     Data.feed({ source: url, type: type })
-      .load(function(table) {
+      .load(function(table) { onTableLoaded(table, type); })
+      .error(onLoadError);
+  });
+}
+
+// a loaded Data.Table — from a URL (loadData) or a local file (loadLocalFile): reset the
+// previous dataset's state, then analyse the new one
+function onTableLoaded(table, type) {
         STATE.dataTable = table;
         STATE.rawData   = table.json();
         // the map itself is created once at page load (see initMapEarly()) and persists across
@@ -1900,16 +1923,89 @@ function loadData() {
           return;
         }
         analyzeSchema(STATE.rawData, type);
-      })
-      .error(function(err) {
-        hideSpinner();
-        var msg = (typeof err === 'string') ? err : (err && err.message) ? err.message : 'Errore sconosciuto';
-        setStatus('error', 'Errore: ' + msg);
-        showToast('Caricamento fallito: ' + msg, 'error');
-        document.getElementById('empty-state').style.display = '';
-      });
-  });
 }
+function onLoadError(err) {
+  hideSpinner();
+  var msg = (typeof err === 'string') ? err : (err && err.message) ? err.message : 'Errore sconosciuto';
+  setStatus('error', 'Errore: ' + msg);
+  showToast('Caricamento fallito: ' + msg, 'error');
+  document.getElementById('empty-state').style.display = '';
+}
+
+// ── local files (📂 button, or dropped on the page) — as the Chat app does it: binary formats
+// as an ArrayBuffer, text as text, then Data.import({source, type}). The type comes from the
+// extension (typeFromUrl), unknown text is sniffed (typeFromContent); ".gz" is unpacked first.
+// STATE.dataUrl becomes the file NAME: the saved page / "mostra codice" then load "<name>" from
+// next to the page (there is no URL; a blob: URL would only live in this tab), and feature
+// layers draw from the loaded table instead of re-fetching (getFeatureDataSource). ──
+var LOCAL_BINARY_TYPES = ['parquet', 'geoparquet', 'gpkg', 'flatgeobuf', 'geobuf'];
+function localImportType(name) {
+  var n = name.toLowerCase().replace(/\.gz$/, '');
+  if (/\.geoparquet$|\.geo\.parquet$/.test(n)) return 'geoparquet';
+  return typeFromUrl(n);
+}
+function readLocalFile(file) {
+  var gz = /\.gz$/i.test(file.name);
+  if (!gz) return Promise.resolve(file);
+  if (typeof DecompressionStream === 'undefined') return Promise.reject(new Error('questo browser non decomprime .gz'));
+  return new Response(file.stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+}
+function loadLocalFile(file) {
+  if (!file) return;
+  var type = localImportType(file.name);
+  showSpinner('Lettura ' + file.name + '…');
+  hide('empty-state');
+  readLocalFile(file).then(function(blob) {
+    if (LOCAL_BINARY_TYPES.indexOf(type) !== -1) return blob.arrayBuffer().then(function(buf) { return { source: buf, type: type }; });
+    return blob.text().then(function(text) {
+      return { source: text, type: type === 'unknown' ? typeFromContent(text.slice(0, 4096)) : type };
+    });
+  }).then(function(src) {
+    showSpinner('Caricamento ' + String(src.type).toUpperCase() + '…');
+    Data.import({
+      source: src.source,
+      type: src.type,
+      success: function(table) {
+        STATE.dataUrl = file.name;
+        STATE.localFile = { name: file.name, size: file.size };
+        STATE.fileType = src.type === 'geoparquet' ? 'parquet' : src.type;
+        document.getElementById('url-input').value = '';
+        document.getElementById('url-input').placeholder = '📂 ' + file.name + ' (file locale)';
+        onTableLoaded(table, STATE.fileType);
+      },
+      error: onLoadError
+    });
+  }).catch(onLoadError);
+}
+function openLocalFilePicker() { document.getElementById('local-file-input').click(); }
+(function() {
+  var u = document.getElementById('url-input');
+  if (!u.getAttribute('data-placeholder')) u.setAttribute('data-placeholder', u.placeholder);
+})();
+(function() {
+  var input = document.getElementById('local-file-input');
+  input.addEventListener('change', function() {
+    if (input.files && input.files[0]) loadLocalFile(input.files[0]);
+    input.value = ''; // the same file can be chosen again
+  });
+  // drop anywhere on the page
+  var depth = 0;
+  var show = function(on) { document.body.classList.toggle('file-drag-over', on); };
+  document.addEventListener('dragenter', function(e) {
+    if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') !== -1) { depth++; show(true); }
+  });
+  document.addEventListener('dragleave', function() { if (depth > 0 && --depth === 0) show(false); });
+  document.addEventListener('dragover', function(e) {
+    if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') !== -1) e.preventDefault();
+  });
+  document.addEventListener('drop', function(e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    depth = 0; show(false);
+    if (!f) return;
+    e.preventDefault();
+    loadLocalFile(f);
+  });
+})();
 
 // ── detectType: URL heuristics → Content-Type header → content sniff ──
 function detectType(url, callback) {
@@ -3420,6 +3516,7 @@ async function generateMapCode(options) {
     '<div id="map"></div>',
     '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.13/ixmaps-gl.js"><\/script>',
     '<script>',
+    STATE.localFile ? '// data: the local file "' + STATE.localFile.name.replace(/[\r\n"]/g, '') + '" — put it next to this page (or replace the url with where it is published)' : null,
     'ixmaps.Map("map", ' + codeLiteral(cfg.map || {}, '') + ', map => {',
     '  map.view(' + JSON.stringify(center) + ', ' + zoom + ')',
     '     .options(' + codeLiteral(cfg.options || {}, '     ') + ');',
@@ -3429,7 +3526,7 @@ async function generateMapCode(options) {
     '<\/script>',
     '</body>',
     '</html>'
-  ].join('\n');
+  ].filter(function(line) { return line != null; }).join('\n');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4416,6 +4513,9 @@ function applyLiveThemeStyle(prop, value) {
 // needed and isn't how the engine expects it (confirmed against ixMaps' own Chat app, which
 // passes parquet/geoparquet straight through with their real type, never obj/geojson).
 function getFeatureDataSource() {
+  // a local file has no URL to re-fetch: draw from the table already loaded (data.js hands geo
+  // formats over as a table with a geometry column, which the engine reads via lookup "geometry")
+  if (STATE.localFile && STATE.dataTable) return { obj: STATE.dataTable, type: "jsondb" };
   return { url: STATE.dataUrl, type: STATE.fileType, cache: "true" };
 }
 
