@@ -489,10 +489,10 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "173fca09b6ed3542",
-     "setDigest": "f21989138133c6bd",
+     "digest": "6c2465127f455c13",
+     "setDigest": "d02c87c0b32daec2",
      "columnDigests": {
-      "getColor": "287a097fdfea7216",
+      "getColor": "1b5bfe02a0c4b9f0",
       "getIcon": "92cec811e782837d",
       "getPosition": "cc08dfe11130e529",
       "getSize": "7abca245b76ca4de"
@@ -2227,10 +2227,10 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "edb4d335b375cb64",
-     "setDigest": "125b03b8a0f32055",
+     "digest": "ac7fbb40dfafad91",
+     "setDigest": "91d75fc0dcb2cc4d",
      "columnDigests": {
-      "getColor": "df12f1d5c7afa87d",
+      "getColor": "34a0e76534d236e8",
       "getIcon": "4653759cac8f7acd",
       "getPosition": "821ad6d6f2d42583",
       "getSize": "60351c2179b35209"
@@ -3965,10 +3965,10 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "f1a4871a17073bc3",
-     "setDigest": "d63411b970c02b4f",
+     "digest": "15a20d3d929192dc",
+     "setDigest": "552e7e922e08f99f",
      "columnDigests": {
-      "getColor": "b184aff8e7c41b0a",
+      "getColor": "421c28942694ce5c",
       "getIcon": "a8c90146a3b2d11d",
       "getPosition": "c11b05139aaeb9a6",
       "getSize": "be3a19e3615fb377"

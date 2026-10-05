@@ -489,10 +489,10 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "27ea4e29ccfc317e",
-     "setDigest": "5595bb724b06039f",
+     "digest": "9612b9aac7282fe1",
+     "setDigest": "5b6148e2564ed4e7",
      "columnDigests": {
-      "getColor": "5decb57345858034",
+      "getColor": "9b6aa132c3d5369e",
       "getIcon": "d6bf68bc17fac770",
       "getPosition": "1ef1ed592e19a95d",
       "getSize": "ecf550cc2435cbd3"
@@ -2226,10 +2226,10 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "03f633f18e40a63e",
-     "setDigest": "eb1516436aff1df8",
+     "digest": "f475b3bad9f2c575",
+     "setDigest": "6187fc59a6b19d5c",
      "columnDigests": {
-      "getColor": "03fc1cf7b38ef4ea",
+      "getColor": "af0160e0c7b9c60d",
       "getIcon": "55b884ac85858957",
       "getPosition": "cdc672ca06d43d9f",
       "getSize": "62f6f3da807e6861"
@@ -3963,10 +3963,10 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b9e93d9709eb6007",
-     "setDigest": "83afa5487c2476f0",
+     "digest": "d982f6c8f7362a00",
+     "setDigest": "5bb0739920a0a8a2",
      "columnDigests": {
-      "getColor": "7908aad98c31e6e9",
+      "getColor": "f4598494a3338c3b",
       "getIcon": "db07dbda45b04c7b",
       "getPosition": "69f110d8fc7b4579",
       "getSize": "341423d5317e2304"

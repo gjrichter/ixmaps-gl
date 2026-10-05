@@ -32,6 +32,7 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
+      "pickable": false,
       "stroked": true
      },
      "columns": [
@@ -1338,6 +1339,7 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
+      "pickable": false,
       "stroked": true
      },
      "columns": [
@@ -2644,6 +2646,7 @@
        77
       ],
       "lineWidthMinPixels": 0.5,
+      "pickable": false,
       "stroked": true
      },
      "columns": [

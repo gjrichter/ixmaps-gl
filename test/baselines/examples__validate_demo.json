@@ -29,13 +29,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "dc69ab3cd3eb7765",
-     "setDigest": "dc69ab3cd3eb7765",
+     "digest": "c6fb8316ddcd9ed0",
+     "setDigest": "c6fb8316ddcd9ed0",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
       "getIcon": "db2c389e9ef30ec2",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "df8013c499138ca4"
+      "getSize": "864a817c4b487e76"
      },
      "stats": {
       "getColor": [
@@ -47,8 +47,8 @@
        9.2
       ],
       "getSize": [
-       996.375183,
-       1992.750366
+       222.796264,
+       445.592528
       ]
      },
      "sample": [
@@ -71,7 +71,7 @@
         9.18,
         45.45
        ],
-       996.375183
+       222.796264
       ],
       [
        [
@@ -92,7 +92,7 @@
         9.19,
         45.46
        ],
-       1409.087297
+       315.081498
       ],
       [
        [
@@ -113,7 +113,7 @@
         9.2,
         45.47
        ],
-       1992.750366
+       445.592528
       ]
      ]
     }
@@ -161,7 +161,8 @@
      "rangeClassed": true,
      "valueMin": 5,
      "valueMax": 20,
-     "valueMedian": 10
+     "valueMedian": 10,
+     "maxSizeValue": 20
     },
     {
      "name": "pie",
@@ -388,13 +389,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "99416fab83710265",
-     "setDigest": "99416fab83710265",
+     "digest": "8ab9c5ed7f54a2d2",
+     "setDigest": "8ab9c5ed7f54a2d2",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
       "getIcon": "db2c389e9ef30ec2",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "4f8e26cf7b298ee9"
+      "getSize": "9536765124f63b71"
      },
      "stats": {
       "getColor": [
@@ -406,8 +407,8 @@
        9.2
       ],
       "getSize": [
-       1255.354067,
-       2510.708133
+       280.705703,
+       561.411406
       ]
      },
      "sample": [
@@ -430,7 +431,7 @@
         9.18,
         45.45
        ],
-       1255.354067
+       280.705703
       ],
       [
        [
@@ -451,7 +452,7 @@
         9.19,
         45.46
        ],
-       1775.338747
+       396.977812
       ],
       [
        [
@@ -472,7 +473,7 @@
         9.2,
         45.47
        ],
-       2510.708133
+       561.411406
       ]
      ]
     }
@@ -520,7 +521,8 @@
      "rangeClassed": true,
      "valueMin": 5,
      "valueMax": 20,
-     "valueMedian": 10
+     "valueMedian": 10,
+     "maxSizeValue": 20
     },
     {
      "name": "pie",
@@ -747,13 +749,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "64e97585ba1cab4b",
-     "setDigest": "64e97585ba1cab4b",
+     "digest": "31cb8f32948bac22",
+     "setDigest": "31cb8f32948bac22",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
       "getIcon": "db2c389e9ef30ec2",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "505ee49e7c826c62"
+      "getSize": "594f1840974c61ba"
      },
      "stats": {
       "getColor": [
@@ -765,8 +767,8 @@
        9.2
       ],
       "getSize": [
-       790.823507,
-       1581.647014
+       176.833512,
+       353.667024
       ]
      },
      "sample": [
@@ -789,7 +791,7 @@
         9.18,
         45.45
        ],
-       790.823507
+       176.833512
       ],
       [
        [
@@ -810,7 +812,7 @@
         9.19,
         45.46
        ],
-       1118.393329
+       250.080351
       ],
       [
        [
@@ -831,7 +833,7 @@
         9.2,
         45.47
        ],
-       1581.647014
+       353.667024
       ]
      ]
     }
@@ -879,7 +881,8 @@
      "rangeClassed": true,
      "valueMin": 5,
      "valueMax": 20,
-     "valueMedian": 10
+     "valueMedian": 10,
+     "maxSizeValue": 20
     },
     {
      "name": "pie",
