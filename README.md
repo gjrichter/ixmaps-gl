@@ -101,6 +101,31 @@ an id wins, a polygon's position is flat's shape center (the vertex mean in Merc
 `chartlower` (else `layerupper`/`layerlower`) hide a theme outside their scales; `.filter()` takes
 flat's grammar (`WHERE a > 5 AND b NOT x`, `LIKE`, `IN`, `BETWEEN`, `$field$`, or a plain regex).
 
+### Handle API
+
+The main interface is flat's handle chain: `ixmaps.map()` — or `ixmaps.map("name")` for the map
+with that `name` in its `Map()` options, so several maps on one page can be addressed separately
+(no name: the last built map, as in flat). From the map handle, `map("name").theme("themename")`
+returns the theme handle (flat's `themeApi`):
+
+```js
+ixmaps.map("map1").theme("mytheme").changeStyle("scale:1.2", "factor");
+ixmaps.map().theme("mytheme").show();  // also hide(), toggle(), remove(),
+                                       // replace(theme), markClass(n), unmarkClass(n)
+```
+
+The historic global forms remain as compatibility wrappers and dispatch on arity: the canonical
+theme-first `ixmaps.changeThemeStyle(themeId, "style:value", "set")` and `ixmaps.removeTheme(id)`
+(htmlgui.js), the handle method `map().changeThemeStyle(theme, style, flag)`, and the older
+map-first pages calling `ixmaps.changeThemeStyle(null|mapName, themeId, style, flag)` /
+`ixmaps.removeTheme(null|mapName, id)` / `ixmaps.setBasemapOpacity(null|mapName, opacity, mode)`
+— where a registered map name targets that map and a null or unknown name the last built one.
+The `ixmaps.Map(div, opts, callback)` callback receives the builder for its own
+`.options().view().layer()` chain, which also carries flat's mapApi handle methods
+(`setView`, `replace`, `show`, `getThemes`, … — htmlgui_flat.js), each delegated to the handle
+of that map's options name — so a page that keeps the callback object as its map handle,
+as flat pages do, works unmodified.
+
 ### Zoom levels
 
 Zoom numbers in the ixmaps API are ixmaps-flat's, i.e. Leaflet's (256px tiles):

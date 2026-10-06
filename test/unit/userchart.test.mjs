@@ -35,3 +35,10 @@ test('formatValue: a small value keeps a significant digit; CEIL / FLOOR', () =>
 test('formatValue: a page gets flat\'s as ixmaps.formatValue', () => {
   assert.equal(win.ixmaps.formatValue(1234.5, 1), '1.234,5');
 });
+
+test('__formatValue: a page gets flat\'s legend variant (legend.js 451) as ixmaps.__formatValue — the AirBnB port\'s statistics count', () => {
+  assert.equal(typeof win.ixmaps.__formatValue, 'function');
+  assert.equal(win.ixmaps.__formatValue(12345, 0, 'BLANK'), '12&nbsp;345');
+  assert.equal(win.ixmaps.__formatValue(0), '0');
+  assert.equal(win.ixmaps.__formatValue(1234567.891, 2, 'BLANK'), '1&nbsp;234&nbsp;567.89');
+});

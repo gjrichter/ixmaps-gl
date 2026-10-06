@@ -82,7 +82,7 @@
   // ---------------------------------------------------------------
   // this engine's release (= package.json "version", checked by
   // test/unit/version.test.mjs); ixmaps.glVersion, and logged once at start
-  const IXMAPS_GL_VERSION = '0.2.14';
+  const IXMAPS_GL_VERSION = '0.2.15';
 
   const LIB_URLS = {
     // Bumped 3.6.2 -> 5.x (2026-09-21, globe-projection compat fix): native
@@ -1951,6 +1951,10 @@
   // per-map handle — most real pages only ever build one map anyway. Set
   // once per successful build(), just before it returns engineApi below.
   let _lastMapApi = null;
+  // flat's map instance registry (htmlgui_flat.js 2416): the built maps by
+  // their Map() options name — ixmaps.map("name") is the handle of THAT
+  // map, ixmaps.map() stays the last built one
+  const _mapApis = Object.create(null);
   // resolves with the first built map's API: ixmaps.map() calls a page
   // makes while the map is still building wait for it
   let _resolveMapReady;
@@ -3063,10 +3067,12 @@
     function mount() {
       map.on('move', updatePinnedTooltipPosition);
       watchHoverTooltip();
-      if (el.parentElement) {
-        el.parentElement.style.position = el.parentElement.style.position || 'relative';
-        el.parentElement.appendChild(pinnedTooltipEl);
-      }
+      // anchor inside the map container: map.project() gives container-
+      // relative pixels, and styling the page's own body (relative) breaks
+      // any page element absolutely positioned against it (AirBnB's
+      // #onmap-buttons on a zero-height all-float body flew off-screen)
+      el.style.position = el.style.position || 'relative';
+      el.appendChild(pinnedTooltipEl);
     }
     return { getTooltip, onClick, mount };
   }
@@ -3080,7 +3086,7 @@
   // layoutLegends().
   // ---------------------------------------------------------------
   function createLegend(ctx) {
-    const { builder, map, el, overlay, runtimes, engineApi, built, refresh, scheduleRefresh, notifyRedraw } = ctx;
+    const { builder, map, el, overlay, runtimes, engineApi, built, refresh, scheduleRefresh, notifyRedraw, quietRefresh } = ctx;
     let addLegendPanel = () => {};
     let setLegendOption = () => {};
     let updateSubTheme = () => {};
@@ -3228,15 +3234,28 @@
         legendStack = document.createElement('div');
         legendStack.className = 'ix-legend-stack';
         legendStack.style.cssText = 'position:absolute;' + legendAlignCss + 'z-index:6;width:280px;'
-          + 'display:flex;flex-direction:column;max-height:calc(100% - 24px);overflow-y:auto;'
+          + 'display:flex;flex-direction:column;max-height:66.6%;overflow-y:auto;'
           + 'border-radius:6px;box-shadow:' + shadow + ';pointer-events:auto;';
         if (!document.getElementById('ix-legend-stack-css')) {
           const css = document.createElement('style');
           css.id = 'ix-legend-stack-css';
-          css.textContent = '.ix-legend-stack>.ix-native-legend:not([data-ixoff])~.ix-native-legend:not([data-ixoff]){border-top:1px solid rgba(128,128,128,.35)}';
+          // the slider rules are flat's own legend.css .slider block
+          // (355-411) — its two duplicate blocks resolved to what the
+          // cascade actually shows: a 5px rounded grey track at 0.7
+          // opacity (1 on hover) and a green thumb
+          css.textContent = '.ix-legend-stack>.ix-native-legend:not([data-ixoff])~.ix-native-legend:not([data-ixoff]){border-top:1px solid rgba(128,128,128,.35)}'
+            + '.ix-legend-stack input[type=range]{-webkit-appearance:none;appearance:none;height:5px;border-radius:10px;background:rgba(155,155,155,0.3);border:solid #888 0px;outline:none;opacity:0.7;transition:opacity .2s;}'
+            + '.ix-legend-stack input[type=range]:hover{opacity:1;}'
+            + '.ix-legend-stack input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:0.5em;background:#4CAF50;cursor:pointer;}'
+            + '.ix-legend-stack input[type=range]::-moz-range-thumb{width:25px;height:25px;border-radius:50%;background:#4CAF50;cursor:pointer;}';
           document.head.appendChild(css);
         }
-        el.parentElement.appendChild(legendStack);
+        // flat anchors its legend inside the map div (#map-legend), so the
+        // panel's max-height resolves against the MAP's height — the stack's
+        // former parent anchor collapsed it to 0 on pages whose body has
+        // only floated children (height 0)
+        el.style.position = el.style.position || 'relative';
+        el.appendChild(legendStack);
         return legendStack;
       };
       // map.setLegend(value): the `legend` map option at runtime, same values as
@@ -3281,7 +3300,7 @@
         rt._triggerRedraw = () => { refresh(); };
         if (subThemeCapable(rt)) rt._onMarksChanged = () => updateSubTheme(rt);
         if (!legendOn || !el.parentElement || !legendApplies(rt)) return;
-        el.parentElement.style.position = el.parentElement.style.position || 'relative';
+        el.style.position = el.style.position || 'relative';
         {
         // .type("...|NOLEGEND") — the fourth real legend-related type()
         // token: opts a theme OUT of the legend entirely (real engine's
@@ -3328,23 +3347,22 @@
           // would hand the dark look a light bg here: its dark branch never
           // ran for this map, its light bg would clash with dark rows/text)
           if (!rt.style.legendtheme) legendColors.bg = looksDark ? '#111' : flatLook.bg;
-          // max-height:66% resolves against el.parentElement's own
-          // height (the map container, which always has a definite
-          // height for the map itself to render into) since this panel
-          // is absolutely positioned inside it — a plain percentage on
-          // an absolutely-positioned element's height IS legal CSS as
-          // long as its containing block has a definite height, which
-          // this one does. display:flex column + min-height:0 on the
-          // ROWS wrapper below (not this outer panel) is what makes
-          // only the row list scroll while the header/description/
-          // slider stay fixed in place — a flex child won't actually
-          // shrink to fit and scroll internally without min-height:0,
-          // it just overflows its flex parent instead.
+          // max-height:66.6% resolves against el's own height (the map
+          // container, which always has a definite height for the map
+          // itself to render into) since this panel sits in the stack,
+          // absolutely positioned inside el. flex:0 1 auto + min-height:0
+          // lets the panel SHRINK to the stack's 2/3 cap so the ROWS
+          // wrapper (its own flex:1 1 auto + min-height:0 below) scrolls
+          // internally while the header/description/slider stay fixed —
+          // with flex:0 0 auto the panel grew past the cap and the whole
+          // stack scrolled instead. text-align:left: the page body may
+          // centre everything (the AirBnB port does), the legend is left
+          // aligned chrome.
           // one box for every theme, as flat's #map-legend (legend.js
           // 2200-2460): the panels stack in the legend stack in theme
           // order, a line between them (see layoutLegends)
-          panel.style.cssText = 'position:relative;flex:0 0 auto;'
-            + 'display:flex;flex-direction:column;'
+          panel.style.cssText = 'position:relative;flex:0 1 auto;min-height:0;overflow:hidden;'
+            + 'display:flex;flex-direction:column;text-align:left;'
             + 'background:' + legendColors.bg + ';color:' + legendColors.fg + ';font:12px/1.4 -apple-system,Arial,sans-serif;'
             + 'padding:10px 12px 12px;pointer-events:auto;';
           const stack = legendStackEl(legendColors.shadow);
@@ -3783,12 +3801,12 @@
           slider.min = isOpacitySlider ? '0' : '25';
           slider.max = isOpacitySlider ? '100' : '200';
           slider.value = String(initialPct);
-          slider.style.cssText = 'width:100%;margin-top:2px;';
+          slider.style.cssText = 'width:50%;margin-top:0.4em;'; // flat's own inline slider style (legend.js 2392)
           slider.addEventListener('input', () => {
             const pct = parseInt(slider.value, 10);
             sliderRow.querySelector('.ix-legend-scale-val').textContent = pct;
             rt.setStyle(isOpacitySlider ? { fillopacity: pct / 100 } : { scale: pct / 100 });
-            refresh();
+            quietRefresh();
           });
           bodyEl.appendChild(slider);
           }
@@ -4179,12 +4197,14 @@
       attributionBox.set(this._attributionText != null ? this._attributionText : this.mapOptions.attribution);
       this._setAttribution = text => attributionBox.set(text);
 
-      if (this._legendHtml && el.parentElement) {
+      if (this._legendHtml) {
         const legendEl = document.createElement('div');
         legendEl.style.cssText = 'position:absolute;top:0;left:0;z-index:5;pointer-events:none';
         legendEl.innerHTML = this._legendHtml;
-        el.parentElement.style.position = el.parentElement.style.position || 'relative';
-        el.parentElement.appendChild(legendEl);
+        // inside the map container, never the page's body (see the pinned
+        // tooltip mount) — styling body breaks page-positioned elements
+        el.style.position = el.style.position || 'relative';
+        el.appendChild(legendEl);
       }
 
       // themes are addressed by either the layer()'s own name (e.g. "AREU")
@@ -5228,9 +5248,18 @@
       // the native legend: createLegend (its four hooks are what the rest
       // of the map calls — panels, the legend option, sub-themes, layout)
       ({ addLegendPanel, setLegendOption, updateSubTheme, layoutLegends } =
-        createLegend({ builder, map, el, overlay, runtimes, engineApi, built, refresh, scheduleRefresh, notifyRedraw }));
+        createLegend({ builder, map, el, overlay, runtimes, engineApi, built, refresh, scheduleRefresh, notifyRedraw,
+          // flat's legend slider (legend.js 2839-2854) patches the style and
+          // calls redrawTheme — a per-theme redraw that does NOT fire
+          // htmlgui_onDrawTheme, so a page's own onDrawTheme hook (this
+          // port's hookStatistics re-applying its own slider's scale)
+          // only reasserts on the next full redraw (pan/zoom). refresh()
+          // here would notify synchronously and clobber the new scale in
+          // the same tick — this quiet variant is that flat behavior.
+          quietRefresh: () => { refreshLayers(); } }));
 
       _lastMapApi = engineApi;
+      if (this.mapOptions && this.mapOptions.name) _mapApis[this.mapOptions.name] = engineApi;
       // ?ixgl-debug: ixmaps.__glDebug.check() reports, for the moment it is
       // called, every theme's geometry problems (invalid or mixed-dimension
       // coordinates, a shape far larger than the theme's others) and what
@@ -5293,6 +5322,27 @@
       resolveBuilt();
       namedLoads.forEach(rt => { listenNamedData(rt); if (!rt._deferredLoad) loadNamedTheme(rt, false); });
       return engineApi;
+    }
+  }
+
+  // GL-PORT COMPAT: flat's ixmaps.Map(div, opts, cb) hands the callback a
+  // mapApi HANDLE (htmlgui_flat.js 904-935) — a real page keeps it and
+  // calls its methods on it (__map.setView(...), __map.replace(...) —
+  // AirBnB's city selector). This engine hands the callback the BUILDER
+  // for its own .options().view().layer() chain; the builder here also
+  // carries flat's handle methods, delegated to the map handle of THIS
+  // map's options name (calls before the map exists wait for it, exactly
+  // as ixmaps.map() does). The builder's own methods with different
+  // semantics — layer, view, options, require, attribution, on — keep
+  // theirs and are not overridden.
+  for (const m of ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
+    'refreshTheme', 'redrawTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize',
+    'loadProject', 'project', 'setThemeVisible', 'setThemeTimeFrame', 'show', 'hide', 'getZoom', 'getThemeObj',
+    'getThemes', 'theme', 'setView']) {
+    if (!MapBuilder.prototype[m]) {
+      MapBuilder.prototype[m] = function (...args) {
+        return mapHandle(this.mapOptions && this.mapOptions.name)[m](...args);
+      };
     }
   }
 
@@ -11423,22 +11473,73 @@
     try { hook.call(global.ixmaps, themeIdOf(rt)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onNewTheme:', e); }
   }
 
-  // flat's ixmaps.map() — the running map's handle (htmlgui.js 173ff,
-  // htmlgui_flat.js). Its methods act on the last built map; called while
-  // the map is still building, they run once it is ready.
+  // flat's ixmaps.themeApi (htmlgui_flat.js 1112-1196): the theme handle a
+  // page gets from map().theme(name) — changeStyle is flat's canonical
+  // global changeThemeStyle(szThemeName, szStyle, szFlag) (htmlgui.js 2050)
+  // in handle form; show / hide / toggle are setThemeVisible, remove the map
+  // handle's. flat's own markClass delegates 3-arg — a stale call against
+  // htmlgui.js's 2-arg markThemeClass (2196) — the canonical form is used
+  // here. Theme ids are global (the registry), so the map binding only
+  // matters for replace.
+  function themeApi(szMap, szTheme) {
+    this.szMap = szMap || null;
+    this.szTheme = szTheme || null;
+  }
+  themeApi.prototype = {
+    changeStyle(szStyle, szFlag) { compatChangeThemeStyle(this.szTheme, szStyle, szFlag); return this; },
+    markClass(nClass) { markThemeClass(this.szTheme, nClass); return this; },
+    unmarkClass(nClass) { unmarkThemeClass(this.szTheme, nClass); return this; },
+    show() { mapHandle(this.szMap).setThemeVisible(this.szTheme, true); return this; },
+    hide() { mapHandle(this.szMap).setThemeVisible(this.szTheme, false); return this; },
+    toggle() {
+      const rt = _globalThemeRegistry.get(this.szTheme);
+      mapHandle(this.szMap).setThemeVisible(this.szTheme, rt ? !!rt._hidden : false);
+      return this;
+    },
+    remove() { mapHandle(this.szMap).remove(this.szTheme); return this; },
+    replace(theme, flag) { mapHandle(this.szMap).replaceTheme(this.szTheme, theme, flag); return this; }
+  };
+
+  // flat's ixmaps.map() / ixmaps.api(szMap) — the running map's handle
+  // (htmlgui.js 173ff, htmlgui_flat.js mapApi 1283). Its methods act on the
+  // map named by szMap (its Map() options name) or, without a name, the
+  // last built map; called while the map is still building, they run once
+  // it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
     'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'setThemeTimeFrame', 'attribution'];
-  const _mapHandle = {};
-  for (const m of MAP_HANDLE_METHODS) {
-    _mapHandle[m] = (...args) => {
-      if (_lastMapApi) { const r = _lastMapApi[m](...args); return r === _lastMapApi ? _mapHandle : r; }
-      _mapReady.then(api => api[m](...args));
-      return _mapHandle;
-    };
+  const _mapHandles = Object.create(null);
+  function makeMapHandle(szMap) {
+    const h = {};
+    const api = () => (szMap && _mapApis[szMap]) || _lastMapApi;
+    for (const m of MAP_HANDLE_METHODS) {
+      h[m] = (...args) => {
+        const a = api();
+        if (a) { const r = a[m](...args); return r === a ? h : r; }
+        _mapReady.then(ready => ready[m](...args));
+        return h;
+      };
+    }
+    h.getZoom = () => { const a = api(); return a ? a.getZoom() : undefined; };
+    h.getThemeObj = id => getThemeObj(id);
+    // flat's mapApi.theme(szTheme) (htmlgui_flat.js 1571): the theme handle
+    h.theme = szTheme => new themeApi(szMap, szTheme);
+    // flat's mapApi aliases (htmlgui_flat.js 1286+): show/hide a theme,
+    // redrawTheme (refreshTheme here), project (loadProject), getThemes(),
+    // setView (view, both flat's object form and (array, zoom))
+    h.show = id => h.setThemeVisible(id, true);
+    h.hide = id => h.setThemeVisible(id, false);
+    h.redrawTheme = id => h.refreshTheme(id);
+    h.project = (...a) => h.loadProject(...a);
+    h.setView = (...a) => h.view(...a);
+    h.getThemes = () => [...new Set(_globalThemeRegistry.values())].map(rt => getThemeObj(themeIdOf(rt))).filter(Boolean);
+    return h;
   }
-  _mapHandle.getZoom = () => (_lastMapApi ? _lastMapApi.getZoom() : undefined);
-  _mapHandle.getThemeObj = id => getThemeObj(id);
-  function mapHandle() { return _mapHandle; }
+  const _mapHandle = makeMapHandle(null);
+  function mapHandle(szMap) {
+    if (!szMap) return _mapHandle;
+    if (!_mapHandles[szMap]) _mapHandles[szMap] = makeMapHandle(szMap);
+    return _mapHandles[szMap];
+  }
 
   // flat's ixmaps.formatValue(value, precision, flag) (ui/js/tools/format.js),
   // which user chart scripts call: thousands separated by "." (BLANK: a
@@ -12013,10 +12114,44 @@
     return _lastMapApi.loadProject(src, flags);
   }
 
+  // flat's global compat forms come in two arities: the canonical
+  // theme-first signatures — changeThemeStyle(szThemeName, szStyle, szFlag)
+  // (htmlgui.js 2050, with its duplicate-leading shift, 2052),
+  // removeTheme(szThemeId) (1884), setBasemapOpacity(nOpacity, szMode)
+  // (1409) — and the older map-first pages calling
+  // (null|szMap, szId, ...) — PNRR passes an explicit null. Arity tells
+  // them apart; theme ids are global (the registry), so the leading map
+  // argument only matters for setBasemapOpacity, where a registered map
+  // name targets that map and null or an unknown name the last built one.
+  function themeStyleArgs(a) {
+    if (a.length >= 4) a = a.slice(1);
+    else if (a[0] === a[1]) a = a.slice(1);
+    return a;
+  }
+  function compatChangeThemeStyle(...a) {
+    const [szId, szStyle, szFlag] = themeStyleArgs(a);
+    return _mapHandle.changeThemeStyle(szId, szStyle, szFlag);
+  }
+  function compatRemoveTheme(...a) {
+    return _mapHandle.remove(a.length >= 2 ? a[1] : a[0]);
+  }
+  function compatSetBasemapOpacity(...a) {
+    if (a.length >= 3) {
+      const api = (a[0] && _mapApis[a[0]]) || _lastMapApi;
+      if (api) api.setBasemapOpacity(a[1], a[2]);
+      return;
+    }
+    return _mapHandle.setBasemapOpacity(a[0], a[1]);
+  }
+
   global.ixmaps = {
     layer, Layer: layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON, loadProject,
     markThemeClass, unmarkThemeClass, getBoundingBox, setTitle, setTitleBox, refreshTheme, formatValue: flatFormatValue,
+    // flat's ixmaps.__formatValue (ui/js/tools/legend.js 451-553) — pages call
+    // it for statistics/legend values; legend's own variant differs from
+    // format.js's only in the SPACE flag, which flatFormatValue covers too
+    __formatValue: flatFormatValue,
     map: mapHandle, getZoom, getThemeDefinitionObj, embeddedSVG,
     // flat's theme list: the theme objects of every theme
     getThemes: () => [...new Set(_globalThemeRegistry.values())].map(rt => getThemeObj(themeIdOf(rt))).filter(Boolean),
@@ -12033,11 +12168,11 @@
     setAttribution: (text) => { if (_lastMapApi && _lastMapApi.setAttribution) _lastMapApi.setAttribution(text); },
     htmlgui_setAttributionString: (text) => { if (_lastMapApi && _lastMapApi.setAttribution) _lastMapApi.setAttribution(text); },
     htmlgui_getAttributionString: () => (_lastMapApi && _lastMapApi.getAttribution ? _lastMapApi.getAttribution() : ''),
-    changeThemeStyle: (szMap, szId, szStyle, szFlag) => _mapHandle.changeThemeStyle(szId, szStyle, szFlag),
-    removeTheme: (szMap, szId) => _mapHandle.remove(szId),
+    changeThemeStyle: compatChangeThemeStyle,
+    removeTheme: compatRemoveTheme,
     // flat's time slider: show the records of a theme (null = all themes) whose timefield lies in [min, max)
     setThemeTimeFrame: (szId, nMin, nMax) => _mapHandle.setThemeTimeFrame(szId, nMin, nMax),
-    setBasemapOpacity: (szMap, nOpacity, szMode) => _mapHandle.setBasemapOpacity(nOpacity, szMode),
+    setBasemapOpacity: compatSetBasemapOpacity,
     // this engine's version (flat's own ixmaps.version numbers flat)
     glVersion: IXMAPS_GL_VERSION,
     // flat always has this page hook (its layer legend tool defines it,
@@ -12062,7 +12197,7 @@
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, multiQuadOffsets, pixelOffsetLngLat,
-    normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, typeStyleNumbers, styleNum,
+    normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
@@ -12071,7 +12206,7 @@
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
-    flatFormatValue,
+    flatFormatValue, themeStyleArgs,
     dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn,
   };
   global.__setFilter = __setFilter;
