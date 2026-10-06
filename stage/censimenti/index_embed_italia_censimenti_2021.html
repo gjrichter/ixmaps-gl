@@ -95,7 +95,7 @@ $Log:index_only_map_embed.html,v $
                     <a class="select" href="javascript:ixmaps.map().replace('chart_procom_all',__pop_procom(),'silent')">Popolazione</a>
                     <ul>
                         <li>
-                            <a class="select" href="javascript:ixmaps.map().add(__pop_procom_5(),'replace|silent')"> - < 5 anni </a>
+                            <a class="select" href="javascript:ixmaps.map().replace('chart_procom_all',__pop_procom_5(),'silent')"> - < 5 anni </a>
                             <a class="select" href="javascript:ixmaps.map().remove('chart_procom_all').add(__pop_procom_75(),'silent')"> - > 75 anni </a>
                            <a class="select" href="javascript:ixmaps.map().remove('chart_procom_all').add(__pop_procom_stranieri(),'silent')"> - stranieri </a>
                            <a class="select" href="javascript:ixmaps.map().remove('chart_procom_all').add(__pop_procom_stranieri_p(),'silent')"> - % </a>
@@ -191,7 +191,7 @@ $Log:index_only_map_embed.html,v $
     <!--========================================================================= -->
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.14/ixmaps-gl.js"></script>
+    <script type="text/javascript" src="../../ixmaps-gl.js"></script>
 
     <script type="text/javascript" src="./js/dataprovider_flatgeobuffer_sezioni.js"></script>
     <script type="text/javascript" src="./js/layer.js"></script>
@@ -623,7 +623,7 @@ $Log:index_only_map_embed.html,v $
                     type: "ext",
 					name: "dataquery_flatgeobuffer"
 				})
-				.type("CHART|USER|SIZE|3D|SHADOW|DENSITY|3D|HEADTAIL||COMPACTLEGEND")
+				.type("CHART|USER|SIZE|DENSITY|3D|HEADTAIL||COMPACTLEGEND")
 				.binding({
 					value: "P1",
 					position: "SEZ21_ID",
@@ -644,7 +644,7 @@ $Log:index_only_map_embed.html,v $
 					rangescale: "0.2",
 					minvaluesize: "20",
 					sizepow: 1,
-					alphafield100: "$density$",
+					xxalphafield100: "$density$",
 					nodatacolor: "RGB(255,253,216)",
 					chartupper: "1:150000",
                     minvaluesize: "20"

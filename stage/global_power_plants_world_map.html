@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Global Power Plants</title>
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<script src="../ixmaps-gl.js"></script>
 <style>
   html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #0a1420; }
   #map { width: 100%; height: 100%; }
@@ -183,59 +183,26 @@
     try { ixmaps.setMapTool("info"); } catch (e) {}
   });
 
-  // --- Projection toggle: Equal Earth <-> Orthographic (globe) ---
+  // --- Projection toggle: Flat <-> Globe ---
 
   var switchEl = document.getElementById("pt-switch");
   var labelFlat = document.getElementById("pt-label-flat");
   var labelGlobe = document.getElementById("pt-label-globe");
   var isGlobe = false;
 
-  function toGlobe() {
+  // DSMW's projection switch (ports/DSMW_Globe_colors.html): swap the projection,
+  // keep the current view — one call, both directions, no theme surgery
+  function setProjection(toGlobe) {
     var project = JSON.parse(ixmaps.getProjectString());
-    project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/orthographic.svg";
-    project.map.center = { lat: 15, lng: 10 };
-    project.map.zoom = 2.2;
-    ixmaps.setProjectJSON(project);
-    // no myMap.view(...) call here — on this engine build it silently reverts the swap
-
-    myMap.then(function (api) {
-      try { api.removeTheme("ocean_flat"); } catch (e) {}
-      myMap.layer("ocean_globe")
-        .data({
-          obj: { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Sphere" }, properties: {} }] },
-          type: "geojson"
-        })
-        .binding({ geo: "geometry" })
-        .type("FEATURE|SILENT")
-        .style({ colorscheme: ["#0d1b2a"], fillopacity: "1", linecolor: "none", linewidth: "0", showdata: "true" })
-        .meta({ name: "ocean_globe_theme", tooltip: "{{}}" })
-        .define();
-    });
-
-    // setProjectJSON (and the theme redraw it triggers) resets the map's tool state,
-    // which silently kills hover tooltips (see ixMaps Hotspot #26) — re-arm it after
-    // the redraw settles, not synchronously right after setProjectJSON.
-    setTimeout(function () { try { ixmaps.setMapTool("info"); } catch (e) {} }, 400);
-
-    isGlobe = true;
-    switchEl.classList.add("globe");
-    labelFlat.classList.remove("active");
-    labelGlobe.classList.add("active");
+    project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/" + (toGlobe ? "orthographic" : "mercator") + ".svg";
+    ixmaps.setProjectJSON(project, "keepview");
+    isGlobe = toGlobe;
+    switchEl.classList.toggle("globe", toGlobe);
+    labelFlat.classList.toggle("active", !toGlobe);
+    labelGlobe.classList.toggle("active", toGlobe);
   }
 
-  function toEqualEarth() {
-    // Globe -> Equal Earth has a known stuck-SVG-transform bug on this engine with no live fix.
-    // Reloading cleanly resets to the default Equal Earth init.
-    location.reload();
-  }
-
-  switchEl.addEventListener("click", function () {
-    if (isGlobe) {
-      toEqualEarth();
-    } else {
-      toGlobe();
-    }
-  });
+  switchEl.addEventListener("click", function () { setProjection(!isGlobe); });
 
 })();
 </script>
