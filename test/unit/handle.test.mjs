@@ -95,3 +95,9 @@ test('the Map callback object: flat\'s mapApi handle methods on the builder (htm
   b.setView([41.9, 12.5], 12);
   b.replace('airbnb_listings', {});
 });
+
+test('setProjection: the projection-only swap, on the handle and the builder — no project machinery', () => {
+  assert.equal(typeof win.ixmaps.map().setProjection, 'function', 'handle has setProjection');
+  const b = new G.MapBuilder('map-div', {});
+  assert.equal(typeof b.setProjection, 'function', 'builder delegates setProjection');
+});

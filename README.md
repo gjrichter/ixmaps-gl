@@ -114,6 +114,16 @@ ixmaps.map().theme("mytheme").show();  // also hide(), toggle(), remove(),
                                        // replace(theme), markClass(n), unmarkClass(n)
 ```
 
+Projection changes never need the project machinery: `map().setProjection("globe")` (or `"mercator"`)
+swaps the MapLibre projection and rebuilds the projection-dependent layers — themes, data and the
+current view are never touched (unlike `setProjectJSON`, which re-defines every theme to change
+the projection and, without `"keepview"`, resets the view).
+
+`CHART|USER` themes (a page's own `userdraw` chart function) render as live SVG in a pane over
+the map, as flat renders them — vector-crisp at every zoom, labels as real text, following every
+pan via transform-only updates (≈3ms for 8,000 charts). Picking/tooltips run on a transparent
+deck layer at the same positions.
+
 The historic global forms remain as compatibility wrappers and dispatch on arity: the canonical
 theme-first `ixmaps.changeThemeStyle(themeId, "style:value", "set")` and `ixmaps.removeTheme(id)`
 (htmlgui.js), the handle method `map().changeThemeStyle(theme, style, flag)`, and the older

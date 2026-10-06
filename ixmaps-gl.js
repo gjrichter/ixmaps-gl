@@ -1411,7 +1411,7 @@
         const key = String(id), area = geometryArea(f.geometry);
         if (!flatShapeWins(best.get(key), area)) continue;
         const pos = flatShapeCenter(f.geometry);
-        if (pos) best.set(key, { area, pos });
+        if (pos) best.set(key, { area, pos, areaKm2: flatShapeAreaKm2(rt, f) });
       }
     }
     rt._positionIndex = best;
@@ -1445,7 +1445,11 @@
         const v = row[lookupField];
         if (v == null || v === '') continue;
         const hit = index.get(flatLookupKey(v, spec.style));
-        if (hit) features.push({ type: 'Feature', geometry: { type: 'Point', coordinates: hit.pos }, properties: row });
+        // the joined feature is a POINT — DENSITY (value per km² of the
+        // joined shape, as flat) needs the shape's km² area carried along
+        // (featureAreaKm2 prefers this marker), exactly as the choropleth
+        // join stamps it
+        if (hit) features.push({ type: 'Feature', geometry: { type: 'Point', coordinates: hit.pos }, properties: row, _flatAreaKm2: hit.areaKm2 });
       }
     }
     return { type: 'FeatureCollection', features };
@@ -2010,16 +2014,57 @@
   // the user chart's size unit: flat's normalX(15) = 300 is the chart's
   // normal radius (maxSize), shown at gl's normal bubble radius
   const USER_CHART_MAX_SIZE = 300;
-  // raster sizes (px) of a user chart's image — see _userChartIcon
-  const USER_CHART_RASTER = [16, 24, 32, 48, 64, 96, 128, 192, 256];
+  // ---- the pane USER charts render into: one per map, live over the canvas ----
+  // flat draws its user charts as LIVE SVG over the map — vector-crisp at
+  // every zoom, labels as real text. The first port here rasterized every
+  // chart into one texture atlas instead, and a page with thousands of
+  // charts got ~50 px per chart (the atlas area is fixed) — icons scaled
+  // up several times over: blur, mushy gradients, unreadable labels. In
+  // this pane each chart is a <g> mounted once; a map 'move' only updates
+  // its transform (translate + scale), which the browser composites —
+  // the same thing flat's own engine does over Leaflet, at the same item
+  // counts. Keyed by the map's options object, so runtimes defined later
+  // (loadProject, post-build map.layer) find it too.
+  const _chartHosts = new WeakMap();
+  function chartHostFor(mapOptions, map, el) {
+    let host = _chartHosts.get(mapOptions);
+    if (host) return host;
+    const pane = document.createElementNS(SVG_NS, 'svg');
+    pane.setAttribute('class', 'ix-user-charts');
+    pane.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:3;';
+    const defs = document.createElementNS(SVG_NS, 'defs');
+    pane.appendChild(defs);
+    el.appendChild(pane);
+    host = { pane, defs, map, el, runtimes: new Set(), raf: 0 };
+    host.requestUpdate = () => {
+      if (host.raf) return;
+      host.raf = global.requestAnimationFrame(() => { host.raf = 0; host.update(); });
+    };
+    // transform-only per move: positions follow the map live; the charts'
+    // own markup is redrawn on the settled-refresh cadence (freezeOnPan)
+    host.update = () => {
+      const w = el.clientWidth, h = el.clientHeight, margin = 256;
+      for (const rt of host.runtimes) {
+        const items = rt._chartItems;
+        if (!items) continue;
+        for (const it of items) {
+          const p = map.project(it.coords);
+          const off = p.x < -margin || p.y < -margin || p.x > w + margin || p.y > h + margin;
+          if (off) { if (it.el.style.display !== 'none') it.el.style.display = 'none'; continue; }
+          if (it.el.style.display === 'none') it.el.style.display = '';
+          it.el.setAttribute('transform', `translate(${p.x} ${p.y}) scale(${it.s}) translate(${-it.ox} ${-it.oy})`);
+        }
+      }
+    };
+    map.on('move', host.requestUpdate);
+    map.on('resize', host.requestUpdate);
+    _chartHosts.set(mapOptions, host);
+    return host;
+  }
   // ?ixgl-debug in the page URL: ixmaps-gl logs what it draws (console.info)
   function glDebug() {
     try { return new URLSearchParams(global.location.search).has('ixgl-debug'); } catch (e) { return false; }
   }
-  // the pixel area all of a layer's chart images may take together: deck.gl
-  // packs them into one texture (1024 px wide), which must stay well below
-  // the GPU's texture size limit — see _userChartIcon
-  const USER_CHART_ATLAS_AREA = 1024 * 8192;
   class LayerBuilder {
     constructor(name) {
       this.name = name;
@@ -2114,11 +2159,24 @@
     define() { return this; }
   }
 
+  // flat-era pages keep the layer construct and CALL it like a function
+  // when handing it back to the map later (censimenti's sidebar:
+  // map().add(__theme(),'clear')) — the call returns the builder; pages also
+  // chain builder methods right on the factory result, so the construct
+  // delegates every one of them (chaining stays on the construct). Every
+  // consumption point unwraps __ixLayer, so the object form keeps working.
   function layer(name, configFn) {
     const builder = new LayerBuilder(name);
     if (configFn) configFn(builder);
-    return builder;
+    const construct = function () { return builder; };
+    construct.__ixLayer = builder;
+    for (const k of Object.getOwnPropertyNames(LayerBuilder.prototype)) {
+      if (k === 'constructor') continue;
+      construct[k] = function (...args) { const r = builder[k](...args); return r === builder ? construct : r; };
+    }
+    return construct;
   }
+  const unwrapLayer = x => (typeof x === 'function' && x.__ixLayer) ? x.__ixLayer : x;
 
   // ---------------------------------------------------------------
   // Binding aliases. Real ixmaps-flat accepts ~50 .binding() keys and maps
@@ -2875,8 +2933,20 @@
       if (__hoverTooltipWatch || !el.parentElement) return;
       const host = el.parentElement;
       const attach = (tipEl) => {
+        // deck nests its tooltip inside its widget root (.fill, z-index 2),
+        // a stacking context under the USER-chart pane (z 3) — the tooltip's
+        // own z-index can never cross that. Moved out to the map container,
+        // a sibling of the pane, where z-index 7 puts it above everything;
+        // same coordinate origin, deck keeps updating the same node.
+        // Re-asserted on every style write (deck sets z-index 1 itself).
+        const liftTooltip = () => {
+          if (tipEl.parentNode !== el) el.appendChild(tipEl);
+          if (tipEl.style.zIndex !== '7') tipEl.style.zIndex = 7;
+        };
+        liftTooltip();
         let lastSetTransform = null;
         const mo = new MutationObserver(() => {
+          liftTooltip();
           if (tipEl.style.display === 'none' || !tipEl.textContent.trim()) return;
           const t = tipEl.style.transform;
           if (!t || t === lastSetTransform) return;
@@ -2976,7 +3046,10 @@
     // touches the tooltip DOM in the same tick.
     function hideDefaultHoverTooltip() {
       requestAnimationFrame(() => {
-        const defaultTooltipEl = el.parentElement && el.parentElement.querySelector('.deck-tooltip');
+        // the hover tooltip is reparented into el (see watchHoverTooltip) —
+        // look there first, then where deck originally nested it
+        const defaultTooltipEl = (el && el.querySelector('.deck-tooltip')) ||
+          (el.parentElement && el.parentElement.querySelector('.deck-tooltip'));
         if (defaultTooltipEl) defaultTooltipEl.style.display = 'none';
       });
     }
@@ -3085,6 +3158,33 @@
   // calls: addLegendPanel(rt), setLegendOption(value), updateSubTheme(rt),
   // layoutLegends().
   // ---------------------------------------------------------------
+  // The map-level `align` option positions the legend — BOTH the native
+  // panel stack (createLegend) and a page legend (map.legend(html), the
+  // legendEl built in build()): one helper, so they can never disagree.
+  // gl's four corners, else flat's own values (htmlgui_flat.js 421-470):
+  // "…left" → left (the part before "left", else 55px), 12px from the top;
+  // "…right" → right (else 25px); "center" / "top" → top center.
+  // Default "top-right" per explicit request (real engine's own fallback is
+  // right-anchored too, just without an opinion on vertical placement).
+  function legendAlignCssFor(mapOptions) {
+    const ALIGN_CSS = {
+      'top-left': 'left:10px;top:10px;',
+      'top-right': 'right:10px;top:10px;',
+      'bottom-left': 'left:10px;bottom:10px;',
+      'bottom-right': 'right:10px;bottom:10px;'
+    };
+    const flatAlignCss = align => {
+      const a = String(align || '');
+      // flat hands these to jQuery .css(), which adds px to a unitless
+      // number — a raw cssText needs it explicit
+      const px = v => /^\d+(\.\d+)?$/.test(v) ? v + 'px' : v;
+      if (/left/.test(a)) return 'left:' + px(a.split('left')[0] || '55px') + ';top:12px;';
+      if (/right/.test(a)) return 'right:' + px(a.split('right')[0] || '25px') + ';top:10px;';
+      if (a === 'center' || a === 'top') return 'left:50%;transform:translateX(-50%);top:10px;';
+      return null;
+    };
+    return ALIGN_CSS[mapOptions.align] || flatAlignCss(mapOptions.align) || ALIGN_CSS['top-right'];
+  }
   function createLegend(ctx) {
     const { builder, map, el, overlay, runtimes, engineApi, built, refresh, scheduleRefresh, notifyRedraw, quietRefresh } = ctx;
     let addLegendPanel = () => {};
@@ -3128,6 +3228,10 @@
     const legendOpt = builder.mapOptions.legend;
     // let, not const: map.setLegend(value) switches them at runtime (see setLegendOption)
     let legendOn = legendIsOn(legendOpt);
+    // flat: a page legend (map.legend(html) → ixmaps.legend.url) REPLACES
+    // the theme-generated legend — legend.js 2076 renders the layerlist
+    // legend instead (useLayerListLegend) — so the native panels stay off
+    if (builder._legendHtml) legendOn = false;
     let legendFolded = legendOpt === 'closed';
     {
       // Map-level `align` option positions the legend panel — a map-
@@ -3146,24 +3250,7 @@
       // shape choice earlier this session. Default "top-right" per
       // explicit request (real engine's own fallback is right-anchored
       // too, just without an opinion on vertical placement).
-      const ALIGN_CSS = {
-        'top-left': 'left:10px;top:10px;',
-        'top-right': 'right:10px;top:10px;',
-        'bottom-left': 'left:10px;bottom:10px;',
-        'bottom-right': 'right:10px;bottom:10px;'
-      };
-      // gl's four corners, else flat's own values (htmlgui_flat.js
-      // 421-470): "…left" → left (the part before "left", else 55px), 12px
-      // from the top; "…right" → right (else 25px); "center" / "top" → top
-      // center
-      const flatAlignCss = align => {
-        const a = String(align || '');
-        if (/left/.test(a)) return 'left:' + (a.split('left')[0] || '55px') + ';top:12px;';
-        if (/right/.test(a)) return 'right:' + (a.split('right')[0] || '25px') + ';top:10px;';
-        if (a === 'center' || a === 'top') return 'left:50%;transform:translateX(-50%);top:10px;';
-        return null;
-      };
-      const legendAlignCss = ALIGN_CSS[builder.mapOptions.align] || flatAlignCss(builder.mapOptions.align) || ALIGN_CSS['top-right'];
+      const legendAlignCss = legendAlignCssFor(builder.mapOptions);
       // Real ixmaps-flat's SUB-THEME (MapTheme.createSubTheme,
       // maptheme.js 14284-14292 / 15010-15160; map.Themes.enableSubThemes
       // defaults to true): marking fields of a multi-field choropleth
@@ -3265,7 +3352,7 @@
       setLegendOption = (opt) => {
         builder.mapOptions.legend = opt;
         legendFolded = opt === 'closed';
-        legendOn = legendIsOn(opt);
+        legendOn = builder._legendHtml ? false : legendIsOn(opt);
         runtimes.forEach(rt => {
           if (!legendOn) {
             if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel);
@@ -3873,7 +3960,7 @@
         this._layerBuilders.push(lb);
         return lb;
       }
-      this._layerBuilders.push(nameOrBuilder);
+      this._layerBuilders.push(unwrapLayer(nameOrBuilder));
       return this;
     }
     // .Layer() — alias of .layer()
@@ -4076,6 +4163,10 @@
         // world once, at the cost of that zoom limit.
         renderWorldCopies: this._engineOptions.worldcopies !== false
       });
+      // the live-SVG pane USER charts render into (see chartHostFor) —
+      // registered here, keyed by this map's options object, so every
+      // runtime (including later loadProject/map.layer ones) finds it
+      chartHostFor(this._engineOptions, map, el);
       // ixmaps.Map(id, {mapProjection}): flat's orthographic map is MapLibre's
       // native globe here (same mapping as loadProject, applyProjectMap);
       // "ortographic" is the spelling flat pages commonly carry. Any other
@@ -4199,7 +4290,9 @@
 
       if (this._legendHtml) {
         const legendEl = document.createElement('div');
-        legendEl.style.cssText = 'position:absolute;top:0;left:0;z-index:5;pointer-events:none';
+        // a page legend (map.legend(html)) is positioned by the map's
+        // own align option — the same rule that places the native stack
+        legendEl.style.cssText = 'position:absolute;' + legendAlignCssFor(this.mapOptions) + 'z-index:5;pointer-events:none';
         legendEl.innerHTML = this._legendHtml;
         // inside the map container, never the page's body (see the pinned
         // tooltip mount) — styling body breaks page-positioned elements
@@ -4325,6 +4418,7 @@
         // the layer name): add(theme, flag) — "replace" swaps a theme of the
         // same id —, replace(id, theme, flag), remove(id)
         add: (layerBuilder, flag) => {
+          layerBuilder = unwrapLayer(layerBuilder);
           _chainedLayers = _chainedLayers.then(() => {
             if (/replace/i.test(flag || '')) {
               const def = layerBuilder.definition();
@@ -4336,6 +4430,7 @@
           return engineApi;
         },
         replace: (id, layerBuilder, flag) => {
+          layerBuilder = unwrapLayer(layerBuilder);
           _chainedLayers = _chainedLayers.then(() => { removeThemeById(id); return engineApi.defineLayer(layerBuilder); })
             .catch(err => console.error('[ixmaps-gl] map.replace():', err));
           return engineApi;
@@ -4367,6 +4462,23 @@
         },
         setMapTypeId: (id) => engineApi.setMapType(id),
         mapType: (id) => engineApi.setMapType(id),
+        // projection swap WITHOUT the project machinery: setProjectJSON
+        // tears down and re-defines every theme to change the projection
+        // (a projection toggle on a theme-heavy page paid a full data
+        // re-aggregation — the power plants stage page). The projection
+        // itself is one MapLibre call; the layers are projection-
+        // dependent (globe far-hemisphere cull, chart placement) so they
+        // are rebuilt — refreshLayers, once now and again when the new
+        // projection has rendered — but THEMES and VIEW are never touched
+        setProjection: (type) => {
+          if (typeof map.setProjection !== 'function') { console.warn('[ixmaps-gl] map.setProjection not available on the loaded maplibre-gl build (needs >=5.0.1) — projection unchanged'); return engineApi; }
+          const t = /globe/i.test(String(type || '')) ? 'globe' : 'mercator';
+          try { map.setProjection({ type: t }); } catch (e) { console.warn('[ixmaps-gl] map.setProjection failed:', e); return engineApi; }
+          refreshLayers();
+          map.triggerRepaint();
+          map.once('idle', refreshLayers);
+          return engineApi;
+        },
         // flat's getMapTypeId(): the basemap type name in use
         getMapTypeId: () => String(builder.mapOptions.mapType || ''),
         // flat's attribution (htmlgui.js htmlgui_set/getAttributionString)
@@ -4515,7 +4627,7 @@
         // exactly how this engine's own facet-filter/style setters below
         // already push responsibility for "what should happen" to the
         // caller rather than guessing.
-        defineLayer: (layerBuilder) => defineFromDefinition(layerBuilder.definition()),
+        defineLayer: (layerBuilder) => defineFromDefinition(unwrapLayer(layerBuilder).definition()),
         // GL-PORT COMPAT: real ixmaps-flat's map handle, as a page gets it
         // from `myMap.then(map => map.view(...).options(...).layer(a)
         // .layer(b))` — the common multi-layer idiom — is chainable on the
@@ -4617,6 +4729,11 @@
           if (rt._unlisten) rt._unlisten();
           if (rt._cancelWait) rt._cancelWait();
           clearTimeout(rt._dependentTimer);
+          // a removed theme's live USER-chart SVG is not part of the deck
+          // layers — leaving its groups mounted keeps the charts on the
+          // map after map.remove()/replace() (censimenti's sidebar)
+          if (rt._clearUserChartPane) rt._clearUserChartPane();
+          if (rt._chartHost && rt._chartHost.runtimes) rt._chartHost.runtimes.delete(rt);
         });
         const removed = removedRuntimes.length > 0;
         // stale-registry guard: _globalThemeRegistry is a bare name->
@@ -5336,7 +5453,7 @@
   // semantics — layer, view, options, require, attribution, on — keep
   // theirs and are not overridden.
   for (const m of ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'redrawTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize',
+    'refreshTheme', 'redrawTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize',
     'loadProject', 'project', 'setThemeVisible', 'setThemeTimeFrame', 'show', 'hide', 'getZoom', 'getThemeObj',
     'getThemes', 'theme', 'setView']) {
     if (!MapBuilder.prototype[m]) {
@@ -5412,6 +5529,9 @@
         }
         return promise;
       };
+      // flat's mapApi.setView(center, zoom) (htmlgui_flat.js 1327) — the
+      // same live-or-build-time split as .view() above
+      promise.setView = (...args) => promise.view(...args);
       promise.options = (...args) => { builder.options(...args); return promise; };
       promise.attribution = (...args) => { builder.attribution(...args); return promise; };
       promise.legend = (...args) => { builder.legend(...args); return promise; };
@@ -9080,8 +9200,12 @@
     buildDeckLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
       this._lastZoom = zoom;
       this._lastBbox = bbox;
-      if (this._hidden) return [];
-      if (!this.flags.has('FEATURE') && !this.flags.has('FEATURES') && chartHiddenByScale(this.style, liveZoom)) return [];
+      // the live USER-chart SVG pane is not part of the deck layers — an
+      // early return here must also unmount its groups, or the pane keeps
+      // showing the last drawing after the theme went out of scale (or was
+      // hidden via setThemeVisible)
+      if (this._hidden) { this._clearUserChartPane(); return []; }
+      if (!this.flags.has('FEATURE') && !this.flags.has('FEATURES') && chartHiddenByScale(this.style, liveZoom)) { this._clearUserChartPane(); return []; }
       // DOT is checked FIRST, matching the real engine's own precedence
       // (its DOT branch is a loop-level fast-path that bypasses the whole
       // drawChart/modifier machinery entirely — a layer flagged DOT never
@@ -9952,6 +10076,11 @@
     }
     // USER charts (see resolveUserChartFunction): one icon per chart, drawn
     // by the page's function; null → no such function (drawn as bubbles)
+    _clearUserChartPane() {
+      if (this._chartPaneGroup) this._chartPaneGroup.remove();
+      this._chartPaneGroup = null;
+      this._chartItems = null;
+    }
     _buildUserChartLayers(combined, liveZoom, sizeValueOf) {
       const name = String(this.style.userdraw || '');
       const draw = resolveUserChartFunction(name);
@@ -9987,9 +10116,17 @@
       // radius of it (see USER_CHART_MAX_SIZE)
       const pxPerUnit = NORMAL_RADIUS_PX * objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1) / USER_CHART_MAX_SIZE;
       const flag = theme.szFlag;
-      const maxRasterPx = Math.sqrt(USER_CHART_ATLAS_AREA / Math.max(1, combined.length));
-      const data = [];
-      let pending = 0;
+      const chartHost = _chartHosts.get(this.mapOptions);
+      if (!chartHost) {
+        if (!this._userChartWarned) { this._userChartWarned = true; console.warn(`[ixmaps-gl] USER chart "${name}": no chart pane — drawn as bubbles`); }
+        return null;
+      }
+      // this view's charts, mounted as live <g> elements in the pane (see
+      // chartHostFor) — flat's own SVG rendering: no atlas, no raster, no
+      // async image decode, the whole drawing is synchronous
+      const items = [];
+      const defsSeen = new Set();
+      let html = '';
       for (const d of combined) {
         const value = valueOf(d);
         // the item's class (range classes set it for groups too — a negative
@@ -9997,133 +10134,69 @@
         const cat = d.properties.cat != null ? d.properties.cat : (d.properties.counts ? dominant(d.properties.counts) : 0);
         const radiusPx = valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
         const size = radiusPx / pxPerUnit;
-        const icon = this._userChartIcon(draw, name, theme, flag, d, value, cat, size, sizeValueOf(d), pxPerUnit, maxRasterPx);
-        if (!icon || icon.failed) continue;
-        if (!icon.canvas) { pending++; continue; }
-        data.push({ d, icon });
+        const chart = this._userChartSvg(draw, name, theme, flag, d, value, cat, size, sizeValueOf(d));
+        if (!chart) continue;
+        html += chart.markup;
+        // the chart's own defs (gradients) go to the pane once per id —
+        // several charts share one (pinnacle's per-color gradient)
+        for (const id of chart.ids) {
+          if (defsSeen.has(id)) continue;
+          defsSeen.add(id);
+          const def = this._userChartGroup.ownerDocument.getElementById(id);
+          if (def) chartHost.defs.appendChild(def.cloneNode(true));
+        }
+        items.push({ d, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit,
+          r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2 });
       }
-      // The charts' images come asynchronously (an SVG decodes as an image):
-      // until every chart of this view has its image the previous complete
-      // drawing stays, then the new one replaces it in one piece — as flat
-      // shows a theme once it is drawn. (Drawing the ready part meanwhile,
-      // and redrawing batch by batch as images came, left the map on an
-      // incomplete or old state after many zooms and pans.)
-      if (glDebug()) console.info(`[ixmaps-gl debug] ${themeIdOf(this)}: zoom ${mapLibreToFlatZoom(liveZoom).toFixed(2)}, ${combined.length} charts, ${data.length} ready, ${pending} pending${this._viewMoving ? ' (moving)' : ''}`);
-      if (pending) {
-        this._userChartWaiting = true;
-        return this._userChartLastLayers || [];
+      if (glDebug()) console.info(`[ixmaps-gl debug] ${themeIdOf(this)}: zoom ${mapLibreToFlatZoom(liveZoom).toFixed(2)}, ${combined.length} charts, ${items.length} drawn${this._viewMoving ? ' (moving)' : ''}`);
+      if (!items.length) {
+        if (this._chartPaneGroup) this._chartPaneGroup.remove();
+        this._chartPaneGroup = null;
+        this._chartItems = null;
+        return (this._userChartLastLayers = []);
       }
-      this._userChartWaiting = false;
-      if (!data.length) return (this._userChartLastLayers = []);
-      // the icon texture is built here, from the chart canvases, and given
-      // to deck.gl whole (iconAtlas + iconMapping): deck.gl has nothing to
-      // load, and the texture is exactly this view's charts
-      const atlas = this._userChartAtlas(data.map(e => e.icon));
-      this._userChartLastLayers = [new IconLayer({
+      if (this._chartPaneGroup) this._chartPaneGroup.remove();
+      this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
+      chartHost.pane.appendChild(this._chartPaneGroup);
+      this._chartPaneGroup.innerHTML = html;
+      const els = this._chartPaneGroup.children;
+      for (let i = 0; i < items.length; i++) items[i].el = els[i];
+      this._chartItems = items;
+      chartHost.runtimes.add(this);
+      chartHost.update();
+      // picking: a transparent circle per chart — the VISIBLE chart is the
+      // live SVG in the pane; this deck layer only serves hover, click and
+      // the tooltips (pickedFeature unwraps the {d, icon} entry shape)
+      this._userChartLastLayers = [new ScatterplotLayer({
         id: `ix-bubbles-${this.name}`,
-        data, pickable: true,
-        iconAtlas: atlas.canvas, iconMapping: atlas.mapping,
+        data: items.map(it => ({ d: it.d, icon: true, r: it.r })),
+        pickable: true,
         getPosition: e => e.d.geometry.coordinates,
-        getIcon: e => e.icon.id,
-        getSize: e => e.icon.unitHeight * pxPerUnit,
-        sizeUnits: 'pixels',
-        billboard: true,
-        // no mipmaps: the charts are drawn at their size on screen
-        textureParameters: { minFilter: 'linear', magFilter: 'linear' },
+        getRadius: e => Math.max(2, e.r),
+        radiusUnits: 'pixels', radiusMinPixels: 1,
+        stroked: false, filled: true, getFillColor: [0, 0, 0, 0],
         parameters: ICON_LAYER_GLOBE_PARAMETERS
       })];
       return this._userChartLastLayers;
     }
-    // one texture for a view's charts: rows of images, 2048 px wide; the
-    // same set of charts keeps its texture
-    _userChartAtlas(icons) {
-      const ids = icons.map(i => i.id);
-      const sig = [...new Set(ids)].sort().join('\n');
-      if (this._userChartAtlasCache && this._userChartAtlasCache.sig === sig) return this._userChartAtlasCache;
-      const W = 2048, PAD = 2, mapping = {}, seen = new Set(), place = [];
-      let x = 0, y = 0, rowH = 0;
-      for (const icon of icons) {
-        if (seen.has(icon.id)) continue;
-        seen.add(icon.id);
-        if (x + icon.width + PAD > W) { x = 0; y += rowH + PAD; rowH = 0; }
-        place.push([icon, x, y]);
-        mapping[icon.id] = { x, y, width: icon.width, height: icon.height, anchorX: icon.anchorX, anchorY: icon.anchorY, mask: false };
-        x += icon.width + PAD; rowH = Math.max(rowH, icon.height);
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = W; canvas.height = Math.max(1, y + rowH);
-      const ctx = canvas.getContext('2d');
-      for (const [icon, px, py] of place) ctx.drawImage(icon.canvas, px, py);
-      this._userChartAtlasCache = { sig, canvas, mapping };
-      return this._userChartAtlasCache;
-    }
-    // user chart images become ready one by one: one redraw once they are
-    _scheduleUserChartRedraw() {
-      if (this._userChartRedrawTimer) return;
-      this._userChartRedrawTimer = setTimeout(() => {
-        this._userChartRedrawTimer = null;
-        if (this._userChartWaiting && this._triggerRedraw) this._triggerRedraw();
-      }, 30);
-    }
-    // The chart is drawn once (its SVG kept in _userChartSvgs) and rasterised
-    // at its size on screen (× devicePixelRatio, in steps of USER_CHART_RASTER
-    // px) onto a canvas (icon.canvas, once the SVG image has decoded): one
-    // image per chart at a fixed 256 px made the texture of a few hundred
-    // charts outgrow the GPU's texture size — WebGL errors, and deck.gl
-    // frames that failed, leaving the map un-updated after a zoom.
-    _userChartIcon(draw, name, theme, flag, d, value, cat, size, nSize, pxPerUnit, maxRasterPx = Infinity) {
-      const base = `user|${name}|${cat}|${Math.round(value * 100) / 100}|${Math.round(size * 2) / 2}|${flag}`;
+    // the chart's SVG, cached by its draw parameters — a failing draw
+    // (undefined) is tried again on the next redraw (null: draws nothing)
+    _userChartSvg(draw, name, theme, flag, d, value, cat, size, nSize) {
+      // the title is part of the markup now (item.szTitle) — items sharing
+      // value/size/class but not a title must not share a cache entry
+      const raw = d.properties.raw || d.properties;
+      const titleField = this.style.titlefield || this.binding.title;
+      const title = titleField && raw && raw[titleField] != null ? String(raw[titleField]) : undefined;
+      const base = `user|${name}|${cat}|${Math.round(value * 100) / 100}|${Math.round(size * 2) / 2}|${flag}|${title || ''}`;
       if (!this._userChartSvgs) this._userChartSvgs = new Map();
-      if (!this._userChartRasters) this._userChartRasters = new Map();
       let chart = this._userChartSvgs.get(base);
       if (chart === undefined) {
         chart = this._drawUserChartSvg(draw, name, theme, flag, d, value, cat, size, nSize);
-        if (chart === undefined) return null; // a failing draw is tried again
+        if (chart === undefined) return null;
         if (this._userChartSvgs.size >= ICON_CACHE_MAX) this._userChartSvgs.delete(this._userChartSvgs.keys().next().value);
         this._userChartSvgs.set(base, chart);
       }
-      if (!chart) return null;
-      const dpr = (global.devicePixelRatio || 1);
-      const want = Math.max(chart.vw, chart.vh) * pxPerUnit * dpr;
-      const fits = USER_CHART_RASTER.filter(r => r <= maxRasterPx);
-      const steps = fits.length ? fits : USER_CHART_RASTER.slice(0, 1);
-      const px = steps.find(r => r >= want) || steps[steps.length - 1];
-      const key = base + '|' + px;
-      const rasters = this._userChartRasters;
-      if (rasters.has(key)) {
-        // least recently used goes first
-        const hit = rasters.get(key);
-        rasters.delete(key); rasters.set(key, hit);
-        return hit;
-      }
-      const s = px / Math.max(chart.vw, chart.vh);
-      const w = Math.max(1, Math.round(chart.vw * s)), h = Math.max(1, Math.round(chart.vh * s));
-      const icon = { canvas: null, width: w, height: h, anchorX: (chart.ox - chart.vx) * s, anchorY: (chart.oy - chart.vy) * s, id: key, unitHeight: chart.vh };
-      // a chart whose image fails is left out (not waited for)
-      const failed = e => {
-        icon.failed = true;
-        if (!this._userChartImageError) console.warn(`[ixmaps-gl] USER chart ${name}: chart image failed`, e);
-        this._userChartImageError = e || true;
-        this._scheduleUserChartRedraw();
-      };
-      // the SVG goes through a canvas: deck.gl blends an SVG image as decoded
-      // (premultiplied), which darkened half-transparent fills (a
-      // fadenegative arrow turned grey)
-      const img = new Image();
-      img.onerror = failed;
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          icon.canvas = canvas;
-        } catch (e) { failed(e); return; }
-        this._scheduleUserChartRedraw();
-      };
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chart.svg.replace('__W__', w).replace('__H__', h));
-      if (rasters.size >= ICON_CACHE_MAX) rasters.delete(rasters.keys().next().value);
-      rasters.set(key, icon);
-      return icon;
+      return chart || null;
     }
     // the page's chart function draws one chart into the hidden SVG: its
     // markup and box (chart units), null when it draws nothing, undefined
@@ -10134,11 +10207,19 @@
       const color = this._userChartColor(cat);
       const raw = d.properties.raw || d.properties;
       const label = this.binding.title && raw && raw[this.binding.title] != null ? String(raw[this.binding.title]) : undefined;
+      // flat's chart title (style.titlefield, maptheme's item.szTitle) —
+      // pinnacleChart draws it below the value text (chart.js 204-216)
+      const titleField = this.style.titlefield || this.binding.title;
+      const title = titleField && raw && raw[titleField] != null ? String(raw[titleField]) : undefined;
       let chart = null;
       try {
         const ret = draw.call(global.ixmaps, document, {
           target: g, theme, value, values: [value], size, maxSize: USER_CHART_MAX_SIZE, color, class: cat, flag,
-          item: { szColor: color, szLabel: label, nCount: d.properties.point_count || 1, nSize }, dbRecord: raw
+          // flat hands the chart the item's color CLASS object (maptheme's
+          // ColorScheme entry) — pinnacleChart reads ccolor.lowColor for its
+          // VALUES label fill (usercharts/d3/chart.js 199)
+          ccolor: { szColor: color, lowColor: color, highColor: color },
+          item: { szColor: color, szLabel: label, szTitle: title, nCount: d.properties.point_count || 1, nSize }, dbRecord: raw
         });
         const bb = ret ? g.getBBox() : null;
         if (bb && bb.width > 0 && bb.height > 0) {
@@ -10150,7 +10231,7 @@
           const vx = bb.x - pad, vy = bb.y - pad, vw = bb.width + 2 * pad, vh = bb.height + 2 * pad;
           // the chart's origin (0,0 — or the point flat moves it to, ret) sits at the map position
           const ox = (ret && ret.x) || 0, oy = (ret && ret.y) || 0;
-          chart = { vx, vy, vw, vh, ox, oy,
+          chart = { vx, vy, vw, vh, ox, oy, markup, ids: [...ids],
             svg: `<svg xmlns="${SVG_NS}" width="__W__" height="__H__" viewBox="${vx} ${vy} ${vw} ${vh}"><defs>${defs}</defs>${markup}</svg>` };
         }
       } catch (e) {
@@ -11506,7 +11587,7 @@
   // last built map; called while the map is still building, they run once
   // it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'setThemeTimeFrame', 'attribution'];
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'setThemeTimeFrame', 'attribution'];
   const _mapHandles = Object.create(null);
   function makeMapHandle(szMap) {
     const h = {};
