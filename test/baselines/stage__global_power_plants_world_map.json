@@ -15,7 +15,7 @@
    },
    "layers": [
     {
-     "id": "ix-features-countries",
+     "id": "ix-features-countries-d1",
      "type": "GeoJsonLayer",
      "count": 257,
      "constants": {
@@ -1177,7 +1177,14 @@
      ],
      "features": 257,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "categoryColorsRgb": [
+      [
+       28,
+       43,
+       54
+      ]
+     ]
     },
     {
      "name": "power_plants",
@@ -1322,7 +1329,7 @@
    },
    "layers": [
     {
-     "id": "ix-features-countries",
+     "id": "ix-features-countries-d1",
      "type": "GeoJsonLayer",
      "count": 257,
      "constants": {
@@ -2484,7 +2491,14 @@
      ],
      "features": 257,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "categoryColorsRgb": [
+      [
+       28,
+       43,
+       54
+      ]
+     ]
     },
     {
      "name": "power_plants",
@@ -2629,7 +2643,7 @@
    },
    "layers": [
     {
-     "id": "ix-features-countries",
+     "id": "ix-features-countries-d1",
      "type": "GeoJsonLayer",
      "count": 257,
      "constants": {
@@ -3791,7 +3805,14 @@
      ],
      "features": 257,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "categoryColorsRgb": [
+      [
+       28,
+       43,
+       54
+      ]
+     ]
     },
     {
      "name": "power_plants",

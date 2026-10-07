@@ -15,7 +15,7 @@
    },
    "layers": [
     {
-     "id": "ix-choropleth-comuni",
+     "id": "ix-choropleth-comuni-d2",
      "type": "GeoJsonLayer",
      "count": 7899,
      "constants": {
@@ -358,7 +358,8 @@
      ],
      "features": 7899,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "categoryColorsRgb": null
     },
     {
      "name": "comuni",
@@ -465,7 +466,7 @@
    },
    "layers": [
     {
-     "id": "ix-choropleth-comuni",
+     "id": "ix-choropleth-comuni-d2",
      "type": "GeoJsonLayer",
      "count": 7899,
      "constants": {
@@ -808,7 +809,8 @@
      ],
      "features": 7899,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "categoryColorsRgb": null
     },
     {
      "name": "comuni",
@@ -915,7 +917,7 @@
    },
    "layers": [
     {
-     "id": "ix-choropleth-comuni",
+     "id": "ix-choropleth-comuni-d2",
      "type": "GeoJsonLayer",
      "count": 7899,
      "constants": {
@@ -1258,7 +1260,8 @@
      ],
      "features": 7899,
      "active": null,
-     "hidden": false
+     "hidden": false,
+     "categoryColorsRgb": null
     },
     {
      "name": "comuni",
