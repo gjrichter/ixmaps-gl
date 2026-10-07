@@ -419,11 +419,17 @@ server.close();
 // — every layer, theme, legend and tooltip must come out identical
 const byPage = new Map(results.map(r => [r.page, r]));
 const equivFailed = [];
+// a deck layer id carries its theme's data generation (-dN, the engine's
+// _dataLayerId): a twin that loads its themes more often (project_clear
+// clears and loads again) counts further without drawing anything else.
+// Equal across a pair is all that matters, not the count — the baseline
+// comparison above still checks the ids exactly.
+const sameGenerations = views => JSON.parse(JSON.stringify(views).replace(/("ix-[^"]*?)-d\d+(?=")/g, '$1-dN'));
 for (const [twin, orig] of config.equivalent || []) {
   const a = byPage.get(twin), b = byPage.get(orig);
   if (!a || !b) continue; // one of the pair filtered out by --page
   const d = (a.error || b.error || a.skipped || b.skipped) ? [`not comparable: ${a.error || b.error || a.skipped || b.skipped}`]
-    : diffSnapshots({ views: b.views, console: [] }, { views: a.views, console: [] });
+    : diffSnapshots({ views: sameGenerations(b.views), console: [] }, { views: sameGenerations(a.views), console: [] });
   if (d.length) {
     equivFailed.push(twin);
     console.log(`NOT EQUIVALENT  ${twin} ≠ ${orig}\n${d.slice(0, 15).map(x => '        ' + x).join('\n')}`);
