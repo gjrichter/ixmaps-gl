@@ -101,6 +101,14 @@ test('resolveClassColors: an explicit list with RGB() colors', () => {
   assert.deepEqual(plain(G.resolveClassColors(['RGB(238,217,36)', '#05b1f0'], ['a', 'b'])), [[238, 217, 36], [5, 177, 240]]);
 });
 
+test('resolveClassColors: a plain STRING colorscheme is flat\'s color list, not a broken function (maptheme.js Themes.toArray)', () => {
+  assert.deepEqual(plain(G.resolveClassColors('#dd0088', [''])), [[221, 0, 136]], 'a single hex string: one single-color class (fire page KDE isobands)');
+  assert.deepEqual(plain(G.resolveClassColors('RGB(245,74,255)', [''])), [[245, 74, 255]], 'RGB() kept whole, not split on its commas');
+  assert.deepEqual(plain(G.resolveClassColors('#ff0000|#00ff00', ['a', 'b'])), [[255, 0, 0], [0, 255, 0]], '|-separated list');
+  assert.deepEqual(plain(G.resolveClassColors('#ff0000,#0000ff', ['a', 'b'])), [[255, 0, 0], [0, 0, 255]], ',-separated list when no RGB() token');
+  assert.equal(plain(G.resolveClassColors('function (o) { o.colorScheme = ["#112233"] }', [''])).length, 1, 'a function-body string still evaluates and runs');
+});
+
 test('flatLegendLook: light by default, dark on dark basemaps/colors when the basemap is mostly opaque (flat legend.js)', () => {
   const look = (...a) => plain(G.flatLegendLook(...a));
   assert.deepEqual(look('white', 1), { dark: false, bg: 'rgba(255,255,255,0.9)' }, '"white" is a map type name, not a CSS color, for flat');

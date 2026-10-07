@@ -177,7 +177,7 @@ test('chart value text: valuefield value, flat grouping, unit with its leading s
   // read off flat: "339 296 €", "352 €"
   assert.equal(G.flatValueText({ canone: '339296' }, null, 1, st, flags()), '339 296 €');
   assert.equal(G.flatValueText({ canone: '352.4' }, null, 1, st, flags()), '352 €');
-  assert.equal(G.flatValueText({ canone: '0.42' }, null, 1, st, flags()), '0.4 €', 'valuedecimals 0 is flat\'s `||` default: 1 decimal below 1');
+  assert.equal(G.flatValueText({ canone: '0.42' }, null, 1, st, flags()), '0 €', 'a string valuedecimals "0" is truthy in flat\'s `nValueDecimals || default`: 0 decimals (maptheme.js 1831 keeps the raw style value)');
   assert.equal(G.flatValueText({ canone: 'n.d.' }, null, 1, st, flags()), 'n.d.', 'a non-number prints as is');
   assert.equal(G.flatValueText({}, null, 1234, { units: '.km' }, flags()), '1 234.km', 'a unit starting with "." gets no space');
   assert.equal(G.flatValueText({}, null, 5, { units: 'abcdef' }, flags()), '5', 'units over 5 characters are left out');
@@ -242,6 +242,73 @@ test('SEQUENCE|STAR layout, as measured on flat (PNRR regions, Lombardia, radius
   assert.deepEqual(plain(noStar), [{ i: 1, v: 2, r: 2, x: 0, y: 0 }, { i: 2, v: 1, r: 1, x: 0, y: 0 }], 'no layout flag: on the center, zero parts left out');
   const horz = G.sequenceLayout([1, 2], flags('SEQUENCE', 'HORZ'), v => v, {});
   assert.deepEqual(plain(horz.map(p => p.x)), [1, 4], 'HORZ: side by side');
+});
+
+test('NOSIZE radius by flat\'s symbol sub-branch, as measured on the fire areas SIF chart', () => {
+  const opts = { objectscaling: 'fixed' };
+  const r = f => G.valueRadius(1, 10, { scale: 1, normalsizevalue: 1000 }, opts, flags('CHART', ...f), 1000);
+  // flat: CHART|SYMBOL|NOSIZE r 60 units at normalX(1) 20 → 3 of the 15-unit normal radius
+  near(r(['SYMBOL', 'NOSIZE']), 3, 'per-part ladder: nMaxRadius / 5');
+  near(r(['SYMBOL', 'NOSIZE', 'SEQUENCE']), 10, 'SEQUENCE: normalX(chart size / 3)');
+  near(r(['SYMBOL', 'NOSIZE', 'CATEGORICAL']), 15, 'CATEGORICAL without AGGREGATE ("symbol equals value"): the normal radius');
+  near(r(['SYMBOL', 'NOSIZE', 'CATEGORICAL', 'AGGREGATE']), 3, 'CATEGORICAL|AGGREGATE takes the per-part ladder');
+  near(r(['BUBBLE', 'NOSIZE']), 7.5, 'BUBBLE: half the normal radius');
+});
+
+test('SYMBOL without a size field: a fixed normal radius only in flat\'s "symbol equals value" branch, value-scaled elsewhere', () => {
+  const opts = { objectscaling: 'fixed' };
+  const r = (v, ...f) => G.valueRadius(v, 10, { scale: 1 }, opts, flags('CHART', 'SYMBOL', ...f), 100);
+  near(r(25, 'CATEGORICAL'), 15, 'CATEGORICAL without AGGREGATE: the normal radius (maptheme.js 21612)');
+  near(r(100, 'CATEGORICAL'), 15, 'whatever the value');
+  near(r(25, 'CATEGORICAL', 'AGGREGATE'), 7.5, 'CATEGORICAL|AGGREGATE: the per-part ladder, by the value (sizepow 2)');
+  near(r(25), 7.5, 'a plain symbol chart: by the value');
+  near(r(25, 'LINEAR'), 3.75, 'LINEAR: proportional');
+});
+
+test('valuedecimals as flat reads it: the raw style value (a string "0" counts, a number 0 does not)', () => {
+  assert.equal(G.explicitValueDecimals({ valuedecimals: '0' }), 0);
+  assert.equal(G.explicitValueDecimals({ valuedecimals: 0 }), null, 'number 0: `||` default');
+  assert.equal(G.explicitValueDecimals({}), null);
+  assert.equal(G.explicitValueDecimals({ valuedecimals: '2' }), 2);
+  // fire areas page: valuedecimals "0", units "ha" — flat prints 0.48 as "1 ha"
+  assert.equal(G.flatValueText(null, null, 0.4803, { valuedecimals: '0', units: 'ha' }, flags()), '1 ha');
+  assert.equal(G.legendDecimals({ valuedecimals: 0 }), 0, 'the legend tests "defined", not truthy (legend.js 610)');
+  assert.equal(G.legendDecimals({}), 2);
+  const st = G.normalizeTheme({ layer: 'x', style: { type: 'CHART|SYMBOL', valuedecimals: '0' } }).style;
+  assert.equal(st.valuedecimals, '0', 'not typed: the raw string survives normalizeTheme');
+});
+
+test('SEQUENCE|RINGS layout, as measured on flat (NYC status: e-bikes | bikes | empty docks)', () => {
+  // flat: max radius 300 units, nMax 117 (biggest field value), LINEAR;
+  // 63 | 75 | 3 → circles r 161.5 (63), 353.8 (138), 361.5 (141)
+  const radiusOf = v => 300 * v / 117;
+  const rings = G.ringsLayout([63, 75, 3], radiusOf);
+  assert.deepEqual(plain(rings.map(p => p.i)), [2, 1, 0], 'biggest ring first, the first part on top');
+  assert.deepEqual(plain(rings.map(p => p.v)), [3, 75, 63], 'each part keeps its own value (the value text)');
+  near(rings[0].r, 361.54, 'docks ring: the running total 141', 0.01);
+  near(rings[1].r, 353.85, 'bikes ring: 138', 0.01);
+  near(rings[2].r, 161.54, 'e-bikes ring: 63', 0.01);
+  assert.ok(rings.every(p => p.x === 0 && p.y === 0), 'all on the center');
+  // flat: 0 | 1 | 67 → no e-bikes circle; r 2.56 (1) and 174.36 (68)
+  const noE = G.ringsLayout([0, 1, 67], radiusOf);
+  assert.deepEqual(plain(noE.map(p => [p.i, p.c])), [[2, 68], [1, 1]], 'a zero part is left out and adds nothing');
+});
+
+test('SEQUENCE over several value fields (no CATEGORICAL/AGGREGATE): a part per field', () => {
+  const spec = G.normalizeTheme({ layer: 'Station', binding: { lookup: 'station_id', value: 'e|b|d' },
+    style: { type: 'GAUGE|CENTERVALUES|CHART|SYMBOL|SEQUENCE|CENTER|RINGS|LINEAR|SIZE|FAST|SUM|GAUGE',
+      colorscheme: ['#ff0000', 'RGB(57,162,225)', 'none'], label: ['e-bikes', 'bikes', 'empty docks'] } });
+  const rt = new G.LayerRuntime(spec, { type: 'FeatureCollection', features: [
+    pt({ e: 63, b: 75, d: 3 }, 0, 0), pt({ e: 0, b: 1, d: 67 }, 1, 1), pt({ e: 'x', b: 117, d: 2 }, 2, 2)] }, {});
+  assert.ok(rt._isMultiFieldSequence());
+  assert.deepEqual(plain(rt.categoryDisplayLabels), ['e-bikes', 'bikes', 'empty docks'], 'the fields\' labels');
+  assert.deepEqual([...rt._partNoFill], [2], 'colorscheme "none": the part is only its outline');
+  assert.equal(rt._multiFieldPartMax, 117, 'flat\'s nMax: the biggest single field value');
+  assert.deepEqual(plain(rt._featuresByCategory[0].map(f => f.properties.parts)), [[63, 75, 3], [0, 1, 67], [0, 117, 2]]);
+  assert.deepEqual(plain(rt._featuresByCategory[0].map(f => f.properties.value)), [63, 0, 0], 'the draw order: the first field, as flat\'s chart value');
+  const single = new G.LayerRuntime(G.normalizeTheme({ layer: 'S', binding: { value: 'e' }, style: { type: 'CHART|SYMBOL|SEQUENCE' } }),
+    { type: 'FeatureCollection', features: [pt({ e: 1 }, 0, 0)] }, {});
+  assert.ok(!single._isMultiFieldSequence(), 'one value field: not a per-field chart');
 });
 
 test('SEQUENCE on a field aggregation: the categories of one field value form one chart', () => {

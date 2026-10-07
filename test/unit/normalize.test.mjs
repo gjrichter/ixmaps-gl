@@ -140,6 +140,17 @@ test('value typing: the page\'s own linewidth list is not mutated', () => {
   assert.deepEqual(lw, ['2', '3']);
 });
 
+test('a rebuilt theme gets a fresh deck.gl layer id (remove+define rebuilds leave no stale layer state)', () => {
+  const { LayerRuntime, normalizeTheme } = loadEngine();
+  const spec = normalizeTheme({ layer: 'kde', style: { type: 'FEATURE|CHOROPLETH|SILENT' }, binding: { geo: 'geometry' } });
+  const fc = { type: 'FeatureCollection', features: [] };
+  const a = new LayerRuntime(spec, fc, {});
+  const b = new LayerRuntime(spec, fc, {});
+  assert.match(a._dataLayerId('ix-choropleth-kde'), /-d\d+$/, 'the id carries the runtime\'s data generation');
+  assert.notEqual(a._dataLayerId('ix-choropleth-kde'), b._dataLayerId('ix-choropleth-kde'),
+    'every runtime gets its own generation — a theme rebuilt via removeTheme() + defineLayer() must make deck.gl build a NEW layer, not update the replaced one in place (in-place updates left the previous generation\'s geometry on screen)');
+});
+
 test('value typing: runtime patches (setStyle — legend sliders, setThemeStyle) are typed the same way', () => {
   const { LayerRuntime } = loadEngine();
   const rt = { style: { scale: 1, fillopacity: 0.5 } };
