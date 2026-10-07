@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+ 
+	<title>Created by Composer</title>
+	<style>
+		#projection-switch {
+			position: absolute; top: 10px; left: 48px; z-index: 10;
+			display: flex; background: #fff; border-radius: 4px;
+			box-shadow: 0 0 0 2px rgba(0,0,0,.1); font: 12px/1 system-ui, sans-serif; overflow: hidden;
+		}
+		#projection-switch button {
+			border: 0; background: none; padding: 8px 12px; cursor: pointer; color: #555;
+		}
+		#projection-switch button.active { background: #0088dd; color: #fff; }
+	</style>
+</head>
+
+<body style="margin:0;padding:0;">
+
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+
+	<!-- projection switch: flat map <-> globe -->
+	<div id="projection-switch">
+		<button id="proj-flat" type="button">Map</button>
+		<button id="proj-globe" type="button" class="active">Globe</button>
+	</div>
+ 
+	<!-- include the ixmaps API -->
+	<script src="../ixmaps-gl.js"></script>
+	<script src="https://s3.fr-par.scw.cloud/ixmaps.data/test%20only/DSMW_soil_legend_colors.js"></script>
+	
+ 
+	<script type="text/javascript" charset="utf-8">
+
+		ixmaps.colorScheme_soilmap = function(objTheme){
+			console.log("ixmaps.colorScheme_soilmap");
+			for ( i=0; i<objTheme.szLabelA.length; i++){
+				objTheme.colorScheme[i] = soilLegendColors[objTheme.szLabelA[i]]||"#dddddd";				
+			}
+		};
+ 
+		// create and embed the map
+		// ! reference to "map-div", the hosting html div
+
+		ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "white",
+			mapProjection: "orthographic",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			search: "Europe",
+			about: "test"
+		},
+		map => map
+		.options({
+			featurescaling: "true",
+			objectscaling: "true",
+			normalSizeScale: "20000000",
+			flushChartDraw: "1000000",
+			flushPaintShape: "1000000",
+			basemapopacity: "0.5",
+			worksilent: "false",
+			loadsilent: "false",
+			hideOnPan:  "false",
+			freezeOnPan:"false",
+		})
+		.attribution("")
+		.view({
+			"center": {
+				"lat": "10",
+				"lng": "10"
+				},
+			"zoom": "3"
+			})
+			.layer(ixmaps.layer("world_grid", layer => layer
+			.data({
+				"url": "https://s3.fr-par.scw.cloud/ixmaps.data/geometries/world_graticules/ne_110m_graticules_15.topojson",
+				"type": "topojson",
+				"name": "DBTABLE74725299",
+				"cache": "true"
+				})
+			.binding({
+				"geo": "geometry",
+				"value": "$item$"
+				})
+			.type("FEATURE")
+			.style({
+				"colorscheme": [
+					"#dddddd"],
+				"fillopacity": "1",
+				"shadow": "false",
+				"visible": "true",
+				"units": "",
+				"scale": "1",
+				"sizepow": "2",
+				"linecolor": [
+					"#ccddff"],
+				"linewidth": "1",
+				"valuescale": "1"
+				})
+			.meta({
+				"title": "world grid",
+				"snippet": "",
+				"description": "",
+				"name": "undefined",
+				"tooltip": ""
+				})
+		))
+		.layer(ixmaps.layer("DSMW", layer => layer
+			.data({
+				"url": "https://s3.fr-par.scw.cloud/ixmaps.data/test%20only/DSMW.topojson",
+				"type": "topojson",
+				"name": "data_1777318859155",
+				"cache": "true"
+				})
+			.binding({
+				"geo": "geometry",
+				"value": "DOMSOI"
+				})
+			.type("FEATURE|CATEGORICAL")
+			.style({
+				"colorscheme": "ixmaps.colorScheme_soilmap",
+				"fillopacity": "1",
+				"shadow": "false",
+				"visible": "true",
+				"showdata": "true",
+				"dsafields": "DOMSOI",
+				"units": "",
+				"scale": "1",
+				"sizepow": "2",
+				"linecolor": [
+					"#0088dd"],
+				"linewidth": "0.01",
+				"valuescale": "1"
+				})
+			.meta({
+				"title": "DSMW",
+				"snippet": "",
+				"description": "",
+				"name": "DSMW",
+				"tooltip": "Fao Soil: <b>{{FAOSOIL}}</b><br>Dom Soil: <b>{{DOMSOI}}</b><br>Country: <b>{{COUNTRY}}</b>	"
+				})
+		))
+	);
+
+		// projection switch: swap the projection, keep the current view
+		(function(){
+			var flat = document.getElementById("proj-flat");
+			var globe = document.getElementById("proj-globe");
+			function setProjection(toGlobe){
+				var project = JSON.parse(ixmaps.getProjectString());
+				project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/" + (toGlobe ? "orthographic" : "mercator") + ".svg";
+				ixmaps.setProjectJSON(project, "keepview");
+				globe.classList.toggle("active", toGlobe);
+				flat.classList.toggle("active", !toGlobe);
+			}
+			flat.onclick  = function(){ setProjection(false); };
+			globe.onclick = function(){ setProjection(true); };
+		})();
+	</script>
+</body>
+</html>

@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+ixmaps map embed html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2023/04/22 $
+$Author: guenter richter $
+$Id:index_embed_Open_Data_PNRR_Dati_Universo_REGIS_III.html 1 2023-04-22 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps</title>
+	<meta name="description" content="La mappa interattiva per esplorare i dati aperti della piattaforma ReGis pubblicati su Italiadomani">
+
+	<meta property="og:url" content="https://gjrichter.github.io/pages/PNRR/index_embed_Open_Data_PNRR_Dati_Universo_REGIS.html">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Dati aperti PNRR: la mappa per esplorarli">
+	<meta property="og:description" content="La mappa interattiva per esplorare i dati aperti della piattaforma ReGis pubblicati su Italiadomani">
+	<meta property="og:image" content="https://user-images.githubusercontent.com/77018886/239703362-afea9f57-271f-4c0b-99b2-6725b36d88e6.png">
+
+
+	<meta name="twitter: card" content="summary_large_image">
+	<meta property="twitter:domain" content="gjrichter.github.io">
+	<meta property="twitter:url" content="https://gjrichter.github.io/pages/PNRR/index_embed_Open_Data_PNRR_Dati_Universo_REGIS.html">
+	<meta name="twitter:title" content="Dati aperti PNRR: la mappa per esplorarli">
+	<meta name="twitter:description" content="La mappa interattiva per esplorare i dati aperti della piattaforma ReGis pubblicati su Italiadomani">
+	<meta name="twitter: image" content="https://user-images.githubusercontent.com/77018886/239703362-afea9f57-271f-4c0b-99b2-6725b36d88e6.png">
+
+	<link rel="stylesheet" href="./page.css">
+	<link rel="stylesheet" href="./font/IcoMoon-Free.css">
+
+	<style>
+		/* GR 27.07.2026 matched to ixmaps' own native legend opacity slider
+		   (.map-legend .legend-bottom-slider / input.slider) so the custom
+		   "grandezza grafici" control looks like part of the same UI family */
+		.slider-row { font-family:"Open Sans","Helvetica Neue",Arial,sans-serif; text-align:left; }
+		.slider-row label {
+			font-size:0.85em; color:#555; display:block; margin-bottom:0.35em;
+		}
+		.slider-row input[type=range] {
+			-webkit-appearance:none; appearance:none;
+			display:block; width:75%; height:5px; margin-top:0.4em;
+			border-radius:10px; background:rgba(155,155,155,0.3); border:0; outline:none;
+			opacity:0.7; transition:opacity 0.2s; box-shadow:none;
+		}
+		.slider-row input[type=range]:hover { opacity:1; }
+		.slider-row input[type=range]::-webkit-slider-runnable-track {
+			background:transparent; border:0; box-shadow:none;
+		}
+		.slider-row input[type=range]::-moz-range-track {
+			background:transparent; border:0; box-shadow:none;
+		}
+		.slider-row input[type=range]::-webkit-slider-thumb {
+			-webkit-appearance:none; appearance:none;
+			width:14px; height:14px; border-radius:0.5em;
+			background:#4CAF50; cursor:pointer;
+		}
+		.slider-row input[type=range]::-moz-range-thumb {
+			width:14px; height:14px; border-radius:0.5em; border:none;
+			background:#4CAF50; cursor:pointer;
+		}
+		/* GR 16.08.2026 reserve space for the longest possible value (the full
+		   "D mmm – D mmm" range shown at slider position 0) so the onmap-buttons
+		   card (width:auto, sized to content) doesn't visibly resize/shift on every
+		   slider tick as shorter single-date strings swap in */
+		.date-range-value { display:inline-block; min-width:6.8em; }
+	</style>
+
+</head>
+
+<body style='text-align:center;background:#F7F6EF'>
+
+	<div id="map_div" style="float:left;width:66%"></div>
+
+	<!-- ------------------------------------- -->
+	<!--                                       -->
+	<!-- s i d e b a r                         -->
+	<!--                                       -->
+	<!-- ------------------------------------- -->
+
+	<!-- ------------------------------------- -->
+	<!-- user buttons to change the map charts -->
+	<!-- ------------------------------------- -->
+
+	<div id="regis_sidebar" style="width:33%;float:right;">
+
+		<!-- ------------------------------------- -->
+		<!-- dynamic theme info, changes on zoom   -->
+		<!-- ------------------------------------- -->
+
+		<div style="font-family:open sans;text-align:left;margin:0.5em 0.5em 0em 0em;">
+			
+			<div style="margin-top:-1em"><h1>Terre trascorse dal fuoco 2010-2025 (SIF) + rilievi accumulati degli ultimi <b style="color:#dd0088">7 giorni</b> del sistema <b style="color:#dd0088">EFFIS</b></h1><h5><b style="color:#ddaaaa">Comuni senza catasto incendi</b> evidenziati in rosa. Dati <b style="color:#dd0088">EFFIS</b> dei sistemi SUOMI VIIRS C2, J1 VIIRS C2 e MODIS C6 1 in magenta . </h5></div>
+
+			Nel quadro della mappa ci sono attualmente visibile <span id="no_progetti" style="font-weight:bold;font-size:1.2em">...</span> aree
+			precorse dal fuoco con una superfice complessiva di<br><span id="sum_importi" style="font-weight:bold;font-size:1.8em;line-height:1.5em">...</span>&nbsp; ettari<br>
+			<span id="ambiti" style="display:none">di questi</span>
+			<span id="ambito-nazionale" style="display:none"><span id="sum_importi_nazionali" style="font-weight:bold;font-size:1em">...</span>&nbsp; € in ambito nazionale e</span>
+			<span id="ambito-regionale" style="display:none"> <span id="sum_importi_tutti" style="font-weight:bold;font-size:1em">...</span>&nbsp; € in ambito regionale</span>
+
+			<div id="filter-div" style="margin-top:0.8em;margin-right:2em;font-size:0.9em;background-color:#F7F6EF;padding:0.2em;border-color:#aaaaaa;display:none">
+				<span id="filter"></span>
+				<button style="font-size:0.8em" onclick="ixmaps.message('rimuovo filtri ...');clearFilter();">x</button>
+			</div>
+
+			<p style="font-size:0.9em;">
+				Crea <a style="color:#0088dd" href="javascript:void()" onclick="$('#popup1').html((ixmaps.szActualUrl));$('#popup1').toggle()">link</a> condivisibile,
+				mostra tabella <a style="color:#0088dd" href="javascript:void()" onclick="ixmaps.popupThemeTable()">dati</a>. Info sulla mappa <a style="color:#0088dd" href="javascript:void()" onclick="$('#info-overlay').show()">qui</a>.
+			</p>
+
+			<textarea id="popup1" style="font-size:1em;text-align:left;width:250px;height:150px;overflow:auto;background:transparent;display:none"></textarea>
+
+			<div id="scroll-area" style="height:600px;overflow:auto;">
+
+				<div id="show-facets-div" style="margin-right:0.5em"> </div>
+
+				<!-- ------------------------------------- -->
+				<!-- static footer, annotations            -->
+				<!-- ------------------------------------- -->
+
+				<hr>
+				<p style="font-size:1em;">Fonte dati:</p>
+				<p><b>SIF</b> - <a style="color:#0088dd" href='https://sif.regione.sicilia.it/ilportale/' target='_blank'>Sistema Informativa Forestale</a> (Regione Sicilia)</p>
+				<p style="font-size:1em;"><b>Open Data Sicilia</b> - <a style="color:#0088dd" href='https://opendatasicilia.it/2023/08/10/catasto-delle-terre-bruciate/' target='_blank'>Catasto delle terre bruciate</a></p>
+				</p>
+				<!--
+			<p><small><b>nota bene:</b><br> - si può clicare sui colori della leggenda per isolare 1 o più categorie<br>
+					- per evitare tempi di aggiornamento grafici lunghi, conviene zoomare un po', prima di attivare l'aggregazione al livello comunale<small></small></p>
+			-->
+
+				<div class="slider-row">
+					<label>grandezza grafici EFFIS: <span class="chart-size-value">100</span>%</label>
+					<input type="range" class="chart-size-slider" min="0.2" max="3" step="0.05" value="1" oninput="updateChartSize(this.value)">
+				</div>
+
+				<div class="slider-row" style="margin-top:0.6em">
+					<label style="cursor:pointer"><input type="checkbox" class="kde-checkbox" onclick="__toggleKDE(this)" style="vertical-align:middle;accent-color:#4CAF50"> densità (KDE) rilevamenti EFFIS</label>
+				</div>
+				<div class="slider-row kde-controls" style="display:none">
+					<label>opacità KDE: <span class="kde-opacity-value">15</span>%</label>
+					<input type="range" class="kde-opacity-slider" min="0" max="60" step="1" value="15" oninput="updateKdeOpacity(this.value)">
+				</div>
+				<div class="slider-row kde-controls" style="display:none;margin-top:0.4em">
+					<label>ampiezza banda KDE: <span class="kde-bw-value">1.00</span>&times;</label>
+					<input type="range" class="kde-bw-slider" min="0.25" max="4" step="0.05" value="1" oninput="updateKdeBandwidth(this.value)">
+				</div>
+
+				<div class="slider-row date-controls" style="margin-top:0.6em">
+					<label>filtro per data rilevamenti EFFIS: <span class="date-range-value">tutte le date</span></label>
+					<input type="range" class="date-slider" min="0" max="0" step="1" value="0" title="0 = tutte le date, 1..N = giorno N" oninput="updateDateFilter(this.value)">
+				</div>
+
+
+				<p style="font-size:0.9em;">
+					Crea <a style="color:#0088dd" href="javascript:void()" onclick="$('#popup').html((ixmaps.szActualUrl));$('#popup').toggle()">link</a> condivisibile,
+					mostra tabella <a style="color:#0088dd" href="javascript:void()" onclick="ixmaps.popupThemeTable()">dati</a>.Info sulla mappa <a style="color:#0088dd" href="javascript:void()" onclick="$('#info-overlay').show()">qui</a>.
+				</p>
+
+				<textarea id="popup" style="font-size:1em;text-align:left;width:250px;height:150px;overflow:auto;background:transparent;display:none"></textarea>
+
+			</div>
+		</div>
+
+	</div>
+
+	<!-- onmap buttons -->
+
+	<div id="onmap-buttons" style="position:absolute;bottom:3em;right:35%;z-index:1500;background:rgba(255,255,255,0.92);border:solid #ddd 1px;border-radius:6px;padding:0.5em 1em 0.7em 1em;min-width:220px">
+
+		<div class="slider-row">
+			<label>grandezza grafici EFFIS: <span class="chart-size-value">100</span>%</label>
+			<input type="range" class="chart-size-slider" min="0.2" max="3" step="0.05" value="1" oninput="updateChartSize(this.value)">
+		</div>
+
+		<div class="slider-row" style="margin-top:0.6em">
+			<label style="cursor:pointer"><input type="checkbox" class="kde-checkbox" onclick="__toggleKDE(this)" style="vertical-align:middle;accent-color:#4CAF50"> densità (KDE) rilevamenti EFFIS</label>
+		</div>
+		<div class="slider-row kde-controls" style="display:none">
+			<label>opacità KDE: <span class="kde-opacity-value">15</span>%</label>
+			<input type="range" class="kde-opacity-slider" min="0" max="60" step="1" value="15" oninput="updateKdeOpacity(this.value)">
+		</div>
+		<div class="slider-row kde-controls" style="display:none;margin-top:0.4em">
+			<label>ampiezza banda KDE: <span class="kde-bw-value">1.00</span>&times;</label>
+			<input type="range" class="kde-bw-slider" min="0.25" max="4" step="0.05" value="1" oninput="updateKdeBandwidth(this.value)">
+		</div>
+
+		<div class="slider-row date-controls" style="margin-top:0.6em">
+			<label>filtro per data rilevamenti EFFIS: <span class="date-range-value">tutte le date</span></label>
+			<input type="range" class="date-slider" min="0" max="0" step="1" value="0" title="0 = tutte le date, 1..N = giorno N" oninput="updateDateFilter(this.value)">
+		</div>
+
+	</div>
+
+	<!-- sidebar switch -->
+
+	<div id="sidebarnav" style="position:absolute;left:0px;bottom:20px;opacity:0.9;width:100%;text-align:center;display:none">
+		<div>
+			<span id="sidebarbuttons" data-toggle="buttons" style="padding:8px 16px 8px 18px;border:solid #ddd 1px;border-radius:2px;background-color:#ffffff;">
+				<a class="btn btn-link" href="javascript:void();" onclick="ixmaps.showMap();">Mappa
+				</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+				<a class="btn btn-link" href="#javascript:void();" onclick="ixmaps.showSidebar();">Elenco finanziamenti
+				</a>
+			</span>
+		</div>
+	</div>
+
+	<!-- Nota Bene -->
+
+	<div id="info-overlay" style="position:absolute;bottom:20%;right:5%;width:90%;max-height:70%;z-index:10000;display:none">
+		<div style="background:#F7F6EF;border:solid #444 0.1px;border-radius:0.5em;max-width:720px;margin:auto">
+			<div style="float:right;margin-top:0.5em;margin-right:0.5em;font-size:22px">
+				<a href="javascript:void()" onclick="$('#info-overlay').hide()"><i class="icon shareIcon share_bitly icon-cancel-circle" title="hide" tabindex="-1"></i></a>
+			</div>
+			<div style="margin:1em;text-align:left">
+				
+				<p>Questa mappa individua tutte le terre trascorse dal fuoco dal 2011 al 2022 come regsitrato nel 'Sistema Informativa Forestale' (SIF) della Regione Sicilia.</p>
+				<p>Terre localizzate in comuni inadempienti al obbligo di registrare le terre trascorse in un registro catastale dei incendi sono colorati in rosso.</p>  	
+				<p>La lista  destra si aggiorna con ogni zoom o pan della mappa. Contiene la somma dei superfici delle aree trascorse dal fuoco, sommato per vari elementi dei metadati delle terre.</p>  	
+				
+				<p style="font-size:1em;">Fonti dati:</p>
+				<p><b>SIF</b> - <a style="color:#0088dd" href='https://sif.regione.sicilia.it/ilportale/' target='_blank'>Sistema Informativa Forestale</a> (Regione Sicilia)</p>
+				<p style="font-size:1em;"><b>Open Data Sicilia</b> - <a style="color:#0088dd" href='https://opendatasicilia.it/2023/08/10/catasto-delle-terre-bruciate/' target='_blank'>Catasto delle terre bruciate</a></p>
+				<p>Nota:</p>
+				<p>Per approfondire il tema si consiglia di leggre i post di Open Data Sicilia:
+				<ul style="text-align:left">
+				<li><a style="color:#0088dd" href="https://opendatasicilia.it/2023/08/10/catasto-delle-terre-bruciate/" target="_blank">Catasto delle terre bruciate</a></li>	
+				<li><a style="color:#0088dd" href="https://opendatasicilia.it/2023/08/18/sicilia-terre-percorse-dal-fuoco/" target="_blank">Terre percorse dal fuoco</a></li>	
+				</ul></p>
+
+			</div>
+		</div>
+	</div>
+
+	<!-- ------------------------------------- -->
+	<!--                                       -->
+	<!-- c o d e                         -->
+	<!--                                       -->
+	<!-- ------------------------------------- -->
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="../ixmaps-gl.js"></script>
+	<!-- GR 28.07.2026 Turf.js - computes the KDE density polygons from the live EFFIS fire points -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/plugins/facet.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/plugins/show_facets.js"></script>
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+		// ---------------------------------------------------
+		//
+		// h e l p e r
+		//
+		// ---------------------------------------------------
+
+		// GR 26.07.2026 "grandezza grafici" - was two +/-10% step buttons calling
+		// changeThemeStyle(..., 'factor'); a slider needs an absolute value instead,
+		// so this now uses 'set' with the slider's own value directly (matches every
+		// other slider control below). Two <input range> instances share this handler
+		// (sidebar + onmap-buttons) and are kept in sync via their shared CSS classes.
+		var updateChartSize = function(value) {
+			value = parseFloat(value);
+			ixmaps.changeThemeStyle(null, null, 'scale:' + value, 'set');
+
+			document.querySelectorAll('.chart-size-value').forEach(function(el) {
+				el.textContent = Math.round(value * 100);
+			});
+			document.querySelectorAll('.chart-size-slider').forEach(function(el) {
+				if (parseFloat(el.value) !== value) { el.value = value; }
+			});
+
+			themesA = ixmaps.getThemes();
+			for (i in themesA) {
+				if (themesA[i].szId.match(/chart|details/) && themesA[i].fVisible) {
+					__actualizeUrl(themesA[i]);
+					break;
+				}
+			}
+		}
+
+		var sizeTexts = function(nFactor) {
+		}
+		var select = function(element) {
+			element.parent().parent().parent().children().children(".radio").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+			//$(".radio").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+			element.parent().prev().html("&bullet;");
+		}
+		var clearFilter = function(szFilter) {
+			// GR 26.07.2026 fixed - the old (null, 'chart', 'filter', 'remove') call shifts
+			// only when arg0===arg1; here they differ, so 'remove' was silently dropped and
+			// (null,'chart','filter') reached the real API as (szId,szStyle,szFlag) - nonsense
+			ixmaps.changeThemeStyle('chart', 'filter', 'remove');
+			ixmaps.changeThemeStyle('SIF_polygons', 'filter', 'remove');
+			// changeThemeStyle applies async (~250ms, see executeWithMessage) - read
+			// szFilter back only after that, or the URL still shows the old filter
+			setTimeout(function() { try { __actualizeUrl(); } catch (e) {} }, 400);
+		}
+
+		// ---------------------------------------------------
+		//
+		// create actual, map zoom dependent theme statistics
+		//
+		// ---------------------------------------------------
+
+		ixmaps.statistics = function(szId) {
+
+			var themeObj = ixmaps.getThemeObj(szId);
+			var lastFilter = themeObj.szFilter || "";
+
+			if (szId == "SIF_polygons") {
+
+				_LOG("=== statistics start ===");
+
+				var szFieldsA = ["TOTSUP"];
+				var facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map");
+
+				console.log("---------------");
+				console.log(facetsA);
+				console.log("---------------");
+				
+				var projects = facetsA[0].data ? ixmaps.formatValue(facetsA[0].data.length, 0, "BLANK") : "0";
+				var importi = facetsA[0].sum ? ixmaps.formatValue(facetsA[0].sum, 0, "BLANK") : "0";
+				$("#no_progetti").html(projects);
+				$("#sum_importi").html(importi);
+
+
+				_LOG("=== statistics done ===");
+
+				ixmaps.data.fShowFacetValues = true;
+				szFieldsA = ["COMUNE","LOCALITA", "ANNO", "data", "mese", "giorno della settimana", "commissariato"];
+				facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map","NONUMERIC");
+				ixmaps.data.showFacets(lastFilter, "show-facets-div", facetsA);
+
+			}
+		};
+
+		// ---------------------------------------------------
+		//
+		// theme change handler 
+		//
+		// ---------------------------------------------------
+
+		// GR 26.07.2026 also persists to the actual address bar (history.replaceState,
+		// no navigation/reload) so zoom, pan and the active filter survive a page
+		// reload or get carried over when the link is copied - not just when the
+		// "crea link" popup is opened by hand. themeObj is optional: called with no
+		// theme (from the zoom/pan hook, which has no theme redraw of its own) it
+		// falls back to the "chart" theme's current filter/scale.
+		var __actualizeUrl = function(themeObj) {
+			themeObj = themeObj || ixmaps.getThemeObj("chart");
+			var szFilter = (themeObj && themeObj.szFilter) || "";
+			var nScale = (themeObj && themeObj.nScale) || __scale_chart;
+
+			var szQuery = "?view=[" + ixmaps.getCenter().lat + "," + ixmaps.getCenter().lng + "]," + ixmaps.getZoom();
+			if (szFilter) { szQuery += "&filter=" + encodeURIComponent(szFilter); }
+			if (nScale && nScale != 1) { szQuery += "&scale=" + nScale; }
+
+			ixmaps.szActualUrl = window.location.hostname + window.location.pathname + szQuery;
+			$('#popup').html((ixmaps.szActualUrl));
+			$('#popup1').html((ixmaps.szActualUrl));
+
+			history.replaceState(null, "", window.location.pathname + szQuery);
+		};
+
+		var old_onDrawTheme = ixmaps.htmlgui_onDrawTheme;
+		// intercept theme creation, to mark active themes
+		ixmaps.htmlgui_onDrawTheme = function(szId) {
+
+			ixmaps.themesDrawnA = ixmaps.themesDrawnA || [];
+			ixmaps.themesDrawnA[szId] = true;
+
+			var themeObj = ixmaps.getThemeObj(szId);
+			if (themeObj.szFlag.match(/NOLEGEND/)) {
+				try {
+					old_onDrawTheme(szId);
+				} catch (e) {}
+				return;
+			};
+
+			if (!themeObj.fVisible) {
+				return;
+			}
+
+			ixmaps.statistics(szId);
+
+			if (themeObj.szFilter) {
+				var szFilterClipped = (themeObj.szFilter.length > 100) ? (themeObj.szFilter.substr(0, 100) + " ... ") : themeObj.szFilter;
+				$("#filter").html(szFilterClipped);
+				ixmaps.setTitle("<div style='font-family:open sans;font-size:0.7em;color:black;padding:0.5em;background:rgba(247, 246, 239, 0.5);width:30%'><i class='fa fa-filter fa-fw'></i>filtro: " + szFilterClipped.split("WHERE")[1] + "</div>");
+				$("#filter-div").show();
+			} else {
+				$("#filter").html("");
+				ixmaps.setTitle("");
+				$("#filter-div").hide();
+			}
+
+			__actualizeUrl(themeObj);
+
+			$("#scroll-area").height(window.innerHeight - $("#scroll-area").offset().top - 50);
+
+			try {
+				old_onDrawTheme(szId);
+			} catch (e) {}
+		};
+
+		// GR 26.07.2026 the "chart" theme is point-based (position by OBJECTID) and
+		// only gets panned/scaled via SVG transform on zoom/pan - it doesn't redraw,
+		// so htmlgui_onDrawTheme above never fires again after the initial draw.
+		// Hook the dedicated zoom/pan notification instead, so the sidebar facets
+		// actually refresh on every zoom or pan as advertised in the info overlay.
+		var old_onZoomAndPan = ixmaps.htmlgui_onZoomAndPan;
+		ixmaps.htmlgui_onZoomAndPan = function(nZoomScale) {
+			if (ixmaps.themesDrawnA && ixmaps.themesDrawnA["chart"]) {
+				ixmaps.statistics("SIF_polygons");
+			}
+			try { __actualizeUrl(); } catch (e) {}
+			try {
+				old_onZoomAndPan(nZoomScale);
+			} catch (e) {}
+		};
+
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// t h e   m a p 
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		/**
+		 ** ************************************
+		 ** define the ixmaps themes and project
+		 ** ************************************
+		 **/
+
+		var __filter = "";
+		var __lat = 38.069116134228686;
+		var __lon = 13.365977533978272;
+		var __zoom = 11.4;
+		var __scale_chart = 1;
+		var __legend = true;
+		
+		/**
+		 ** strings used by the map 	
+		 **/
+
+		attribution =
+			"powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
+
+		/**
+		 ** get query params and adapt theme and project definitions 	
+		 **/
+
+		const params = new Proxy(new URLSearchParams(window.location.search), {
+			get: (searchParams, prop) => searchParams.get(prop),
+		});
+
+		if (params.filter) {
+			__filter = params.filter;
+		}
+
+		if (params.view) {
+			var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+			__lat = latlonA[0];
+			__lon = latlonA[1];
+			__zoom = parseInt(params.view.split(',')[2]);
+			//setTimeout("ixmaps.setView(null,"+params.view+")",1000);
+		};
+
+		if (params.scale) {
+			__scale_chart = params.scale;
+		};
+
+		if (params.legend) {
+			__legend = params.legend;
+		};
+
+		// ---------------------------------------------------
+		// t h e   d a t a   q u e r i e s
+		// ---------------------------------------------------
+		
+		// GR 27.07.2026 SIF data now loaded from a static GeoParquet snapshot (2010-2025,
+		// 15,183 features, same field names as the live ArcGIS source below it replaces -
+		// see terre_trascorse_dal_fuoco_2010_2025.geo.parquet in gjrichter/data). Swapped
+		// in for the previous client-side multi-year ArcGIS fetch/merge (32 requests,
+		// slow) now that a current snapshot is hosted; regenerate that file periodically
+		// to pick up newer fire seasons instead of re-adding the live fetch.
+		query = function(data,options){
+			var szUrl1 = "https://raw.githubusercontent.com/gjrichter/data/master/SIF/terre_trascorse_dal_fuoco_2010_2025.geo.parquet";
+			var szUrl2 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/SIF/comuni_commissari.csv";
+			var broker = new Data.Broker()
+				.addSource(szUrl1, "parquet")
+				.addSource(szUrl2, "csv")
+				.realize(
+					dataA => {
+						var data = dataA[0];
+						data.column("DATI_WEB.DBO.DFCNSIINCD_DENORM.OBJECTID").rename("OBJECTID");
+						data.column("DATI_WEB.DBO.DFCNSIINCD_DENORM.DTAINIZIOFUOCO").rename("DTAINIZIOFUOCO");
+						data.column("DATI_WEB.DBO.DFCNSIINCD_DENORM.LOCALITA").rename("LOCALITA");
+						data.column("DATI_WEB.DBO.DFCNSIINCD_DENORM.TOTSUP").rename("TOTSUP");
+						data.column("DATI_WEB.DBO.DFCNSIINCD_DENORM.TOTSUPBOSCATA").rename("TOTSUPBOSCATA");
+						data.column("DATI_WEB.DBO.DFCNSIINCD_DENORM.TOTSUPNNBOSCATA").rename("TOTSUPNNBOSCATA");
+						data.column("DATI_WEB.DBO.DFCNSIINCD_DENORM.ANNO").rename("ANNO");
+						data.column("DATI_WEB.DBO.AAAMAMCOMU.DESCRIPTION").rename("COMUNE");
+						data.addTimeColumns({source:"DTAINIZIOFUOCO"});
+						var daysA = ["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
+						data.column("day").map(value => {
+							return daysA[value];
+						});
+						data.column("date").rename("data");
+						data.column("month").rename("mese");
+						data.column("day").rename("giorno della settimana");
+
+						dataA[1].column("Comune").map(value => {
+							return value.toUpperCase();
+						});
+						comuniA = dataA[1].lookupArray({key:"Comune",value:"istat_codice"});
+						data.addColumn({source:"COMUNE",destination:"commissariato"},value => {
+							return (comuniA[value]?"si":"no");
+						});
+
+						options.type = "dbtable";
+						ixmaps.setExternalData(data,options);
+				});
+		};
+
+		query_comuni = function(data,options){
+			var szUrl1 = "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/comuni_2022/Com01012022_s_WGS84.topojson.gz";
+			var szUrl2 = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/SIF/comuni_commissari.csv";
+			var broker = new Data.Broker()
+				.addSource(szUrl1, "topojson")
+				.addSource(szUrl2, "csv")
+				.realize(
+					dataA => {
+						var data = dataA[0];
+						comuniA = dataA[1].lookupArray({key:"istat_codice",value:"comune"});
+						data.addColumn({source:"PRO_COM",destination:"commissariato"},value => {
+							return (comuniA[value]?"si":"no");
+						});
+						options.type = "dbtable";
+						ixmaps.setExternalData(data,options);
+				});
+		};
+		
+	
+		// ---------------------------------------------------
+		// t h e   l a y e r 
+		// ---------------------------------------------------
+
+		var __comuni_2022 =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					name: "data_1",
+					query: query_comuni.toString(),
+					type: "ext"
+				})
+				.binding({
+					id: "PRO_COM",
+					position: "geometry",
+					value: "commissariato"
+				})
+				.filter("WHERE COD_REG = 19")
+				.type("FEATURES|CHOROPLETH|CATEGORICAL|NOLEGEND")
+				.style({
+					opacity: "0.2",
+					colorscheme: ["#880000","none"],
+					values: ["si","no"],
+					linecolor: "#000000",
+					linewidth: "0.3",
+					showdata: "true",
+					layerupper: "1:1500000"
+				})
+				.meta({
+					title: "Comuni 2022",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		// ---------------------------------------------------
+		// t h e   t h e m e s 
+		// ---------------------------------------------------
+
+		// GR 26.07.2026 restore a filter (if any) read from the URL, so a reloaded/shared
+		// link starts already filtered - applied via .filter() at definition time since
+		// changeThemeStyle can't reach a theme before it exists
+		var __SIF_terre_percorse_dal_fuoco =
+			ixmaps.layer("SIF", layer => {
+				var t = layer
+					.data({
+						name: "data_2",
+						query: query.toString()
+					})
+					.type("FEATURES|CHOROPLETH|CATEGORICAL|TEXTLEGEND")
+					.binding({
+						id: "OBJECTID",
+						value: "commissariato"
+					})
+					.style({
+						colorscheme: [
+							"rgba(0,0,0,0.1)",
+							"rgba(0,0,0,0.1)"],
+						values: [
+							"si",
+							"no"
+						],
+						fillopacity: "0.3",
+						linecolor: "black",
+						linewidth: "0.1",
+						layerupper: "1:1500000",
+						showdata: "true"
+					})
+					.meta({
+						title: "Terre trascorse dal fuoco<br> 2010-2025",
+						splash: "scaricando dati ...",
+						name: "SIF_polygons"
+					});
+				if (__filter) { t = t.filter(__filter); }
+				return t;
+			});
+
+		var __SIF_terre_percorse_dal_fuoco_chart =
+			ixmaps.layer("SIF", layer => {
+				var t = layer
+					.data({
+						name: "data_2",
+						query: query.toString()
+					})
+					.type("CHART|SYMBOL|NOSIZE|VALUES|BOX|TITLE|DTEXT|NOLEGEND")
+					.binding({
+						position: "OBJECTID",
+						value: "TOTSUP",
+						size: "TOTSUP",
+						title: "LOCALITA"
+					})
+					.style({
+						colorscheme: [
+							"none"],
+						fillopacity: "0.5",
+						linecolor: "none",
+						linewidth: "0.5",
+						valuecolor: "#dd0000",
+						units: "ha",
+						showdata: "true",
+						labelfield: "ANNO",
+						layerupper: "1:10000",
+						boxopacity: "0",
+						textcolor: "black",
+						valuedecimals: "0",
+						valuescale: "3",
+						textscale: "1",
+						normalsizevalue: "1000",
+						name: "chart"
+					})
+					.meta({
+						title: "SIF - Terre trascorse dal fuoco - dal 2010 al 2025",
+						splash: "scaricando dati ..."
+					});
+				if (__filter) { t = t.filter(__filter); }
+				return t;
+			});
+
+		var __SUOMI_VIIRS_C2_Europe_7d =
+			ixmaps.layer("SUOMI_VIIRS_C2", layer => layer
+				.data({
+					url: "https://raw.githubusercontent.com/gjrichter/data/master/SUOMI_VIIRS_C2_Europe_7d.csv",
+					type: "csv",
+					name: "SUOMI_VIIRS_C2_Europe_24h"
+				})
+				.binding({
+					position: "latitude|longitude",
+					value: "bright_ti4",
+					timefield: "acq_date"
+				})
+				.type("CHART|BUBBLE|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+				.style({
+					colorscheme: [
+						"7",
+						"RGB(245,74,255)",
+						"RGB(245,41,38)",
+						"dynamic"],
+					fillopacity: "0.9",
+					linecolor: "orange",
+					linewidth: "2",
+					gridwidth: "15px",
+					name: "SUOMI_VIIRS_C2_Europe_7d"
+				})
+				.meta({
+					title: "SUOMI_VIIRS_C2_Europe_7d",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __J1_VIIRS_C2_Europe_7d =
+			ixmaps.layer("J1_VIIRS_C2", layer => layer
+				.data({
+					url: "https://raw.githubusercontent.com/gjrichter/data/master/J1_VIIRS_C2_Europe_7d.csv",
+					type: "csv",
+					name: "J1_VIIRS_C2_Europe_7d"
+				})
+				.binding({
+					position: "latitude|longitude",
+					value: "bright_ti4",
+					timefield: "acq_date"
+				})
+				.type("CHART|BUBBLE|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+				.style({
+					colorscheme: [
+						"7",
+						"RGB(245,74,255)",
+						"RGB(245,41,38)",
+						"dynamic"],
+					fillopacity: "0.9",
+					linecolor: "black",
+					linewidth: "1",
+					gridwidth: "15px",
+					name: "J1_VIIRS_C2_Europe_7d"
+				})
+				.meta({
+					title: "J1_VIIRS_C2_Europe_7d",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __MODIS_C6_1_Europe_7d =
+			ixmaps.layer("MODIS_C6_1", layer => layer
+				.data({
+					url: "https://raw.githubusercontent.com/gjrichter/data/master/MODIS_C6_1_Europe_7d.csv",
+					type: "csv",
+					name: "MODIS_C6_1_Europe_7d"
+				})
+				.binding({
+					position: "latitude|longitude",
+					value: "brightness",
+					timefield: "acq_date"
+				})
+				.type("CHART|SYMBOL|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+				.style({
+					colorscheme: [
+						"7",
+						"RGB(245,74,255)",
+						"RGB(245,41,38)",
+						"dynamic"],
+					symbols: ["square"],
+					fillopacity: "0.9",
+					linecolor: "orange",
+					linewidth: "2",
+					gridwidth: "15px",
+					name: "MODIS_C6_1_Europe_7d"
+				})
+				.meta({
+					title: "MODIS_C6_1_Europe_7d",
+					splash: "scaricando dati ..."
+				})
+			);
+		
+		// ---------------------------------------------------
+		// e m b e d   t h e   m a p  
+		// ---------------------------------------------------
+
+		/**
+		 ** create the interactive map an append it to the document div 
+		 **/
+
+		// GR 28.07.2026 captured so the KDE extension can inject/update a runtime
+		// layer via __mapPromise.then(api => api.layer(def)) - see below
+		var __mapPromise = ixmaps.Map("map_div", {
+				mapService: "leaflet",
+				mapType: "VT_DATAVIZ",
+				map: "../../maps/svg/maps/generic/mercator.svg",
+				name: "SIF_2022",
+				mode: "pan",
+				width: "100%",
+				height: (window.innerHeight-15) + "px",
+				legend: 0, // ((__legend == true) ? "true" : 0),
+				tools: "true",
+				search: "Italy",
+				about: "test"
+			},
+			map => map
+			.view([__lat, __lon], __zoom)
+			.options({
+				featurescaling: "true",
+				objectscaling: "dynamic",
+				normalSizeScale: "259302",
+				flushChartDraw: "1000000",
+				basemapopacity: "1",
+				worksilent: "true",
+				loadsilent: "true",
+				panhidden: "false"
+			})
+			.local("aggregated", "")
+			.local("loading data ...", "...")
+			.attribution(attribution)
+
+			// -----------------------------		 
+			// the data visualization layer 
+			// -----------------------------
+					 
+			//.layer(__comuni_2022)
+			.layer(__SIF_terre_percorse_dal_fuoco)
+			.layer(__SIF_terre_percorse_dal_fuoco_chart)
+
+			.layer(__J1_VIIRS_C2_Europe_7d)
+			.layer(__SUOMI_VIIRS_C2_Europe_7d)
+			.layer(__MODIS_C6_1_Europe_7d)	 
+					
+		);
+
+		// ---------------------------------------------------
+		//
+		// K D E   ( T u r f . j s )   f r o m   t h e   l i v e
+		// E F F I S   f i r e   o b s e r v a t i o n s
+		//
+		// combines the three point layers above (SUOMI VIIRS C2, J1 VIIRS C2,
+		// MODIS C6.1 - each a live "last 7 days" hotspot feed) into a single
+		// weighted density surface, weighted by each theme's own brightness
+		// field. See EXTENSIONS_GUIDE.md / template-kde.html (create-ixmap
+		// skill) for the underlying pattern.
+		// ---------------------------------------------------
+
+		var __KDE_THEMES = ["SUOMI_VIIRS_C2_Europe_7d", "J1_VIIRS_C2_Europe_7d", "MODIS_C6_1_Europe_7d"];
+		var __KDE_WEIGHT_FIELD = {
+			"SUOMI_VIIRS_C2_Europe_7d": "bright_ti4",
+			"J1_VIIRS_C2_Europe_7d": "bright_ti4",
+			"MODIS_C6_1_Europe_7d": "brightness"
+		};
+		var __kdeOn = false;
+		var __kdeTimer = null;
+		var __kdeBandwidthFactor = 1;
+
+		// GR 16.08.2026 acq_date filter (SUOMI/J1 VIIRS + MODIS "last 7 days" feeds
+		// share the same acq_date field, format YYYY-MM-DD). __datesA is the sorted
+		// list of distinct dates actually present, built once all three themes have
+		// drawn (see __buildDateRange, hooked below).
+		//
+		// Uses ixmaps.setThemeTimeFrame() (needs .binding({timefield:"acq_date"}),
+		// added on all three themes) rather than changeThemeStyle('filter:WHERE...').
+		// setThemeTimeFrame is a pure SVG-attribute show/hide on already-rendered
+		// shapes (no re-query, no re-aggregation) - much cheaper while dragging, at
+		// the cost of a known bug: it doesn't persist across a theme redraw (e.g.
+		// these AGGREGATE|RELOCATE themes re-bucketing on pan/zoom resets everything
+		// visible again, since there's no stored per-theme time-window reapplied
+		// post-redraw). Accepted for now; to be fixed later (e.g. re-issue the last
+		// setThemeTimeFrame call from the same onDrawTheme hook used for KDE below).
+		// Single slider, legend.js-native-slider style: 0 = all dates, 1..N = that
+		// one specific day (__datesA[value-1]) - not a from/to range.
+		var __datesA = [];
+		var __dateSliderValue = 0;
+		var __dateRangeBuilt = false;
+
+		var __removeKDE = function () {
+			if (!__mapPromise) return;
+			__mapPromise.then(function (api) { try { api.removeTheme("kde_fires"); } catch (e) {} });
+		};
+
+		var __toggleKDE = function (el) {
+			__kdeOn = el.checked;
+			document.querySelectorAll('.kde-checkbox').forEach(function (cb) { cb.checked = __kdeOn; });
+			document.querySelectorAll('.kde-controls').forEach(function (div) { div.style.display = __kdeOn ? "block" : "none"; });
+			if (__kdeOn) { clearTimeout(__kdeTimer); __kdeTimer = setTimeout(__updateKDE, 200); }
+			else { __removeKDE(); }
+		};
+
+		var updateKdeOpacity = function (value) {
+			value = parseFloat(value);
+			document.querySelectorAll('.kde-opacity-value').forEach(function (el) { el.textContent = Math.round(value); });
+			document.querySelectorAll('.kde-opacity-slider').forEach(function (el) { if (parseFloat(el.value) !== value) { el.value = value; } });
+			if (__kdeOn && __mapPromise) {
+				__mapPromise.then(function (api) { try { api.changeThemeStyle("kde_fires", "fillopacity:" + (value / 100), "set"); } catch (e) {} });
+			}
+		};
+
+		var updateKdeBandwidth = function (value) {
+			__kdeBandwidthFactor = parseFloat(value) || 1;
+			document.querySelectorAll('.kde-bw-value').forEach(function (el) { el.textContent = __kdeBandwidthFactor.toFixed(2); });
+			document.querySelectorAll('.kde-bw-slider').forEach(function (el) { if (parseFloat(el.value) !== __kdeBandwidthFactor) { el.value = value; } });
+			if (__kdeOn) { clearTimeout(__kdeTimer); __kdeTimer = setTimeout(__updateKDE, 200); }
+		};
+
+		// ---------------------------------------------------
+		// acq_date filter (EFFIS rilevamenti)
+		// ---------------------------------------------------
+
+		var __formatDateShort = function (szIso) {
+			var partsA = szIso.split("-");
+			var mesiA = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+			return parseInt(partsA[2], 10) + " " + mesiA[parseInt(partsA[1], 10) - 1];
+		};
+
+		var __updateDateRangeLabel = function () {
+			var szText = (__dateSliderValue === 0)
+				? __formatDateShort(__datesA[0]) + " – " + __formatDateShort(__datesA[__datesA.length - 1])
+				: __formatDateShort(__datesA[__dateSliderValue - 1]);
+			document.querySelectorAll('.date-range-value').forEach(function (el) { el.textContent = szText; });
+		};
+
+		// builds __datesA (sorted distinct acq_date values, union across the three
+		// EFFIS themes) once all three have drawn at least once - waiting for all
+		// three avoids initializing the slider bounds from a partial/incomplete range.
+		// Tracked via its own __dateThemesSeenA, NOT ixmaps.themesDrawnA: hooks wrap
+		// outer-to-inner-executes-first, and this hook was attached after the one
+		// that sets themesDrawnA[szId] - so for the theme currently drawing, that
+		// flag is still false when this runs (it's an "onDrawTheme so far" set,
+		// not "onDrawTheme complete" - see old_onDrawTheme_kde chain below)
+		var __dateThemesSeenA = {};
+		var __buildDateRangeRetries = 0;
+		var __buildDateRange = function (szId) {
+			if (__dateRangeBuilt) return;
+			if (szId) { __dateThemesSeenA[szId] = true; }
+			if (!__KDE_THEMES.every(function (n) { return __dateThemesSeenA[n]; })) return;
+
+			// read the full underlying dataset directly (dbRecords/dbFields), not
+			// ixmaps.data.getFacets(): that walks each theme's rendered indexA/itemA,
+			// which only cover the current viewport - on the initial Sicily-zoomed
+			// view these Europe-wide feeds render 0 visible points there, so facets
+			// would come back empty even though the data itself has plenty of rows
+			var datesSetA = {};
+			__KDE_THEMES.forEach(function (name) {
+				var t = ixmaps.getThemeObj(name);
+				if (!t || !t.objTheme || !t.objTheme.dbRecords || !t.objTheme.dbFields) return;
+				var iDate = t.objTheme.dbFields.findIndex(function (f) { return f.id === "acq_date"; });
+				if (iDate < 0) return;
+				t.objTheme.dbRecords.forEach(function (rec) {
+					var d = rec[iDate];
+					if (d) { datesSetA[d] = true; }
+				});
+			});
+
+			__datesA = Object.keys(datesSetA).sort();
+			if (!__datesA.length) {
+				// dbRecords can still be mid-attach right when the draw event fires -
+				// retry a few times before giving up (see old_onDrawTheme_kde below)
+				if (__buildDateRangeRetries++ < 10) { setTimeout(function () { __buildDateRange(); }, 300); }
+				return;
+			}
+
+			__dateSliderValue = 0;
+			__dateRangeBuilt = true;
+
+			// N distinct dates -> N+1 slider positions (0 = all, 1..N = that day)
+			document.querySelectorAll('.date-slider').forEach(function (el) { el.max = __datesA.length; el.value = __dateSliderValue; });
+			__updateDateRangeLabel();
+		};
+
+		// acq_date has no time component, so every row on the same day parses to
+		// the exact same uTime (midnight UTC) - nUMax set to that value still
+		// includes the whole day via setTimeFrame's inclusive <= comparison
+		//
+		// GR 16.08.2026 the engine's setTimeFrame (ixMap.Themes.prototype, in
+		// maptheme.js) debounces via a SINGLE "markTimeout" shared across ALL
+		// themes (not one per theme) - clearTimeout(this.markTimeout) means calling
+		// it once per theme (3x) back-to-back in the same tick cancels the first
+		// two, only the last actually applies. Verified live with a per-theme
+		// stagger workaround, which was itself unreliable under rapid repeated
+		// calls (fast dragging) for the same reason. The real fix: call with
+		// szId=null - doSetTimeFrame special-cases that to loop over ALL themes
+		// SYNCHRONOUSLY inside a single pass through the shared debounce (same
+		// pattern legend.js's own native slider uses), so there's only ever one
+		// call in flight, no collision possible. Themes without a timefield
+		// binding (SIF_polygons, chart, comuni) are unaffected - their shapes have
+		// no baked-in "time" attribute, so the engine's isNaN(uTime) check leaves
+		// them always in range.
+		var __applyDateFilter = function () {
+			if (!__datesA.length) return;
+			var nUMin, nUMax;
+			if (__dateSliderValue === 0) {
+				nUMin = new Date(__datesA[0]).getTime();
+				nUMax = new Date(__datesA[__datesA.length - 1]).getTime();
+			} else {
+				nUMin = nUMax = new Date(__datesA[__dateSliderValue - 1]).getTime();
+			}
+			ixmaps.setThemeTimeFrame(null, nUMin, nUMax);
+			// setThemeTimeFrame only toggles SVG display, it doesn't trigger
+			// onDrawTheme - so the KDE recompute hook below never fires for it.
+			// Re-trigger it explicitly here instead.
+			if (__kdeOn) { clearTimeout(__kdeTimer); __kdeTimer = setTimeout(__updateKDE, 200); }
+		};
+
+		var __dateFilterDebounce = null;
+		var updateDateFilter = function (value) {
+			if (!__datesA.length) return;
+			__dateSliderValue = parseInt(value, 10);
+			document.querySelectorAll('.date-slider').forEach(function (el) { el.value = __dateSliderValue; });
+			__updateDateRangeLabel();
+			clearTimeout(__dateFilterDebounce);
+			__dateFilterDebounce = setTimeout(__applyDateFilter, 60);
+		};
+
+		var __updateKDE = function () {
+			if (!__kdeOn || typeof turf === "undefined" || !__mapPromise) return;
+
+			// (1) collect weighted points from all three live EFFIS themes
+			// setThemeTimeFrame() only hides SVG shapes - it doesn't touch indexA/
+			// dbIndexA - so without this explicit re-check the KDE haze would keep
+			// including points the date slider has visually hidden
+			var dateFilterSet = null;
+			if (__dateRangeBuilt && __dateSliderValue !== 0) {
+				dateFilterSet = {};
+				dateFilterSet[__datesA[__dateSliderValue - 1]] = true;
+			}
+			var pts = [];
+			__KDE_THEMES.forEach(function (themeName) {
+				var objTheme = ixmaps.getThemeObj(themeName);
+				if (!objTheme || !objTheme.indexA || !objTheme.itemA || !objTheme.objTheme) return;
+				var dbRecords = objTheme.objTheme.dbRecords;
+				var dbFields = objTheme.objTheme.dbFields;
+				if (!dbRecords || !dbFields) return;
+
+				var iLat = dbFields.findIndex(function (f) { return f.id === "latitude"; });
+				var iLng = dbFields.findIndex(function (f) { return f.id === "longitude"; });
+				var iW = dbFields.findIndex(function (f) { return f.id === __KDE_WEIGHT_FIELD[themeName]; });
+				var iDate = dbFields.findIndex(function (f) { return f.id === "acq_date"; });
+				if (iLat < 0 || iLng < 0) return;
+
+				var recIdx = [];
+				for (var i = 0; i < objTheme.indexA.length; i++) {
+					var item = objTheme.itemA[objTheme.indexA[i]];
+					if (!item) continue;
+					if (item.dbIndex != null) recIdx.push(item.dbIndex);
+					if (Array.isArray(item.dbIndexA)) for (var j = 0; j < item.dbIndexA.length; j++) recIdx.push(item.dbIndexA[j]);
+				}
+				for (var k = 0; k < recIdx.length; k++) {
+					var rec = dbRecords[recIdx[k]];
+					if (!rec) continue;
+					if (dateFilterSet && iDate >= 0 && !dateFilterSet[rec[iDate]]) continue;
+					var la = +rec[iLat], ln = +rec[iLng];
+					if (isNaN(la) || isNaN(ln)) continue;
+					var w = (iW >= 0 ? (+rec[iW] || 0) : 0);
+					if (w <= 0) w = 1;
+					pts.push([la, ln, w]);
+				}
+			});
+
+			var zoom = ixmaps.getZoom() || 6;
+			if (pts.length < 5) { __removeKDE(); return; }
+
+			// PERF: sample before building the grid
+			var ptCap = zoom >= 16 ? 1500 : zoom >= 14 ? 3000 : zoom >= 13 ? 5000 : 8000;
+			if (pts.length > ptCap) {
+				var step = Math.ceil(pts.length / ptCap), out = [];
+				for (var s2 = 0; s2 < pts.length; s2 += step) out.push(pts[s2]);
+				pts = out;
+			}
+
+			// (2) zoom-adaptive bandwidth (km) + grid budget, x user bandwidth slider
+			var bwKm, maxCells;
+			if      (zoom >= 16) { bwKm = 0.04; maxCells = 1000000; }
+			else if (zoom >= 15) { bwKm = 0.08; maxCells =  800000; }
+			else if (zoom >= 14) { bwKm = 0.12; maxCells =  600000; }
+			else if (zoom >= 13) { bwKm = 0.30; maxCells =  300000; }
+			else if (zoom >= 12) { bwKm = 0.80; maxCells =  100000; }
+			else if (zoom >= 11) { bwKm = 2.00; maxCells =   40000; }
+			else if (zoom >= 10) { bwKm = 5.00; maxCells =   25000; }
+			else if (zoom >= 9)  { bwKm = 10.0; maxCells =   20000; }
+			else                 { bwKm = 24.0; maxCells =   15000; }
+			bwKm *= __kdeBandwidthFactor;
+
+			var s = Infinity, w0 = Infinity, n = -Infinity, e = -Infinity;
+			pts.forEach(function (p) { if (p[0] < s) s = p[0]; if (p[0] > n) n = p[0]; if (p[1] < w0) w0 = p[1]; if (p[1] > e) e = p[1]; });
+			var midLat = (s + n) / 2;
+			var kmLat = 111.3, kmLng = 111.3 * Math.cos(midLat * Math.PI / 180);
+			s -= bwKm / kmLat * 1.5; n += bwKm / kmLat * 1.5; w0 -= bwKm / kmLng * 1.5; e += bwKm / kmLng * 1.5;
+			var BW2 = 2 * bwKm * bwKm;
+
+			var aspect = (e - w0) / Math.max(n - s, 0.001);
+			var nLng = Math.max(Math.round(Math.sqrt(maxCells * aspect)), 5);
+			var nLat = Math.max(Math.round(maxCells / nLng), 5);
+			var stepLat = (n - s) / nLat, stepLng = (e - w0) / nLng;
+
+			// (3) Gaussian KDE on the grid
+			var gridPts = [];
+			for (var ila = 0; ila <= nLat; ila++) for (var iln = 0; iln <= nLng; iln++) {
+				var glat = s + ila * stepLat, glng = w0 + iln * stepLng, v = 0;
+				for (var q = 0; q < pts.length; q++) {
+					var dy = (pts[q][0] - glat) * kmLat, dx = (pts[q][1] - glng) * kmLng;
+					v += pts[q][2] * Math.exp(-(dx * dx + dy * dy) / BW2);
+				}
+				gridPts.push(turf.point([glng, glat], { v: v }));
+			}
+			var maxV = 0; gridPts.forEach(function (p) { if (p.properties.v > maxV) maxV = p.properties.v; });
+			if (maxV <= 0) { __removeKDE(); return; }
+
+			var breaks = [0.15, 0.30, 0.50, 0.70].map(function (r) { return r * maxV; });
+			var iso;
+			try { iso = turf.isobands(turf.featureCollection(gridPts), breaks, { zProperty: "v" }); }
+			catch (err) { return; }
+
+			// keep only the outer ring of each band -> stacked filled blobs (opacity = density)
+			iso.features.forEach(function (feat) {
+				if (!feat || !feat.geometry) return;
+				var g = feat.geometry;
+				if (g.type === "Polygon") g.coordinates = g.coordinates.length ? [g.coordinates[0]] : [];
+				else if (g.type === "MultiPolygon") g.coordinates = g.coordinates.map(function (p) { return p.length ? [p[0]] : []; });
+			});
+
+			// (4) inject as a runtime layer
+			var opEl = document.querySelector('.kde-opacity-slider');
+			var op = (opEl ? parseFloat(opEl.value) : 15) / 100;
+			var def = ixmaps.layer("kde_fires_layer")
+				.data({ obj: iso, type: "geojson" })
+				.binding({ geo: "geometry" })
+				.type("FEATURE|CHOROPLETH|SILENT")
+				.style({ colorscheme: "#dd0088", fillopacity: op, linewidth: 0.01 })
+				.meta({ name: "kde_fires" })
+				.define();
+
+			__mapPromise.then(function (api) { try { api.removeTheme("kde_fires"); } catch (e) {} api.layer(def); });
+		};
+
+		// recompute on redraw of any of the three EFFIS themes (filter changes)
+		// and on every pan/zoom (these are AGGREGATE|RELOCATE charts whose
+		// grouping depends on the current view) - chains onto whatever the
+		// page has already installed above, same pattern as __actualizeUrl.
+		var old_onDrawTheme_kde = ixmaps.htmlgui_onDrawTheme;
+		ixmaps.htmlgui_onDrawTheme = function (szId) {
+			if (__KDE_THEMES.indexOf(szId) >= 0 && !__dateRangeBuilt) {
+				__buildDateRange(szId);
+			}
+			if (__kdeOn && __KDE_THEMES.indexOf(szId) >= 0) {
+				clearTimeout(__kdeTimer);
+				__kdeTimer = setTimeout(__updateKDE, 300);
+			}
+			try { old_onDrawTheme_kde(szId); } catch (e) {}
+		};
+
+		var old_onZoomAndPan_kde = ixmaps.htmlgui_onZoomAndPan;
+		ixmaps.htmlgui_onZoomAndPan = function (nZoomScale) {
+			if (__kdeOn) {
+				clearTimeout(__kdeTimer);
+				__kdeTimer = setTimeout(__updateKDE, 300);
+			}
+			try { old_onZoomAndPan_kde(nZoomScale); } catch (e) {}
+		};
+
+		if (!window.location.search) {
+			$("#info-overlay").fadeIn("slow");
+			setTimeout(function(){$("#info-overlay").fadeOut("slow")},2000);
+		}
+
+		/**
+		 **
+		 ** window size handling, show or hide sidebar
+		 **
+		 **/
+
+		ixmaps.resize = function() {
+			$("#regis_map").css("height", (window.innerHeight * 0.95) + "px");
+			if (window.innerWidth < 600) {
+				$("#sidebarnav").show();
+				$("#onmap-buttons").hide();
+				ixmaps.showMap();
+			} else {
+				$("#sidebarnav").hide();
+				$("#onmap-buttons").show();
+				ixmaps.showBoth();
+			}
+		};
+		ixmaps.showSidebar = function() {
+			$("#regis_sidebar").show();
+			$("#regis_sidebar").css("width", "100%");
+			$("#regis_map_target").css("width", "0");
+		};
+		ixmaps.showMap = function() {
+			$("#regis_sidebar").hide();
+			$("#regis_sidebar").css("width", "0");
+			$("#regis_map_target").css("width", "100%");
+		};
+		ixmaps.showBoth = function() {
+			$("#regis_sidebar").show();
+			$("#regis_sidebar").css("width", "33%");
+			$("#regis_map_target").css("width", "66%");
+		};
+
+		ixmaps.resize();
+
+		$(window).resize(function() {
+			ixmaps.resize();
+		});
+
+	</script>
+
+</body>
+
+</html>

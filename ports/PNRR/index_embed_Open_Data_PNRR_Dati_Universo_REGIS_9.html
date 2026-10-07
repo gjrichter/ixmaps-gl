@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+ixmaps map embed html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2023/04/22 $
+$Author: guenter richter $
+$Id:index_embed_Open_Data_PNRR_Dati_Universo_REGIS_III.html 1 2023-04-22 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>Dati aperti PNRR: la mappa per esplorarli</title>
+	<meta name="description" content="La mappa interattiva per esplorare i dati aperti della piattaforma ReGis pubblicati su Italiadomani">
+
+	<meta property="og:url" content="https://gjrichter.github.io/pages/PNRR/index_embed_Open_Data_PNRR_Dati_Universo_REGIS.html">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Dati aperti PNRR: la mappa per esplorarli">
+	<meta property="og:description" content="La mappa interattiva per esplorare i dati aperti della piattaforma ReGis pubblicati su Italiadomani">
+	<meta property="og:image" content="https://user-images.githubusercontent.com/77018886/239703362-afea9f57-271f-4c0b-99b2-6725b36d88e6.png">
+
+
+	<meta name="twitter: card" content="summary_large_image">
+	<meta property="twitter:domain" content="gjrichter.github.io">
+	<meta property="twitter:url" content="https://gjrichter.github.io/pages/PNRR/index_embed_Open_Data_PNRR_Dati_Universo_REGIS.html">
+	<meta name="twitter:title" content="Dati aperti PNRR: la mappa per esplorarli">
+	<meta name="twitter:description" content="La mappa interattiva per esplorare i dati aperti della piattaforma ReGis pubblicati su Italiadomani">
+	<meta name="twitter: image" content="https://user-images.githubusercontent.com/77018886/239703362-afea9f57-271f-4c0b-99b2-6725b36d88e6.png">
+
+	<style>
+		table {
+			background: #F7F6EF;
+			border-radius: 0.3em;
+			xxpadding: 0.4em 0.8em;
+		}
+
+		td {
+			border: dotted #888800 0.1px;
+		}
+
+		button {
+			background: #F7F6EF;
+			border: #dddddd solid 1px;
+			border-radius: 0.3em;
+			padding: 0.4em 0.8em;
+		}
+
+		button:hover {
+			cursor: pointer;
+		}
+
+		.left {
+			text-align: left;
+		}
+
+		a {
+			text-decoration: none;
+		}
+
+	</style>
+
+	<style type="text/css">
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6 {
+			font-family: arial, helvetica;
+			color: #888;
+			font-weight: 300;
+		}
+
+		p {
+			font-family: arial, helvetica;
+			color: #444;
+			font-weight: 300;
+		}
+
+		a {
+			font-family: arial, helvetica;
+			font-weight: 100;
+			color: black;
+			text-decoration: none;
+		}
+
+		a:hover {
+			color: #000088;
+			text-decoration: none;
+		}
+
+		.filter-input {
+			width: 275px;
+			margin: 0;
+			float: left;
+			outline: none;
+			font-size: 1.2em;
+			border: 0;
+			margin-left: 0.2em;
+			font-family: Raleway, Arial;
+			font-weight: 300;
+			color: #444;
+		}
+
+		.minvalue,
+		.maxvalue {
+			margin-left: 1em;
+			margin-right: 1em;
+		}
+
+		.slider-handle {
+			position: absolute;
+			top: 0px;
+			width: 20px;
+			height: 20px;
+			background-color: #ddd;
+			background-image: none;
+			filter: none;
+			box-shadow: rgba(255, 255, 255, 0.2) 0px 1px 0px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px;
+			background-repeat: repeat-x;
+			border-width: 0px;
+			border-style: solid;
+			border-color: transparent;
+			border-image: initial;
+		}
+
+	</style>
+	<link rel="stylesheet" href="./font/IcoMoon-Free.css">
+
+</head>
+
+<body style='text-align:center;background:#F7F6EF'>
+
+	<div id="regis_map" style="float:left;width:66%"></div>
+
+	<!-- ------------------------------------- -->
+	<!--                                       -->
+	<!-- s i d e b a r                         -->
+	<!--                                       -->
+	<!-- ------------------------------------- -->
+
+	<!-- ------------------------------------- -->
+	<!-- user buttons to change the map charts -->
+	<!-- ------------------------------------- -->
+
+	<div id="regis_sidebar" style="width:33%;float:right;">
+
+		<!-- ------------------------------------- -->
+		<!-- dynamic theme info, changes on zoom   -->
+		<!-- ------------------------------------- -->
+
+		<div style="font-family:open sans;text-align:left;margin:0.5em 0.5em 0em 0em;">
+
+			Nel quadro della mappa ci sono attualmente visibile <span id="no_progetti" style="font-weight:bold;font-size:1.2em">...</span> progetti
+			con un finanziamento complessivo di<br><span id="sum_importi" style="font-weight:bold;font-size:1.8em;line-height:1.5em">...</span>&nbsp; €<br>
+			<span id="ambiti" style="display:none">di questi</span>
+			<span id="ambito-nazionale" style="display:none"><span id="sum_importi_nazionali" style="font-weight:bold;font-size:1em">...</span>&nbsp; € in ambito nazionale e</span>
+			<span id="ambito-regionale" style="display:none"> <span id="sum_importi_tutti" style="font-weight:bold;font-size:1em">...</span>&nbsp; € in ambito regionale</span>
+
+			<div id="filter-div" style="margin-top:0.8em;margin-right:2em;font-size:0.9em;background-color:#F7F6EF;padding:0.2em;border-color:#aaaaaa;display:none">
+				<span id="filter"></span>
+				<button style="font-size:0.8em" onclick="ixmaps.message('rimuovo filtri ...');clearFilter();">x</button>
+			</div>
+
+			<p style="font-size:0.9em">
+				Si consiglia di utilizzare <b>l'elenco sottostante</b> per <b>filtrare i progetti</b> del PNRR sulla mappa. Per <b>condividere</b> i risultati, è possibile utilizzare questo <a style="color:#0088dd" href="javascript:void()" onclick="$('#popup1').html((ixmaps.szActualUrl));$('#popup1').toggle()">link</a>. Info sulla mappa <a style="color:#0088dd" href="javascript:void()" onclick="$('#info-overlay').show('slow')">qui</a>.
+			</p>
+
+			<textarea id="popup1" style="font-size:1em;text-align:left;width:250px;height:150px;overflow:auto;background:transparent;display:none"></textarea>
+
+			<div id="scroll-area" style="height:600px;overflow:auto;margin-top:0em">
+
+				<div id="show-facets-div" style="margin-right:0.5em"> </div>
+				mostra <a style="color:#0088dd" href="javascript:void()" onclick="$('#show-list-div').toggle()">schede progetti</a> (max. 100)
+				<div id="show-list-div" style="margin-right:0.5em;display:none"> here must go the item list</div>
+
+				<!-- ------------------------------------- -->
+				<!-- static footer, annotations            -->
+				<!-- ------------------------------------- -->
+
+				<hr>
+				<p style="font-size:1em;">Fonte dati:<br>Italia<b>domani</b> - Catalogo Open Data</p>
+				<p style="font-size:0.9em;"><a style="color:#0088dd" href="https://aborruso.quarto.pub/italiadomani/" target="_blank">Descrizione dei dati</a> ed <a style="color:#0088dd" href="https://pnrr.datibenecomune.it/fonti/regis/mappa.html" target="_blank">istruzioni</a> per l'uso di questa mappa si trovano su pagine dedicate dell'associazione <b>onData</b>.</p>
+
+				<p style="font-size:0.9em;">Link ai dati: <a style="color:#0088dd" href="https://www.italiadomani.gov.it/content/sogei-ng/it/it/catalogo-open-data.html?orderby=%40jcr%3Acontent%2FobservationDateInEvidence&sort=desc" target="_blank">ItaliaDomani Open Data PNRR</a>
+				</p>
+				<!--
+			<p><small><b>nota bene:</b><br> - si può clicare sui colori della leggenda per isolare 1 o più categorie<br>
+					- per evitare tempi di aggiornamento grafici lunghi, conviene zoomare un po', prima di attivare l'aggregazione al livello comunale<small></small></p>
+			-->
+				
+				<p>Simboli nella visualizzazione dei singoli progetti:<br>
+					<img src="../../pages/PNRR/img/megafono.png" style="vertical-align:middle;height:16px"> in gara,
+					<img src="../../pages/PNRR/img/515345.png" style="vertical-align:middle;height:16px"> aggiudicato</p>
+
+				<table>
+					<tr>
+						<td>
+							<button onclick="sizeCharts(0.90)">-</button>
+						</td>
+						<td>
+							<span style="font-size:0.8em"> &nbsp; grandezza grafici &nbsp;</span>
+						</td>
+						<td>
+							<button onclick="sizeCharts(1.1)">+</button>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<button onclick="sizeTexts(0.90)">-</button>
+						</td>
+						<td>
+							<span style="font-size:0.8em"> &nbsp; grandezza testi &nbsp;</span>
+						</td>
+						<td>
+							<button onclick="sizeTexts(1.1)">+</button>
+						</td>
+					</tr>
+
+				</table>
+
+
+				<p style="font-size:0.9em;">
+					Crea <a style="color:#0088dd" href="javascript:void()" onclick="$('#popup').html((ixmaps.szActualUrl));$('#popup').toggle()">link</a> condivisibile,
+					mostra tabella <a style="color:#0088dd" href="javascript:void()" onclick="ixmaps.popupThemeTable()">dati</a>.Info sulla mappa <a style="color:#0088dd" href="javascript:void()" onclick="$('#info-overlay').show('slow')">qui</a>.
+				</p>
+
+				<textarea id="popup" style="font-size:1em;text-align:left;width:250px;height:150px;overflow:auto;background:transparent;display:none"></textarea>
+				
+				<hr>
+				<p style="font-size:0.9em;">
+					Filteri predefiniti:<br>  
+					missioni <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE missione in (M4,M5)')">M4+M5</a>, 
+					missioni <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE missione in (M2,M5)')">M2+M5</a>, 
+					missioni <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE missione in (M1,M2,M3)')">M1+M2+M3 </a>,
+					missioni <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE missione in (M5,M6)')">M5+M6</a>,
+					missioni <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE missione in (M2,M6)')">M2+M6</a>
+				</p>
+
+				<p style="font-size:0.9em;">
+					progetti <a style="color:#0088dd" href="javascript:void()" onclick='__setFacetFilter("WHERE \"stato di avanzamento\" IN (in gara,aggiudicato)")'>in gara + aggiudicati</a>
+				</p>
+
+				<p style="font-size:0.9em;">
+					importo <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE importo > 500000000')">> 500 000 000</a><br> 
+					importo <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE importo > 100000000')">> 100 000 000</a><br> 
+					importo <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE importo > 10000000')">> 10 000 000</a><br> 
+					importo <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE importo < 10000000')">< 10 000 000</a><br> 
+					importo <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE importo < 1000000')">< 1 000 000</a><br> 
+					importo <a style="color:#0088dd" href="javascript:void()" onclick="__setFacetFilter('WHERE importo < 100000')">< 100 000</a> 
+				</p>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- onmap buttons -->
+
+	<div id="onmap-buttons" style="position:absolute;bottom:3em;right:35%">
+
+		<table>
+			<tr>
+				<td>
+					<button onclick="sizeCharts(0.90)">-</button>
+				</td>
+				<td>
+					<span style="font-size:0.8em"> &nbsp; grandezza grafici &nbsp;</span>
+				</td>
+				<td>
+					<button onclick="sizeCharts(1.1)">+</button>
+				</td>
+			</tr>
+
+		</table>
+
+	</div>
+
+	<!-- sidebar switch -->
+
+	<div id="sidebarnav" style="position:absolute;left:0px;bottom:20px;opacity:0.9;width:100%;text-align:center;display:none">
+		<div>
+			<span id="sidebarbuttons" data-toggle="buttons" style="padding:8px 16px 8px 18px;border:solid #ddd 1px;border-radius:2px;background-color:#ffffff;">
+				<a class="btn btn-link" href="javascript:void();" onclick="ixmaps.showMap();">Mappa
+				</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+				<a class="btn btn-link" href="#javascript:void();" onclick="ixmaps.showSidebar();">Elenco finanziamenti
+				</a>
+			</span>
+		</div>
+	</div>
+
+	<!-- Nota Bene -->
+
+	<div id="info-overlay" style="position:absolute;bottom:20%;right:5%;width:90%;max-height:70%;display:none;z-index:99999">
+		<div style="background:#F7F6EF;border:solid #444 0.1px;border-radius:0.5em;max-width:720px;margin:auto;box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);">
+			<div style="float:right;margin-top:0.5em;margin-right:0.5em;font-size:22px">
+				<a href="javascript:void()" onclick="$('#info-overlay').hide('slow')"><i class="icon shareIcon share_bitly icon-cancel-circle" title="hide" tabindex="-1"></i></a>
+			</div>
+			<div style="margin:1em;">
+				<h2>nota bene:</h2>
+				<h3>Questa non è la mappa del PNRR.</h3>
+				<p>Questa mappa rappresenta i <b>progetti pubblicati sul catalogo open data di Italiadomani</b>, ovvero sul sito ufficiale del Piano.
+					La fonte di questi dati è <b>ReGiS</b>, il sistema di <b>rendicontazione</b> e <b>controllo</b> delle misure e dei progetti finanziati dal Piano Nazionale di Ripresa e Resilienza.</p>
+
+				<ul style="text-align:left;margin-left:-1em">
+					<li><p>Utilizza <b>l'elenco a destra</b> e <b>la mappa</b> per <b>filtrare</b> i progetti del PNRR. La lista e la mappa sono sincronizzate.</p></li>
+					<li><p>Per <b>condividere</b> una <b>mappa personalizzata</b> con filtri e posizione, è possibile creare <b>un link</b> personalizzato</p></li></ul>
+
+				<p style="font-size:0.9em;"><a style="color:#0088dd" href="https://pnrr.datibenecomune.it/fonti/regis/" target="_blank">Descrizione dei dati</a> ed <a style="color:#0088dd" href="https://pnrr.datibenecomune.it/fonti/regis/mappa.html" target="_blank">istruzioni</a> per l'uso di questa mappa si trovano su pagine dedicate dell'associazione <b>onData</b>.</p>
+				
+				<p style="font-size:0.9em;">Link ai dati: <a style="color:#0088dd" href="https://www.italiadomani.gov.it/content/sogei-ng/it/it/catalogo-open-data.html?orderby=%40jcr%3Acontent%2FobservationDateInEvidence&sort=desc" target="_blank">ItaliaDomani Open Data PNRR</a>, data di osservazione: <b>31.03.2025 (v9)</b>	
+				</p>
+
+			</div>
+		</div>
+	</div>
+
+	<!-- ------------------------------------- -->
+	<!--                                       -->
+	<!-- c o d e                         -->
+	<!--                                       -->
+	<!-- ------------------------------------- -->
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+	<script src="../../ixmaps-gl.js"></script>
+	<script type="text/javascript" src="./format.js"></script>
+	<script type="text/javascript" src="./facet.js"></script>
+	<script type="text/javascript" src="./show_facets.js"></script>
+	<script type="text/javascript" src="./list.js"></script>
+
+	<script type="text/javascript" src="./show_word_cloud.js"></script>
+	<script src="./d3/d3.js" charset="utf-8"></script>
+	<script src="./d3/d3.layout.cloud.js"></script>
+	<script src="./d3/d3.wordcloud.js"></script>
+	<!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+		
+		// ---------------------------------------------------
+		//
+		// h e l p e r
+		//
+		// ---------------------------------------------------
+
+		var sizeCharts = function(nFactor) {
+			ixmaps.changeThemeStyle(null, 'chart', 'scale:' + nFactor, 'factor');
+			ixmaps.changeThemeStyle(null, 'chart_prov', 'scale:' + nFactor, 'factor');
+			ixmaps.changeThemeStyle(null, 'chart_reg', 'scale:' + nFactor, 'factor');
+			ixmaps.changeThemeStyle(null, 'details', 'scale:' + nFactor, 'factor');
+			ixmaps.changeThemeStyle(null, 'details_3', 'scale:' + nFactor, 'factor');
+
+			themesA = ixmaps.getThemes();
+			for (i in themesA) {
+				if (themesA[i].szId.match(/chart|details/) && themesA[i].fVisible) {
+					__actualizeUrl(themesA[i]);
+					break;
+				}
+			}
+		}
+		var sizeTexts = function(nFactor) {
+			ixmaps.changeThemeStyle(null, 'province_sum', 'scale:' + nFactor, 'factor');
+			ixmaps.changeThemeStyle(null, 'province_sum_2', 'scale:' + nFactor, 'factor');
+			ixmaps.changeThemeStyle(null, 'regioni_sum', 'scale:' + nFactor, 'factor');
+		}
+		var select = function(element) {
+			element.parent().parent().parent().children().children(".radio").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+			element.parent().prev().html("&bullet;");
+		}
+		var clearFilter = function(szFilter) {
+			ixmaps.changeThemeStyle(null, 'choropleth', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'chart', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'chart_prov', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'chart_reg', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'details', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'details_3', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'province_sum', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'province_sum_2', 'filter', 'remove');
+			ixmaps.changeThemeStyle(null, 'regioni_sum', 'filter', 'remove');
+		}
+
+		// ---------------------------------------------------
+		//
+		// create actual, map zoom dependent theme statistics
+		//
+		// ---------------------------------------------------
+
+		ixmaps.statistics = function(szId) {
+
+			var themeObj = ixmaps.getThemeObj(szId);
+			var lastFilter = themeObj.szFilter || "";
+
+			if (szId == "chart" || szId == "chart_prov" || szId == "chart_reg" || szId == "details") {
+
+				_LOG("=== statistics start ===");
+
+				var szFieldsA = ["importo"];
+				var facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map");
+				var projects = facetsA[0].data ? ixmaps.formatValue(facetsA[0].data.length, 0, "BLANK") : "0";
+				var importi = facetsA[0].sum ? ixmaps.formatValue(facetsA[0].sum, 0, "BLANK") : "0";
+				
+				console.log("=======================");
+				console.log(facetsA);
+				console.log("=======================");
+				
+				// look for explicit column with number of projects
+				// if facet of column returned, use this for number of projects in legend
+				
+				szFieldsA = ["projects_n"];
+				facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map");
+				if (facetsA[0]){
+					projects = facetsA[0].sum ? ixmaps.formatValue(facetsA[0].sum, 0, "BLANK") : "0";
+				}
+				
+				$("#no_progetti").html(projects);
+				$("#sum_importi").html(importi);
+				
+				facetsA = ixmaps.data.getFacets("WHERE \"Descrizione Comune\" like \"ambito\"", 'user_legend', szFieldsA, szId, "map");
+				if (facetsA && facetsA[0] && facetsA[0].data && facetsA[0].data.length) {
+					projects = ixmaps.formatValue(facetsA[0].data.length, 0, "BLANK");
+					importi = ixmaps.formatValue(facetsA[0].sum, 0, "BLANK");
+					$("#no_progetti_nazionali").html(projects);
+					$("#sum_importi_nazionali").html(importi);
+					$("#ambito-nazionale").show();
+				} else {
+					$("#ambito-nazionale").hide();
+				}
+
+				facetsA = ixmaps.data.getFacets("WHERE \"Descrizione Comune\" like \"tutti\"", 'user_legend', szFieldsA, szId, "map");
+				if (facetsA && facetsA[0] && facetsA[0].data && facetsA[0].data.length) {
+					projects = ixmaps.formatValue(facetsA[0].data.length, 0, "BLANK");
+					importi = ixmaps.formatValue(facetsA[0].sum, 0, "BLANK");
+					$("#no_progetti_tutti").html(projects);
+					$("#sum_importi_tutti").html(importi);
+					$("#ambito-regionale").show();
+				} else {
+					$("#ambito-regionale").hide();
+				}
+
+				if ($("#ambito-nazionale").css("display") == "inline" || $("#ambito-regionale").css("display") == "inline") {
+					$("#ambiti").show();
+				} else {
+					$("#ambiti").hide();
+				}
+
+				_LOG("=== statistics done ===");
+
+				ixmaps.data.fShowFacetValues = true;
+				//szFieldsA = ["missione", "Descrizione Submisura", "stato di avanzamento", "Descrizione Regione", "Descrizione Provincia", "Descrizione Comune", "Soggetto attuatore", "Descrizione Misura", "CUP Descrizione Settore", "CUP Descrizione Categoria", "Sintesi progetto", "CUP", "CIG", "Denominazione Aggiudicatario", "tipo finanziamento","Tipologia procedura di attivazione"];
+				szFieldsA = ["missione", "Descrizione Submisura",,"Descrizione Fase Attuale Categorie", "stato di avanzamento", "Ritardi", "Descrizione Regione", "Descrizione Provincia", "Descrizione Comune", "Soggetto attuatore", "Descrizione Misura", "CUP Descrizione Settore", "CUP Descrizione Categoria", "Sintesi progetto", "CUP", "CIG", "Denominazione Aggiudicatario", "tipo finanziamento","Tipologia procedura di attivazione","Descrizione Fase Attuale Categorie"];
+				facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map","NONUMERIC");
+				ixmaps.data.showFacets(lastFilter, "show-facets-div", facetsA);
+				
+				$('#show-list-div').hide();
+				ixmaps.data.makeItemList(lastFilter,"show-list-div",szId);
+			}
+		};
+
+		// ---------------------------------------------------
+		//
+		// theme change handler 
+		//
+		// ---------------------------------------------------
+
+		var __actualizeUrl = function(themeObj) {
+			ixmaps.szActualUrl = window.location.hostname + window.location.pathname;
+			ixmaps.szActualUrl += "?filter=" + encodeURIComponent(themeObj.szFilter);
+			ixmaps.szActualUrl += "&scale=" + themeObj.nScale;
+			ixmaps.szActualUrl += "&view=[" + ixmaps.getCenter().lat + "," + ixmaps.getCenter().lng + "]," + ixmaps.getZoom();
+			$('#popup').html((ixmaps.szActualUrl));
+			$('#popup1').html((ixmaps.szActualUrl));
+		};
+
+		var old_onDrawTheme = ixmaps.htmlgui_onDrawTheme;
+		// intercept theme creation, to mark active themes
+		ixmaps.htmlgui_onDrawTheme = function(szId) {
+
+			ixmaps.themesDrawnA = ixmaps.themesDrawnA || [];
+			ixmaps.themesDrawnA[szId] = true;
+
+			var themeObj = ixmaps.getThemeObj(szId);
+			if (themeObj.szFlag.match(/NOLEGEND/)) {
+				try {
+					old_onDrawTheme(szId);
+				} catch (e) {}
+				return;
+			};
+
+			if (!themeObj.fVisible) {
+				return;
+			}
+
+			if ( szId == "chart_reg" ){
+				ixmaps.removeTheme(null,"chart_reg_pivot");
+			} 
+			
+			ixmaps.statistics(szId);
+
+			var nOpacity = (ixmaps.getZoom() - 7) / 10;
+			ixmaps.setBasemapOpacity(null, nOpacity, "absolute");
+
+
+			if (themeObj.szFilter) {
+				var szFilterClipped = (themeObj.szFilter.length > 100) ? (themeObj.szFilter.substr(0, 100) + " ... ") : themeObj.szFilter;
+				$("#filter").html(szFilterClipped);
+				ixmaps.setTitle("<div style='font-family:open sans;font-size:0.7em;color:black;padding:0.5em;background:rgba(247, 246, 239, 0.5);width:30%'><i class='fa fa-filter fa-fw'></i>filtro: " + szFilterClipped.split("WHERE")[1] + "</div>");
+				$("#filter-div").show();
+			} else {
+				$("#filter").html("");
+				ixmaps.setTitle("");
+				$("#filter-div").hide();
+			}
+
+			__actualizeUrl(themeObj);
+
+			$("#scroll-area").height(window.innerHeight - $("#scroll-area").offset().top - 50);
+
+			try {
+				old_onDrawTheme(szId);
+			} catch (e) {}
+		};
+
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// t h e   m a p 
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		/**
+		 ** ************************************
+		 ** define the ixmaps themes and project
+		 ** ************************************
+		 **/
+
+		/**
+		 ** default parameter which can be changed by url query parameter	
+		 **/
+		
+		var __filter = "";
+		var __lat = 41.86956082699455;
+		var __lon = 13.150634765625002;
+		var __zoom = 6;
+		var __scale_chart = 1;
+		var __legend = true;
+		
+		/**
+		 ** get query params and adapt theme and project definitions 	
+		 **/
+
+		const params = new Proxy(new URLSearchParams(window.location.search), {
+			get: (searchParams, prop) => searchParams.get(prop),
+		});
+
+		if (params.filter) {
+			__filter = params.filter;
+		}
+
+		if (params.view) {
+			var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+			__lat = latlonA[0];
+			__lon = latlonA[1];
+			__zoom = parseInt(params.view.split(',')[2]);
+		};
+
+		if (params.scale) {
+			__scale_chart = params.scale;
+		};
+
+		if (params.legend) {
+			__legend = params.legend;
+		};
+
+		/**
+		 ** strings used by the map 	
+		 **/
+
+		attribution =
+			"powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
+
+		
+		// ---------------------------------------------------
+		// t h e   m a p   l a y e r 
+		// ---------------------------------------------------
+
+		/**
+		 ** define static layer with reference shapes (comuni, province, regioni ) 
+		 **/
+
+		/* 1. centroids of 2011, by curtesy of Andrea Borruso */
+		var __georef_urban =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://raw.githubusercontent.com/aborruso/centroidiurbanfabric/master/output/ElencoUnitaAmministrative2011.geojson",
+					type: "geojson"
+				})
+				.binding({
+					id: "PRO_COM_T",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["none"],
+					linecolor: "none",
+					linewidth: "1",
+					scale: "0.0001"
+				})
+			);
+
+		/* 2. last istat data (2022), for changes since 2011 */
+		var __georef =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/comuni_2022/Com01012022_s_WGS84.topojson.gz",
+					type: "topojson"
+				})
+				.binding({
+					id: "PRO_COM_T",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["none"],
+					linecolor: "none",
+					linewidth: "0.3",
+					sizefield: "Shape_Area"
+				})
+			);
+
+
+		/* 3. last istat data (2022), province */
+		var __georef_prov =
+			ixmaps.layer("ITALIA_Province_2022", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/province_2022/Prov01012022_g_WGS84.topojson.gz",
+					type: "topojson"
+				})
+				.binding({
+					id: "COD_PROV",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["none"],
+					linecolor: "black",
+					linewidth: "0.1",
+					sizefield: "Shape_Area"
+				})
+			);
+
+		/* 4. last istat data (2022), regioni */
+		var __georef_reg =
+			ixmaps.layer("ITALIA_Regioni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/regioni_2022/Reg01012022_s_WGS84.topojson.gz",
+					type: "topojson"
+				})
+				.binding({
+					id: "COD_REG",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["rgba(255,255,255,0.1)"],
+					linecolor: "black",
+					linewidth: "0.3",
+					sizefield: "Shape_Area"
+				})
+			);
+
+		/* 5. miniatura d'Italia per ambito nazionale */
+		var __georef_mini =
+			ixmaps.layer("ITALIA_Regioni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/minimap/italia_miniatura.topojson",
+					type: "topojson"
+				})
+				.binding({
+					id: "COD_RIP",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["rgba(155,155,155,0.3)"],
+					linecolor: "none",
+					linewidth: "1",
+					sizefield: "Shape_Area"
+				})
+			);
+
+		/**
+		 ** define dynamic layer with visualizzation themes 
+		 **/
+
+		var __CUP_PNRR_choropleth =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data"
+				})
+				.binding({
+					position: "PROCOM",
+					value: "missione",
+					size: "importo",
+					title: "Descrizione Comune"
+				})
+				.filter(__filter)
+				.type("CHOROPLETH|DOMINANT|CATEGORICAL|ORDER|AGGREGATE|SUM|DOPACITYMAX|NOLEGEND")
+				.style({
+					values: ["M1", "M2", "M3", "M4", "M5", "M6"],
+					label: ["M1 - Digitalizz., innov., competi., cultura e turismo",
+						"M2 - Rivoluzione verde e trans. eco.",
+						"M3 - Infrastrutture per una mobilità sostenibile",
+						"M4 - Istruzione e ricerca",
+						"M5 - Inclusione e coesione",
+						"M6 - Salute"
+					],
+					colorscheme: [
+						"#5BBBEB",
+						"#92C151",
+						"#EA425B",
+						"#F49E4B",
+						"#B671DC",
+						"#FACB49"
+					],
+					showdata: "true",
+					units: "€",
+					dopacitypow: "3",
+					dopacityscale: "0.5",
+					chartupper: "1:2000000",
+					aggregationfield: "PROCOM",
+					name: "choropleth"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9</b>",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_chart =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data"
+				})
+				.binding({
+					position: "PROCOM",
+					value: "missione",
+					size: "importo",
+					title: "Descrizione Comune"
+				})
+				.filter(__filter)
+				.type("CHART|SYMBOL|SEQUENCE|STAR|DOPACITY|GLOW|SORT|DOWN|SIZE|CATEGORICAL|ORDER|AGGREGATE|SUM|VALUES|INLINETEXT|TITLE|BOX|COMPACTLEGEND")
+				.style({
+					values: ["M1", "M2", "M3", "M4", "M5", "M6"],
+					label: ["M1 - Digitalizz., innov., competi., cultura e turismo",
+						"M2 - Rivoluzione verde e trans. eco.",
+						"M3 - Infrastrutture per una mobilità sostenibile",
+						"M4 - Istruzione e ricerca",
+						"M5 - Inclusione e coesione",
+						"M6 - Salute"
+					],
+					colorscheme: [
+						"#5BBBEB",
+						"#92C151",
+						"#EA425B",
+						"#F49E4B",
+						"#B671DC",
+						"#FACB49"
+					],
+					fillopacity: "0.66",
+					linecolor: "white",
+					linewidth: "1",
+					valuescale: "1.2",
+					showdata: "true",
+					units: "€",
+					scale: __scale_chart,
+					dopacitypow: "2",
+					textscale: "0.7",
+					boxopacity: "0",
+					bordercolor: "none",
+					normalsizevalue: "1000000000",
+					showdata: "true",
+					aggregationscale: [
+						"1:1", "PROCOM",
+						"1:10000000", "Descrizione Provincia"
+					],
+					boxupper: "1:250000",
+					glowlower: "1:250000",
+					valueupper: "1:1000000",
+					chartupper: "1:2000000",
+					chartlower: "1:2500",
+					name: "chart"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9 03/2025</b>",
+					description: "nota bene: <b>Livello comunale</b> include <b>solo</b> i progetti direttamente associati ad un comune",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_chart_reg =
+			ixmaps.layer("ITALIA_Regioni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_fintot_iter_pivot_reg_sub_avanz_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data_reg"
+				})
+				.binding({
+					position: "Regione",
+					value: "missione",
+					size: "importo",
+					title: "Descrizione Regione"
+				})
+				.filter(__filter)
+				.type("CHART|SYMBOL|SEQUENCE|GLOW|SIZEP2|STAR|SORT|DOWN|DOPACITY|CATEGORICAL|ORDER|AGGREGATE|SUM|INLINETEXT|COMPACTLEGEND")
+				.style({
+					values: ["M1", "M2", "M3", "M4", "M5", "M6"],
+					label: ["M1 - Digitalizz., innov., competi., cultura e turismo",
+						"M2 - Rivoluzione verde e trans. eco.",
+						"M3 - Infrastrutture per una mobilità sostenibile",
+						"M4 - Istruzione e ricerca",
+						"M5 - Inclusione e coesione",
+						"M6 - Salute"
+					],
+					colorscheme: [
+						"#5BBBEB",
+						"#92C151",
+						"#EA425B",
+						"#F49E4B",
+						"#B671DC",
+						"#FACB49"
+					],
+					showdata: "true",
+					units: "€",
+					scale: __scale_chart,
+					normalsizevalue: "2000000000",
+					dopacitypow: "2",
+					linecolor: "white",
+					linewidth: "3",
+					lookuptonumber: "true",
+					xxglowupper: "1:1000000",
+					chartlower: "1:5000000",
+					name: "chart_reg"
+				})
+				.meta({
+					title: "<b>PNRR Universo REGIS - v9 03/2025</b>",
+					description: "nota bene: <b>aggregazione a livello regionale</b>; include i progetti per <b>tutti i comuni</b> e dell’<b>ambito nazionale</b>.",
+					splash: "scaricando dati ..."
+				})
+			);
+		
+		var __CUP_PNRR_REGIONI_SUM =
+			ixmaps.layer("ITALIA_Regioni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_fintot_iter_pivot_reg_sub_avanz_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data_reg"
+				})
+				.binding({
+					position: "Regione",
+					value: "importo",
+					title: "Descrizione Regione"
+				})
+				.filter(__filter)
+				.type("RECT|CHART|SYMBOLS|SIZEP4|TEXTONLY|AGGREGATE|VALUES|SUM|NOLEGEND")
+				.style({
+					colorscheme: ["white"],
+					symbols: ["label"],
+					units: "€",
+					showdata: "true",
+					lookuptonumber: "true",
+					scale: "1",
+					align: "baseline",
+					rangescale: "0.2",
+					textcolor: "#888888",
+					textscale: "1.3",
+					titlefield: "Descrizione Regione",
+					chartlower: "1:5000000",
+					valuescale: "0.8",
+					name: "regioni_sum"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9</b>",
+					snippet: "include i progetti al livello regionale (tutti comuni) e del Ambito Nazionale",
+					splash: "scaricando dati ..."
+				})
+			);
+		
+
+		var __CUP_PNRR_PROJECTS =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data"
+				})
+				.binding({
+					position: "PROCOM",
+					value: "missione",
+					title: "Descrizione Comune"
+				})
+				.filter(__filter)
+				.type("CHART|SYMBOL|VALUES|FIXSIZE|INLINETEXT|MULTIQUAD|SORT|CATEGORICAL|SUM|BOX|TITLE|COMPACTLEGEND")
+				.style({
+					values: ["M1", "M2", "M3", "M4", "M5", "M6"],
+					label: ["M1 - Digitalizz., innov., competi., cultura e turismo",
+						"M2 - Rivoluzione verde e trans. eco.",
+						"M3 - Infrastrutture per una mobilità sostenibile",
+						"M4 - Istruzione e ricerca",
+						"M5 - Inclusione e coesione",
+						"M6 - Salute"
+					],
+					colorscheme: [
+						"#5BBBEB",
+						"#92C151",
+						"#EA425B",
+						"#F49E4B",
+						"#B671DC",
+						"#FACB49"
+					],
+					fillopacity: "0.8",
+					showdata: "true",
+					valuefield: "importo",
+					sizefield: "importo",
+					units: "€",
+					gridx: "20",
+					scale: "0.1",
+					normalsizevalue: "1",
+					linecolor: "white",
+					linewidth: "0.1",
+					rangescale: "1.1",
+					valuescale: "0.3",
+					boxopacity: "0",
+					boxmargin: "2",
+					textscale: "4",
+					textcolor: "black",
+					chartupper: "1:250000",
+					name: "details"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9</b><br>i singoli progetti",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_PROJECTS_ICONS =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data"
+				})
+				.binding({
+					position: "PROCOM",
+					value: "stato di avanzamento",
+					title: "Descrizione Comune"
+				})
+				.filter(__filter)
+				.type("CHART|SYMBOL|FIXSIZE|INLINETEXT|MULTIQUAD|CATEGORICAL|SUM|COMPACTLEGEND")
+				.style({
+					values: ["in gara","aggiudicato","progetto"],
+					symbols: [
+						"../../../../pages/PNRR/img/megafono.png",
+						"../../../../pages/PNRR/img/515345.png",
+						"none"],
+					colorscheme: ["green"],
+					fillopacity: "0.0008",
+					shadow: "true",
+					showdata: "true",
+					valuefield: "importo",
+					sizefield: "importo",
+					units: "€",
+					gridx: "20",
+					scale: "0.1",
+					normalsizevalue: "15",
+					offsety: "-2",
+					offsetx: "-5",
+					rangescale: "1.1",
+					valuescale: "0.3",
+					boxopacity: "0",
+					boxmargin: "2",
+					textscale: "1",
+					textcolor: "black",
+					chartupper: "1:250000",
+					name: "details_3"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9</b><br>i singoli progetti",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_PROJECTS_SUM =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data"
+				})
+				.binding({
+					position: "PROCOM",
+					value: "missione",
+					size: "importo",
+					title: "Descrizione Comune"
+				})
+				.filter(__filter)
+				.type("CHART|BAR|HORZ|SIZEP4|SORT|VALUES|CATEGORICAL|AGGREGATE|SUM|BOX|TITLE|COMPACTLEGEND")
+				.style({
+					values: ["M1", "M2", "M3", "M4", "M5", "M6"],
+					label: ["M1 - Digitalizz., innov., competi., cultura e turismo",
+						"M2 - Rivoluzione verde e trans. eco.",
+						"M3 - Infrastrutture per una mobilità sostenibile",
+						"M4 - Istruzione e ricerca",
+						"M5 - Inclusione e coesione",
+						"M6 - Salute"
+					],
+					colorscheme: [
+						"#5BBBEB",
+						"#92C151",
+						"#EA425B",
+						"#F49E4B",
+						"#B671DC",
+						"#FACB49"
+					],
+					showdata: "true",
+					gridx: "10",
+					scale: "1",
+					rangescale: "0.2",
+					valuescale: "0.8",
+					textscale: "1.3",
+					units: "€",
+					normalsizevalue: "100000",
+					boxopacity: "0.5",
+					boxmargin: "5",
+					chartupper: "1:100000",
+					name: "details_sum"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9</b>",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_chart_prov =
+			ixmaps.layer("ITALIA_Province_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_fintot_iter_pivot_prov_sub_avanz_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data_prov"
+				})
+				.binding({
+					position: "Provincia",
+					value: "missione",
+					size: "importo",
+					title: "Descrizione Provincia"
+				})
+				.filter(__filter)
+				.type("CHART|SYMBOL|GLOW|DOPACITY|SEQUENCE|STAR|SORT|DOWN|CATEGORICAL|ORDER|AGGREGATE|SUM|INLINETEXT|COMPACTLEGEND")
+				.style({
+					values: ["M1", "M2", "M3", "M4", "M5", "M6"],
+					label: ["M1 - Digitalizz., innov., competi., cultura e turismo",
+						"M2 - Rivoluzione verde e trans. eco.",
+						"M3 - Infrastrutture per una mobilità sostenibile",
+						"M4 - Istruzione e ricerca",
+						"M5 - Inclusione e coesione",
+						"M6 - Salute"
+					],
+					colorscheme: [
+						"#5BBBEB",
+						"#92C151",
+						"#EA425B",
+						"#F49E4B",
+						"#B671DC",
+						"#FACB49"
+					],
+					showdata: "true",
+					lookuptonumber: "true",
+					units: "€",
+					scale: __scale_chart,
+					linecolor: "white",
+					linewidth: "3",
+					dopacitypow: "5",
+					normalsizevalue: "2000000000",
+					chartupper: "1:5000000",
+					chartlower: "1:2000000",
+					name: "chart_prov"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9 03/2025</b>",
+					description: "<b>nota bene:</b> L’aggregazione a livello provinciale include anche i progetti per tutti i comuni, ma non i progetto dell'ambito nazionale.",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_PROVINCE_SUM =
+			ixmaps.layer("ITALIA_Province_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_fintot_iter_pivot_prov_sub_avanz_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data_prov"
+				})
+				.binding({
+					position: "Provincia",
+					value:"importo",
+					title: "Descrizione Provincia"
+				})
+				.filter(__filter)
+				.type("RECT|CHART|SYMBOLS|SIZEP4|TEXTONLY|AGGREGATE|VALUES|SUM|NOLEGEND")
+				.style({
+					colorscheme: ["white"],
+					symbols: ["label"],
+					units: "€",
+					showdata: "true",
+					lookuptonumber: "true",
+					scale: "1",
+					align: "baseline",
+					textcolor: "#aaaaaa",
+					textscale: "1.3",
+					titlefield: "Descrizione Provincia",
+					chartupper: "1:5000000",
+					chartlower: "1:2000000",
+					valuescale: "0.8",
+					aggregationfield: "Provincia",
+					name: "province_sum"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9</b>",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_PROVINCE_SUM_2 =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data"
+				})
+				.binding({
+					position: "PROCOM",
+					value: "importo",
+					title: "Descrizione Comune"
+				})
+				.filter(__filter)
+				.type("RECT|CHART|SYMBOLS|SIZEP4|TEXTONLY|AGGREGATE|VALUES|SUM|NOLEGEND")
+				.style({
+					colorscheme: ["white"],
+					symbols: ["label"],
+					units: "€",
+					showdata: "true",
+					scale: "1",
+					align: "baseline",
+					textcolor: "#aaaaaa",
+					textscale: "1.3",
+					titlefield: "Descrizione Provincia",
+					chartupper: "1:2000000",
+					chartlower: "1:1000000",
+					valuescale: "0.8",
+					aggregationfield: "Provincia",
+					name: "province_sum_2"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - v9</b>",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __CUP_PNRR_chart_pop =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2025_03_v9/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v9.csv.gz",
+					type: "csv",
+					name: "pnrr_data"
+				})
+				.binding({
+					position: "PROCOM",
+					value: "pop_2022",
+					title: "Descrizione Comune"
+				})
+				.type("CHART|SYMBOL|AGGREGATE|MAX|NOFILTER")
+				.style({
+					colorscheme: [
+						"gray"],
+					fillopacity: "0.001",
+					linecolor: "black",
+					linewidth: "0.3",
+					normalsizevalue: "500000",
+					valuedecimals: "0",
+					chartupper: "1:2000000",
+					chartlower: "1:100000",
+					name: "chart_pop"
+				})
+				.meta({
+					title: "<b>PNRR - Universo REGIS - pop 2022</b>",
+					splash: "scaricando dati ..."
+				})
+			);
+
+
+		// ---------------------------------------------------
+		// e m b e d   t h e   m a p  
+		// ---------------------------------------------------
+
+		/**
+		 **
+		 ** create the interactive map an append it to the document 
+		 **
+		 **/
+
+		ixmaps.Map("regis_map", {
+				mapService: "leaflet",
+				mapType: "OpenStreetMap - FR",
+				map: "../../maps/svg/maps/generic/mercator.svg",
+				name: "regis_map",
+				mode: "pan",
+				width: "100%",
+				height: (window.innerHeight * 0.95) + "px",
+				legend: ((__legend == true) ? "closed" : 0),
+				xxalign: "right",
+				tools: "true",
+				search: "Italy"
+			},
+			map => map
+			.view([__lat, __lon], __zoom)
+			.options({
+				featurescaling: "true",
+				objectscaling: "dynamic",
+				normalSizeScale: "6000000",
+				dynamicScalePow: "2.5",
+				flushChartDraw: "1000000",
+				basemapopacity: "0.5",
+				panhidden: "false",
+				silent: "true"
+			})
+			//.local("aggregated", "")
+			//.local("loading data ...", "scaricando dati ...")
+			//.require("https://raw.githubusercontent.com/gjrichter/pages/main/PNRR_2025_03_v9/item_simple_pop.js")
+			//.attribution(attribution)
+			
+			// -----------------------------		 
+			// the geo reference layer 
+			// -----------------------------
+
+			.layer(__georef_reg)
+			.layer(__georef_urban)
+			.layer(__georef)
+			.layer(__georef_prov)
+			.layer(__georef_mini)
+
+			// -----------------------------		 
+			// the data visualization layer 
+			// -----------------------------
+
+			.layer(__CUP_PNRR_chart_reg)
+			.layer(__CUP_PNRR_REGIONI_SUM)
+					 
+			.layer(__CUP_PNRR_chart_prov)
+			.layer(__CUP_PNRR_PROVINCE_SUM)
+
+			.layer(__CUP_PNRR_choropleth)
+			.layer(__CUP_PNRR_chart)
+			//.layer(__CUP_PNRR_chart_pop)
+			//.layer(__CUP_PNRR_PROJECTS)
+			//.layer(__CUP_PNRR_PROJECTS_ICONS)
+			.layer(__CUP_PNRR_PROVINCE_SUM_2)
+		);
+
+		if (!window.location.search) {
+			$("#info-overlay").show("slow");
+			setTimeout(function(){$("#info-overlay").hide();},3000);
+		}
+
+		/**
+		 **
+		 ** window size handling, show or hide sidebar
+		 **
+		 **/
+
+		ixmaps.resize = function() {
+			$("#regis_map").css("height", (window.innerHeight * 0.95) + "px");
+			if (window.innerWidth < 600) {
+				$("#sidebarnav").show();
+				$("#onmap-buttons").hide();
+				ixmaps.showMap();
+			} else {
+				$("#sidebarnav").hide();
+				$("#onmap-buttons").show();
+				ixmaps.showBoth();
+			}
+		};
+		ixmaps.showSidebar = function() {
+			$("#regis_sidebar").show();
+			$("#regis_sidebar").css("width", "100%");
+			$("#regis_map_target").css("width", "0");
+		};
+		ixmaps.showMap = function() {
+			$("#regis_sidebar").hide();
+			$("#regis_sidebar").css("width", "0");
+			$("#regis_map_target").css("width", "100%");
+		};
+		ixmaps.showBoth = function() {
+			$("#regis_sidebar").show();
+			$("#regis_sidebar").css("width", "33%");
+			$("#regis_map_target").css("width", "66%");
+		};
+
+		ixmaps.resize();
+
+		$(window).resize(function() {
+			ixmaps.resize();
+		});
+
+	</script>
+
+</body>
+
+</html>

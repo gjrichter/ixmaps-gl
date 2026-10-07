@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>Created by Composer</title>
+	<style>
+		html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }
+		#map-div { width: 100%; height: 100%; }
+	</style>
+</head>
+
+<body>
+
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+
+	<!-- include the ixmaps API -->
+	<script src="../ixmaps-gl.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+
+		// ----------------------------------------------------------------
+		// Citi Bike GBFS data: fetch + join station_information (position)
+		// with station_status (live availability) by station_id
+		// ----------------------------------------------------------------
+		function loadNYCStations() {
+			return Promise.all([
+				fetch("https://gbfs.citibikenyc.com/gbfs/en/station_information.json").then(r => r.json()),
+				fetch("https://gbfs.citibikenyc.com/gbfs/en/station_status.json").then(r => r.json())
+			]).then(function(results) {
+				var info = results[0].data.stations;
+				var status = results[1].data.stations;
+
+				var statusById = {};
+				// GR: station_status switched to numeric ids + legacy_id (the old
+				// UUIDs still live in station_information) — index both so the join
+				// keeps working across the GBFS id scheme change
+				status.forEach(function(s) {
+					statusById[s.station_id] = s;
+					if (s.legacy_id) { statusById[s.legacy_id] = s; }
+				});
+
+				return info.map(function(st) {
+					var s = statusById[st.station_id] || {};
+					return {
+						station_id: st.station_id,
+						name: st.name,
+						lat: st.lat,
+						lon: st.lon,
+						num_ebikes_available: s.num_ebikes_available || 0,
+						num_bikes_available: s.num_bikes_available || 0,
+						num_docks_available: s.num_docks_available || 0
+					};
+				});
+			});
+		}
+
+		// ----------------------------------------------------------------
+		// define/replace the two "Station" themes (position + status gauge)
+		// same layer name "Station" -> status overlay joins onto positions
+		// stable meta.name -> re-running this on refresh auto-replaces
+		// ----------------------------------------------------------------
+		function renderStations(myMap, stations) {
+
+			myMap.layer("Station")
+				.data({ obj: stations, type: "json" })
+				.binding({ geo: "lat|lon", id: "station_id", title: "name" })
+				.type("FEATURE|NOLEGEND")
+				.style({
+					colorscheme: ["5", "white", "blue"],
+					shadow: "false",
+					showdata: "true",
+					scale: "1",
+					valuescale: "1"
+				})
+				.meta({ name: "station-position", tooltip: "<b>{{name}}</b><br>{{theme.item.chart}}" })
+				.title("Stations")
+				.define();
+
+			myMap.layer("Station")
+				.data({ obj: stations, type: "json" })
+				.binding({ lookup: "station_id", value: "num_ebikes_available|num_bikes_available|num_docks_available" })
+				.type("GAUGE|CENTERVALUES|CHART|SYMBOL|SEQUENCE|CENTER|RINGS|LINEAR|SIZE|FAST|SUM|GAUGE")
+				.style({
+					colorscheme: ["red", "RGB(57,162,225)", "none"],
+					fillopacity: "0.7",
+					shadow: "false",
+					showdata: "true",
+					symbols: ["circle"],
+					label: ["e-bikes", "bikes", "empty docks"],
+					scale: "2",
+					linecolor: ["#39A2E1"],
+					linewidth: "5",
+					valuescale: "1",
+					fadenegative: "1"
+				})
+				.meta({ name: "station-status", tooltip: "{{theme.item.chart}}{{theme.item.data}}" })
+				.title("Citi Bike - Station Status")
+				.define();
+		}
+
+		// create and embed the map
+		// ! reference to "map-div", the hosting html div
+
+		ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "CartoDB - Positron",
+			map: "../../maps/svg/maps/generic/mercator.svg",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			about: "test"
+		},
+		map => map
+		.options({
+			featurescaling: "true",
+			objectscaling: "dynamic",
+			normalSizeScale: "5000",
+			clipmap: "true",
+			clipmapdynamic: "true",
+			dynamiclabel: "NOSIZE",
+			labelspace: "1.0",
+			checklabeloverlap: "NOSQUEEZE",
+			dynamiclayer: "true",
+			dynamictiles: "true",
+			discardtiles: "false",
+			loadmultitiles: "true",
+			loadsilent: "false",
+			loadexternaldata: "true",
+			buttonsize: "15",
+			fastpan: "false",
+			panborder: "0",
+			northarrow: "false",
+			sidebarbuttons: "false",
+			tooltipdelay: "250",
+			popupdelay: "250",
+			popupgridstyle: "firstright|firstitalic|firstbold|firstgray|firstsmall|background|alternate|full",
+			popupalignment: "BOTTOM|LEFT",
+			transparentbackground: "true",
+			flushChartDraw: "50000",
+			mapopacity: "1",
+			basemapopacity: "1",
+			panhidden: "false"
+		})
+		.attribution("")
+		.view({
+			center: {
+				lat: "40.728364515715036",
+				lng: "-73.96103382110597"
+				},
+			zoom: "14"
+			})
+		)
+		.then(function(myMap) {
+
+			loadNYCStations().then(function(stations) {
+				renderStations(myMap, stations);
+			});
+
+			// refresh live station status every 10s, same as the source project
+			setInterval(function() {
+				loadNYCStations().then(function(stations) {
+					renderStations(myMap, stations);
+				});
+			}, 10000);
+		});
+	</script>
+</body>
+</html>

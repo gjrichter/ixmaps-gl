@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>Created by Composer</title>
+</head>
+
+<body style="margin:0;padding:0;">
+
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+
+	<!-- include the ixmaps API -->
+	<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.8/ixmaps-gl.js"></script>
+	<script src="./js/dataprovider_flatgeobuffer_test.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+
+		// ---------------------------------------------------
+		// t h e   d a t a 
+		// ---------------------------------------------------
+
+		process = data => {
+			data.addColumn({
+				source: "scadenza",
+				destination: "scaduto"
+			}, (value) => {
+				var valueA = value.split("/");
+				var scad = new Date(valueA[2] + "/" + valueA[1] + "/" + valueA[0]);
+				var act = new Date();
+				return (Math.floor((act.getTime() - scad.getTime()) / (1000 * 60 * 60 * 24 * 356)));
+			});
+			data.addColumn({
+				source: "canone",
+				destination: "canone_classi"
+			}, (value) => {
+				if (value > 10000) {
+					return "Più di 10.000 euro";
+				} else if (value > 5000) {
+					return "5.000-10.000 euro";
+				} else if (value > 1000) {
+					return "1.000-5.000 euro";
+				} else if (value > 0) {
+					return "Fino a 1.000 euro";
+				}
+				return "non definito";
+			});
+		};
+
+		// ---------------------------------------------------
+		// t h e   l a y e r 
+		// ---------------------------------------------------
+
+		var __concessioni =
+			ixmaps.layer("Concessioni", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ConcessioniDemaniali/concessioni.csv.gz",
+					type: "csv",
+					process: process.toString(),
+					name: "processed_data"
+				})
+				.type("CHART|GLOW|SYMBOL|SIZEP3|SEQUENCE|STAR|SORT|UP|EXPAND|AGGREGATE|RELOCATE|CATEGORICAL|COMPACTLEGEND|COUNT")
+				.binding({
+					position: "ycoord|xcoord",
+					value: "uso",
+					size: "canone"
+				})
+				.style({
+					colorscheme: [
+						"9",
+						"tableau"
+					],
+					fillopacity: "0.5",
+					shadow: "false",
+					showdata: "true",
+					symbols: [
+						"circle"
+					],
+					units: "€",
+					linewidth: "0.5",
+					normalsizevalue: "20000000",
+					valueupper: "1:50000",
+					gridwidthpx: "3",
+					glowlower: "1:100000",
+					name: "symbol",
+					tooltip: "<div style='white-space:nowrap'><h2 style='margin:0;font-size:1.8em'>{{categoria}}</h2><h2 style='margin-top:0;margin-bottom:0.5em;font-size:1.6em'>{{uso}}</h2><table><tr><td>Canone: </td><td><b style='font-size:1.5em'>{{canone}} €</b> &nbsp;(dovuto: {{dovuto}} €)</td></tr><tr><td>Scadenza: </td><td><b style='font-size:1.2em'>{{scadenza}}</b></td></tr><tr><td>Tipo: </td><td>{{tipologia}}</td></tr><tr><td>Amministr.: </td><td>{{amministr}}</td></tr></table></div>"
+				})
+				.meta({
+					title: " ",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __canoni =
+			ixmaps.layer("Canoni", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ConcessioniDemaniali/concessioni.csv.gz",
+					type: "csv",
+					process: process.toString(),
+					name: "processed_data_canoni"
+				})
+				.type("CHART|LABEL|VALUES|TEXTONLY")
+				.binding({
+					position: "ycoord|xcoord",
+					value: "$item$"
+				})
+				.style({
+					colorscheme: [
+						"#dddddd"
+					],
+					fillopacity: "0.2",
+					showdata: "true",
+					units: "€",
+					align: "2left",
+					refreshtimeout: "0",
+					normalsizevalue: "50000000",
+					scale: "1",
+					sizepow: "3.5",
+					valuefield: "canone",
+					sizefield: "canone",
+					textcolor: "#008800",
+					linecolor: [
+						"#888888"
+					],
+					valueupper: "1:50000",
+					chartupper: "1:10000",
+					valuescale: "1",
+					valuedecimals: "0",
+					name: "text",
+					tooltip: "<div style='white-space:nowrap'><h2 style='margin:0;font-size:1.8em'>{{categoria}}</h2><h2 style='margin-top:0;margin-bottom:0.5em;font-size:1.6em'>{{uso}}</h2><table><tr><td>Canone: </td><td><b style='font-size:1.5em'>{{canone}} €</b> &nbsp;(dovuto: {{dovuto}} €)</td></tr><tr><td>Scadenza: </td><td><b style='font-size:1.2em'>{{scadenza}}</b></td></tr><tr><td>Tipo: </td><td>{{tipologia}}</td></tr><tr><td>Amministr.: </td><td>{{amministr}}</td></tr></table></div>"
+				})
+				.meta({
+					title: " ",
+					splash: "scaricando dati ..."
+				})
+			);
+
+		var __polygons =
+			ixmaps.layer("Polygons", layer => layer
+				.data({
+					type: "ext",
+					name: "dataquery_flatgeobuffer",
+					url: "https://s3.fr-par.scw.cloud/ixmaps.data/test%20only/opendatashpoggettipolygon_epsg4326.fgb"
+				})
+				.binding({
+					geo: "geometry",
+					value: "$item$"
+				})
+				.type("FEATURE")
+				.style({
+					colorscheme: [
+						"#4400dd"],
+					fillopacity: "0.01",
+					shadow: "false",
+					visible: "true",
+					showdata: "true",
+					units: "",
+					scale: "1",
+					sizepow: "2",
+					linecolor: [
+						"#BDCE4F"],
+					linewidth: "0.2",
+					featureupper: "1:200000",
+					valuescale: "1"
+				})
+				.meta({
+					title: "2025-Q4_analysis_polygons",
+					snippet: "",
+					description: "",
+					name: "2025-Q4_analysis_polygons",
+					tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+				})
+				.define()
+			);
+
+		// create and embed the map
+		// ! reference to "map-div", the hosting html div
+
+		let _map = ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "VT_BASIC_LIGHT",
+			map: "../../maps/svg/maps/generic/mercator.svg",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			search: "Europe",
+			about: "test"
+		});
+		_map.options({
+			featurescaling: "dynamic",
+			objectscaling: "dynamic",
+			normalSizeScale: "20000000",
+			flushChartDraw: "1000000",
+			flushPaintShape: "1000000",
+			dynamiclabel: "false",
+			basemapopacity: "0.5",
+			worksilent: "false",
+			loadsilent: "false",
+			hideOnPan: "false",
+			freezeOnPan: "false",
+		});
+		_map.attribution("");
+		_map.view({
+			"center": {
+				"lat": "41.49549158301073",
+				"lng": "14.863127471817673"
+			},
+			"zoom": "6.26640264824977"
+		});
+		_map.layer("2025-Q4_analysis_polygons")
+			.data({
+				type: "ext",
+				name: "dataquery_flatgeobuffer",
+				url: "https://s3.fr-par.scw.cloud/ixmaps.data/test%20only/opendatashpoggettipolygon_epsg4326.fgb"
+			})
+			.binding({
+				geo: "geometry",
+				value: "$item$"
+			})
+			.type("FEATURE")
+			.style({
+				colorscheme: [
+					"#4400dd"],
+				fillopacity: "0.01",
+				shadow: "false",
+				visible: "true",
+				showdata: "true",
+				units: "",
+				scale: "1",
+				sizepow: "2",
+				linecolor: [
+					"#BDCE4F"],
+				linewidth: "0.2",
+				featureupper: "1:200000",
+				valuescale: "1"
+			})
+			.meta({
+				title: "2025-Q4_analysis_polygons",
+				snippet: "",
+				description: "",
+				name: "2025-Q4_analysis_polygons",
+				tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+			})
+			.define();
+
+		_map.layer(__polygons);
+		_map.layer(__concessioni);
+		_map.layer(__canoni);
+
+	</script>
+</body>
+
+</html>

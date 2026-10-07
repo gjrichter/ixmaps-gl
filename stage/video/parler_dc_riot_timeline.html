@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jan 6, 2021 · Parler Video Geolocations</title>
+    <!--
+        Ported from ixmaps_project_Parler_clean_6_DC_Riot_Geo_multiple_timeline_satellite.json
+        Original used legacy project-file API + dataprovider_Parler.js + video_item.html.
+        This version uses the ixmaps-flat fluent API — single self-contained HTML file.
+
+        Basemap note: original used "NOKIA - satellite" (Nokia HERE imagery).
+        That string is not documented in the flat framework; "CartoDB - Dark matter" is
+        used as a verified dark alternative. Try mapType:"NOKIA - satellite" if you want
+        to restore satellite imagery.
+
+        Data source: s3.eu-west-1.amazonaws.com/data.ixmaps.com/Parler/RiotGeo.csv
+        Videos:      d2hxwnssq7ss7g.cloudfront.net/{videoId}_cvt.mp4
+    -->
+    <script src="../../ixmaps-gl.js"></script>
+    <style>
+        html, body { width:100%; height:100%; margin:0; padding:0; overflow:hidden; background:#111; }
+        #map { width:100%; height:100%; }
+
+        /* ── Title bar ── */
+        #title-bar {
+            position:absolute; top:12px; left:50%; transform:translateX(-50%);
+            background:rgba(10,10,20,0.85); color:#ddd;
+            padding:7px 18px; border-radius:6px;
+            font-family:'Segoe UI', Arial, sans-serif; font-size:14px; font-weight:600;
+            z-index:1000; pointer-events:none;
+            box-shadow:0 2px 8px rgba(0,0,0,0.45); text-align:center; white-space:nowrap;
+        }
+        #title-bar .sub { font-size:11px; font-weight:normal; color:#777; margin-top:2px; }
+        #title-bar .sub a { color:#777; }
+        #vid-count { color:#dd6600; }
+        #title-info {
+            pointer-events:auto; cursor:pointer;
+            display:inline-flex; align-items:center; justify-content:center;
+            width:17px; height:17px;
+            border:1.5px solid rgba(255,255,255,0.7); border-radius:50%;
+            color:#fff; font-size:11px; font-weight:700;
+            margin-left:8px; vertical-align:middle; position:relative; top:-2px; opacity:.8;
+            line-height:1;
+        }
+        #title-info:hover { opacity:1; border-color:#fff; }
+
+        /* ── Time control bar ── */
+        #time-bar {
+            position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+            background:rgba(10,10,20,0.90); border-radius:8px;
+            padding:9px 16px; z-index:1000;
+            display:none; align-items:center; gap:12px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.55);
+            font-family:'Segoe UI', Arial, sans-serif;
+        }
+        #play-btn {
+            background:#dd6600; border:none; color:#fff; border-radius:50%;
+            width:28px; height:28px; cursor:pointer; font-size:12px; line-height:1;
+            flex-shrink:0;
+        }
+        #play-btn:hover { background:#ff7800; }
+        #time-slider { width:300px; accent-color:#dd6600; cursor:pointer; }
+        #time-display { color:#ccc; font-size:12px; min-width:150px; }
+        #window-toggle {
+            background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+            color:#999; border-radius:4px; padding:2px 7px;
+            font-size:11px; cursor:pointer;
+        }
+        #window-toggle:hover { color:#ccc; }
+
+        /* ── Loading overlay ── */
+        #app-loading {
+            position:absolute; top:0; left:0; width:100%; height:100%;
+            background:rgba(8,10,18,0.95);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            z-index:9999; font-family:'Segoe UI', Arial, sans-serif;
+        }
+        #app-loading .spinner {
+            width:38px; height:38px;
+            border:3px solid rgba(210,90,0,0.18); border-top-color:#dd6600;
+            border-radius:50%; animation:spin 0.9s linear infinite; margin-bottom:14px;
+        }
+        #app-loading h3 { margin:0 0 5px; color:#ccc; font-size:1rem; font-weight:600; }
+        #app-loading .msg { font-size:0.74rem; color:rgba(170,170,170,0.55); }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ── Info button ── */
+        #info-btn {
+            position:absolute; bottom:20px; right:20px;
+            background:rgba(10,10,20,0.85); border:1px solid rgba(255,255,255,0.15);
+            color:#aaa; border-radius:50%; width:32px; height:32px;
+            font-size:16px; cursor:pointer; z-index:1000;
+            box-shadow:0 2px 8px rgba(0,0,0,0.45); line-height:1;
+        }
+        #info-btn:hover { color:#fff; border-color:rgba(255,255,255,0.35); }
+
+        /* ── Info panel ── */
+        #info-panel {
+            display:none; position:absolute; top:50%; left:50%;
+            transform:translate(-50%,-50%);
+            background:rgba(10,10,20,0.96); color:#ccc;
+            border:1px solid rgba(255,255,255,0.12); border-radius:10px;
+            padding:28px 30px 24px; max-width:480px; width:calc(100% - 40px);
+            max-height:80vh; overflow-y:auto;
+            z-index:2000; font-family:'Segoe UI', Arial, sans-serif;
+            font-size:13.5px; line-height:1.65;
+            box-shadow:0 8px 32px rgba(0,0,0,0.75);
+        }
+        #info-panel h2 { margin:0 0 16px; color:#eee; font-size:15px; padding-right:24px; }
+        #info-panel h3 {
+            margin:18px 0 6px; color:#dd6600; font-size:11.5px;
+            text-transform:uppercase; letter-spacing:.07em;
+        }
+        #info-panel p { margin:0 0 10px; }
+        #info-panel a { color:#dd7722; text-decoration:none; }
+        #info-panel a:hover { text-decoration:underline; }
+        #info-close {
+            position:absolute; top:12px; right:14px;
+            background:none; border:none; color:#555; font-size:22px;
+            cursor:pointer; line-height:1; padding:0;
+        }
+        #info-close:hover { color:#ccc; }
+    </style>
+</head>
+<body>
+
+<div id="app-loading">
+    <div class="spinner"></div>
+    <h3>Jan 6, 2021 · Parler Video Geolocations</h3>
+    <div class="msg" id="loading-msg">Fetching video metadata from archive…</div>
+</div>
+
+<div id="map"></div>
+
+<div id="title-bar">
+    Jan 6, 2021 · Parler Video Geolocations — US Capitol <span id="title-info" onclick="toggleInfo()" title="About this map">i</span>
+    <div class="sub">
+        <span id="vid-count">…</span> geolocated videos &nbsp;·&nbsp;
+        bubble size = duration &nbsp;·&nbsp;
+        source: <a href="https://gist.github.com/Parler-Analysis/2c023fd2e053fba5bc85b09209f606eb" target="_blank">Parler-Analysis</a>
+    </div>
+</div>
+
+<div id="time-bar">
+    <button id="play-btn" onclick="togglePlay()" title="Play / Pause">▶</button>
+    <input type="range" id="time-slider" oninput="onSliderChange(+this.value)">
+    <span id="time-display">—</span>
+    <button id="window-toggle" onclick="cycleWindow()" title="Cycle time window">1h</button>
+</div>
+
+<button id="info-btn" onclick="toggleInfo()" title="About this map">ℹ</button>
+
+<div id="info-panel">
+    <button id="info-close" onclick="toggleInfo()">×</button>
+    <h2>Jan 6, 2021 · Parler Video Geolocations</h2>
+
+    <h3>Scope</h3>
+    <p>Each bubble marks where a Parler video was recorded on January 6, 2021, in and around the US Capitol in Washington DC. Bubble size reflects video duration. Use the time bar at the bottom to filter by recording time; click any bubble to watch the clip.</p>
+
+    <h3>The Parler Archive</h3>
+    <p>Parler was a social media platform that positioned itself as a free-speech alternative to mainstream networks, popular with right-wing and far-right users. On January 6, 2021, thousands of Trump supporters stormed the US Capitol building in an attempt to disrupt the certification of the 2020 presidential election result. Many participants filmed the events and uploaded videos to Parler.</p>
+    <p>In the days that followed, Apple, Google, and Amazon suspended Parler's services over its handling of content inciting violence. Before the platform went fully offline, security researcher <em>@donk_enby</em> automated the bulk download of approximately 1.1 million videos — many of which still contained unredacted GPS coordinates in their EXIF metadata.</p>
+    <p>Volunteers from the <strong>Parler-Analysis</strong> collective extracted and published that metadata, enabling precise geographic placement of recordings made at the Capitol.</p>
+
+    <h3>Sources</h3>
+    <p>
+        Video metadata: <a href="https://gist.github.com/Parler-Analysis/2c023fd2e053fba5bc85b09209f606eb" target="_blank">Parler-Analysis (GitHub Gist)</a><br>
+        Geodata CSV: <a href="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Parler/RiotGeo.csv" target="_blank">data.ixmaps.com · Parler/RiotGeo.csv</a><br>
+        Video archive: d2hxwnssq7ss7g.cloudfront.net<br>
+        Visualization: <a href="https://ixmaps.com" target="_blank">ixmaps</a>
+    </p>
+</div>
+
+
+<script>
+
+// ── Info panel ───────────────────────────────────────────────────────────────
+function toggleInfo() {
+    var p = document.getElementById("info-panel");
+    p.style.display = p.style.display === "block" ? "none" : "block";
+}
+
+// ── Data source ──────────────────────────────────────────────────────────────
+var DATA_URL = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Parler/RiotGeo.csv";
+
+// ── Time window (ms) — cycled by the window button ──────────────────────────
+var WINDOWS    = [15 * 60e3, 30 * 60e3, 60 * 60e3, 120 * 60e3];
+var _winIdx    = 2;   // start at 1 hour
+var WINDOW_MS  = WINDOWS[_winIdx];
+var WIN_LABELS = ["15 min", "30 min", "1h", "2h"];
+
+function cycleWindow() {
+    _winIdx   = (_winIdx + 1) % WINDOWS.length;
+    WINDOW_MS = WINDOWS[_winIdx];
+    document.getElementById("window-toggle").textContent = WIN_LABELS[_winIdx];
+    onSliderChange(+document.getElementById("time-slider").value);
+}
+
+// ── Date normalization ───────────────────────────────────────────────────────
+// EXIF standard: "YYYY:MM:DD HH:MM:SS" (colons in date, space separator, colons in time).
+// JavaScript new Date() needs ISO "YYYY-MM-DDTHH:MM:SS".
+function normalizeDate(v) {
+    if (!v) return v;
+    var parts = v.split(" ");
+    if (parts.length >= 2) {
+        return parts[0].replace(/:/g, "-") + "T" + parts[1];
+    }
+    // Fallback: all-colon variant "YYYY:MM:DD:HH:MM:SS"
+    var p = v.split(":");
+    if (p.length < 5) return v;
+    return p[0] + "-" + p[1] + "-" + p[2] + "T" + p[3] + ":" + p[4] + (p[5] ? ":" + p[5] : "");
+}
+
+// ── CSV parser (handles quoted fields) ──────────────────────────────────────
+function parseCSVLine(line, sep) {
+    var result = [], inQuote = false, current = "";
+    for (var i = 0; i < line.length; i++) {
+        var c = line[i];
+        if (c === '"')            { inQuote = !inQuote; }
+        else if (c === sep && !inQuote) { result.push(current); current = ""; }
+        else                      { current += c; }
+    }
+    result.push(current);
+    return result;
+}
+
+function parseCSV(text) {
+    var lines   = text.trim().split(/\r?\n/);
+    var sep     = (lines[0].split(",").length >= lines[0].split(";").length) ? "," : ";";
+    var headers = parseCSVLine(lines[0], sep).map(function(h) { return h.trim().replace(/^"|"$/g, ""); });
+    var rows    = [];
+    for (var i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        var vals = parseCSVLine(lines[i], sep);
+        var row  = {};
+        headers.forEach(function(h, idx) {
+            row[h] = (vals[idx] || "").trim().replace(/^"|"$/g, "");
+        });
+        row.LatitudeDD  = parseFloat(row.LatitudeDD);
+        row.LongitudeDD = parseFloat(row.LongitudeDD);
+        row.sDuration   = parseFloat(row.sDuration) || 0;
+        row.CreateDate  = normalizeDate(row.CreateDate);
+        var _vid = row.SourceFile ? (row.SourceFile.split("meta-")[1] || "").split(".json")[0] : "";
+        row.videoUrl = _vid ? "https://d2hxwnssq7ss7g.cloudfront.net/" + _vid + "_cvt.mp4" : "";
+        rows.push(row);
+    }
+    // Drop rows with invalid coordinates
+    return rows.filter(function(r) { return !isNaN(r.LatitudeDD) && !isNaN(r.LongitudeDD); });
+}
+
+// ── Time slider ──────────────────────────────────────────────────────────────
+var _minMs, _maxMs;
+var _playing  = false;
+var _playTimer = null;
+
+function onSliderChange(offsetMs) {
+    updateTimeFrame(_minMs + offsetMs);
+}
+
+function fmtUTC(ms) {
+    var d = new Date(ms);
+    var mo = d.getUTCMonth() + 1;
+    var dy = d.getUTCDate();
+    var h  = String(d.getUTCHours()).padStart(2, "0");
+    var m  = String(d.getUTCMinutes()).padStart(2, "0");
+    return (mo === 1 ? "Jan" : mo) + " " + dy + " · " + h + ":" + m;
+}
+
+function updateTimeFrame(startMs) {
+    ixmaps.setThemeTimeFrame("parler-vids", startMs, startMs + WINDOW_MS);
+    document.getElementById("time-display").textContent =
+        fmtUTC(startMs) + " – " + fmtUTC(startMs + WINDOW_MS).split(" · ")[1] + " UTC";
+}
+
+function togglePlay() {
+    _playing = !_playing;
+    document.getElementById("play-btn").textContent = _playing ? "⏸" : "▶";
+    if (_playing) {
+        _playTimer = setInterval(function() {
+            var slider = document.getElementById("time-slider");
+            var next   = parseInt(slider.value, 10) + 5 * 60 * 1000;  // advance 5 min per tick
+            if (next > parseInt(slider.max, 10)) { next = 0; }
+            slider.value = next;
+            onSliderChange(next);
+        }, 400);
+    } else {
+        clearInterval(_playTimer);
+    }
+}
+
+// ── Map init ──────────────────────────────────────────────────────────────────
+var myMap = ixmaps.Map("map", {
+    mapType: "VT_DATAVIZ_DARK",  // try "NOKIA - satellite" for satellite imagery
+    legend:  "closed",
+    mode:    "pan"
+})
+.view({ center: { lat: 38.8899, lng: -77.0088 }, zoom: 17 })
+.options({
+    basemapopacity:  1,
+    flushChartDraw:  1000000
+});
+
+// ── Data loading ───────────────────────────────────────────────────────────────
+fetch(DATA_URL)
+    .then(function(r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.text();
+    })
+    .then(function(text) {
+        document.getElementById("loading-msg").textContent = "Parsing records…";
+        var data = parseCSV(text);
+
+        // Compute time range from the data
+        _minMs = Infinity;
+        _maxMs = -Infinity;
+        data.forEach(function(r) {
+            var ms = new Date(r.CreateDate).getTime();
+            if (!isNaN(ms)) {
+                if (ms < _minMs) _minMs = ms;
+                if (ms > _maxMs) _maxMs = ms;
+            }
+        });
+
+        // Setup slider to cover the full day span
+        var slider    = document.getElementById("time-slider");
+        slider.min    = 0;
+        slider.max    = _maxMs - _minMs;
+        slider.value  = 0;
+        slider.step   = 60000;  // 1-minute resolution
+
+        document.getElementById("vid-count").textContent = data.length;
+        document.getElementById("loading-msg").textContent = data.length + " records. Rendering map…";
+
+        myMap.layer("parler-videos")
+            .data({ obj: data, type: "json" })
+            .binding({
+                geo:       "LatitudeDD|LongitudeDD",
+                value:     "sDuration",
+                title:     "SourceFile",
+                timefield: "CreateDate"
+            })
+            .type("CHART|BUBBLE|SIZE|VALUES")
+            .style({
+                colorscheme:     ["#dd6600"],
+                textcolor:       "#663300",
+                linecolor:       "#ffffff",
+                linewidth:       1,
+                fillopacity:     0.8,
+                scale:           1,
+                normalsizevalue: "50000000",
+                sizepow:         3,
+                units:           " s",
+                showdata:        "true"
+            })
+            .meta({
+                name:    "parler-vids",
+                tooltip: "<video controls preload='metadata' style='width:260px;display:block;margin-bottom:6px'><source src='{{videoUrl}}' type='video/mp4'></video><span style='color:#aaa;font-size:.82em'>{{sDuration}} s &nbsp;·&nbsp; {{CreateDate}}</span>"
+            })
+            .title("Jan 6 · Parler Videos (bubble = duration in seconds)")
+            .define();
+
+        // Show time bar; display all videos initially — slider activates filtering
+        document.getElementById("time-bar").style.display = "flex";
+        document.getElementById("time-display").textContent =
+            "drag to filter  (" + fmtUTC(_minMs) + " → " + fmtUTC(_maxMs) + " UTC)";
+
+        document.getElementById("app-loading").style.display = "none";
+    })
+    .catch(function(err) {
+        document.getElementById("loading-msg").textContent =
+            "Error: " + err.message + " — check browser console for CORS details";
+    });
+
+</script>
+</body>
+</html>

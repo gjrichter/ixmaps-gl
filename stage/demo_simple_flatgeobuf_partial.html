@@ -1,0 +1,368 @@
+<!--
+  File: demo_simple_flatgeobuf_partial.html
+  Project: iXMaps demo gallery
+  Author: (add maintainer name if desired)
+
+  Description:
+    Demonstrates incremental loading of a FlatGeobuf dataset into an iXMaps theme.
+    The example queries only the features intersecting the current viewport (with
+    configurable padding) and refreshes the theme after debounced zoom/pan events.
+
+  Structure:
+    - Centered container div (#map_div) for the embedded map
+    - Inline script registering a FlatGeobuf data provider and interaction hooks
+    - iXMaps embed call that wires provider, theme refresh, and UI signals together
+
+  Dependencies:
+    - https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ixmaps.js
+    - Data.feed helper (bundled with iXMaps) for FlatGeobuf requests
+
+  Usage:
+    Pan or zoom the map to trigger partial reloads; the theme updates with fresh
+    geometry clipped to the new bounds. Ideal as a template for large vector layers.
+
+  Created: (insert date)
+  Last updated: (insert date)
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>flatgeobuf and partial loading</title>
+	<meta name="description" content="demo of flatgeobuf and partial loading">
+</head>
+
+<body style='text-align:center;background:#F7F6EF;margin:0;padding:0'>
+
+	<!-- map container -->
+	<div id="map_div" style="max-width:1024px;margin:auto"></div>
+
+	<!-- load the iXMaps library -->
+	<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.6/ixmaps-gl.js"></script>
+
+	<!-- the map code -->
+	<script type="text/javascript" charset="utf-8">
+
+		// ---------------------------------------------------
+		// c o n s t a n t s   a n d   v a r i a b l e s 
+		// ---------------------------------------------------
+
+		const attribution =
+			"powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
+
+		const MIN_ZOOM = 12;
+
+		let szThemeUrl = "";
+		let szThemeNameA = [];
+
+		ixmaps.__oldBounds = null;
+		
+		// Track pending downloads to prevent loading message flickering
+		let __pendingDownloads = 0;
+
+		// ---------------------------------------------------------------------
+		// d a t a   q u e r y
+		// ---------------------------------------------------------------------
+
+		/**
+		 * Helper function to hide loading message only when no pending downloads
+		 */
+		function __hideLoadingIfComplete() {
+			if (__pendingDownloads <= 0) {
+				__pendingDownloads = 0; // Ensure it doesn't go negative
+				// Temporarily restore original hideLoading to actually hide it
+				if (ixmaps.__originalHideLoading) {
+					ixmaps.hideLoading = ixmaps.__originalHideLoading;
+					delete ixmaps.__originalHideLoading;
+				}
+				// showLoadingArrayStop exists in flat only, not in ixmaps-gl
+				if (ixmaps.showLoadingArrayStop) {
+					ixmaps.showLoadingArrayStop();
+				}
+				ixmaps.hideLoading();
+			}
+		}
+		
+		/**
+		 * Override hideLoading to check pending downloads first
+		 */
+		function __setupLoadingOverride() {
+			if (!ixmaps.__originalHideLoading) {
+				ixmaps.__originalHideLoading = ixmaps.hideLoading;
+				ixmaps.hideLoading = function() {
+					// Only hide if no pending downloads
+					if (__pendingDownloads <= 0) {
+						ixmaps.__originalHideLoading.call(this);
+					}
+				};
+			}
+		}
+
+		/**
+		 * Query features from a FlatGeobuf source based on the current map view.
+		 * @param {Object} data - Placeholder for compatibility with the host API; not used here.
+		 * @param {Object} option - Theme configuration supplied by the host map instance.
+		 * @param {Object} option.theme - Theme descriptor used to track refresh state.
+		 * @param {string} option.name - Identifier for the external dataset to update.
+		 * @param {string} option.ext - Remote FlatGeobuf resource URL.
+		 * @returns {void}
+		 */
+		ixmaps.dataquery_flatgeobuffer = function (data, option) {
+
+			if (!szThemeNameA[option.theme.szName]) {
+				szThemeNameA[option.theme.szName] = option.theme.szName;
+			}
+			szThemeUrl = option.ext;
+
+			if (!szThemeUrl) {
+				// Abort early if no valid data source is configured.
+				ixmaps.setTitleBox("error while loading: no data url", "RGBA(128,0,0,0.5)");
+				__hideLoadingIfComplete();
+				ixmaps.setExternalData(null, {
+					name: option.name
+				});
+				return true;
+			}
+			// get actual map bounds
+			// --------------------------------------------------
+			let bounds = ixmaps.getBoundingBox();
+			// Aggiungi 10% di padding
+			let padding = 0.1;
+			// calculate width and height of the bounding box
+			let width = bounds[1].lng - bounds[0].lng;
+			let height = bounds[1].lat - bounds[0].lat;
+			// calculate the bounding box with 10% padding
+			let bbox = [
+				bounds[0].lng - width * padding,
+				bounds[0].lat - height * padding,
+				bounds[1].lng + width * padding,
+				bounds[1].lat + height * padding
+			];
+			// Remember the bounds used for this request to detect future changes.
+			ixmaps.__oldBounds = bounds;
+
+			// read partial data from the flatgeobuf source
+			// --------------------------------------------------
+			// Inform the user that an asynchronous fetch is starting.
+			ixmaps.setTitleBox("querying data ...");
+			ixmaps.in_query = true;
+			
+			// Setup override to prevent premature hiding of loading message
+			__setupLoadingOverride();
+			
+			// Increment pending downloads counter
+			__pendingDownloads++;
+
+			Data.feed({
+				"source": szThemeUrl,
+				"type": "fgb",
+				"bbox": bbox
+			}).load(function (mydata) {
+				// set the loaded data to the visualization theme
+				// --------------------------------------------------
+				// Replace the current dataset with the freshly downloaded subset.
+				ixmaps.setTitle("");
+				
+				// Decrement pending downloads counter
+				__pendingDownloads--;
+				
+				// Call setExternalData - it will try to hide loading, but our override will prevent it
+				// if there are still pending downloads
+				try {
+					ixmaps.setExternalData(mydata, {
+						type: "jsonDB",
+						name: option.name
+					});
+
+					// Check if we should hide loading now (after setExternalData completes)
+					__hideLoadingIfComplete();
+				} finally {
+					// always release the busy flag, or later zoom/pan never re-queries
+					ixmaps.in_query = false;
+				}
+
+			}).error(function (e) {
+				// Provide feedback if the query fails and reset the theme state.
+				ixmaps.setTitleBox("error while loading", "RGBA(128,0,0,0.5)");
+				
+				// Decrement pending downloads counter
+				__pendingDownloads--;
+				
+				// Only hide loading if no pending downloads remain
+				__hideLoadingIfComplete();
+				
+				ixmaps.setExternalData(null, {
+					name: option.name
+				});
+				ixmaps.in_query = false;
+				ixmaps.setTitle("");
+			});
+
+			// Return true to indicate async loading is in progress
+			return true;
+		};
+
+		// ---------------------------------------------------------------------
+		// r e f r e s h   o n   z o o m    a n d    p a n
+		// ---------------------------------------------------------------------
+
+		/**
+		 * Create a debounced variant of the provided callback.
+		 * @param {Function} func - Function executed after trailing delay expires.
+		 * @param {number} wait - Debounce delay in milliseconds.
+		 * @returns {Function} Debounced wrapper that postpones execution.
+		 */
+		let __debounce = function (func, wait) {
+			let timeout;
+			return function executedFunction(...args) {
+				const later = () => {
+					clearTimeout(timeout);
+					func(...args);
+				};
+				clearTimeout(timeout);
+				timeout = setTimeout(later, wait);
+			};
+		};
+
+		/**
+		 * Debounced theme refresh to avoid hammering the data service on rapid map interactions.
+		 */
+		let __debouncedRefresh = __debounce(() => {
+			for (let szThemeName in szThemeNameA) {
+				if(ixmaps.getThemeObj(szThemeName).fVisible){
+					ixmaps.refreshTheme(szThemeName);
+				}
+			}
+		}, 500);
+
+		// ---------------------------------------------------------------------
+		// c r e a t e   a   h o o k   f o r   z o o m / p a n
+		// ---------------------------------------------------------------------
+
+		ixmaps.htmlgui_onZoomAndPan_old = ixmaps.htmlgui_onZoomAndPan;
+		/**
+		 * Handle map zoom and pan events to ensure the active theme stays in sync with the viewport.
+		 * @param {number} nZoom - Current zoom level supplied by the host map.
+		 * @returns {void}
+		 */
+		ixmaps.htmlgui_onZoomAndPan = function (nZoom) {
+
+			if (ixmaps.htmlgui_onZoomAndPan_old) {
+					ixmaps.htmlgui_onZoomAndPan_old(nZoom);
+				}
+
+			// if the theme is busy, exit early
+			if (ixmaps.in_query) {
+				ixmaps.setTitleBox("theme busy ...");
+				return;
+			}
+			// if the zoom is less than the minimum zoom, exit early
+			if (ixmaps.getZoom() < MIN_ZOOM) {
+				ixmaps.__oldBounds = null;
+				ixmaps.setTitleBox("zoom in to refresh","RGBA(128,0,0,0.5)");
+				return;
+			}
+			// check if the new view is still within the area already fetched
+			let bounds = ixmaps.getBoundingBox();
+			if (ixmaps.__oldBounds) {
+				if ((bounds[0].lat >= ixmaps.__oldBounds[0].lat) &&
+					(bounds[0].lng >= ixmaps.__oldBounds[0].lng) &&
+					(bounds[1].lat <= ixmaps.__oldBounds[1].lat) &&
+					(bounds[1].lng <= ixmaps.__oldBounds[1].lng)
+				) {
+					return;
+				}
+			}
+
+			// Trigger a debounced refresh, which eventually calls the data query.
+			__debouncedRefresh();
+		};
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// t h e   v i s u a l i z a t i o n
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		/**
+		 ** define the visualization theme
+		 **/
+		var __chart_theme =
+			ixmaps.layer("osm", layer => layer
+				.data({
+					type: "ext",
+					name: "dataquery_flatgeobuffer",
+					url: "https://ixmaps-data.s3.amazonaws.com/TestData/beni_immobili_pubblici.fgb"
+				})
+				.binding({
+					position: "geometry",
+					value: "natura_del_bene"
+				})
+				.type("CHART|SYMBOL|SEQUENCE|STAR|SIZE|VALUES|CATEGORICAL|AGGREGATE|SUM|COMPACTLEGEND")
+				.style({
+					values:["TERRENO","FABBRICATO"],
+					label:["Terreni","Fabbricati"],
+					colorscheme: [
+						"8",
+						"tableau10"
+					],
+					fillopacity: "0.7",
+					sizepow: "3",
+					linecolor: "white",
+					linewidth: "1",
+					normalsizevalue: "200",
+					units: "",
+					valuedecimals: "0",
+					name: "features",
+					chartupper: "1:100000",
+					showdata: "true"
+				})
+				.meta({
+					title: "Beni Immobiliari della Pubblica Amministrazione",
+					splash: "...",
+					tooltip: "{{theme.item.data}}"
+				})
+			);
+
+		/**
+		 **
+		 ** define andembed the interactive map  
+		 **
+		 **/
+		ixmaps.Map("map_div", {
+			mapService: "leaflet_vt",
+			mapType: "VT_TONER_LITE",
+			map: "../../maps/svg/maps/generic/mercator.svg",
+			legend: "true",
+			align: "100px left",
+			mode: "map",
+			search: "world",
+			tools: "true",
+			about: "test"
+		}).then(map => map
+				.view([42.85, 13.58], 14)
+				.options({
+					featurescaling: "true",
+					objectscaling: "dynamic",
+					normalSizeScale: "100000",
+					flushChartDraw: "1000000",
+					flushPaintShape: "1000000",
+					hideOnPan: "false",
+					freezeOnPan: "false",
+					basemapopacity: "1",
+					worksilent: "true",
+					loadsilent: "false"
+				})
+				.require("https://unpkg.com/osmtogeojson@3.0.0-beta.4/osmtogeojson.js")
+
+				.layer(__chart_theme)
+		);
+
+	</script>
+
+</body>
+
+</html>

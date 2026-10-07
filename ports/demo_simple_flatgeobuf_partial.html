@@ -1,0 +1,174 @@
+<!--
+  File: demo_simple_flatgeobuf_partial.html
+  Project: iXMaps demo gallery
+  Author: (add maintainer name if desired)
+
+  Description:
+    Demonstrates incremental loading of a FlatGeobuf dataset into an iXMaps theme.
+    The example queries only the features intersecting the current viewport (with
+    configurable padding) and refreshes the theme after debounced zoom/pan events.
+
+  Structure:
+    - Centered container div (#map_div) for the embedded map
+    - Inline script registering a FlatGeobuf data provider and interaction hooks
+    - iXMaps embed call that wires provider, theme refresh, and UI signals together
+
+  Dependencies:
+    - https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ixmaps.js
+    - Data.feed helper (bundled with iXMaps) for FlatGeobuf requests
+
+  Usage:
+    Pan or zoom the map to trigger partial reloads; the theme updates with fresh
+    geometry clipped to the new bounds. Ideal as a template for large vector layers.
+
+  Created: (insert date)
+  Last updated: (insert date)
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>flatgeobuf and partial loading</title>
+	<meta name="description" content="demo of flatgeobuf and partial loading">
+</head>
+
+<body style='text-align:center;background:#F7F6EF;margin:0;padding:0'>
+
+	<!-- map container -->
+	<div id="map_div" style="max-width:1024px;margin:auto"></div>
+
+	<!-- load the iXMaps library -->
+	<script src="../ixmaps-gl.js"></script>
+	<script src="./js/dataprovider_flatgeobuffer_test.js"></script>
+
+	<!-- the map code -->
+	<script type="text/javascript" charset="utf-8">
+
+		// ---------------------------------------------------
+		// c o n s t a n t s   a n d   v a r i a b l e s 
+		// ---------------------------------------------------
+
+		const attribution =
+			"powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
+
+		const MIN_ZOOM = 12;
+
+		let szThemeUrl = "";
+		let szThemeNameA = [];
+
+		ixmaps.__oldBounds = null;
+		
+		// Track pending downloads to prevent loading message flickering
+		let __pendingDownloads = 0;
+
+
+		// ---------------------------------------------------------------------
+		// r e f r e s h   o n   z o o m    a n d    p a n
+		// ---------------------------------------------------------------------
+
+		/**
+		 * Create a debounced variant of the provided callback.
+		 * @param {Function} func - Function executed after trailing delay expires.
+		 * @param {number} wait - Debounce delay in milliseconds.
+		 * @returns {Function} Debounced wrapper that postpones execution.
+		 */
+		let __debounce = function (func, wait) {
+			let timeout;
+			return function executedFunction(...args) {
+				const later = () => {
+					clearTimeout(timeout);
+					func(...args);
+				};
+				clearTimeout(timeout);
+				timeout = setTimeout(later, wait);
+			};
+		};
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// t h e   v i s u a l i z a t i o n
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		/**
+		 ** define the visualization theme
+		 **/
+		var __chart_theme =
+			ixmaps.layer("osm", layer => layer
+				.data({
+					type: "ext",
+					name: "dataquery_flatgeobuffer",
+					url: "https://ixmaps-data.s3.amazonaws.com/TestData/beni_immobili_pubblici.fgb"
+				})
+				.binding({
+					position: "geometry",
+					value: "natura_del_bene"
+				})
+				.type("CHART|SYMBOL|SEQUENCE|STAR|SIZE|VALUES|CATEGORICAL|AGGREGATE|SUM|COMPACTLEGEND")
+				.style({
+					values:["TERRENO","FABBRICATO"],
+					label:["Terreni","Fabbricati"],
+					colorscheme: [
+						"8",
+						"tableau10"
+					],
+					fillopacity: "0.7",
+					sizepow: "3",
+					linecolor: "white",
+					linewidth: "1",
+					normalsizevalue: "200",
+					units: "",
+					valuedecimals: "0",
+					name: "features",
+					chartupper: "1:100000",
+					showdata: "true"
+				})
+				.meta({
+					title: "Beni Immobiliari della Pubblica Amministrazione",
+					splash: "...",
+					tooltip: "{{theme.item.data}}"
+				})
+			);
+
+		/**
+		 **
+		 ** define andembed the interactive map  
+		 **
+		 **/
+		ixmaps.Map("map_div", {
+			mapService: "leaflet_vt",
+			mapType: "VT_TONER_LITE",
+			map: "../../maps/svg/maps/generic/mercator.svg",
+			legend: "true",
+			align: "100px left",
+			mode: "map",
+			search: "world",
+			tools: "true",
+			about: "test"
+		}).then(map => map
+				.view([42.85, 13.58], 14)
+				.options({
+					featurescaling: "true",
+					objectscaling: "dynamic",
+					normalSizeScale: "100000",
+					flushChartDraw: "1000000",
+					flushPaintShape: "1000000",
+					hideOnPan: "false",
+					freezeOnPan: "false",
+					basemapopacity: "1",
+					worksilent: "true",
+					loadsilent: "false"
+				})
+				.require("https://unpkg.com/osmtogeojson@3.0.0-beta.4/osmtogeojson.js")
+
+				.layer(__chart_theme)
+		);
+
+	</script>
+
+</body>
+
+</html>

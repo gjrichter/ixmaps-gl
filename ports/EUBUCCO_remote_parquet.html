@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example - EUBUCCO remote parquet, loaded by bounding box">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>EUBUCCO Emilia-Romagna - remote parquet by bbox</title>
+</head>
+
+<body style="margin:0;padding:0;">
+
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+
+	<!-- include the ixmaps API -->
+	<script src="../ixmaps-gl.js"></script>
+	<!-- local dev: <script src="http://localhost:8753/Repositories/GitHub/ixmaps-flat/ixmaps.js"></script> -->
+	<script src="./js/dataprovider_remote_parquet.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+
+		// ---------------------------------------------------
+		// U R L   r o u t i n g   ( hash: #zoom/lat/lng )
+		// ---------------------------------------------------
+
+		function _getViewFromHash() {
+			const hash = window.location.hash.slice(1);
+			if (!hash) return null;
+			const parts = hash.split('/');
+			if (parts.length === 3) {
+				const zoom = parseFloat(parts[0]);
+				const lat  = parseFloat(parts[1]);
+				const lng  = parseFloat(parts[2]);
+				if (!isNaN(zoom) && !isNaN(lat) && !isNaN(lng))
+					return { zoom, lat, lng };
+			}
+			return null;
+		}
+
+		function _setHash(lat, lng, zoom) {
+			const h = `#${parseFloat(zoom).toFixed(2)}/${parseFloat(lat).toFixed(6)}/${parseFloat(lng).toFixed(6)}`;
+			if (window.location.hash !== h)
+				history.replaceState(null, null, h);
+		}
+
+		// ---------------------------------------------------
+		// t h e   l a y e r
+		// ---------------------------------------------------
+
+		var __polygons =
+			ixmaps.layer("Polygons")
+			.data({
+				"type": "ext",
+				"name": "dataquery_remote_parquet",
+				"url": "https://s3.eubucco.com/eubucco/v0.2/buildings/parquet/nuts_id=ITH5/ITH5.parquet",
+			})
+			.binding({
+				"geo": "geometry",
+				"value": "subtype"
+			})
+			.type("FEATURE|CHOROPLETH|CATEGORICAL")
+			.style({
+				"colorscheme": [
+					9,
+					"tableau"
+				],
+				"fillopacity": 1,
+				"shadow": false,
+				"visible": true,
+				"showdata": true,
+				"values": [
+					"agricultural",
+					"apartment",
+					"industrial",
+					"detached",
+					"others",
+					"commercial",
+					"public",
+					"terraced",
+					"semi-detached"],
+				"units": "",
+				"scale": 1,
+				"sizepow": 2,
+				"linecolor": [
+					"none"
+				],
+				"linewidth": "0.5",
+				"valuescale": 1,
+				"featureupper": "1:150000"
+			})
+			.meta({
+				"title": "EUBUCCO Emilia-Romagna (remote parquet)",
+				"snippet": "",
+				"description": "",
+				"name": "EUBUCCO_ITH5",
+				"tooltip": "{{theme.item.data}}"
+			})
+			.define();
+
+		// ---------------------------------------------------
+		// t h e   m a p
+		// ---------------------------------------------------
+
+		// create and embed the map
+		// ! reference to "map-div", the hosting html div
+
+		let _map = ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "VT_DATAVIZ_DARK",
+			map: "../../maps/svg/maps/generic/mercator.svg",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			search: "Europe",
+			about: "EUBUCCO remote parquet test"
+		});
+		_map.options({
+			featurescaling: "true",
+			objectscaling: "dynamic",
+			normalSizeScale: "20000000",
+			flushChartDraw: "1000000",
+			flushPaintShape: "1000000",
+
+			dynamiclabel: "false",
+			basemapopacity: "0.5",
+			worksilent: "false",
+			loadsilent: "false",
+			hideOnPan: "false",
+			freezeOnPan: "false",
+		});
+		_map.attribution("building data: <a href='https://eubucco.com' target='_blank'>EUBUCCO v0.2</a>");
+		var _urlView = _getViewFromHash();
+		_map.view(_urlView ? {
+			"center": { "lat": String(_urlView.lat), "lng": String(_urlView.lng) },
+			"zoom": String(_urlView.zoom)
+		} : {
+			"center": {
+				"lat": "44.494887",
+				"lng": "11.342616"
+			},
+			"zoom": "15"
+		});
+
+		_map.layer(__polygons);
+
+		// write initial hash once map is ready
+		_map.on('mapready', function() {
+			var c = ixmaps.getCenter();
+			_setHash(c.lat, c.lng, ixmaps.getZoom());
+		});
+
+		// update hash on every pan / zoom
+		_map.on('moveend', function() {
+			var c = ixmaps.getCenter();
+			_setHash(c.lat, c.lng, ixmaps.getZoom());
+		});
+
+		// respond to browser back / forward
+		window.addEventListener('hashchange', function() {
+			var v = _getViewFromHash();
+			if (v) _map.view({ center: { lat: String(v.lat), lng: String(v.lng) }, zoom: String(v.zoom) });
+		});
+
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+ 
+	<title>Created by Composer</title>
+</head>
+ 
+<body style="margin:0;padding:0;">
+ 
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+ 
+	<!-- include the ixmaps API -->
+	<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+	<script src="./js/dataprovider_flatgeobuffer_test.js"></script>
+ 
+	<script type="text/javascript" charset="utf-8">
+
+		var process_data = function(data) {
+			data.column("capacity_mw").map(item => {
+				return (
+					String(Math.floor(item*100)/100)+" MW"
+				);
+			});
+		};
+ 
+		// create and embed the map
+		// ! reference to "map-div", the hosting html div
+
+		ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "OpenStreetMap - Osmarenderer",
+			map: "../../maps/svg/maps/generic/mercator.svg",
+			height: "800px",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			search: "Europe",
+			about: "test"
+		},
+		map => map
+		.options({
+			featurescaling: "true",
+			objectscaling: "dynamic",
+			normalSizeScale: "20000000",
+			flushChartDraw: "1000000",
+			flushPaintShape: "1000000",
+			basemapopacity: "0.5",
+			worksilent: "false",
+			loadsilent: "false",
+			hideOnPan:  "false",
+			freezeOnPan:"false",
+		})
+		.attribution("")
+		.view({
+			center: {
+				lat: "20.3034175184893",
+				lng: "3.1640625000000004"
+				},
+			zoom: "2"
+			})
+		.layer(ixmaps.layer("2025-Q4_analysis_polygons", layer => layer
+			.data({
+				type: "ext",
+				name: "dataquery_flatgeobuffer",
+				url: "https://s3.fr-par.scw.cloud/ixmaps.data/test%20only/2025-Q4_analysis_polygons.fgb"
+				})
+			.binding({
+				geo: "geometry",
+				value: "$item$"
+				})
+			.type("FEATURE")
+			.style({
+				colorscheme: [
+					"#4400dd"],
+				fillopacity: "0.01",
+				shadow: "false",
+				visible: "true",
+				showdata: "true",
+				units: "",
+				scale: "1",
+				sizepow: "2",
+				linecolor: [
+					"#dd8800"],
+				linewidth: "1.5",
+				featureupper: "1:200000",
+				valuescale: "1"
+				})
+			.meta({
+				title: "2025-Q4_analysis_polygons",
+				snippet: "",
+				description: "",
+				name: "2025-Q4_analysis_polygons",
+				tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+				})
+		))
+		.layer(ixmaps.layer("2025-Q4_analysis_points", layer => layer
+			.data({
+				url: "https://s3.fr-par.scw.cloud/ixmaps.data/test%20only/2025-Q4_analysis_polygons.parquet",
+				type: "parquet",
+				name: "data_1770334473470",
+				process: process_data.toString(),
+				cache: "true"
+				})
+			.binding({
+				geo: "latitude|longitude",
+				value: "country",
+				size: "capacity_mw",
+				title: "capacity_mw"
+				})
+			.type("CHART|BUBBLE|SIZE|CATEGORICAL|AGGREGATE|RELOCATE|CIRCULARBOX|BOTTOMTITLESUM")
+			.style({
+				colorscheme: [
+					"1",
+					"#dd8800",
+					"#dd8800"],
+				fillopacity: "0.7",
+				shadow: "false",
+				visible: "true",
+				showdata: "true",
+				units: "MW",
+				scale: "1",
+				sizepow: "2",
+				valuescale: "1",
+				gridwidthpx: "2",
+				valuefield: "capacity_mw",
+				valuedecimals: "2",
+				textscale: "0.4",
+				textcolor: "#884400",
+				boxcolor: "white",
+				boxupper: "1:200000",
+				valueupper: "1:200000",
+				})
+			.meta({
+				title: "<big>Solar Assets by Country</big> <br><small> 2025-Q4_analysis_points<br>fonte: <a href='https://www.transitionzero.org/products/solar-asset-mapper' target='_blank'>Transition Zero</a></small>",
+				snippet: "",
+				description: "",
+				name: "2025-Q4_analysis_points",
+				tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+				})
+		))
+	);
+	</script>
+</body>
+</html>

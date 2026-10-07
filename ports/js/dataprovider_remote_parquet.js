@@ -1,0 +1,221 @@
+/**
+ * Data provider for remote (Geo)Parquet sources with bbox helper columns.
+ *
+ * Queries a remote parquet URL (e.g. EUBUCCO on S3) directly via DuckDB WASM
+ * with a spatial filter (bbox) based on the current map bounds - only row
+ * groups intersecting the viewport are downloaded (HTTP range requests).
+ * Re-queries when the user zooms or pans outside the last loaded bounds
+ * (with debouncing).
+ */
+
+window.ixmaps = window.ixmaps || {};
+(function () {
+
+	"use strict";
+
+	const MIN_ZOOM = 13;
+	const DEBOUNCE_MS = 500;
+	const BBOX_PADDING = 0.1;  // 10% padding around viewport
+	const MAX_ROWS = 150000;   // abort with error when the bbox selects more rows (data.js runs the query with LIMIT MAX_ROWS+1)
+
+	// columns to select (besides the geometry column, added automatically);
+	// keep this list short - it cuts the transfer volume massively
+	const COLUMNS = ["id", "type", "subtype", "height", "construction_year"];
+
+	let szThemeUrl = "";
+	let szThemeNameA = [];
+	let __oldBounds = null;
+	let __retryPending = false;  // one busy-retry at a time (two providers on
+	                             // a page would otherwise multiply retries)
+
+	// bounds no viewport is inside: the next zoom/pan re-queries. Set whenever
+	// an empty table is handed over, or the wide bounds of that view would
+	// count as "already loaded" when zooming back in.
+	const __noBounds = () => [{ lat: 0, lng: 0 }, { lat: 0, lng: 0 }];
+
+	// -------------------------------------------------------------------------
+	// Debounce helper
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Returns a debounced version of fn that runs after `wait` ms of no calls.
+	 * @param {Function} fn - Function to debounce
+	 * @param {number} wait - Delay in ms
+	 * @returns {Function} Debounced function
+	 */
+	function __debounce(fn, wait) {
+		let timeout;
+		return function executedFunction(...args) {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => fn(...args), wait);
+		};
+	}
+
+	/**
+	 * Returns true if the theme should be considered visible (not hidden by user or scale).
+	 */
+	function __isThemeVisible(themeObj) {
+		if (!themeObj) return false;
+		if (themeObj.fHide === true) return false;
+		if (typeof themeObj.fShow !== "undefined") return themeObj.fShow === true;
+		if (typeof themeObj.fVisible !== "undefined") return themeObj.fVisible === true;
+		return true;
+	}
+
+	/**
+	 * Refreshes only themes that use this provider and are currently visible,
+	 * so they re-query with the new map bounds.
+	 */
+	function __refreshThemes() {
+		let nRefresh = 0;
+		for (let szThemeName in szThemeNameA) {
+			let themeObj = ixmaps.getThemeObj && ixmaps.getThemeObj(szThemeName);
+			if (__isThemeVisible(themeObj)) {
+				++nRefresh;
+				ixmaps.refreshTheme(szThemeName);
+			}
+		}
+		if ( nRefresh === 0 ){
+			__oldBounds = __noBounds();
+		}
+	}
+
+	const __debouncedRefresh = __debounce(__refreshThemes, DEBOUNCE_MS);
+
+	/**
+	 * Builds a valid but empty jsonDB table. ixmaps.setExternalData() alerts
+	 * "data is null or undefined" when passed null/undefined - use this instead
+	 * to clear a theme's display (out-of-scale zoom, load error, no data url).
+	 */
+	function __emptyTable() {
+		return new Data.Table().setArray([["id"]]);
+	}
+
+	// -------------------------------------------------------------------------
+	// Data query: remote parquet with bbox filter
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Queries data from the remote parquet source using the current map bounds.
+	 * At zoom < MIN_ZOOM returns empty data. Otherwise requests the parquet URL
+	 * with a bbox (with padding) so only visible-area features are loaded.
+	 *
+	 * @param {*} data - Unused (kept for API compatibility)
+	 * @param {Object} option - Theme options; must include option.theme.szName, option.name, option.ext (data URL)
+	 */
+	ixmaps.dataquery_remote_parquet = function (data, option) {
+
+		szThemeNameA[option.theme.szName] = option.theme.szName;
+		szThemeUrl = option.ext;
+
+		if (!szThemeUrl) {
+			ixmaps.setTitleBox("error while loading: no data url", "RGBA(128,0,0,0.5)");
+			__oldBounds = __noBounds();
+			ixmaps.setExternalData(__emptyTable(), { type: "jsonDB", name: option.name });
+			return;
+		}
+
+		if (ixmaps.getZoom() < MIN_ZOOM) {
+			ixmaps.setTitleBox("zoom in to load buildings ...");
+			__oldBounds = __noBounds();
+			ixmaps.setExternalData(__emptyTable(), { type: "jsonDB", name: option.name });
+			return;
+		}
+
+		let bounds = (__oldBounds = ixmaps.getBoundingBox());
+
+		// Build bbox with padding so we fetch slightly beyond viewport (fewer refetches on small pans)
+		let width = bounds[1].lng - bounds[0].lng;
+		let height = bounds[1].lat - bounds[0].lat;
+		let bbox = [
+			bounds[0].lng - width * BBOX_PADDING,
+			bounds[0].lat - height * BBOX_PADDING,
+			bounds[1].lng + width * BBOX_PADDING,
+			bounds[1].lat + height * BBOX_PADDING
+		];
+
+		ixmaps.setTitleBox("querying data ...");
+		ixmaps.in_query = true;
+
+		Data.feed({
+			source: szThemeUrl,
+			type: "parquet",
+			bbox: bbox,
+			columns: COLUMNS,
+			maxRows: MAX_ROWS
+		})
+			.load(function (mydata) {
+				ixmaps.setTitle("");
+				ixmaps.setExternalData(mydata, {
+					type: "jsonDB",
+					name: option.name
+				});
+				ixmaps.in_query = false;
+			})
+			.error(function (e) {
+				ixmaps.setTitleBox("error while loading: " + e, "RGBA(128,0,0,0.5)");
+				__oldBounds = __noBounds();
+				ixmaps.setExternalData(__emptyTable(), { type: "jsonDB", name: option.name });
+				ixmaps.in_query = false;
+				ixmaps.setTitle("");
+			});
+	};
+
+	// -------------------------------------------------------------------------
+	// Zoom/pan: re-query only when bounds leave the last loaded area
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Returns true if `bounds` is fully inside `__oldBounds` (no need to refetch).
+	 */
+	function __boundsInsideOld(bounds) {
+		if (!__oldBounds) return false;
+		return (
+			bounds[0].lat >= __oldBounds[0].lat &&
+			bounds[0].lng >= __oldBounds[0].lng &&
+			bounds[1].lat <= __oldBounds[1].lat &&
+			bounds[1].lng <= __oldBounds[1].lng
+		);
+	}
+
+	// the previous hook, captured ONCE at load: a shared 'htmlgui_onZoomAndPan_old' property
+	// gets overwritten when a second provider loads, and this wrapper would
+	// then call ITSELF through it - capture locally instead
+	const __oldZoomHook = ixmaps.htmlgui_onZoomAndPan;
+	ixmaps.htmlgui_onZoomAndPan = function (nZoom) {
+
+		// If a query is in progress, retry after a short delay - one at a
+		// time (see __retryPending)
+		if (ixmaps.in_query) {
+			ixmaps.setTitleBox("theme busy ...");
+			if (!__retryPending) {
+				__retryPending = true;
+				setTimeout(() => { __retryPending = false; ixmaps.htmlgui_onZoomAndPan(nZoom); }, 250);
+			}
+			if (__oldZoomHook) __oldZoomHook(nZoom);
+			return;
+		}
+
+		let bounds = ixmaps.getBoundingBox();
+
+		// No previous bounds: let the theme load normally, don’t trigger refresh here
+		if (!__oldBounds) {
+			if (__oldZoomHook) __oldZoomHook(nZoom);
+			return;
+		}
+
+		// Still inside last loaded bbox: no refetch
+		if (__boundsInsideOld(bounds)) {
+			ixmaps.setTitle("");
+			if (__oldZoomHook) __oldZoomHook(nZoom);
+			return;
+		}
+
+		// Map has panned/zoomed outside loaded area: debounced refresh
+		__debouncedRefresh();
+		__oldBounds = bounds;
+
+		if (__oldZoomHook) __oldZoomHook(nZoom);
+	};
+
+})();

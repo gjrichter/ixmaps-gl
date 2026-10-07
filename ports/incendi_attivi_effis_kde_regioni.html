@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mappa interattiva degli incendi attivi in Italia (EFFIS/NASA FIRMS) con esclusione automatica delle sorgenti di calore industriali note e interpolazione di densità KDE">
+    <meta name="author" content="italy-fire-watch">
+    <meta name="keywords" content="incendi, EFFIS, FIRMS, VIIRS, MODIS, KDE, Italia, satellite, mappa interattiva">
+
+    <title>Incendi Italia — EFFIS filtrato + KDE</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+    <link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+    <style>
+        /* ============================================================
+           ixMaps · linguaggio UI moderno — variante FLAT (no shadow)
+           Adattato da site_wbgt_flat.css, ritinteggiato sulla palette
+           magenta->rosso di questa mappa (incendi EFFIS).
+           ============================================================ */
+        :root {
+            --primary-color: #dd0088;
+            --secondary-color: #5b6470;
+            --accent-color: #dd0088;
+            --text-color: #0b0d0f;
+            --background-color: #ffffff;
+            --sidebar-background: #ffffff;
+            --title-color: #dd0088;
+
+            --soft: #f6f7f9;
+            --inset: #eef1f4;
+            --ink: #0b0d0f;
+            --ink-2: #5b6470;
+            --ink-3: #9aa1ab;
+            --line: #e9ebef;
+            --line-2: #d7dbe1;
+            --blue: #dd0088;
+            --blue-2: #f4519e;
+            --azure: #fbe8f4;
+            --azure-ink: #99005c;
+
+            --border-radius: 14px;
+            --r-ctrl: 9px;
+            --r-pill: 999px;
+            --sh-soft: none;
+            --sh-float: none;
+            --transition: all 0.15s ease;
+
+            --mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #map { width: 100%; height: 100%; }
+
+        .logo {
+            position: absolute; bottom: 20px; right: 20px;
+            z-index: 9999; cursor: pointer; transition: var(--transition); opacity: 0.85;
+        }
+        .logo:hover { opacity: 1; }
+        .logo-text {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 24px; line-height: 0.85; font-weight: 700;
+            color: #9aa0a6; text-align: left;
+        }
+
+        .sidebar {
+            position: absolute; right: 5%; top: 14px;
+            max-width: 340px; width: 28%; min-width: 300px;
+            background: var(--sidebar-background);
+            border: 1px solid var(--line-2);
+            border-radius: var(--border-radius);
+            box-shadow: var(--sh-float);
+            z-index: 99999; transition: var(--transition);
+            max-height: calc(100vh - 28px);
+            display: flex; flex-direction: column;
+        }
+        .sidebar-content { padding: 18px 20px; }
+
+        .sidebar h1 {
+            font-size: 1.6em; font-weight: 700;
+            line-height: 1.3; letter-spacing: -0.01em;
+            margin: 0 0 10px 0; color: var(--title-color);
+            padding-bottom: 10px; border-bottom: 2px solid var(--title-color);
+        }
+
+        .sidebar-toggle {
+            position: absolute; top: 6px; right: 6px;
+            background: none; border: none; font-size: 22px;
+            color: var(--ink-3); cursor: pointer; padding: 6px;
+            border-radius: 7px; transition: var(--transition);
+        }
+        .sidebar-toggle:hover { background-color: var(--soft); color: var(--ink-2); }
+
+        a { color: var(--text-color); text-decoration: none; transition: var(--transition); }
+        a:hover { color: var(--blue); }
+        .source-link { color: var(--blue); font-weight: 500; }
+        .source-link:hover { text-decoration: underline; }
+
+        .controls {
+            background: #fff; padding: 14px;
+            border-radius: var(--r-ctrl); margin: 14px 0;
+            border: 1px solid var(--line);
+        }
+        .control-label {
+            display: block; font-weight: 600;
+            font-size: 12.5px; letter-spacing: 0; text-transform: none;
+            color: var(--ink-2); margin-bottom: 9px;
+        }
+
+        /* Compact checkbox row - stacks tightly, explanation via title tooltip
+           instead of a permanently-visible paragraph (was taking too much space) */
+        .check-row {
+            display: block; font-size: 12.5px; color: var(--ink-2);
+            cursor: pointer; padding: 4px 0;
+        }
+        .check-row:not(:last-child) { border-bottom: 1px solid var(--line); }
+        .check-row input[type=checkbox] { vertical-align: middle; accent-color: var(--blue); margin-right: 2px; }
+
+        .controls .slider {
+            -webkit-appearance: none; appearance: none;
+            height: 4px; border-radius: 2px; width: 100%;
+            background: var(--line-2) !important;
+            outline: none; opacity: 1 !important; cursor: pointer;
+        }
+        .controls .slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 16px !important; height: 16px !important; border-radius: 50% !important;
+            background: #fff !important; border: 2px solid var(--blue) !important;
+            box-shadow: var(--sh-soft); cursor: pointer;
+        }
+        .controls .slider::-moz-range-thumb {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #fff; border: 2px solid var(--blue); box-shadow: var(--sh-soft); cursor: pointer;
+        }
+        .controls .slider::-moz-range-track {
+            background: var(--line-2); height: 4px; border-radius: 2px;
+        }
+        .controls label[style*="cursor:pointer"] input[type=checkbox] { accent-color: var(--blue); }
+
+        .statistics {
+            background: var(--soft); border: 1px solid var(--line);
+            border-radius: var(--r-ctrl); padding: 12px 14px; margin: 14px 0 0;
+            font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
+            flex: 1 1 auto; min-height: 60px; overflow-y: auto;
+        }
+        .statistics strong { color: var(--ink); font-weight: 600; }
+        .statistics .stat-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            gap: 10px; padding: 3px 0;
+        }
+        .statistics .stat-row > span:first-child { color: var(--ink-2); }
+        .statistics .stat-row .v { font-family: var(--mono); color: var(--ink); text-align: right; }
+        .statistics .stat-row .v.big { font-size: 18px; font-weight: 600; color: var(--blue); }
+        .statistics em { font-style: normal; color: var(--ink-3); font-size: 0.82em; }
+
+        .code-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 20, 35, .5); z-index: 999999; display: none;
+        }
+        .code-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90%; max-width: 1200px; height: 80%; background: #fff;
+            border-radius: var(--border-radius); box-shadow: none;
+            display: flex; flex-direction: column; border: 1px solid var(--line-2);
+        }
+        .code-header {
+            padding: 14px 18px; background: var(--soft); color: var(--ink);
+            border-bottom: 1px solid var(--line);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .code-header h2 { font-size: 15px; font-weight: 650; margin: 0; }
+        .code-actions { display: flex; gap: 8px; }
+        .code-actions a { color: var(--ink-2); padding: 5px 10px; border-radius: 7px; transition: var(--transition); }
+        .code-actions a:hover { background: var(--soft); color: var(--ink); }
+        .code-content { flex: 1; overflow: auto; padding: 18px; }
+        .hljs { background: var(--soft); border-radius: var(--r-ctrl); padding: 15px; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b3b8bf; }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        }
+        button:focus-visible, a:focus-visible, input:focus-visible {
+            outline: 2px solid var(--blue-2); outline-offset: 2px;
+        }
+
+        /* Info button — pinned to the sidebar's bottom-right corner, always visible
+           regardless of scroll (was inline next to the title, easy to miss there) */
+        .info-button {
+            display: flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px; background: #fff; color: #666;
+            border-radius: 50%; font-size: 12px; font-weight: 700; cursor: pointer;
+            border: 1px solid #bbb; font-family: Georgia, serif;
+            transition: color 0.15s, border-color 0.15s; user-select: none;
+            position: absolute; bottom: 14px; right: 14px; z-index: 100000;
+        }
+        .info-button:hover { color: #111; border-color: #888; }
+
+        .info-popup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 10000; }
+        .info-popup-overlay.active { display: block; }
+        .info-popup {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            background: #fff; border: 1px solid #d7dbe1; border-radius: 12px; box-shadow: none;
+            z-index: 100001; width: min(620px, 94vw); max-height: 88vh; overflow: hidden; flex-direction: column;
+        }
+        .info-popup.active { display: flex; }
+        .info-popup-header { padding: 16px 20px 14px; border-bottom: 1px solid #eef0f2; position: sticky; top: 0; background: #f7f8f9; z-index: 10; }
+        .info-popup-header h2 { margin: 0; font-size: 15px; font-weight: 600; color: #222; letter-spacing: .01em; }
+        .info-popup-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer; line-height: 1; padding: 2px 4px; border-radius: 3px; transition: color .15s; }
+        .info-popup-close:hover { color: #222; }
+        .info-popup-content { padding: 18px 20px; color: #333; font-size: 13.5px; line-height: 1.65; overflow-y: auto; flex: 1; }
+        .info-popup-content h3 { color: #0b0d0f; margin: 22px 0 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid #e9ebef; padding-bottom: 5px; }
+        .info-popup-content h3:first-child { margin-top: 0; }
+        .info-popup-content p { margin: 6px 0; }
+        .info-popup-content ul { margin: 6px 0; padding-left: 22px; }
+        .info-popup-content li { margin: 5px 0; }
+        .info-popup-content strong { color: #0b0d0f; font-weight: 600; }
+        .info-popup-content code { background: #fbe8f4; padding: 1px 6px; border-radius: 5px; font-family: var(--mono); font-size: .86em; color: #99005c; }
+        .info-section { background: #fdf4f9; padding: 11px 14px; border-radius: 9px; margin: 10px 0; border-left: 3px solid #dd0088; }
+        .fire-scale { display: flex; align-items: center; gap: 3px; margin: 8px 0; flex-wrap: wrap; }
+        .fire-scale-item { display: inline-block; width: 26px; height: 14px; border: 1px solid #ddd; }
+        .fire-scale span { font-size: 11px; color: #666; }
+        .info-popup-footer { padding: 11px 20px; background: #f6f7f9; border-top: 1px solid #e9ebef; font-size: 12px; color: #5b6470; }
+        .info-popup-footer a { color: #99005c; text-decoration: none; }
+        .info-popup-footer a:hover { text-decoration: underline; }
+
+        .mobile-top-bar { display: none; }
+        @media (max-width: 768px) {
+            #map { margin-top: 36px; height: calc(100vh - 36px) !important; }
+            .mobile-top-bar {
+                display: flex; position: fixed; top: 0; left: 0; right: 0; height: 36px;
+                background: rgba(255,255,255,.97); border-bottom: 1px solid #d4d4d4; z-index: 99999;
+                align-items: center; justify-content: center; gap: 7px; padding: 0 12px; font-size: 12.5px;
+            }
+            .mtb-title { font-weight: 600; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .mtb-sep { color: #ccc; }
+            .mtb-period { color: #777; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+            .sidebar {
+                position: fixed; right: 10px; top: 46px;
+                width: calc(100% - 20px); max-width: none; min-width: auto;
+                max-height: calc(100vh - 66px);
+            }
+            .logo { right: 10px; bottom: 10px; }
+            .logo-text { font-size: 30px; }
+            .code-container { width: 95%; height: 90%; }
+        }
+        @media (max-width: 480px) {
+            .sidebar-content { height: 100%; overflow-y: auto; }
+            .logo-text { font-size: 26px; }
+        }
+
+        .loading {
+            display: inline-block; width: 18px; height: 18px; margin-right: .5em;
+            border: 2px solid var(--line); border-top: 2px solid var(--blue);
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<!-- Info Popup -->
+<div class="info-popup-overlay" id="infoOverlay" onclick="toggleInfoPopup()"></div>
+<div class="info-popup" id="infoPopup">
+    <div class="info-popup-header">
+        <h2>Incendi Italia — EFFIS / FIRMS</h2>
+        <button class="info-popup-close" onclick="toggleInfoPopup()" aria-label="Chiudi">&times;</button>
+    </div>
+    <div class="info-popup-content">
+
+        <h3>Descrizione</h3>
+        <p>
+            Hotspot satellitari <strong>attivi nelle ultime 48 ore</strong> sul territorio italiano, dagli stessi
+            sensori usati da <strong>EFFIS</strong> (Copernicus) e ridistribuiti da <strong>NASA FIRMS</strong>.
+            Le sorgenti di calore industriali note (altiforni, raffinerie, centrali, inceneritori) che altrimenti
+            verrebbero segnalate come incendi sono escluse automaticamente.
+        </p>
+
+        <h3>Sensori</h3>
+        <ul>
+            <li><strong>SUOMI VIIRS C2</strong> — Suomi NPP, risoluzione 375m</li>
+            <li><strong>NOAA-20/J1 VIIRS C2</strong> — JPSS-1, risoluzione 375m</li>
+            <li><strong>MODIS C6.1</strong> — Terra/Aqua, risoluzione 1km</li>
+        </ul>
+
+        <h3>Scala cromatica</h3>
+        <div class="fire-scale">
+            <span>bassa FRP</span>
+            <div class="fire-scale-item" style="background:#f54aff"></div>
+            <div class="fire-scale-item" style="background:#e34dc0"></div>
+            <div class="fire-scale-item" style="background:#d15080"></div>
+            <div class="fire-scale-item" style="background:#c05440"></div>
+            <div class="fire-scale-item" style="background:#f52926"></div>
+            <span>alta FRP</span>
+        </div>
+        <p style="font-size:.9em;color:#666">Ogni cerchio (VIIRS) o quadrato (MODIS) è una cella di griglia con la
+            potenza radiativa del fuoco (FRP) sommata dei rilevamenti al suo interno.</p>
+
+        <h3>Filtro sorgenti note (non incendio)</h3>
+        <div class="info-section">
+            <strong>Lista iniziale curata</strong>
+            <p style="margin-top:6px">14 siti noti: 12 industriali (ILVA Taranto, raffinerie, centrali termoelettriche,
+                inceneritori — buffer 1500-2000m) e 2 vulcani attivi (Etna, Stromboli — buffer 3000-4000m per coprire
+                anche episodi eruttivi, non solo il cratere).</p>
+        </div>
+        <div class="info-section">
+            <strong>Mask auto-derivata</strong>
+            <p style="margin-top:6px">Ogni cella di griglia (~1km) rilevata in almeno 10 giorni distinti su una
+                finestra di 60 giorni viene promossa automaticamente a "sorgente nota" ed esclusa (buffer 750m) —
+                la lista cresce da sola nel tempo.</p>
+        </div>
+        <p>Il numero di rilevamenti esclusi è indicato nel pannello laterale.</p>
+
+        <h3>Densità (KDE)</h3>
+        <p>Stima kernel-density (Gaussiana, Turf.js) calcolata dai punti degli stessi tre layer, pesata per FRP —
+            mostra le zone di concentrazione degli incendi indipendentemente dalla dimensione delle singole celle.
+            Ampiezza banda e opacità regolabili dal pannello laterale.</p>
+
+        <h3>Note sull'interazione</h3>
+        <ul>
+            <li>Rotellina o pinch per lo zoom · trascina per spostarti</li>
+            <li>Hover sulle celle per il tooltip con FRP, confidenza, satellite e data/ora</li>
+        </ul>
+
+    </div>
+    <div class="info-popup-footer">
+        Dati: <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank" rel="noopener">NASA FIRMS</a> ·
+        <a href="https://forest-fire.emergency.copernicus.eu/" target="_blank" rel="noopener">EFFIS</a>
+        &nbsp;·&nbsp; Pipeline: <a href="https://github.com/gjrichter/italy-fire-watch" target="_blank" rel="noopener">italy-fire-watch</a>
+        &nbsp;·&nbsp; Visualizzazione: <a href="https://ixmaps.com" target="_blank" rel="noopener">iXMaps</a>
+        &nbsp;·&nbsp; Sviluppato con <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a>
+    </div>
+</div>
+
+<!-- Logo / view source -->
+<div class="logo" onclick="toggleCodeView()" role="button" tabindex="0" aria-label="Mostra codice HTML">
+    <div class="logo-text">Data<br><span style="padding-left: 2px;">Viz</span><em style="font-style: italic;"> i</em></div>
+</div>
+
+<main>
+    <div id="map" role="application" aria-label="Mappa interattiva degli incendi attivi in Italia"></div>
+
+    <div class="sidebar" id="sidebar_toggle" style="background:none;box-shadow:none;">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Apri menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+            </svg>
+        </button>
+    </div>
+
+    <aside class="sidebar" id="main_sidebar">
+        <div class="sidebar-content" style="width:100%;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;z-index:99999">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Chiudi menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm8.5 9.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z"/>
+                </svg>
+            </button>
+
+            <header>
+                <h1>Incendi Italia — EFFIS</h1>
+                <p style="margin:0;font-size:.9em;color:var(--secondary-color)">
+                    Dati: <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank" rel="noopener" class="source-link">NASA FIRMS</a> / EFFIS — pipeline <a href="https://github.com/gjrichter/italy-fire-watch" target="_blank" rel="noopener" class="source-link">italy-fire-watch</a>
+                </p>
+                <p style="margin:4px 0 0 0;font-size:.9em">
+                    <a href="#" onclick="openInGoogleMaps();return false;" class="source-link">Apri in Google Maps ↗</a>
+                </p>
+            </header>
+
+            <div class="controls">
+                <label for="chart_size_slider" class="control-label">grandezza simboli</label>
+                <input type="range" id="chart_size_slider" class="slider" min="0.2" max="3" step="0.05" value="1" aria-label="Regola grandezza simboli">
+            </div>
+
+            <div class="controls" id="kde_group">
+                <label class="check-row" title="Interpolazione spaziale dei rilevamenti pesata per FRP">
+                    <input type="checkbox" id="kde_checkbox" onclick="toggleKDE(this)"> densità (KDE) rilevamenti
+                </label>
+                <label class="check-row" title="Cerchi = buffer attorno a siti industriali, vulcani e celle auto-derivate">
+                    <input type="checkbox" id="exclusion_checkbox" onclick="toggleExclusionAreas(this)"> aree escluse (sorgenti note)
+                </label>
+                <label class="check-row" title="Esclusi di default: più falsi positivi (sun glint/segnale debole)">
+                    <input type="checkbox" id="lowconf_checkbox" onclick="toggleLowConfidence(this)"> includi VIIRS bassa confidenza
+                </label>
+                <div id="kde_sliders" style="display:none;margin-top:10px">
+                    <label class="control-label">opacità KDE <span id="kde_opacity_val">0.15</span></label>
+                    <input type="range" id="kde_opacity_slider" class="slider" min="0" max="0.6" step="0.01" value="0.15" aria-label="Opacità KDE">
+                    <label class="control-label" style="margin-top:14px">ampiezza banda ×<span id="kde_bw_val">1.0</span></label>
+                    <input type="range" id="kde_bw_slider" class="slider" min="0.25" max="4" step="0.05" value="1" aria-label="Ampiezza banda KDE">
+                </div>
+            </div>
+
+            <div class="statistics" id="statistics" aria-live="polite">
+                <div class="loading"></div>
+                <span class="sr-only">Caricamento statistiche...</span>
+            </div>
+        </div>
+        <span class="info-button" onclick="toggleInfoPopup()" title="Informazioni sulla mappa" aria-label="Informazioni" role="button" tabindex="0">i</span>
+    </aside>
+
+    <div class="code-overlay" id="code_overlay">
+        <div class="code-container">
+            <div class="code-header">
+                <h2>Codice HTML della Mappa</h2>
+                <div class="code-actions">
+                    <a href="#" onclick="copyToClipboard();return false;" title="Copia negli appunti"><i class="bi bi-clipboard"></i> Copia</a>
+                    <a href="#" onclick="saveAsFile();return false;" title="Salva come file"><i class="bi bi-download"></i> Salva</a>
+                    <a href="#" onclick="closeCodeView();return false;" title="Chiudi"><i class="bi bi-x-circle"></i> Chiudi</a>
+                </div>
+            </div>
+            <div class="code-content"><pre id="code_display" class="hljs"></pre></div>
+        </div>
+    </div>
+
+    <div class="mobile-top-bar" id="mobile_top_bar">
+        <span class="mtb-title">Incendi Italia — EFFIS</span>
+        <span class="mtb-sep">·</span>
+        <span class="mtb-period" id="mtb_period">—</span>
+    </div>
+</main>
+
+<script src="../ixmaps-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/json_config.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/json_config_html.js"></script>
+
+<script>
+// ---------------------------------------------------
+// s i d e b a r   /   r e s p o n s i v e   c h r o m e
+// ---------------------------------------------------
+let sidebarOpen = window.innerWidth > 768;
+
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+}
+
+function resizeMap() {
+    if (__mapPromise) __mapPromise.then(function (api) { try { api.resize(); } catch (e) {} });
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('main_sidebar');
+    sidebarOpen = !sidebarOpen;
+    sidebar.style.display = sidebarOpen ? 'flex' : 'none';
+    setTimeout(resizeMap, 300);
+}
+
+function handleResize() {
+    const sidebar = document.getElementById('main_sidebar');
+    if (window.innerWidth <= 768) {
+        sidebar.style.display = 'none';
+        sidebarOpen = false;
+    } else {
+        sidebar.style.display = 'flex';
+        sidebarOpen = true;
+    }
+    resizeMap();
+}
+
+if (window.innerWidth <= 768) {
+    document.getElementById('main_sidebar').style.display = 'none';
+    sidebarOpen = false;
+}
+window.addEventListener('resize', debounce(handleResize, 250));
+
+function toggleInfoPopup() {
+    document.getElementById('infoPopup').classList.toggle('active');
+    document.getElementById('infoOverlay').classList.toggle('active');
+}
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closeCodeView();
+        document.getElementById('infoPopup').classList.remove('active');
+        document.getElementById('infoOverlay').classList.remove('active');
+    }
+});
+
+// ---------------------------------------------------
+// v i e w   c o d e   o v e r l a y
+// ---------------------------------------------------
+function toggleCodeView() {
+    const overlay = document.getElementById('code_overlay');
+    overlay.style.display = (overlay.style.display === 'block' ? 'none' : 'block');
+    if (overlay.style.display === 'block') generateHtmlCode();
+}
+function closeCodeView() {
+    document.getElementById('code_overlay').style.display = 'none';
+    document.getElementById('code_display').textContent = "";
+}
+function generateHtmlCode() {
+    try {
+        const codeDisplay = document.getElementById('code_display');
+        const projectCode = ixmaps.map().getProjectString();
+        const htmlCode = new Config(projectCode).getProjectHTML();
+        codeDisplay.textContent = htmlCode;
+        delete codeDisplay.dataset.highlighted;
+        hljs.highlightElement(codeDisplay);
+    } catch (e) { console.warn("[code view] non disponibile:", e); }
+}
+function copyToClipboard() {
+    const codeText = document.getElementById('code_display').textContent;
+    navigator.clipboard.writeText(codeText).then(function () {
+        alert('Codice HTML copiato negli appunti!');
+    }).catch(function (err) { console.error('Errore nella copia:', err); });
+}
+function saveAsFile() {
+    const codeText = document.getElementById('code_display').textContent;
+    const blob = new Blob([codeText], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'italy_fires_effis.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ---------------------------------------------------
+// d a t a   /   s t a t i s t i c s
+// ---------------------------------------------------
+// Cache-bust every page load - jsDelivr's CDN cache + the browser's own HTTP cache
+// (partitioned per top-level origin, so file:// and https:// copies of this same
+// page can otherwise show different cached snapshots of the same URL) would
+// otherwise happily serve an old snapshot of data that changes daily.
+var __cacheBust = "?_=" + Date.now();
+var CSV_URL = "https://cdn.jsdelivr.net/gh/gjrichter/italy-fire-watch@main/italy_fires_current.csv" + __cacheBust;
+var STATS_URL = "https://cdn.jsdelivr.net/gh/gjrichter/italy-fire-watch@main/italy_fires_stats.json" + __cacheBust;
+var MASK_URL = "https://cdn.jsdelivr.net/gh/gjrichter/italy-fire-watch@main/exclusion_mask.geojson" + __cacheBust;
+
+function renderStatistics(stats) {
+    var aggiornati = '-';
+    if (stats.generated_at) {
+        aggiornati = new Date(stats.generated_at).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+    }
+    document.getElementById('statistics').innerHTML =
+        '<div class="stat-row"><span>Hotspot visibili</span><span class="v big">' + stats.kept + '</span></div>' +
+        '<div class="stat-row"><span>Esclusi <em>sorgenti note</em></span><span class="v">' + stats.excluded_count + '</span></div>' +
+        '<div class="stat-row"><span>Finestra dati</span><span class="v">' + stats.window_days + ' giorni</span></div>' +
+        '<div class="stat-row"><span>Aggiornato <em>ora it.</em></span><span class="v">' + aggiornati + '</span></div>';
+    var mtb = document.getElementById('mtb_period');
+    if (mtb) mtb.textContent = 'ultime ' + (stats.window_days * 24) + 'h · agg. ' + aggiornati;
+}
+
+fetch(STATS_URL).then(function (r) { return r.json(); }).then(renderStatistics).catch(function (e) {
+    document.getElementById('statistics').innerHTML = '<span style="color:#c00">statistiche non disponibili</span>';
+});
+
+// ---------------------------------------------------
+// r e g i o n   s h a p e s   ( b a s e   l a y e r )
+// ---------------------------------------------------
+// White Italy-with-regions silhouette under the basemap tiles, same source/style as
+// temperature_attuali_wbgt_kde.html's "nuts2" layer - GISCO NUTS2 (regional) boundaries,
+// filtered to Italy. Attached first so the EFFIS layers draw on top of it.
+const nuts2 =
+    ixmaps.layer("nuts2", layer => layer
+        .type("FEATURES|SILENT|LOCKED|NOLEGEND")
+        .data({
+            url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2021_4326_LEVL_2.geojson",
+            type: "geojson"
+        })
+        .binding({
+            id: "NUTS_ID"
+        })
+        .filter("WHERE CNTR_CODE = IT")
+        .style({
+            colorscheme: ["white"],
+            fillopacity: "1",
+            linecolor: "#999999",
+            linewidth: "2",
+            shadow: true,
+            showdata: true,
+            featurelower: "1:3000000",
+            titlefield: "NUTS_NAME",
+            name: "nuts2"
+        })
+    );
+
+// ---------------------------------------------------
+// t h e   E F F I S   l a y e r s
+// ---------------------------------------------------
+var EFFIS_COLORSCHEME = ["7", "RGB(245,74,255)", "RGB(245,41,38)", "dynamic"];
+
+// VIIRS confidence is categorical (low/nominal/high) - "low" is typically sun-glint or a
+// weak (<15K) thermal anomaly, more prone to false alarms (NASA FIRMS FAQ). Excluded by
+// default, matching NASA's own guidance for lower-false-alarm use; toggle in the sidebar
+// re-includes it. MODIS confidence is a separate 0-100 numeric field, not touched here.
+var EXCLUDE_LOW_CONFIDENCE = true;
+
+function viirsFilter(source) {
+    var f = 'WHERE source == "' + source + '"';
+    if (EXCLUDE_LOW_CONFIDENCE) f += ' AND confidence != "low"';
+    return f;
+}
+
+var __SUOMI_VIIRS_C2 =
+    ixmaps.layer("SUOMI_VIIRS_C2", layer => layer
+        .data({ url: CSV_URL, type: "csv" })
+        .filter(viirsFilter("viirs_snpp"))
+        .binding({ position: "lat|lon", value: "frp" })
+        .type("CHART|BUBBLE|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+        .style({
+            colorscheme: EFFIS_COLORSCHEME,
+            fillopacity: "0.9",
+            linecolor: "orange",
+            linewidth: "2",
+            gridwidth: "15px",
+            datafields: ["frp", "confidence", "satellite", "acq_at"],
+            showdata: "true",
+            name: "SUOMI_VIIRS_C2_current"
+        })
+        .meta({ title: "SUOMI VIIRS C2", tooltip: "<strong>SUOMI VIIRS C2</strong><br>{{theme.item.chart}}{{theme.item.data}}" })
+    );
+
+var __J1_VIIRS_C2 =
+    ixmaps.layer("J1_VIIRS_C2", layer => layer
+        .data({ url: CSV_URL, type: "csv" })
+        .filter(viirsFilter("viirs_noaa20"))
+        .binding({ position: "lat|lon", value: "frp" })
+        .type("CHART|BUBBLE|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+        .style({
+            colorscheme: EFFIS_COLORSCHEME,
+            fillopacity: "0.9",
+            linecolor: "black",
+            linewidth: "1",
+            gridwidth: "15px",
+            datafields: ["frp", "confidence", "satellite", "acq_at"],
+            showdata: "true",
+            name: "J1_VIIRS_C2_current"
+        })
+        .meta({ title: "NOAA-20/J1 VIIRS C2", tooltip: "<strong>NOAA-20/J1 VIIRS C2</strong><br>{{theme.item.chart}}{{theme.item.data}}" })
+    );
+
+// Rebuilds both VIIRS layers in place (same layer name -> overwrites, no removeTheme
+// needed) with the confidence filter toggled on/off.
+function refreshViirsConfidenceFilter() {
+    __mapPromise.then(function (api) {
+        api.layer("SUOMI_VIIRS_C2")
+            .data({ url: CSV_URL, type: "csv" })
+            .filter(viirsFilter("viirs_snpp"))
+            .binding({ position: "lat|lon", value: "frp" })
+            .type("CHART|BUBBLE|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+            .style({
+                colorscheme: EFFIS_COLORSCHEME, fillopacity: "0.9", linecolor: "orange",
+                linewidth: "2", gridwidth: "15px",
+                datafields: ["frp", "confidence", "satellite", "acq_at"], showdata: "true",
+                name: "SUOMI_VIIRS_C2_current"
+            })
+            .meta({ title: "SUOMI VIIRS C2", tooltip: "<strong>SUOMI VIIRS C2</strong><br>{{theme.item.chart}}{{theme.item.data}}" })
+            .define();
+
+        api.layer("J1_VIIRS_C2")
+            .data({ url: CSV_URL, type: "csv" })
+            .filter(viirsFilter("viirs_noaa20"))
+            .binding({ position: "lat|lon", value: "frp" })
+            .type("CHART|BUBBLE|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+            .style({
+                colorscheme: EFFIS_COLORSCHEME, fillopacity: "0.9", linecolor: "black",
+                linewidth: "1", gridwidth: "15px",
+                datafields: ["frp", "confidence", "satellite", "acq_at"], showdata: "true",
+                name: "J1_VIIRS_C2_current"
+            })
+            .meta({ title: "NOAA-20/J1 VIIRS C2", tooltip: "<strong>NOAA-20/J1 VIIRS C2</strong><br>{{theme.item.chart}}{{theme.item.data}}" })
+            .define();
+    });
+}
+
+function toggleLowConfidence(el) {
+    EXCLUDE_LOW_CONFIDENCE = !el.checked;
+    refreshViirsConfidenceFilter();
+}
+
+var __MODIS_C6_1 =
+    ixmaps.layer("MODIS_C6_1", layer => layer
+        .data({ url: CSV_URL, type: "csv" })
+        .filter('WHERE source == "modis"')
+        .binding({ position: "lat|lon", value: "frp" })
+        .type("CHART|SYMBOL|SIZE|FAST|AGGREGATE|RELOCATE|SUM|NOLEGEND")
+        .style({
+            colorscheme: EFFIS_COLORSCHEME,
+            symbols: ["square"],
+            fillopacity: "0.9",
+            linecolor: "orange",
+            linewidth: "2",
+            gridwidth: "15px",
+            datafields: ["frp", "confidence", "satellite", "acq_at"],
+            showdata: "true",
+            name: "MODIS_C6_1_current"
+        })
+        .meta({ title: "MODIS C6.1", tooltip: "<strong>MODIS C6.1</strong><br>{{theme.item.chart}}{{theme.item.data}}" })
+    );
+
+// ---------------------------------------------------
+// t h e   m a p
+// ---------------------------------------------------
+
+// Restore center/zoom from the URL if present (?view=[lat,lng],zoom), so a
+// reloaded/shared link opens on the same view instead of resetting to Italy.
+var __lat = 42.0, __lon = 12.5, __zoom = 6;
+(function () {
+    var params = new URLSearchParams(window.location.search);
+    var view = params.get('view');
+    if (!view) return;
+    var m = view.match(/\[([^,]+),([^\]]+)\],([\d.]+)/);
+    if (!m) return;
+    __lat = parseFloat(m[1]); __lon = parseFloat(m[2]); __zoom = parseFloat(m[3]);
+})();
+
+var __mapPromise = ixmaps.Map("map", {
+        mapType: "ArcGIS - Topo",
+        mode:    "pan",
+        legend:  "open",
+        tools:   false
+    },
+    map => map
+    .view({ center: { lat: __lat, lng: __lon }, zoom: __zoom })
+    .options({
+        objectscaling:   "dynamic",
+        normalSizeScale: "7000000",
+        basemapopacity:  0.85,
+        flushChartDraw:  1000000,
+        silent:          true
+    })
+    .layer(nuts2)
+    .layer(__SUOMI_VIIRS_C2)
+    .layer(__J1_VIIRS_C2)
+    .layer(__MODIS_C6_1)
+);
+
+// ---------------------------------------------------
+// c h a r t   s i z e   s l i d e r
+// ---------------------------------------------------
+
+document.getElementById('chart_size_slider').addEventListener('input', function (e) {
+    var value = parseFloat(e.target.value);
+    ixmaps.changeThemeStyle(null, null, 'scale:' + value, 'set');
+});
+
+// ---------------------------------------------------
+// K D E   ( T u r f . j s )   f r o m   t h e   t h r e e
+// f i l t e r e d   E F F I S   t h e m e s
+// ---------------------------------------------------
+
+var __KDE_THEMES = ["SUOMI_VIIRS_C2_current", "J1_VIIRS_C2_current", "MODIS_C6_1_current"];
+var __KDE_WEIGHT_FIELD = "frp";
+var __kdeOn = false;
+var __kdeTimer = null;
+var __kdeBandwidthFactor = 1;
+
+var removeKDE = function () {
+    if (!__mapPromise) return;
+    __mapPromise.then(function (api) { try { api.removeTheme("kde_fires"); } catch (e) {} });
+};
+
+function toggleKDE(el) {
+    __kdeOn = el.checked;
+    document.getElementById('kde_sliders').style.display = __kdeOn ? "block" : "none";
+    if (__kdeOn) { clearTimeout(__kdeTimer); __kdeTimer = setTimeout(updateKDE, 200); }
+    else { removeKDE(); }
+}
+
+document.getElementById('kde_opacity_slider').addEventListener('input', function (e) {
+    var value = parseFloat(e.target.value);
+    document.getElementById('kde_opacity_val').textContent = value.toFixed(2);
+    if (__kdeOn && __mapPromise) {
+        __mapPromise.then(function (api) { try { api.changeThemeStyle("kde_fires", "fillopacity:" + value, "set"); } catch (e) {} });
+    }
+});
+
+document.getElementById('kde_bw_slider').addEventListener('input', function (e) {
+    __kdeBandwidthFactor = parseFloat(e.target.value) || 1;
+    document.getElementById('kde_bw_val').textContent = __kdeBandwidthFactor.toFixed(2);
+    if (__kdeOn) { clearTimeout(__kdeTimer); __kdeTimer = setTimeout(updateKDE, 200); }
+});
+
+var updateKDE = function () {
+    if (!__kdeOn || typeof turf === "undefined" || !__mapPromise) return;
+
+    var pts = [];
+    __KDE_THEMES.forEach(function (themeName) {
+        var objTheme = ixmaps.getThemeObj(themeName);
+        if (!objTheme || !objTheme.indexA || !objTheme.itemA || !objTheme.objTheme) return;
+        var dbRecords = objTheme.objTheme.dbRecords;
+        var dbFields = objTheme.objTheme.dbFields;
+        if (!dbRecords || !dbFields) return;
+
+        var iLat = dbFields.findIndex(function (f) { return f.id === "lat"; });
+        var iLng = dbFields.findIndex(function (f) { return f.id === "lon"; });
+        var iW = dbFields.findIndex(function (f) { return f.id === __KDE_WEIGHT_FIELD; });
+        if (iLat < 0 || iLng < 0) return;
+
+        var recIdx = [];
+        for (var i = 0; i < objTheme.indexA.length; i++) {
+            var item = objTheme.itemA[objTheme.indexA[i]];
+            if (!item) continue;
+            if (item.dbIndex != null) recIdx.push(item.dbIndex);
+            if (Array.isArray(item.dbIndexA)) for (var j = 0; j < item.dbIndexA.length; j++) recIdx.push(item.dbIndexA[j]);
+        }
+        for (var k = 0; k < recIdx.length; k++) {
+            var rec = dbRecords[recIdx[k]];
+            if (!rec) continue;
+            var la = +rec[iLat], ln = +rec[iLng];
+            if (isNaN(la) || isNaN(ln)) continue;
+            var w = (iW >= 0 ? (+rec[iW] || 0) : 0);
+            if (w <= 0) w = 1;
+            pts.push([la, ln, w]);
+        }
+    });
+
+    var zoom = ixmaps.getZoom() || 6;
+    if (pts.length < 5) { removeKDE(); return; }
+
+    var ptCap = zoom >= 16 ? 1500 : zoom >= 14 ? 3000 : zoom >= 13 ? 5000 : 8000;
+    if (pts.length > ptCap) {
+        var step = Math.ceil(pts.length / ptCap), out = [];
+        for (var s2 = 0; s2 < pts.length; s2 += step) out.push(pts[s2]);
+        pts = out;
+    }
+
+    var bwKm, maxCells;
+    if      (zoom >= 16) { bwKm = 0.04; maxCells = 1000000; }
+    else if (zoom >= 15) { bwKm = 0.08; maxCells =  800000; }
+    else if (zoom >= 14) { bwKm = 0.12; maxCells =  600000; }
+    else if (zoom >= 13) { bwKm = 0.30; maxCells =  300000; }
+    else if (zoom >= 12) { bwKm = 0.80; maxCells =  100000; }
+    else if (zoom >= 11) { bwKm = 2.00; maxCells =   40000; }
+    else if (zoom >= 10) { bwKm = 5.00; maxCells =   25000; }
+    else if (zoom >= 9)  { bwKm = 10.0; maxCells =   20000; }
+    else                 { bwKm = 24.0; maxCells =   15000; }
+    bwKm *= __kdeBandwidthFactor;
+
+    var s = Infinity, w0 = Infinity, n = -Infinity, e = -Infinity;
+    pts.forEach(function (p) { if (p[0] < s) s = p[0]; if (p[0] > n) n = p[0]; if (p[1] < w0) w0 = p[1]; if (p[1] > e) e = p[1]; });
+    var midLat = (s + n) / 2;
+    var kmLat = 111.3, kmLng = 111.3 * Math.cos(midLat * Math.PI / 180);
+    s -= bwKm / kmLat * 1.5; n += bwKm / kmLat * 1.5; w0 -= bwKm / kmLng * 1.5; e += bwKm / kmLng * 1.5;
+    var BW2 = 2 * bwKm * bwKm;
+
+    var aspect = (e - w0) / Math.max(n - s, 0.001);
+    var nLng = Math.max(Math.round(Math.sqrt(maxCells * aspect)), 5);
+    var nLat = Math.max(Math.round(maxCells / nLng), 5);
+    var stepLat = (n - s) / nLat, stepLng = (e - w0) / nLng;
+
+    var gridPts = [];
+    for (var ila = 0; ila <= nLat; ila++) for (var iln = 0; iln <= nLng; iln++) {
+        var glat = s + ila * stepLat, glng = w0 + iln * stepLng, v = 0;
+        for (var q = 0; q < pts.length; q++) {
+            var dy = (pts[q][0] - glat) * kmLat, dx = (pts[q][1] - glng) * kmLng;
+            v += pts[q][2] * Math.exp(-(dx * dx + dy * dy) / BW2);
+        }
+        gridPts.push(turf.point([glng, glat], { v: v }));
+    }
+    var maxV = 0; gridPts.forEach(function (p) { if (p.properties.v > maxV) maxV = p.properties.v; });
+    if (maxV <= 0) { removeKDE(); return; }
+
+    var breaks = [0.15, 0.30, 0.50, 0.70].map(function (r) { return r * maxV; });
+    var iso;
+    try { iso = turf.isobands(turf.featureCollection(gridPts), breaks, { zProperty: "v" }); }
+    catch (err) { return; }
+
+    iso.features.forEach(function (feat) {
+        if (!feat || !feat.geometry) return;
+        var g = feat.geometry;
+        if (g.type === "Polygon") g.coordinates = g.coordinates.length ? [g.coordinates[0]] : [];
+        else if (g.type === "MultiPolygon") g.coordinates = g.coordinates.map(function (p) { return p.length ? [p[0]] : []; });
+    });
+
+    var op = parseFloat(document.getElementById('kde_opacity_slider').value) || 0.15;
+    var def = ixmaps.layer("kde_fires_layer")
+        .data({ obj: iso, type: "geojson" })
+        .binding({ geo: "geometry" })
+        .type("FEATURE|CHOROPLETH|SILENT")
+        .style({ colorscheme: "#dd0088", fillopacity: op, linewidth: 0.01 })
+        .meta({ name: "kde_fires" })
+        .define();
+
+    __mapPromise.then(function (api) { try { api.removeTheme("kde_fires"); } catch (e) {} api.layer(def); });
+};
+
+var __old_onDrawTheme = ixmaps.htmlgui_onDrawTheme;
+ixmaps.htmlgui_onDrawTheme = function (szId) {
+    if (__kdeOn && __KDE_THEMES.indexOf(szId) >= 0) {
+        clearTimeout(__kdeTimer);
+        __kdeTimer = setTimeout(updateKDE, 300);
+    }
+    try { __old_onDrawTheme(szId); } catch (e) {}
+};
+
+// ---------------------------------------------------
+// e x c l u s i o n   a r e a s   ( o n   d e m a n d )
+// ---------------------------------------------------
+// The mask stores center points + buffer_m (a true circular radius, not a square -
+// see is_excluded() in filter_fires.py). Turf.js builds the actual circle polygons
+// client-side for display; the pipeline doesn't need to change.
+
+var __exclusionCache = null;
+
+function toggleExclusionAreas(el) {
+    if (!el.checked) {
+        __mapPromise.then(function (api) { try { api.removeTheme("exclusion_areas"); } catch (e) {} });
+        return;
+    }
+    if (__exclusionCache) { drawExclusionAreas(__exclusionCache); return; }
+    fetch(MASK_URL).then(function (r) { return r.json(); }).then(function (mask) {
+        __exclusionCache = mask;
+        drawExclusionAreas(mask);
+    }).catch(function (e) { console.warn("[exclusion areas] non disponibile:", e); });
+}
+
+function drawExclusionAreas(mask) {
+    var circles = mask.features.map(function (feat) {
+        var lon = feat.geometry.coordinates[0], lat = feat.geometry.coordinates[1];
+        var bufferKm = (feat.properties.buffer_m || 1000) / 1000;
+        var circle = turf.circle([lon, lat], bufferKm, { steps: 48, units: "kilometers" });
+        circle.properties = feat.properties;
+        return circle;
+    });
+    var fc = turf.featureCollection(circles);
+
+    var def = ixmaps.layer("exclusion_areas_layer")
+        .data({ obj: fc, type: "geojson" })
+        .binding({ geo: "geometry", value: "origin", title: "name" })
+        .type("FEATURE|CHOROPLETH|CATEGORICAL")
+        .style({
+            colorscheme: ["#607d8b", "#455a64"],
+            values: ["seed", "auto"],
+            fillopacity: 0.18,
+            linecolor: "#37474f",
+            linewidth: 1.5,
+            showdata: "true"
+        })
+        .meta({ name: "exclusion_areas", tooltip:
+            "<strong>{{name}}</strong><br>{{kind}} — buffer {{buffer_m}}m<br>origine: {{origin}}" })
+        .title("Aree escluse").define();
+
+    __mapPromise.then(function (api) { try { api.removeTheme("exclusion_areas"); } catch (e) {} api.layer(def); });
+}
+
+// ---------------------------------------------------
+// o p e n   i n   g o o g l e   m a p s
+// ---------------------------------------------------
+function openInGoogleMaps() {
+    var center = ixmaps.getCenter(), zoom = ixmaps.getZoom();
+    if (!center || !zoom) return;
+    var url = "https://www.google.com/maps/@" + center.lat + "," + center.lng + "," + Math.round(zoom) + "z";
+    window.open(url, "_blank", "noopener");
+}
+
+// ---------------------------------------------------
+// p e r s i s t   v i e w   i n   t h e   U R L
+// ---------------------------------------------------
+// No navigation/reload - just keeps the address bar (and therefore any
+// copied/bookmarked link) in sync with the current center/zoom.
+var __actualizeUrl = function () {
+    var center = ixmaps.getCenter(), zoom = ixmaps.getZoom();
+    if (!center || !zoom) return;
+    var szQuery = "?view=[" + center.lat + "," + center.lng + "]," + zoom;
+    history.replaceState(null, "", window.location.pathname + szQuery);
+};
+
+// ---------------------------------------------------
+// d y n a m i c   b a s e m a p   o p a c i t y
+// ---------------------------------------------------
+// Same approach as temperature_attuali_wbgt_kde.html: fade the raw basemap tiles out as
+// the user zooms in, so the white nuts2 region silhouette + EFFIS bubbles/KDE become the
+// dominant visual. Formula/thresholds copied as-is (opacity 0 at zoom 7, 1.0 at zoom 9) -
+// this map's own default zoom (~6) sits just below the zero-crossing, matching the
+// reference's own default view.
+function updateBasemapOpacity() {
+    var nOpacity = (ixmaps.getZoom() - 7) / 2;
+    try { ixmaps.map().setBasemapOpacity(nOpacity, "absolute"); } catch (e) {}
+}
+
+var __old_onZoomAndPan = ixmaps.htmlgui_onZoomAndPan;
+ixmaps.htmlgui_onZoomAndPan = function (nZoomScale) {
+    if (__kdeOn) {
+        clearTimeout(__kdeTimer);
+        __kdeTimer = setTimeout(updateKDE, 300);
+    }
+    updateBasemapOpacity();
+    try { __actualizeUrl(); } catch (e) {}
+    try { __old_onZoomAndPan(nZoomScale); } catch (e) {}
+};
+</script>
+</body>
+</html>

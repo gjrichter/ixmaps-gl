@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<!-- **********************************************************************
+     Airbnb Listings by Host - Multi-City Visualization with Facets
+     
+     Description:
+     Interactive map visualization showing Airbnb listings grouped by host name.
+     Uses bubble charts to display individual hosts with their listing counts.
+     Features interactive facets for filtering and analysis.
+     
+     Features:
+     - City selector to switch between multiple cities
+     - Interactive facet list for filtering by host attributes
+     - Dynamic statistics showing visible listings count
+     - Bubble chart visualization showing hosts by listing count
+     
+     Data Source: 
+     - Inside Airbnb (https://insideairbnb.com/about/)
+     - Data hosted on GitHub: https://github.com/gjrichter/data/tree/master/InsideAirbnb/2025
+     
+     $Author: guenter richter $
+     $Date: 2024 $
+     $License: CC-BY $
+     ********************************************************************** -->
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="description" content="ixmaps Airbnb listings by host - all cities selector with facets">
+	<meta name="author" content="guenter richter">
+	<title>Airbnb listings by host - cities selector with facets</title>
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+	<link rel="stylesheet" href="./css/sidebar.css">
+	<style>
+		#chart-size-slider {
+			-webkit-appearance: none;
+			appearance: none;
+			height: 6px;
+			background: #888;
+			border-radius: 3px;
+			outline: none;
+		}
+		#chart-size-slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 16px;
+			height: 16px;
+			background: #666;
+			border-radius: 50%;
+			cursor: pointer;
+		}
+		#chart-size-slider::-moz-range-thumb {
+			width: 16px;
+			height: 16px;
+			background: #666;
+			border-radius: 50%;
+			cursor: pointer;
+			border: none;
+		}
+	</style>
+</head>
+
+<body style='text-align:center;background:#F7F7F7'>
+
+	<div id="map-div" style="float:left;width:66%;height:95vh"></div>
+
+	<div id="sidebar_div" class="sidebar" style="width:33%;float:right;height:95vh;display:flex;flex-direction:column;text-align:left">
+		<div style="font-family:Verdana, Geneva, Tahoma, sans-serif;color:#404040;margin:0.5em 0.5em 0em 0em;display:flex;flex-direction:column;height:100%;overflow:hidden">
+			<h1 style="color:#888888;margin-top:0">Airbnb listings by host</h1>
+			<p>Individual hosts with their listing counts</p>
+			<label for="city-select" style="font-weight:bold">City</label>
+			<select id="city-select" style="display:block;margin:0.4em 0 1em 0;padding:0.4em;font-size:1em;width:90%"></select>
+
+			<div style="margin:0.6em 0 1.2em 0;font-size:0.9em;background:#F7F6EF;padding:0.5em;border:1px solid #ddd;border-radius:4px">
+				<span>Total listings visible: </span><span id="no_progetti" style="font-weight:bold">...</span>
+			</div>
+
+			<div id="description-div" style="margin:0.6em 0 1.2em 0">
+				<p>Bubble charts show individual hosts, sized by the total number of listings they manage.</p>
+				<p><small>fonte: <a href="https://insideairbnb.com/about/">Inside Airbnb</a></small></p>
+			</div>
+
+			<div style="flex:1;overflow-y:auto;overflow-x:hidden;min-height:0">
+				<div id="show-facets-div" style="margin-right:0.5em"></div>
+			</div>
+		</div>
+	</div>
+
+	<div id="onmap-buttons" style="position:absolute;bottom:3em;right:35%;z-index:1000;pointer-events:none">
+		<div style="pointer-events:auto;background:white;padding:0.5em;border-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,0.2);display:flex;align-items:center;gap:0.5em">
+			<span style="font-size:0.8em">chart size</span>
+			<input type="range" id="chart-size-slider" min="0.5" max="1.5" step="0.05" value="1.0" style="width:150px" oninput="updateChartSize(this.value)">
+			<span id="chart-size-value" style="font-size:0.8em;min-width:40px;text-align:right">1.0</span>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="../../ixmaps-gl.js"></script>
+	<script type="text/javascript" src="../js/format.js"></script>
+	<script type="text/javascript" src="../js/facet.js"></script>
+	<script type="text/javascript" src="../js/show_facets.js"></script>
+	<script type="text/javascript" src="../js/show_word_cloud.js"></script>
+	<script type="text/javascript" src="../js/d3/d3.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../js/d3/d3.layout.cloud.js"></script>
+	<script type="text/javascript" src="../js/d3/d3.wordcloud.js"></script>
+
+	<script type="text/javascript">
+		// ============================================================
+		// Global Variables
+		// ============================================================
+		
+		/** @type {Object} Map instance handle stored after embedding */
+		var __map = null;
+		
+		// ============================================================
+		// UI Helper Functions
+		// ============================================================
+		
+		/**
+		 * Gets the current slider value for chart scale
+		 * @returns {string} Current slider value as string
+		 */
+		function getSliderScaleValue(){
+			var slider = document.getElementById('chart-size-slider');
+			return slider ? slider.value : "1.0";
+		}
+
+		/**
+		 * Updates the chart size based on slider value
+		 * @param {number} scaleValue - Absolute scale value (range: 0.5 to 1.5)
+		 */
+		var updateChartSize = function(scaleValue) {
+			// Update the display value (show actual value)
+			document.getElementById('chart-size-value').textContent = parseFloat(scaleValue).toFixed(2);
+			// Apply the scale directly
+			ixmaps.map().changeThemeStyle('airbnb_listings', 'scale:' + scaleValue);
+		};
+
+		// ============================================================
+		// Data Configuration
+		// ============================================================
+		
+		/**
+		 * Mapping of city keys to their corresponding CSV data files
+		 * @type {Object.<string, string>}
+		 */
+		var CITY_FILES = {
+			"barcelona": "airbnb_listings_barcelona.csv",
+			"bergamo": "airbnb_listings_bergamo.csv",
+			"berlin": "airbnb_listings_berlin.csv",
+			"bologna": "airbnb_listings_bologna.csv",
+			"madrid": "airbnb_listings_madrid.csv",
+			"milan": "airbnb_listings_milan.csv",
+			"napoli": "airbnb_listings_napoli.csv",
+			"newyork": "airbnb_listings_NewYork.csv",
+			"paris": "airbnb_listings_paris.csv",
+			"puglia": "airbnb_listings_puglia.csv",
+			"rome": "airbnb_listings_rome.csv",
+			"sanfranzisco": "airbnb_listings_SanFranzisco.csv",
+			"sicilia": "airbnb_listings_sicilia.csv",
+			"trentino": "airbnb_listings_trentino.csv",
+			"venice": "airbnb_listings_venice.csv"
+		};
+
+		/**
+		 * Predefined map view settings (center coordinates and zoom level) for each city
+		 * @type {Object.<string, {lat: number, lng: number, zoom: number}>}
+		 */
+		var CITY_VIEWS = {
+			"barcelona": { lat: 41.3851, lng: 2.1734, zoom: 12 },
+			"bergamo": { lat: 45.6983, lng: 9.6773, zoom: 12 },
+			"berlin": { lat: 52.5200, lng: 13.4050, zoom: 11.5 },
+			"bologna": { lat: 44.4949, lng: 11.3426, zoom: 12 },
+			"madrid": { lat: 40.4168, lng: -3.7038, zoom: 12 },
+			"milan": { lat: 45.4642, lng: 9.1900, zoom: 12 },
+			"napoli": { lat: 40.8518, lng: 14.2681, zoom: 12 },
+			"newyork": { lat: 40.7128, lng: -74.0060, zoom: 11.5 },
+			"paris": { lat: 48.8566, lng: 2.3522, zoom: 12 },
+			"puglia": { lat: 41.1253, lng: 16.8667, zoom: 8.5 },
+			"rome": { lat: 41.9028, lng: 12.4964, zoom: 12 },
+			"sanfranzisco": { lat: 37.7749, lng: -122.4194, zoom: 12 },
+			"sicilia": { lat: 37.5999938, lng: 14.0153557, zoom: 8 },
+			"trentino": { lat: 46.4337, lng: 11.1693, zoom: 9 },
+			"venice": { lat: 45.43447, lng: 12.33735, zoom: 14.3 }
+		};
+
+		// ============================================================
+		// Utility Functions
+		// ============================================================
+		
+		/**
+		 * Converts a city key to a display label (capitalizes first letter)
+		 * @param {string} key - City key (e.g., "venice")
+		 * @returns {string} Capitalized label (e.g., "Venice")
+		 */
+		function toLabel(key){
+			return key.charAt(0).toUpperCase() + key.slice(1);
+		}
+
+		/**
+		 * Populates the city selector dropdown with available cities
+		 * @param {string} defaultCity - City key to select by default
+		 */
+		function populateCityDropdown(defaultCity){
+			var select = document.getElementById('city-select');
+			select.innerHTML = '';
+			Object.keys(CITY_FILES).forEach(function(key){
+				var opt = document.createElement('option');
+				opt.value = key;
+				opt.textContent = toLabel(key);
+				if (key === defaultCity){ opt.selected = true; }
+				select.appendChild(opt);
+			});
+		}
+
+		/**
+		 * Data processing function: creates derived columns from host listing counts
+		 * Categorizes hosts into groups based on number of listings they manage
+		 * @param {Object} dbTable - Data table object to process
+		 */
+		function data_process(dbTable){
+			// Create binary flags for different thresholds
+			dbTable.addColumn({'source':'calculated_host_listings_count','destination':'power_user_10+'},function(value){return(String(value>10));});
+			dbTable.addColumn({'source':'calculated_host_listings_count','destination':'power_user_1'},function(value){return(String(value>1));});
+			dbTable.addColumn({'source':'calculated_host_listings_count','destination':'power_user_3+'},function(value){return(String(value>3));});
+			dbTable.addColumn({'source':'calculated_host_listings_count','destination':'power_user_100+'},function(value){return(String(value>100));});
+			
+			// Create categorical groups for visualization
+			dbTable.addColumn({'source':'calculated_host_listings_count','destination':'power_user_groups'},function(value){
+				if (value > 100) { return "100+"; }
+				else if (value > 10) { return "11-100"; }
+				else if (value > 3) { return "4-10"; }
+				else if (value == 1) { return "1"; }
+				else { return "2-3"; }
+			});
+			
+			// Create combined host_id and host_name column
+			dbTable.addColumn({
+				'source':['host_id','host_name'],
+				'destination':'host_id_name'
+			}, function(host_id,host_name){
+				var id = host_id || '';
+				var name = host_name || '';
+				return id + ' - ' + name;
+			});
+		}
+
+		/**
+		 * Creates an ixmaps bubble chart layer for a specific city
+		 * Uses host_name as the value field for categorical grouping
+		 * @param {string} cityKey - City identifier key
+		 * @returns {Object} ixmaps layer configuration object
+		 */
+		function listings_by_host(cityKey){
+			var file = CITY_FILES[cityKey];
+			// Data files hosted on GitHub: https://github.com/gjrichter/data/tree/master/InsideAirbnb/2025
+			var url = "https://raw.githubusercontent.com/gjrichter/data/master/InsideAirbnb/2025/" + file;
+			
+			// Configure bubble chart layer showing hosts by name
+			return ixmaps.layer("generic", function(layer){ return layer
+				.data({ type: "csv", name: "airbnb_listings_" + cityKey, url: url, process: data_process.toString() })
+				.binding({ 
+					position: "latitude|longitude", 
+					value: "host_id_name",
+					size: "calculated_host_listings_count" 
+				})
+				.type("CHART|BUBBLE|SIZE|CATEGORICAL|COUNT")
+				.style({
+					colorscheme: ["8", "tableau10"],
+					fillopacity: "0.5",
+					linecolor: ["none"],
+					linewidth: "1",
+					scale: getSliderScaleValue(),
+					normalsizevalue: "1000",
+					showdata: "true",
+					name: "airbnb_listings"
+				})
+				.meta({ 
+					name: "airbnb_listings",
+					title: "Airbnb listings ("+toLabel(cityKey)+")",
+					splash: "...",
+					tooltip: "{{theme.item.data}}"
+				});
+			});
+		}
+
+		// ============================================================
+		// Statistics and Facet Functions
+		// ============================================================
+		
+		/**
+		 * Statistics callback: calculates and displays counts for visible listings
+		 * Updates the total count display and shows interactive facets
+		 * @param {string} szId - Theme identifier ("airbnb_listings")
+		 */
+		ixmaps.statistics = function(szId) {
+			var themeObj = ixmaps.getThemeObj(szId);
+			var lastFilter = themeObj.szFilter || "";
+
+			if (szId == "airbnb_listings") {				
+				ixmaps.data.fShowFacetValues = false;
+				szFieldsA = [
+					"name",
+					"host_name",
+					"neighbourhood_group",
+					"neighbourhood",
+					"room_type",
+					"price",
+					"minimum_nights",
+					"number_of_reviews",
+					"last_review",
+					"reviews_per_month",
+					"availability_365",
+					"license"
+				];
+
+				facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId, "map");
+				
+				let nCount = 0;
+				// Try to get count from facets
+				if (facetsA && facetsA.length && facetsA[0]) {
+					nCount = facetsA[0].nValuesSum || facetsA[0].nCount || 0;
+				}
+				
+				// Fallback: count visible items directly if facets not available
+				if (!nCount && themeObj.itemA && themeObj.itemA.length) {
+					for (let i in themeObj.itemA) {
+						if (themeObj.itemA[i] && themeObj.itemA[i].dbIndexA) {
+							nCount += themeObj.itemA[i].dbIndexA.length;
+						}
+					}
+				}
+				
+				// Additional fallback: try to get count from indexA
+				if (!nCount && themeObj.indexA && themeObj.indexA.length) {
+					nCount = themeObj.indexA.length;
+				}
+				
+				var pois = nCount ? ixmaps.__formatValue(nCount, 0, "BLANK") : String(nCount || 0);
+				$("#no_progetti").html(pois);
+
+				if(1 || nCount > 0){
+					ixmaps.data.showFacets(lastFilter, "show-facets-div", facetsA);
+					$("#show-facets-div").show();
+				}else{
+					$("#show-facets-div").hide();
+				}
+			}
+		};
+
+		// ============================================================
+		// Theme Drawing Hook
+		// ============================================================
+		
+		/**
+		 * Hooks into the theme drawing process to automatically update statistics
+		 * when themes are drawn/redrawn (e.g., after pan/zoom or city change)
+		 * Also applies the slider scale value to ensure charts use the current slider setting
+		 */
+		(function hookStatistics(){
+			var old_onDrawTheme = ixmaps.htmlgui_onDrawTheme;
+			ixmaps.htmlgui_onDrawTheme = function(szId){
+				// Call original handler if it exists
+				try{ if (old_onDrawTheme){ old_onDrawTheme(szId); } }catch(e){}
+				// Apply slider scale value to the theme
+				if (szId === "airbnb_listings"){
+					var scaleValue = getSliderScaleValue();
+					try{
+						ixmaps.map().changeThemeStyle('airbnb_listings', 'scale:' + scaleValue);
+					}catch(e){ /* Silently handle if theme not ready */ }
+				}
+				// Update statistics for visible listings
+				ixmaps.statistics(szId);
+			};
+		})();
+
+		// ============================================================
+		// Map Navigation Functions
+		// ============================================================
+		
+		/**
+		 * Zooms and centers the map view to a specific city
+		 * @param {string} cityKey - City identifier key
+		 */
+		function zoom_to_city(cityKey){
+			var v = CITY_VIEWS[cityKey];
+			if (v){
+				var lat = parseFloat(v.lat);
+				var lng = parseFloat(v.lng);
+				var zoom = parseFloat(v.zoom);
+				
+				// Validate coordinates and fallback to default if invalid
+				if (isNaN(lat) || isNaN(lng)){
+					console.warn('Invalid coords for city', cityKey, v);
+					lat = 41.9; lng = 12.5; zoom = 6; // Default: central Italy
+				}
+				(__map || ixmaps.map()).setView([lat, lng], zoom);
+			} else {
+				// City not found, use default view
+				(__map || ixmaps.map()).setView([41.9, 12.5], 6);
+			}
+		}
+
+		/**
+		 * Handles city selector dropdown change event
+		 * Updates map view and replaces bubble chart layer with new city data
+		 * Automatically applies the current slider scale value to the new layer
+		 */
+		function onCityChange(){
+			var key = document.getElementById('city-select').value;
+			
+			// First, zoom to the new city
+			zoom_to_city(key);
+			
+			// Then replace the layer (with slight delay to allow view transition)
+			setTimeout(function(){
+				(__map || ixmaps.map()).replace("airbnb_listings", listings_by_host(key));
+				// Apply slider scale value after layer is replaced
+				setTimeout(function(){
+					var scaleValue = getSliderScaleValue();
+					try{
+						ixmaps.map().changeThemeStyle('airbnb_listings', 'scale:' + scaleValue);
+					}catch(e){ /* Silently handle if theme not ready */ }
+				}, 100);
+			},200);
+		}
+
+		// ============================================================
+		// Initialization
+		// ============================================================
+		
+		/**
+		 * Initializes the application:
+		 * - Sets up city selector dropdown
+		 * - Embeds the map with initial city data
+		 * - Configures map options and view
+		 */
+		(function init(){
+			var defaultCity = "venice"; // Default city to display on load
+			
+			// Setup UI components
+			populateCityDropdown(defaultCity);
+			document.getElementById('city-select').addEventListener('change', onCityChange);
+
+			// Embed the ixmaps map
+			ixmaps.Map("map-div", {
+				mapService: "leaflet_vt",           // Use Leaflet vector tiles
+				mapType: "CartoDB - Positron", // Base map style
+				name: "map_airbnb_all_hosts",
+				mode: "pan",                        // Enable panning
+				legend: "open",
+				tools: "true",
+				search: "Europe"
+			}, function(map){ 
+				// Store map handle for later use
+				__map = map; 
+				return map
+					.options({
+						featurescaling: "true",      // Scale features based on zoom
+						objectscaling: "dynamic",    // Dynamic scaling for charts
+						normalSizeScale: "50000",    // Base scale factor
+						dynamicScalePow: "2",        // Power law for dynamic scaling
+						dynamiclabel: "NOREMOVE|CHECKOVERLAP", // Label placement
+						flushChartDraw: "1000000",   // Chart drawing flush threshold
+						flushPaintShape: "1000000",   // Shape painting flush threshold
+						basemapopacity: "0.9"         // Base map transparency
+					})
+					// Set initial map view to default city
+					.view({ 
+						center: { lat: CITY_VIEWS[defaultCity].lat, lng: CITY_VIEWS[defaultCity].lng }, 
+						zoom: String(CITY_VIEWS[defaultCity].zoom) 
+					})
+					// Add initial layer for default city
+					.layer(listings_by_host(defaultCity));
+			});
+		})();
+
+	</script>
+
+</body>
+
+</html>
+

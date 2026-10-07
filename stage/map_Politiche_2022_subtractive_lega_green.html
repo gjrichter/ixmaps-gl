@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+map_Politiche_2022_subtractive_lega_green.html
+
+Elezioni Politiche 2022 - Camera, scrutini per comune
+COMPOSECOLOR|SUBTRACTIVE - colore composto dai risultati dei 5 partiti principali
+
+Converted from ixmaps_project_Elezioni_Politiche_2022_subtractive_lega_green.json
+(old iframe/loadProject architecture) to a self-contained ixmaps-flat page.
+The old SVGZ basemap is replaced by the ISTAT comuni boundaries loaded
+as a FEATURE layer (topojson).
+
+dati: Eligendo - Ministero dell'Interno (via data.ixmaps.com)
+geometrie: ISTAT Com01012022
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Elezioni Politiche 2022 - mappa comuni">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>Elezioni Politiche 2022</title>
+</head>
+
+<body style="margin:0;padding:0">
+
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+
+	<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+
+		// boundaries as FEATURE layer (replaces the old SVGZ basemap)
+		var __georef =
+			ixmaps.layer("comuni", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/comuni_2022/Com01012022_s_WGS84.topojson.gz",
+					type: "topojson"
+				})
+				.binding({
+					id: "PRO_COM",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["none"],
+					linecolor: "none",
+					linewidth: "0.1",
+					sizefield: "Shape_Area"
+				})
+			);
+
+		var __compose =
+			ixmaps.layer("comuni", layer => layer
+				.data({
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ElezioniPolitiche2022/Camera2022_scrutini_pivot.csv.gz",
+					type: "csv"
+				})
+				.binding({
+					value: "PARTITO DEMOCRATICO - ITALIA DEMOCRATICA E PROGRESSISTA|MOVIMENTO 5 STELLE|FORZA ITALIA|LEGA PER SALVINI PREMIER|FRATELLI D'ITALIA CON GIORGIA MELONI",
+					value100: "Total",
+					position: "pro_com",
+					title: "desc_com"
+				})
+				.type("CHOROPLETH|COMPOSECOLOR|SUBTRACTIVE|DOPACITYMAX|HORZ|SORT|SIMPLELEGEND")
+				.style({
+					colorscheme: [
+						"#E41B22",
+						"RGB(238,217,36)",
+						"RGB(5,177,240)",
+						"#04c467",
+						"#0C416D"
+					],
+					linecolor: "none",
+					linewidth: "0.01",
+					label: [
+						"PARTITO DEMOCRATICO",
+						"MOVIMENTO 5 STELLE",
+						"FORZA ITALIA",
+						"LEGA",
+						"FRATELLI D'ITALIA"
+					],
+					units: "%",
+					alphafield: "Total",
+					alphafield100: "$density$",
+					dopacitypow: "5",
+					dopacityscale: "2.5",
+					valuedecimals: "1",
+					showdata: "true"
+				})
+				.meta({
+					name: "compose",
+					title: "<b>2022</b> - Elezioni Politiche",
+					tooltip: "<b>{{theme.item.title}}</b>{{theme.item.chart}}"
+				})
+			);
+
+		var myMap = ixmaps.Map("map-div", {
+				mapService: "leaflet_vt",
+				mapType: "white",
+				width: "100%",
+				height: (window.innerHeight - 4) + "px",
+				legend: "true",
+				mode: "info"
+			});
+
+		myMap.then(map => map
+			.view([41.89818843043047, 12.661743164062502], 6)
+			.options({
+				featurescaling: "dynamic",
+				objectscaling: "dynamic",
+				normalSizeScale: "1528452",
+				panhidden: "false",
+				flushPaintShape: "50000",
+				flushChartDraw: "50000"
+			})
+			.layer(__georef)
+			.layer(__compose)
+		);
+
+	</script>
+
+</body>
+
+</html>
