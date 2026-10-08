@@ -66,7 +66,12 @@ page. It currently implements:
   the parts' sum), `SORT`, `SYMMETRIC`/`BIGTOTOP`, `HALF*`, `AUTOCOMPLETE`, `CENTER` (the center
   part as a disc, `GLOW`), `CENTERVALUE`, `VALUES` (flat's leader-line labels; one part: inside),
   `THIN`/`XTHIN`/`THICK` donuts. `3D`, `VOLUME`, `STARBURST`, `RAYS`/`FLOWER`, `BOW`, `ZOOM` are
-  noted in the console and drawn as a flat pie; `AGGREGATE` and `CATEGORICAL` pies are not drawn yet
+  noted in the console and drawn as a flat pie. `AGGREGATE` and `CATEGORICAL` (`EXACT`) pies: a pie
+  per position (or aggregation grid cell, `RELOCATE`), a slice per category of the value field
+  (`style.values`; other values count in the pie's size only) or per value field, slices summed
+  (`SUM`, `MAX`/`MIN`, `MEAN`, `FIRST`/`LAST`, `AUTO100`), sized by the summed size field, legend
+  rows summed per category; `GRIDSIZE`, `AUTOSIZE`, `DOPACITY`, the chart box/title and field100
+  arithmetic on them are noted in the console, not ported
 - **CHART\|VECTOR / CHART\|BEZIER** — flow lines from an item's position to its second one
   (`binding.position2` / `style.lookupfield2`: a key joined to the FEATURE shapes like `position`,
   or `"lat|lon"` fields), per record or `AGGREGATE`d per origin–destination pair (`SUM`, `MAX`,
@@ -92,7 +97,7 @@ page. It currently implements:
 - Globe (orthographic) projection alongside flat Mercator
 
 Not yet implemented: plain (non-AGGREGATE) `CATEGORICAL` choropleths, and the `QUAD`/
-`WAFFLE`/`BAR` base types, `AGGREGATE`/`CATEGORICAL` pies, and SYMBOL shape variants beyond
+`WAFFLE`/`BAR` base types, and SYMBOL shape variants beyond
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
 

@@ -53,7 +53,8 @@
 // PIE|DONUT) a pie per record, a slice per value field, flat's sizing,
 // CENTER part and VALUES leader labels (_buildPieLayers; 3D/VOLUME/
 // STARBURST/RAYS/BOW variants are noted, drawn flat; AGGREGATE and
-// CATEGORICAL pies not yet), CHART|VECTOR and CHART|BEZIER a flow line
+// CATEGORICAL pies a pie per item, a slice per category or field, flat's
+// aggregation), CHART|VECTOR and CHART|BEZIER a flow line
 // per item from its position to its second one (binding position2 /
 // style lookupfield2), per record or AGGREGATE'd per origin–destination
 // pair, with flat's widths, colors, arrow heads and GRADIENT / FADEIN
@@ -2084,6 +2085,12 @@ in vec4 vPieLineColor;
     'POW2', 'POW3', 'NOSORT'];
   // flat's PIE / DONUT variants with no rendering here (see _buildPieLayers)
   const PIE_INERT_FLAGS = [/3D/, /VOLUME/, /HEIGHT/, /STARBURST/, /FLOWER/, /RAYS/, /BOW/, /ZOOM/, /DIRECTION/, /DIRECTED/, /POLAR/];
+  // ... and of AGGREGATE / CATEGORICAL pies: GRIDSIZE's pie the size of its
+  // grid cell (drawn by the SIZE rule instead), AUTOSIZE, DOPACITY, the
+  // chart BOX and TITLE, GAUGE, MULTIPLE / DIFFUSE, the post-aggregation
+  // value arithmetic (DIFFERENCE, FRACTION, PERCENT …, field100)
+  const PIE_AGGREGATE_INERT_FLAGS = [/^GRIDSIZE$/, /AUTOSIZE/, /DOPACITY/, /BOX/, /TITLE/, /^GAUGE$/, /^MULTIPLE$/, /^DIFFUSE$/,
+    /^DIFFERENCE$/, /^FRACTION$/, /^PERCENT$/, /^PERMILLE$/, /^PRODUCT$/, /^CALCVAL$/, /^RELATIVE$/];
   // flat's VECTOR / BEZIER modifiers with no rendering here (see
   // _buildVectorLayers), the word → what happens instead
   const VECTOR_INERT_FLAGS = {
@@ -2698,6 +2705,16 @@ in vec4 vPieLineColor;
           console.info(`[ixmaps-gl] type flag "${flag}" on a PIE chart recognized, not drawn yet — the pie is drawn flat and plain`);
         }
       });
+      // AGGREGATE / CATEGORICAL pies (_isAggregatedPie): what is not ported
+      if (flags.has('AGGREGATE') || flags.has('CATEGORICAL')) {
+        flags.forEach(flag => {
+          const inert = PIE_AGGREGATE_INERT_FLAGS.find(re => re.test(flag));
+          if (inert && !_warnedFlags.has('PIEAGG:' + flag)) {
+            _warnedFlags.add('PIEAGG:' + flag);
+            console.info(`[ixmaps-gl] type flag "${flag}" on an aggregated PIE chart recognized, not ported yet — ignored`);
+          }
+        });
+      }
     }
 
     // VECTOR / BEZIER modifiers _buildVectorLayers doesn't draw
@@ -3710,7 +3727,7 @@ in vec4 vPieLineColor;
           // no SUM) falls back to a per-category record COUNT.
           // a VECTOR / BEZIER flow legend sums its size field (flat's rows
           // show the flows' summed sizes, measured on the twin page)
-          const useSum = flatFlag(rt.flags, 'SUM') && (rt.style.valuefield || (rt._isVectorChart() && rt.binding.size));
+          const useSum = flatFlag(rt.flags, 'SUM') && (rt.style.valuefield || ((rt._isVectorChart() || rt._isAggregatedPie()) && rt.binding.size));
           const valueField = rt.style.valuefield || rt.binding.size;
           // legendunits wins over the theme's general-purpose units
           // (used elsewhere for tooltips, e.g. _renderItemChartHtml) —
@@ -3719,16 +3736,18 @@ in vec4 vPieLineColor;
           // space injected), matching how style.units/legendunits are
           // themselves authored with their own leading space (e.g.
           // " MW") in real pages.
-          // (a VECTOR / BEZIER legend: flat's szUnit, the units after a
-          // space unless they start with ".", measured on the twin page)
+          // (a VECTOR / BEZIER or aggregated PIE legend: flat's szUnit, the
+          // units after a space unless they start with ".", measured on the
+          // twin pages)
+          const flatUnitLegend = rt._isVectorChart() || rt._isAggregatedPie();
           const rawLegendUnit = rt.style.legendunits || rt.style.units || '';
-          const legendUnit = rt._isVectorChart() && rawLegendUnit && rawLegendUnit[0] !== '.' && rawLegendUnit[0] !== ' ' ? ' ' + rawLegendUnit : rawLegendUnit;
+          const legendUnit = flatUnitLegend && rawLegendUnit && rawLegendUnit[0] !== '.' && rawLegendUnit[0] !== ' ' ? ' ' + rawLegendUnit : rawLegendUnit;
           // a per-item chart over several value fields: the row values as
           // flat's legend prints them (legend.js 610, 810: __formatValue
           // with valuedecimals, else 2, "BLANK" — whole numbers without
           // decimals), a colorscheme "none" part as an outline in linecolor
           const multiFieldLegend = rt._isMultiFieldChart();
-          const legendTotalText = v => ((multiFieldLegend || rt._isVectorChart())
+          const legendTotalText = v => ((multiFieldLegend || flatUnitLegend)
             ? flatFormatValue(v, legendDecimals(rt.style), 'BLANK')
             : rt._formatTooltipValue(v));
           const outlineRgb = rt.style.linecolor && styleLineColor(rt.style.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(rt.style.linecolor)) : [128, 128, 128];
@@ -7429,6 +7448,136 @@ in vec4 vPieLineColor;
     return out;
   }
 
+  // flat's value rules of a theme (MapTheme constructor, maptheme.js
+  // 7740-7830), by substring of the type string as flat tests them:
+  // nullIsValue (0 is a value: ZEROISNOTVALUE no, ZEROISVALUE yes, a CHART
+  // with CATEGORICAL or several value fields always), negativeOk
+  // (NEGATIVEISNOTVALUE no, NEGATIVEISVALUE yes, CATEGORICAL without
+  // AGGREGATE no), undefinedOk (UNDEFINEDISNOTVALUE no), zeroExcludes
+  // (ZEROISNOTVALUE: a 0 is left out of an aggregation's means)
+  function flatValueRules(t, nFields) {
+    t = String(t || '');
+    let nullIsValue = true, negativeOk = true, undefinedOk = true;
+    if (/ZEROISNOTVALUE/.test(t)) nullIsValue = false;
+    if (/ZEROISVALUE/.test(t)) nullIsValue = true;
+    if (/NEGATIVEISNOTVALUE/.test(t)) negativeOk = false;
+    if (/NEGATIVEISVALUE/.test(t)) negativeOk = true;
+    if (/UNDEFINEDISVALUE/.test(t)) undefinedOk = true;
+    if (/UNDEFINEDISNOTVALUE/.test(t)) undefinedOk = false;
+    if (/CHART/.test(t) && (/CATEGORICAL/.test(t) || nFields > 1)) nullIsValue = true;
+    if (/CATEGORICAL/.test(t) && !/AGGREGATE/.test(t)) negativeOk = false;
+    return { nullIsValue, negativeOk, undefinedOk, zeroExcludes: /ZEROISNOTVALUE/.test(t) };
+  }
+
+  // An AGGREGATE or CATEGORICAL pie: one record's contribution to its item,
+  // as flat's loadAndAggregateValuesOfTheme reads it (maptheme.js
+  // 10465-10571, which every AGGREGATE theme goes through). `o`:
+  //   { rules (flatValueRules), sizeField, cat (CATEGORICAL: the record's
+  //     category, 0-based, -1 when it is none of them), fields (otherwise:
+  //     the value fields) }
+  // Returns null when flat leaves the record out, else
+  //   { cat, size } (CATEGORICAL) or { parts, zeroNot, size }
+  //  - size: the size field as a number (1 without one); a record whose
+  //    size is no number, 0 (unless 0 is a value) or negative (unless
+  //    negatives are values) is left out
+  //  - CATEGORICAL: a value that is none of the categories (not in
+  //    style.values) is part -1 — no slice, but its size still counts in
+  //    the item's size (flat: nValuesA[-1]); left out only with
+  //    UNDEFINEDISNOTVALUE
+  //  - value fields: a value that is no number is 0 (UNDEFINEDISNOTVALUE:
+  //    the record is left out); a 0 is left out of the item's MEAN with
+  //    ZEROISNOTVALUE (zeroNot), else the record when 0 is no value; a
+  //    negative value when negatives are no values
+  function flatPieRecord(raw, o) {
+    const r = o.rules;
+    const size = o.sizeField ? flatScanValue(raw[o.sizeField]) : 1;
+    if (isNaN(size) || (size === 0 && !r.nullIsValue) || (size < 0 && !r.negativeOk)) return null;
+    if (o.cat !== undefined) {
+      if (o.cat < 0 && !r.undefinedOk) return null;
+      return { cat: o.cat, size };
+    }
+    const parts = [], zeroNot = [];
+    for (let k = 0; k < o.fields.length; k++) {
+      let v = parseFloat(raw[o.fields[k]]);
+      zeroNot[k] = false;
+      if (isNaN(v)) {
+        if (!r.undefinedOk) return null;
+        v = 0;
+      }
+      if (v === 0) {
+        if (r.zeroExcludes) { parts[k] = 0; zeroNot[k] = true; continue; }
+        if (!r.nullIsValue) return null;
+      }
+      if (v < 0 && !r.negativeOk) return null;
+      parts[k] = v;
+    }
+    return { parts, zeroNot, size };
+  }
+
+  // Adds a record's flatPieRecord to its item (maptheme.js 10779-10943) —
+  // `item` null for the first record of the item. Returns the item
+  //   { parts (sparse for CATEGORICAL: the category sums), counts (the
+  //     records per part, for MEAN), size (the item's size, flat's nSize),
+  //     n (its record count, flat's nCount) }
+  // SUM (default): the parts and the |sizes| summed; MAX / MIN: their
+  // maximum / minimum (a part missing so far counts 0, as in flat; the
+  // record count stays 1); FIRST: the first record only; LAST: the last.
+  // A CATEGORICAL record of no category (-1) adds its size only.
+  function flatPieAccumulate(item, rec, flags) {
+    const max = flags.has('MAX'), min = flags.has('MIN');
+    if (item && flags.has('FIRST')) return item;
+    if (!item || flags.has('LAST')) {
+      if (rec.cat !== undefined) {
+        const parts = [], counts = [];
+        if (rec.cat >= 0) { parts[rec.cat] = rec.size; counts[rec.cat] = 1; }
+        return { parts, counts, size: Math.abs(rec.size), n: 1 };
+      }
+      return { parts: rec.parts.slice(), counts: rec.zeroNot.map(z => (z ? 0 : 1)), size: Math.abs(rec.size), n: 1 };
+    }
+    const comb = (a, v) => (max ? Math.max(a || 0, v) : min ? Math.min(a || 0, v) : (a || 0) + v);
+    if (rec.cat !== undefined) {
+      if (rec.cat >= 0) {
+        item.parts[rec.cat] = comb(item.parts[rec.cat], rec.size);
+        item.counts[rec.cat] = (item.counts[rec.cat] || 0) + 1;
+      }
+    } else {
+      for (let k = 0; k < rec.parts.length; k++) {
+        item.parts[k] = comb(item.parts[k], rec.parts[k] || 0);
+        if (!rec.zeroNot[k]) item.counts[k] = (item.counts[k] || 0) + 1;
+      }
+    }
+    if (max) item.size = Math.max(item.size, rec.size);
+    else if (min) item.size = Math.min(item.size, rec.size);
+    else { item.size += Math.abs(rec.size); item.n++; }
+    return item;
+  }
+
+  // An aggregated pie item's parts and size after flat's post-aggregation
+  // steps (maptheme.js 11056-11137): MEAN — a part divided by its record
+  // count (CATEGORICAL: the category's records; value fields: the item's
+  // records, or with ZEROISNOTVALUE the records with a value there), the
+  // size by the item's record count unless SIZESUM; AUTO100 — the parts in
+  // % of their sum. `nParts`: the number of parts (CATEGORICAL with
+  // style.values: every category; without: up to the item's last one, as
+  // flat's sparse nValuesA). Returns { parts, size }.
+  function flatPieItemValues(item, t, o = {}) {
+    t = String(t || '');
+    const n = o.nParts != null ? o.nParts : item.parts.length;
+    let parts = [];
+    for (let k = 0; k < n; k++) parts[k] = item.parts[k] || 0;
+    let size = item.size;
+    if (/MEAN/.test(t)) {
+      const perPart = o.categorical || /ZEROISNOTVALUE/.test(t);
+      parts = parts.map((v, k) => (perPart ? (item.counts[k] > 0 ? v / item.counts[k] : 0) : v / item.n));
+      if (!/SIZESUM/.test(t)) size /= item.n;
+    }
+    if (/AUTO100/.test(t)) {
+      const sum = parts.reduce((a, v) => a + v, 0);
+      parts = parts.map(v => v / (sum / 100));
+    }
+    return { parts, size };
+  }
+
   // CHART|VECTOR / CHART|BEZIER: the theme's items as real ixmaps-flat
   // builds them (maptheme.js loadAndAggregateValuesOfTheme, which every
   // VECTOR / BEZIER theme goes through, 9650: 10402-10450 the second
@@ -8670,6 +8819,9 @@ in vec4 vPieLineColor;
       cell.value += f.properties.value;
       if (f.properties.classValue !== undefined) cell.classValue += f.properties.classValue;
       if (post) cell.value100 += f.properties.value100 || 0;
+      // an AGGREGATE / CATEGORICAL pie's record (flatPieRecord): its parts
+      // and size added to the cell's item as flat does (flatPieAccumulate)
+      if (f.properties.pie) cell.pie = flatPieAccumulate(cell.pie || null, f.properties.pie, flags);
       const series = f.properties.series;
       if (series) {
         if (!cell.series) cell.series = new Array(series.length).fill(0);
@@ -8691,6 +8843,7 @@ in vec4 vPieLineColor;
             ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}) }
         : cell.first.properties;
       if (cell.series && cell.n > 1) props = Object.assign({}, props, { series: cell.series });
+      if (cell.pie) props = Object.assign({}, props, { pie: cell.pie });
       // a field aggregation's cell key (the field value): the categories of
       // one cell are merged by it (groupCoLocated), not by their positions
       if (field) props = Object.assign({}, props, { aggKey: cell.key });
@@ -9212,6 +9365,36 @@ in vec4 vPieLineColor;
     _resolveAggregateValue(props) { return resolveAggregateValue(this.binding, this.flags, props); }
 
     _buildAggregationIndex(sourceFeatures) {
+      // an AGGREGATE / CATEGORICAL pie: one bucket, each record carrying its
+      // contribution to its item (flatPieRecord), added up per position or
+      // grid cell by aggregateOnGrid (flatPieAccumulate)
+      if (this._isAggregatedPie()) {
+        const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+        const fields = this._pieCategorical ? null : String(this.binding.value || '').split('|');
+        const rules = flatValueRules(t, fields ? fields.length : 1);
+        const sizeField = this.binding.size && this.binding.size !== '$item$' ? this.binding.size : null;
+        const feats = [];
+        for (const f of sourceFeatures) {
+          const c = f.geometry && f.geometry.coordinates;
+          if (!c || typeof c[0] !== 'number' || !isFinite(c[0]) || !isFinite(c[1])) continue;
+          const p = f.properties || {};
+          let cat;
+          if (this._pieCategorical) {
+            const k = this._pieCategoryKey(p[this.binding.value]);
+            const i = k == null ? undefined : this._pieCategoryIndex.get(k);
+            cat = i == null ? -1 : i;
+          }
+          const pie = flatPieRecord(p, { rules, sizeField, cat, fields });
+          if (!pie) continue;
+          feats.push({ type: 'Feature', geometry: f.geometry, properties: { value: pie.size, pie, raw: p } });
+        }
+        this._featuresByCategory = [feats];
+        this._clusterIndices = null;
+        this._clusterRadiusPx = null;
+        this._aggregateStatsCache = null;
+        this._pieStatsCache = null;
+        return;
+      }
       // Range-classed (non-CATEGORICAL numeric) coloring: DON'T pre-split
       // by class here — the real engine aggregates every record together
       // first and classes color from the resulting CELL TOTAL afterward
@@ -9440,6 +9623,9 @@ in vec4 vPieLineColor;
     }
 
     _usesAggregationIndex() {
+      // AGGREGATE / CATEGORICAL pies aggregate their records into items
+      // (see _buildAggregationIndex)
+      if (this._isAggregatedPie()) return true;
       // GRIDSIZE bins its own grid (_ensureGridIndex) — PLOT curves and the
       // plain mesh; a classed GRIDSIZE symbol chart is aggregated like any
       // other (see _isPlainGridMesh)
@@ -9945,11 +10131,13 @@ in vec4 vPieLineColor;
       }
 
       // bare {{FIELD}}, {{raw.FIELD}}, {{local.FIELD}} — only meaningful
-      // for a single unaggregated record (see class comment above)
-      if (!isGroup && props.raw) {
-        Object.keys(props.raw).forEach(field => {
+      // for a single unaggregated record (see class comment above); an
+      // aggregated pie's item gives its first record's, as flat (data[0])
+      const fieldsRaw = isGroup ? props.firstRaw : props.raw;
+      if (fieldsRaw) {
+        Object.keys(fieldsRaw).forEach(field => {
           if (field === 'geometry') return;
-          const v = props.raw[field];
+          const v = fieldsRaw[field];
           if (this._isNumericValue(v)) {
             dataObj[field] = this._formatTooltipValue(v);
             dataObj.raw[field] = v;
@@ -10614,13 +10802,18 @@ in vec4 vPieLineColor;
       return String(this.binding.value || '').split('|');
     }
     // CHART|PIE (and PIE|DONUT): one pie per record, its slices the value
-    // fields (_buildPieLayers). An AGGREGATE pie (flat sums the records of
-    // a grid cell or category into one pie) and a CATEGORICAL one (a part
-    // per category) have no renderer here yet.
+    // fields; AGGREGATE and CATEGORICAL pies one pie per item — the records
+    // of a position (or grid cell) — its slices the categories or the value
+    // fields (_isAggregatedPie, _buildPieLayers)
     _isVectorChart() { return isVectorChart(this.flags); }
     _isPieChart() {
-      return !isVectorChart(this.flags) && this.flags.has('CHART') && this.flags.has('PIE') && !this.flags.has('AGGREGATE')
-        && !this.flags.has('CATEGORICAL') && !this.flags.has('DOT');
+      return !isVectorChart(this.flags) && this.flags.has('CHART') && this.flags.has('PIE') && !this.flags.has('DOT');
+    }
+    // a pie whose items flat aggregates (loadAndAggregateValuesOfTheme):
+    // AGGREGATE, or CATEGORICAL (a part per category — flat sums the
+    // records of an item's position by category even without AGGREGATE)
+    _isAggregatedPie() {
+      return this._isPieChart() && (this.flags.has('AGGREGATE') || this.flags.has('CATEGORICAL'));
     }
     // a per-item chart whose parts are its value fields (legend rows, sums)
     _isMultiFieldChart() {
@@ -10632,6 +10825,8 @@ in vec4 vPieLineColor;
     // colors) — flat colors a 1-part pie (or any with CLASSES) by them
     // (maptheme.js 20330-20341); several parts are colored by field.
     _preparePie() {
+      if (this.flags.has('CATEGORICAL')) { this._preparePieCategories(); return; }
+      this._pieCategorical = false;
       const fields = String(this.binding.value).split('|');
       const pooled = [];
       for (const f of this.features) {
@@ -10657,6 +10852,61 @@ in vec4 vPieLineColor;
         this._valueMax = nMax;
         this.partsA = flatRangeParts(pooled, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
       }
+    }
+
+    // a CATEGORICAL pie's categories (flat's getStringValueIndex, maptheme.js
+    // 9204-9243): style.values in their order, else the values in the order
+    // the records bring them; a value is trimmed (IGNORECASE: upper case),
+    // an empty one is none (UNDEFINEDISVALUE: "undefined"). A slice per
+    // category in its colorscheme color, labeled by style.label. flat's
+    // classes are the category numbers (partsA: i + 1, the last one 0.001
+    // wider) — its value range (nMin / nMax) follows the items
+    // (_pieAggregateStats).
+    _preparePieCategories() {
+      const st = this.style;
+      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+      const ignoreCase = /IGNORECASE/.test(t), undefinedIsValue = /UNDEFINEDISVALUE/.test(t);
+      const key = v => {
+        let k = v == null ? '' : String(v);
+        if (k.length === 0 || k === ' ') { if (!undefinedIsValue) return null; k = 'undefined'; }
+        if (ignoreCase) k = k.toUpperCase();
+        return k.trim();
+      };
+      const index = new Map();
+      const explicit = Array.isArray(st.values) ? st.values : null;
+      const labels = [];
+      if (explicit) {
+        explicit.forEach(v => { const k = key(v); if (k != null && !index.has(k)) { index.set(k, labels.length); labels.push(String(v).trim()); } });
+      } else {
+        for (const f of this.features) {
+          const k = key(f.properties[this.binding.value]);
+          if (k != null && !index.has(k)) { index.set(k, labels.length); labels.push(k); }
+        }
+      }
+      this._pieCategorical = true;
+      this._pieExplicitValues = !!explicit;
+      this._pieCategoryKey = key;
+      this._pieCategoryIndex = index;
+      this.categoryLabels = labels;
+      const explicitLabel = Array.isArray(st.label) ? st.label.map(String) : null;
+      this.categoryDisplayLabels = explicitLabel && explicitLabel.length === labels.length ? explicitLabel : labels;
+      this.categoryColorsRgb = resolveClassColors(st.colorscheme, this.categoryDisplayLabels, st.classes);
+      // the legend and the facets look a record's raw value up
+      const byLabel = new Map();
+      for (const f of this.features) {
+        const v = f.properties[this.binding.value];
+        if (byLabel.has(v)) continue;
+        const k = key(v);
+        if (k != null && index.has(k)) byLabel.set(v, index.get(k));
+      }
+      labels.forEach((l, i) => { if (!byLabel.has(l)) byLabel.set(l, i); });
+      this.categoryIndexByLabel = byLabel;
+      const n = labels.length;
+      this.partsA = labels.map((l, i) => ({ min: i + 1, max: i + 1 + (i === n - 1 ? 0.001 : 0) + 1e-9 }));
+      this._rangeClassed = false;
+      this._multiFields = null;
+      this._pieFields = null;
+      this._partNoFill = new Set();
     }
 
     // x-axis labels of a per-item PLOT (style.xaxis / label, else the fields)
@@ -12472,7 +12722,18 @@ in vec4 vPieLineColor;
     //    unit.
     //  - draw order: flat's sort before drawing (by the size value, the
     //    sum or the first value; the biggest on top)
-    // Not drawn here (a console note at type parsing, PIE_INERT_FLAGS):
+    //  - AGGREGATE / CATEGORICAL (_isAggregatedPie): a pie per item — the
+    //    records of a position, or of an aggregation grid cell —
+    //    (_pieAggregatedItems; flatPieRecord / flatPieAccumulate /
+    //    flatPieItemValues), a slice per category (CATEGORICAL, in its
+    //    category color) or per value field; its size the item's summed
+    //    size field (flat's nSize, every record of the item counted), the
+    //    theme's nMin / nMax / nMaxSize those of the items
+    //    (_pieAggregateStats); draw order by the item's size with a size
+    //    field or AGGREGATE|SUM; COUNT prints a part's record count;
+    //    CENTERVALUE the item's record count
+    // Not drawn here (a console note at type parsing, PIE_INERT_FLAGS,
+    // PIE_AGGREGATE_INERT_FLAGS):
     // 3D, VOLUME, HEIGHT, STARBURST, FLOWER/RAYS, BOW, ZOOM, DIRECTION /
     // DIRECTED, POLAR — the pie is drawn flat and plain instead. Nor
     // style.clipparts, showparts, gridx (flat's several pies per item).
@@ -12486,15 +12747,20 @@ in vec4 vPieLineColor;
       const st = this.style;
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
       const has = re => re.test(t);
-      const fields = this._pieFields || String(this.binding.value || '').split('|');
-      const multi = fields.length > 1;
+      const agg = this._isAggregatedPie();
+      const cat = !!this._pieCategorical;
+      const fields = cat ? null : (this._pieFields || String(this.binding.value || '').split('|'));
+      const multi = !cat && fields.length > 1;
+      // AGGREGATE / CATEGORICAL: the statistics of the items (sets
+      // _valueMin / _valueMax), their biggest size flat's nMaxSize
+      const stats = agg ? this._pieAggregateStats(zoom) : null;
       const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
       const sizePow = resolveSizePow(st, this.flags);
       // flat tests /SIZE/: also NOSIZE and GRIDSIZE
       const sizeFlag = has(/SIZE/) && !has(/NORMSIZE/);
       const sizeLog = has(/SIZELOG/);
       const nsv = styleNum(st.normalsizevalue);
-      const maxSize = nsv || this._maxSizeValue;
+      const maxSize = nsv || (stats ? stats.maxSize : this._maxSizeValue);
       const range = nsv || ((this._valueMax || 0) - (this._valueMin || 0));
       const nSizeOf = (sum, size) => {
         const n = NORMAL_RADIUS_PX;
@@ -12509,14 +12775,17 @@ in vec4 vPieLineColor;
       const colors = this.categoryColorsRgb || [];
       const scheme = Array.isArray(st.colorscheme) ? st.colorscheme : [];
       const noFill = this._partNoFill || new Set();
-      const byClass = has(/CLASSES/) || !multi;
+      const byClass = has(/CLASSES/) || (!cat && !multi);
+      // flat (maptheme.js 20327-20336): a pie of one part (or CLASSES) takes
+      // the color of the class its value falls in — CATEGORICAL: the class
+      // whose number equals the value (sl.single: the item's only part)
       const classColor = v => {
         const parts = this.partsA || [];
-        for (let x = 0; x < parts.length; x++) if (v < parts[x].max) return colors[x];
+        for (let x = 0; x < parts.length; x++) if (cat ? v === parts[x].min : v < parts[x].max) return colors[x];
         return null;
       };
       const sliceRgb = sl => (sl.complement ? (parseCssColor(String(st.nodatacolor || '')) || [0xee, 0xee, 0xee])
-        : (byClass && classColor(sl.value)) || colors[sl.i] || [128, 128, 128]);
+        : ((byClass || sl.single) && classColor(sl.value)) || colors[sl.i] || [128, 128, 128]);
       const fo = styleNum(st.fillopacity), op = styleNum(st.opacity);
       // flat sets the group's fill-opacity only for a truthy value
       const fillAlpha = op > 0 ? op : fo > 0 ? fo : 1;
@@ -12526,13 +12795,39 @@ in vec4 vPieLineColor;
       if (has(/WHITELINES/)) line = 'white';
       const lc = st.linecolor != null && st.linecolor !== '' ? styleLineColor(st.linecolor) : null;
       if (lc) line = lc;
-      if (scheme.slice(0, fields.length).some(c => String(c).trim().toLowerCase() === 'none')) line = lc || 'black';
+      if (!cat && scheme.slice(0, fields.length).some(c => String(c).trim().toLowerCase() === 'none')) line = lc || 'black';
       const lineRgb = line === 'none' ? null : hexOrNamedToRgb(line);
       const lineWidthOf = r => (lineRgb ? (styleNum(st.linewidth) || 0.1) * r / 15 : 0);
       const lineRgba = lineRgb ? [...lineRgb.slice(0, 3), Math.round(255 * lineAlpha)] : [0, 0, 0, 0];
 
       const charts = [];
-      for (const f of this._activeFeatures || this.features) {
+      if (agg) {
+        // one pie per item (_pieAggregatedItems), its parts and size as flat
+        // has them after aggregation (flatPieItemValues)
+        for (const f of this._pieAggregatedItems(zoom, bbox)) {
+          const c = f.geometry.coordinates;
+          if (globeCenter && !isOnVisibleHemisphere(c[0], c[1], globeCenter)) continue;
+          const pie = f.properties.pie;
+          const { parts: values, size } = this._pieItemValues(pie);
+          const layout = pieSliceLayout(values, t, { centerPart: st.centerpart, itemCount: pie.n });
+          if (!layout) continue;
+          if (cat) layout.slices.forEach(sl => { sl.single = values.length === 1; });
+          const sum = values.reduce((a, v) => a + (isNaN(v) ? 0 : v), 0);
+          const r = nSizeOf(sum, size) * unit;
+          if (!(r > 0) || !isFinite(r)) continue;
+          // flat's draw-order key (maptheme.js 16812-16860): with a size
+          // field or AGGREGATE|SUM the item's size, else its first part
+          const key = this.binding.size || (has(/AGGREGATE/) && has(/SUM/)) ? size : values[0];
+          // the tooltip: a row per part (counts), its value the parts' sum
+          // (flat: the sum of nValuesA), its records (theme.item.data, the
+          // page's own {{field}}s from the first, as flat's data[0])
+          const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
+          const properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
+            titleRaw: f.properties.titleRaw || f.properties.raw || null };
+          charts.push({ c, r, layout, size, count: pie.n, partCounts: pie.counts, nParts: values.length, key, properties });
+        }
+      }
+      for (const f of agg ? [] : this._activeFeatures || this.features) {
         const c = f.geometry && f.geometry.coordinates;
         if (!c || typeof c[0] !== 'number') continue;
         const [lng, lat] = c;
@@ -12553,13 +12848,15 @@ in vec4 vPieLineColor;
         // 1-field pie its class (cat) like a range-classed bubble
         const properties = multi ? { value: values[0], parts: values, raw }
           : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
-        charts.push({ c, r, layout, size, key, properties });
+        charts.push({ c, r, layout, size, nParts: values.length, key, properties });
       }
       // flat sorts the charts before drawing (maptheme.js 16774-16870),
       // ascending — the last drawn on top —, SORT|UP descending; not with
-      // NOSRT, NOSIZE (unless SORT) or when all values are equal
+      // NOSRT, NOSIZE (unless SORT) or when all values are equal, nor a
+      // CATEGORICAL pie without AGGREGATE, size field or SORT
       if (((this._valueMin !== this._valueMax) || this.binding.size) && !has(/NOSRT/)
-        && (!has(/NOSIZE/) || has(/\bSORT\b/))) {
+        && (!has(/NOSIZE/) || has(/\bSORT\b/))
+        && (!has(/CATEGORICAL/) || has(/AGGREGATE/) || this.binding.size || has(/\bSORT\b/))) {
         const down = has(/\bSORT\b/) && has(/\bUP\b/);
         charts.sort((a, b) => (down ? b.key - a.key : a.key - b.key) || 0);
       }
@@ -12619,6 +12916,74 @@ in vec4 vPieLineColor;
       return layers.concat(this._buildPieTextLayers(charts, zoom, liveZoom, unit, sliceRgb, has));
     }
 
+    // the items of an AGGREGATE / CATEGORICAL pie within bbox: its records
+    // (_buildAggregationIndex) added up per item by aggregateOnGrid — with
+    // AGGREGATE on the theme's aggregation grid (gridwidth, aggregation …,
+    // see _ensureClusterIndices; none: per position), else per position
+    // (flat sums a CATEGORICAL theme's records of one shape by category
+    // without AGGREGATE too). Each item's properties.pie: flatPieAccumulate's.
+    _pieAggregatedItems(zoom, bbox) {
+      if (!this._featuresByCategory) return [];
+      if (this.flags.has('AGGREGATE')) {
+        this._ensureClusterIndices(zoom);
+        return this._clusterIndices[0].getClusters(bbox, this._clusterUsesFixedZoom ? GRIDWIDTH_METERS_REFERENCE_ZOOM : zoom);
+      }
+      const feats = this._featuresByCategory[0];
+      if (!this._pieExactIndex || this._pieExactIndex.features !== feats) {
+        this._pieExactIndex = new GridAggregateIndex(null, this.flags, undefined, null).load(feats);
+      }
+      return this._pieExactIndex.getClusters(bbox, zoom);
+    }
+
+    // an aggregated pie item's parts (a CATEGORICAL pie with style.values:
+    // one per category) and size (flatPieItemValues)
+    _pieItemValues(pie) {
+      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+      const nParts = this._pieCategorical ? (this._pieExplicitValues ? this.categoryLabels.length : null) : (this._pieFields || []).length;
+      return flatPieItemValues(pie, t, { categorical: !!this._pieCategorical, nParts });
+    }
+
+    // flat's statistics of an aggregated pie theme (maptheme.js
+    // 11180-11241), over every item (at this zoom when a grid aggregates):
+    // nMin / nMax over the items' sizes (CATEGORICAL or a size field), else
+    // over their parts; nMaxSize the biggest size; the classes of a
+    // value-field pie (partsA) over the items' parts, as for a per-record
+    // pie (_preparePie). Sets the theme's _valueMin / _valueMax / partsA.
+    _pieAggregateStats(zoom) {
+      const feats = this._featuresByCategory && this._featuresByCategory[0];
+      const zkey = this.flags.has('AGGREGATE') ? zoom : null;
+      const cache = this._pieStatsCache;
+      if (cache && cache.feats === feats && cache.zoom === zkey) return cache;
+      let nMin = Infinity, nMax = -Infinity, maxSize = -Infinity;
+      const pooled = [];
+      const bySize = !!this._pieCategorical || !!(this.binding.size && this.binding.size !== '$item$');
+      for (const f of this._pieAggregatedItems(zoom, [-180, -90, 180, 90])) {
+        const { parts, size } = this._pieItemValues(f.properties.pie);
+        if (isFinite(size) && size > maxSize) maxSize = size;
+        for (const v of parts) if (isFinite(v)) pooled.push(v);
+        if (bySize) {
+          if (isFinite(size)) { if (size < nMin) nMin = size; if (size > nMax) nMax = size; }
+        } else {
+          for (const v of parts) if (isFinite(v)) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+        }
+      }
+      if (nMin <= nMax) {
+        this._valueMin = nMin;
+        this._valueMax = nMax;
+        if (!this._pieCategorical && pooled.length) {
+          const nParts = Math.trunc(styleNum(this.style.classes)) || colorSchemeClassCount(this.style.colorscheme) || DEFAULT_RANGE_CLASSES;
+          this.partsA = flatRangeParts(pooled, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
+          // a 1-field pie's legend rows are these classes (in place, as
+          // _ensureAggregateStats: the legend holds the array)
+          if (!this._multiFields && Array.isArray(this.categoryLabels)) {
+            this.categoryLabels.splice(0, this.categoryLabels.length, ...this.partsA.map(p => `${this._formatTooltipValue(p.min)} - ${this._formatTooltipValue(p.max)}`));
+          }
+        }
+      }
+      this._pieStatsCache = { feats, zoom: zkey, maxSize: maxSize > -Infinity ? maxSize : undefined };
+      return this._pieStatsCache;
+    }
+
     // the value texts of _buildPieLayers (see there)
     _buildPieTextLayers(charts, zoom, liveZoom, unit, sliceRgb, has) {
       const st = this.style;
@@ -12629,12 +12994,16 @@ in vec4 vPieLineColor;
       const noBreaks = flatNoBreaks(this._valueMin, this._valueMax);
       const dec = explicitValueDecimals(st);
       const fmt = (v, d) => flatFormatValue(v, d, noBreaks ? 'ROUND|NOBREAKS' : 'ROUND');
-      const partText = sl => (sl.complement ? Math.round(sl.percent * 10) / 10 + ' % '
-        : fmt(sl.value, dec != null ? dec : (sl.value < 1 ? 2 : 0)) + partUnit);
+      // COUNT on an aggregated pie: the part's record count (flat's nCountA)
+      const countText = has(/COUNT/);
+      const partText = (sl, ch) => {
+        if (sl.complement) return Math.round(sl.percent * 10) / 10 + ' % ';
+        const v = countText && ch && ch.partCounts ? ch.partCounts[sl.i] || 0 : sl.value;
+        return fmt(v, dec != null ? dec : (v < 1 ? 2 : 0)) + partUnit;
+      };
       const valuesOn = has(/VALUES/) && !has(/STACKED/) && !valuesHiddenByScale(st, zoom);
       const textOverride = st.valuecolor || st.textcolor;
       const inline = [], boxed = [], centerTexts = [], lines = [];
-      const nFields = (this._pieFields || []).length;
       for (const ch of charts) {
         const o = ch.off;
         // CENTER: the center part's value (maptheme.js 20402-20410)
@@ -12644,10 +13013,10 @@ in vec4 vPieLineColor;
           const fontSize = Math.min(ch.centerR * 0.8, ch.centerR * (3.3 / Math.max(1, text.length))) * valueScale;
           const rgb = (this.categoryColorsRgb || [])[ch.layout.center.i] || [128, 128, 128];
           if (fontSize > VALUES_MIN_FONT_PX) centerTexts.push({ position: ch.c, text, fontSize, off: o, color: flatChartTextRgb(rgb), bold: true });
-        } else if (!ch.layout.center && has(/CENTERVALUE/) && ch.size !== undefined && !isNaN(ch.size)) {
+        } else if (!ch.layout.center && has(/CENTERVALUE/) && (ch.count || (ch.size !== undefined && !isNaN(ch.size)))) {
           // flat prints String(nCount || nSize): a record's item has no
-          // nCount, so its size value
-          const text = String(ch.size);
+          // nCount, so its size value; an aggregated item its record count
+          const text = String(ch.count || ch.size);
           const fontSize = Math.min(ch.r * 0.5, ch.r * (2 / Math.max(1, text.length)));
           if (fontSize > VALUES_MIN_FONT_PX) {
             centerTexts.push({ position: ch.c, text, fontSize, off: o, bold: false,
@@ -12655,20 +13024,20 @@ in vec4 vPieLineColor;
           }
         }
         if (!valuesOn) continue;
-        if (nFields > 1 || has(/NOINLINETEXT/)) {
+        if (ch.nParts > 1 || has(/NOINLINETEXT/)) {
           const fontSize = 5 * unit * valueScale;
           if (fontSize <= VALUES_MIN_FONT_PX) continue;
           for (const lab of pieValueLabelLayout(ch.layout.slices, ch.r, fontSize, unit, (this.partsA || []).length)) {
             const bg = has(/VALUEBACKGROUND/) ? sliceRgb(lab.slice) : [255, 255, 255];
             const textRgb = textOverride ? hexOrNamedToRgb(textOverride) : flatDerivateRgb(bg, bg[0] + bg[1] + bg[2] > 450 ? 0.6 : 3);
-            boxed.push({ position: ch.c, text: partText(lab.slice), fontSize, anchor: lab.anchor,
+            boxed.push({ position: ch.c, text: partText(lab.slice, ch), fontSize, anchor: lab.anchor,
               // the text's baseline → its center (arial: 0.35 font above)
               off: [o[0] + lab.x, o[1] + lab.y - 0.35 * fontSize], color: textRgb, bg: [...bg.slice(0, 3), 128] });
             lab.segments.forEach(sg => lines.push({ c: ch.c, o, sg }));
           }
         } else if (ch.layout.slices.length) {
           const sl = ch.layout.slices[ch.layout.slices.length - 1];
-          const text = partText(sl);
+          const text = partText(sl, ch);
           const fontSize = Math.min(ch.r * 0.8, ch.r * (3.4 / Math.max(1, text.length)));
           const color = textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(sliceRgb(sl));
           // baseline at −0.6 R + R / 2 + 0.45 font (maptheme.js 20434)
@@ -14240,7 +14609,7 @@ in vec4 vPieLineColor;
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat,
+    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

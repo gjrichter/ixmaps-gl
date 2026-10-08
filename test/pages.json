@@ -33,6 +33,7 @@
     "examples/dot_range_equidistant.html",
     "examples/plot_curves.html",
     "examples/pie_size_sum.html",
+    "examples/pie_categorical_aggregate.html",
     "examples/vector_bezier_aggregate.html",
     "examples/validate_demo.html",
     "examples/alias_bubble_range_quantile.html",
@@ -156,6 +157,10 @@
     {
       "flat": "examples/pie_size_sum_svg.html",
       "gl": "examples/pie_size_sum.html"
+    },
+    {
+      "flat": "examples/pie_categorical_aggregate_svg.html",
+      "gl": "examples/pie_categorical_aggregate.html"
     },
     {
       "flat": "examples/vector_bezier_aggregate_svg.html",
