@@ -46,7 +46,11 @@ page. It currently implements:
   cell, class breaks and legend from the aggregated cells), dynamic sizing, glow (between
   `glowlower` and `glowupper`),
   multi-point grouping, on-bubble value labels, `NORMALIZE`, chart boxes (`BOX`, `CIRCULARBOX`)
-  with the item title above or below (`TITLE`, `BOTTOMTITLE`), between `boxlower` and `boxupper`
+  with the item title above or below (`TITLE`, `BOTTOMTITLE`), between `boxlower` and `boxupper`.
+  A `CATEGORICAL` `BUBBLE` (also `EXACT`/`AGGREGATE`) is filled and outlined as in flat, each
+  bubble and each part of a grouped one: `fillopacity` (1), outlined in the category color × 0.7
+  or `linecolor` (none with `NOLINES`), `linewidth` (0.1) growing with √radius (`OUTLINE`: up to the
+  normal radius), the outline opaque with `linecolor`/`OUTLINE` or below fillopacity 0.5, else 0.3
 - **CHART\|LABEL** — flat's value label: a rounded box sized by the bubble radius of the size value
   in the item color, with `VALUES` the value in bold; with `TEXTONLY` only the text, over a halo of
   the theme color

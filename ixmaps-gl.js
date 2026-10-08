@@ -6631,6 +6631,53 @@ in vec4 vPieLineColor;
     }
     return [r, g, b].map(c => Math.min(255, Math.floor(c * f)));
   }
+  // A BUBBLE chart's look in flat (maptheme.js, the BUBBLE branch), for a
+  // circle of screen radius r in the class color rgb, `unit` = flat's
+  // normalX(1) on screen (the object zoom factor × style.scale):
+  //  - stroke (20740-20780, 20895): style.linecolor, else ChartColors.lowColor
+  //    (the color × 0.7, __maptheme_getChartColors) — none with NOLINES or
+  //    linecolor "none"
+  //  - width (20898-20903): linewidth (0.1) · unit · √(r / normal radius),
+  //    the normal radius 15 · unit; OUTLINE: unit · min(1, r / normal radius)
+  //  - fill-opacity fillopacity (1); stroke-opacity (21050-21056) 1 with
+  //    OUTLINE or a linecolor, else 1 below fillopacity 0.5, 0.3 above
+  // (_buildLabelChartLayers spells the same rule out for CHART|LABEL's box.)
+  function flatBubbleLook(rgb, r, unit, style, flags) {
+    const fillOpacity = styleNum(style.fillopacity) || 1;
+    const outline = flatFlag(flags, 'OUTLINE');
+    const lineColor = style.linecolor ? styleLineColor(style.linecolor) : null;
+    const stroke = lineColor ? (lineColor === 'none' ? null : hexOrNamedToRgb(lineColor))
+      : flatFlag(flags, 'NOLINES') ? null : flatDerivateRgb(rgb, 0.7);
+    const ratio = r / (NORMAL_RADIUS_PX * unit);
+    const width = outline ? unit * Math.min(1, ratio) : unit * (styleNum(style.linewidth) || 0.1) * Math.sqrt(ratio);
+    const strokeOpacity = outline || lineColor ? 1 : (fillOpacity < 0.5 ? 1 : 0.3);
+    return { fillOpacity, stroke, strokeOpacity, width };
+  }
+
+  // flatBubbleLook for a cached icon raster `size` canvas px wide, drawn 2r
+  // screen px wide: the stroke width in canvas px, in quarter-octave steps
+  // (≤ 19 % apart, at most the icon's radius) — every distinct width is
+  // another icon in deck.gl's shared atlas (see ICON_ATLAS_RESET_AFTER), and
+  // a continuous width would make one per bubble. It hardly depends on the
+  // zoom: r and the width both scale with the object zoom factor. `stroke`
+  // only when it is style.linecolor (a packed icon derives each part's own,
+  // see _buildBubbleIcon), noStroke for NOLINES / linecolor "none";
+  // outlineRatio (OUTLINE): r / normal radius, also stepped, as 1 from 1 up
+  // (where flat's OUTLINE width stops growing).
+  function bubbleIconLook(r, unit, style, flags, size) {
+    const look = flatBubbleLook([0, 0, 0], r, unit, style, flags);
+    const step = v => (v > 0 ? Math.round(Math.pow(2, Math.round(Math.log2(v) * 4) / 4) * 1000) / 1000 : 0);
+    const out = {
+      fillOpacity: look.fillOpacity,
+      strokeOpacity: look.strokeOpacity,
+      stroke: style.linecolor ? look.stroke : null,
+      noStroke: !look.stroke,
+      width: r > 0 ? Math.min(size / 2, step(look.width * size / (2 * r))) : 0,
+    };
+    if (flatFlag(flags, 'OUTLINE')) out.outlineRatio = Math.min(1, step(r / (NORMAL_RADIUS_PX * unit)));
+    return out;
+  }
+
   // ChartColors.textColor (colorscheme.js 104-116): darker on light colors
   function flatChartTextRgb(rgb) {
     return flatDerivateRgb(rgb, rgb[0] + rgb[1] + rgb[2] > 450 ? 0.6 : 3);
@@ -9915,7 +9962,15 @@ in vec4 vPieLineColor;
       return this._glowIconCache.get(key);
     }
 
-    _buildBubbleIcon(counts, colors, marked = null, shapes = null) {
+    // look (optional, a CATEGORICAL BUBBLE's flat look — see bubbleIconLook):
+    // every part filled at look.fillOpacity and stroked like its own flat
+    // bubble (look.stroke, else its color × 0.7; look.strokeOpacity), the
+    // width look.width canvas px for a part of the icon's full radius,
+    // √(share of it) for a smaller one (flat's width ∝ √r) — OUTLINE:
+    // ∝ min(1, r / normal radius), look.outlineRatio being the full
+    // radius / normal radius. Without it the older look: 0.9 fill, a 1 px
+    // white stroke (the SYMBOL branch's packed icon).
+    _buildBubbleIcon(counts, colors, marked = null, shapes = null, look = null) {
       // The cache key quantizes each count's RATIO to the group's total,
       // not the raw count — computeBubblePackLayout's radii are purely
       // sqrt(c/total), so two clusters with wildly different absolute
@@ -9945,7 +10000,8 @@ in vec4 vPieLineColor;
       // coarse share buckets that can put a small marked part at 0
       const key = counts.map(c => Math.round((c / total) * RATIO_BUCKETS)).join('-') + (marked
         ? '|iso:' + counts.map((c, i) => (c > 0 && marked.has(i) ? i + ':' + Math.round(Math.sqrt(c / total) * 100) : null)).filter(Boolean).join(',')
-        : '') + (shapes ? '|sym:' + shapes.map(v => String(v).toLowerCase()).join(',') : '');
+        : '') + (shapes ? '|sym:' + shapes.map(v => String(v).toLowerCase()).join(',') : '')
+        + (look ? `|fb:${look.fillOpacity}:${look.strokeOpacity}:${look.stroke ? look.stroke.join(',') : look.noStroke ? 'none' : 'low'}:${look.width}${look.outlineRatio != null ? ':' + look.outlineRatio : ''}` : '');
       if (this._iconCache.has(key)) return this._iconCache.get(key);
       const size = BUBBLE_ICON_SIZE;
       const canvas = document.createElement('canvas');
@@ -9960,13 +10016,33 @@ in vec4 vPieLineColor;
         // _resolveSymbolShape; circles when the name isn't one GL draws
         const shape = shapes ? normalizeSymbolShape(shapes[Math.min(p.i, shapes.length - 1)]) : 'circle';
         const px = cx + offsets[i].x * fitScale, py = cy + offsets[i].y * fitScale;
+        let pr = radii[i] * fitScale, lw = 0;
+        if (look && !look.noStroke) {
+          const k = pr / (size / 2);
+          lw = Math.min(pr, look.outlineRatio != null
+            ? look.width * Math.min(1, k * look.outlineRatio) / Math.min(1, look.outlineRatio)
+            : look.width * Math.sqrt(k));
+          // inside the part, as _buildSingleIcon: the icon's edge is the bubble's
+          pr = Math.max(0.5, pr - lw / 2);
+        }
         ctx.beginPath();
-        if (shape === 'circle') ctx.arc(px, py, radii[i] * fitScale, 0, Math.PI * 2);
-        else drawSymbolPath(ctx, shape, px, py, radii[i] * fitScale);
+        if (shape === 'circle') ctx.arc(px, py, pr, 0, Math.PI * 2);
+        else drawSymbolPath(ctx, shape, px, py, pr);
         ctx.closePath();
         ctx.fillStyle = `rgb(${colors[p.i].join(',')})`;
-        ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
-        ctx.lineWidth = 1; ctx.strokeStyle = '#fff'; ctx.stroke();
+        if (!look) {
+          ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
+          ctx.lineWidth = 1; ctx.strokeStyle = '#fff'; ctx.stroke();
+          return;
+        }
+        ctx.globalAlpha = look.fillOpacity; ctx.fill();
+        if (lw > 0) {
+          ctx.globalAlpha = look.strokeOpacity;
+          ctx.lineWidth = lw;
+          ctx.strokeStyle = `rgb(${(look.stroke || flatDerivateRgb(colors[p.i], 0.7)).join(',')})`;
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
       });
       const icon = { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key };
       return this._cacheIcon(key, icon);
@@ -9995,10 +10071,12 @@ in vec4 vPieLineColor;
     // cached bubble icon here already accepts; the border scales with
     // the bubble exactly as the fill already does, which reads as
     // reasonable rather than wrong.
-    _buildSingleIcon(colorRgb, opacity, shape, borderColorRgb, borderWidth) {
+    // borderOpacity (default 1): the border's own alpha (flat's
+    // stroke-opacity, see flatBubbleLook)
+    _buildSingleIcon(colorRgb, opacity, shape, borderColorRgb, borderWidth, borderOpacity = 1) {
       shape = shape || 'circle';
       borderWidth = borderWidth || 0;
-      const key = `single-${shape}-${colorRgb.join(',')}-${opacity}-${borderColorRgb ? borderColorRgb.join(',') : 'none'}-${borderWidth}`;
+      const key = `single-${shape}-${colorRgb.join(',')}-${opacity}-${borderColorRgb ? borderColorRgb.join(',') : 'none'}-${borderWidth}${borderOpacity !== 1 ? `-so${borderOpacity}` : ''}`;
       if (this._iconCache.has(key)) return this._iconCache.get(key);
       const size = BUBBLE_ICON_SIZE;
       const canvas = document.createElement('canvas');
@@ -10020,7 +10098,7 @@ in vec4 vPieLineColor;
       ctx.globalAlpha = shape === 'empty' ? 0 : opacity;
       ctx.fill();
       if (borderWidth > 0 && borderColorRgb) {
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha = borderOpacity;
         ctx.strokeStyle = `rgb(${borderColorRgb.join(',')})`;
         ctx.lineWidth = borderWidth;
         ctx.stroke();
@@ -12321,17 +12399,31 @@ in vec4 vPieLineColor;
       // fillopacity and linecolor, as a single item (flat draws one
       // symbol) — the packed multi-category icon is for CATEGORICAL cells
       const singleSymbol = d => !d.properties.counts || (this._rangeClassed && d.properties.cat != null);
+      // a CATEGORICAL BUBBLE (flat's BUBBLE branch): every bubble — a single
+      // one and each part of a packed one — filled and stroked as flat's,
+      // see flatBubbleLook; the icon carries both opacities
+      const flatLook = flatChartBranch(this.flags) === 'bubble' && this.flags.has('CATEGORICAL')
+        ? d => bubbleIconLook(radiusOf(d), objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1), this.style, this.flags, BUBBLE_ICON_SIZE)
+        : null;
+      const singleIcon = d => {
+        const rgb = (this.categoryColorsRgb || [])[d.properties.cat];
+        if (!flatLook) return this._buildSingleIcon(rgb, fillOpacity, shapeOf(d.properties), singleBorderColorRgb, singleBorderWidthPx);
+        const look = flatLook(d);
+        return this._buildSingleIcon(rgb, look.fillOpacity, shapeOf(d.properties),
+          look.noStroke || !rgb ? null : (look.stroke || flatDerivateRgb(rgb, 0.7)), look.width, look.strokeOpacity);
+      };
       layers.push(new IconLayer({
         id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
         data: combined, pickable: true,
         getPosition: d => d.geometry.coordinates,
         getIcon: d => !singleSymbol(d)
-          ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d), Array.isArray(this.style.symbols) ? this.style.symbols : null)
-          : this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, shapeOf(d.properties), singleBorderColorRgb, singleBorderWidthPx),
+          ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d), Array.isArray(this.style.symbols) ? this.style.symbols : null, flatLook && flatLook(d))
+          : singleIcon(d),
         getSize: d => vRadius(sizeValueOf(d)) * 2,
         // group icons bake a fixed 0.9 alpha; an explicit fillopacity scales it
         // so a near-transparent theme doesn't show opaque 1-px-cell clusters
-        getColor: d => [255, 255, 255, Math.round(this._iconAlpha(d) * (!singleSymbol(d) && this.style.fillopacity != null ? fillOpacity : 1))],
+        // (a flat-look icon carries its own fill and stroke opacity)
+        getColor: d => [255, 255, 255, Math.round(this._iconAlpha(d) * (!flatLook && !singleSymbol(d) && this.style.fillopacity != null ? fillOpacity : 1))],
         ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
         sizeUnits: 'pixels',
         billboard: true,
@@ -14618,7 +14710,7 @@ in vec4 vPieLineColor;
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
-    applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
+    applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,
     dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn,
