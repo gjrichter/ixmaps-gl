@@ -107,7 +107,7 @@
   }
 
   var myMap = ixmaps.Map("map", {
-      mapType:       "#0a1420",
+      mapType:       "VT_DATAVIZ_DARK",
       mapProjection: "equalearth",
       mode:          "info",
       legend:        "open",
@@ -117,7 +117,7 @@
     .options({
       objectscaling:   "dynamic",
       normalSizeScale: "170000000",
-      basemapopacity:  0,
+      basemapopacity:  0.3,
       flushChartDraw:  1000000
     });
 
@@ -141,7 +141,6 @@
     .style({ colorscheme: ["#152838"], linewidth: 0.6, showdata: "true" })
     .meta({ name: "graticule_theme", tooltip: "{{}}" })
     .define();
-  */
   // Land / countries
   myMap.layer("countries")
     .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json", type: "topojson" })
@@ -150,6 +149,7 @@
     .style({ colorscheme: ["#1c2b36"], fillopacity: "1", linecolor: "#2a3f4d", linewidth: 0.5, showdata: "true" })
     .meta({ name: "countries_theme", tooltip: "{{}}" })
     .define();
+  */
 
   // Power plants — bubble size = capacity_mw, color = primary_fuel (categorical)
   myMap.layer("power_plants")

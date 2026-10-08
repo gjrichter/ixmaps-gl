@@ -15,239 +15,6 @@
    },
    "layers": [
     {
-     "id": "ix-features-countries-d1",
-     "type": "GeoJsonLayer",
-     "count": 257,
-     "constants": {
-      "filled": true,
-      "getFillColor": [
-       28,
-       43,
-       54,
-       255
-      ],
-      "getLineColor": [
-       42,
-       63,
-       77
-      ],
-      "lineWidthMinPixels": 0.5,
-      "pickable": false,
-      "stroked": true
-     },
-     "columns": [
-      "~geometry"
-     ],
-     "digest": "2522cab18deb5b7e",
-     "setDigest": "a2f155589d192295",
-     "columnDigests": {
-      "~geometry": "902f1358e52bffb2"
-     },
-     "stats": {},
-     "sample": [
-      [
-       [
-        "MultiPolygon",
-        707,
-        [
-         -57.469742,
-         -63.564269
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        7,
-        [
-         3.084773,
-         -54.399239
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        39,
-        [
-         25.266099,
-         -17.800136
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        43,
-        [
-         31.78345,
-         52.109152
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        13,
-        [
-         -88.909362,
-         15.900571
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        78,
-        [
-         44.808,
-         39.630799
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        172,
-        [
-         13.713536,
-         46.519826
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -2.366657,
-         49.290082
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        8,
-        [
-         -78.290749,
-         18.286408
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         39.204297,
-         32.155991
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        203,
-        [
-         141.380523,
-         41.314919
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         35.945621,
-         4.618187
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        46,
-        [
-         80.247365,
-         42.217998
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        26,
-        [
-         104.438716,
-         10.427181
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        285,
-        [
-         143.370244,
-         -12.607433
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -70.189743,
-         12.581146
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        35,
-        [
-         48.574258,
-         41.827477
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        25,
-        [
-         19.022843,
-         44.854012
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        6,
-        [
-         -59.703102,
-         13.227945
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        27,
-        [
-         92.601907,
-         21.971946
-        ]
-       ]
-      ]
-     ]
-    },
-    {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
      "count": 34427,
@@ -262,13 +29,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "c998aabc24dc6708",
-     "setDigest": "f8499a40e666b697",
+     "digest": "7c2573b05d165ac5",
+     "setDigest": "87c3764508f4015e",
      "columnDigests": {
       "getColor": "23484a5e108c453f",
       "getIcon": "063bfd545745b585",
       "getPosition": "afba5845752738d3",
-      "getSize": "932361a39d689fb0"
+      "getSize": "f2227c283a90cfc0"
      },
      "stats": {
       "getColor": [
@@ -281,7 +48,7 @@
       ],
       "getSize": [
        1.1,
-       121.922793
+       38.555373
       ]
      },
      "sample": [
@@ -722,13 +489,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0ca5835ddf668a28",
-     "setDigest": "bcd23d969c1992f9",
+     "digest": "b2b80961e61f2b26",
+     "setDigest": "0d439251e72a65d1",
      "columnDigests": {
       "getColor": "23484a5e108c453f",
       "getIcon": "3d0d8a7fd66e2b18",
       "getPosition": "afba5845752738d3",
-      "getSize": "0acc7a9925f2356a"
+      "getSize": "37fa8b58f48a7681"
      },
      "stats": {
       "getColor": [
@@ -741,7 +508,7 @@
       ],
       "getSize": [
        0.2,
-       22.167781
+       7.010068
       ]
      },
      "sample": [
@@ -1170,23 +937,6 @@
    ],
    "themes": [
     {
-     "name": "countries",
-     "flags": [
-      "FEATURE",
-      "SILENT"
-     ],
-     "features": 257,
-     "active": null,
-     "hidden": false,
-     "categoryColorsRgb": [
-      [
-       28,
-       43,
-       54
-      ]
-     ]
-    },
-    {
      "name": "power_plants",
      "flags": [
       "BUBBLE",
@@ -1299,11 +1049,6 @@
    ],
    "legend": [],
    "tooltips": {
-    "countries": [
-     "",
-     "",
-     ""
-    ],
     "power_plants": [
      "<b>Adelaide Showgrounds</b><br>Australia<br>Solar<br>1 MW",
      "<b>Aalborg</b><br>Denmark<br>Solar<br>17 MW",
@@ -1326,239 +1071,6 @@
    },
    "layers": [
     {
-     "id": "ix-features-countries-d1",
-     "type": "GeoJsonLayer",
-     "count": 257,
-     "constants": {
-      "filled": true,
-      "getFillColor": [
-       28,
-       43,
-       54,
-       255
-      ],
-      "getLineColor": [
-       42,
-       63,
-       77
-      ],
-      "lineWidthMinPixels": 0.5,
-      "pickable": false,
-      "stroked": true
-     },
-     "columns": [
-      "~geometry"
-     ],
-     "digest": "2522cab18deb5b7e",
-     "setDigest": "a2f155589d192295",
-     "columnDigests": {
-      "~geometry": "902f1358e52bffb2"
-     },
-     "stats": {},
-     "sample": [
-      [
-       [
-        "MultiPolygon",
-        707,
-        [
-         -57.469742,
-         -63.564269
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        7,
-        [
-         3.084773,
-         -54.399239
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        39,
-        [
-         25.266099,
-         -17.800136
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        43,
-        [
-         31.78345,
-         52.109152
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        13,
-        [
-         -88.909362,
-         15.900571
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        78,
-        [
-         44.808,
-         39.630799
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        172,
-        [
-         13.713536,
-         46.519826
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -2.366657,
-         49.290082
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        8,
-        [
-         -78.290749,
-         18.286408
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         39.204297,
-         32.155991
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        203,
-        [
-         141.380523,
-         41.314919
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         35.945621,
-         4.618187
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        46,
-        [
-         80.247365,
-         42.217998
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        26,
-        [
-         104.438716,
-         10.427181
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        285,
-        [
-         143.370244,
-         -12.607433
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -70.189743,
-         12.581146
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        35,
-        [
-         48.574258,
-         41.827477
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        25,
-        [
-         19.022843,
-         44.854012
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        6,
-        [
-         -59.703102,
-         13.227945
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        27,
-        [
-         92.601907,
-         21.971946
-        ]
-       ]
-      ]
-     ]
-    },
-    {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
      "count": 15427,
@@ -1573,13 +1085,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "d13df74ec84faea1",
-     "setDigest": "86332781b2222941",
+     "digest": "f13e7ba31baa9bdd",
+     "setDigest": "7b03f38f50dd7bad",
      "columnDigests": {
       "getColor": "ec84029138c9148f",
       "getIcon": "48d3727211c7c1de",
       "getPosition": "ff7fe11fe17c485c",
-      "getSize": "197b330286c28fb3"
+      "getSize": "0cf889a9ab0e4c46"
      },
      "stats": {
       "getColor": [
@@ -1592,7 +1104,7 @@
       ],
       "getSize": [
        1.1,
-       96.422047
+       30.491328
       ]
      },
      "sample": [
@@ -2033,13 +1545,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "6717f8498f33f348",
-     "setDigest": "d7a78b6fa091204a",
+     "digest": "2d12c8cbc654424c",
+     "setDigest": "3833d3e79bf03357",
      "columnDigests": {
       "getColor": "ec84029138c9148f",
       "getIcon": "cabb39fe6194062a",
       "getPosition": "ff7fe11fe17c485c",
-      "getSize": "71f6b15bebf573fe"
+      "getSize": "afaf17fef152f33f"
      },
      "stats": {
       "getColor": [
@@ -2052,7 +1564,7 @@
       ],
       "getSize": [
        0.2,
-       17.531281
+       5.543878
       ]
      },
      "sample": [
@@ -2481,23 +1993,6 @@
    ],
    "themes": [
     {
-     "name": "countries",
-     "flags": [
-      "FEATURE",
-      "SILENT"
-     ],
-     "features": 257,
-     "active": null,
-     "hidden": false,
-     "categoryColorsRgb": [
-      [
-       28,
-       43,
-       54
-      ]
-     ]
-    },
-    {
      "name": "power_plants",
      "flags": [
       "BUBBLE",
@@ -2610,11 +2105,6 @@
    ],
    "legend": [],
    "tooltips": {
-    "countries": [
-     "",
-     "",
-     ""
-    ],
     "power_plants": [
      "<b>Tauá</b><br>Brazil<br>Solar<br>1 MW",
      "<b>Le Souich</b><br>France<br>Wind<br>12 MW",
@@ -2637,239 +2127,6 @@
    },
    "layers": [
     {
-     "id": "ix-features-countries-d1",
-     "type": "GeoJsonLayer",
-     "count": 257,
-     "constants": {
-      "filled": true,
-      "getFillColor": [
-       28,
-       43,
-       54,
-       255
-      ],
-      "getLineColor": [
-       42,
-       63,
-       77
-      ],
-      "lineWidthMinPixels": 0.5,
-      "pickable": false,
-      "stroked": true
-     },
-     "columns": [
-      "~geometry"
-     ],
-     "digest": "2522cab18deb5b7e",
-     "setDigest": "a2f155589d192295",
-     "columnDigests": {
-      "~geometry": "902f1358e52bffb2"
-     },
-     "stats": {},
-     "sample": [
-      [
-       [
-        "MultiPolygon",
-        707,
-        [
-         -57.469742,
-         -63.564269
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        7,
-        [
-         3.084773,
-         -54.399239
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        39,
-        [
-         25.266099,
-         -17.800136
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        43,
-        [
-         31.78345,
-         52.109152
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        13,
-        [
-         -88.909362,
-         15.900571
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        78,
-        [
-         44.808,
-         39.630799
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        172,
-        [
-         13.713536,
-         46.519826
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -2.366657,
-         49.290082
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        8,
-        [
-         -78.290749,
-         18.286408
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         39.204297,
-         32.155991
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        203,
-        [
-         141.380523,
-         41.314919
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        35,
-        [
-         35.945621,
-         4.618187
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        46,
-        [
-         80.247365,
-         42.217998
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        26,
-        [
-         104.438716,
-         10.427181
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        285,
-        [
-         143.370244,
-         -12.607433
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        5,
-        [
-         -70.189743,
-         12.581146
-        ]
-       ]
-      ],
-      [
-       [
-        "MultiPolygon",
-        35,
-        [
-         48.574258,
-         41.827477
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        25,
-        [
-         19.022843,
-         44.854012
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        6,
-        [
-         -59.703102,
-         13.227945
-        ]
-       ]
-      ],
-      [
-       [
-        "Polygon",
-        27,
-        [
-         92.601907,
-         21.971946
-        ]
-       ]
-      ]
-     ]
-    },
-    {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
      "count": 34737,
@@ -2884,13 +2141,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "e76ec9b373f2c32d",
-     "setDigest": "73fffe40a0679848",
+     "digest": "77d0243f286bac35",
+     "setDigest": "f8790417c96c6d21",
      "columnDigests": {
       "getColor": "178a0a4fc568a99a",
       "getIcon": "f66a8af6f8f92b85",
       "getPosition": "2b61746706416c9e",
-      "getSize": "dcd2913f06efdb25"
+      "getSize": "acbf6d6efe2ce1c2"
      },
      "stats": {
       "getColor": [
@@ -2903,7 +2160,7 @@
       ],
       "getSize": [
        1.1,
-       116.013178
+       36.686588
       ]
      },
      "sample": [
@@ -3344,13 +2601,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "024c5bb61dbe29eb",
-     "setDigest": "0c35397cfdc68d7f",
+     "digest": "4180a74d5b34a241",
+     "setDigest": "5fa9c95faf13fbbc",
      "columnDigests": {
       "getColor": "178a0a4fc568a99a",
       "getIcon": "15a0b91427fb2148",
       "getPosition": "2b61746706416c9e",
-      "getSize": "547da86241e69d26"
+      "getSize": "cfe7780c6e6b8120"
      },
      "stats": {
       "getColor": [
@@ -3363,7 +2620,7 @@
       ],
       "getSize": [
        0.2,
-       21.093305
+       6.670289
       ]
      },
      "sample": [
@@ -3792,23 +3049,6 @@
    ],
    "themes": [
     {
-     "name": "countries",
-     "flags": [
-      "FEATURE",
-      "SILENT"
-     ],
-     "features": 257,
-     "active": null,
-     "hidden": false,
-     "categoryColorsRgb": [
-      [
-       28,
-       43,
-       54
-      ]
-     ]
-    },
-    {
      "name": "power_plants",
      "flags": [
       "BUBBLE",
@@ -3921,11 +3161,6 @@
    ],
    "legend": [],
    "tooltips": {
-    "countries": [
-     "",
-     "",
-     ""
-    ],
     "power_plants": [
      "<b>Adelaide Showgrounds</b><br>Australia<br>Solar<br>1 MW",
      "<b>Tennant Creek</b><br>Australia<br>Gas<br>17 MW",

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Global Power Plants — Facet Browser</title>
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0/ixmaps-gl.js"></script>
 <style>
-  html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Arial, sans-serif; background: #0a1420; color: #cfe3ee; }
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Segoe UI", Arial, sans-serif; background: #021B2A; color: #cfe3ee; }
 
   #map_div { position: absolute; top: 0; bottom: 0; left: 0; width: 66%; }
 
@@ -108,7 +108,7 @@
   ];
 
   var myMap = ixmaps.Map("map_div", {
-      mapType:       "#0a1420",
+      mapType:       "VT_DATAVIZ_DARK",
       mapProjection: "equalearth",
       mode:          "info",
       tools:         false
@@ -117,21 +117,22 @@
     .options({
       objectscaling:   "dynamic",
       normalSizeScale: "170000000",
-      basemapopacity:  0,
+      basemapopacity:  0.3,
       flushChartDraw:  1000000
     });
 
   // Land / countries backdrop — same GISCO source as the first power-
   // plants page, no ocean/graticule overlay needed here (a plain dark
   // background already reads fine at map_div's own 66%-width crop).
+  /*
   myMap.layer("countries")
-    .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json", type: "topojson" })
+    .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_10M_2020_4326.json", type: "topojson" })
     .binding({ geo: "geometry", id: "CNTR_ID", title: "NAME_ENGL" })
     .type("FEATURE|SILENT")
     .style({ colorscheme: ["#1c2b36"], fillopacity: "1", linecolor: "#2a3f4d", linewidth: 0.5, showdata: "true" })
     .meta({ name: "countries_theme", tooltip: "{{}}" })
     .define();
-
+*/
   // Power plants — bubble size = capacity_mw, color = primary_fuel
   // (categorical). No legendfilter/floating legend here (legend option
   // omitted, matching accidents_app.html's own architecture) — the
@@ -147,7 +148,7 @@
       fillopacity:     0.85,
       sizepow:         2,
       scale:           1,
-      normalsizevalue: "50000",
+      normalsizevalue: "500000",
       valuefield:      "capacity_mw",
       valuedecimals:   0,
       units:           " MW",
