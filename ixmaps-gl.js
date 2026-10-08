@@ -4298,6 +4298,11 @@ in vec4 vPieLineColor;
         const v = this.mapOptions && this.mapOptions[dim];
         if (typeof v === 'string' && /^\s*\d+(\.\d+)?\s*px\s*$/i.test(v)) el.style[dim] = v.trim();
         else if (typeof v === 'number' && v > 0) el.style[dim] = v + 'px';
+        // a percentage stays the page's CSS — unless that CSS left the
+        // container collapsed on this side (e.g. an empty flex item, the
+        // UNHCR page): flat's own pixel-sized map div fills it there
+        else if (typeof v === 'string' && /^\s*\d+(\.\d+)?\s*%\s*$/.test(v)
+          && !(dim === 'width' ? el.clientWidth : el.clientHeight)) el.style[dim] = v.trim();
       }
       // without width/height flat's map is "fullscreen" (htmlgui_flat.js
       // 847-876): it fills the window, whatever the page's CSS gives the
