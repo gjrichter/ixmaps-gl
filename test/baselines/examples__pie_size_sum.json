@@ -1,0 +1,980 @@
+{
+ "page": "examples/pie_size_sum.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 7,
+    "center": [
+     8.6,
+     45.3
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-comuni-d1",
+     "type": "GeoJsonLayer",
+     "count": 7899,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       233,
+       233,
+       233,
+       102
+      ],
+      "getLineColor": [
+       170,
+       170,
+       170
+      ],
+      "lineWidthMinPixels": 0.15,
+      "pickable": false,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "c562168a078da15d",
+     "setDigest": "ee2b45e9c1df0d24",
+     "columnDigests": {
+      "~geometry": "ad62f0ceb140c1e4"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.791013,
+         45.386267
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.518183,
+         44.933589
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        13,
+        [
+         7.296968,
+         45.341962
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.926834,
+         45.448202
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.455505,
+         45.117189
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        6,
+        [
+         7.597748,
+         45.409
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        9,
+        [
+         7.514377,
+         45.119856
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         7.861778,
+         45.051891
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.902453,
+         45.526606
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        14,
+        [
+         7.211218,
+         44.875598
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.90614,
+         45.058734
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        14,
+        [
+         7.434335,
+         45.100371
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        12,
+        [
+         7.972148,
+         45.443214
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         7.767703,
+         45.385571
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        9,
+        [
+         7.498915,
+         45.30102
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.753669,
+         45.421874
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.813967,
+         45.083206
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        17,
+        [
+         7.229771,
+         45.334771
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        15,
+        [
+         7.84596,
+         45.462815
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        11,
+        [
+         7.657571,
+         45.304616
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "comuni",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 7899,
+     "active": null,
+     "hidden": false,
+     "categoryColorsRgb": [
+      [
+       233,
+       233,
+       233
+      ]
+     ]
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "CHART",
+      "PIE",
+      "SIMPLELEGEND",
+      "SIZE",
+      "SUM"
+     ],
+     "features": 7859,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       119,
+       180
+      ],
+      [
+       255,
+       127,
+       14
+      ],
+      [
+       44,
+       160,
+       44
+      ],
+      [
+       214,
+       39,
+       40
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0,
+     "maxSizeValue": 2751747
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "comuni": [
+     "<b></b> ()<br>",
+     "<b></b> ()<br>",
+     "<b></b> ()<br>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     8.6,
+     45.3
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-comuni-d1",
+     "type": "GeoJsonLayer",
+     "count": 7899,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       233,
+       233,
+       233,
+       102
+      ],
+      "getLineColor": [
+       170,
+       170,
+       170
+      ],
+      "lineWidthMinPixels": 0.15,
+      "pickable": false,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "c562168a078da15d",
+     "setDigest": "ee2b45e9c1df0d24",
+     "columnDigests": {
+      "~geometry": "ad62f0ceb140c1e4"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.791013,
+         45.386267
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.518183,
+         44.933589
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        13,
+        [
+         7.296968,
+         45.341962
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.926834,
+         45.448202
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.455505,
+         45.117189
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        6,
+        [
+         7.597748,
+         45.409
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        9,
+        [
+         7.514377,
+         45.119856
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         7.861778,
+         45.051891
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.902453,
+         45.526606
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        14,
+        [
+         7.211218,
+         44.875598
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.90614,
+         45.058734
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        14,
+        [
+         7.434335,
+         45.100371
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        12,
+        [
+         7.972148,
+         45.443214
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         7.767703,
+         45.385571
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        9,
+        [
+         7.498915,
+         45.30102
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.753669,
+         45.421874
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.813967,
+         45.083206
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        17,
+        [
+         7.229771,
+         45.334771
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        15,
+        [
+         7.84596,
+         45.462815
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        11,
+        [
+         7.657571,
+         45.304616
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "comuni",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 7899,
+     "active": null,
+     "hidden": false,
+     "categoryColorsRgb": [
+      [
+       233,
+       233,
+       233
+      ]
+     ]
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "CHART",
+      "PIE",
+      "SIMPLELEGEND",
+      "SIZE",
+      "SUM"
+     ],
+     "features": 7859,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       119,
+       180
+      ],
+      [
+       255,
+       127,
+       14
+      ],
+      [
+       44,
+       160,
+       44
+      ],
+      [
+       214,
+       39,
+       40
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0,
+     "maxSizeValue": 2751747
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "comuni": [
+     "<b></b> ()<br>",
+     "<b></b> ()<br>",
+     "<b></b> ()<br>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 6,
+    "center": [
+     8.6,
+     45.3
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-comuni-d1",
+     "type": "GeoJsonLayer",
+     "count": 7899,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       233,
+       233,
+       233,
+       102
+      ],
+      "getLineColor": [
+       170,
+       170,
+       170
+      ],
+      "lineWidthMinPixels": 0.15,
+      "pickable": false,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "c562168a078da15d",
+     "setDigest": "ee2b45e9c1df0d24",
+     "columnDigests": {
+      "~geometry": "ad62f0ceb140c1e4"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.791013,
+         45.386267
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.518183,
+         44.933589
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        13,
+        [
+         7.296968,
+         45.341962
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.926834,
+         45.448202
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.455505,
+         45.117189
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        6,
+        [
+         7.597748,
+         45.409
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        9,
+        [
+         7.514377,
+         45.119856
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         7.861778,
+         45.051891
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.902453,
+         45.526606
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        14,
+        [
+         7.211218,
+         44.875598
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.90614,
+         45.058734
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        14,
+        [
+         7.434335,
+         45.100371
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        12,
+        [
+         7.972148,
+         45.443214
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        7,
+        [
+         7.767703,
+         45.385571
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        9,
+        [
+         7.498915,
+         45.30102
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        8,
+        [
+         7.753669,
+         45.421874
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        10,
+        [
+         7.813967,
+         45.083206
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        17,
+        [
+         7.229771,
+         45.334771
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        15,
+        [
+         7.84596,
+         45.462815
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        11,
+        [
+         7.657571,
+         45.304616
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "comuni",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 7899,
+     "active": null,
+     "hidden": false,
+     "categoryColorsRgb": [
+      [
+       233,
+       233,
+       233
+      ]
+     ]
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "CHART",
+      "PIE",
+      "SIMPLELEGEND",
+      "SIZE",
+      "SUM"
+     ],
+     "features": 7859,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       119,
+       180
+      ],
+      [
+       255,
+       127,
+       14
+      ],
+      [
+       44,
+       160,
+       44
+      ],
+      [
+       214,
+       39,
+       40
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0,
+     "maxSizeValue": 2751747
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "comuni": [
+     "<b></b> ()<br>",
+     "<b></b> ()<br>",
+     "<b></b> ()<br>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": [
+  "warning: [ixmaps-gl] layer \"comuni\": type \"CHART|PIE|SIZE|SUM|SIMPLELEGEND\" has no implemented renderer"
+ ]
+}

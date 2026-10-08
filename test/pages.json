@@ -32,6 +32,7 @@
     "examples/dot_categorical.html",
     "examples/dot_range_equidistant.html",
     "examples/plot_curves.html",
+    "examples/pie_size_sum.html",
     "examples/validate_demo.html",
     "examples/alias_bubble_range_quantile.html",
     "examples/alias_style_sizefield_bubble.html",
@@ -150,6 +151,10 @@
     {
       "flat": "examples/bubble_aggregate_field100_svg.html",
       "gl": "examples/bubble_aggregate_field100.html"
+    },
+    {
+      "flat": "examples/pie_size_sum_svg.html",
+      "gl": "examples/pie_size_sum.html"
     }
   ]
 }
