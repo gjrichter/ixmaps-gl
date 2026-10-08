@@ -3482,28 +3482,36 @@
           // sync — no separate light/dark branch anywhere else.
           // flat's look (flatLegendLook) unless the page picks one with
           // this engine's own legendtheme
-          const opacityOpt = parseFloat(builder._engineOptions.basemapopacity);
-          const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
-          const flatLook = flatLegendLook(builder.mapOptions.mapType, isNaN(opacityOpt) ? 1 : opacityOpt, legendBackground);
-          // effective darkness (style background vs page background, see
-          // effectiveMapDark): a dark basemap faded to <= 0.5 over a DARK
-          // page still reads dark — flatLegendLook's name heuristic would
-          // wrongly switch the panel (and the tooltip) to light there
-          const looksDark = typeof builder.__effectiveDark === 'function'
-            ? builder.__effectiveDark(isNaN(opacityOpt) ? 1 : opacityOpt, builder.mapOptions.mapType, legendBackground)
-            : flatLook.dark;
-          const isLightLegend = rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !looksDark);
-          const legendColors = isLightLegend
-            ? { bg: 'rgba(255,255,255,0.92)', fg: '#1a1a1a', shadow: '0 2px 10px rgba(0,0,0,0.18)',
-                rowMarked: 'rgba(0,0,0,0.08)', track: 'rgba(0,0,0,0.08)',
-                selectBg: 'rgba(0,0,0,0.04)', selectBorder: 'rgba(0,0,0,0.2)' }
-            : { bg: 'rgba(28,30,34,0.92)', fg: '#eee', shadow: '0 2px 10px rgba(0,0,0,0.45)',
-                rowMarked: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.08)',
-                selectBg: 'rgba(255,255,255,0.08)', selectBorder: 'rgba(255,255,255,0.25)' };
-          // the panel bg follows the same effective decision (flatLegendLook
-          // would hand the dark look a light bg here: its dark branch never
-          // ran for this map, its light bg would clash with dark rows/text)
-          if (!rt.style.legendtheme) legendColors.bg = looksDark ? '#111' : flatLook.bg;
+          // The look is decided again once the basemap style exists (see
+          // rt._relookLegend below): a panel built before the style loads
+          // can only get effectiveMapDark's name-heuristic fallback, which
+          // reads a dark basemap faded to <= 0.5 as light.
+          const lookColors = () => {
+            const opacityOpt = parseFloat(builder._engineOptions.basemapopacity);
+            const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
+            const flatLook = flatLegendLook(builder.mapOptions.mapType, isNaN(opacityOpt) ? 1 : opacityOpt, legendBackground);
+            // effective darkness (style background vs page background, see
+            // effectiveMapDark): a dark basemap faded to <= 0.5 over a DARK
+            // page still reads dark — flatLegendLook's name heuristic would
+            // wrongly switch the panel (and the tooltip) to light there
+            const looksDark = typeof builder.__effectiveDark === 'function'
+              ? builder.__effectiveDark(isNaN(opacityOpt) ? 1 : opacityOpt, builder.mapOptions.mapType, legendBackground)
+              : flatLook.dark;
+            const isLightLegend = rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !looksDark);
+            const colors = isLightLegend
+              ? { bg: 'rgba(255,255,255,0.92)', fg: '#1a1a1a', shadow: '0 2px 10px rgba(0,0,0,0.18)',
+                  rowMarked: 'rgba(0,0,0,0.08)', track: 'rgba(0,0,0,0.08)',
+                  selectBg: 'rgba(0,0,0,0.04)', selectBorder: 'rgba(0,0,0,0.2)' }
+              : { bg: 'rgba(28,30,34,0.92)', fg: '#eee', shadow: '0 2px 10px rgba(0,0,0,0.45)',
+                  rowMarked: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.08)',
+                  selectBg: 'rgba(255,255,255,0.08)', selectBorder: 'rgba(255,255,255,0.25)' };
+            // the panel bg follows the same effective decision (flatLegendLook
+            // would hand the dark look a light bg here: its dark branch never
+            // ran for this map, its light bg would clash with dark rows/text)
+            if (!rt.style.legendtheme) colors.bg = looksDark ? '#111' : flatLook.bg;
+            return colors;
+          };
+          const legendColors = lookColors();
           // max-height:66.6% resolves against el's own height (the map
           // container, which always has a definite height for the map
           // itself to render into) since this panel sits in the stack,
@@ -3924,6 +3932,7 @@
           // sharing the same data source and calls refresh()), so this
           // is UI wiring only, no new filtering logic.
           const filterField = rt.style.legendfilter;
+          let filterSelect = null;
           if (filterField) {
             const facet = engineApi.getFacets(rt.name, [filterField], { bbox: [-180, -85, 180, 85] })[0];
             const values = (facet && facet.type === 'textual')
@@ -3939,7 +3948,26 @@
               else engineApi.clearFacetFilter(rt.name, filterField);
             });
             bodyEl.appendChild(filterEl);
+            filterSelect = filterEl;
           }
+
+          // re-apply the look in place once the basemap style is known
+          // (createLegend's 'style.load' listener) — restyled, not rebuilt,
+          // so the filter choice, slider and folding survive
+          rt._relookLegend = () => {
+            const c = lookColors();
+            if (c.bg === legendColors.bg && c.fg === legendColors.fg) return;
+            Object.assign(legendColors, c);
+            panel.style.background = c.bg;
+            panel.style.color = c.fg;
+            if (filterSelect) {
+              filterSelect.style.background = c.selectBg;
+              filterSelect.style.color = c.fg;
+              filterSelect.style.borderColor = c.selectBorder;
+            }
+            if (stack) stack.style.boxShadow = c.shadow;
+            if (!isTextOnly) renderRows();
+          };
 
           if (!isTextOnly) { bodyEl.appendChild(rowsScroll); renderRows(); }
 
@@ -3997,6 +4025,9 @@
         }
       };
       runtimes.forEach(rt => addLegendPanel(rt));
+      // every style (the initial one, setProjectJSON swaps) can change the
+      // effective darkness the panels were built with
+      map.on('style.load', () => runtimes.forEach(rt => { if (rt._legendPanel && rt._relookLegend) rt._relookLegend(); }));
     }
     return { addLegendPanel, setLegendOption, updateSubTheme, layoutLegends };
   }
