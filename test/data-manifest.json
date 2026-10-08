@@ -31,6 +31,10 @@
   "sha256": "88509492624ceca7b95dd1032add7a20a8f9659afea31883ad8ee2b4acdf4cd3",
   "bytes": 2046624
  },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/unhcr-population-2023/population.csv": {
+  "sha256": "ca421fbfc15b12e276c291edab11c4d47877d943e5255e679a2eddf44ddde997",
+  "bytes": 6501142
+ },
  "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ixmaps.js": {
   "sha256": "21135b8e36f85b24f890b0d0fdb43ced6d6edcfb68fd8c1b508191c29452087f",
   "bytes": 58294
@@ -206,6 +210,10 @@
  "https://raw.githubusercontent.com/gjrichter/geo/0153a0e14da5dae877b8c94d6deb11f210d4660a/italy/boundaries/italy_istat_municipalities_4326_500m.topojson": {
   "sha256": "161635facb52743b035d0c5cab92b2f1194cb9bd0d7c297b11fb7b980daea89b",
   "bytes": 4686409
+ },
+ "https://raw.githubusercontent.com/gjrichter/geo/main/world/ne_10m_admin_0_countries_xs.json": {
+  "sha256": "3a7792432659775bff1d8aed6a9dd7b14e812075052338a0b9b174ab93523114",
+  "bytes": 1301345
  },
  "https://raw.githubusercontent.com/gjrichter/ixmaps-data/main/by-project/italy-comuni-demographics/comuni_population_by_age_sex_v3.csv": {
   "sha256": "bcb3f1b3f96ff5d4aa733f398d4d06eef1e6ba8ba5f97a5db31f7d100e396589",

@@ -67,6 +67,15 @@ page. It currently implements:
   part as a disc, `GLOW`), `CENTERVALUE`, `VALUES` (flat's leader-line labels; one part: inside),
   `THIN`/`XTHIN`/`THICK` donuts. `3D`, `VOLUME`, `STARBURST`, `RAYS`/`FLOWER`, `BOW`, `ZOOM` are
   noted in the console and drawn as a flat pie; `AGGREGATE` and `CATEGORICAL` pies are not drawn yet
+- **CHART\|VECTOR / CHART\|BEZIER** — flow lines from an item's position to its second one
+  (`binding.position2` / `style.lookupfield2`: a key joined to the FEATURE shapes like `position`,
+  or `"lat|lon"` fields), per record or `AGGREGATE`d per origin–destination pair (`SUM`, `MAX`,
+  `MIN`), as flat draws them: BEZIER's curve (`rangescale` bow, `SHORT`, `GAP`, `REVERSE`,
+  `RANDOM`), width by the size (`sizepow`, `normalsizevalue`) or `linewidth`, `POINTER`/`ARROW`
+  heads (`markersize`), `GRADIENT`/`FADEIN`, `DOPACITY`/`DOPACITYMIN`, static `DASH` dashes; colored
+  by `linecolor`, `colorfield` or the `CATEGORICAL`/`EXACT` category; densified, so they follow the
+  globe. `VALUES` text along the curve, `DYNAMICWIDTH`, `LONG` and the dash animation are noted in
+  the console, not drawn
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
   geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or one per grid
@@ -82,7 +91,7 @@ page. It currently implements:
   `window.__setFacetFilter`) for building filterable sidebars
 - Globe (orthographic) projection alongside flat Mercator
 
-Not yet implemented: plain (non-AGGREGATE) `CATEGORICAL` choropleths, and the `QUAD`/`BEZIER`/`VECTOR`/
+Not yet implemented: plain (non-AGGREGATE) `CATEGORICAL` choropleths, and the `QUAD`/
 `WAFFLE`/`BAR` base types, `AGGREGATE`/`CATEGORICAL` pies, and SYMBOL shape variants beyond
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.

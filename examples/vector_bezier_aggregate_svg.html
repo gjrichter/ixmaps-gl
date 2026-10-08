@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>VECTOR · BEZIER flows</title>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ixmaps.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 320px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>VECTOR · BEZIER flows</b>
+  <span>The most used real flow type, CHART|VECTOR|BEZIER|POINTER|FADEIN|…|EXACT|AGGREGATE|SUM (UNHCR refugees 2023): one curved arrow per origin–destination country pair, both ends joined to the country shapes (position / position2), records of a pair summed, width by the summed size, colored by the origin. A second theme draws Ukraine's flows as straight CHART|VECTOR|ARROW lines. Flat twin: vector_bezier_aggregate_svg.html.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  var GEO_URL  = "https://raw.githubusercontent.com/gjrichter/geo/main/world/ne_10m_admin_0_countries_xs.json";
+  var DATA_URL = "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/unhcr-population-2023/population.csv";
+
+  var base = ixmaps.layer("countries", layer => layer
+    .data({ url: GEO_URL, type: "topojson" })
+    .binding({ geo: "geometry", id: "ISO_A3_EH" })
+    .type("FEATURE|NOLEGEND")
+    .style({ colorscheme: ["#e9e9e9"], fillopacity: 0.5, linecolor: "#aaaaaa", linewidth: 0.15 })
+  );
+
+  var flows = ixmaps.layer("countries", layer => layer
+    .data({ url: DATA_URL, type: "csv", name: "refugees", cache: "true" })
+    .binding({
+      value: "Country of origin",
+      size: "Refugees under UNHCR's mandate",
+      position: "Country of origin (ISO)",
+      position2: "Country of asylum (ISO)",
+      title: "Country of origin"
+    })
+    .type("CHART|VECTOR|BEZIER|POINTER|FADEIN|SIZEP2|NOSCALE|EXACT|FAST|AGGREGATE|SUM")
+    .style({
+      filter: "WHERE Year = 2023",
+      colorscheme: ["8", "tableau"],
+      values: ["Syrian Arab Rep.", "Afghanistan", "South Sudan", "Myanmar", "Sudan", "Dem. Rep. of the Congo", "Somalia", "Eritrea"],
+      fillopacity: "0.8",
+      units: "persons",
+      normalsizevalue: "500000",
+      scale: "1",
+      rangescale: "4",
+      sizepow: "1.5",
+      markersize: "1"
+    })
+    .meta({
+      title: "Refugees 2023 by country of origin",
+      tooltip: "<b>{{Country of origin}} &rarr; {{Country of asylum}}</b><br>{{theme.item.value}}"
+    })
+  );
+
+  var ukraine = ixmaps.layer("countries", layer => layer
+    .data({ url: DATA_URL, type: "csv", name: "refugees", cache: "true" })
+    .binding({
+      value: "Country of origin",
+      size: "Refugees under UNHCR's mandate",
+      position: "Country of origin (ISO)",
+      position2: "Country of asylum (ISO)"
+    })
+    .type("CHART|VECTOR|ARROW|EXACT|AGGREGATE|SUM")
+    .style({
+      filter: "WHERE Year = 2023 AND \"Country of origin (ISO)\" = \"UKR\"",
+      colorscheme: ["#cc3366"],
+      fillopacity: "0.5",
+      units: "persons",
+      linewidth: "0.6"
+    })
+    .meta({ title: "Refugees 2023 from Ukraine" })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "true" },
+    map => map.view([30, 25], 3)
+      // flat's default object scaling (charts keep their screen size); gl's own default is "dynamic"
+      .options({ objectscaling: "true" })
+      .layer(base).layer(flows).layer(ukraine)
+  );
+</script>
+</body>
+</html>

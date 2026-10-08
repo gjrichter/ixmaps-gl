@@ -53,12 +53,17 @@
 // PIE|DONUT) a pie per record, a slice per value field, flat's sizing,
 // CENTER part and VALUES leader labels (_buildPieLayers; 3D/VOLUME/
 // STARBURST/RAYS/BOW variants are noted, drawn flat; AGGREGATE and
-// CATEGORICAL pies not yet). These
+// CATEGORICAL pies not yet), CHART|VECTOR and CHART|BEZIER a flow line
+// per item from its position to its second one (binding position2 /
+// style lookupfield2), per record or AGGREGATE'd per origin–destination
+// pair, with flat's widths, colors, arrow heads and GRADIENT / FADEIN
+// (_buildVectorLayers; VALUES, DYNAMICWIDTH, LONG and the DASH animation
+// are noted, see VECTOR_INERT_FLAGS). These
 // base types are dispatched by buildDeckLayers in the real engine's own
 // precedence order — DOT is checked first because the real engine's DOT
 // bypasses the whole drawChart/modifier pipeline rather than being
-// "BUBBLE with the size locked." Other real base types (QUAD, BEZIER,
-// VECTOR, WAFFLE, BAR, and SYMBOL's own shape variants) are NOT
+// "BUBBLE with the size locked." Other real base types (QUAD, WAFFLE,
+// BAR, and SYMBOL's own shape variants) are NOT
 // implemented yet — adding one means a new _buildXLayers() method plus a
 // dispatch line, not a rewrite, but each should be added deliberately
 // (checking, per real source, which modifiers it actually shares with
@@ -203,7 +208,7 @@
   // byte-grep of the shipped file (deck.gl's own @deck.gl/maplibre
   // overview page claims ES-modules-only, which the actual UMD bundle
   // contradicts).
-  let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer;
+  let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension;
   // PieSliceLayer (see makePieSliceLayer) is derived from ScatterplotLayer
   // once deck.gl is there
   let PieSliceLayer;
@@ -385,7 +390,7 @@ in vec4 vPieLineColor;
         global.Mustache ? Promise.resolve() : loadScript(LIB_URLS.mustache),
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
       ]).then(() => {
-        ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer } = global.deck);
+        ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension } = global.deck);
         PieSliceLayer = makePieSliceLayer(ScatterplotLayer);
         // which engine and libraries this page really runs (a page may
         // bring its own MapLibre/deck.gl — the loaded ones are named)
@@ -1547,13 +1552,17 @@ in vec4 vPieLineColor;
     const lookupField = spec.binding.lookup;
     let layers = String(spec.name).split('|');
     if (layers.length > 1 && spec.flags && spec.flags.has('DIFFERENCE')) layers = layers.slice(-1);
+    const lookup2 = spec.binding.lookup2;
     const features = [];
-    for (const layer of layers) {
+    const indexes = layers.map(layer => {
       const index = new Map();
       runtimes.filter(r => r.name === layer && (r.flags.has('FEATURE') || r.flags.has('FEATURES'))).forEach(r => {
         // in theme order, as flat's layer holds the themes' shapes
         for (const [k, v] of featurePositionIndex(r)) { if (flatShapeWins(index.get(k), v.area)) index.set(k, v); }
       });
+      return index;
+    });
+    for (const index of indexes) {
       if (!index.size) continue;
       for (const row of table.rows) {
         const v = row[lookupField];
@@ -1563,7 +1572,18 @@ in vec4 vPieLineColor;
         // joined shape, as flat) needs the shape's km² area carried along
         // (featureAreaKm2 prefers this marker), exactly as the choropleth
         // join stamps it
-        if (hit) features.push({ type: 'Feature', geometry: { type: 'Point', coordinates: hit.pos }, properties: row, _flatAreaKm2: hit.areaKm2 });
+        if (!hit) continue;
+        const f = { type: 'Feature', geometry: { type: 'Point', coordinates: hit.pos }, properties: row, _flatAreaKm2: hit.areaKm2 };
+        // VECTOR / BEZIER: the second position by its own key (flat looks
+        // it up in every layer of the theme, maptheme.js 10431-10436); a
+        // record without one stays an item that draws no line (null)
+        if (lookup2 && !String(lookup2).includes('|')) {
+          const v2 = row[lookup2];
+          let hit2 = null;
+          if (v2 != null && v2 !== '') for (const idx of indexes) { hit2 = idx.get(flatLookupKey(v2, spec.style)); if (hit2) break; }
+          f._pos2 = hit2 ? hit2.pos : null;
+        }
+        features.push(f);
       }
     }
     return { type: 'FeatureCollection', features };
@@ -2064,6 +2084,14 @@ in vec4 vPieLineColor;
     'POW2', 'POW3', 'NOSORT'];
   // flat's PIE / DONUT variants with no rendering here (see _buildPieLayers)
   const PIE_INERT_FLAGS = [/3D/, /VOLUME/, /HEIGHT/, /STARBURST/, /FLOWER/, /RAYS/, /BOW/, /ZOOM/, /DIRECTION/, /DIRECTED/, /POLAR/];
+  // flat's VECTOR / BEZIER modifiers with no rendering here (see
+  // _buildVectorLayers), the word → what happens instead
+  const VECTOR_INERT_FLAGS = {
+    VALUES: 'the value text along the curve is not drawn yet',
+    DYNAMICWIDTH: 'not drawn yet (flat widens by the log of the length in its own map units) — the plain width instead',
+    LONG: 'not drawn yet (its bow depends on flat\'s own map units) — the default bow instead',
+    DASH: 'drawn as static dashes — flat\'s dash animation is not ported'
+  };
   const _warnedFlags = new Set();
 
   // GL-PORT COMPAT: real ixmaps-flat's global ixmaps.getThemeObj(szId) /
@@ -2401,6 +2429,9 @@ in vec4 vPieLineColor;
     'style.valuefield': ['style', 'valuefield'],
     'style.timefield': ['binding', 'time'], // setThemeTimeFrame, see LayerRuntime.setTimeFrame
     'style.titlefield': ['binding', 'title'], // {{theme.item.title}}, see _buildTooltipContext
+    // VECTOR / BEZIER's second position: a join key ("a") or lat/lon
+    // fields ("a|b"), see joinChartPositions and _vectorRecords
+    'style.lookupfield2': ['binding', 'lookup2'],
     // the lookup key's normalization (flatLookupKey): flat's newTheme moves
     // binding.tonumber / digits / … into these style keys (htmlgui.js 1712)
     'style.lookupdigits': ['style', 'lookupdigits'],
@@ -2633,7 +2664,10 @@ in vec4 vPieLineColor;
     // real ixmaps-flat (htmlgui.js newTheme) merges .meta() INTO style first
     // — meta wins — and only then reads type, bindings and style properties
     const style = Object.assign({}, def.style, def.meta);
-    const typeStr = style.type != null ? String(style.type) : '';
+    let typeStr = style.type != null ? String(style.type) : '';
+    // flat (htmlgui-side theme parse, maptheme.js 1192): the old type
+    // word EXACT is CATEGORICAL
+    if (/\bEXACT\b/.test(typeStr) && !/\bCATEGORICAL\b/.test(typeStr)) typeStr += '|CATEGORICAL';
     const filter = style.filter;
     const title = style.title;
     delete style.type;
@@ -2662,6 +2696,17 @@ in vec4 vPieLineColor;
         if (inert && !(/HEIGHT/.test(flag) && !flags.has('3D')) && !_warnedFlags.has('PIE:' + flag)) {
           _warnedFlags.add('PIE:' + flag);
           console.info(`[ixmaps-gl] type flag "${flag}" on a PIE chart recognized, not drawn yet — the pie is drawn flat and plain`);
+        }
+      });
+    }
+
+    // VECTOR / BEZIER modifiers _buildVectorLayers doesn't draw
+    if (isVectorChart(flags)) {
+      flags.forEach(flag => {
+        const why = VECTOR_INERT_FLAGS[flag];
+        if (why && !_warnedFlags.has('VECTOR:' + flag)) {
+          _warnedFlags.add('VECTOR:' + flag);
+          console.info(`[ixmaps-gl] type flag "${flag}" on a VECTOR/BEZIER chart recognized, ${why}`);
         }
       });
     }
@@ -3663,7 +3708,9 @@ in vec4 vPieLineColor;
           // aggregation" reading (style.valuefield, falling back to
           // the bound size field); anything else (plain CATEGORICAL,
           // no SUM) falls back to a per-category record COUNT.
-          const useSum = flatFlag(rt.flags, 'SUM') && rt.style.valuefield;
+          // a VECTOR / BEZIER flow legend sums its size field (flat's rows
+          // show the flows' summed sizes, measured on the twin page)
+          const useSum = flatFlag(rt.flags, 'SUM') && (rt.style.valuefield || (rt._isVectorChart() && rt.binding.size));
           const valueField = rt.style.valuefield || rt.binding.size;
           // legendunits wins over the theme's general-purpose units
           // (used elsewhere for tooltips, e.g. _renderItemChartHtml) —
@@ -3672,13 +3719,16 @@ in vec4 vPieLineColor;
           // space injected), matching how style.units/legendunits are
           // themselves authored with their own leading space (e.g.
           // " MW") in real pages.
-          const legendUnit = rt.style.legendunits || rt.style.units || '';
+          // (a VECTOR / BEZIER legend: flat's szUnit, the units after a
+          // space unless they start with ".", measured on the twin page)
+          const rawLegendUnit = rt.style.legendunits || rt.style.units || '';
+          const legendUnit = rt._isVectorChart() && rawLegendUnit && rawLegendUnit[0] !== '.' && rawLegendUnit[0] !== ' ' ? ' ' + rawLegendUnit : rawLegendUnit;
           // a per-item chart over several value fields: the row values as
           // flat's legend prints them (legend.js 610, 810: __formatValue
           // with valuedecimals, else 2, "BLANK" — whole numbers without
           // decimals), a colorscheme "none" part as an outline in linecolor
           const multiFieldLegend = rt._isMultiFieldChart();
-          const legendTotalText = v => (multiFieldLegend
+          const legendTotalText = v => ((multiFieldLegend || rt._isVectorChart())
             ? flatFormatValue(v, legendDecimals(rt.style), 'BLANK')
             : rt._formatTooltipValue(v));
           const outlineRgb = rt.style.linecolor && styleLineColor(rt.style.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(rt.style.linecolor)) : [128, 128, 128];
@@ -4508,6 +4558,7 @@ in vec4 vPieLineColor;
         return runtimes.find(r => {
           if (base === `ix-bubbles-${r.name}`) return isSymbolChart(r.flags);
           if (base === `ix-pie-${r.name}`) return r._isPieChart();
+          if (base === `ix-vector-${r.name}` || base === `ix-vector-heads-${r.name}`) return r._isVectorChart();
           if (base === `ix-dot-${r.name}`) return r.flags.has('DOT');
           if (base === `ix-choropleth-${r.name}`) return r.flags.has('CHOROPLETH');
           if (base === `ix-features-${r.name}`) return r.flags.has('FEATURE') || r.flags.has('FEATURES');
@@ -6473,6 +6524,12 @@ in vec4 vPieLineColor;
 
   // the themes drawn by the symbol chart pipeline (_buildChartLayers): flat's
   // BUBBLE/SQUARE/LABEL branch (maptheme.js 20647-20652), symbols, user charts
+  // CHART|VECTOR / CHART|BEZIER — flat's flow lines (maptheme.js chartMap
+  // 18148-18435, ahead of drawChart: they take precedence over PIE,
+  // BUBBLE, SYMBOL ...; DOT's branch comes first)
+  function isVectorChart(flags) {
+    return flags.has('CHART') && (flags.has('VECTOR') || flags.has('BEZIER')) && !flags.has('DOT');
+  }
   function isSymbolChart(flags) {
     return flags.has('CHART') && (flags.has('SYMBOL') || flags.has('USER') || flags.has('LABEL'));
   }
@@ -7365,6 +7422,192 @@ in vec4 vPieLineColor;
       }
     });
     return out;
+  }
+
+  // CHART|VECTOR / CHART|BEZIER: the theme's items as real ixmaps-flat
+  // builds them (maptheme.js loadAndAggregateValuesOfTheme, which every
+  // VECTOR / BEZIER theme goes through, 9650: 10402-10450 the second
+  // position, 10763 the item id, 10779-10985 the items). `records`:
+  //   { p1: [lng, lat], p2: [lng, lat] | null, cat (0-based category, -1
+  //     not one of them; null without CATEGORICAL), value (the value
+  //     field as a number, without CATEGORICAL), size (the size field as
+  //     a number, NaN when not one; 1 without a size field), raw }
+  // `o`: { aggregate, vectorKey (the VECTOR flag: the item id has the
+  // second position too), multiParts (CATEGORICAL: the category is part
+  // of the id), max / min (MAX / MIN aggregation), zeroIsNotValue,
+  // negativeIsNotValue }. Returns items
+  //   { p1, p2, cat, nSize, value, count, raw (the first record), raws }
+  //  - without AGGREGATE every record is an item, its nSize the size as
+  //    it is (negative too, 0 when not a number) — flat checks no value
+  //    there
+  //  - AGGREGATE: records of one id are one item: the id is the first
+  //    position (+ the category with CATEGORICAL, + the second position
+  //    with VECTOR — a BEZIER without VECTOR sums every flow of an origin
+  //    into its first record's flow, as flat); a record whose size is no
+  //    number (or 0 with ZEROISNOTVALUE, negative with
+  //    NEGATIVEISNOTVALUE) is left out; nSize the sum of the |sizes|
+  //    (MAX / MIN: their maximum / minimum), value the values' sum
+  //  - the first record of an item gives its category, second position,
+  //    and the record its tooltip reads
+  function flatVectorItems(records, o = {}) {
+    const items = [];
+    if (!o.aggregate) {
+      for (const r of records) {
+        items.push({ p1: r.p1, p2: r.p2, cat: r.cat, nSize: r.size || 0, value: r.value, count: 1, raw: r.raw, raws: [r.raw] });
+      }
+      return items;
+    }
+    const byId = new Map();
+    for (const r of records) {
+      const s = r.size;
+      if (isNaN(s) || (s === 0 && o.zeroIsNotValue) || (s < 0 && o.negativeIsNotValue)) continue;
+      let id = r.p1[0] + ',' + r.p1[1];
+      // flat's nValue for the id: the category number (1-based), 0 for a
+      // value that is none of the categories
+      if (o.multiParts) id += ',' + (r.cat != null && r.cat >= 0 ? r.cat + 1 : 0);
+      if (o.vectorKey && r.p2) id += '&' + r.p2[0] + ',' + r.p2[1];
+      const item = byId.get(id);
+      if (!item) {
+        const it = { p1: r.p1, p2: r.p2, cat: r.cat, nSize: Math.abs(s), value: r.value, count: 1, raw: r.raw, raws: [r.raw] };
+        byId.set(id, it);
+        items.push(it);
+        continue;
+      }
+      if (o.max) {
+        item.nSize = Math.max(item.nSize, s);
+        item.value = Math.max(item.value || 0, r.value || 0);
+      } else if (o.min) {
+        item.nSize = Math.min(item.nSize, s);
+        item.value = Math.min(item.value || 0, r.value || 0);
+      } else {
+        item.nSize += Math.abs(s);
+        item.value = (item.value || 0) + (r.value || 0);
+      }
+      item.count++;
+      item.raws.push(r.raw);
+    }
+    return items;
+  }
+
+  // CHART|BEZIER: one flow's curve as flat draws it (maptheme.js
+  // 18148-18375), in screen pixels relative to its first position (y
+  // down — flat's SVG map coordinates, scaled). dx/dy: the second
+  // position minus the first. o:
+  //   w       the line width in flat's chart units (linewidth, else
+  //           10 · (|nSize| / max)^(1/sizepow))
+  //   ll      flat's arrow / gap length in chart units (w + 3, GAP: w +
+  //           gapsize — computed by the caller, see _buildVectorLayers)
+  //   unit    pixels per chart unit (the object zoom × style.scale)
+  //   oz      pixels per chart unit without style.scale
+  //   bow     rangescale (flat's nBow; 5 when not given), RANDOM already
+  //           applied
+  //   t       the type string (SHORT, POINTER / ARROW, GAP)
+  //   marker  markersize (1)
+  //   gap     gapsize (20)
+  // Returns { start, c1, c2, end, vx, vy } — start/end/c1/c2 [x, y]
+  // pixels; (vx, vy) the end after shortening, which decides the
+  // gradient direction. The control points come from the unshortened
+  // vector: offset by (dy, −dx) / 50 · bow (SHORT: the unit vector · 5
+  // bow chart units), at 1/4 and 1/2 of the (shortened) vector. An arrow (POINTER
+  // or a type word ending in ARROW) ends the curve ll · markersize units
+  // short of the second position, room for the arrow head. GAP: the curve
+  // starts gapsize units off the first position and ends ll / 500 of the
+  // bow further on.
+  function bezierVectorLayout(dx, dy, o) {
+    const t = String(o.t || '');
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const bow = o.bow || 5;
+    let ox, oy;
+    // (LONG's bow depends on flat's own map units — not drawn here, see
+    // VECTOR_INERT_FLAGS: the default bow instead)
+    if (/\bSHORT\b/.test(t)) { ox = dy / len * bow * 5 * o.oz; oy = dx / len * bow * 5 * o.oz; }
+    else { ox = dy / 50 * bow; oy = dx / 50 * bow; }
+    let x = dx, y = dy;
+    // flat's /\bPOINTER|ARROW\b/: POINTER at a word start, or ARROW at a
+    // word end (ARROW, SMALLARROW, LASTARROW ...)
+    if (/\bPOINTER|ARROW\b/.test(t)) {
+      const k = o.ll * o.unit * (o.marker || 1) / len;
+      x -= dx * k; y -= dy * k;
+    }
+    let x0 = 0, y0 = 0;
+    if (/\bGAP\b/.test(t)) {
+      x += ox / 500 * o.ll;
+      y -= oy / 500 * o.ll;
+      x0 = x / len * (o.gap || 20) * o.oz;
+      y0 = y / len * (o.gap || 20) * o.oz;
+    }
+    return { start: [x0, y0], c1: [x / 4 + ox, y / 4 - oy], c2: [x / 2 + ox, y / 2 - oy], end: [x, y], vx: x, vy: y };
+  }
+
+  // flat's Themes.toArray for a style list (maptheme.js 999-1016): a list
+  // as it is; a string split at "|" when it has one or names an RGB(…)
+  // color (flat's /\RGB/: upper case only), else at ","
+  function flatToArray(v) {
+    if (Array.isArray(v)) return v;
+    const str = String(v);
+    return (/\|/.test(str) || /RGB/.test(str)) ? str.split('|') : str.split(',');
+  }
+  // a fixed number in [0, 1) for a string — stands in for flat's
+  // Math.random() where the harness needs the same drawing every time
+  function hashUnit(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0) / 4294967296;
+  }
+
+  // points of a cubic Bézier, n segments (n + 1 points)
+  function cubicBezierPoints(p0, c1, c2, p3, n) {
+    const out = [];
+    for (let i = 0; i <= n; i++) {
+      const s = i / n, u = 1 - s;
+      const a = u * u * u, b = 3 * u * u * s, c = 3 * u * s * s, d = s * s * s;
+      out.push([a * p0[0] + b * c1[0] + c * c2[0] + d * p3[0], a * p0[1] + b * c1[1] + c * c2[1] + d * p3[1]]);
+    }
+    return out;
+  }
+
+  // flat's arrow marker (an SVG <marker>, markerUnits strokeWidth, orient
+  // auto) at a line's end: the triangle M0,s L s,s/2 L0,0 in units of the
+  // line width sw, its reference point (refX, refY) on the end point, its
+  // x axis along the end's direction (tx, ty). BEZIER: s = min(5, 2.5 +
+  // 5 / (w · scale)) · markersize, ref (s / 1.7, s / 2) (maptheme.js
+  // 18309-18320); VECTOR: s = 4, ref (4, 2) — the tip on the end point
+  // (18411-18424). A zero direction is orient 0: pointing right.
+  // Returns the three corners [x, y] (pixels, y down).
+  function arrowMarkerTriangle(end, tx, ty, sw, s, refX, refY) {
+    const l = Math.sqrt(tx * tx + ty * ty);
+    const ux = l ? tx / l : 1, uy = l ? ty / l : 0;
+    const at = (mx, my) => {
+      const a = (mx - refX) * sw, b = (my - refY) * sw;
+      return [end[0] + a * ux - b * uy, end[1] + a * uy + b * ux];
+    };
+    return [at(0, s), at(s, s / 2), at(0, 0)];
+  }
+
+  // BEZIER GRADIENT / FADEIN (maptheme.js 18233-18284): a linear gradient
+  // over the curve's bounding box, vertical when the (shortened) vector
+  // is more vertical than horizontal, else horizontal; the stop on the
+  // first position's side has the fade opacity (FADEIN 0.2, GRADIENT 2),
+  // the other one 2 — SVG clamps both to 1 — and the colors run from the
+  // second color (linecolor's first entry) at the start to the line color
+  // at the end. Returns per point { k: 0 … 1 from the start side's stop,
+  // alpha } — the color mix k and opacity of each point.
+  function fadeGradientStops(points, vx, vy, fade) {
+    const vertical = Math.abs(vy) > Math.abs(vx);
+    const axis = vertical ? 1 : 0;
+    let min = Infinity, max = -Infinity;
+    for (const p of points) { if (p[axis] < min) min = p[axis]; if (p[axis] > max) max = p[axis]; }
+    const v = vertical ? vy : vx;
+    const a = Math.min(1, Math.max(0, fade));
+    // offset 0 is the box's left / top side: the start side unless the
+    // vector points left / up
+    const startAtZero = !(v < 0);
+    return points.map(p => {
+      let f = max > min ? (p[axis] - min) / (max - min) : 0;
+      if (!startAtZero) f = 1 - f;
+      // f: 0 on the start side, 1 on the end side
+      return { k: f, alpha: a + (1 - a) * f };
+    });
   }
 
   // CHART|SYMBOL|SEQUENCE (flat maptheme.js 21184-21300, 21790-21925,
@@ -8620,7 +8863,10 @@ in vec4 vPieLineColor;
       this._filterExpr = spec.filter || '';
       this.mapOptions = mapOptions || {};
       this._specBinding = spec.binding;
-      this.features = applyField100(filterFlatValues(this._withDensity(fc.features), this.binding, this.flags), this.binding, this.flags, this.style);
+      // VECTOR / BEZIER keep every record: flat checks their values only
+      // when it aggregates them (flatVectorItems)
+      const withDensity = this._withDensity(fc.features);
+      this.features = applyField100(isVectorChart(this.flags) ? withDensity : filterFlatValues(withDensity, this.binding, this.flags), this.binding, this.flags, this.style);
       this.binding = field100Binding(this.binding, this.flags);
       this._iconCache = new Map();
       this._glowIconCache = new Map();
@@ -8867,6 +9113,7 @@ in vec4 vPieLineColor;
       if (this._usesAggregationIndex()) {
         this._buildAggregationIndex(this.features);
       }
+      if (this._isVectorChart()) this._prepareVector();
 
       this._prepareAlphaField();
     }
@@ -9142,7 +9389,10 @@ in vec4 vPieLineColor;
       this._timeMin = undefined;
       const facetFilters = this.facetFilters, runtimeFilterExpr = this._runtimeFilterExpr, timeFrame = this._timeFrame;
       this.binding = this._specBinding;
-      this.features = applyField100(filterFlatValues(this._withDensity(fc.features), this.binding, this.flags), this.binding, this.flags, this.style);
+      // VECTOR / BEZIER keep every record: flat checks their values only
+      // when it aggregates them (flatVectorItems)
+      const withDensity = this._withDensity(fc.features);
+      this.features = applyField100(isVectorChart(this.flags) ? withDensity : filterFlatValues(withDensity, this.binding, this.flags), this.binding, this.flags, this.style);
       this.binding = field100Binding(this.binding, this.flags);
       this._iconCache.clear();
       this._glowIconCache.clear();
@@ -9188,7 +9438,8 @@ in vec4 vPieLineColor;
       // GRIDSIZE bins its own grid (_ensureGridIndex) — PLOT curves and the
       // plain mesh; a classed GRIDSIZE symbol chart is aggregated like any
       // other (see _isPlainGridMesh)
-      return (this.flags.has('AGGREGATE') || isSymbolChart(this.flags))
+      // VECTOR / BEZIER aggregate by their positions (flatVectorItems)
+      return (this.flags.has('AGGREGATE') || isSymbolChart(this.flags)) && !isVectorChart(this.flags)
         && (!this.flags.has('GRIDSIZE') || (!this.flags.has('PLOT') && !this._isPlainGridMesh()));
     }
 
@@ -9676,6 +9927,18 @@ in vec4 vPieLineColor;
         local: {}
       };
 
+      // a VECTOR / BEZIER flow (measured on the twin page): no item chart,
+      // label or class; its value is flat's nValuesA[0] — with CATEGORICAL
+      // the category's number (1 for the first), else the (summed) value
+      // field; its count the records of the item
+      if (this._isVectorChart() && props.vector) {
+        const v = props.vector.itemValue;
+        dataObj.theme.chart = dataObj.theme.item.chart = '';
+        dataObj.theme.item.value = v == null || isNaN(v) ? '' : flatFormatValue(v, explicitValueDecimals(this.style) ?? (Math.abs(v) < 1 ? 2 : 0), 'ROUND');
+        dataObj.theme.item.label = dataObj.theme.item.class = '';
+        dataObj.theme.item.count = props.count;
+      }
+
       // bare {{FIELD}}, {{raw.FIELD}}, {{local.FIELD}} — only meaningful
       // for a single unaggregated record (see class comment above)
       if (!isGroup && props.raw) {
@@ -9973,8 +10236,11 @@ in vec4 vPieLineColor;
       // USER charts (a page's own chart function, style.userdraw) go the
       // chart pipeline too, drawn by _buildUserChartLayers (bubbles when the
       // page has no such function)
+      // VECTOR / BEZIER (flat's chartMap draws them before it calls
+      // drawChart, maptheme.js 18148, 18376)
       // PIE / DONUT (flat's PIE branch comes before BUBBLE and SYMBOL in
       // drawChart, maptheme.js 19939)
+      if (this._isVectorChart()) return this._buildVectorLayers(zoom, bbox, liveZoom, globeCenter);
       if (this._isPieChart()) return this._buildPieLayers(zoom, bbox, liveZoom, globeCenter);
       if (isSymbolChart(this.flags)) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
       console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
@@ -10342,8 +10608,9 @@ in vec4 vPieLineColor;
     // fields (_buildPieLayers). An AGGREGATE pie (flat sums the records of
     // a grid cell or category into one pie) and a CATEGORICAL one (a part
     // per category) have no renderer here yet.
+    _isVectorChart() { return isVectorChart(this.flags); }
     _isPieChart() {
-      return this.flags.has('CHART') && this.flags.has('PIE') && !this.flags.has('AGGREGATE')
+      return !isVectorChart(this.flags) && this.flags.has('CHART') && this.flags.has('PIE') && !this.flags.has('AGGREGATE')
         && !this.flags.has('CATEGORICAL') && !this.flags.has('DOT');
     }
     // a per-item chart whose parts are its value fields (legend rows, sums)
@@ -12446,6 +12713,331 @@ in vec4 vPieLineColor;
       return layers;
     }
 
+    // CHART|VECTOR / CHART|BEZIER — the theme's classes as flat has them:
+    // with CATEGORICAL (or EXACT) the categories, flat's string values
+    // trimmed (getStringValueIndex, maptheme.js 9204), its partsA one
+    // [k, k + 1e-9] per category (the last + 0.001) and the colorscheme's
+    // colors per category; the items' statistics follow in _vectorItems
+    _prepareVector() {
+      const st = this.style;
+      this._vectorCategorical = this.flags.has('CATEGORICAL') && !!this.binding.value;
+      if (this._vectorCategorical) {
+        const explicit = Array.isArray(st.values) ? st.values.map(v => String(v).trim()) : null;
+        const index = new Map();
+        if (explicit) explicit.forEach((v, i) => { if (!index.has(v)) index.set(v, i); });
+        else {
+          for (const f of this.features) {
+            const v = f.properties[this.binding.value];
+            if (v == null) continue;
+            const k = String(v).trim();
+            if (k !== '' && !index.has(k)) index.set(k, index.size);
+          }
+          this.categoryLabels = Array.from(index.keys());
+          const explicitLabel = Array.isArray(st.label) ? st.label.map(String) : null;
+          this.categoryDisplayLabels = explicitLabel && explicitLabel.length === this.categoryLabels.length ? explicitLabel : this.categoryLabels;
+          this.categoryColorsRgb = resolveClassColors(st.colorscheme, this.categoryDisplayLabels, st.classes);
+        }
+        this._vectorCategoryIndex = index;
+        // the legend counts records by their raw value
+        const byLabel = new Map(index);
+        for (const f of this.features) {
+          const v = f.properties[this.binding.value];
+          if (v != null && !byLabel.has(v) && index.has(String(v).trim())) byLabel.set(v, index.get(String(v).trim()));
+        }
+        this.categoryIndexByLabel = byLabel;
+        const n = this.categoryLabels.length;
+        this.partsA = this.categoryLabels.map((l, i) => ({ min: i + 1, max: i + 1 + (i === n - 1 ? 0.001 : 0) + 1e-9 }));
+        this._rangeClassed = false;
+      }
+      // colorfield (flat 12529-12597, 12644-12652): an item's color is its
+      // color value's — the colorvalues, else values, else the items'
+      // values in order — n-th color of the colorscheme realized for n
+      const colorField = st.colorfield || (this.binding && this.binding.color);
+      this._vectorColorField = colorField || null;
+      if (colorField) {
+        const list = Array.isArray(st.colorvalues) ? st.colorvalues.map(String)
+          : Array.isArray(st.values) ? st.values.map(String)
+            : [...new Set(this.features.map(f => String(f.properties[colorField])))];
+        const colors = resolveClassColors(st.colorscheme, list, st.classes) || [];
+        this._vectorColorOf = new Map(list.map((v, i) => [v, colors[i]]));
+      }
+      this._vectorItemsOf = null;
+    }
+
+    // the records of flatVectorItems from this theme's (active) features:
+    // the second position joined by key (joinChartPositions: f._pos2) or
+    // read from lat/lon fields ("lat|lon")
+    _vectorRecords(features) {
+      const b = this.binding;
+      const l2 = b.lookup2 != null ? String(b.lookup2) : '';
+      const latlon2 = l2.includes('|') ? l2.split('|') : null;
+      const sizeField = b.size && b.size !== '$item$' ? b.size : null;
+      const records = [];
+      for (const f of features) {
+        const c = f.geometry && f.geometry.coordinates;
+        if (!c || typeof c[0] !== 'number') continue;
+        const p = f.properties || {};
+        let p2 = null;
+        if (latlon2) {
+          const lat = flatScanValue(p[latlon2[0]]), lng = flatScanValue(p[latlon2[1]]);
+          if (isFinite(lat) && isFinite(lng)) p2 = [lng, lat];
+        } else if (f._pos2) p2 = f._pos2;
+        let cat = null, value;
+        if (this._vectorCategorical) {
+          const v = p[b.value];
+          const i = v == null ? undefined : this._vectorCategoryIndex.get(String(v).trim());
+          cat = i == null ? -1 : i;
+        } else if (b.value) {
+          value = flatScanValue(p[b.value]);
+        }
+        records.push({ p1: c, p2, cat, value, size: sizeField ? flatScanValue(p[sizeField]) : 1, raw: p });
+      }
+      return records;
+    }
+
+    // the items (flatVectorItems) of the active features, once per feature
+    // set; also flat's statistics of them (maptheme.js 11180-11240): nMin /
+    // nMax over the items' sizes (CATEGORICAL or a size field, else their
+    // values), nMaxSize the biggest size
+    _vectorItems() {
+      const features = this._activeFeatures || this.features;
+      if (this._vectorItemsOf === features) return this._vectorItemsCache;
+      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+      const items = flatVectorItems(this._vectorRecords(features), {
+        aggregate: this.flags.has('AGGREGATE'),
+        vectorKey: /VECTOR/.test(t),
+        multiParts: this.flags.has('CATEGORICAL'),
+        max: /\bMAX\b/.test(t), min: /\bMIN\b/.test(t),
+        zeroIsNotValue: /ZEROISNOTVALUE/.test(t), negativeIsNotValue: /NEGATIVEISNOTVALUE/.test(t)
+      });
+      let min = Infinity, max = -Infinity, maxSize = -Infinity;
+      const bySize = this._vectorCategorical || !!this.binding.size;
+      for (const it of items) {
+        if (isFinite(it.nSize) && it.nSize > maxSize) maxSize = it.nSize;
+        const v = bySize ? it.nSize : it.value;
+        if (isFinite(v)) { if (v < min) min = v; if (v > max) max = v; }
+      }
+      if (min <= max) { this._valueMin = min; this._valueMax = max; }
+      this._vectorMaxSize = maxSize;
+      this._vectorItemsOf = features;
+      this._vectorItemsCache = items;
+      return items;
+    }
+
+    // CHART|VECTOR / CHART|BEZIER — real ixmaps-flat's flow lines
+    // (maptheme.js chartMap 18148-18435): one line per item
+    // (_vectorItems) from its first to its second position — the
+    // positions joined to FEATURE shapes by key (binding position /
+    // position2, style lookupfield / lookupfield2) or read from lat/lon
+    // fields. An item without a second position, or with a size under
+    // style.minvalue, draws nothing; one is drawn when either end lies in
+    // the view (flat 16590-16620).
+    //  - BEZIER (also VECTOR|BEZIER — the BEZIER branch comes first): a
+    //    cubic curve (bezierVectorLayout), width (linewidth, else 10 ·
+    //    (|nSize| / normalsizevalue or the biggest size)^(1/sizepow)) ·
+    //    unit px — unit: the object zoom × style.scale; a width ≤ 0 is not
+    //    drawn; stroke opacity fillopacity (else 0.3); a negative size or
+    //    REVERSE swaps the ends; RANDOM lowers the bow by up to 0.66 ·
+    //    rangescale (flat's Math.random, here a fixed hash of the item);
+    //    POINTER / ARROW an arrow head (arrowMarkerTriangle) at the
+    //    shortened end, its opacity 2 · fillopacity; GRADIENT / FADEIN a
+    //    gradient (fadeGradientStops) from the second color (linecolor's
+    //    first entry) at the start — FADEIN at 0.2 opacity — to the line
+    //    color at the end; DOPACITY (DOPACITYMAX) / DOPACITYMIN the line
+    //    and arrow opacity by the size within nMin … nMax (dopacitypow,
+    //    dopacityscale); DASH dashes of 50 / 5 + width units, round caps
+    //  - VECTOR alone: a straight line, width (linewidth, else 2 · nSize /
+    //    normalsizevalue / the biggest size, else 0.1) · the object zoom px
+    //    (no style.scale), opacity fillopacity (0.3); POINTER / ARROW a 4 ×
+    //    width arrow head with its tip on the second position; DASH dashes
+    //    of 50 / 15 units
+    //  - color: linecolor (its last entry), else the colorfield's color,
+    //    else the category's (CATEGORICAL) or the value's n-th color; a
+    //    record whose category is none of them is black (flat: an
+    //    "undefined" stroke — szNoDataColor is unset)
+    //  - draw order: flat's sort before drawing (16774-16880), the
+    //    biggest last (on top) when sized or AGGREGATE|SUM
+    //  - lines are densified in Web Mercator pixels (flat draws them on its
+    //    Mercator map), so under the globe projection they follow the
+    //    surface; their far-side parts are left out
+    // Not drawn here (console note at type parsing, VECTOR_INERT_FLAGS):
+    // VALUES (text along the curve), DYNAMICWIDTH, LONG, the DASH
+    // animation; nor the second position from the category label (flat's
+    // fallback without position2), a grid aggregation (gridwidth), the
+    // VECTOR arrow's thin white outline, the legend's class marking.
+    // Known divergence: all arrow heads lie above all lines (flat draws
+    // each line with its head); a line thinner than a pixel is drawn one
+    // pixel wide at its width as opacity (SVG's coverage).
+    _buildVectorLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+      const st = this.style;
+      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+      const has = re => re.test(t);
+      const bezier = has(/\bBEZIER\b/);
+      if (!this.binding.lookup2) {
+        if (!this._warnedNoPos2) {
+          this._warnedNoPos2 = true;
+          console.info(`[ixmaps-gl] layer "${this.name}": a VECTOR/BEZIER chart without position2 (lookupfield2) — flat's second position from the category label is not ported, nothing drawn`);
+        }
+        return [];
+      }
+      const items = this._vectorItems();
+      const oz = objectZoomFactor(liveZoom, this.mapOptions);
+      const scale = styleNum(st.scale) || 1;
+      const unit = oz * scale;
+      const world = 512 * Math.pow(2, liveZoom);
+      const toPx = ([lng, lat]) => {
+        const s = Math.sin(Math.max(-85.0511, Math.min(85.0511, lat)) * Math.PI / 180);
+        return [(lng + 180) / 360 * world, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * world];
+      };
+      const toLngLat = ([x, y]) => [x / world * 360 - 180, (2 * Math.atan(Math.exp((0.5 - y / world) * 2 * Math.PI)) - Math.PI / 2) * 180 / Math.PI];
+      const inBox = c => c && c[0] >= bbox[0] && c[0] <= bbox[2] && c[1] >= bbox[1] && c[1] <= bbox[3];
+
+      const sizePow = resolveSizePow(st, this.flags);
+      const nsv = styleNum(st.normalsizevalue);
+      const maxSize = this._vectorMaxSize;
+      // style.linewidth as flat holds it: the raw style value — flat's
+      // `nLineWidth + 3` (the arrow length) joins a string ("0.6" + 3 =
+      // "0.63") but adds a number
+      const rawLw = this._definition && this._definition.style ? this._definition.style.linewidth : st.linewidth;
+      const lwNum = styleNum(st.linewidth);
+      const markerSize = styleNum(st.markersize) || 1;
+      const gapSize = styleNum(st.gapsize) || 20;
+      const fo = styleNum(st.fillopacity);
+      const groupAlpha = styleNum(st.opacity) > 0 ? Math.min(1, styleNum(st.opacity)) : 1;
+      const minValue = styleNum(st.minvalue);
+      const rs = styleNum(st.rangescale);
+      const dopMin = has(/DOPACITYMIN/), dop = !dopMin && has(/DOPACITY/);
+      const dopPow = styleNum(st.dopacitypow) || 1, dopScale = styleNum(st.dopacityscale) || 1;
+      const nMin = this._valueMin, nMax = this._valueMax;
+      const lineColors = st.linecolor != null && st.linecolor !== '' ? flatToArray(st.linecolor) : null;
+      const lineRgb = lineColors ? hexOrNamedToRgb(String(lineColors[lineColors.length - 1]).trim()) : null;
+      const colors = this.categoryColorsRgb || [];
+      const colorOf = it => {
+        if (lineRgb) return lineRgb;
+        if (this._vectorColorField) {
+          const c = this._vectorColorOf.get(String(it.raw[this._vectorColorField]));
+          if (c) return c;
+        }
+        if (it.cat != null) return it.cat >= 0 && colors[it.cat] ? colors[it.cat] : [0, 0, 0];
+        return Number.isInteger(it.value) && colors[it.value - 1] ? colors[it.value - 1] : [0, 0, 0];
+      };
+      const fade = has(/\bFADEIN\b/) ? 0.2 : 2;
+      const gradient = bezier && has(/\bGRADIENT\b|\bFADEIN\b/);
+      const arrow = has(/\bPOINTER|ARROW\b/);
+      const dash = has(/\bDASH\b/);
+      const dopacity = it => {
+        const range = Math.pow(nMax - nMin, 1 / dopPow);
+        return Math.pow(dopMin ? nMax - it.nSize : it.nSize - nMin, 1 / dopPow) / range * (fo || 1) * dopScale;
+      };
+
+      // flat's sort before drawing (maptheme.js 16774-16880)
+      let order = items;
+      const sized = !!this.binding.size;
+      if (((nMin !== nMax) || sized) && !has(/NOSRT/) && (!has(/NOSIZE/) || has(/\bSORT\b/))
+        && (!this.flags.has('CATEGORICAL') || this.flags.has('AGGREGATE') || sized || has(/\bSORT\b/))) {
+        const key = (sized || (this.flags.has('AGGREGATE') && has(/SUM/))) ? (it => it.nSize)
+          : (this._vectorCategorical ? (it => (it.cat != null && it.cat >= 0 ? it.cat + 1 : 0)) : (it => it.value));
+        const keyed = items.map(it => ({ it, y: key(it) })).filter(d => !isNaN(d.y));
+        const down = has(/\bSORT\b/) && has(/\bUP\b/);
+        keyed.sort((a, b) => (down ? b.y - a.y : a.y - b.y));
+        order = keyed.map(d => d.it);
+      }
+
+      const paths = [], heads = [];
+      const N = 32;
+      const visible = c => !globeCenter || isOnVisibleHemisphere(c[0], c[1], globeCenter);
+      for (const it of order) {
+        let p1 = it.p1, p2 = it.p2;
+        if (!p2) continue;
+        if (minValue && it.nSize < minValue) continue;
+        if (!inBox(p1) && !inBox(p2)) continue;
+        const rgb = colorOf(it);
+        let pts, end, tan, sw, headS, refX, refY, headAlpha, lineAlpha, stops = null, dashArr = null;
+        if (bezier) {
+          if (p1[0] === p2[0] && p1[1] === p2[1]) continue;
+          const w = rawLw != null && rawLw !== '' && lwNum ? lwNum
+            : 10 / Math.pow(nsv || maxSize, 1 / sizePow) * Math.pow(Math.abs(it.nSize), 1 / sizePow);
+          sw = w * unit;
+          if (!(sw > 0)) continue;
+          if (has(/\bREVERSE\b/) || it.nSize < 0) [p1, p2] = [p2, p1];
+          const a = toPx(p1), b = toPx(p2);
+          const dx = b[0] - a[0], dy = b[1] - a[1];
+          if (!(dx * dx + dy * dy > 0)) continue;
+          let bow = rs;
+          if (has(/\bRANDOM\b/)) bow -= rs * 0.66 * hashUnit(p1[0] + ',' + p1[1] + '&' + p2[0] + ',' + p2[1]);
+          const gapAdd = has(/\bGAP\b/) ? gapSize : 3;
+          const ll = typeof rawLw === 'string' && lwNum ? Number(rawLw + String(gapAdd)) : w + gapAdd;
+          const lay = bezierVectorLayout(dx, dy, { w, ll, unit, oz, bow, t, marker: markerSize, gap: gapSize });
+          pts = cubicBezierPoints(lay.start, lay.c1, lay.c2, lay.end, N);
+          end = lay.end;
+          tan = [lay.end[0] - lay.c2[0], lay.end[1] - lay.c2[1]];
+          headS = Math.min(5, 2.5 + 5 / (w * scale)) * markerSize;
+          refX = headS / 1.7; refY = headS / 2;
+          lineAlpha = fo || 0.3;
+          headAlpha = Math.min(1, (fo || 0.3) * 2);
+          // (flat sets the computed opacity as is; one that is no number
+          // — every size equal — SVG ignores: the opacity stays)
+          if (dop || dopMin) { const d = dopacity(it); if (isFinite(d)) { lineAlpha = d; headAlpha = d; } }
+          if (gradient) stops = fadeGradientStops(pts, lay.vx, lay.vy, fade);
+          if (dash) dashArr = [50 * oz, 5 * oz + sw];
+          pts = pts.map(p => [p[0] + a[0], p[1] + a[1]]);
+          end = [end[0] + a[0], end[1] + a[1]];
+        } else {
+          const w = (rawLw != null && rawLw !== '' && lwNum) || (2 / (nsv || 1) / maxSize * it.nSize) || 0.1;
+          sw = w * oz;
+          const a = toPx(p1), b = toPx(p2);
+          pts = [];
+          for (let i = 0; i <= N; i++) pts.push([a[0] + (b[0] - a[0]) * i / N, a[1] + (b[1] - a[1]) * i / N]);
+          end = b;
+          tan = [b[0] - a[0], b[1] - a[1]];
+          headS = 4; refX = 4; refY = 2;
+          lineAlpha = fo || 0.3;
+          headAlpha = Math.min(1, (fo || 0.3) * 2);
+          if (dash) dashArr = [50 * oz, 15 * oz];
+        }
+        // a line under a pixel: one pixel at its width as opacity
+        const drawW = Math.max(1, sw);
+        const thin = Math.min(1, sw);
+        const color2 = lineColors && lineColors.length > 1 ? hexOrNamedToRgb(String(lineColors[0]).trim()) : rgb;
+        const vertexColor = i => {
+          const s = stops ? stops[i] : null;
+          const k = s ? s.k : 1;
+          const c = s ? [0, 1, 2].map(j => Math.round(color2[j] + (rgb[j] - color2[j]) * k)) : rgb.slice(0, 3);
+          return [...c, Math.round(255 * Math.min(1, lineAlpha) * (s ? s.alpha : 1) * thin * groupAlpha)];
+        };
+        const properties = { value: it.nSize, cat: it.cat, raw: it.raw, count: it.count,
+          vector: { itemValue: it.cat != null ? (it.cat >= 0 ? it.cat + 1 : 0) : it.value } };
+        // the line in map coordinates; on the globe only its visible runs
+        const ll = pts.map(toLngLat);
+        let run = [], runColors = [];
+        const flush = () => {
+          if (run.length > 1) paths.push({ path: run, colors: runColors, width: drawW, dash: dashArr ? [dashArr[0] / drawW, dashArr[1] / drawW] : [0, 0], properties, item: it });
+          run = []; runColors = [];
+        };
+        ll.forEach((c, i) => { if (visible(c)) { run.push(c); runColors.push(vertexColor(i)); } else flush(); });
+        flush();
+        if (arrow && visible(toLngLat(end))) {
+          const tri = arrowMarkerTriangle(end, tan[0], tan[1], sw, headS, refX, refY).map(toLngLat);
+          heads.push({ type: 'Feature', properties, geometry: { type: 'Polygon', coordinates: [[...tri, tri[0]]] },
+            fill: [...rgb.slice(0, 3), Math.round(255 * Math.min(1, headAlpha) * groupAlpha)] });
+        }
+      }
+      const layers = [new PathLayer({
+        id: `ix-vector-${this.name}`, data: paths, pickable: true,
+        getPath: d => d.path, getColor: d => d.colors, getWidth: d => d.width,
+        widthUnits: 'pixels', capRounded: dash && bezier, jointRounded: false, billboard: false,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS,
+        ...(dash ? { getDashArray: d => d.dash, extensions: [new PathStyleExtension({ dash: true })] } : {})
+      })];
+      if (heads.length) {
+        layers.push(new GeoJsonLayer({
+          id: `ix-vector-heads-${this.name}`, data: { type: 'FeatureCollection', features: heads }, pickable: true,
+          filled: true, stroked: false, getFillColor: d => d.fill, parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+      return layers;
+    }
+
     // flat's chart position for this build (flatChartAlignOffset): a
     // function item → pixel offset, the same for every part of one chart
     // (symbol, glow, shadow, box, title, value text). unit is flat's
@@ -13639,7 +14231,7 @@ in vec4 vPieLineColor;
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, multiQuadOffsets, pixelOffsetLngLat,
+    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
