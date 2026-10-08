@@ -10248,7 +10248,11 @@ in vec4 vPieLineColor;
       if (this._isVectorChart()) return this._buildVectorLayers(zoom, bbox, liveZoom, globeCenter);
       if (this._isPieChart()) return this._buildPieLayers(zoom, bbox, liveZoom, globeCenter);
       if (isSymbolChart(this.flags)) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
-      console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
+      // once per theme, not on every redraw
+      if (!this._warnedNoRenderer) {
+        this._warnedNoRenderer = true;
+        console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
+      }
       return [];
     }
 
