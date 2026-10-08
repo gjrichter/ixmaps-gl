@@ -489,11 +489,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "ae671a75114b4f85",
-     "setDigest": "3fcb3ca2247695bf",
+     "digest": "c2274ee3c7d0bb69",
+     "setDigest": "c76ca137c19030d5",
      "columnDigests": {
-      "getColor": "2a305f2981a3e5ea",
-      "getIcon": "496e783d7cc16dad",
+      "getColor": "3a58a7606564ce17",
+      "getIcon": "9da625688cf56549",
       "getPosition": "1e7d6e1f844a9e5a",
       "getSize": "3431c92b51ce1cc8"
      },
@@ -1409,11 +1409,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0d879279af77994d",
-     "setDigest": "f717bf0271f099f4",
+     "digest": "8c5e9fd26bfd63a0",
+     "setDigest": "dc651b7f2ad49330",
      "columnDigests": {
-      "getColor": "94c20a6d58d493ce",
-      "getIcon": "3830cd8bac8997fe",
+      "getColor": "fa21f3a050a3b262",
+      "getIcon": "276c5e052de0d9b8",
       "getPosition": "b5f6360160141458",
       "getSize": "5ae5d5a3eb4199ac"
      },
@@ -2329,11 +2329,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "ea1f91b9bb742dd1",
-     "setDigest": "b6a5cb3af6d27a2b",
+     "digest": "8f10a846390edbfc",
+     "setDigest": "007e3ee07365fc67",
      "columnDigests": {
-      "getColor": "a7f81067013fb85a",
-      "getIcon": "226911cf4ac791e3",
+      "getColor": "2ec27c2a2ec76f48",
+      "getIcon": "ded9eb7e71ce6e4c",
       "getPosition": "2dabc0782723592c",
       "getSize": "b6202ecc8e919958"
      },
@@ -3394,11 +3394,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "f83413f6dd1607e2",
-     "setDigest": "313a445c8af94489",
+     "digest": "dbecfbf72ac99772",
+     "setDigest": "107387a84284dee7",
      "columnDigests": {
-      "getColor": "e92c7655e9796857",
-      "getIcon": "1b85f5202451137c",
+      "getColor": "475346ea8d1623f8",
+      "getIcon": "37b1b0e15a0f8a9e",
       "getPosition": "eea4d06f9ff09d0a",
       "getSize": "e70ff1495f772048"
      },
@@ -4314,11 +4314,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "e7baf70c42d3a24d",
-     "setDigest": "f30a78bae3154b8e",
+     "digest": "f5355051b07f7b98",
+     "setDigest": "f1e6f9b7eed02261",
      "columnDigests": {
-      "getColor": "9be7e0cba110d896",
-      "getIcon": "2ff52e5217abd0dd",
+      "getColor": "783654f4d0cc585b",
+      "getIcon": "47426f5843ad7459",
       "getPosition": "1b458db9dec348ab",
       "getSize": "da947dc64af29651"
      },
@@ -5234,11 +5234,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "28bb8b017754e65d",
-     "setDigest": "c23b1cc36ffc441f",
+     "digest": "7209e7871a5b27f5",
+     "setDigest": "e18b259e6c70be78",
      "columnDigests": {
-      "getColor": "8454eeac7beba610",
-      "getIcon": "6b25d2bb1e0eab44",
+      "getColor": "42355bdd96696fc8",
+      "getIcon": "f9c923e34e046e7f",
       "getPosition": "5aec6be866cae3a6",
       "getSize": "551a843e5a487a2c"
      },
@@ -6299,11 +6299,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "2ea60e02f5f6486d",
-     "setDigest": "d6abd915dbd96529",
+     "digest": "a2939607409128ba",
+     "setDigest": "7fa900f681c840c8",
      "columnDigests": {
-      "getColor": "5d1b29281a53af33",
-      "getIcon": "f92b0199b1283920",
+      "getColor": "7ef66a0025828d5a",
+      "getIcon": "62ba67b02f819a11",
       "getPosition": "a0437bcff7f7b099",
       "getSize": "80e8fe0df2b83f50"
      },
@@ -7219,11 +7219,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "1279f1de8dc1415d",
-     "setDigest": "bdda6fcafde9174e",
+     "digest": "233e31a3673b887d",
+     "setDigest": "228e95405325a329",
      "columnDigests": {
-      "getColor": "c0f48d9ca1110178",
-      "getIcon": "af8b8356836aee19",
+      "getColor": "61477bcc913bd4c5",
+      "getIcon": "5d9057f7f8dc7884",
       "getPosition": "96ef2de9f37ae8d0",
       "getSize": "63e7367da71f56b9"
      },
@@ -8139,11 +8139,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b08229a867e1e781",
-     "setDigest": "daf4a0e494ffdf7e",
+     "digest": "a29496537773aead",
+     "setDigest": "b0684ed3cb77875b",
      "columnDigests": {
-      "getColor": "830198c664a256aa",
-      "getIcon": "6bce6a24fada3051",
+      "getColor": "9f44ae6760bf8a4d",
+      "getIcon": "51b83068b84b2100",
       "getPosition": "3803ce3bf60bb40b",
       "getSize": "26f985763e4f9710"
      },

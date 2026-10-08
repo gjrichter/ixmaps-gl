@@ -939,6 +939,7 @@
      "type": "TextLayer",
      "count": 12799,
      "constants": {
+      "characterSet": "auto",
       "fontFamily": "arial",
       "fontWeight": "normal",
       "getAlignmentBaseline": "center",
@@ -1328,6 +1329,7 @@
      "type": "TextLayer",
      "count": 3339,
      "constants": {
+      "characterSet": "auto",
       "fontFamily": "arial",
       "fontWeight": "bold",
       "getAlignmentBaseline": "center",
@@ -2762,6 +2764,7 @@
      "type": "TextLayer",
      "count": 9660,
      "constants": {
+      "characterSet": "auto",
       "fontFamily": "arial",
       "fontWeight": "normal",
       "getAlignmentBaseline": "center",
@@ -3151,6 +3154,7 @@
      "type": "TextLayer",
      "count": 1896,
      "constants": {
+      "characterSet": "auto",
       "fontFamily": "arial",
       "fontWeight": "bold",
       "getAlignmentBaseline": "center",
@@ -4585,6 +4589,7 @@
      "type": "TextLayer",
      "count": 14900,
      "constants": {
+      "characterSet": "auto",
       "fontFamily": "arial",
       "fontWeight": "normal",
       "getAlignmentBaseline": "center",
@@ -4974,6 +4979,7 @@
      "type": "TextLayer",
      "count": 5162,
      "constants": {
+      "characterSet": "auto",
       "fontFamily": "arial",
       "fontWeight": "bold",
       "getAlignmentBaseline": "center",
