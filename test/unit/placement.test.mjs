@@ -265,6 +265,21 @@ test('SYMBOL without a size field: a fixed normal radius only in flat\'s "symbol
   near(r(25, 'LINEAR'), 3.75, 'LINEAR: proportional');
 });
 
+test('GRIDSIZE: a classed symbol chart sized to its grid cell, a plain one-color grid stays a mesh', () => {
+  const rt = (type, colorscheme) => new G.LayerRuntime(G.normalizeTheme({ layer: 'L', binding: { position: 'a|b', value: 'v' },
+    style: { type, colorscheme, aggregationscale: ['1:1', '5px'] } }),
+  { type: 'FeatureCollection', features: [1, 2, 3].map(v => pt({ v }, 11 + v / 10, 45)) }, {});
+  const classed = rt('GLOW|CHART|SYMBOL|SIZE|VALUES|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE|GAP', ['9', '#56A651', '#794073', '3colors', '#DDA729']);
+  assert.ok(!classed._isPlainGridMesh(), 'classes, VALUES, GLOW: drawn as a symbol chart');
+  classed._clusterRadiusPx = 5; classed._clusterUsesFixedZoom = false;
+  // fuel-price page on flat: 5 px cells, RECT|GAP → nGridSize 4.35 px, circle r 2.17 px
+  near(classed._gridChartRadiusPx(7, 7), 5 / 1.15 / 2, 'r = cell / 1.15 / 2', 1e-9);
+  near(classed._gridChartRadiusPx(7, 8), 2 * 5 / 1.15 / 2, 'scales with the live zoom like the cell', 1e-9);
+  const plain = rt('CHART|SYMBOL|SIZE|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE', ['rgba(255,255,255,0.3)']);
+  assert.ok(plain._isPlainGridMesh(), 'one color, no VALUES/GLOW: the uniform grid mesh (Germany/accidents companion grid)');
+  assert.ok(rt('CHART|SYMBOL|AGGREGATE|RECT|GRIDSIZE', ['none'])._isPlainGridMesh(), 'colorscheme "none" (plot_curves grid)');
+});
+
 test('valuedecimals as flat reads it: the raw style value (a string "0" counts, a number 0 does not)', () => {
   assert.equal(G.explicitValueDecimals({ valuedecimals: '0' }), 0);
   assert.equal(G.explicitValueDecimals({ valuedecimals: 0 }), null, 'number 0: `||` default');

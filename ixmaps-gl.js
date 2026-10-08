@@ -4495,6 +4495,33 @@
           return engineApi;
         },
         replaceTheme: (id, layerBuilder, flag) => engineApi.replace(id, layerBuilder, flag),
+        // flat's newTheme(title, theme, flag) (htmlgui.js 1540-1570, the
+        // handle's newTheme forwards to it): with "replace" the theme of the
+        // same id goes first, "clearcharts" every CHART theme, "clear" /
+        // "clearall" every theme — LOCKED themes stay (flat's
+        // Themes.removeAll, maptheme.js 3047-3050: the fuel-price page's
+        // nuts2 base) — then the theme is added; "force" removes nothing
+        newTheme: (title, layerBuilder, flag) => {
+          layerBuilder = unwrapLayer(layerBuilder);
+          const f = String(flag || '');
+          _chainedLayers = _chainedLayers.then(() => {
+            if (!/force/i.test(f)) {
+              if (/replace/i.test(f)) {
+                const def = layerBuilder.definition();
+                const id = (def.style && def.style.name) || (def.meta && def.meta.name);
+                if (id) removeThemeById(id);
+              } else if (/clearcharts|clear|clearall/i.test(f)) {
+                const charts = /clearcharts/i.test(f);
+                const doomed = runtimes.filter(rt => !flatFlag(rt.flags, 'LOCKED') && (!charts || rt.flags.has('CHART')));
+                const byName = new Map();
+                doomed.forEach(rt => { if (!byName.has(rt.name)) byName.set(rt.name, []); byName.get(rt.name).push(rt); });
+                byName.forEach((list, name) => removeRuntimes(name, list));
+              }
+            }
+            return engineApi.defineLayer(layerBuilder);
+          }).catch(err => console.error('[ixmaps-gl] map.newTheme():', err));
+          return engineApi;
+        },
         remove: (id) => { removeThemeById(id); return engineApi; },
         // flat's map.setMapType(id) / setMapTypeId / mapType (htmlgui_flat.js
         // mapApi): swap the basemap at runtime. MapLibre's setStyle replaces
@@ -5550,7 +5577,7 @@
   // as ixmaps.map() does). The builder's own methods with different
   // semantics — layer, view, options, require, attribution, on — keep
   // theirs and are not overridden.
-  for (const m of ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
+  for (const m of ['replace', 'add', 'newTheme', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
     'refreshTheme', 'redrawTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize',
     'loadProject', 'project', 'setThemeVisible', 'setThemeTimeFrame', 'show', 'hide', 'getZoom', 'getThemeObj',
     'getThemes', 'theme', 'setView']) {
@@ -8743,7 +8770,11 @@
     }
 
     _usesAggregationIndex() {
-      return (this.flags.has('AGGREGATE') || isSymbolChart(this.flags)) && !this.flags.has('GRIDSIZE');
+      // GRIDSIZE bins its own grid (_ensureGridIndex) — PLOT curves and the
+      // plain mesh; a classed GRIDSIZE symbol chart is aggregated like any
+      // other (see _isPlainGridMesh)
+      return (this.flags.has('AGGREGATE') || isSymbolChart(this.flags))
+        && (!this.flags.has('GRIDSIZE') || (!this.flags.has('PLOT') && !this._isPlainGridMesh()));
     }
 
     _rebuildActiveFeatures() {
@@ -9487,16 +9518,19 @@
       // GRIDSIZE (spatial grid binning) is checked before the generic
       // CHART|SYMBOL bubble pipeline, same "more specific base type wins"
       // precedence as DOT: PLOT+GRIDSIZE is the per-year curves mini-chart
-      // (_buildPlotLayers); GRIDSIZE alone (no PLOT — the real engine's
-      // "grid" companion layer) is a plain uniform grid mesh, sized to the
-      // full cell pitch regardless of SIZE/QUANTILE/MEAN, matching
-      // maptheme.js's own `GRIDSIZE && !PLOT -> nRadius = nGridSize/2` rule
-      // (SIZE/QUANTILE/MEAN have no visible effect there in the real
-      // engine either — confirmed, not a gap in this port).
+      // (_buildPlotLayers); GRIDSIZE without PLOT is flat's symbol chart
+      // with `nRadius = nGridSize/2` (maptheme.js 21843) — every chart the
+      // size of its cell, colored by its class (QUANTILE of the MEAN, the
+      // fuel-price page). Only a plain one-color grid (the "grid"
+      // companion layer) takes the uniform mesh shortcut.
       if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox);
       // PLOT without GRIDSIZE: one line chart per item over its value fields
       if (this.flags.has('PLOT') && this._isItemPlot()) return this._buildItemPlotLayers(zoom);
-      if (this.flags.has('GRIDSIZE')) return this._buildGridMeshLayers(zoom, bbox);
+      // a plain grid (one color, no values or glow — the Germany page's
+      // companion "grid" layer) as one square per cell; a classed GRIDSIZE
+      // chart (the fuel-price page) is a symbol chart sized to the grid,
+      // below in _buildChartLayers (_gridChartRadiusPx)
+      if (this.flags.has('GRIDSIZE') && this._isPlainGridMesh()) return this._buildGridMeshLayers(zoom, bbox);
       // CHOROPLETH is checked before the generic FEATURE dispatch — a
       // CHOROPLETH layer's own type string doesn't carry FEATURE/FEATURES
       // (only its geometry-donor base layer does, see
@@ -9852,6 +9886,27 @@
     // style.values/xaxis (explicit, see _prepare) if set, else whatever
     // CATEGORICAL auto-discovered.
     // a per-item PLOT: no GRIDSIZE grid, several value fields per item
+    // GRIDSIZE without PLOT drawn as one uniform square per cell: only a
+    // plain grid — a single color, no VALUES, no GLOW
+    _isPlainGridMesh() {
+      return !this.flags.has('PLOT') && (this.categoryColorsRgb || []).length <= 1
+        && !this.flags.has('VALUES') && !this.flags.has('GLOW');
+    }
+    // GRIDSIZE (no PLOT) symbol chart radius, px: flat's nGridSize / 2
+    // (maptheme.js 21843), nGridSize the aggregation cell pitch / nAutoSize
+    // (16944-16952: RECT or no AGGREGATE 1.0, with GAP 1.15; else 0.75,
+    // with GAP 0.8) · style.scale. Measured on the fuel-price page: 5 px
+    // cells, RECT|GAP → nGridSize 4.35 px, circle r 2.17 px. null when not
+    // a GRIDSIZE chart or no grid at this scale.
+    _gridChartRadiusPx(zoom, liveZoom) {
+      if (!this.flags.has('GRIDSIZE') || this.flags.has('PLOT') || !this._clusterRadiusPx) return null;
+      const fromZoom = this._clusterUsesFixedZoom ? GRIDWIDTH_METERS_REFERENCE_ZOOM : zoom;
+      const cellPx = this._clusterRadiusPx * Math.pow(2, liveZoom - fromZoom);
+      const rect = flatFlag(this.flags, 'RECT') || !this.flags.has('AGGREGATE');
+      const gap = flatFlag(this.flags, 'GAP');
+      const autoSize = rect ? (gap ? 1.15 : 1.0) : (gap ? 0.8 : 0.75);
+      return cellPx / autoSize * (styleNum(this.style.scale) || 1) / 2;
+    }
     _isItemPlot() {
       return this.flags.has('PLOT') && !this.flags.has('GRIDSIZE') && String(this.binding.value || '').includes('|');
     }
@@ -10715,6 +10770,20 @@
             ...(f.properties.titleRaw ? { titleRaw: f.properties.titleRaw } : {}) }
         };
       });
+      // MEAN (no CATEGORICAL): a cell's value is the mean of its records,
+      // not their sum (flat's MEAN aggregation) — what its label prints,
+      // its size and its class follow. The fuel-price page: 119 stations,
+      // sum 270.0 → 2.27 €
+      if (this.flags.has('MEAN') && !this.flags.has('CATEGORICAL')) {
+        groups.forEach(g => {
+          const p = g.properties;
+          const n = groupRecordCount(p);
+          if (!(n > 0)) return;
+          if (p.recordCounts) p.counts = p.counts.map((c, i) => (p.recordCounts[i] ? c / p.recordCounts[i] : c));
+          p.total = p.total / n;
+          if (p.classTotal !== undefined) p.classTotal = p.classTotal / n;
+        });
+      }
       return { individual, groups };
     }
 
@@ -10842,6 +10911,10 @@
       // _computeAggregatedItems below — a plain (non-AGGREGATE)
       // BUBBLE/CHART theme never reads them.
       if (this.flags.has('AGGREGATE')) this._ensureClusterIndices(zoom);
+      // GRIDSIZE: every chart the size of its grid cell, whatever its value
+      // (_gridChartRadiusPx); otherwise valueRadius
+      const gridR = this._gridChartRadiusPx(zoom, liveZoom);
+      const vRadius = v => (gridR != null ? gridR : valueRadius(v, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue));
       // AGGREGATE sums without a normalsizevalue: flat's default is the
       // largest aggregated value (defaultNormalSizeValue leaves it unset, the
       // sizes depend on the aggregation)
@@ -10999,7 +11072,7 @@
       const singleBorderWidthPx = styleNum(this.style.linewidth) || 0;
 
       const itemRgb = d => this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat] || [128, 128, 128];
-      const radiusOf = d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+      const radiusOf = d => vRadius(sizeValueOf(d));
       // align / offsetx / offsety: the whole chart moves (flatChartAlignOffset)
       // MULTIQUAD / MULTISQUARE: the items at one position side by side
       // (multiQuadOffsets), added to the chart position
@@ -11048,7 +11121,7 @@
           data: combined, pickable: false,
           getPosition: d => d.geometry.coordinates,
           getIcon: d => this._getGlowIcon((this.categoryColorsRgb || [])[d.properties.counts ? dominant(this._groupIsolation(d) ? d.properties.counts.map((c, i) => (this._markedClasses.has(i) ? c : 0)) : d.properties.counts) : d.properties.cat]),
-          getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * (d.properties.counts ? 9 : 11),
+          getSize: d => vRadius(sizeValueOf(d)) * (d.properties.counts ? 9 : 11),
           getColor: d => [255, 255, 255, this._iconAlpha(d)],
           ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
           sizeUnits: 'pixels',
@@ -11124,7 +11197,7 @@
       const alignRight = /right/.test(String(this.style.align || ''));
       // with MULTIQUAD only the first item of a position gets its box/title
       const boxLayout = boxShown ? combined.filter(d => !multi || multi.index.get(d) === 0).map(d => {
-        const r = valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+        const r = vRadius(sizeValueOf(d));
         const ext = multi ? multi.extent.get(d) : [0, 0, 0, 0];
         const chart = [ext[0] - r, ext[1] - r, ext[2] + r, ext[3] + r];
         const grow = e => { if (!e) return; chart[0] = Math.min(chart[0], e[0]); chart[1] = Math.min(chart[1], e[1]); chart[2] = Math.max(chart[2], e[2]); chart[3] = Math.max(chart[3], e[3]); };
@@ -11249,17 +11322,27 @@
         }));
       }
 
+      // flat's per-part SYMBOL branch (everything but CATEGORICAL without
+      // AGGREGATE/GROUP) draws a square of side 2r, the other one 1.6r
+      // (drawSymbolPath's own square)
+      const perPartBranch = flatChartBranch(this.flags) === 'symbol'
+        && !(this.flags.has('CATEGORICAL') && !this.flags.has('AGGREGATE') && !flatFlag(this.flags, 'GROUP'));
+      const shapeOf = props => { const sh = this._resolveSymbolShape(props); return sh === 'square' && perPartBranch ? 'squarefull' : sh; };
+      // a range-classed cell is ONE class: one symbol in its class color,
+      // fillopacity and linecolor, as a single item (flat draws one
+      // symbol) — the packed multi-category icon is for CATEGORICAL cells
+      const singleSymbol = d => !d.properties.counts || (this._rangeClassed && d.properties.cat != null);
       layers.push(new IconLayer({
         id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
         data: combined, pickable: true,
         getPosition: d => d.geometry.coordinates,
-        getIcon: d => d.properties.counts
+        getIcon: d => !singleSymbol(d)
           ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d), Array.isArray(this.style.symbols) ? this.style.symbols : null)
-          : this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, this._resolveSymbolShape(d.properties), singleBorderColorRgb, singleBorderWidthPx),
-        getSize: d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue) * 2,
+          : this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, shapeOf(d.properties), singleBorderColorRgb, singleBorderWidthPx),
+        getSize: d => vRadius(sizeValueOf(d)) * 2,
         // group icons bake a fixed 0.9 alpha; an explicit fillopacity scales it
         // so a near-transparent theme doesn't show opaque 1-px-cell clusters
-        getColor: d => [255, 255, 255, Math.round(this._iconAlpha(d) * (d.properties.counts && this.style.fillopacity != null ? fillOpacity : 1))],
+        getColor: d => [255, 255, 255, Math.round(this._iconAlpha(d) * (!singleSymbol(d) && this.style.fillopacity != null ? fillOpacity : 1))],
         ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
         sizeUnits: 'pixels',
         billboard: true,
@@ -11304,7 +11387,7 @@
         const pointValueOf = valueTextOf || this._chartValueTextFn();
 
         const pointLabels = individual.reduce((out, d) => {
-          const radius = valueRadius(d.properties.value, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+          const radius = vRadius(d.properties.value);
           // flat's VALUES label prints the value (nValuesA), not the size;
           // its font by flat's chart branch (_chartValueTextFn)
           const { text, fontSize, bold, baseline } = pointValueOf(d, radius);
@@ -11328,10 +11411,23 @@
         // number nobody's individual bubble actually shows.
         const groupLabels = groups.reduce((out, d) => {
           const counts = d.properties.counts;
-          const outerRadiusPx = valueRadius(d.properties.total, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+          const outerRadiusPx = vRadius(d.properties.total);
           const iconSizePx = outerRadiusPx * 2; // matches the cluster IconLayer's own getSize (*2) below
           const pxPerCanvasUnit = iconSizePx / BUBBLE_ICON_SIZE;
           const iso = this._groupIsolation(d);
+          // a range-classed cell is one symbol (see the bubbles layer): its
+          // value text as a single chart's (_chartValueTextFn)
+          if (this._rangeClassed && d.properties.cat != null) {
+            const value = d.properties.classTotal !== undefined ? d.properties.classTotal : d.properties.total;
+            const v = pointValueOf({ properties: { value, cat: d.properties.cat } }, outerRadiusPx);
+            if (v.fontSize > VALUES_MIN_FONT_PX) {
+              const o = alignOf(d);
+              out.push({ geometry: d.geometry, text: v.text, fontSize: v.fontSize, bold: v.bold,
+                color: resolveTextColor(this.style, contrastTextColor((this.categoryColorsRgb || [])[d.properties.cat])),
+                pixelOffset: v.baseline ? [o[0], o[1] + v.baseline - 0.35 * v.fontSize] : o });
+            }
+            return out;
+          }
           const { present, radii, offsets, fitScale } = (iso && isolatedBubblePackLayout(counts, BUBBLE_ICON_SIZE, iso)) || computeBubblePackLayout(counts, BUBBLE_ICON_SIZE);
 
           present.forEach((p, i) => {
@@ -11359,13 +11455,18 @@
           sizeUnits: 'pixels',
           fontFamily: 'arial',
           fontWeight: 'bold',
+          // the glyphs of the actual texts, not deck's ASCII default — a
+          // unit like " €" (the fuel-price page) is outside it ("Missing
+          // character: €" and no glyph)
+          characterSet: 'auto',
           getTextAnchor: 'middle',
           getAlignmentBaseline: 'center'
         };
         // flat's SYMBOL branch writes its values in normal weight
         if (pointLabels.length) layers.push(new TextLayer({ id: `ix-points-values-${this.name}`, data: pointLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps,
           fontWeight: pointLabels[0].bold === false ? 'normal' : 'bold' }));
-        if (groupLabels.length) layers.push(new TextLayer({ id: `ix-cluster-values-${this.name}`, data: groupLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps }));
+        if (groupLabels.length) layers.push(new TextLayer({ id: `ix-cluster-values-${this.name}`, data: groupLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps,
+          fontWeight: groupLabels[0].bold === false ? 'normal' : 'bold' }));
       }
 
       // LABEL: flat's chart label (maptheme.js 24533-24590) — a small text
@@ -11882,6 +11983,11 @@
   //   gray stroke (fill-opacity:0, stroke #888888)
   function drawSymbolPath(ctx, shape, cx, cy, r) {
     switch (shape) {
+      // flat's per-part SYMBOL square (maptheme.js 22037): side 2r — with
+      // GRIDSIZE the whole cell (the fuel-price grid, contiguous squares)
+      case 'squarefull':
+        ctx.rect(cx - r, cy - r, 2 * r, 2 * r);
+        break;
       case 'square': {
         const s = r * Math.SQRT2;
         ctx.rect(cx - s / 2, cy - s / 2, s, s);
@@ -12084,7 +12190,7 @@
   // map named by szMap (its Map() options name) or, without a name, the
   // last built map; called while the map is still building, they run once
   // it is ready.
-  const MAP_HANDLE_METHODS = ['replace', 'add', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
+  const MAP_HANDLE_METHODS = ['replace', 'add', 'newTheme', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
     'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'setThemeTimeFrame', 'attribution'];
   const _mapHandles = Object.create(null);
   function makeMapHandle(szMap) {
@@ -12749,6 +12855,8 @@
     htmlgui_getAttributionString: () => (_lastMapApi && _lastMapApi.getAttribution ? _lastMapApi.getAttribution() : ''),
     changeThemeStyle: compatChangeThemeStyle,
     removeTheme: compatRemoveTheme,
+    // flat's ixmaps.newTheme(title, theme, flag) — on the last built map
+    newTheme: (title, theme, flag) => _mapHandle.newTheme(title, theme, flag),
     // flat's time slider: show the records of a theme (null = all themes) whose timefield lies in [min, max)
     setThemeTimeFrame: (szId, nMin, nMax) => _mapHandle.setThemeTimeFrame(szId, nMin, nMax),
     setBasemapOpacity: compatSetBasemapOpacity,
