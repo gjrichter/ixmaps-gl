@@ -34,6 +34,8 @@
     "examples/plot_curves.html",
     "examples/pie_size_sum.html",
     "examples/pie_categorical_aggregate.html",
+    "examples/bar_horz_categorical_aggregate.html",
+    "examples/bar_pointer_offsetmean.html",
     "examples/vector_bezier_aggregate.html",
     "examples/validate_demo.html",
     "examples/alias_bubble_range_quantile.html",
@@ -165,6 +167,14 @@
     {
       "flat": "examples/vector_bezier_aggregate_svg.html",
       "gl": "examples/vector_bezier_aggregate.html"
+    },
+    {
+      "flat": "examples/bar_horz_categorical_aggregate_svg.html",
+      "gl": "examples/bar_horz_categorical_aggregate.html"
+    },
+    {
+      "flat": "examples/bar_pointer_offsetmean_svg.html",
+      "gl": "examples/bar_pointer_offsetmean.html"
     }
   ]
 }

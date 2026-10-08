@@ -85,6 +85,17 @@ page. It currently implements:
   by `linecolor`, `colorfield` or the `CATEGORICAL`/`EXACT` category; densified, so they follow the
   globe. `VALUES` text along the curve, `DYNAMICWIDTH`, `LONG` and the dash animation are noted in
   the console, not drawn
+- **CHART\|BAR** (and `BARS`) — a bar chart per record or, with `AGGREGATE`/`CATEGORICAL`, per
+  item (aggregated as the pies), a bar per value field or category, as flat draws it: width and
+  length by `SIZE` (size field or the values' sum, `sizepow`), `normalsizevalue`, `rangescale`,
+  `COMPRESS`/`EXPAND`; `HORZ` (to the right, the first bar on top), `STACKED` (one column, values on
+  leader lines with their share), `SORT`, `UP`, `CENTER`, `SPACED`, `THIN`/`THICK`, `NOZERO`,
+  `NONEGATIVE`/`ONLYNEGATIVE`, `LEFT`; negative bars; `POINTER`/`ARROW` pointers (sized by the
+  value with `SIZE`, negative ones pointing down in `fadenegative`), `OFFSETMEAN`/`OFFSETMEDIAN`/
+  `DEVIATION`; `VALUES` (beyond the bar or inside it, `valuedecimals`, `units`, `DTEXT`,
+  `VALUEBACKGROUND`/`CTEXT`), `FADEIN`/`FADENEGATIVE`, `fillopacity`/`linecolor`/`linewidth`;
+  `BOX` and `TITLE`. `3D`, `VOLUME`, `COLUMN`, `DOTTED`, `TRENDLINE`, the `XAXIS` labels, `ZOOM` and
+  field100 arithmetic are noted in the console and drawn as plain bars (`SMALLARROW` as `ARROW`)
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
   geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or one per grid
@@ -101,7 +112,7 @@ page. It currently implements:
 - Globe (orthographic) projection alongside flat Mercator
 
 Not yet implemented: plain (non-AGGREGATE) `CATEGORICAL` choropleths, and the `QUAD`/
-`WAFFLE`/`BAR` base types, and SYMBOL shape variants beyond
+`WAFFLE` base types, and SYMBOL shape variants beyond
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
 

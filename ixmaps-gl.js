@@ -59,12 +59,16 @@
 // style lookupfield2), per record or AGGREGATE'd per origin–destination
 // pair, with flat's widths, colors, arrow heads and GRADIENT / FADEIN
 // (_buildVectorLayers; VALUES, DYNAMICWIDTH, LONG and the DASH animation
-// are noted, see VECTOR_INERT_FLAGS). These
+// are noted, see VECTOR_INERT_FLAGS), CHART|BAR (and BARS) a bar chart
+// per record or aggregated item, a bar per value field or category, flat's
+// sizing, HORZ / STACKED / SORT, POINTER and ARROW pointers, VALUES texts,
+// BOX and TITLE (_buildBarLayers; 3D, VOLUME, DOTTED, TRENDLINE, the axis
+// labels … are noted, drawn plain, see BAR_INERT_FLAGS). These
 // base types are dispatched by buildDeckLayers in the real engine's own
 // precedence order — DOT is checked first because the real engine's DOT
 // bypasses the whole drawChart/modifier pipeline rather than being
 // "BUBBLE with the size locked." Other real base types (QUAD, WAFFLE,
-// BAR, and SYMBOL's own shape variants) are NOT
+// and SYMBOL's own shape variants) are NOT
 // implemented yet — adding one means a new _buildXLayers() method plus a
 // dispatch line, not a rewrite, but each should be added deliberately
 // (checking, per real source, which modifiers it actually shares with
@@ -210,9 +214,9 @@
   // overview page claims ES-modules-only, which the actual UMD bundle
   // contradicts).
   let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension;
-  // PieSliceLayer (see makePieSliceLayer) is derived from ScatterplotLayer
-  // once deck.gl is there
-  let PieSliceLayer;
+  // PieSliceLayer (see makePieSliceLayer) and BarShapeLayer
+  // (makeBarShapeLayer) are derived from ScatterplotLayer once deck.gl is there
+  let PieSliceLayer, BarShapeLayer;
 
   // CHART|PIE / DONUT slices (_buildPieLayers): one instance per slice — a
   // ScatterplotLayer circle (billboarded, pixel radius, pixel offset, the
@@ -316,6 +320,107 @@ in vec4 vPieLineColor;
     return Layer;
   }
 
+  // CHART|BAR / BARS bars (_buildBarLayers): one instance per bar — a
+  // ScatterplotLayer circle (billboarded, pixel radius, pixel offset, the
+  // same projection path as every other chart, globe included) whose
+  // fragment shader keeps only the bar's shape inside the circle and draws
+  // flat's outline along its edge, centered on it (an SVG stroke).
+  //   getBarShape:  [half width, shaft half width, shaft length, band] px
+  //   getBarShape2: [head length, direction (0 up, 1 right, 2 down,
+  //                  3 left; + 4: never picked), outline width px, the base's distance from
+  //                  the circle's center along the direction] — the circle
+  //                  centered on the shape, its radius covering it
+  // A plain bar is a rectangle (shaft = half width, no band, no head); a
+  // POINTER / ARROW its shaft, a band as wide as the bar and a triangular
+  // head (flat's pointer path). Why not a canvas icon per bar: every bar
+  // has its own length (~1 000 distinct icons per view on a comuni page,
+  // beyond deck.gl's never-evicting icon atlas); nor polygons in map
+  // coordinates, re-tessellated at every zoom step and wrong on the globe.
+  function makeBarShapeLayer(Base) {
+    class Layer extends Base {
+      getShaders() {
+        const shaders = super.getShaders();
+        const inject = Object.assign({}, shaders.inject || {});
+        inject['vs:#decl'] = (inject['vs:#decl'] || '') + `
+in vec4 instanceBarShapes;
+in vec4 instanceBarShapes2;
+out vec4 vBarShape;
+out vec4 vBarShape2;
+out float vBarRadius;
+out vec4 vBarLineColor;
+`;
+        inject['vs:#main-end'] = (inject['vs:#main-end'] || '') + `
+vBarShape = instanceBarShapes;
+vBarShape2 = instanceBarShapes2;
+vBarRadius = outerRadiusPixels;
+vBarLineColor = vec4(instanceLineColors.rgb, instanceLineColors.a * layer.opacity);
+`;
+        inject['fs:#decl'] = (inject['fs:#decl'] || '') + `
+in vec4 vBarShape;
+in vec4 vBarShape2;
+in float vBarRadius;
+in vec4 vBarLineColor;
+float barSegDist(vec2 p, vec2 a, vec2 b) {
+  vec2 ab = b - a;
+  float l2 = dot(ab, ab);
+  float t = l2 > 0.0 ? clamp(dot(p - a, ab) / l2, 0.0, 1.0) : 0.0;
+  return length(p - a - t * ab);
+}
+`;
+        // before the picking module's own filter (it replaces the color
+        // when picking): the discards shape the pick area too
+        inject['fs:DECKGL_FILTER_COLOR'] = (inject['fs:DECKGL_FILTER_COLOR'] || '') + `
+{
+  vec2 barS = geometry.uv * vBarRadius;
+  barS.y = -barS.y;
+  // a direction beyond 3: drawn, never picked (a chart's BOX)
+  float barDir = vBarShape2.y;
+  bool barNoPick = barDir > 3.5;
+  if (barNoPick) barDir -= 4.0;
+  if (barNoPick && picking.isActive > 0.5) discard;
+  vec2 barD = barDir < 0.5 ? vec2(0.0, -1.0) : barDir < 1.5 ? vec2(1.0, 0.0) : barDir < 2.5 ? vec2(0.0, 1.0) : vec2(-1.0, 0.0);
+  vec2 barP = vec2(abs(dot(barS, vec2(-barD.y, barD.x))), dot(barS, barD) + vBarShape2.w);
+  float barW2 = vBarShape.x, barSW = vBarShape.y, barL = vBarShape.z, barB = vBarShape.w, barH = vBarShape2.x;
+  bool barIn = (barP.x <= barSW && barP.y >= 0.0 && barP.y <= barL)
+    || (barP.x <= barW2 && barP.y >= barL && barP.y <= barL + barB)
+    || (barH > 0.0 && barP.y >= barL + barB && barP.y <= barL + barB + barH && barP.x <= barW2 * (1.0 - (barP.y - barL - barB) / barH));
+  float barD0 = barSegDist(barP, vec2(0.0, 0.0), vec2(barSW, 0.0));
+  barD0 = min(barD0, barSegDist(barP, vec2(barSW, 0.0), vec2(barSW, barL)));
+  barD0 = min(barD0, barSegDist(barP, vec2(barSW, barL), vec2(barW2, barL)));
+  barD0 = min(barD0, barSegDist(barP, vec2(barW2, barL), vec2(barW2, barL + barB)));
+  barD0 = min(barD0, barSegDist(barP, vec2(barW2, barL + barB), vec2(0.0, barL + barB + barH)));
+  // in device pixels (fwidth: CSS px per device pixel): edges anti-aliased
+  // over one device pixel, a hairline outline fades in by its width
+  float barAA = max(fwidth(barS.x), 1e-4);
+  float barFill = barIn ? clamp(barD0 / barAA + 0.5, 0.0, 1.0) : clamp(0.5 - barD0 / barAA, 0.0, 1.0);
+  // a bar thinner than a device pixel covers only its share of it (a 0
+  // value's bar is no line)
+  barFill = min(barFill, clamp(min(2.0 * barW2, barL + barB + barH) / barAA, 0.0, 1.0));
+  float barLW = vBarShape2.z;
+  float barLine = barLW > 0.0 ? clamp(min(barLW * 0.5 / barAA + 0.5 - barD0 / barAA, barLW / barAA), 0.0, 1.0) : 0.0;
+  color = vec4(mix(color.rgb, vBarLineColor.rgb, barLine), mix(color.a * barFill, vBarLineColor.a, barLine));
+  if (color.a <= 0.0) discard;
+}
+`;
+        shaders.inject = inject;
+        return shaders;
+      }
+      initializeState() {
+        super.initializeState();
+        this.getAttributeManager().addInstanced({
+          instanceBarShapes: { size: 4, accessor: 'getBarShape', defaultValue: [0, 0, 0, 0] },
+          instanceBarShapes2: { size: 4, accessor: 'getBarShape2', defaultValue: [0, 0, 0, 0] }
+        });
+      }
+    }
+    Layer.layerName = 'BarShapeLayer';
+    Layer.defaultProps = {
+      getBarShape: { type: 'accessor', value: [0, 0, 0, 0] },
+      getBarShape2: { type: 'accessor', value: [0, 0, 0, 0] }
+    };
+    return Layer;
+  }
+
   // Cached so multiple ixmaps.Map() calls on one page (or a page that
   // still has its own static <script> tags for these libraries) only
   // ever fetch once: a library a page already loaded is reused when it is
@@ -393,6 +498,7 @@ in vec4 vPieLineColor;
       ]).then(() => {
         ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension } = global.deck);
         PieSliceLayer = makePieSliceLayer(ScatterplotLayer);
+        BarShapeLayer = makeBarShapeLayer(ScatterplotLayer);
         // which engine and libraries this page really runs (a page may
         // bring its own MapLibre/deck.gl — the loaded ones are named)
         const ml = global.maplibregl && typeof global.maplibregl.getVersion === 'function' ? global.maplibregl.getVersion() : '?';
@@ -2091,6 +2197,12 @@ in vec4 vPieLineColor;
   // value arithmetic (DIFFERENCE, FRACTION, PERCENT …, field100)
   const PIE_AGGREGATE_INERT_FLAGS = [/^GRIDSIZE$/, /AUTOSIZE/, /DOPACITY/, /BOX/, /TITLE/, /^GAUGE$/, /^MULTIPLE$/, /^DIFFUSE$/,
     /^DIFFERENCE$/, /^FRACTION$/, /^PERCENT$/, /^PERMILLE$/, /^PRODUCT$/, /^CALCVAL$/, /^RELATIVE$/];
+  // flat's BAR / BARS variants with no rendering here (see flatBarLayout):
+  // the bar is drawn plain (SMALLARROW as ARROW) — tested as substrings,
+  // as flat does
+  const BAR_INERT_FLAGS = [/3D/, /VOLUME/, /COLUMN/, /DOTTED/, /SMALLARROW/, /TRENDLINE/, /AXIS/, /^CLIP$/, /MORPH/,
+    /ZOOM/, /NORMSIZE/, /MENUSIZE/, /INVERT/, /DIAGLEFT/, /DIAGRIGHT/, /^WIDTH$/, /^MULTIPLE$/, /^DIFFUSE$/,
+    /^DIFFERENCE$/, /^FRACTION$/, /^PERCENT$/, /^PERMILLE$/, /^PRODUCT$/, /^CALCVAL$/, /^RELATIVE$/];
   // flat's VECTOR / BEZIER modifiers with no rendering here (see
   // _buildVectorLayers), the word → what happens instead
   const VECTOR_INERT_FLAGS = {
@@ -2715,6 +2827,16 @@ in vec4 vPieLineColor;
           }
         });
       }
+    }
+
+    // BAR variants _buildBarLayers doesn't draw (the bars are drawn plain)
+    if (isBarChart(flags)) {
+      flags.forEach(flag => {
+        if (BAR_INERT_FLAGS.some(re => re.test(flag)) && !_warnedFlags.has('BAR:' + flag)) {
+          _warnedFlags.add('BAR:' + flag);
+          console.info(`[ixmaps-gl] type flag "${flag}" on a BAR chart recognized, not ported yet — the bars are drawn plain`);
+        }
+      });
     }
 
     // VECTOR / BEZIER modifiers _buildVectorLayers doesn't draw
@@ -4582,6 +4704,7 @@ in vec4 vPieLineColor;
         return runtimes.find(r => {
           if (base === `ix-bubbles-${r.name}`) return isSymbolChart(r.flags);
           if (base === `ix-pie-${r.name}`) return r._isPieChart();
+          if (base === `ix-bar-${r.name}`) return r._isBarChart();
           if (base === `ix-vector-${r.name}` || base === `ix-vector-heads-${r.name}`) return r._isVectorChart();
           if (base === `ix-dot-${r.name}`) return r.flags.has('DOT');
           if (base === `ix-choropleth-${r.name}`) return r.flags.has('CHOROPLETH');
@@ -7308,6 +7431,412 @@ in vec4 vPieLineColor;
     return [lngLat[0] + offset[0] * 360 / world, lat];
   }
 
+  // CHART|BAR / BARS: which flat draws as a bar chart — drawChart's BAR
+  // branch (maptheme.js 23283) comes after USER, PIE, WAFFLE, BUBBLE,
+  // SYMBOL and BUFFER; flat tests /BAR/ as a substring (BARS too)
+  function isBarChart(flags) {
+    if (!flags.has('CHART') || isVectorChart(flags) || flags.has('DOT')) return false;
+    const t = flags.typeString != null ? flags.typeString : [...flags].join('|');
+    return /BAR/.test(t) && !/\bUSER\b|PIE|WAFFLE|BUBBLE|SYMBOL|BUFFER/.test(t);
+  }
+
+  // One item's bar chart as real ixmaps-flat draws it — maptheme.js
+  // drawChart's BAR branch (23283-24425) — in flat's normal units (u:
+  // normalX(1), the chart size is 30 u; px = u · the object zoom factor ×
+  // style.scale), y down, relative to the item's position. `values`: the
+  // item's parts (nValuesA, after aggregation); `t`: the type string,
+  // tested as flat does, by substring. `o`:
+  //   themeMin / themeMax  the theme's nMin / nMax (the items' sizes with a
+  //                        size field or CATEGORICAL, else their parts)
+  //   maxSize, itemSize    the theme's nMaxSize, the item's nSize (size field)
+  //   sizeField            a size field is bound
+  //   normalSizeValue, sizePow, rangeScale, valueScale, units,
+  //   valueDecimals (explicit, else undefined), noBreaks, gridX, nClasses
+  //   (partsA.length), classMax (partsA[k].max), nColors, fillOpacity,
+  //   lineWidth, lineColor (linecolor, else undefined), fadeNegative,
+  //   fadeValuePow, hideValues (valueupper/lower), means / medians / devs
+  //   (per part, OFFSETMEAN / OFFSETMEDIAN / DEVIATION)
+  //   measure(text, font)  the text's width at that font size (u)
+  // Returns null when flat draws no chart (no size, or a single 0 part),
+  // else { bars, texts, lines, extent: [x0, y0, x1, y1] } —
+  //   bars:  { part (the value's index), cls (its color index), base
+  //          [x, y] (the middle of the shaft's foot), dir (0 up, 1 right,
+  //          2 down, 3 left), w2 (half width), sw (shaft half width), len
+  //          (shaft), band, head, value, textValue, fill: { opacity },
+  //          line: { rgb: 'color' (the bar's) | null (lineColor or black),
+  //          width, opacity }, opacity (FADEIN / FADENEGATIVE) }
+  //   texts: { text, x, y (the baseline's start), angle (0 reading right,
+  //          90 up, -90 down), font, opacity, color ('value' — flat's
+  //          #798697 values color, 'red', 'contrast' — ChartColors
+  //          .textColor of the bar's color —, or a CSS color), bg (null,
+  //          'white' — #fefeff —, or 'bar' — the bar's color at 0.5),
+  //          cls, part }
+  //   lines: STACKED leader lines { x0, y0, x1, y1 }
+  // Divergences (not drawn here): 3D, VOLUME, COLUMN's cylinders, DOTTED,
+  // SMALLARROW (drawn as ARROW), TRENDLINE, the XAXIS/AXIS labels, the
+  // mean/median marks, CLIP / MORPH frames, showparts / clipparts, ZOOM /
+  // NORMSIZE / MENUSIZE, INVERT, DIAGLEFT / DIAGRIGHT — bars are drawn
+  // plain instead (see BAR_INERT_FLAGS).
+  function flatBarLayout(values, t, o) {
+    t = String(t || '');
+    const has = re => re.test(t);
+    const n = values.length;
+    if (!n) return null;
+    const parts = values.map(v => (isFinite(v) ? v : 0));
+    const sum = parts.reduce((a, v) => a + v, 0);
+    const stacked = has(/STACKED/), pointer = has(/POINTER/), horz = has(/HOR/);
+    const sizeFlag = has(/SIZE/) && !has(/NORMSIZE/);
+    const sizePow = o.sizePow || 2;
+    const CHART = 30;
+    let nMax = Math.max(o.themeMax, Math.abs(o.themeMin));
+    let nRange = o.themeMax - o.themeMin;
+    let maxSize = o.maxSize;
+    if (o.normalSizeValue) nRange = maxSize = o.normalSizeValue;
+    // flat's getChartSize (no chart when 0) and its "a single 0" rule
+    if (sizeFlag && !has(/NOSIZE/)) {
+      const s = o.sizeField ? o.itemSize : Math.abs(sum);
+      const ref = o.sizeField ? maxSize : nRange;
+      const size = has(/SIZELOG/) ? Math.max(1, 15 / Math.log(ref) * Math.log(s)) : 15 / Math.pow(ref, 1 / sizePow) * Math.pow(s, 1 / sizePow);
+      if (isNaN(size) || size === 0) return null;
+    }
+    if (n === 1 && parts[0] === 0 && !has(/ZEROISVALUE|AUTOCOMPLETE|CATEGORICAL/)) return null;
+
+    // the sizer: the chart's size by the size field or by the values' sum
+    let sizer = 1;
+    if (sizeFlag && o.sizeField && o.itemSize != null) {
+      sizer = has(/SIZELOG/) ? 1 / Math.max(1, Math.log(maxSize) * Math.log(o.itemSize))
+        : Math.pow(o.itemSize, 1 / sizePow) / Math.pow(maxSize, 1 / sizePow);
+    } else if (sizeFlag) {
+      const s = pointer ? sum / n : sum;
+      sizer = has(/SIZELOG/) ? 1 / Math.max(1, Math.log(nRange) * Math.log(Math.abs(s)))
+        : Math.pow(Math.abs(s), 1 / sizePow) / Math.pow(nRange, 1 / sizePow);
+    }
+    if (sizer === 0 && sum !== 0) sizer = 1;
+    const chartSize = CHART * sizer;
+
+    // bar width and value text size
+    let W = chartSize / n * 0.66;
+    if (stacked) {
+      W = chartSize / 3;
+      if (o.gridX && !has(/MULTI/)) W /= 2;
+    }
+    let f = W < 5 ? W * 4 / 5 : W;
+    let textOpacity = 1;
+    if (has(/COLUMN/)) W *= has(/THICK/) ? 2 : has(/THIN/) ? 1 : 1.5;
+    if (has(/THIN/)) { W *= 0.6; f *= 0.75; }
+    if (has(/THICK/)) { W *= 1.5; f *= 1.5; }
+    if (stacked) f = 5;
+    if (stacked && !has(/ZOOM/)) f *= sizer;
+    const valueScale = o.valueScale || 1;
+    f *= valueScale;
+
+    // the bar length per value unit (nStep)
+    if (o.normalSizeValue && (!o.field100 || pointer)) nMax = o.normalSizeValue;
+    let step0 = CHART / nMax;
+    if (has(/OFFSETMEAN|OFFSETMEDIAN|DEVIATION/)) step0 = chartSize / 300;
+    if (sizeFlag && has(/SEQUENCE/) && n > 1 && !o.sizeField && !o.field100) step0 = step0 * n / sizer;
+    else if (sizeFlag && n > 1 && !has(/EXPAND/)) {
+      if (o.field100 || pointer) step0 *= sizer;
+      else step0 /= has(/SIZEP4/) ? sizer * sizer : sizer;
+    }
+    if (o.rangeScale) step0 *= o.rangeScale;
+    if (has(/COMPRESSMAX/)) step0 /= 4;
+    else if (has(/COMPRESSMORE/)) step0 /= 3;
+    else if (has(/COMPRESS/)) step0 /= 2;
+    else if (has(/EXPANDMAX/)) step0 *= 4;
+    else if (has(/EXPANDMORE/)) step0 *= 3;
+    else if (has(/EXPAND/)) step0 *= 2;
+    if (pointer && !has(/NORMSIZE/)) step0 *= 1.2;
+
+    // the bar order: SORT descending (STACKED ascending), UP reversed
+    let sorted = null;
+    if (has(/\bSORT\b/)) {
+      sorted = parts.map((v, i) => ({ i, v }));
+      sorted.sort(stacked ? (a, b) => a.v - b.v : (a, b) => b.v - a.v);
+      sorted = sorted.map(s => s.i);
+    }
+    const startI = has(/\bUP\b/) ? n - 1 : 0;
+    const nC = has(/CENTER/) ? 2 : 1;
+    const fmt = (v, d) => flatGroupedValue(v, d, o.noBreaks);
+    const measure = o.measure || ((text, font) => text.length * font * 0.55);
+
+    const bars = [], texts = [], lines = [];
+    let posX = 0, posY = 0, minNext = 0, barsDrawn = 0, step = step0;
+    for (let i = 0; i < n; i++) {
+      step = step0;
+      let idx = Math.abs(startI - i);
+      if (sorted) idx = sorted[idx];
+      let v = parts[idx];
+      let tv = v;
+      if (has(/OFFSETMEAN|OFFSETMEDIAN/)) {
+        const ref = has(/OFFSETMEDIAN/) ? (o.medians || [])[idx] : (o.means || [])[idx];
+        v = 100 / ref * v - 100;
+        v = isFinite(v) ? v : 0;
+        tv = v;
+        nMax = 100;
+      } else if (has(/DEVIATION/)) {
+        v = (v - (o.means || [])[idx]) / (o.devs || [])[idx];
+        v = isFinite(v) ? v : 0;
+        tv = v;
+        v *= 100;
+      }
+      // the color: the part's, or (SEQUENCE, a single part) the class of
+      // the value
+      let cls = o.nColors ? (idx < o.nColors ? idx : idx % (o.gridX || 1000000)) : idx;
+      if ((has(/SEQUENCE|CLIP/) || n === 1) && o.nColors >= 2 && o.classMax && o.classMax.length) {
+        cls = o.classMax.length - 1;
+        for (let k = 0; k < o.classMax.length; k++) if (v < o.classMax[k]) { cls = k; break; }
+      }
+      if (has(/LEFT/) && has(/HORZ/)) v = -v;
+      if (v < 0 && !stacked) { posY = -v * step; v = -v; }
+      if (pointer && sizeFlag) {
+        // flat's sized pointer: its width by the value (the WIDTH variant
+        // by value100 is not ported)
+        W = chartSize * Math.pow(Math.abs(v / nMax), 1 / 3);
+        f = W * 0.6;
+        if (!has(/ZOOM|XAXIS/)) {
+          textOpacity = Math.pow(Math.abs(v), 1 / 2) / Math.pow(o.themeMax, 1 / 2);
+          if (o.fadeValuePow) textOpacity = Math.pow(Math.abs(v), o.fadeValuePow) / Math.pow(nMax, o.fadeValuePow);
+        }
+      }
+      if (has(/DTEXT/) && !has(/ZOOM/)) {
+        f = (chartSize * 2 / 3) * Math.pow(Math.abs(v / nMax), 1 / 2) * 0.75;
+        textOpacity = Math.pow(Math.abs(v), 1 / 3) / Math.pow(nMax, 1 / 3);
+      }
+      v = isFinite(v) ? v : 0;
+      if (v === 0 && has(/NOZERO/)) { posY = 0; continue; }
+      if (tv < 0 && has(/NONEGATIVE/)) { posY = 0; continue; }
+      if (tv > 0 && has(/ONLYNEGATIVE/)) { posY = 0; continue; }
+
+      const oy = posY;
+      const bar = { part: idx, cls, value: v, textValue: tv, dir: 0, w2: W / 2, sw: W / 2, band: 0, head: 0, len: 0,
+        fill: { opacity: o.fillOpacity || 1 }, line: null, opacity: 1 };
+      let drawn = true;
+      if (pointer && v) {
+        if (has(/OFFSETMEAN|OFFSETMEDIAN|DEVIATION/) && Math.abs(v * step) > 50) {
+          const h = Math.abs(v * step);
+          step = (50 + (h - 50) / 10 + h % 50) / Math.abs(v);
+        }
+        const H = v * step;
+        const arrow = has(/ARROW/);
+        const style = { rgb: null, width: o.lineWidth ? o.lineWidth * Math.sqrt(sizer || 1) : 0.05, opacity: 0.5 };
+        if (oy <= 0) {
+          // positive: the shaft from the base up, a band as wide as the bar,
+          // the head on it
+          Object.assign(bar, arrow
+            ? { base: [posX + W / 2, oy - 0.9 * H / nC + 0.9 * H], len: 0.9 * H, sw: W / 6, band: W / 15, head: W / 1.5 }
+            : { base: [posX + W / 2, oy - H / nC + H], len: H, sw: W * 5 / 14, band: W / 15, head: W / 2 });
+          bar.line = style;
+        } else if (!has(/NONEGATIVE/)) {
+          // negative: from the zero line down, the head below
+          Object.assign(bar, arrow
+            ? { base: [posX + W / 2, oy - H / nC], len: H, sw: W / 6, head: W / 2, dir: 2 }
+            : { base: [posX + W / 2, oy - H / nC], len: H, sw: W * 5 / 14, head: W / 4, dir: 2 });
+          bar.line = style;
+          if (!has(/LEFT/)) {
+            const fadeNeg = o.fadeNegative || 0.1;
+            if (has(/ZOOM|NORMSIZE/)) {
+              bar.fill.opacity = 0.5;
+              bar.line = { rgb: 'color', width: 0.25, opacity: 1 };
+            } else if (o.nClasses > 2) {
+              bar.fill.opacity = fadeNeg;
+              bar.line = { rgb: 'low', width: o.lineWidth ? o.lineWidth * 0.25 * sizer : 0.25, opacity: 0.8 };
+            } else {
+              bar.fill.opacity = fadeNeg;
+              bar.line = { rgb: 'high', width: o.lineWidth ? o.lineWidth * Math.sqrt(sizer || 1) : 0.05, opacity: 1 };
+            }
+          }
+        } else drawn = false;
+      } else {
+        // plain 2D bar (DOTTED, 3D, COLUMN are drawn as this too)
+        if (!has(/NOZERO/)) v = v || 0.00001;
+        const H = v * step;
+        bar.value = v;
+        if (H < 0) drawn = false;
+        bar.base = [posX + W / 2, oy - H / nC + H];
+        bar.len = H;
+        if (oy <= 0 || has(/LEFT/)) {
+          bar.line = { rgb: null, width: o.lineWidth ? o.lineWidth * 0.25 * sizer : 0.2, opacity: o.lineWidth ? 1 : 0.1 };
+        } else {
+          bar.fill.opacity = 0.3;
+          bar.line = { rgb: 'color', width: 0.25, opacity: 1 };
+        }
+      }
+      if (has(/FADENEGATIVE/) && tv < 0) bar.opacity = 0.5;
+      if (has(/FADEIN/)) {
+        if (n === 2 && i === 0) bar.opacity = 0.6;
+        else if (!has(/NORMSIZE/)) {
+          const p = has(/FADEINP4/) ? 10 : 3;
+          bar.opacity = 0.1 + 0.9 * Math.pow(i + 1, p) / Math.pow(n, p);
+        }
+      }
+      if (drawn) bars.push(bar);
+
+      // the value text
+      const H = v * step;
+      if (has(/VALUES/) && !(oy > 0 && has(/NONEGATIVE/)) && !o.hideValues
+        && f > 0 && !(o.gridX && o.nClasses / o.gridX > 2)) {
+        let text = fmt(tv, o.valueDecimals != null ? o.valueDecimals : (o.themeMax <= 1 ? 1 : 0));
+        if (pointer && tv > 0 && (o.themeMin < 0 || has(/OFFSETMEAN|OFFSETMEDIAN|\bSIGN\b/))) text = '+' + text;
+        if (!has(/VOLUME/)) text += o.units ? ' ' + o.units + ' ' : '';
+        if (stacked && tv !== 0 && !o.field100 && !o.gridX) text += ' (' + Math.round(tv / sum * 100) + '%)';
+        if (stacked) f = (has(/ZOOM/) ? 18 : 5) * valueScale;
+        // SVG collapses the blanks
+        text = text.replace(/\s+/g, ' ').trim();
+        const red = parseFloat(text) < 0;
+        // createTextLabel's box: not with HORZ; with ZOOM … AXIS only
+        // colored (VALUEBACKGROUND / CTEXT); colored for a positive value
+        const colored = tv > 0 && has(/CTEXT|VALUEBACKGROUND/);
+        let bgOn = true;
+        if (has(/ZOOM|MENUSIZE|NORMSIZE|INFOSIZE|AXIS|SELECTION/)) bgOn = colored;
+        if (has(/VALUEBACKGROUND/)) bgOn = true;
+        if (horz) bgOn = false;
+        const bg = bgOn ? (colored ? 'bar' : 'white') : null;
+        // the text color: negative red (valuecolor), else textcolor; on the
+        // bar's color its text color, else flat's values color
+        const color = red ? (o.valueColor || 'red') : (o.textColor || (bg === 'bar' ? 'contrast' : 'value'));
+        const textW = measure(text, f);
+        const tLen = textW + (bgOn ? 0.7 * f : 0);
+        const ptY = W / 2 + f * 0.15;
+        const outside = (!has(/DOINLINETEXT/) || has(/ZOOM/) || has(/NORMSIZE/)) && has(/VALUE/) && !(has(/VOLUME/) && !has(/ZOOM/))
+          && (has(/THIN|NOINLINETEXT|DTEXT|SIZE|STACKED|NORMSIZE|ZOOM/) || tLen + 1 > H / nC);
+        const base = { text, cls, part: idx, opacity: textOpacity, color, bg };
+        if (outside && stacked) {
+          if (!(v === 0 && !has(/ZEROISVALUE/)) && !(o.gridX && n / o.gridX > 2)) {
+            const topDx = H / 2;
+            minNext = Math.max(0, minNext + (f * 0.75 - topDx));
+            const textPosX = minNext + topDx - f / 3;
+            let indent = 0.5 * sizer;
+            let ptYs = ptY;
+            let x1 = posX + ptY + W / 3, x2 = posX + ptY + W * 7 / 8;
+            const y1 = -topDx, y2 = -textPosX - f / 3;
+            if (o.gridX && barsDrawn < o.gridX) {
+              ptYs -= W * 2 + tLen;
+              const tmp = x2;
+              x2 = x1 - W * 1.4;
+              x1 = tmp - W * 1.4;
+              indent = -indent;
+            }
+            texts.push(Object.assign(base, { x: posX + ptYs + W + indent, y: oy - textPosX, angle: 0, font: f }));
+            [[x1, y1, x1 + indent, y1], [x1 + indent, y1, x2, y2], [x2, y2, x2 + indent, y2]]
+              .forEach(([a, b, c, d]) => lines.push({ x0: a, y0: oy + b, x1: c, y1: oy + d }));
+            minNext = Math.max(0, minNext + (f * 2 / 3 - (H - topDx)));
+          }
+        } else if (outside) {
+          const lift = pointer && tv > 0 ? W * 0.5 : 0;
+          if (n === 1 && !has(/HORZ/) && !has(/VOLUME/)) {
+            texts.push(Object.assign(base, { x: posX - W * 0.8 + f, y: oy - H / nC - f * 0.8 - lift + 0.25 * f, angle: 0, font: f,
+              opacity: tv < 0 ? textOpacity * 0.75 : textOpacity }));
+          } else {
+            // rotate(270) scale(0.9): reading up, 0.9 font
+            texts.push(Object.assign(base, { x: posX + ptY + 0.9 * 0.25 * f, y: oy - 0.5 - W * 0.25 - H / nC - 0.9 * f, angle: 90, font: 0.9 * f }));
+          }
+        } else {
+          // inside the bar, in its text color, shrunk to fit
+          const s = Math.min(1, H / tLen);
+          if (s >= 0.33) {
+            let ptX = -4;
+            if (tv > 0) ptX += Math.max(1, H - (tLen + 3) * s);
+            const dY = 0.5 / s;
+            texts.push(Object.assign(base, { x: posX + ptY - dY + 0.25 * f, y: oy - ptX - f, angle: 90, font: f * s, color: 'contrast', bg: null }));
+          }
+          minNext = Math.max(0, minNext - H);
+        }
+      }
+
+      if (stacked) {
+        if (!has(/CENTER/)) posY -= v * step;
+      } else {
+        posY = 0;
+        posX += W;
+        if (has(/SPACED/)) posX += W / 5;
+        else if (!has(/\bUP\b/)) posX += 0.05;
+      }
+      barsDrawn++;
+      if (stacked && !has(/MULTI/) && o.gridX && barsDrawn % o.gridX === 0) {
+        posY = 0;
+        posX += W + W / 20;
+      }
+    }
+
+    // the chart's position: HOR(Z) turned by 90° (bars to the right, the
+    // first on top, the last centered on the position's height), else
+    // the bars side by side centered on it (STACKED: the first column)
+    const P = posX;
+    let map, dirMap, angleMap;
+    if (horz) {
+      const dy = W / 2 + (has(/3D/) ? W / 3 : 0) - P;
+      map = (x, y) => [-y, x + dy];
+      dirMap = d => (d + 1) % 4;
+      angleMap = a => a - 90;
+    } else {
+      const dx = stacked ? W / 2 : W * barsDrawn / 2;
+      map = (x, y) => [x - dx, y];
+      dirMap = d => d;
+      angleMap = a => a;
+    }
+    const ext = [Infinity, Infinity, -Infinity, -Infinity];
+    const grow = (x, y) => { if (x < ext[0]) ext[0] = x; if (y < ext[1]) ext[1] = y; if (x > ext[2]) ext[2] = x; if (y > ext[3]) ext[3] = y; };
+    for (const b of bars) {
+      b.base = map(b.base[0], b.base[1]);
+      b.dir = dirMap(b.dir);
+      const d = [[0, -1], [1, 0], [0, 1], [-1, 0]][b.dir], a = [-d[1], d[0]];
+      const L = b.len + b.band + b.head;
+      [[-b.w2, 0], [b.w2, 0], [-b.w2, L], [b.w2, L]].forEach(([u, v]) => grow(b.base[0] + a[0] * u + d[0] * v, b.base[1] + a[1] * u + d[1] * v));
+    }
+    for (const tx of texts) {
+      [tx.x, tx.y] = map(tx.x, tx.y);
+      tx.angle = angleMap(tx.angle);
+      // arial: ascent 0.905, descent 0.212 of the font
+      const w = measure(tx.text, tx.font) + (tx.bg ? 0.7 * tx.font : 0);
+      const r = tx.angle * Math.PI / 180, c = Math.cos(r), s = -Math.sin(r);
+      const xo = tx.bg ? -0.3 * tx.font : 0;
+      [[xo, -0.905 * tx.font], [xo + w, -0.905 * tx.font], [xo, 0.212 * tx.font], [xo + w, 0.212 * tx.font]]
+        .forEach(([u, v]) => grow(tx.x + u * c - v * s, tx.y + u * s + v * c));
+    }
+    for (const l of lines) {
+      [l.x0, l.y0] = map(l.x0, l.y0);
+      [l.x1, l.y1] = map(l.x1, l.y1);
+      grow(l.x0, l.y0); grow(l.x1, l.y1);
+    }
+    return { bars, texts, lines, extent: ext[0] <= ext[2] ? ext : [0, 0, 0, 0], width: W, sizer };
+  }
+
+  // flat's BOX and TITLE around a chart (maptheme.js 18758-18905), in the
+  // chart's units: `extent` the chart's [x0, y0, x1, y1]; o: { margin
+  // (boxmargin, 2), titleFont, title (text or ''), bottomTitle, alignRight,
+  // measure }. The margin is min(2 m, m · width / 30); the title's first
+  // baseline 0.7 font above the chart (BOTTOMTITLE: one font below), its
+  // lines wrapped to the chart's width and stacked upward; the box encloses
+  // chart and title, its top trimmed by 0.1 font when titled. Returns
+  // { rect: [x0, y0, x1, y1], title: { lines, x, anchor, baseline, font } | null }
+  function flatChartBox(extent, o) {
+    const e = extent.slice();
+    const w = e[2] - e[0];
+    const margin = Math.min(2 * o.margin, o.margin * w / 30);
+    let title = null;
+    if (o.title) {
+      const f = o.titleFont;
+      const measure = o.measure || ((text, font) => text.length * font * 0.55);
+      const lines = [];
+      for (const word of String(o.title).split(/\s+/).filter(Boolean)) {
+        const last = lines.length ? lines[lines.length - 1] + ' ' + word : null;
+        if (last !== null && measure(last, f) <= w) lines[lines.length - 1] = last;
+        else lines.push(word);
+      }
+      const width = Math.max(...lines.map(l => measure(l, f)));
+      const baseline = o.bottomTitle ? e[3] + f : e[1] - 0.7 * f - (lines.length - 1) * f;
+      const x = o.alignRight ? e[2] : e[0];
+      const x0 = o.alignRight ? x - width : x;
+      title = { lines, x, anchor: o.alignRight ? 'end' : 'start', baseline, font: f };
+      e[0] = Math.min(e[0], x0);
+      e[1] = Math.min(e[1], baseline - 0.905 * f) + 0.1 * f;
+      e[2] = Math.max(e[2], x0 + width);
+      e[3] = Math.max(e[3], baseline + (lines.length - 1) * f + 0.212 * f);
+    }
+    return { rect: [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin], title, width: w };
+  }
+
   // CHART|PIE / DONUT: one pie's slices as real ixmaps-flat lays them out —
   // maptheme.js drawChart's PIE branch (19939-20330) and piechart.js
   // DonutChart.realize (181-510). `values`: the item's part values (field
@@ -9166,7 +9695,8 @@ in vec4 vPieLineColor;
         this._gridRefLat = (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
       }
 
-      if (this._isPieChart() && this.binding.value) {
+      // a bar chart's parts are a pie's (its value fields or categories)
+      if ((this._isPieChart() || this._isBarChart()) && this.binding.value) {
         this._preparePie();
       } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this)) {
         // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
@@ -10513,6 +11043,9 @@ in vec4 vPieLineColor;
       // drawChart, maptheme.js 19939)
       if (this._isVectorChart()) return this._buildVectorLayers(zoom, bbox, liveZoom, globeCenter);
       if (this._isPieChart()) return this._buildPieLayers(zoom, bbox, liveZoom, globeCenter);
+      // BAR / BARS (flat's BAR branch, after BUBBLE and SYMBOL: a type
+      // with those is not a bar chart, see isBarChart)
+      if (this._isBarChart()) return this._buildBarLayers(zoom, bbox, liveZoom, globeCenter);
       if (isSymbolChart(this.flags)) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
       // once per theme, not on every redraw
       if (!this._warnedNoRenderer) {
@@ -10884,18 +11417,22 @@ in vec4 vPieLineColor;
     // of a position (or grid cell) — its slices the categories or the value
     // fields (_isAggregatedPie, _buildPieLayers)
     _isVectorChart() { return isVectorChart(this.flags); }
+    // CHART|BAR / BARS: a bar chart per record or item, its bars a pie's
+    // parts (_buildBarLayers)
+    _isBarChart() { return isBarChart(this.flags); }
     _isPieChart() {
       return !isVectorChart(this.flags) && this.flags.has('CHART') && this.flags.has('PIE') && !this.flags.has('DOT');
     }
     // a pie whose items flat aggregates (loadAndAggregateValuesOfTheme):
     // AGGREGATE, or CATEGORICAL (a part per category — flat sums the
     // records of an item's position by category even without AGGREGATE)
+    // (a bar chart's items too)
     _isAggregatedPie() {
-      return this._isPieChart() && (this.flags.has('AGGREGATE') || this.flags.has('CATEGORICAL'));
+      return (this._isPieChart() || this._isBarChart()) && (this.flags.has('AGGREGATE') || this.flags.has('CATEGORICAL'));
     }
     // a per-item chart whose parts are its value fields (legend rows, sums)
     _isMultiFieldChart() {
-      return !!this._multiFields && (this._isMultiFieldSequence() || this._isPieChart());
+      return !!this._multiFields && (this._isMultiFieldSequence() || this._isPieChart() || this._isBarChart());
     }
     // flat's theme statistics for a pie (maptheme.js 9119-9130): nMin/nMax
     // over every part value of every item, the classes (partsA, flat's
@@ -13183,6 +13720,258 @@ in vec4 vPieLineColor;
       return layers;
     }
 
+    // CHART|BAR / BARS (_isBarChart) — flat's bar chart per item
+    // (flatBarLayout, maptheme.js drawChart's BAR branch): its items and
+    // theme statistics as a pie's (one per record, or AGGREGATE /
+    // CATEGORICAL items via _pieAggregatedItems / _pieAggregateStats), a bar
+    // per value field or category:
+    //  - size: SIZE by the size field (or the values' sum) with sizepow, the
+    //    width chart size / parts · 0.66, the length value · 30 u / nMax
+    //    (normalsizevalue, else the theme's max) · rangescale, with SIZE
+    //    and several parts / sizer (SIZEP4: sizer²), COMPRESS / EXPAND,
+    //    POINTER · 1.2
+    //  - HORZ: the bars to the right, the first on top; else upward side
+    //    by side; STACKED: one column; SORT, UP, CENTER, SPACED, THIN /
+    //    THICK, NOZERO, NONEGATIVE, ONLYNEGATIVE, LEFT
+    //  - colors: the part's (categories, fields), a single part or
+    //    SEQUENCE the value's class; outline linecolor (black) at
+    //    linewidth · 0.25 (0.2 u) and opacity 1 (0.1 without linewidth);
+    //    a negative bar fill 0.3, outlined in its color; fillopacity
+    //  - POINTER / ARROW (SMALLARROW drawn as ARROW): flat's pointer path,
+    //    negative values pointing the other way (fadenegative fill, the
+    //    outline lighter or darker), SIZE: its width by the value;
+    //    OFFSETMEAN / OFFSETMEDIAN / DEVIATION: the value's deviation from
+    //    the part's mean / median (in %) or in standard deviations
+    //  - VALUES: the value (valuedecimals, else 1 decimal with a max ≤ 1)
+    //    and units, POINTER a "+", STACKED its share; beyond the bar's end
+    //    (in a white box unless HORZ; VALUEBACKGROUND / CTEXT: the bar's
+    //    color), inside it when it fits (without SIZE, THIN, DTEXT …),
+    //    STACKED beside the column on leader lines; flat's values color
+    //    #798697 (textcolor), negative red (valuecolor); DTEXT and a sized
+    //    POINTER fade small values
+    //  - BOX / TITLE (flatChartBox): a box around chart and title, the
+    //    item's title above it — boxcolor (white) at boxopacity, bordercolor
+    //    (#bbbbbb) at 0.3, borderwidth · 0.2 · w / 30; title 5 u ·
+    //    textscale in textcolor (#888888) over a white halo
+    //  - draw order: flat's (_buildPieLayers); each chart's box under its
+    //    bars, a later chart over an earlier one
+    // Not drawn (BAR_INERT_FLAGS, a console note): see flatBarLayout.
+    // Known divergence: every value text lies above every bar (flat draws
+    // them in the chart's own group); the leader lines are drawn in map
+    // coordinates (approximate on the globe).
+    _buildBarLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+      const st = this.style;
+      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+      const has = re => re.test(t);
+      const agg = this._isAggregatedPie();
+      const cat = !!this._pieCategorical;
+      const fields = cat ? null : (this._pieFields || String(this.binding.value || '').split('|'));
+      const stats = agg ? this._pieAggregateStats(zoom) : null;
+      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
+      const sizeField = !!(this.binding.size && this.binding.size !== '$item$');
+      const nsv = styleNum(st.normalsizevalue);
+      const colors = this.categoryColorsRgb || [];
+      const num = v => { const x = styleNum(v); return isNaN(x) ? undefined : x; };
+      const measure = (text, font) => titleTextWidth(text, font);
+      // the charts' values (and, for OFFSETMEAN …, every item's)
+      const items = [];
+      const itemValues = f => {
+        if (agg) {
+          const { parts, size } = this._pieItemValues(f.properties.pie);
+          return { values: parts, size };
+        }
+        const raw = f.properties || {};
+        return { values: fields.map(k => flatNumber(raw[k], this.flags)), size: sizeField ? parseFloat(raw[this.binding.size]) : undefined };
+      };
+      const all = agg ? this._pieAggregatedItems(zoom, [-180, -90, 180, 90]) : (this._activeFeatures || this.features);
+      // flat's per-part mean, median (getMeanMedianQuantile) and standard
+      // deviation over every item
+      let means, medians, devs;
+      if (has(/OFFSETMEAN|OFFSETMEDIAN|DEVIATION/)) {
+        const cache = this._barStatsCache;
+        if (cache && cache.all === all && (!agg || cache.zoom === zoom)) ({ means, medians, devs } = cache);
+        else {
+          const cols = [];
+          for (const f of all) itemValues(f).values.forEach((v, k) => { (cols[k] ||= []).push(v); });
+          means = cols.map(c => c.reduce((a, v) => a + v, 0) / c.length);
+          medians = cols.map(c => c.slice().sort((a, b) => a - b)[Math.round(c.length / 2)]);
+          devs = cols.map((c, k) => Math.sqrt(c.reduce((a, v) => a + (v - means[k]) * (v - means[k]), 0) / c.length));
+          this._barStatsCache = { all, zoom, means, medians, devs };
+        }
+      }
+      const lo = {
+        themeMin: this._valueMin, themeMax: this._valueMax,
+        maxSize: stats ? stats.maxSize : this._maxSizeValue, sizeField,
+        normalSizeValue: nsv > 0 ? nsv : undefined, sizePow: resolveSizePow(st, this.flags),
+        rangeScale: num(st.rangescale), valueScale: num(st.valuescale), units: st.units ? String(st.units) : '',
+        valueDecimals: explicitValueDecimals(st), noBreaks: flatNoBreaks(this._valueMin, this._valueMax),
+        gridX: num(st.gridx), nClasses: (this.partsA || []).length, classMax: (this.partsA || []).map(p => p.max),
+        nColors: colors.length, fillOpacity: num(st.fillopacity), lineWidth: num(st.linewidth),
+        fadeNegative: num(st.fadenegative), fadeValuePow: num(st.fadevaluepow),
+        textColor: st.textcolor || undefined, valueColor: st.valuecolor || undefined,
+        hideValues: valuesHiddenByScale(st, zoom), means, medians, devs, measure
+      };
+      const inView = c => c[0] >= bbox[0] && c[0] <= bbox[2] && c[1] >= bbox[1] && c[1] <= bbox[3]
+        && (!globeCenter || isOnVisibleHemisphere(c[0], c[1], globeCenter));
+      const charts = [];
+      for (const f of agg ? this._pieAggregatedItems(zoom, bbox) : all) {
+        const c = f.geometry && f.geometry.coordinates;
+        if (!c || typeof c[0] !== 'number' || !inView(c)) continue;
+        const { values, size } = itemValues(f);
+        const layout = flatBarLayout(values, t, Object.assign({ itemSize: size }, lo));
+        if (!layout || (!layout.bars.length && !layout.texts.length)) continue;
+        const sum = values.reduce((a, v) => a + (isFinite(v) ? v : 0), 0);
+        let properties;
+        if (agg) {
+          const pie = f.properties.pie;
+          const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
+          properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
+            titleRaw: f.properties.titleRaw || f.properties.raw || null };
+        } else {
+          const raw = f.properties || {};
+          properties = values.length > 1 ? { value: values[0], parts: values, raw }
+            : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
+        }
+        // flat's draw-order key (as for pies, maptheme.js 16812-16860)
+        const key = agg ? (this.binding.size || (has(/AGGREGATE/) && has(/SUM/)) ? size : values[0])
+          : (this.binding.size ? size : has(/SIZE/) ? sum : values[0]);
+        charts.push({ c, layout, key, properties });
+      }
+      if (((this._valueMin !== this._valueMax) || this.binding.size) && !has(/NOSRT/)
+        && (!has(/NOSIZE/) || has(/\bSORT\b/))
+        && (!has(/CATEGORICAL/) || has(/AGGREGATE/) || this.binding.size || has(/\bSORT\b/))) {
+        const down = has(/\bSORT\b/) && has(/\bUP\b/);
+        charts.sort((a, b) => (down ? b.key - a.key : a.key - b.key) || 0);
+      }
+
+      const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(st, liveZoom);
+      const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title;
+      const titleFont = 5 * (num(st.textscale) || num(st.valuescale) || 1);
+      const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
+      const borderStyle = String(st.borderstyle || '');
+      const boxFill = [...hexOrNamedToRgb(st.boxcolor || 'white').slice(0, 3), Math.round(255 * boxOpacity)];
+      const boxLine = borderStyle === 'none' ? [0, 0, 0, 0]
+        : [...hexOrNamedToRgb(styleLineColor(st.bordercolor) || '#bbbbbb').slice(0, 3), Math.round(255 * (/^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3))];
+      const borderWidth = num(st.borderwidth) || 1;
+      const lc = st.linecolor != null && st.linecolor !== '' ? styleLineColor(st.linecolor) : null;
+      const lineRgbOf = (spec, rgb) => (spec.rgb === 'color' ? rgb : spec.rgb === 'low' ? flatDerivateRgb(rgb, 0.7)
+        : spec.rgb === 'high' ? flatDerivateRgb(rgb, 1.3) : (lc && lc !== 'none' ? hexOrNamedToRgb(lc) : [0, 0, 0]));
+      const align = !!(st.align || styleNum(st.offsetx) || styleNum(st.offsety));
+
+      const shapes = [], texts = [], titles = [], lines = [];
+      // a shape in chart units → the instance (px; the circle around it)
+      const shape = (ch, s, fill, line, width, props, noPick) => {
+        const L = s.len + s.band + s.head;
+        const d = [[0, -1], [1, 0], [0, 1], [-1, 0]][s.dir];
+        const cx = (s.base[0] + d[0] * L / 2) * unit + ch.off[0], cy = (s.base[1] + d[1] * L / 2) * unit + ch.off[1];
+        const lw = line[3] > 0 ? width * unit : 0;
+        shapes.push({
+          position: ch.c, off: [cx, -cy], properties: props, fill, line,
+          r: Math.hypot(s.w2 * unit, L * unit / 2) + lw + 2,
+          shape: [s.w2 * unit, s.sw * unit, s.len * unit, s.band * unit],
+          shape2: [s.head * unit, s.dir + (noPick ? 4 : 0), lw, L * unit / 2]
+        });
+      };
+      for (const ch of charts) {
+        const L = ch.layout;
+        let box = null;
+        if (boxShown) {
+          const title = titleShown ? this._itemTitle(ch.properties) : '';
+          box = flatChartBox(L.extent, { margin: num(st.boxmargin) || 2, titleFont, title: title ? title + (st.titleunits || '') : '',
+            bottomTitle: flatFlag(this.flags, 'BOTTOMTITLE'), alignRight: /right/.test(String(st.align || '')), measure });
+        }
+        const ext = box ? box.rect : L.extent;
+        // align / offsetx / offsety (flatChartAlignOffset), the chart's
+        // half height as its size (ASSUMPTION: not measured on flat for BAR)
+        ch.off = align ? flatChartAlignOffset(st, { unit, symbolScale: 1, half: (ext[3] - ext[1]) / 2 * unit }) : [0, 0];
+        if (box) {
+          const r = box.rect;
+          shape(ch, { base: [(r[0] + r[2]) / 2, r[3]], dir: 0, len: r[3] - r[1], w2: (r[2] - r[0]) / 2, sw: (r[2] - r[0]) / 2, band: 0, head: 0 },
+            boxFill, boxLine, borderWidth * 0.2 * box.width / 30, null, true);
+          if (box.title) titles.push({ position: ch.c, text: box.title.lines.join('\n'), font: box.title.font * unit, anchor: box.title.anchor,
+            off: [box.title.x * unit + ch.off[0], (box.title.baseline - 0.8 * box.title.font) * unit + ch.off[1]] });
+        }
+        for (const b of L.bars) {
+          const rgb = colors[b.cls] || [128, 128, 128];
+          const a = Math.round(255 * b.fill.opacity * b.opacity);
+          const line = [...lineRgbOf(b.line, rgb).slice(0, 3), Math.round(255 * b.line.opacity * b.opacity)];
+          shape(ch, b, [...rgb.slice(0, 3), a], line, b.line.width, ch.properties, false);
+        }
+        for (const tx of L.texts) {
+          const font = tx.font * unit;
+          if (font <= VALUES_MIN_FONT_PX) continue;
+          const rgb = colors[tx.cls] || [128, 128, 128];
+          const color = tx.color === 'value' ? [0x79, 0x86, 0x97] : tx.color === 'contrast' ? flatChartTextRgb(rgb) : hexOrNamedToRgb(tx.color);
+          // the baseline's start → the text's middle-left (arial: 0.35 font
+          // above the baseline), perpendicular to its reading direction
+          const r = tx.angle * Math.PI / 180;
+          const mx = tx.x * unit - 0.35 * font * Math.sin(r), my = tx.y * unit - 0.35 * font * Math.cos(r);
+          texts.push({ position: ch.c, text: tx.text, font, angle: tx.angle, off: [mx + ch.off[0], my + ch.off[1]],
+            color: [...color.slice(0, 3), Math.round(255 * Math.max(0, Math.min(1, tx.opacity)))],
+            bg: tx.bg === 'bar' ? [...rgb.slice(0, 3), 128] : tx.bg === 'white' ? [254, 254, 255, 255] : null });
+        }
+        for (const l of L.lines) lines.push({ c: ch.c, o: ch.off, sg: [l.x0 * unit, l.y0 * unit, l.x1 * unit, l.y1 * unit] });
+      }
+
+      const layers = [new BarShapeLayer({
+        id: `ix-bar-${this.name}`,
+        data: shapes, pickable: true,
+        getPosition: d => d.position,
+        getRadius: d => d.r,
+        getPixelOffset: d => d.off,
+        getFillColor: d => d.fill,
+        getLineColor: d => d.line,
+        getBarShape: d => d.shape,
+        getBarShape2: d => d.shape2,
+        radiusUnits: 'pixels', billboard: true, stroked: false, filled: true, antialiasing: true,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      })];
+      if (lines.length) {
+        const feature = d => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [
+          pixelOffsetLngLat(d.c, [d.o[0] + d.sg[0], d.o[1] + d.sg[1]], liveZoom),
+          pixelOffsetLngLat(d.c, [d.o[0] + d.sg[2], d.o[1] + d.sg[3]], liveZoom)] } });
+        const fc = { type: 'FeatureCollection', features: lines.map(feature) };
+        [['bg', [255, 255, 255, Math.round(255 * 0.2)], 0.15], ['fg', [0x88, 0x88, 0x88, 255], 0.05]].forEach(([k, color, w]) => {
+          layers.push(new GeoJsonLayer({
+            id: `ix-bar-lines-${k}-${this.name}`, data: fc, pickable: false,
+            stroked: true, filled: false, getLineColor: color, getLineWidth: w * unit, lineWidthUnits: 'pixels'
+          }));
+        });
+      }
+      const textBase = {
+        getPosition: d => d.position, getText: d => d.text, getSize: d => d.font,
+        getPixelOffset: d => d.off, getColor: d => d.color, getAngle: d => d.angle,
+        sizeUnits: 'pixels', fontFamily: 'arial', characterSet: 'auto', fontWeight: 'normal',
+        getTextAnchor: 'start', getAlignmentBaseline: 'center', pickable: false,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      };
+      const boxed = texts.filter(d => d.bg), plain = texts.filter(d => !d.bg);
+      if (plain.length) layers.push(new TextLayer(Object.assign({}, textBase, { id: `ix-bar-values-${this.name}`, data: plain })));
+      if (boxed.length) {
+        // flat's box (createTextLabel): 0.3 font left of the text, 0.4 font
+        // right of it, 0.1 font taller
+        layers.push(new TextLayer(Object.assign({}, textBase, {
+          id: `ix-bar-values-boxed-${this.name}`, data: boxed,
+          background: true, getBackgroundColor: d => d.bg,
+          // one padding per layer: of the texts' mean font
+          backgroundPadding: [0.3, 0, 0.4, 0.1].map(k => k * boxed.reduce((a, d) => a + d.font, 0) / boxed.length)
+        })));
+      }
+      if (titles.length) {
+        layers.push(new TextLayer({
+          id: `ix-bar-titles-${this.name}`, data: titles, pickable: false,
+          getPosition: d => d.position, getText: d => d.text, getSize: d => d.font,
+          sizeUnits: 'pixels', fontFamily: 'arial', characterSet: 'auto', lineHeight: 1,
+          getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
+          fontSettings: { sdf: true }, outlineWidth: 1 / 7, outlineColor: [255, 255, 255, 128],
+          getTextAnchor: d => d.anchor, getAlignmentBaseline: 'top',
+          getPixelOffset: d => d.off,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+      return layers;
+    }
+
     // CHART|VECTOR / CHART|BEZIER — the theme's classes as flat has them:
     // with CATEGORICAL (or EXACT) the categories, flat's string values
     // trimmed (getStringValueIndex, maptheme.js 9204), its partsA one
@@ -14701,7 +15490,7 @@ in vec4 vPieLineColor;
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat,
+    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>BAR · POINTER|OFFSETMEAN</title>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ixmaps.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 320px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>BAR · POINTER|OFFSETMEAN</b>
+  <span>The real election pages' pointer type, CHART|BAR|POINTER|OFFSETMEAN|BOX|LONGTITLE|SIMPLELEGEND|MEAN|VALUES|SIZEP3|DOPACITY (same style), on four 2024 age-band shares per comune: a pointer per band, up when the comune's share lies above the mean of all comuni, down (faded) when below, its length and value the deviation in %, chart size by population, titled box. Flat twin: bar_pointer_offsetmean_svg.html.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  var GEO_URL  = "https://raw.githubusercontent.com/gjrichter/geo/0153a0e14da5dae877b8c94d6deb11f210d4660a/italy/boundaries/italy_istat_municipalities_4326_500m.topojson";
+  var DATA_URL = "https://raw.githubusercontent.com/gjrichter/ixmaps-data/main/by-project/italy-comuni-demographics/comuni_population_by_age_sex_v3.csv";
+
+  var base = ixmaps.layer("comuni", layer => layer
+    .data({ url: GEO_URL, type: "topojson" })
+    .binding({ geo: "geometry", id: "com_istat_code_num", title: "name" })
+    .type("FEATURE|NOLEGEND")
+    .style({ colorscheme: ["#e9e9e9"], fillopacity: 0.4, linecolor: "#aaaaaa", linewidth: 0.15 })
+  );
+
+  var pointers = ixmaps.layer("comuni", layer => layer
+    .data({ url: DATA_URL, type: "csv", name: "popData", cache: "true" })
+    .binding({
+      lookup: "comune_code",
+      value: "2024_0-4_male|2024_0-4_female|2024_80-84_male|2024_80-84_female",
+      size: "2024_total_pop",
+      title: "comune_name"
+    })
+    .type("CHART|BAR|POINTER|OFFSETMEAN|BOX|LONGTITLE|SIMPLELEGEND|MEAN|VALUES|SIZEP3|DOPACITY")
+    .style({
+      colorscheme: ["#FF0000", "#02a294", "#F8E127", "#000088"],
+      label: ["0-4 male", "0-4 female", "80-84 male", "80-84 female"],
+      fillopacity: "1",
+      units: "%",
+      legendunits: "%",
+      normalsizevalue: "100000",
+      scale: "1",
+      rangescale: "5",
+      textcolor: "black",
+      bordercolor: "black",
+      boxopacity: "0.01",
+      valueupper: "1:100000",
+      boxupper: "1:100000",
+      valuescale: "1",
+      valuedecimals: "1",
+      fadenegative: "0.1"
+    })
+    .meta({
+      title: "Age-band shares 2024, deviation from the mean",
+      tooltip: "<b>{{comune_name}}</b> ({{provincia}})<br>{{theme.item.chart}}"
+    })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "true" },
+    map => map.view([45.07, 7.65], 13)
+      // flat's default object scaling (charts keep their screen size); gl's own default is "dynamic"
+      .options({ objectscaling: "true" })
+      .layer(base).layer(pointers)
+  );
+</script>
+</body>
+</html>
