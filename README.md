@@ -61,6 +61,12 @@ page. It currently implements:
   flat's part sizes, glow and value labels
 - **CHART\|USER** — a page's own chart function (`style.userdraw`: `ixmaps.<name>(SVGDocument, opt)`
   and its `_init`, as flat calls them), drawn in flat's chart units and shown as an icon at flat's size
+- **CHART\|PIE** (and `PIE|DONUT`) — a pie per record (placed on its FEATURE shape by
+  `binding.lookup`), a slice per value field, as flat lays them out: `SIZE` by the size field (or
+  the parts' sum), `SORT`, `SYMMETRIC`/`BIGTOTOP`, `HALF*`, `AUTOCOMPLETE`, `CENTER` (the center
+  part as a disc, `GLOW`), `CENTERVALUE`, `VALUES` (flat's leader-line labels; one part: inside),
+  `THIN`/`XTHIN`/`THICK` donuts. `3D`, `VOLUME`, `STARBURST`, `RAYS`/`FLOWER`, `BOW`, `ZOOM` are
+  noted in the console and drawn as a flat pie; `AGGREGATE` and `CATEGORICAL` pies are not drawn yet
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
   geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or one per grid
@@ -77,7 +83,7 @@ page. It currently implements:
 - Globe (orthographic) projection alongside flat Mercator
 
 Not yet implemented: plain (non-AGGREGATE) `CATEGORICAL` choropleths, and the `QUAD`/`BEZIER`/`VECTOR`/
-`PIE`/`DONUT`/`WAFFLE`/`BAR` base types and SYMBOL shape variants beyond
+`WAFFLE`/`BAR` base types, `AGGREGATE`/`CATEGORICAL` pies, and SYMBOL shape variants beyond
 circle/square/diamond/triangle. See the top-of-file comment in
 [`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
 
@@ -288,7 +294,7 @@ features this engine doesn't implement:
 
 ```text
 [ixmaps-gl validate] error unknown-style-key — layer "points": unknown style key "fillOpacity" — did you mean "fillopacity"?
-[ixmaps-gl validate] warning gl-unsupported — layer "pie": type flag "PIE" is not implemented by ixmaps-gl
+[ixmaps-gl validate] warning gl-unsupported — layer "waffle": type flag "WAFFLE" is not implemented by ixmaps-gl
 ```
 
 It is **off by default** — nothing is fetched and nothing changes. Turn it on with any of:

@@ -116,6 +116,241 @@
        445.592528
       ]
      ]
+    },
+    {
+     "id": "ix-pie-pie",
+     "type": "PieSliceLayer",
+     "count": 3,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "84c44d2c6c024a77",
+     "setDigest": "bc832c4e16313004",
+     "columnDigests": {
+      "getFillColor": "333383d2f01831bd",
+      "getPixelOffset": "e0ffd1920c9cc044",
+      "getPosition": "4c28149854a8aaae",
+      "getRadius": "8c617d878c5fdd3c",
+      "getSlice": "e00c764ff658177d",
+      "getSliceLineWidth": "995d040cfb7dd737"
+     },
+     "stats": {
+      "getFillColor": [
+       60,
+       230
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getRadius": [
+       222.796264,
+       222.796264
+      ],
+      "getSlice": [
+       0,
+       0
+      ],
+      "getSliceLineWidth": [
+       1.485308,
+       1.485308
+      ]
+     },
+     "sample": [
+      [
+       [
+        230,
+        25,
+        75,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.18,
+        45.45
+       ],
+       222.796264,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.485308
+      ],
+      [
+       [
+        60,
+        180,
+        75,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.46
+       ],
+       222.796264,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.485308
+      ],
+      [
+       [
+        145,
+        30,
+        180,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.2,
+        45.47
+       ],
+       222.796264,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.485308
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-inline-pie",
+     "type": "TextLayer",
+     "count": 3,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "fontWeight": "normal",
+      "getAlignmentBaseline": "center",
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "3913897556a3a9b3",
+     "setDigest": "3913897556a3a9b3",
+     "columnDigests": {
+      "getColor": "f9234a2b0926dc81",
+      "getPixelOffset": "fb10a25d9502b8e2",
+      "getPosition": "4c28149854a8aaae",
+      "getSize": "70b4e7abe94df4b8",
+      "getText": "080f2ca85d9a009d"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getSize": [
+       178.237011,
+       178.237011
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -4.455925
+       ],
+       [
+        9.18,
+        45.45
+       ],
+       178.237011,
+       "5"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -4.455925
+       ],
+       [
+        9.19,
+        45.46
+       ],
+       178.237011,
+       "10"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -4.455925
+       ],
+       [
+        9.2,
+        45.47
+       ],
+       178.237011,
+       "20"
+      ]
+     ]
     }
    ],
    "themes": [
@@ -230,7 +465,7 @@
        "min": 17
       }
      ],
-     "rangeClassed": true,
+     "rangeClassed": false,
      "valueMin": 5,
      "valueMax": 20,
      "valueMedian": 10,
@@ -243,6 +478,11 @@
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(67,99,216)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr></table>"
+    ],
+    "pie": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(60,180,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(145,30,180)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr></table>"
     ]
    },
    "validation": [
@@ -476,6 +716,241 @@
        561.411406
       ]
      ]
+    },
+    {
+     "id": "ix-pie-pie",
+     "type": "PieSliceLayer",
+     "count": 3,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "a7138f60acc55ec0",
+     "setDigest": "7cf708fb3a308d0e",
+     "columnDigests": {
+      "getFillColor": "333383d2f01831bd",
+      "getPixelOffset": "e0ffd1920c9cc044",
+      "getPosition": "4c28149854a8aaae",
+      "getRadius": "26adfed79c415c00",
+      "getSlice": "e00c764ff658177d",
+      "getSliceLineWidth": "c39d52d74f2a25c6"
+     },
+     "stats": {
+      "getFillColor": [
+       60,
+       230
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getRadius": [
+       280.705703,
+       280.705703
+      ],
+      "getSlice": [
+       0,
+       0
+      ],
+      "getSliceLineWidth": [
+       1.871371,
+       1.871371
+      ]
+     },
+     "sample": [
+      [
+       [
+        230,
+        25,
+        75,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.18,
+        45.45
+       ],
+       280.705703,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.871371
+      ],
+      [
+       [
+        60,
+        180,
+        75,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.46
+       ],
+       280.705703,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.871371
+      ],
+      [
+       [
+        145,
+        30,
+        180,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.2,
+        45.47
+       ],
+       280.705703,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.871371
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-inline-pie",
+     "type": "TextLayer",
+     "count": 3,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "fontWeight": "normal",
+      "getAlignmentBaseline": "center",
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "3a3497a0d13ae010",
+     "setDigest": "3a3497a0d13ae010",
+     "columnDigests": {
+      "getColor": "f9234a2b0926dc81",
+      "getPixelOffset": "acef183a58e2f279",
+      "getPosition": "4c28149854a8aaae",
+      "getSize": "6ce1eef277c5d932",
+      "getText": "080f2ca85d9a009d"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getSize": [
+       224.564562,
+       224.564562
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -5.614114
+       ],
+       [
+        9.18,
+        45.45
+       ],
+       224.564562,
+       "5"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -5.614114
+       ],
+       [
+        9.19,
+        45.46
+       ],
+       224.564562,
+       "10"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -5.614114
+       ],
+       [
+        9.2,
+        45.47
+       ],
+       224.564562,
+       "20"
+      ]
+     ]
     }
    ],
    "themes": [
@@ -590,7 +1065,7 @@
        "min": 17
       }
      ],
-     "rangeClassed": true,
+     "rangeClassed": false,
      "valueMin": 5,
      "valueMax": 20,
      "valueMedian": 10,
@@ -603,6 +1078,11 @@
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(67,99,216)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr></table>"
+    ],
+    "pie": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(60,180,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(145,30,180)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr></table>"
     ]
    },
    "validation": [
@@ -836,6 +1316,241 @@
        353.667024
       ]
      ]
+    },
+    {
+     "id": "ix-pie-pie",
+     "type": "PieSliceLayer",
+     "count": 3,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "71dbd2b0e67fa587",
+     "setDigest": "555a7b03c68786e8",
+     "columnDigests": {
+      "getFillColor": "333383d2f01831bd",
+      "getPixelOffset": "e0ffd1920c9cc044",
+      "getPosition": "4c28149854a8aaae",
+      "getRadius": "8354dc10db37273a",
+      "getSlice": "e00c764ff658177d",
+      "getSliceLineWidth": "e07e325d787667ba"
+     },
+     "stats": {
+      "getFillColor": [
+       60,
+       230
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getRadius": [
+       176.833512,
+       176.833512
+      ],
+      "getSlice": [
+       0,
+       0
+      ],
+      "getSliceLineWidth": [
+       1.17889,
+       1.17889
+      ]
+     },
+     "sample": [
+      [
+       [
+        230,
+        25,
+        75,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.18,
+        45.45
+       ],
+       176.833512,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.17889
+      ],
+      [
+       [
+        60,
+        180,
+        75,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.46
+       ],
+       176.833512,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.17889
+      ],
+      [
+       [
+        145,
+        30,
+        180,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.2,
+        45.47
+       ],
+       176.833512,
+       [
+        0,
+        6.283185,
+        0
+       ],
+       1.17889
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-inline-pie",
+     "type": "TextLayer",
+     "count": 3,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "fontWeight": "normal",
+      "getAlignmentBaseline": "center",
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "bf6604fc71843ebf",
+     "setDigest": "bf6604fc71843ebf",
+     "columnDigests": {
+      "getColor": "f9234a2b0926dc81",
+      "getPixelOffset": "96aa7c685898871d",
+      "getPosition": "4c28149854a8aaae",
+      "getSize": "dc80f7fc90575704",
+      "getText": "080f2ca85d9a009d"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.18,
+       9.2
+      ],
+      "getSize": [
+       141.46681,
+       141.46681
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -3.53667
+       ],
+       [
+        9.18,
+        45.45
+       ],
+       141.46681,
+       "5"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -3.53667
+       ],
+       [
+        9.19,
+        45.46
+       ],
+       141.46681,
+       "10"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        -3.53667
+       ],
+       [
+        9.2,
+        45.47
+       ],
+       141.46681,
+       "20"
+      ]
+     ]
     }
    ],
    "themes": [
@@ -950,7 +1665,7 @@
        "min": 17
       }
      ],
-     "rangeClassed": true,
+     "rangeClassed": false,
      "valueMin": 5,
      "valueMax": 20,
      "valueMedian": 10,
@@ -963,6 +1678,11 @@
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
      "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>points</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(67,99,216)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr></table>"
+    ],
+    "pie": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(230,25,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(60,180,75)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'></h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(145,30,180)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr></table>"
     ]
    },
    "validation": [
@@ -1094,7 +1814,6 @@
   "warning: [ixmaps-gl validate] error unknown-type-flag — layer \"points\": unknown type flag \"CATEGORICL\" — did you mean \"CATEGORICAL\"?",
   "warning: [ixmaps-gl validate] warning gl-unsupported — ixmaps function \"setMapTool\" is not implemented by ixmaps-gl",
   "warning: [ixmaps-gl validate] warning gl-unsupported — layer \"pie\": type flag \"PIE\" is not implemented by ixmaps-gl",
-  "warning: [ixmaps-gl validate] warning gl-unsupported — options key \"panhidden\" is not implemented by ixmaps-gl",
-  "warning: [ixmaps-gl] layer \"pie\": type \"CHART|PIE|VALUES\" has no implemented renderer"
+  "warning: [ixmaps-gl validate] warning gl-unsupported — options key \"panhidden\" is not implemented by ixmaps-gl"
  ]
 }

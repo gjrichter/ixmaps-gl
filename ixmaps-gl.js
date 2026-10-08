@@ -49,12 +49,16 @@
 // (headTailBreaks); LOG/POW2/POW3 are recognized type flags but not
 // implemented, see KNOWN_INERT_FLAGS. CHART|USER draws a page's own chart
 // function (style.userdraw, _buildUserChartLayers), CHART|LABEL flat's
-// value label, boxed or TEXTONLY (_buildLabelChartLayers). These
+// value label, boxed or TEXTONLY (_buildLabelChartLayers), CHART|PIE (and
+// PIE|DONUT) a pie per record, a slice per value field, flat's sizing,
+// CENTER part and VALUES leader labels (_buildPieLayers; 3D/VOLUME/
+// STARBURST/RAYS/BOW variants are noted, drawn flat; AGGREGATE and
+// CATEGORICAL pies not yet). These
 // base types are dispatched by buildDeckLayers in the real engine's own
 // precedence order — DOT is checked first because the real engine's DOT
 // bypasses the whole drawChart/modifier pipeline rather than being
 // "BUBBLE with the size locked." Other real base types (QUAD, BEZIER,
-// VECTOR, PIE/DONUT, WAFFLE, BAR, and SYMBOL's own shape variants) are NOT
+// VECTOR, WAFFLE, BAR, and SYMBOL's own shape variants) are NOT
 // implemented yet — adding one means a new _buildXLayers() method plus a
 // dispatch line, not a rewrite, but each should be added deliberately
 // (checking, per real source, which modifiers it actually shares with
@@ -200,6 +204,111 @@
   // overview page claims ES-modules-only, which the actual UMD bundle
   // contradicts).
   let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer;
+  // PieSliceLayer (see makePieSliceLayer) is derived from ScatterplotLayer
+  // once deck.gl is there
+  let PieSliceLayer;
+
+  // CHART|PIE / DONUT slices (_buildPieLayers): one instance per slice — a
+  // ScatterplotLayer circle (billboarded, pixel radius, pixel offset, the
+  // same projection path as every other chart, globe included) whose
+  // fragment shader keeps only the slice's sector of the circle and the
+  // ring outside its inner radius (DONUT, CENTER), and draws flat's slice
+  // outline along the sector's edges.
+  //   getSlice: [start angle, sweep, inner radius / radius] — radians,
+  //             clockwise from 12 o'clock (flat's DonutChart angles); a
+  //             sweep of 2π is a full ring (no radial edges)
+  //   getSliceLineWidth: the outline width in pixels (0 = none), drawn in
+  //             getLineColor
+  // Why not a canvas icon per pie (as the bubbles): every pie has its own
+  // slice angles, ~7 900 distinct icons on the comuni page, far beyond
+  // what deck.gl's never-evicting icon atlas holds (ICON_ATLAS_RESET_AFTER);
+  // and not polygons in map coordinates: ~31 000 slices re-tessellated at
+  // every zoom step. Here the GPU draws each slice from 5 numbers, crisp at
+  // any device pixel ratio. Neighbouring slices split the circle by angle
+  // without anti-aliasing between them (a hard partition: no background
+  // seam shows between two slices); the circle's rim keeps
+  // ScatterplotLayer's own anti-aliasing.
+  function makePieSliceLayer(Base) {
+    class Layer extends Base {
+      getShaders() {
+        const shaders = super.getShaders();
+        const inject = Object.assign({}, shaders.inject || {});
+        inject['vs:#decl'] = (inject['vs:#decl'] || '') + `
+in vec3 instancePieSlices;
+in float instancePieLineWidths;
+out vec3 vPieSlice;
+out float vPieRadius;
+out float vPieLineWidth;
+out vec4 vPieLineColor;
+`;
+        inject['vs:#main-end'] = (inject['vs:#main-end'] || '') + `
+vPieSlice = instancePieSlices;
+vPieRadius = outerRadiusPixels;
+vPieLineWidth = instancePieLineWidths;
+vPieLineColor = vec4(instanceLineColors.rgb, instanceLineColors.a * layer.opacity);
+`;
+        inject['fs:#decl'] = (inject['fs:#decl'] || '') + `
+in vec3 vPieSlice;
+in float vPieRadius;
+in float vPieLineWidth;
+in vec4 vPieLineColor;
+`;
+        // before the picking module's own filter (it replaces the color
+        // when picking): the discards shape the pick area too
+        inject['fs:DECKGL_FILTER_COLOR'] = (inject['fs:DECKGL_FILTER_COLOR'] || '') + `
+{
+  const float PIE_TAU = 6.283185307179586;
+  vec2 pieP = geometry.uv * vPieRadius;
+  float pieR = length(pieP);
+  float pieInner = vPieSlice.z * vPieRadius;
+  if (pieInner > 0.0 && pieR < pieInner - 1.0) discard;
+  bool pieFull = vPieSlice.y >= PIE_TAU - 1e-5;
+  if (!pieFull) {
+    float pieA = atan(pieP.x, pieP.y);
+    float pieRel = mod(pieA - vPieSlice.x + 2.0 * PIE_TAU, PIE_TAU);
+    if (pieRel >= vPieSlice.y) discard;
+  }
+  float pieD = vPieRadius - pieR;
+  if (pieInner > 0.0) pieD = min(pieD, pieR - pieInner);
+  if (!pieFull) {
+    vec2 pieE0 = vec2(sin(vPieSlice.x), cos(vPieSlice.x));
+    vec2 pieE1 = vec2(sin(vPieSlice.x + vPieSlice.y), cos(vPieSlice.x + vPieSlice.y));
+    float pieD0 = dot(pieP, pieE0) > 0.0 ? abs(pieP.x * pieE0.y - pieP.y * pieE0.x) : pieR;
+    float pieD1 = dot(pieP, pieE1) > 0.0 ? abs(pieP.x * pieE1.y - pieP.y * pieE1.x) : pieR;
+    pieD = min(pieD, min(pieD0, pieD1));
+  }
+  // in device pixels (fwidth: CSS px per device pixel), so a hairline
+  // stays one at any device pixel ratio. Half the outline lies inside
+  // each slice (the other half in its neighbour); below a pixel it fades
+  // in by its width
+  float pieAA = max(fwidth(pieR), 1e-4);
+  float pieH = vPieLineWidth * 0.5 / pieAA;
+  float pieDD = pieD / pieAA;
+  float pieLine = pieH > 0.0 ? clamp(min(pieH + 0.5 - pieDD, 2.0 * pieH), 0.0, 1.0) : 0.0;
+  float pieRim = clamp((vPieRadius - pieR) / pieAA + 0.5, 0.0, 1.0);
+  color = vec4(mix(color.rgb, vPieLineColor.rgb, pieLine), mix(color.a, vPieLineColor.a * pieRim, pieLine));
+  if (pieInner > 0.0) color.a *= clamp((pieR - pieInner) / pieAA + 0.5, 0.0, 1.0);
+}
+`;
+        shaders.inject = inject;
+        return shaders;
+      }
+      initializeState() {
+        super.initializeState();
+        this.getAttributeManager().addInstanced({
+          instancePieSlices: { size: 3, accessor: 'getSlice', defaultValue: [0, 2 * Math.PI, 0] },
+          instancePieLineWidths: { size: 1, accessor: 'getSliceLineWidth', defaultValue: 0 }
+        });
+      }
+    }
+    Layer.layerName = 'PieSliceLayer';
+    // deck.gl merges a subclass's defaultProps over its base class's
+    Layer.defaultProps = {
+      getSlice: { type: 'accessor', value: [0, 2 * Math.PI, 0] },
+      getSliceLineWidth: { type: 'accessor', value: 0 }
+    };
+    return Layer;
+  }
 
   // Cached so multiple ixmaps.Map() calls on one page (or a page that
   // still has its own static <script> tags for these libraries) only
@@ -277,6 +386,7 @@
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
       ]).then(() => {
         ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer } = global.deck);
+        PieSliceLayer = makePieSliceLayer(ScatterplotLayer);
         // which engine and libraries this page really runs (a page may
         // bring its own MapLibre/deck.gl — the loaded ones are named)
         const ml = global.maplibregl && typeof global.maplibregl.getVersion === 'function' ? global.maplibregl.getVersion() : '?';
@@ -1952,6 +2062,8 @@
   // outliers" inverse mode) stays unimplemented — no config here uses it.
   const KNOWN_INERT_FLAGS = ['SEQUENCE', 'STAR', 'SORT', 'DOWN', 'RECT', 'CLIPTOGEOBOUNDS', 'OUTLIER',
     'POW2', 'POW3', 'NOSORT'];
+  // flat's PIE / DONUT variants with no rendering here (see _buildPieLayers)
+  const PIE_INERT_FLAGS = [/3D/, /VOLUME/, /HEIGHT/, /STARBURST/, /FLOWER/, /RAYS/, /BOW/, /ZOOM/, /DIRECTION/, /DIRECTED/, /POLAR/];
   const _warnedFlags = new Set();
 
   // GL-PORT COMPAT: real ixmaps-flat's global ixmaps.getThemeObj(szId) /
@@ -2542,6 +2654,17 @@
         console.info(`[ixmaps-gl] type flag "${flag}" recognized, no distinct rendering behavior implemented yet`);
       }
     });
+    // PIE variants _buildPieLayers doesn't draw (the pie is drawn flat and
+    // plain): flat tests them as substrings, so do these
+    if (flags.has('PIE') && flags.has('CHART')) {
+      flags.forEach(flag => {
+        const inert = PIE_INERT_FLAGS.find(re => re.test(flag));
+        if (inert && !(/HEIGHT/.test(flag) && !flags.has('3D')) && !_warnedFlags.has('PIE:' + flag)) {
+          _warnedFlags.add('PIE:' + flag);
+          console.info(`[ixmaps-gl] type flag "${flag}" on a PIE chart recognized, not drawn yet — the pie is drawn flat and plain`);
+        }
+      });
+    }
 
     const rawBinding = Object.assign({}, def.binding);
     const targets = resolveBindingTargets(style, rawBinding, def);
@@ -3554,7 +3677,7 @@
           // flat's legend prints them (legend.js 610, 810: __formatValue
           // with valuedecimals, else 2, "BLANK" — whole numbers without
           // decimals), a colorscheme "none" part as an outline in linecolor
-          const multiFieldLegend = !!rt._multiFields && rt._isMultiFieldSequence();
+          const multiFieldLegend = rt._isMultiFieldChart();
           const legendTotalText = v => (multiFieldLegend
             ? flatFormatValue(v, legendDecimals(rt.style), 'BLANK')
             : rt._formatTooltipValue(v));
@@ -3605,7 +3728,7 @@
             // a per-item chart over several value fields: a row per field,
             // the field's sum over the visible items (flat's NYC status
             // legend: bikes / empty docks / e-bikes, biggest sum first)
-            if (rt._multiFields && rt._isMultiFieldSequence()) {
+            if (rt._isMultiFieldChart()) {
               (rt._activeFeatures || rt.features).forEach(f => {
                 const c = f.geometry && f.geometry.coordinates;
                 if (!c || typeof c[0] !== 'number') return;
@@ -4384,6 +4507,7 @@
         const base = layerId.replace(/-g\d+$/, '');
         return runtimes.find(r => {
           if (base === `ix-bubbles-${r.name}`) return isSymbolChart(r.flags);
+          if (base === `ix-pie-${r.name}`) return r._isPieChart();
           if (base === `ix-dot-${r.name}`) return r.flags.has('DOT');
           if (base === `ix-choropleth-${r.name}`) return r.flags.has('CHOROPLETH');
           if (base === `ix-features-${r.name}`) return r.flags.has('FEATURE') || r.flags.has('FEATURES');
@@ -7056,6 +7180,193 @@
     return [lngLat[0] + offset[0] * 360 / world, lat];
   }
 
+  // CHART|PIE / DONUT: one pie's slices as real ixmaps-flat lays them out —
+  // maptheme.js drawChart's PIE branch (19939-20330) and piechart.js
+  // DonutChart.realize (181-510). `values`: the item's part values (field
+  // order); `t`: the type string, tested as flat does, by substring (so
+  // CENTERVALUE also is CENTER, XTHIN also THIN). Returns null when flat
+  // draws no pie (no sum, no positive part), else
+  //   { slices: [{ i, value, percent, start, sweep, complement }],
+  //     inner: inner radius / radius,
+  //     center: { i, value, size } | null }
+  // (k on a slice: its index among all of flat's donut parts)
+  // i is the part's field index (-1: AUTOCOMPLETE's no-data complement);
+  // start/sweep in degrees, clockwise from 12 o'clock.
+  //  - parts: in field order; SORT biggest first; REVERSE takes flat's
+  //    index n − i literally — field n doesn't exist and field 0 is never
+  //    reached, so a REVERSE pie loses its first part, as in flat
+  //  - a part is a slice when > 0, or = 0 unless ZEROISNOTVALUE (a 0 slice
+  //    has no angle and is not drawn); negative parts are left out
+  //  - the slices share 100 % (AUTOCOMPLETE below 100: the rest is a
+  //    no-data part, the values are taken as percentages)
+  //  - CENTER (without DONUT): the center part (style.centerpart first /
+  //    last / min / max — default max — or a field number) is no slice but
+  //    a disc in the middle, radius √(size / 100) of the pie's, size =
+  //    value / sum · 200; the ring around it has that inner radius
+  //  - DONUT: inner radius 0.42 (THICK 0.25, THIN 0.66, XTHIN 0.95, 3D 0.5)
+  //  - an aggregated 1-record item of fewer than 2 parts has no hole
+  //  - angles: from 0° (SYMMETRIC: the first part, BIGTOTOP the biggest,
+  //    centered on 12 o'clock), HALF over 180° from 270° (HALFPLUS10 200°
+  //    from 260°, HALFMINUS10 160° from 280°, HALFPLUS20 220° from 250°,
+  //    HALFMINUS20 140° from 290°)
+  function pieSliceLayout(values, t, opts = {}) {
+    t = String(t || '');
+    const has = re => re.test(t);
+    const parts = values.map(v => (isNaN(v) ? 0 : v));
+    const sum = parts.reduce((a, v) => a + v, 0);
+    const autocomplete = has(/AUTOCOMPLETE/);
+    if (sum === 0 && !autocomplete) return null;
+    const n = parts.length;
+    let sortedIndex = null;
+    if (has(/\bSORT\b/)) sortedIndex = parts.map((value, index) => ({ index, value })).sort((a, b) => b.value - a.value);
+    if (has(/\bREVERSE\b/)) sortedIndex = parts.map((value, i) => ({ index: n - i, value }));
+    const at = p => (sortedIndex ? sortedIndex[p].index : p);
+    const donut = has(/DONUT/), centerFlag = has(/CENTER/);
+    let center = null;
+    if (centerFlag) {
+      let cSum = 0, cMax = -Number.MAX_VALUE, cMin = Number.MAX_VALUE, iMin, iMax;
+      for (let p = 0; p < n; p++) {
+        const i = at(p);
+        cSum += parts[i] || 0;
+        if (parts[i] < cMin) { cMin = parts[i]; iMin = i; }
+        if (parts[i] > cMax) { cMax = parts[i]; iMax = i; }
+      }
+      const cp = opts.centerPart != null && opts.centerPart !== '' ? String(opts.centerPart) : 'max';
+      let ci = 0;
+      if (cp === 'first') ci = 0;
+      else if (cp === 'last') ci = n - 1;
+      else if (cp === 'min') ci = iMin;
+      else if (cp === 'max') ci = iMax;
+      else if (Number(cp)) ci = Number(cp);
+      center = { i: ci, value: parts[ci], size: parts[ci] / cSum * 200 };
+    }
+    const slices = [];
+    for (let p = 0; p < n; p++) {
+      const i = at(p);
+      if (centerFlag && !donut && i === center.i) continue;
+      const v = parts[i];
+      if (v > 0 || (v === 0 && !has(/ZEROISNOTVALUE/))) slices.push({ i, value: v, percent: v });
+    }
+    let inner = 0;
+    if (donut) inner = has(/3D/) ? 0.5 : has(/XTHIN/) ? 0.95 : has(/THIN/) ? 0.66 : has(/THICK/) ? 0.25 : 0.42;
+    else if (centerFlag) inner = Math.sqrt(center.size / 100);
+    // GR 09.11.2019 "donut with count or size == 1 --> bubble": only for an
+    // aggregated item of 1 record (opts.itemCount) — flat's per-record
+    // items have no nCount, so their 1-part donuts keep the hole
+    if (slices.length < 2 && opts.itemCount === 1) inner = 0;
+    // DonutChart.realize
+    let biggest = slices[0], biggestValue = 0, any = false;
+    for (const sl of slices) {
+      if (sl.percent > 0) {
+        if (has(/BIGTOTOP/) && sl.percent > biggestValue) { biggest = sl; biggestValue = sl.percent; }
+        any = true;
+      }
+    }
+    // flat draws its "Pie error: no values !" circle here
+    if (!any && !autocomplete) return null;
+    const pctSum = slices.reduce((a, sl) => a + sl.percent, 0);
+    if (pctSum !== 100) {
+      if (autocomplete && pctSum < 100) slices.push({ i: -1, value: null, percent: Math.floor((100 - pctSum) * 100000) / 100000, complement: true });
+      else slices.forEach(sl => { sl.percent = sl.percent / pctSum * 100; });
+    }
+    let end = 0;
+    if (has(/SYMMETRIC/) && slices.length) {
+      if (has(/BIGTOTOP/)) {
+        end = 360;
+        let x = 0;
+        for (; x < slices.length && slices[x] !== biggest; x++) end -= slices[x].percent < 100 ? Math.floor(360 / 100 * slices[x].percent) : 0;
+        end -= slices[x] && slices[x].percent < 100 ? Math.floor(360 / 100 / 2 * biggest.percent) : 0;
+      } else if (slices[0].percent < 100) {
+        end = 360 - Math.floor(360 / 100 / 2 * slices[0].percent);
+      }
+    }
+    if (has(/HALF/)) end = 270;
+    if (has(/HALFPLUS10/)) end = 260;
+    if (has(/HALFMINUS10/)) end = 280;
+    if (has(/HALFPLUS20/)) end = 250;
+    if (has(/HALFMINUS20/)) end = 290;
+    let maxAngle = has(/HALF/) ? 180 : 360;
+    if (has(/HALFPLUS10/)) maxAngle = 200;
+    if (has(/HALFMINUS10/)) maxAngle = 160;
+    if (has(/HALFPLUS20/)) maxAngle = 220;
+    if (has(/HALFMINUS20/)) maxAngle = 140;
+    const out = [];
+    slices.forEach((sl, k) => {
+      const sweep = sl.percent / 100 * maxAngle;
+      const start = end % 360;
+      end = start + sweep;
+      if (end > 360) end = end % 360;
+      // _crc_drawDonut draws nothing for start == end (a 0 part, or a
+      // full turn that doesn't start at 0°); k: flat's donut part index
+      // (its value texts count them, drawn or not)
+      if (start === end || start < 0 || end < 0) return;
+      out.push(Object.assign(sl, { start, sweep, k }));
+    });
+    return { slices: out, inner, center: centerFlag && !donut ? center : null };
+  }
+
+  // A pie's VALUES as flat draws them for more than one part
+  // (maptheme.js drawDonutText 25072-25155, drawTextforOneQuadrant
+  // 24993-25065, piechart.js getTextPosition 517-555): a label per slice
+  // outside the pie, joined to the slice by a leader line. Per slice: the
+  // point at 1.1 R in the middle of its angle; the labels of each quadrant
+  // stacked by that point's height (line height 1.2 font, kept apart, the
+  // last ones pushed toward the pie's top/bottom), all at x = R + 2u right
+  // or left; the leader line from the slice's rim to its 1.1 R point,
+  // horizontally to R − 3u when short of it, to the label's height at
+  // R + 2u, then 2u straight on; the text 1.5u further. Only flat's first
+  // min(50, maxParts) donut parts get one (maxParts: the theme's class
+  // count). Pixels, y down, relative to the pie center:
+  //   [{ slice, segments: [[x0, y0, x1, y1], ...], x, y (text baseline), anchor: 'start' | 'end' }]
+  function pieValueLabelLayout(slices, R, fontPx, unitPx, maxParts) {
+    const limit = Math.min(50, maxParts);
+    const quads = [[], [], [], []];
+    let yMax = 0;
+    for (const sl of slices) {
+      if (sl.k >= limit) continue;
+      let end = sl.start + sl.sweep;
+      if (end > 360) end = end % 360;
+      const mid = sl.start < end ? (sl.start + end) / 2 : Math.min(360, (sl.start + end + 360) / 2) % 360;
+      const sin = Math.sin(Math.PI * mid / 180), cos = Math.cos(Math.PI * mid / 180);
+      const p = { slice: sl, x: sin * R * 1.1, y: -cos * R * 1.1, lx: sin * R, ly: -cos * R };
+      yMax = Math.max(yMax, Math.abs(p.y));
+      // flat's quadrants 1 (upper right) 2 (lower right) 3 (lower left)
+      // 4 (upper left), folded onto positive x/y
+      if (p.x > 0) {
+        if (p.y > 0) quads[1].push(p);
+        else quads[0].push({ slice: sl, x: p.x, y: -p.y, lx: p.lx, ly: -p.ly });
+      } else if (p.y > 0) quads[2].push({ slice: sl, x: -p.x, y: p.y, lx: -p.lx, ly: p.ly });
+      else quads[3].push({ slice: sl, x: -p.x, y: -p.y, lx: -p.lx, ly: -p.ly });
+    }
+    const out = [];
+    const dirs = [[1, -1, 'start'], [1, 1, 'start'], [-1, 1, 'end'], [-1, -1, 'end']];
+    quads.forEach((q, qi) => {
+      q.sort((a, b) => (a.y > b.y ? 1 : -1));
+      const [xDir, yDir, anchor] = dirs[qi];
+      const lh = fontPx * 1.2;
+      let yMin = lh / 2;
+      let ySpace = yMax - lh * (q.length - 2);
+      for (const p of q) {
+        const knee = p.y / p.ly;
+        const yPos = Math.max(yMin, Math.min(p.y, ySpace));
+        yMin = yPos + lh;
+        ySpace += fontPx;
+        const xPos = R + 2 * unitPx;
+        const segments = [];
+        let sx = p.lx * xDir, sy = p.ly * yDir;
+        if (knee) { segments.push([sx, sy, p.x * xDir, p.y * yDir]); sx = p.x * xDir; sy = p.y * yDir; }
+        if (p.x < R - 3 * unitPx) { const x = (R - 3 * unitPx) * xDir; segments.push([sx, sy, x, sy]); sx = x; }
+        let ex = xPos * xDir;
+        const ey = yPos * yDir;
+        segments.push([sx, sy, ex, ey]);
+        segments.push([ex, ey, ex + 2 * unitPx * xDir, ey]);
+        ex += 3.5 * unitPx * xDir;
+        out.push({ slice: p.slice, segments, x: ex, y: ey + fontPx * 0.25, anchor });
+      }
+    });
+    return out;
+  }
+
   // CHART|SYMBOL|SEQUENCE (flat maptheme.js 21184-21300, 21790-21925,
   // 22296-22395): one symbol per category part of a chart, in category
   // order or sorted (SORT: DOWN biggest first, UP smallest first), parts
@@ -8404,7 +8715,9 @@
         this._gridRefLat = (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
       }
 
-      if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this)) {
+      if (this._isPieChart() && this.binding.value) {
+        this._preparePie();
+      } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this)) {
         // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
         // (binding.value is a pipe-joined field list, e.g. one CSV column
         // per age band for the same year/sex — same pipe convention
@@ -9660,6 +9973,9 @@
       // USER charts (a page's own chart function, style.userdraw) go the
       // chart pipeline too, drawn by _buildUserChartLayers (bubbles when the
       // page has no such function)
+      // PIE / DONUT (flat's PIE branch comes before BUBBLE and SYMBOL in
+      // drawChart, maptheme.js 19939)
+      if (this._isPieChart()) return this._buildPieLayers(zoom, bbox, liveZoom, globeCenter);
       if (isSymbolChart(this.flags)) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
       console.warn(`[ixmaps-gl] layer "${this.name}": type "${[...this.flags].join('|')}" has no implemented renderer`);
       return [];
@@ -10022,6 +10338,51 @@
     _itemPlotFields() {
       return String(this.binding.value || '').split('|');
     }
+    // CHART|PIE (and PIE|DONUT): one pie per record, its slices the value
+    // fields (_buildPieLayers). An AGGREGATE pie (flat sums the records of
+    // a grid cell or category into one pie) and a CATEGORICAL one (a part
+    // per category) have no renderer here yet.
+    _isPieChart() {
+      return this.flags.has('CHART') && this.flags.has('PIE') && !this.flags.has('AGGREGATE')
+        && !this.flags.has('CATEGORICAL') && !this.flags.has('DOT');
+    }
+    // a per-item chart whose parts are its value fields (legend rows, sums)
+    _isMultiFieldChart() {
+      return !!this._multiFields && (this._isMultiFieldSequence() || this._isPieChart());
+    }
+    // flat's theme statistics for a pie (maptheme.js 9119-9130): nMin/nMax
+    // over every part value of every item, the classes (partsA, flat's
+    // distributeValues over that range, as many as the colorscheme has
+    // colors) — flat colors a 1-part pie (or any with CLASSES) by them
+    // (maptheme.js 20330-20341); several parts are colored by field.
+    _preparePie() {
+      const fields = String(this.binding.value).split('|');
+      const pooled = [];
+      for (const f of this.features) {
+        for (const k of fields) { const v = flatNumber(f.properties[k], this.flags); if (isFinite(v)) pooled.push(v); }
+      }
+      let nMin = Infinity, nMax = -Infinity;
+      for (const v of pooled) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+      const nParts = Math.trunc(styleNum(this.style.classes)) || colorSchemeClassCount(this.style.colorscheme) || DEFAULT_RANGE_CLASSES;
+      if (fields.length > 1) {
+        Object.assign(this, computeMultiFieldClasses(this.binding, this.style));
+        this.categoryIndexByLabel = new Map(this.categoryLabels.map((v, i) => [v, i]));
+        const scheme = Array.isArray(this.style.colorscheme) ? this.style.colorscheme : [];
+        this._partNoFill = new Set(fields.map((f, i) => i).filter(i => String(scheme[i]).trim().toLowerCase() === 'none'));
+      } else {
+        const r = computeRangeClasses(this.features, this.binding, this.style, this.flags, v => this._formatTooltipValue(v));
+        if (r) { Object.assign(this, r); this._rangeClassed = false; }
+        this._multiFields = null;
+        this._partNoFill = new Set();
+      }
+      this._pieFields = fields;
+      if (pooled.length) {
+        this._valueMin = nMin;
+        this._valueMax = nMax;
+        this.partsA = flatRangeParts(pooled, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
+      }
+    }
+
     // x-axis labels of a per-item PLOT (style.xaxis / label, else the fields)
     _itemPlotLabels() {
       const fields = this._itemPlotFields();
@@ -11792,6 +12153,299 @@
       return layers;
     }
 
+    // CHART|PIE / DONUT — real ixmaps-flat's PIE branch (maptheme.js
+    // 19939-20533, piechart.js DonutChart): one pie per record at its
+    // position (joined to its FEATURE shape by binding.lookup), a slice per
+    // value field (pieSliceLayout), drawn by PieSliceLayer (see there why
+    // not as icons).
+    //  - radius (flat's nSize in chart units, 15 = NORMAL_RADIUS_PX, × the
+    //    object zoom and style.scale): with a type word containing SIZE
+    //    (not NORMSIZE) and a size field 15 · (size / max size)^(1/sizepow)
+    //    — max size: normalsizevalue, else the field's maximum (flat's
+    //    nMaxSize) —, SIZE without a size field 15 · (sum / (nMax − nMin))
+    //    ^(1/sizepow) — the pie's sum against the range of the part values
+    //    (normalsizevalue replaces that range) —, SIZELOG 15 · log(v) /
+    //    log(max), at least 1; otherwise 15. A pie of radius 0 (or no
+    //    number) is not drawn.
+    //  - colors: a field's colorscheme color; a 1-field pie (or CLASSES)
+    //    takes its value's class color (flat's partsA, maptheme.js
+    //    20330-20341); a "none" color fills nothing and strokes the pie in
+    //    linecolor, else black; AUTOCOMPLETE's rest in nodatacolor (#eeeeee)
+    //  - fill opacity fillopacity (flat: the chart group's fill-opacity,
+    //    default 1); opacity sets fill and outline
+    //  - outline #555566 (NOLINES none, WHITELINES white, linecolor wins),
+    //    (linewidth, default 0.1) · R / 15 px wide — flat's
+    //    normalX(linewidth) · R / 300 with normalX(1) = 20 chart units
+    //    (measured on the twin page): a hairline at the default
+    //  - CENTER (not DONUT): the center part's disc, 0.9 × the inner
+    //    radius, in its color, with GLOW two halos (6× at 0.05, 2× at 0.1
+    //    fill opacity); its value in bold in the middle with CENTERVALUE or
+    //    VALUES: min(0.8 r, 3.3 r / length) · valuescale, valuedecimals
+    //    (else 0), the unit up to 5 characters, ChartColors.textColor of
+    //    the part color
+    //  - DONUT|CENTERVALUE: the item's size value in the middle, min(0.5 r,
+    //    2 r / length), valuecolor / textcolor, else #888888, over a 0.5
+    //    black halo
+    //  - VALUES (not STACKED, within valueupper/lower): several parts (or
+    //    NOINLINETEXT) a label per slice outside the pie on a leader line
+    //    (pieValueLabelLayout) — font 5u · valuescale, #999999 (textcolor)
+    //    on a white box at 0.5 (VALUEBACKGROUND: the slice color), leader
+    //    lines #888888 0.5u over a white 1.5u at 0.2; a single part its
+    //    value inside the pie, min(0.8 R, 3.4 R / length), 0.1 R above the
+    //    center. Texts: valuedecimals, else 2 below 1 and 0 above, plus the
+    //    unit.
+    //  - draw order: flat's sort before drawing (by the size value, the
+    //    sum or the first value; the biggest on top)
+    // Not drawn here (a console note at type parsing, PIE_INERT_FLAGS):
+    // 3D, VOLUME, HEIGHT, STARBURST, FLOWER/RAYS, BOW, ZOOM, DIRECTION /
+    // DIRECTED, POLAR — the pie is drawn flat and plain instead. Nor
+    // style.clipparts, showparts, gridx (flat's several pies per item).
+    // Known divergence: flat draws a chart's value labels in the chart's
+    // own group, so a bigger pie drawn later covers a smaller neighbour's
+    // labels; here every label lies above every pie.
+    // Known divergence: the leader lines are drawn in map coordinates
+    // (pixel offsets converted at the current zoom, Web Mercator), so under
+    // the globe projection they are approximate.
+    _buildPieLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+      const st = this.style;
+      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+      const has = re => re.test(t);
+      const fields = this._pieFields || String(this.binding.value || '').split('|');
+      const multi = fields.length > 1;
+      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
+      const sizePow = resolveSizePow(st, this.flags);
+      // flat tests /SIZE/: also NOSIZE and GRIDSIZE
+      const sizeFlag = has(/SIZE/) && !has(/NORMSIZE/);
+      const sizeLog = has(/SIZELOG/);
+      const nsv = styleNum(st.normalsizevalue);
+      const maxSize = nsv || this._maxSizeValue;
+      const range = nsv || ((this._valueMax || 0) - (this._valueMin || 0));
+      const nSizeOf = (sum, size) => {
+        const n = NORMAL_RADIUS_PX;
+        if (sizeFlag && this.binding.size) {
+          return sizeLog ? Math.max(1, n / Math.log(maxSize) * Math.log(size)) : n / Math.pow(maxSize, 1 / sizePow) * Math.pow(size, 1 / sizePow);
+        }
+        if (sizeFlag) {
+          return sizeLog ? Math.max(1, n / Math.log(range) * Math.log(sum)) : n / Math.pow(range, 1 / sizePow) * Math.pow(sum, 1 / sizePow);
+        }
+        return n;
+      };
+      const colors = this.categoryColorsRgb || [];
+      const scheme = Array.isArray(st.colorscheme) ? st.colorscheme : [];
+      const noFill = this._partNoFill || new Set();
+      const byClass = has(/CLASSES/) || !multi;
+      const classColor = v => {
+        const parts = this.partsA || [];
+        for (let x = 0; x < parts.length; x++) if (v < parts[x].max) return colors[x];
+        return null;
+      };
+      const sliceRgb = sl => (sl.complement ? (parseCssColor(String(st.nodatacolor || '')) || [0xee, 0xee, 0xee])
+        : (byClass && classColor(sl.value)) || colors[sl.i] || [128, 128, 128]);
+      const fo = styleNum(st.fillopacity), op = styleNum(st.opacity);
+      // flat sets the group's fill-opacity only for a truthy value
+      const fillAlpha = op > 0 ? op : fo > 0 ? fo : 1;
+      const lineAlpha = op > 0 ? op : 1;
+      let line = '#555566';
+      if (has(/NOLINES/)) line = 'none';
+      if (has(/WHITELINES/)) line = 'white';
+      const lc = st.linecolor != null && st.linecolor !== '' ? styleLineColor(st.linecolor) : null;
+      if (lc) line = lc;
+      if (scheme.slice(0, fields.length).some(c => String(c).trim().toLowerCase() === 'none')) line = lc || 'black';
+      const lineRgb = line === 'none' ? null : hexOrNamedToRgb(line);
+      const lineWidthOf = r => (lineRgb ? (styleNum(st.linewidth) || 0.1) * r / 15 : 0);
+      const lineRgba = lineRgb ? [...lineRgb.slice(0, 3), Math.round(255 * lineAlpha)] : [0, 0, 0, 0];
+
+      const charts = [];
+      for (const f of this._activeFeatures || this.features) {
+        const c = f.geometry && f.geometry.coordinates;
+        if (!c || typeof c[0] !== 'number') continue;
+        const [lng, lat] = c;
+        if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) continue;
+        if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) continue;
+        const raw = f.properties || {};
+        const values = fields.map(k => { const v = flatNumber(raw[k], this.flags); return isNaN(v) ? 0 : v; });
+        const layout = pieSliceLayout(values, t, { centerPart: st.centerpart });
+        if (!layout) continue;
+        const sum = values.reduce((a, v) => a + v, 0);
+        const size = this.binding.size ? parseFloat(raw[this.binding.size]) : undefined;
+        const r = nSizeOf(sum, size) * unit;
+        if (!(r > 0) || !isFinite(r)) continue;
+        // flat's draw-order key (maptheme.js 16812-16860): the size value,
+        // else with SIZE the sum, else the first value
+        const key = this.binding.size ? size : has(/SIZE/) ? sum : values[0];
+        // the tooltip's {{theme.item.chart}}: a row per field (parts), a
+        // 1-field pie its class (cat) like a range-classed bubble
+        const properties = multi ? { value: values[0], parts: values, raw }
+          : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
+        charts.push({ c, r, layout, size, key, properties });
+      }
+      // flat sorts the charts before drawing (maptheme.js 16774-16870),
+      // ascending — the last drawn on top —, SORT|UP descending; not with
+      // NOSRT, NOSIZE (unless SORT) or when all values are equal
+      if (((this._valueMin !== this._valueMax) || this.binding.size) && !has(/NOSRT/)
+        && (!has(/NOSIZE/) || has(/\bSORT\b/))) {
+        const down = has(/\bSORT\b/) && has(/\bUP\b/);
+        charts.sort((a, b) => (down ? b.key - a.key : a.key - b.key) || 0);
+      }
+      // align / offsetx / offsety (flatChartAlignOffset) — flat's PIE
+      // ptNull is (0, r + 5 units); the chart's half size taken as r, as
+      // for BUBBLE (ASSUMPTION: not measured on flat for PIE)
+      const aligned = !!(st.align || styleNum(st.offsetx) || styleNum(st.offsety));
+      charts.forEach(ch => {
+        ch.off = aligned ? flatChartAlignOffset(st, { unit, symbolScale: 1, half: ch.r, orig: ch.r + 5 * unit }) : [0, 0];
+      });
+
+      const TAU = 2 * Math.PI;
+      const slices = [], centers = [], glows = [];
+      const glowOn = has(/GLOW/) && !has(/ZOOM/) && !glowHiddenByScale(st, liveZoom);
+      for (const ch of charts) {
+        for (const sl of ch.layout.slices) {
+          const rgb = sliceRgb(sl);
+          slices.push({
+            position: ch.c, r: ch.r, off: ch.off, properties: ch.properties, chart: ch, part: sl,
+            slice: [sl.start * Math.PI / 180, sl.sweep >= 360 ? TAU : sl.sweep * Math.PI / 180, ch.layout.inner],
+            fill: [...rgb.slice(0, 3), !sl.complement && noFill.has(sl.i) ? 0 : Math.round(255 * fillAlpha)]
+          });
+        }
+        const center = ch.layout.center;
+        if (center) {
+          const cr = ch.r * Math.sqrt(center.size / 100);
+          ch.centerR = cr;
+          const rgb = colors[center.i] || [128, 128, 128];
+          if (cr > 0) centers.push({ position: ch.c, r: cr * 0.9, off: ch.off, properties: ch.properties, chart: ch, fill: [...rgb.slice(0, 3), Math.round(255 * fillAlpha)] });
+          if (glowOn && cr > 0) {
+            glows.push({ position: ch.c, r: cr * 6, off: ch.off, fill: [...rgb.slice(0, 3), Math.round(255 * 0.05)] });
+            glows.push({ position: ch.c, r: cr * 2, off: ch.off, fill: [...rgb.slice(0, 3), Math.round(255 * 0.1)] });
+          }
+        }
+      }
+      const discProps = {
+        getPosition: d => d.position,
+        getRadius: d => d.r,
+        getPixelOffset: d => d.off,
+        getFillColor: d => d.fill,
+        radiusUnits: 'pixels', billboard: true, stroked: false, filled: true, antialiasing: true,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      };
+      const layers = [new PieSliceLayer(Object.assign({}, discProps, {
+        id: `ix-pie-${this.name}`,
+        data: slices, pickable: true,
+        getLineColor: lineRgba,
+        getSlice: d => d.slice,
+        getSliceLineWidth: d => lineWidthOf(d.r)
+      }))];
+      if (centers.length) {
+        layers.push(new PieSliceLayer(Object.assign({}, discProps, { id: `ix-pie-center-${this.name}`, data: centers, pickable: true })));
+      }
+      if (glows.length) {
+        layers.push(new PieSliceLayer(Object.assign({}, discProps, { id: `ix-pie-glow-${this.name}`, data: glows, pickable: false })));
+      }
+      return layers.concat(this._buildPieTextLayers(charts, zoom, liveZoom, unit, sliceRgb, has));
+    }
+
+    // the value texts of _buildPieLayers (see there)
+    _buildPieTextLayers(charts, zoom, liveZoom, unit, sliceRgb, has) {
+      const st = this.style;
+      const valueScale = styleNum(st.valuescale) || 1;
+      const units = st.units ? String(st.units) : '';
+      const unitText = units ? (units[0] === '.' ? '' : ' ') + units : '';
+      const partUnit = (has(/AUTOCOMPLETE/) && !/%/.test(unitText) ? ' % ' : '') + unitText;
+      const noBreaks = flatNoBreaks(this._valueMin, this._valueMax);
+      const dec = explicitValueDecimals(st);
+      const fmt = (v, d) => flatFormatValue(v, d, noBreaks ? 'ROUND|NOBREAKS' : 'ROUND');
+      const partText = sl => (sl.complement ? Math.round(sl.percent * 10) / 10 + ' % '
+        : fmt(sl.value, dec != null ? dec : (sl.value < 1 ? 2 : 0)) + partUnit);
+      const valuesOn = has(/VALUES/) && !has(/STACKED/) && !valuesHiddenByScale(st, zoom);
+      const textOverride = st.valuecolor || st.textcolor;
+      const inline = [], boxed = [], centerTexts = [], lines = [];
+      const nFields = (this._pieFields || []).length;
+      for (const ch of charts) {
+        const o = ch.off;
+        // CENTER: the center part's value (maptheme.js 20402-20410)
+        if (ch.layout.center && (has(/CENTERVALUE/) || (has(/VALUES/) && !valuesHiddenByScale(st, zoom))) && ch.centerR > 0) {
+          const cv = ch.layout.center.value;
+          const text = fmt(cv, dec != null ? dec : 0) + (unitText.length <= 5 ? unitText : '');
+          const fontSize = Math.min(ch.centerR * 0.8, ch.centerR * (3.3 / Math.max(1, text.length))) * valueScale;
+          const rgb = (this.categoryColorsRgb || [])[ch.layout.center.i] || [128, 128, 128];
+          if (fontSize > VALUES_MIN_FONT_PX) centerTexts.push({ position: ch.c, text, fontSize, off: o, color: flatChartTextRgb(rgb), bold: true });
+        } else if (!ch.layout.center && has(/CENTERVALUE/) && ch.size !== undefined && !isNaN(ch.size)) {
+          // flat prints String(nCount || nSize): a record's item has no
+          // nCount, so its size value
+          const text = String(ch.size);
+          const fontSize = Math.min(ch.r * 0.5, ch.r * (2 / Math.max(1, text.length)));
+          if (fontSize > VALUES_MIN_FONT_PX) {
+            centerTexts.push({ position: ch.c, text, fontSize, off: o, bold: false,
+              color: textOverride ? hexOrNamedToRgb(textOverride) : [0x88, 0x88, 0x88] });
+          }
+        }
+        if (!valuesOn) continue;
+        if (nFields > 1 || has(/NOINLINETEXT/)) {
+          const fontSize = 5 * unit * valueScale;
+          if (fontSize <= VALUES_MIN_FONT_PX) continue;
+          for (const lab of pieValueLabelLayout(ch.layout.slices, ch.r, fontSize, unit, (this.partsA || []).length)) {
+            const bg = has(/VALUEBACKGROUND/) ? sliceRgb(lab.slice) : [255, 255, 255];
+            const textRgb = textOverride ? hexOrNamedToRgb(textOverride) : flatDerivateRgb(bg, bg[0] + bg[1] + bg[2] > 450 ? 0.6 : 3);
+            boxed.push({ position: ch.c, text: partText(lab.slice), fontSize, anchor: lab.anchor,
+              // the text's baseline → its center (arial: 0.35 font above)
+              off: [o[0] + lab.x, o[1] + lab.y - 0.35 * fontSize], color: textRgb, bg: [...bg.slice(0, 3), 128] });
+            lab.segments.forEach(sg => lines.push({ c: ch.c, o, sg }));
+          }
+        } else if (ch.layout.slices.length) {
+          const sl = ch.layout.slices[ch.layout.slices.length - 1];
+          const text = partText(sl);
+          const fontSize = Math.min(ch.r * 0.8, ch.r * (3.4 / Math.max(1, text.length)));
+          const color = textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(sliceRgb(sl));
+          // baseline at −0.6 R + R / 2 + 0.45 font (maptheme.js 20434)
+          if (fontSize > VALUES_MIN_FONT_PX) inline.push({ position: ch.c, text, fontSize, off: [o[0], o[1] - 0.1 * ch.r + 0.45 * fontSize - 0.35 * fontSize], color });
+        }
+      }
+      const layers = [];
+      const textBase = {
+        getPosition: d => d.position, getText: d => d.text, getSize: d => d.fontSize,
+        getPixelOffset: d => d.off, getColor: d => d.color,
+        sizeUnits: 'pixels', fontFamily: 'arial', characterSet: 'auto',
+        getAlignmentBaseline: 'center', pickable: false
+      };
+      if (lines.length) {
+        const feature = d => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [
+          pixelOffsetLngLat(d.c, [d.o[0] + d.sg[0], d.o[1] + d.sg[1]], liveZoom),
+          pixelOffsetLngLat(d.c, [d.o[0] + d.sg[2], d.o[1] + d.sg[3]], liveZoom)] } });
+        const fc = { type: 'FeatureCollection', features: lines.map(feature) };
+        [['bg', [255, 255, 255, Math.round(255 * 0.2)], 1.5], ['fg', [0x88, 0x88, 0x88, 255], 0.5]].forEach(([k, color, w]) => {
+          layers.push(new GeoJsonLayer({
+            id: `ix-pie-lines-${k}-${this.name}`, data: fc, pickable: false,
+            stroked: true, filled: false, getLineColor: color, getLineWidth: w * unit, lineWidthUnits: 'pixels'
+          }));
+        });
+      }
+      if (boxed.length) {
+        layers.push(new TextLayer(Object.assign({}, textBase, {
+          id: `ix-pie-values-${this.name}`, data: boxed, fontWeight: 'normal',
+          getTextAnchor: d => d.anchor,
+          // flat's box: from 0.3 font left of the text to 0.4 font right of
+          // it, 0.1 font taller (createTextLabel)
+          background: true, getBackgroundColor: d => d.bg, backgroundBorderRadius: 0.1 * 5 * unit * valueScale,
+          backgroundPadding: [0.3, 0, 0.4, 0.1].map(k => k * 5 * unit * valueScale)
+        })));
+      }
+      if (inline.length) {
+        layers.push(new TextLayer(Object.assign({}, textBase, { id: `ix-pie-inline-${this.name}`, data: inline, fontWeight: 'normal', getTextAnchor: 'middle' })));
+      }
+      // CENTER's value in bold; DONUT|CENTERVALUE's in normal weight over
+      // flat's thin black halo (stroke-opacity 0.5)
+      const bold = centerTexts.filter(d => d.bold), plain = centerTexts.filter(d => !d.bold);
+      if (bold.length) {
+        layers.push(new TextLayer(Object.assign({}, textBase, { id: `ix-pie-centervalue-${this.name}`, data: bold, getTextAnchor: 'middle', fontWeight: 'bold' })));
+      }
+      if (plain.length) {
+        layers.push(new TextLayer(Object.assign({}, textBase, {
+          id: `ix-pie-centercount-${this.name}`, data: plain, getTextAnchor: 'middle', fontWeight: 'normal',
+          fontSettings: { sdf: true }, outlineWidth: 1, outlineColor: [0, 0, 0, 128]
+        })));
+      }
+      return layers;
+    }
+
     // flat's chart position for this build (flatChartAlignOffset): a
     // function item → pixel offset, the same for every part of one chart
     // (symbol, glow, shadow, box, title, value text). unit is flat's
@@ -12985,7 +13639,7 @@
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, multiQuadOffsets, pixelOffsetLngLat,
+    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, multiQuadOffsets, pixelOffsetLngLat,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

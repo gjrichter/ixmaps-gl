@@ -21,7 +21,7 @@
 <div id="map_div"></div>
 <div id="caption">
   <b>PIE · SIZE|SUM</b>
-  <span>The most used real pie type, CHART|PIE|SIZE|SUM|SIMPLELEGEND: one pie per comune, placed on its FEATURE base polygon via binding.lookup, slices = four 2024 age-band shares (0-4 and 80-84, male/female), pie size = total population. Not yet rendered by ixmaps-gl (PIE has no renderer). Flat twin: pie_size_sum_svg.html.</span><br>
+  <span>The most used real pie type, CHART|PIE|SIZE|SUM|SIMPLELEGEND: one pie per comune, placed on its FEATURE base polygon via binding.lookup, slices = four 2024 age-band shares (0-4 and 80-84, male/female), pie size = total population. Flat twin: pie_size_sum_svg.html.</span><br>
   <a id="back" href="index.html">&larr; all examples</a>
 </div>
 <script>
@@ -57,7 +57,10 @@
   );
 
   window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
-    map => map.view([45.3, 8.6], 8).layer(base).layer(pies)
+    map => map.view([45.3, 8.6], 8)
+      // flat's default object scaling (charts keep their screen size); gl's own default is "dynamic"
+      .options({ objectscaling: "true" })
+      .layer(base).layer(pies)
   );
 </script>
 </body>
