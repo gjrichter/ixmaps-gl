@@ -82,7 +82,7 @@
   // ---------------------------------------------------------------
   // this engine's release (= package.json "version", checked by
   // test/unit/version.test.mjs); ixmaps.glVersion, and logged once at start
-  const IXMAPS_GL_VERSION = '0.2.17';
+  const IXMAPS_GL_VERSION = '0.2.18';
 
   const LIB_URLS = {
     // Bumped 3.6.2 -> 5.x (2026-09-21, globe-projection compat fix): native
