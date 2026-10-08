@@ -2479,6 +2479,44 @@
     return typeof v === 'number' ? v : NaN;
   }
 
+  // flat's changeThemeStyle arithmetic (maptheme.js doChangeThemeStyle,
+  // 4962-5334): these numeric keys go through __calcNewValue (4486) — flag
+  // "pow" current^v, "factor" current·v, "add"/"delta" current+v, else v.
+  // The value is the theme's current one, or flat's own fallback where its
+  // code has one (`mapTheme.nBrightness || 1`, …; fillopacity: 1 when the
+  // new value is < 1, else 0)
+  const FLAT_STYLE_CALC_KEYS = {
+    opacity: 0, fillopacity: null, blur: 0, dopacityscale: 0, dopacitypow: 0, brightness: 1, rangescale: 1,
+    normalsizevalue: 0, minvalue: 1, maxvalue: 1, valuescale: 0, linewidth: 0, markersize: 0, gapsize: 0,
+    offsetx: 0, offsety: 0, rotation: 0, minvaluesize: 0, minvaluevalue: 0, clipvaluesize: 0, minsize: 0,
+    minchartsize: 0, maxcharts: 0, sizepow: 0, outlierscale: 0, clipsize: 0, clipframerate: 1,
+    gridwidth: 1, gridmatrix: 1, gridwidthpx: 50, gridoffsetx: 0, gridoffsety: 0
+  };
+  // the new value of style[key] after flat's changeThemeStyle(…, "key:value",
+  // flag), or null when flat leaves the theme as it is. scale is a resize
+  // FACTOR there (__calcFactor, 4502: "factor" v, "add" (current+v)/current,
+  // else v/current; no pow/delta), multiplied into nScale by
+  // MapTheme.resize (26544) — a factor of 0 or NaN is falsy, so the
+  // Themes.execute loop (3326) skips the resize: scale:0 changes nothing.
+  // Other keys: the value string as given
+  function flatChangedStyleValue(key, current, value, flag) {
+    const f = String(flag || '');
+    const cur = Number(Array.isArray(current) ? current[0] : current);
+    const v = Number(value);
+    if (key === 'scale') {
+      const now = Number.isFinite(cur) && cur ? cur : 1;
+      const factor = /factor/.test(f) ? v : /add/.test(f) ? (now + v) / now : v / now;
+      return factor ? now * factor : null;
+    }
+    if (!(key in FLAT_STYLE_CALC_KEYS) || !/pow|factor|add|delta/.test(f)) return value;
+    const fallback = FLAT_STYLE_CALC_KEYS[key] == null ? (v < 1 ? 1 : 0) : FLAT_STYLE_CALC_KEYS[key];
+    const base = Number.isFinite(cur) && cur ? cur : fallback;
+    const n = Number.isFinite(v) ? v : 0;
+    if (/pow/.test(f)) return Math.pow(base, n);
+    if (/factor/.test(f)) return base * n;
+    return base + n;
+  }
+
   function normalizeTheme(def) {
     // real ixmaps-flat (htmlgui.js newTheme) merges .meta() INTO style first
     // — meta wins — and only then reads type, bindings and style properties
@@ -4643,23 +4681,40 @@
         // "filter:WHERE ..." value reuses rt.setRuntimeFilter, the SAME
         // applyWhereFilter grammar the layer's own load-time .filter()
         // already parses — just invoked again at runtime.
+        //
+        // themeId null: every theme but the FEATURE ones (flat's
+        // Themes.changeThemeStyle, maptheme.js 4464: `szFlag.match(/FEATURE/)`
+        // skipped), one redraw for all. Numeric keys follow flat's
+        // "factor"/"add"/"pow" flags and scale its resize factor
+        // (flatChangedStyleValue) — the scale slider's
+        // changeThemeStyle(null, null, 'scale:' + v, 'set').
         changeThemeStyle: (themeId, styleKeyValue, action) => {
-          const rt = findRuntime(themeId);
-          if (!rt) return;
+          const targets = themeId == null
+            ? runtimes.filter(r => ![...r.flags].some(f => /FEATURE/.test(f)))
+            : [findRuntime(themeId)].filter(Boolean);
+          if (!targets.length) return;
           const colonIdx = String(styleKeyValue).indexOf(':');
           const key = colonIdx === -1 ? String(styleKeyValue) : styleKeyValue.slice(0, colonIdx);
           const value = colonIdx === -1 ? '' : styleKeyValue.slice(colonIdx + 1);
-          if (validation) validation.style(themeId, { [key]: value });
-          if (key === 'filter') {
-            rt.setRuntimeFilter(action === 'remove' ? '' : value);
-            refresh();
-          } else if (key === 'type') {
+          if (key === 'type') {
             console.warn(`[ixmaps-gl] changeThemeStyle: changing the type ("${value}") is not supported`);
-          } else {
-            // any other style key, as flat: "set" writes it, "remove" drops it
-            rt.setStyle({ [key]: /remove/.test(action || '') ? undefined : value });
-            refresh();
+            return;
           }
+          let changed = false;
+          targets.forEach(rt => {
+            if (validation) validation.style(themeIdOf(rt), { [key]: value });
+            if (key === 'filter') {
+              rt.setRuntimeFilter(action === 'remove' ? '' : value);
+              changed = true;
+              return;
+            }
+            // any other style key, as flat: "set" writes it, "remove" drops it
+            const next = /remove/.test(action || '') ? undefined : flatChangedStyleValue(key, rt.style[key], value, action);
+            if (next === null) return;
+            rt.setStyle({ [key]: next });
+            changed = true;
+          });
+          if (changed) refresh();
         },
         // flat's ixmaps.setThemeTimeFrame(szId, min, max): show only the
         // records whose timefield lies in [min, max) (ms or Date-
@@ -12910,7 +12965,7 @@
     fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,
-    flatFormatValue, themeStyleArgs, explicitValueDecimals, legendDecimals,
+    flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,
     dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn,
   };
   global.__setFilter = __setFilter;

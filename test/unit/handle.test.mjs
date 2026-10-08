@@ -60,6 +60,34 @@ test('themeStyleArgs: flat\'s duplicate-leading shift (htmlgui.js 2052)', () => 
   assert.deepEqual(G.themeStyleArgs(['theme', 'theme', 'scale:2', 'factor']), ['theme', 'scale:2', 'factor']);
 });
 
+test('themeStyleArgs: the scale slider\'s changeThemeStyle(null, null, \'scale:\' + v, \'set\') → all themes', () => {
+  assert.deepEqual(G.themeStyleArgs([null, null, 'scale:1.5', 'set']), [null, 'scale:1.5', 'set']);
+});
+
+test('flatChangedStyleValue: scale as flat\'s resize factor (maptheme.js __calcFactor 4502, resize 26544)', () => {
+  const f = G.flatChangedStyleValue;
+  assert.equal(f('scale', 2, '1.5', 'set'), 1.5, 'set: the new scale');
+  assert.equal(f('scale', undefined, '1.5', 'set'), 1.5, 'no scale yet: from 1');
+  assert.equal(f('scale', 2, '1.2', 'factor'), 2.4, 'factor: multiplied');
+  assert.equal(f('scale', 2, '0.5', 'add'), 2.5, 'add: added');
+  assert.equal(f('scale', 2, '0', 'set'), null, 'scale 0: factor 0, flat skips the resize');
+  assert.equal(f('scale', 2, 'x', 'set'), null, 'not a number: factor NaN, skipped');
+  assert.equal(f('scale', 2, '3', 'pow'), 3, 'no pow for scale: a set');
+});
+
+test('flatChangedStyleValue: numeric keys follow __calcNewValue (maptheme.js 4486), others are set', () => {
+  const f = G.flatChangedStyleValue;
+  assert.equal(f('valuescale', 2, '3', 'set'), '3', 'set: the value as given');
+  assert.equal(f('valuescale', 2, '3', 'factor'), 6);
+  assert.equal(f('valuescale', 2, '3', 'add'), 5);
+  assert.equal(f('linewidth', 2, '1', 'delta'), 3, 'delta = add');
+  assert.equal(f('linewidth', 2, '3', 'pow'), 8);
+  assert.equal(f('brightness', undefined, '2', 'factor'), 2, 'flat\'s fallback: nBrightness || 1');
+  assert.equal(f('gridwidthpx', undefined, '2', 'factor'), 100, 'flat\'s fallback: nGridWidthPx || 50');
+  assert.equal(f('fillopacity', undefined, '0.5', 'factor'), 0.5, 'fillopacity fallback 1 when the new value is < 1');
+  assert.equal(f('colorscheme', '#fff', '#000', 'factor'), '#000', 'not a numeric key: set');
+});
+
 test('removeTheme / setBasemapOpacity: both arities dispatch on arguments.length', () => {
   // flat's canonical removeTheme(szThemeId) (htmlgui.js 1884); the map-first
   // pages call (null|szMap, szId) — a 2-arg call must not lose the id
