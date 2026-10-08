@@ -5218,10 +5218,26 @@
       // never by size, so resizing the SAME cached icon every frame
       // creates no new atlas entries — none of the reclustering risk
       // above applies to a pure size change.
+      //
+      // globe: MapLibre shifts getZoom() by log2(cos(center lat)) as the
+      // center moves north/south (the globe keeps its size on screen); the
+      // grid zoom takes that out, so a gridwidthpx grid changes on zoom
+      // only, not on pan (flat's orthographic keeps its scale on rotation)
+      // — rounded so float noise doesn't miss GridAggregateIndex's
+      // per-zoom cache. Measured on the GHS orthographic page: center lat
+      // 17.2° → 47.2° moved getZoom() 2.467 → 1.975, re-binning the
+      // 3 px MEAN cloud (cells changing color) on every pan.
+      function gridZoomOf() {
+        const z = map.getZoom();
+        const proj = typeof map.getProjection === 'function' && map.getProjection();
+        if (!proj || proj.type !== 'globe') return z;
+        const lat = map.getCenter().lat * Math.PI / 180;
+        return Math.round((z - Math.log2(Math.cos(lat))) * 1e6) / 1e6;
+      }
       function refreshLayers() {
         const liveZoom = map.getZoom();
         // frozen only while MapLibre really is zooming (see 'moveend')
-        const zoom = isZooming && map.isZooming() ? stableGridZoom : liveZoom;
+        const zoom = isZooming && map.isZooming() ? stableGridZoom : gridZoomOf();
         const viewMoving = map.isMoving();
         const bounds = map.getBounds();
         const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
@@ -5304,11 +5320,11 @@
       // zoom too) picks up the hide/show within one 150ms tick — still
       // effectively instant, without the unthrottled rebuild storm.
       let isZooming = false;
-      let stableGridZoom = map.getZoom();
+      let stableGridZoom = gridZoomOf();
       map.on('zoomstart', () => { isZooming = true; });
       map.on('zoomend', () => {
         isZooming = false;
-        stableGridZoom = map.getZoom();
+        stableGridZoom = gridZoomOf();
         // Was: clearTimeout(refreshTimer); refreshLayers(); — a DIRECT,
         // un-throttled rebuild on every single zoomend. That was fine
         // while every runtime's per-tick cost was cheap (viewport-scoped
@@ -5358,7 +5374,7 @@
         // the same arrows at every zoom, while the scale gates (liveZoom)
         // still switched.
         isZooming = false;
-        stableGridZoom = map.getZoom();
+        stableGridZoom = gridZoomOf();
         refresh();
       });
 
