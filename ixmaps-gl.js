@@ -4723,7 +4723,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // carry the suffix; stripping a pattern that isn't there is a
         // no-op. A theme's single circles (ix-bubbles-<name>-circles-gN,
         // a ScatterplotLayer) route like its bubbles.
-        const base = layerId.replace(/-g\d+$/, '').replace(/-circles$/, '');
+        const base = layerId.replace(/-g\d+$/, '').replace(/-circles$/, '').replace(/^(ix-vector-heads-.*)-n\d+$/, '$1');
         return runtimes.find(r => {
           if (base === `ix-bubbles-${r.name}`) return isSymbolChart(r.flags);
           if (base === `ix-pie-${r.name}`) return r._isPieChart();
@@ -14484,8 +14484,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         ...(dash ? { getDashArray: d => d.dash, extensions: [new PathStyleExtension({ dash: true })] } : {})
       })];
       if (heads.length) {
+        // the head count in the id: deck kept a same-id polygon layer's
+        // larger buffers when a filter cut the heads (the Zeit page's "to
+        // Africa": bow-tie triangles from the unfiltered heads' vertices).
+        // Every head has the same vertex count, so an equal count — a pan —
+        // reuses the layer; a changed one gets fresh buffers
         layers.push(new GeoJsonLayer({
-          id: `ix-vector-heads-${this.name}`, data: { type: 'FeatureCollection', features: heads }, pickable: true,
+          id: `ix-vector-heads-${this.name}-n${heads.length}`, data: { type: 'FeatureCollection', features: heads }, pickable: true,
           filled: true, stroked: false, getFillColor: d => d.fill, parameters: ICON_LAYER_GLOBE_PARAMETERS
         }));
       }
