@@ -1542,6 +1542,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     _filterCache.set(expr, pred);
     return pred;
   }
+  // a load-time .filter() drops records for good, so a later changeThemeStyle
+  // "filter" must re-filter the unfiltered data (flat re-processes the theme
+  // with the new filter) instead of narrowing what the first filter left
+  function refilterFrom(raw, spec, runtimes) {
+    return expr => {
+      const f = applyWhereFilter(raw, expr);
+      return f.type === 'Table' ? joinTableFeatures(spec, f, runtimes) : f;
+    };
+  }
+
   function applyWhereFilter(fc, filterExpr) {
     if (!filterExpr) return fc;
     const pred = flatFilterPredicate(String(filterExpr));
@@ -4593,6 +4603,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const filtered = applyWhereFilter(raw, spec.filter);
         const fc = filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered;
         const rt = new LayerRuntime(spec, fc, this._engineOptions);
+        if (spec.filter) rt._refilter = refilterFrom(raw, spec, runtimes);
         // tags which underlying data source this runtime came from — see
         // setFacetFilter/clearFacetFilter/clearAllFacetFilters below,
         // which use this to propagate a facet filter to every theme
@@ -5106,7 +5117,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           targets.forEach(rt => {
             if (validation) validation.style(themeIdOf(rt), { [key]: value });
             if (key === 'filter') {
-              rt.setRuntimeFilter(action === 'remove' ? '' : value);
+              const expr = action === 'remove' ? '' : value;
+              if (rt._refilter) {
+                // the theme was loaded with a filter: re-filter its full data
+                rt._runtimeFilterExpr = '';
+                rt._filterExpr = expr;
+                rt.replaceFeatures(rt._refilter(expr));
+              } else rt.setRuntimeFilter(expr);
               changed = true;
               return;
             }
@@ -5444,6 +5461,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           spec = pspec;
         }
         rt.replaceFeatures(namedThemeFeatures(spec, rows, rt._specBinding));
+        rt._refilter = spec.filter ? expr => namedThemeFeatures(Object.assign({}, spec, { filter: expr }), rows, rt._specBinding) : null;
         if (glDebug()) console.info(`[ixmaps-gl debug] data for ${themeIdOf(rt)}: ${rows.length} rows → ${rt.features.length} features`);
         // the legend is built from the theme's classes: build it again
         if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel);
@@ -5519,6 +5537,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const filtered = applyWhereFilter(raw, spec.filter);
         const fc = filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered;
         const rt = new LayerRuntime(spec, fc, builder._engineOptions);
+        if (spec.filter) rt._refilter = refilterFrom(raw, spec, runtimes);
         rt._definition = pdef; // for refreshTheme
         rt._deferredLoad = deferred;
         rt._named = named;
