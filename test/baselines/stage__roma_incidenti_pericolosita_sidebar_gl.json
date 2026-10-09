@@ -475,469 +475,461 @@
      ]
     },
     {
-     "id": "ix-bubbles-Roma-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-Roma-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 14782,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": true
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "125bb1d112400bdc",
-     "setDigest": "3a429503098e2e2b",
+     "digest": "d8917a1b6d316e9d",
+     "setDigest": "58bec7054e466f41",
      "columnDigests": {
-      "getColor": "287a097fdfea7216",
-      "getIcon": "f731368f58139414",
+      "getFillColor": "806fb696c0b740c1",
+      "getLineColor": "287a097fdfea7216",
+      "getLineWidth": "fd69697c256468d2",
       "getPosition": "cc08dfe11130e529",
-      "getSize": "7abca245b76ca4de"
+      "getRadius": "68cbd09af476a4ff"
      },
      "stats": {
-      "getColor": [
+      "getFillColor": [
+       54,
+       220
+      ],
+      "getLineColor": [
        255,
        255
+      ],
+      "getLineWidth": [
+       0.013333,
+       0.194854
       ],
       "getPosition": [
        12.3804,
        12.6124
       ],
-      "getSize": [
-       0.2,
-       12.554091
+      "getRadius": [
+       0.1,
+       6.277046
       ]
      },
      "sample": [
       [
        [
+        54,
+        166,
+        177,
+        153
+       ],
+       [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4961,
         41.9035
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4858,
         41.8807
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.5052,
         41.8977
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4837,
         41.9024
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4893,
         41.8981
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4802,
         41.907
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.482,
         41.8768
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4675,
         41.8973
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4798,
         41.8864
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4999,
         41.8894
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.492,
         41.8999
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4975,
         41.9074
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4766,
         41.9005
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4788,
         41.8878
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4812,
         41.9065
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.501,
         41.9047
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4961,
         41.8795
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.5105,
         41.8961
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4632,
         41.9012
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4985,
         41.902
        ],
-       0.2
+       0.1
       ]
      ]
     },
     {
      "id": "ix-points-values-Roma",
      "type": "TextLayer",
-     "count": 3985,
+     "count": 3940,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -954,14 +946,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "13d9379050b34b40",
-     "setDigest": "4883001a10e2e517",
+     "digest": "903e8e921d5c9279",
+     "setDigest": "ecc089c19ef6b1cf",
      "columnDigests": {
-      "getColor": "fdb97ee0c48790bb",
-      "getPixelOffset": "f4af82e7eae6771d",
-      "getPosition": "c355a689c6d59489",
-      "getSize": "98ecb46f02383b19",
-      "getText": "cea63331698dfec6"
+      "getColor": "63a66a4660b1c61a",
+      "getPixelOffset": "31d21dfebfffbd5b",
+      "getPosition": "20a7f23d32c5c231",
+      "getSize": "94ac2d876baedb82",
+      "getText": "f5d6555c030622d3"
      },
      "stats": {
       "getColor": [
@@ -986,7 +978,8 @@
        [
         255,
         255,
-        255
+        255,
+        31
        ],
        [
         0,
@@ -1020,7 +1013,8 @@
        [
         255,
         255,
-        255
+        255,
+        60
        ],
        [
         0,
@@ -1088,7 +1082,8 @@
        [
         255,
         255,
-        255
+        255,
+        41
        ],
        [
         0,
@@ -1122,7 +1117,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -1190,7 +1186,8 @@
        [
         255,
         255,
-        255
+        255,
+        65
        ],
        [
         0,
@@ -1224,7 +1221,8 @@
        [
         255,
         255,
-        255
+        255,
+        224
        ],
        [
         0,
@@ -1241,7 +1239,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -1275,7 +1274,8 @@
        [
         255,
         255,
-        255
+        255,
+        133
        ],
        [
         0,
@@ -1292,7 +1292,8 @@
        [
         255,
         255,
-        255
+        255,
+        24
        ],
        [
         0,
@@ -1327,7 +1328,7 @@
     {
      "id": "ix-cluster-values-Roma",
      "type": "TextLayer",
-     "count": 2413,
+     "count": 2383,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -1344,14 +1345,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "0e5c2d0faef0523c",
-     "setDigest": "a86e95a03658a7f5",
+     "digest": "823433f6fb9b91ac",
+     "setDigest": "f12a99a41c7fbb36",
      "columnDigests": {
-      "getColor": "442d526b73f94026",
-      "getPixelOffset": "d7098f4fc24f6e3b",
-      "getPosition": "4e085e9a15918c18",
-      "getSize": "403361633619137e",
-      "getText": "ab5d8b96a99a4655"
+      "getColor": "3148285fe455ae73",
+      "getPixelOffset": "68f94cf3b50013a5",
+      "getPosition": "b1f7ed86ce0e9d21",
+      "getSize": "ca924a2be077c15f",
+      "getText": "eca9f5c9fd9edd4a"
      },
      "stats": {
       "getColor": [
@@ -1376,7 +1377,8 @@
        [
         255,
         255,
-        255
+        255,
+        65
        ],
        [
         0,
@@ -1495,7 +1497,8 @@
        [
         255,
         255,
-        255
+        255,
+        65
        ],
        [
         0,
@@ -1512,7 +1515,8 @@
        [
         255,
         255,
-        255
+        255,
+        120
        ],
        [
         0,
@@ -1563,7 +1567,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -1580,7 +1585,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -1597,7 +1603,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -1614,7 +1621,8 @@
        [
         255,
         255,
-        255
+        255,
+        78
        ],
        [
         0,
@@ -1631,7 +1639,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -1648,7 +1657,8 @@
        [
         255,
         255,
-        255
+        255,
+        41
        ],
        [
         0,
@@ -1665,7 +1675,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -1699,7 +1710,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -2301,469 +2313,461 @@
      ]
     },
     {
-     "id": "ix-bubbles-Roma-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-Roma-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 8136,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": true
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "30a0f7c0177ebbfe",
-     "setDigest": "d9931ab530bfc94e",
+     "digest": "fd7a9843b41c7bb7",
+     "setDigest": "e57530eca85ece0e",
      "columnDigests": {
-      "getColor": "df12f1d5c7afa87d",
-      "getIcon": "9a719734054db8f1",
+      "getFillColor": "b8a60e1b2967d9ea",
+      "getLineColor": "df12f1d5c7afa87d",
+      "getLineWidth": "cf6f4c264c2c1949",
       "getPosition": "821ad6d6f2d42583",
-      "getSize": "60351c2179b35209"
+      "getRadius": "45d31883b2a27719"
      },
      "stats": {
-      "getColor": [
+      "getFillColor": [
+       54,
+       220
+      ],
+      "getLineColor": [
        255,
        255
+      ],
+      "getLineWidth": [
+       0.013333,
+       0.245501
       ],
       "getPosition": [
        12.4384,
        12.5544
       ],
-      "getSize": [
-       0.2,
-       15.817164
+      "getRadius": [
+       0.1,
+       7.908582
       ]
      },
      "sample": [
       [
        [
+        54,
+        166,
+        177,
+        153
+       ],
+       [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4961,
         41.9035
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4858,
         41.8807
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.5052,
         41.8977
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4837,
         41.9024
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4893,
         41.8981
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4802,
         41.907
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.482,
         41.8768
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4675,
         41.8973
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4798,
         41.8864
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4999,
         41.8894
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.492,
         41.8999
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4975,
         41.9074
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4766,
         41.9005
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4788,
         41.8878
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4812,
         41.9065
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.501,
         41.9047
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4961,
         41.8795
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.5105,
         41.8961
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4632,
         41.9012
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4985,
         41.902
        ],
-       0.2
+       0.1
       ]
      ]
     },
     {
      "id": "ix-points-values-Roma",
      "type": "TextLayer",
-     "count": 2178,
+     "count": 2172,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -2780,14 +2784,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "67ae7953cdde34cc",
-     "setDigest": "b05b018407ac9845",
+     "digest": "403d92e8b3700c00",
+     "setDigest": "4a0b569508613289",
      "columnDigests": {
-      "getColor": "c39b777e4394cc83",
-      "getPixelOffset": "446fbc97480b9c42",
-      "getPosition": "624d24300f864974",
-      "getSize": "256368341d7003ca",
-      "getText": "ad1f47abdca09979"
+      "getColor": "2ae9f359ce272dd2",
+      "getPixelOffset": "12eceba808f72c1a",
+      "getPosition": "c01b57732c02a078",
+      "getSize": "b6cf57ce483e057f",
+      "getText": "699d96b3002740c7"
      },
      "stats": {
       "getColor": [
@@ -2812,7 +2816,8 @@
        [
         255,
         255,
-        255
+        255,
+        78
        ],
        [
         0,
@@ -2846,7 +2851,8 @@
        [
         255,
         255,
-        255
+        255,
+        133
        ],
        [
         0,
@@ -2914,7 +2920,8 @@
        [
         255,
         255,
-        255
+        255,
+        41
        ],
        [
         0,
@@ -3016,7 +3023,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -3067,7 +3075,8 @@
        [
         255,
         255,
-        255
+        255,
+        133
        ],
        [
         0,
@@ -3118,7 +3127,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -3153,7 +3163,7 @@
     {
      "id": "ix-cluster-values-Roma",
      "type": "TextLayer",
-     "count": 1432,
+     "count": 1430,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -3170,14 +3180,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "d03a676fd89e2f99",
-     "setDigest": "48458636ad272aab",
+     "digest": "eadff25d372fca4b",
+     "setDigest": "6bc97fe348dffcf7",
      "columnDigests": {
-      "getColor": "0b1bc0be0de18bc5",
-      "getPixelOffset": "ea7eca8e7056191f",
-      "getPosition": "9df4d25cf14f43d7",
-      "getSize": "dad642bab2c22a9c",
-      "getText": "26c6baccfcc2c18e"
+      "getColor": "f23cb1d28eb99957",
+      "getPixelOffset": "cc8cd3d5b9c01a3c",
+      "getPosition": "cf2eb0f71c0eeaef",
+      "getSize": "5ac1b5e5709a4ec2",
+      "getText": "06509bf3bbecf43b"
      },
      "stats": {
       "getColor": [
@@ -3202,7 +3212,8 @@
        [
         255,
         255,
-        255
+        255,
+        194
        ],
        [
         0,
@@ -3321,7 +3332,8 @@
        [
         255,
         255,
-        255
+        255,
+        182
        ],
        [
         0,
@@ -3389,7 +3401,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -3406,7 +3419,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -3440,7 +3454,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -3474,7 +3489,8 @@
        [
         255,
         255,
-        255
+        255,
+        90
        ],
        [
         0,
@@ -3525,7 +3541,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -4127,469 +4144,461 @@
      ]
     },
     {
-     "id": "ix-bubbles-Roma-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-Roma-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 18628,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": true
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "eac1a06c984e0d4d",
-     "setDigest": "d054e6b629aeafd6",
+     "digest": "ba6dabcfc216f43a",
+     "setDigest": "f4e0c215913e626b",
      "columnDigests": {
-      "getColor": "b184aff8e7c41b0a",
-      "getIcon": "f551ecf7045cd671",
+      "getFillColor": "614198dc1bbdc32d",
+      "getLineColor": "b184aff8e7c41b0a",
+      "getLineWidth": "c66dbb221168831a",
       "getPosition": "c11b05139aaeb9a6",
-      "getSize": "be3a19e3615fb377"
+      "getRadius": "4ca5fa2c20dc10f6"
      },
      "stats": {
-      "getColor": [
+      "getFillColor": [
+       54,
+       220
+      ],
+      "getLineColor": [
        255,
        255
+      ],
+      "getLineWidth": [
+       0.013333,
+       0.154656
       ],
       "getPosition": [
        12.26455,
        12.7284
       ],
-      "getSize": [
-       0.2,
-       9.964189
+      "getRadius": [
+       0.1,
+       4.982094
       ]
      },
      "sample": [
       [
        [
+        54,
+        166,
+        177,
+        153
+       ],
+       [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4961,
         41.9035
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4858,
         41.8807
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.5052,
         41.8977
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4837,
         41.9024
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4893,
         41.8981
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4802,
         41.907
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.482,
         41.8768
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4675,
         41.8973
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4798,
         41.8864
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4999,
         41.8894
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.492,
         41.8999
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4975,
         41.9074
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4766,
         41.9005
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4788,
         41.8878
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4812,
         41.9065
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.501,
         41.9047
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4961,
         41.8795
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.5105,
         41.8961
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4632,
         41.9012
        ],
-       0.2
+       0.1
       ],
       [
+       [
+        54,
+        166,
+        177,
+        153
+       ],
        [
         255,
         255,
         255,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-54,166,177-0.6-none-0",
-        "url": "#b9416c91:1758",
-        "width": 48
-       },
+       0.013333,
        [
         12.4985,
         41.902
        ],
-       0.2
+       0.1
       ]
      ]
     },
     {
      "id": "ix-points-values-Roma",
      "type": "TextLayer",
-     "count": 920,
+     "count": 899,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -4606,14 +4615,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "9cf650a4946b2fca",
-     "setDigest": "1428e26d57b7e20d",
+     "digest": "2dfeced964f885e5",
+     "setDigest": "be2696d9d894b5d4",
      "columnDigests": {
-      "getColor": "e3a32b68a6cd78b1",
-      "getPixelOffset": "9c7c2b8962f29210",
-      "getPosition": "1ce0a874425f898c",
-      "getSize": "6420a52e309a5032",
-      "getText": "e1f9bcaf3da20ac2"
+      "getColor": "abc64138ea7d60ca",
+      "getPixelOffset": "3ec3c8ffc9c6972a",
+      "getPosition": "4a41c8f342d30f28",
+      "getSize": "0a3b4340b5c4133e",
+      "getText": "75838af50e6250be"
      },
      "stats": {
       "getColor": [
@@ -4638,7 +4647,8 @@
        [
         255,
         255,
-        255
+        255,
+        224
        ],
        [
         0,
@@ -4655,7 +4665,8 @@
        [
         255,
         255,
-        255
+        255,
+        224
        ],
        [
         0,
@@ -4672,7 +4683,8 @@
        [
         255,
         255,
-        255
+        255,
+        22
        ],
        [
         0,
@@ -4689,7 +4701,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -4706,7 +4719,8 @@
        [
         255,
         255,
-        255
+        255,
+        90
        ],
        [
         0,
@@ -4723,7 +4737,8 @@
        [
         255,
         255,
-        255
+        255,
+        194
        ],
        [
         0,
@@ -4808,7 +4823,8 @@
        [
         255,
         255,
-        255
+        255,
+        65
        ],
        [
         0,
@@ -4842,7 +4858,8 @@
        [
         255,
         255,
-        255
+        255,
+        90
        ],
        [
         0,
@@ -4859,7 +4876,8 @@
        [
         255,
         255,
-        255
+        255,
+        90
        ],
        [
         0,
@@ -4876,7 +4894,8 @@
        [
         255,
         255,
-        255
+        255,
+        163
        ],
        [
         0,
@@ -4944,7 +4963,8 @@
        [
         255,
         255,
-        255
+        255,
+        151
        ],
        [
         0,
@@ -4961,7 +4981,8 @@
        [
         255,
         255,
-        255
+        255,
+        194
        ],
        [
         0,
@@ -4979,7 +5000,7 @@
     {
      "id": "ix-cluster-values-Roma",
      "type": "TextLayer",
-     "count": 1586,
+     "count": 1559,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -4996,14 +5017,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "11f0df7969c8d82c",
-     "setDigest": "c3bf25c40fac350f",
+     "digest": "2c39284142cc1015",
+     "setDigest": "dcb19a6631a05502",
      "columnDigests": {
-      "getColor": "eb22818c66a001b5",
-      "getPixelOffset": "3d7e266c4b74342e",
-      "getPosition": "dd5b0c033ffad2cd",
-      "getSize": "9cf794cfd5ce40d5",
-      "getText": "5e7388f47a15a2f2"
+      "getColor": "8bcb27a95e21a91f",
+      "getPixelOffset": "4385b326057089a3",
+      "getPosition": "60388a75bc706ca2",
+      "getSize": "765a9b3ee244677a",
+      "getText": "5992b41335d974b5"
      },
      "stats": {
       "getColor": [
@@ -5028,7 +5049,8 @@
        [
         255,
         255,
-        255
+        255,
+        21
        ],
        [
         0,
@@ -5045,7 +5067,8 @@
        [
         255,
         255,
-        255
+        255,
+        212
        ],
        [
         0,
@@ -5062,7 +5085,8 @@
        [
         255,
         255,
-        255
+        255,
+        151
        ],
        [
         0,
@@ -5096,7 +5120,8 @@
        [
         255,
         255,
-        255
+        255,
+        194
        ],
        [
         0,
@@ -5151,23 +5176,6 @@
        ],
        [
         0,
-        -0.031331
-       ],
-       [
-        12.4644,
-        41.9003
-       ],
-       1.566537,
-       "0.2"
-      ],
-      [
-       [
-        255,
-        255,
-        255
-       ],
-       [
-        0,
         -0.063398
        ],
        [
@@ -5181,7 +5189,8 @@
        [
         255,
         255,
-        255
+        255,
+        65
        ],
        [
         0,
@@ -5198,7 +5207,8 @@
        [
         255,
         255,
-        255
+        255,
+        133
        ],
        [
         0,
@@ -5215,7 +5225,8 @@
        [
         255,
         255,
-        255
+        255,
+        36
        ],
        [
         0,
@@ -5232,7 +5243,8 @@
        [
         255,
         255,
-        255
+        255,
+        90
        ],
        [
         0,
@@ -5300,7 +5312,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -5317,7 +5330,8 @@
        [
         255,
         255,
-        255
+        255,
+        151
        ],
        [
         0,
@@ -5334,7 +5348,8 @@
        [
         255,
         255,
-        255
+        255,
+        102
        ],
        [
         0,
@@ -5355,14 +5370,32 @@
        ],
        [
         0,
-        -0.031331
+        -0.063398
        ],
        [
-        12.482,
-        41.8767
+        12.502122,
+        41.891711
        ],
-       1.566537,
-       "0.2"
+       3.169921,
+       "0.6"
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        163
+       ],
+       [
+        0,
+        -0.063398
+       ],
+       [
+        12.4788,
+        41.888
+       ],
+       3.169921,
+       "0.6"
       ]
      ]
     }

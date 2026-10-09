@@ -475,40 +475,52 @@
      ]
     },
     {
-     "id": "ix-bubbles-AREU-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-AREU-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 8840,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": true
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "ec14bb8265cc060b",
-     "setDigest": "a6c408a26e9ca20e",
+     "digest": "7d7139fce7cc6322",
+     "setDigest": "22ae6ca51884c7d4",
      "columnDigests": {
-      "getColor": "949eb3cb5f05fb6f",
-      "getIcon": "b30b6e20ec242866",
+      "getFillColor": "dbc61da57531cfd3",
+      "getLineColor": "6c5ef59d6f605dcd",
+      "getLineWidth": "967ad37966864b94",
       "getPosition": "f6d5dd30dddcbcd4",
-      "getSize": "d966a910919d66f3"
+      "getRadius": "13c574b3a10bb874"
      },
      "stats": {
-      "getColor": [
-       255,
+      "getFillColor": [
+       248,
        255
+      ],
+      "getLineColor": [
+       148,
+       153
+      ],
+      "getLineWidth": [
+       0.013333,
+       0.300481
       ],
       "getPosition": [
        9.06574,
        9.314003
       ],
-      "getSize": [
-       0.2,
-       11.040385
+      "getRadius": [
+       0.1,
+       5.520192
       ]
      },
      "sample": [
@@ -516,428 +528,408 @@
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.13972,
         45.48224
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.0794,
         45.51449
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.07854,
         45.42893
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.15308,
         45.45713
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.15076,
         45.48726
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.16941,
         45.52046
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.082047,
         45.419611
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.256295,
         45.416183
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.054409,
        [
         9.187875,
         45.44011
        ],
-       0.816129
+       0.408064
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.058371,
        [
         9.171335,
         45.409605
        ],
-       0.875559
+       0.43778
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.059504,
        [
         9.10021,
         45.44428
        ],
-       0.892562
+       0.446281
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.061985,
        [
         9.288117,
         45.525742
        ],
-       0.929768
+       0.464884
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.070824,
        [
         9.22233,
         45.44368
        ],
-       1.062362
+       0.531181
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.070824,
        [
         9.120344,
         45.419841
        ],
-       1.062362
+       0.531181
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.071829,
        [
         9.167147,
         45.479147
        ],
-       1.077431
+       0.538716
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.07512,
        [
         9.208985,
         45.48129
        ],
-       1.126805
+       0.563402
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.076322,
        [
         9.12222,
         45.48571
        ],
-       1.144835
+       0.572417
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.076322,
        [
         9.11258,
         45.46659
        ],
-       1.144835
+       0.572417
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.076322,
        [
         9.13319,
         45.47546
        ],
-       1.144835
+       0.572417
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.076322,
        [
         9.12538,
         45.45189
        ],
-       1.144835
+       0.572417
       ]
      ]
     },
     {
      "id": "ix-points-values-AREU",
      "type": "TextLayer",
-     "count": 1783,
+     "count": 1781,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -954,14 +946,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "fb334a4613b44f87",
-     "setDigest": "d63de1df94a8fd26",
+     "digest": "e99abce4d96a595e",
+     "setDigest": "f370eed1d91103ac",
      "columnDigests": {
-      "getColor": "0291a6e3655b512b",
-      "getPixelOffset": "07a4e9bfb9cb2a2f",
-      "getPosition": "9d334f31f6132dc7",
-      "getSize": "d2f72084ed315cb2",
-      "getText": "b07ab4c9807bf3c0"
+      "getColor": "b9204cfdb5b2e87d",
+      "getPixelOffset": "98b8b0fac7abb30f",
+      "getPosition": "74167c46c0096516",
+      "getSize": "53318c5c51d8fa90",
+      "getText": "2749af36dfe6f946"
      },
      "stats": {
       "getColor": [
@@ -1207,7 +1199,8 @@
        [
         30,
         30,
-        30
+        30,
+        212
        ],
        [
         0,
@@ -1327,7 +1320,7 @@
     {
      "id": "ix-cluster-values-AREU",
      "type": "TextLayer",
-     "count": 1224,
+     "count": 1221,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -1344,14 +1337,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "4c5f9ea56f29010d",
-     "setDigest": "3169c2fd7f326adb",
+     "digest": "7d79a6f8fedeb7dd",
+     "setDigest": "8add6ca0e2c393b3",
      "columnDigests": {
-      "getColor": "399e7d42b4d633e7",
-      "getPixelOffset": "bbf9b30a712e1204",
-      "getPosition": "983f86f2c73259b0",
-      "getSize": "599cd6baaed2cf08",
-      "getText": "7455c6e52aa7c5a3"
+      "getColor": "b0d60195f1bbffa9",
+      "getPixelOffset": "c61740d7fb607f17",
+      "getPosition": "60189e690554bc58",
+      "getSize": "4acfba936c59d98e",
+      "getText": "0398f691ab315723"
      },
      "stats": {
       "getColor": [
@@ -2276,40 +2269,52 @@
      ]
     },
     {
-     "id": "ix-bubbles-AREU-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-AREU-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 7267,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": true
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "8b41082a72391b63",
-     "setDigest": "6097c378ac11d54d",
+     "digest": "d74ff13711197ba1",
+     "setDigest": "02a8876262d978d2",
      "columnDigests": {
-      "getColor": "5a5c5bece2705840",
-      "getIcon": "5894fd9bff7653b7",
+      "getFillColor": "31441bb2ae7136af",
+      "getLineColor": "45ccd3bc5b1a06cd",
+      "getLineWidth": "f807dd7922822611",
       "getPosition": "607fde1d82df64ac",
-      "getSize": "4bf0785bc0438906"
+      "getRadius": "2ec4579c99e657f7"
      },
      "stats": {
-      "getColor": [
-       255,
+      "getFillColor": [
+       248,
        255
+      ],
+      "getLineColor": [
+       148,
+       153
+      ],
+      "getLineWidth": [
+       0.013333,
+       0.378583
       ],
       "getPosition": [
        9.12791,
        9.252096
       ],
-      "getSize": [
-       0.2,
-       13.910013
+      "getRadius": [
+       0.1,
+       6.955007
       ]
      },
      "sample": [
@@ -2317,428 +2322,408 @@
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.13972,
         45.48224
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.22212,
         45.44361
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.20885,
         45.48138
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.15308,
         45.45713
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.25122,
         45.46213
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.2239,
         45.45487
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.15076,
         45.48726
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.16897,
         45.47438
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.17092,
         45.43732
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.18566,
         45.44907
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.074971,
        [
         9.16709,
         45.479255
        ],
-       1.124558
+       0.562279
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.090499,
        [
         9.187847,
         45.440113
        ],
-       1.357478
+       0.678739
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.093201,
        [
         9.16521,
         45.475995
        ],
-       1.398009
+       0.699004
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.09616,
        [
         9.13319,
         45.47546
        ],
-       1.442401
+       0.721201
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.09616,
        [
         9.24152,
         45.48224
        ],
-       1.442401
+       0.721201
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.09616,
        [
         9.22537,
         45.49073
        ],
-       1.442401
+       0.721201
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.09616,
        [
         9.19435,
         45.43727
        ],
-       1.442401
+       0.721201
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.09616,
        [
         9.19043,
         45.47663
        ],
-       1.442401
+       0.721201
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.09616,
        [
         9.19929,
         45.4436
        ],
-       1.442401
+       0.721201
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.09616,
        [
         9.1779,
         45.4466
        ],
-       1.442401
+       0.721201
       ]
      ]
     },
     {
      "id": "ix-points-values-AREU",
      "type": "TextLayer",
-     "count": 2693,
+     "count": 2688,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -2755,14 +2740,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "65280203dad6ccce",
-     "setDigest": "0122b0eeb0d087e4",
+     "digest": "8c34445274207c77",
+     "setDigest": "793e9b0fbb2da793",
      "columnDigests": {
-      "getColor": "147128ed1a656384",
-      "getPixelOffset": "bb3ac46508ef4e90",
-      "getPosition": "27a5e61af5cd1f55",
-      "getSize": "c28e3bbf0c813691",
-      "getText": "241963b6c38a0186"
+      "getColor": "56536c79534c0022",
+      "getPixelOffset": "e00177bebb58ee64",
+      "getPosition": "7958368f9d64a8df",
+      "getSize": "4b774811942f28ac",
+      "getText": "b2dd1c3ef2d8f877"
      },
      "stats": {
       "getColor": [
@@ -2838,7 +2823,8 @@
        [
         30,
         30,
-        30
+        30,
+        82
        ],
        [
         0,
@@ -3128,7 +3114,7 @@
     {
      "id": "ix-cluster-values-AREU",
      "type": "TextLayer",
-     "count": 1948,
+     "count": 1936,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -3145,14 +3131,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "ab23cdf7185863c9",
-     "setDigest": "8540c963a1622407",
+     "digest": "20d44c9c4fe4d462",
+     "setDigest": "8aac32ad175acd73",
      "columnDigests": {
-      "getColor": "409fc04173897dba",
-      "getPixelOffset": "8557d803bad8b123",
-      "getPosition": "ac1daec61f810918",
-      "getSize": "0dfbb9d06e6ee5f2",
-      "getText": "25b0f2fa781e0fc7"
+      "getColor": "4fb5c21f2696df9e",
+      "getPixelOffset": "da88182f61791dc8",
+      "getPosition": "adec174ee7a3b320",
+      "getSize": "04712253cc65a31b",
+      "getText": "74f86edba45c94eb"
      },
      "stats": {
       "getColor": [
@@ -3211,7 +3197,8 @@
        [
         30,
         30,
-        30
+        30,
+        38
        ],
        [
         0,
@@ -3398,7 +3385,8 @@
        [
         30,
         30,
-        30
+        30,
+        38
        ],
        [
         0,
@@ -3500,7 +3488,8 @@
        [
         30,
         30,
-        30
+        30,
+        212
        ],
        [
         0,
@@ -4077,40 +4066,52 @@
      ]
     },
     {
-     "id": "ix-bubbles-AREU-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-AREU-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 10038,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": true
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "171c352f749bf695",
-     "setDigest": "b3c0d045570104de",
+     "digest": "6c9e2d511af9f186",
+     "setDigest": "6b3f938316fb9597",
      "columnDigests": {
-      "getColor": "66243e51f85add60",
-      "getIcon": "29121df0e6d2d9b3",
+      "getFillColor": "594f5cc99751c82e",
+      "getLineColor": "029f5438c5603413",
+      "getLineWidth": "ac02309beeb3248b",
       "getPosition": "16629b3a6cf13e23",
-      "getSize": "5503ebdef5373fc6"
+      "getRadius": "ecc9a9c474b06e61"
      },
      "stats": {
-      "getColor": [
-       255,
+      "getFillColor": [
+       235,
        255
+      ],
+      "getLineColor": [
+       141,
+       153
+      ],
+      "getLineWidth": [
+       0.013333,
+       0.238492
       ],
       "getPosition": [
        8.941572,
        9.43859
       ],
-      "getSize": [
-       0.2,
-       11.312674
+      "getRadius": [
+       0.1,
+       5.656337
       ]
      },
      "sample": [
@@ -4118,421 +4119,401 @@
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.213636,
         45.589886
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.24826,
         45.56974
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.18609,
         45.55476
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.13972,
         45.48224
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.17159,
         45.40967
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.32939,
         45.53419
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.063172,
         45.5328
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.353436,
         45.371046
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.0794,
         45.51449
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.215043,
         45.532041
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.01174,
         45.42251
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.29004,
         45.38808
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.03251,
         45.53991
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.07388,
         45.58067
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         8.992078,
         45.48836
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.31169,
         45.36239
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.06251,
         45.532698
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.355034,
         45.576547
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.2335,
         45.35722
        ],
-       0.2
+       0.1
       ],
       [
        [
         255,
         255,
-        255,
+        178,
+        217
+       ],
+       [
+        153,
+        153,
+        106,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-255,255,178-0.85-none-0",
-        "url": "#640a3d07:1558",
-        "width": 48
-       },
+       0.013333,
        [
         9.04729,
         45.58992
        ],
-       0.2
+       0.1
       ]
      ]
     },
@@ -4556,10 +4537,10 @@
       "getSize",
       "getText"
      ],
-     "digest": "8c86fb8c6f4f81c6",
-     "setDigest": "96216368bb091a4a",
+     "digest": "7727388df96eb0aa",
+     "setDigest": "4e87db3aba55e00e",
      "columnDigests": {
-      "getColor": "735f994ed349f916",
+      "getColor": "a76986292ca4f728",
       "getPixelOffset": "bed85a8a10ff97ca",
       "getPosition": "02a3e64e54cdda8c",
       "getSize": "e7fb6582d7205ddf",
@@ -4946,10 +4927,10 @@
       "getSize",
       "getText"
      ],
-     "digest": "61ee055a1c68a70f",
-     "setDigest": "09298aab53b5ea2d",
+     "digest": "f75ca896bb48d31f",
+     "setDigest": "a75733025fb864db",
      "columnDigests": {
-      "getColor": "9f63b8164de4e1ff",
+      "getColor": "3fcf003b005ca8b4",
       "getPixelOffset": "fd586baa8ae3683a",
       "getPosition": "fca9166620a4c3a1",
       "getSize": "d3d8a47e121ac876",
