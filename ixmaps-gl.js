@@ -7169,6 +7169,94 @@ in vec4 vPieLineColor;
     return { offset, index, extent };
   }
 
+  // Chart texts covered by charts drawn after them. Flat draws each chart
+  // as one SVG group (symbol, then its value text) in the sorted draw
+  // order, so a later chart's symbol paints over the texts of every chart
+  // beneath it; here the texts are separate TextLayers above every icon.
+  // This composites that occlusion on the CPU: for each text, the
+  // transmittance Π(1 − α) of every LATER chart's symbol parts at a few
+  // sample points of the text box, averaged — the fraction of the text
+  // still showing through, its alpha. Partly covered texts fade instead
+  // of being clipped (no per-pixel mask in deck.gl).
+  //   charts: in draw order, { x, y, parts: [{ dx, dy, r, shape, alpha }] }
+  //     in screen pixels, a part's alpha its opacity
+  //   texts: { order (index into charts), x, y, w, h }
+  // Returns each text's transmittance, 0..1.
+  const OCCLUSION_CELL_PX = 32;
+  // below this a text is as good as hidden: left out of its TextLayer
+  const CHART_TEXT_MIN_TRANSMITTANCE = 0.08;
+  function chartTextTransmittance(charts, texts) {
+    // the texts' sample points, then a grid over just their extent holding,
+    // per cell, the charts (in draw order) whose reach overlaps it
+    const SAMPLES = [[0, 0], [-0.35, -0.3], [0.35, -0.3], [-0.35, 0.3], [0.35, 0.3]];
+    const nS = SAMPLES.length, px = new Float64Array(texts.length * nS), py = new Float64Array(texts.length * nS);
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    texts.forEach((t, i) => SAMPLES.forEach(([sx, sy], j) => {
+      const x = px[i * nS + j] = t.x + sx * t.w, y = py[i * nS + j] = t.y + sy * t.h;
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }));
+    const out = new Array(texts.length).fill(1);
+    if (!texts.length || !charts.length) return out;
+    const C = OCCLUSION_CELL_PX;
+    const W = Math.floor((maxX - minX) / C) + 1, H = Math.floor((maxY - minY) / C) + 1;
+    const reach = charts.map(c => {
+      let ext = 0;
+      for (const p of c.parts) ext = Math.max(ext, Math.sqrt(p.dx * p.dx + p.dy * p.dy) + p.r * Math.SQRT2);
+      return ext;
+    });
+    const range = (c, ext) => [Math.max(0, Math.floor((c.x - ext - minX) / C)), Math.min(W - 1, Math.floor((c.x + ext - minX) / C)),
+      Math.max(0, Math.floor((c.y - ext - minY) / C)), Math.min(H - 1, Math.floor((c.y + ext - minY) / C))];
+    // two passes (count, fill) into one flat array: cells keep draw order
+    const start = new Int32Array(W * H + 1);
+    charts.forEach((c, k) => {
+      const [x0, x1, y0, y1] = range(c, reach[k]);
+      for (let gy = y0; gy <= y1; gy++) for (let gx = x0; gx <= x1; gx++) start[gy * W + gx + 1]++;
+    });
+    for (let i = 0; i < W * H; i++) start[i + 1] += start[i];
+    const fill = start.slice(0, W * H), cells = new Int32Array(start[W * H]);
+    charts.forEach((c, k) => {
+      const [x0, x1, y0, y1] = range(c, reach[k]);
+      for (let gy = y0; gy <= y1; gy++) for (let gx = x0; gx <= x1; gx++) cells[fill[gy * W + gx]++] = k;
+    });
+    // what of (x, y) still shows through chart c's parts
+    const keepAt = (c, x, y) => {
+      let keep = 1;
+      for (const p of c.parts) {
+        if (insideSymbolShape(p.shape, x - c.x - p.dx, y - c.y - p.dy, p.r)) keep *= 1 - p.alpha;
+      }
+      return keep;
+    };
+    texts.forEach((t, i) => {
+      let sum = 0;
+      for (let j = 0; j < nS; j++) {
+        const x = px[i * nS + j], y = py[i * nS + j];
+        const cell = Math.floor((y - minY) / C) * W + Math.floor((x - minX) / C);
+        let keep = 1;
+        // only the charts drawn after the text's own cover it
+        for (let n = start[cell + 1] - 1; n >= start[cell] && cells[n] > t.order && keep > 0.005; n--) {
+          const k = cells[n], c = charts[k], dx = x - c.x, dy = y - c.y;
+          if (dx * dx + dy * dy < reach[k] * reach[k]) keep *= keepAt(c, x, y);
+        }
+        sum += keep;
+      }
+      out[i] = sum / nS;
+    });
+    return out;
+  }
+  // inside drawSymbolPath's shape of radius r, (dx, dy) from its center;
+  // the shapes without their own test as the circle
+  function insideSymbolShape(shape, dx, dy, r) {
+    switch (shape) {
+      case 'squarefull': return Math.abs(dx) <= r && Math.abs(dy) <= r;
+      case 'square': return Math.abs(dx) <= r * Math.SQRT1_2 && Math.abs(dy) <= r * Math.SQRT1_2;
+      case 'roundrect': return Math.abs(dx) <= r * 0.8 && Math.abs(dy) <= r * 0.8;
+      case 'diamond': case 'carot': return Math.abs(dx) + Math.abs(dy) <= r;
+      case 'empty': return false;
+      default: return dx * dx + dy * dy <= r * r;
+    }
+  }
+
   // A pixel offset [dx, dy] (y down) from lngLat at MapLibre zoom `zoom`,
   // as lng/lat (Web Mercator, 512 px world tiles) — for shapes too large
   // for an icon, drawn in map coordinates (rebuilt with every refresh).
@@ -11839,8 +11927,8 @@ in vec4 vPieLineColor;
       // VALUES: bold value label centered on each bubble (see
       // flatValueText/valuesFontSizePx above). Labels are their own
       // layers, added last in the array so they draw on top of every icon
-      // layer (a small bubble's label can still show over a bigger
-      // neighboring bubble's icon — a known, accepted gap). Entries whose
+      // layer; a label under later-drawn charts is faded or dropped by
+      // _occludeChartTexts, as flat's later chart groups cover it. Entries whose
       // computed font size would be sub-pixel are dropped rather than
       // rendered at getSize: 0, matching the real engine's own "too
       // small to bother" gate.
@@ -11849,7 +11937,11 @@ in vec4 vPieLineColor;
         const textOpts = this._valueTextOpts();
         const pointValueOf = valueTextOf || this._chartValueTextFn();
 
+        // draw order of each chart (see chartTextTransmittance below); an
+        // item maxcharts left out draws no chart, so no text either
+        const orderOf = new Map(combined.map((d, k) => [d, k]));
         const pointLabels = individual.reduce((out, d) => {
+          if (!orderOf.has(d)) return out;
           const radius = vRadius(d.properties.value);
           // flat's VALUES label prints the value (nValuesA), not the size;
           // its font by flat's chart branch (_chartValueTextFn)
@@ -11857,7 +11949,7 @@ in vec4 vPieLineColor;
           if (fontSize > VALUES_MIN_FONT_PX) {
             const o = alignOf(d);
             out.push({ geometry: d.geometry, text, fontSize, bold, color: resolveTextColor(this.style, contrastTextColor((this.categoryColorsRgb || [])[d.properties.cat])),
-              pixelOffset: baseline ? [o[0], o[1] + baseline - 0.35 * fontSize] : o });
+              pixelOffset: baseline ? [o[0], o[1] + baseline - 0.35 * fontSize] : o, order: orderOf.get(d) });
           }
           return out;
         }, []);
@@ -11873,6 +11965,7 @@ in vec4 vPieLineColor;
         // would misrepresent every category's own count as one summed
         // number nobody's individual bubble actually shows.
         const groupLabels = groups.reduce((out, d) => {
+          if (!orderOf.has(d)) return out;
           const counts = d.properties.counts;
           const outerRadiusPx = vRadius(d.properties.total);
           const iconSizePx = outerRadiusPx * 2; // matches the cluster IconLayer's own getSize (*2) below
@@ -11887,7 +11980,7 @@ in vec4 vPieLineColor;
               const o = alignOf(d);
               out.push({ geometry: d.geometry, text: v.text, fontSize: v.fontSize, bold: v.bold,
                 color: resolveTextColor(this.style, contrastTextColor((this.categoryColorsRgb || [])[d.properties.cat])),
-                pixelOffset: v.baseline ? [o[0], o[1] + v.baseline - 0.35 * v.fontSize] : o });
+                pixelOffset: v.baseline ? [o[0], o[1] + v.baseline - 0.35 * v.fontSize] : o, order: orderOf.get(d) });
             }
             return out;
           }
@@ -11902,12 +11995,25 @@ in vec4 vPieLineColor;
               out.push({
                 geometry: d.geometry, text, fontSize,
                 color: resolveTextColor(this.style, contrastTextColor((this.categoryColorsRgb || [])[p.i])),
-                pixelOffset: [offsets[i].x * fitScale * pxPerCanvasUnit + alignOf(d)[0], offsets[i].y * fitScale * pxPerCanvasUnit + alignOf(d)[1]]
+                pixelOffset: [offsets[i].x * fitScale * pxPerCanvasUnit + alignOf(d)[0], offsets[i].y * fitScale * pxPerCanvasUnit + alignOf(d)[1]],
+                order: orderOf.get(d)
               });
             }
           });
           return out;
         }, []);
+
+        // a text under later charts fades by what still shows through them
+        // (chartTextTransmittance), as flat's per-chart SVG groups paint
+        // each later symbol over it; nearly hidden ones are dropped. (Flat's
+        // later GLOW circles veil it too, but they veil the earlier symbols
+        // as well, and here every glow lies under every symbol — a text
+        // fading under a glow its own symbol isn't under would read wrong.)
+        const visible = this._occludeChartTexts(combined, pointLabels.concat(groupLabels), {
+          liveZoom, globeCenter, alignOf, radiusOf, singleSymbol, shapeOf, fillOpacity, singleBorderWidthPx
+        });
+        const keepVisible = labels => labels.filter(l => visible.has(l));
+        const shownPointLabels = keepVisible(pointLabels), shownGroupLabels = keepVisible(groupLabels);
 
         const textLayerCommonProps = {
           pickable: false,
@@ -11926,10 +12032,10 @@ in vec4 vPieLineColor;
           getAlignmentBaseline: 'center'
         };
         // flat's SYMBOL branch writes its values in normal weight
-        if (pointLabels.length) layers.push(new TextLayer({ id: `ix-points-values-${this.name}`, data: pointLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps,
-          fontWeight: pointLabels[0].bold === false ? 'normal' : 'bold' }));
-        if (groupLabels.length) layers.push(new TextLayer({ id: `ix-cluster-values-${this.name}`, data: groupLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps,
-          fontWeight: groupLabels[0].bold === false ? 'normal' : 'bold' }));
+        if (shownPointLabels.length) layers.push(new TextLayer({ id: `ix-points-values-${this.name}`, data: shownPointLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps,
+          fontWeight: shownPointLabels[0].bold === false ? 'normal' : 'bold' }));
+        if (shownGroupLabels.length) layers.push(new TextLayer({ id: `ix-cluster-values-${this.name}`, data: shownGroupLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps,
+          fontWeight: shownGroupLabels[0].bold === false ? 'normal' : 'bold' }));
       }
 
       // LABEL: flat's chart label (maptheme.js 24533-24590) — a small text
@@ -12561,6 +12667,60 @@ in vec4 vPieLineColor;
         [vMin, vMax] = this._valueTextRange;
       }
       return { noBreaks: flatNoBreaks(vMin, vMax), maxValue: styleNum(this.style.normalsizevalue) || (isFinite(vMax) ? vMax : undefined) };
+    }
+
+    // The charts of _buildChartLayers' bubbles layer as
+    // chartTextTransmittance's occluders, in draw order and screen
+    // pixels, and each text's resulting alpha: the text's color gets it,
+    // the returned Set holds the texts still visible. Screen pixels:
+    // Web Mercator world pixels at the live zoom; under globe a local
+    // equal-area frame around the view center at the scale MapLibre's
+    // globe matches Mercator's there (the limb's foreshortening ignored).
+    _occludeChartTexts(combined, texts, o) {
+      const visible = new Set();
+      if (!texts.length) return visible;
+      const toRad = Math.PI / 180;
+      let screenOf;
+      if (o.globeCenter) {
+        const s = 512 * Math.pow(2, o.liveZoom) / 360 / Math.cos(o.globeCenter.lat * toRad);
+        screenOf = c => [(((c[0] - o.globeCenter.lng) % 360 + 540) % 360 - 180) * Math.cos(c[1] * toRad) * s, -c[1] * s];
+      } else {
+        screenOf = c => { const p = lngLatToWorldPixel(c[0], c[1], o.liveZoom); return [p.x, p.y]; };
+      }
+      const symbols = Array.isArray(this.style.symbols) ? this.style.symbols : null;
+      const charts = combined.map(d => {
+        const [x, y] = screenOf(d.geometry.coordinates);
+        const a = o.alignOf(d), r = o.radiusOf(d), iconAlpha = this._iconAlpha(d) / 255;
+        let parts;
+        if (o.singleSymbol(d)) {
+          // the icon's shape is inset by half its border (_buildSingleIcon)
+          const shape = o.shapeOf(d.properties);
+          parts = [{ dx: 0, dy: 0, r: r * (1 - o.singleBorderWidthPx / BUBBLE_ICON_SIZE), shape, alpha: o.fillOpacity * iconAlpha }];
+        } else {
+          // _buildBubbleIcon's packed parts, its baked 0.9 alpha scaled by an
+          // explicit fillopacity like the bubbles layer's getColor
+          const counts = d.properties.counts, iso = this._groupIsolation(d);
+          const { present, radii, offsets, fitScale } = (iso && isolatedBubblePackLayout(counts, BUBBLE_ICON_SIZE, iso)) || computeBubblePackLayout(counts, BUBBLE_ICON_SIZE);
+          const px = 2 * r / BUBBLE_ICON_SIZE * fitScale;
+          const alpha = 0.9 * (this.style.fillopacity != null ? o.fillOpacity : 1) * iconAlpha;
+          parts = present.map((p, i) => ({ dx: offsets[i].x * px, dy: offsets[i].y * px, r: radii[i] * px,
+            shape: symbols ? normalizeSymbolShape(symbols[Math.min(p.i, symbols.length - 1)]) : 'circle', alpha }));
+        }
+        return { x: x + a[0], y: y + a[1], parts };
+      });
+      // the text box: Arial digits are ~0.56 em wide, ~0.7 em high
+      const boxes = texts.map(t => {
+        const [x, y] = screenOf(t.geometry.coordinates);
+        return { order: t.order, x: x + t.pixelOffset[0], y: y + t.pixelOffset[1], w: 0.56 * t.fontSize * String(t.text).length, h: 0.7 * t.fontSize };
+      });
+      const shown = chartTextTransmittance(charts, boxes);
+      texts.forEach((t, i) => {
+        if (shown[i] < CHART_TEXT_MIN_TRANSMITTANCE) return;
+        const c = t.color || [0, 0, 0];
+        if (shown[i] < 1) t.color = [c[0], c[1], c[2], Math.round((c[3] != null ? c[3] : 255) * shown[i])];
+        visible.add(t);
+      });
+      return visible;
     }
 
     // CHART|LABEL (maptheme.js 20647-21037), at the chart radius r of the
@@ -13639,7 +13799,7 @@ in vec4 vPieLineColor;
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, multiQuadOffsets, pixelOffsetLngLat,
+    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, chartTextTransmittance, insideSymbolShape, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, multiQuadOffsets, pixelOffsetLngLat,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

@@ -937,7 +937,7 @@
     {
      "id": "ix-points-values-AREU",
      "type": "TextLayer",
-     "count": 1783,
+     "count": 1781,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -954,14 +954,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "fb334a4613b44f87",
-     "setDigest": "d63de1df94a8fd26",
+     "digest": "e99abce4d96a595e",
+     "setDigest": "f370eed1d91103ac",
      "columnDigests": {
-      "getColor": "0291a6e3655b512b",
-      "getPixelOffset": "07a4e9bfb9cb2a2f",
-      "getPosition": "9d334f31f6132dc7",
-      "getSize": "d2f72084ed315cb2",
-      "getText": "b07ab4c9807bf3c0"
+      "getColor": "b9204cfdb5b2e87d",
+      "getPixelOffset": "98b8b0fac7abb30f",
+      "getPosition": "74167c46c0096516",
+      "getSize": "53318c5c51d8fa90",
+      "getText": "2749af36dfe6f946"
      },
      "stats": {
       "getColor": [
@@ -1207,7 +1207,8 @@
        [
         30,
         30,
-        30
+        30,
+        212
        ],
        [
         0,
@@ -1327,7 +1328,7 @@
     {
      "id": "ix-cluster-values-AREU",
      "type": "TextLayer",
-     "count": 1224,
+     "count": 1221,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -1344,14 +1345,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "4c5f9ea56f29010d",
-     "setDigest": "3169c2fd7f326adb",
+     "digest": "7d79a6f8fedeb7dd",
+     "setDigest": "8add6ca0e2c393b3",
      "columnDigests": {
-      "getColor": "399e7d42b4d633e7",
-      "getPixelOffset": "bbf9b30a712e1204",
-      "getPosition": "983f86f2c73259b0",
-      "getSize": "599cd6baaed2cf08",
-      "getText": "7455c6e52aa7c5a3"
+      "getColor": "b0d60195f1bbffa9",
+      "getPixelOffset": "c61740d7fb607f17",
+      "getPosition": "60189e690554bc58",
+      "getSize": "4acfba936c59d98e",
+      "getText": "0398f691ab315723"
      },
      "stats": {
       "getColor": [
@@ -2738,7 +2739,7 @@
     {
      "id": "ix-points-values-AREU",
      "type": "TextLayer",
-     "count": 2693,
+     "count": 2688,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -2755,14 +2756,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "65280203dad6ccce",
-     "setDigest": "0122b0eeb0d087e4",
+     "digest": "8c34445274207c77",
+     "setDigest": "793e9b0fbb2da793",
      "columnDigests": {
-      "getColor": "147128ed1a656384",
-      "getPixelOffset": "bb3ac46508ef4e90",
-      "getPosition": "27a5e61af5cd1f55",
-      "getSize": "c28e3bbf0c813691",
-      "getText": "241963b6c38a0186"
+      "getColor": "56536c79534c0022",
+      "getPixelOffset": "e00177bebb58ee64",
+      "getPosition": "7958368f9d64a8df",
+      "getSize": "4b774811942f28ac",
+      "getText": "b2dd1c3ef2d8f877"
      },
      "stats": {
       "getColor": [
@@ -2838,7 +2839,8 @@
        [
         30,
         30,
-        30
+        30,
+        82
        ],
        [
         0,
@@ -3128,7 +3130,7 @@
     {
      "id": "ix-cluster-values-AREU",
      "type": "TextLayer",
-     "count": 1948,
+     "count": 1936,
      "constants": {
       "characterSet": "auto",
       "fontFamily": "arial",
@@ -3145,14 +3147,14 @@
       "getSize",
       "getText"
      ],
-     "digest": "ab23cdf7185863c9",
-     "setDigest": "8540c963a1622407",
+     "digest": "20d44c9c4fe4d462",
+     "setDigest": "8aac32ad175acd73",
      "columnDigests": {
-      "getColor": "409fc04173897dba",
-      "getPixelOffset": "8557d803bad8b123",
-      "getPosition": "ac1daec61f810918",
-      "getSize": "0dfbb9d06e6ee5f2",
-      "getText": "25b0f2fa781e0fc7"
+      "getColor": "4fb5c21f2696df9e",
+      "getPixelOffset": "da88182f61791dc8",
+      "getPosition": "adec174ee7a3b320",
+      "getSize": "04712253cc65a31b",
+      "getText": "74f86edba45c94eb"
      },
      "stats": {
       "getColor": [
@@ -3211,7 +3213,8 @@
        [
         30,
         30,
-        30
+        30,
+        38
        ],
        [
         0,
@@ -3398,7 +3401,8 @@
        [
         30,
         30,
-        30
+        30,
+        38
        ],
        [
         0,
@@ -3500,7 +3504,8 @@
        [
         30,
         30,
-        30
+        30,
+        212
        ],
        [
         0,
@@ -4556,10 +4561,10 @@
       "getSize",
       "getText"
      ],
-     "digest": "8c86fb8c6f4f81c6",
-     "setDigest": "96216368bb091a4a",
+     "digest": "7727388df96eb0aa",
+     "setDigest": "4e87db3aba55e00e",
      "columnDigests": {
-      "getColor": "735f994ed349f916",
+      "getColor": "a76986292ca4f728",
       "getPixelOffset": "bed85a8a10ff97ca",
       "getPosition": "02a3e64e54cdda8c",
       "getSize": "e7fb6582d7205ddf",
@@ -4946,10 +4951,10 @@
       "getSize",
       "getText"
      ],
-     "digest": "61ee055a1c68a70f",
-     "setDigest": "09298aab53b5ea2d",
+     "digest": "f75ca896bb48d31f",
+     "setDigest": "a75733025fb864db",
      "columnDigests": {
-      "getColor": "9f63b8164de4e1ff",
+      "getColor": "3fcf003b005ca8b4",
       "getPixelOffset": "fd586baa8ae3683a",
       "getPosition": "fca9166620a4c3a1",
       "getSize": "d3d8a47e121ac876",
