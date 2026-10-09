@@ -2226,6 +2226,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // build()'s main loop and defineLayer(), the two places a runtime is
   // ever created, for where this gets populated.
   const _globalThemeRegistry = new Map();
+  // flat's theme index (maptheme.js getTheme, "theme 0,1,2,..."): a number or
+  // numeric string below the theme count addresses the n-th theme
+  function isThemeIndex(id, count) {
+    return id != null && id !== '' && typeof id !== 'boolean' && !isNaN(Number(id)) && Number.isInteger(Number(id)) && Number(id) >= 0 && Number(id) < count;
+  }
+  // the runtime of a theme id for the module-level globals: by name, else the
+  // n-th theme of the last built map
+  function registryTheme(id) {
+    const rt = _globalThemeRegistry.get(id);
+    if (rt) return rt;
+    const list = _lastMapApi && _lastMapApi.runtimes;
+    return list && isThemeIndex(id, list.length) ? list[Number(id)] : undefined;
+  }
 
   // Same LAST-DEFINITION-WINS rationale as _globalThemeRegistry above, for
   // real ixmaps-flat's map-LEVEL globals (ixmaps.getProjectString/
@@ -4808,6 +4821,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // verified conventions' own priority (layer name, then style.name).
       function findRuntime(themeId) {
         const matches = runtimes.filter(r => r.name === themeId || (r.style && r.style.name === themeId) || (r.meta && r.meta.name === themeId));
+        // a number (or "1", "2" ...) naming no theme is flat's theme index
+        // (maptheme.js getTheme): 0-based, base layers counted
+        if (!matches.length && isThemeIndex(themeId, runtimes.length)) return runtimes[Number(themeId)];
         if (!matches.length) { console.warn(`[ixmaps-gl] no layer named "${themeId}"`); return undefined; }
         return matches.find(r => !r.flags.has('FEATURE') && !r.flags.has('FEATURES')) || matches[0];
       }
@@ -15196,7 +15212,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     show() { mapHandle(this.szMap).setThemeVisible(this.szTheme, true); return this; },
     hide() { mapHandle(this.szMap).setThemeVisible(this.szTheme, false); return this; },
     toggle() {
-      const rt = _globalThemeRegistry.get(this.szTheme);
+      const rt = registryTheme(this.szTheme);
       mapHandle(this.szMap).setThemeVisible(this.szTheme, rt ? !!rt._hidden : false);
       return this;
     },
@@ -15363,7 +15379,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // no id: flat's current theme — here the one a page's facets were
     // built for (its own facet script sets ixmaps.filterThemeId), else the
     // last chart / choropleth theme
-    let rt = szId != null ? _globalThemeRegistry.get(szId) : null;
+    let rt = szId != null ? registryTheme(szId) : null;
     if (szId == null) {
       const pid = pageIxmaps() && pageIxmaps().filterThemeId;
       rt = (pid != null && _globalThemeRegistry.get(pid))
@@ -15454,7 +15470,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // flat's ixmaps.getThemeDefinitionObj(szId): the theme's definition —
   // type, style (sizefield/valuefield as flat names them), meta
   function getThemeDefinitionObj(szId) {
-    const rt = _globalThemeRegistry.get(szId);
+    const rt = registryTheme(szId);
     if (!rt) return null;
     const style = Object.assign({}, rt.style);
     if (rt.binding.size && !style.sizefield) style.sizefield = rt.binding.size;
@@ -15500,11 +15516,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // before that block ran (there is none, currently) would just no-op
   // here instead of redrawing.
   function markThemeClass(szId, index) {
-    const rt = _globalThemeRegistry.get(szId);
+    const rt = registryTheme(szId);
     if (rt) markRuntimeClass(rt, index);
   }
   function unmarkThemeClass(szId, index) {
-    const rt = _globalThemeRegistry.get(szId);
+    const rt = registryTheme(szId);
     if (rt) unmarkRuntimeClass(rt, index);
   }
   // the legend's own rows mark their theme directly: its .layer() name
