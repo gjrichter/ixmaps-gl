@@ -6285,8 +6285,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // the zoom at which flat's object scale equals normalSizeScale (symbols
   // at their normal size) — see FLAT_OBJECT_SCALE_CONSTANT
   function resolveZoomReference(mapOptions) {
-    const scaleDenominator = parseFloat(mapOptions && mapOptions.normalSizeScale) || FLAT_DEFAULT_NORMAL_SIZE_SCALE;
+    const scaleDenominator = parseFloat(normalSizeScaleOf(mapOptions)) || FLAT_DEFAULT_NORMAL_SIZE_SCALE;
     return flatToMapLibreZoom(Math.log2(FLAT_OBJECT_SCALE_CONSTANT / scaleDenominator));
+  }
+  // .options({normalSizeScale}) under any spelling: flat matches the key
+  // case-insensitively (htmlgui.js, /normalSizeScale/i → setScaleParam;
+  // the last matching key wins), e.g. "normalsizescale"
+  function normalSizeScaleOf(mapOptions) {
+    if (!mapOptions || typeof mapOptions !== 'object') return undefined;
+    let value;
+    for (const key of Object.keys(mapOptions)) if (/normalSizeScale/i.test(key)) value = mapOptions[key];
+    return value;
   }
 
   // .options({dynamicScalePow}) — the REAL parameter name (confirmed in
@@ -6359,7 +6368,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // scale (resolveZoomReference); flat's real rule (maptheme.js 13408,
   // 0.3 + 0.7 / ln(nZoom / dx)) is not ported yet
   function autoOpacityZoomReference(mapOptions) {
-    const scaleDenominator = parseFloat(mapOptions && mapOptions.normalSizeScale);
+    const scaleDenominator = parseFloat(normalSizeScaleOf(mapOptions));
     if (!scaleDenominator) return flatToMapLibreZoom(DEFAULT_ZOOM_REFERENCE);
     return flatToMapLibreZoom(Math.log2(WEBMERCATOR_SCALE_CONSTANT / scaleDenominator));
   }
@@ -15775,7 +15784,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
-    flatToMapLibreZoom, mapLibreToFlatZoom, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
+    flatToMapLibreZoom, mapLibreToFlatZoom, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,

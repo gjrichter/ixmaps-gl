@@ -42,6 +42,14 @@ test('resolveZoomReference: the zoom at which FLAT\'s object scale equals normal
   near(flatScaleAt(G.resolveZoomReference({})), 177165354, 'no normalSizeScale → flat\'s nMapScale (mapscript.js 2124)');
 });
 
+test('normalSizeScale: any key spelling, as flat (htmlgui.js /normalSizeScale/i)', () => {
+  near(G.resolveZoomReference({ normalsizescale: '259302' }), G.resolveZoomReference({ normalSizeScale: '259302' }), 'lowercase key');
+  near(G.resolveZoomReference({ NormalSizeScale: 259302 }), G.resolveZoomReference({ normalSizeScale: '259302' }), 'other spelling');
+  assert.equal(G.normalSizeScaleOf({ normalsizescale: '1', normalSizeScale: '2' }), '2', 'the last matching key wins');
+  near(G.objectZoomFactor(3, { objectscaling: 'dynamic', normalsizescale: '10000000' }),
+    G.objectZoomFactor(3, { objectscaling: 'dynamic', normalSizeScale: '10000000' }), 'object zoom factor');
+});
+
 test('resolveAggregationPx / valuesHiddenByScale compare thresholds with the displayed scale', () => {
   const agg = ['1:1', '3px', '1:500000', '1px'];
   // flat's scale: flat zoom 12.5 = 1:76 468 → 3px; 1:500000 is crossed at
