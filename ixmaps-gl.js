@@ -3959,8 +3959,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
                 const c = f.geometry && f.geometry.coordinates;
                 if (!c || typeof c[0] !== 'number') return;
                 const [lng, lat] = c;
-                if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
-                if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
+                if (!inViewport(lng, lat, bbox, globeCenter)) return;
                 rt._multiFields.forEach((k, i) => { totals[i] += parseFloat(f.properties[k]) || 0; });
               });
               maxTotal = Math.max(0, ...totals);
@@ -3981,8 +3980,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
               while (Array.isArray(pt) && Array.isArray(pt[0])) pt = pt[0];
               if (!Array.isArray(pt)) return;
               const [lng, lat] = pt;
-              if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
-              if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
+              if (!inViewport(lng, lat, bbox, globeCenter)) return;
               totals[idx] += useSum ? (parseFloat(f.properties[valueField]) || 0) : 1;
             });
             maxTotal = Math.max(0, ...totals);
@@ -7461,6 +7459,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // only to stop the far side bleeding through, not to hem in near-limb
   // points that are still legitimately visible (if foreshortened).
   const GLOBE_HORIZON_DEG = 90;
+  // a point inside the lng/lat bbox [w, s, e, n] and, under globe projection
+  // (globeCenter set), on the visible hemisphere
+  function inViewport(lng, lat, bbox, globeCenter) {
+    if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return false;
+    return !globeCenter || isOnVisibleHemisphere(lng, lat, globeCenter);
+  }
+
   function isOnVisibleHemisphere(lng, lat, center) {
     const toRad = d => d * Math.PI / 180;
     const phi0 = toRad(center.lat), phi1 = toRad(lat);
@@ -9829,8 +9834,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const c = f.geometry && f.geometry.coordinates;
         if (!c || typeof c[0] !== 'number') return;
         const [lng, lat] = c;
-        if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
-        if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) return;
+        if (!inViewport(lng, lat, bbox, globeCenter)) return;
         const v = parseFloat(f.properties[rt.binding.value]);
         add(rt._resolvePartsClass(v), v);
       });
@@ -12628,7 +12632,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         this._featuresByCategory.forEach((feats, cat) => {
           feats.forEach(f => {
             const [lng, lat] = f.geometry.coordinates;
-            if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) return;
+            if (!inViewport(lng, lat, bbox)) return;
             individual.push({ geometry: f.geometry, properties: { ...f.properties, cat } });
           });
         });
@@ -13849,8 +13853,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const c = f.geometry && f.geometry.coordinates;
         if (!c || typeof c[0] !== 'number') continue;
         const [lng, lat] = c;
-        if (lng < bbox[0] || lng > bbox[2] || lat < bbox[1] || lat > bbox[3]) continue;
-        if (globeCenter && !isOnVisibleHemisphere(lng, lat, globeCenter)) continue;
+        if (!inViewport(lng, lat, bbox, globeCenter)) continue;
         const raw = f.properties || {};
         const values = fields.map(k => { const v = flatNumber(raw[k], this.flags); return isNaN(v) ? 0 : v; });
         const layout = pieSliceLayout(values, t, { centerPart: st.centerpart });
