@@ -1542,16 +1542,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     _filterCache.set(expr, pred);
     return pred;
   }
-  // a load-time .filter() drops records for good, so a later changeThemeStyle
-  // "filter" must re-filter the unfiltered data (flat re-processes the theme
-  // with the new filter) instead of narrowing what the first filter left
-  function refilterFrom(raw, spec, runtimes) {
-    return expr => {
-      const f = applyWhereFilter(raw, expr);
-      return f.type === 'Table' ? joinTableFeatures(spec, f, runtimes) : f;
-    };
+  // a theme's data after its .filter() (spec.filter, or expr) and, for a table,
+  // the join to geometry. A load-time .filter() drops records for good, so a
+  // later changeThemeStyle "filter" re-runs this on the unfiltered data (flat
+  // re-processes the theme with the new filter) instead of narrowing what the
+  // first filter left.
+  function filterAndJoin(raw, spec, runtimes, expr = spec.filter) {
+    const f = applyWhereFilter(raw, expr);
+    return f.type === 'Table' ? joinTableFeatures(spec, f, runtimes) : f;
   }
-
   function applyWhereFilter(fc, filterExpr) {
     if (!filterExpr) return fc;
     const pred = flatFilterPredicate(String(filterExpr));
@@ -4598,10 +4597,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           cacheKey = cached.sourceKey;
           raw = await cached.promise;
         }
-        const filtered = applyWhereFilter(raw, spec.filter);
-        const fc = filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered;
+        const fc = filterAndJoin(raw, spec, runtimes);
         const rt = new LayerRuntime(spec, fc, this._engineOptions);
-        if (spec.filter) rt._refilter = refilterFrom(raw, spec, runtimes);
+        if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
         // tags which underlying data source this runtime came from — see
         // setFacetFilter/clearFacetFilter/clearAllFacetFilters below,
         // which use this to propagate a facet filter to every theme
@@ -5293,8 +5291,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             const raw = spec.data && spec.data.obj
               ? await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions)
               : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload: true }).promise;
-            const filtered = applyWhereFilter(raw, spec.filter);
-            rt.replaceFeatures(filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered);
+            rt.replaceFeatures(filterAndJoin(raw, spec, runtimes));
             maybeZoomToTheme(rt); // a scale-deferred theme gets its first data here
           }
           if (targets.length) { refresh(); notifyRedraw(); }
@@ -5438,9 +5435,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (broker) { pendingLoads--; rt._brokerLoading--; setDataLoading(); }
         }
       }
-      function namedThemeFeatures(spec, rows, binding) {
-        const filtered = applyWhereFilter(rowsResult(rows, binding || spec.binding), spec.filter);
-        return filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered;
+      function namedThemeFeatures(spec, rows, binding, expr) {
+        return filterAndJoin(rowsResult(rows, binding || spec.binding), spec, runtimes, expr);
       }
       function fillNamedTheme(rt, spec, table, patch) {
         rt._lastTable = table;
@@ -5459,7 +5455,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           spec = pspec;
         }
         rt.replaceFeatures(namedThemeFeatures(spec, rows, rt._specBinding));
-        rt._refilter = spec.filter ? expr => namedThemeFeatures(Object.assign({}, spec, { filter: expr }), rows, rt._specBinding) : null;
+        rt._refilter = spec.filter ? expr => namedThemeFeatures(spec, rows, rt._specBinding, expr) : null;
         if (glDebug()) console.info(`[ixmaps-gl debug] data for ${themeIdOf(rt)}: ${rows.length} rows → ${rt.features.length} features`);
         // the legend is built from the theme's classes: build it again
         if (rt._legendPanel && rt._legendPanel.parentNode) rt._legendPanel.parentNode.removeChild(rt._legendPanel);
@@ -5532,10 +5528,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           sourceKey = cached.sourceKey;
           raw = await cached.promise;
         }
-        const filtered = applyWhereFilter(raw, spec.filter);
-        const fc = filtered.type === 'Table' ? joinTableFeatures(spec, filtered, runtimes) : filtered;
+        const fc = filterAndJoin(raw, spec, runtimes);
         const rt = new LayerRuntime(spec, fc, builder._engineOptions);
-        if (spec.filter) rt._refilter = refilterFrom(raw, spec, runtimes);
+        if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
         rt._definition = pdef; // for refreshTheme
         rt._deferredLoad = deferred;
         rt._named = named;
