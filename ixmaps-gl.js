@@ -10891,7 +10891,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // reasonable rather than wrong.
     // borderOpacity (default 1): the border's own alpha (flat's
     // stroke-opacity, see flatBubbleLook)
+    // colorscheme ["none"] — flat's explicit no-fill symbol
+    _noFillScheme() {
+      const cs = this.style.colorscheme;
+      return Array.isArray(cs) && cs.length === 1 && String(cs[0]).trim().toLowerCase() === 'none';
+    }
+
     _buildSingleIcon(colorRgb, opacity, shape, borderColorRgb, borderWidth, borderOpacity = 1) {
+      if (!colorRgb) { colorRgb = [128, 128, 128]; opacity = 0; } // no class colour (["none"]): unfilled
       shape = shape || 'circle';
       borderWidth = borderWidth || 0;
       const key = `single-${shape}-${colorRgb.join(',')}-${opacity}-${borderColorRgb ? borderColorRgb.join(',') : 'none'}-${borderWidth}${borderOpacity !== 1 ? `-so${borderOpacity}` : ''}`;
@@ -13286,6 +13293,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // a CATEGORICAL BUBBLE: flat's look (flatBubbleLook) in screen px,
         // its stroke centered on the radius as flat's SVG circle
         const lookUnit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1);
+        // colorscheme ["none"]: flat draws the symbol unfilled (only its values / box / title)
+        const noFill = this._noFillScheme();
         const circleLook = flatLook ? d => flatBubbleLook((this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128], radiusPx(d), lookUnit, this.style, this.flags) : null;
         const lineRgb = d => (circleLook ? circleLook(d).stroke : outlineRgb(d)) || [0, 0, 0];
         layers.push(new ScatterplotLayer({
@@ -13294,7 +13303,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           getPosition: d => d.geometry.coordinates,
           getRadius: d => radiusPx(d) - (symbolOutline || circleLook ? 0 : outlinePx(d, radiusPx(d)) / 2),
           radiusUnits: 'pixels',
-          getFillColor: d => [...((this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128]).slice(0, 3), Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).fillOpacity : fillOpacity))],
+          getFillColor: d => [...((this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128]).slice(0, 3), noFill ? 0 : Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).fillOpacity : fillOpacity))],
           stroked: circleLook ? combined.some(d => circleLook(d).stroke) : combined.some(d => outlineRgb(d)),
           getLineColor: d => [...lineRgb(d).slice(0, 3), Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).strokeOpacity : 1))],
           getLineWidth: d => (circleLook ? (circleLook(d).stroke ? circleLook(d).width : 0) : outlinePx(d, radiusPx(d))),
