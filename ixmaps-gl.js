@@ -10862,7 +10862,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             dataObj.raw[field] = v;
           } else {
             dataObj[field] = v;
-            dataObj.local[field] = v;
+            // translated, as flat's tooltip (tooltip_mustache.js 446:
+            // ixmaps.getLocalString(value)) — the migration page's ISO
+            // code → country name in {{local.from}} → {{local.to}}
+            dataObj.local[field] = makeLocalText([])(v);
           }
         });
       }
