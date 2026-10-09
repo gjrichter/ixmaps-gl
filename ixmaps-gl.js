@@ -4432,6 +4432,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       await null;
       const el = document.getElementById(this.containerId);
       if (!el) throw new Error(`[ixmaps-gl] container #${this.containerId} not found`);
+      // flat's init replaces the container's content with its own map page
+      // (mappage.html via innerHTML), so a page's placeholder inside the
+      // map div ("connecting to Internet ...", the fuel-price page) goes
+      // away; here it would stay on top of the map — remove it the same way
+      while (el.firstChild) el.removeChild(el.firstChild);
       // GL-PORT COMPAT: ixmaps.Map(id, {width, height}) — flat sizes its
       // inner map div with these and gives PIXEL values to the page's own
       // container too (htmlgui_flat.js:866-876, parent().css(...)); here
