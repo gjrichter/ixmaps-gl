@@ -4503,8 +4503,9 @@ in vec4 vPieLineColor;
         // hover/click tooltip lookup keeps working across a rotation.
         // Non-atlas layers (ix-dot-/ix-features-/ix-choropleth-) never
         // carry the suffix; stripping a pattern that isn't there is a
-        // no-op.
-        const base = layerId.replace(/-g\d+$/, '');
+        // no-op. A theme's single circles (ix-bubbles-<name>-circles-gN,
+        // a ScatterplotLayer) route like its bubbles.
+        const base = layerId.replace(/-g\d+$/, '').replace(/-circles$/, '');
         return runtimes.find(r => {
           if (base === `ix-bubbles-${r.name}`) return isSymbolChart(r.flags);
           if (base === `ix-pie-${r.name}`) return r._isPieChart();
@@ -11883,7 +11884,33 @@ in vec4 vPieLineColor;
       // fillopacity and linecolor, as a single item (flat draws one
       // symbol) — the packed multi-category icon is for CATEGORICAL cells
       const singleSymbol = d => !d.properties.counts || (this._rangeClassed && d.properties.cat != null);
-      layers.push(new IconLayer({
+      // only single circles (no group icon, no other shape, no pixel
+      // offset — ScatterplotLayer has none): drawn as real circles. A
+      // cached circle icon shrunk to a few device pixels samples a coarse
+      // mip level of the atlas and reads as a square, where flat's SVG
+      // circle of the same radius stays round. Its own id: deck.gl matches
+      // layers by id alone, so a theme switch turning the IconLayer of
+      // this id into a ScatterplotLayer kept the icon layer's state and
+      // drew nothing (the fuel-price page's station points); hover/click
+      // routing goes by the final id (layerRuntimeById). The border keeps
+      // the icon's look — inside the radius, width scaling with the size
+      if (combined.length && !alignOf.active && combined.every(d => singleSymbol(d) && shapeOf(d.properties) === 'circle')) {
+        const borderPx = d => (singleBorderColorRgb && singleBorderWidthPx > 0 ? singleBorderWidthPx * vRadius(sizeValueOf(d)) * 2 / BUBBLE_ICON_SIZE : 0);
+        layers.push(new ScatterplotLayer({
+          id: `ix-bubbles-${this.name}-circles-g${this._iconGeneration}`,
+          data: combined, pickable: true,
+          getPosition: d => d.geometry.coordinates,
+          getRadius: d => vRadius(sizeValueOf(d)) - borderPx(d) / 2,
+          radiusUnits: 'pixels',
+          getFillColor: d => [...((this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128]).slice(0, 3), Math.round(this._iconAlpha(d) * fillOpacity)],
+          stroked: !!singleBorderColorRgb && singleBorderWidthPx > 0,
+          getLineColor: d => [...(singleBorderColorRgb || [0, 0, 0]).slice(0, 3), this._iconAlpha(d)],
+          getLineWidth: borderPx,
+          lineWidthUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      } else layers.push(new IconLayer({
         id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
         data: combined, pickable: true,
         getPosition: d => d.geometry.coordinates,

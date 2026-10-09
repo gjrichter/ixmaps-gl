@@ -15,105 +15,114 @@
    },
    "layers": [
     {
-     "id": "ix-bubbles-points-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-points-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 3,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": false
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "c6fb8316ddcd9ed0",
-     "setDigest": "c6fb8316ddcd9ed0",
+     "digest": "10f66aea590598ea",
+     "setDigest": "10f66aea590598ea",
      "columnDigests": {
-      "getColor": "4bdd37889df299db",
-      "getIcon": "db2c389e9ef30ec2",
+      "getFillColor": "df5cd3aa32cb56f6",
+      "getLineColor": "2da68f4520a026eb",
+      "getLineWidth": "cffb57f282df1536",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "864a817c4b487e76"
+      "getRadius": "1a5891fa5fd6fa63"
      },
      "stats": {
-      "getColor": [
-       255,
-       255
+      "getFillColor": [
+       67,
+       230
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
       ],
       "getPosition": [
        9.18,
        9.2
       ],
-      "getSize": [
-       222.796264,
-       445.592528
+      "getRadius": [
+       111.398132,
+       222.796264
       ]
      },
      "sample": [
       [
        [
-        255,
-        255,
-        255,
+        230,
+        25,
+        75,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
+       0,
        [
         9.18,
         45.45
        ],
-       222.796264
+       111.398132
       ],
       [
        [
-        255,
-        255,
-        255,
+        230,
+        25,
+        75,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
+       0,
        [
         9.19,
         45.46
        ],
-       315.081498
+       157.540749
       ],
       [
        [
-        255,
-        255,
-        255,
+        67,
+        99,
+        216,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-67,99,216-0.85-none-0",
-        "url": "#7ea85d4d:1782",
-        "width": 48
-       },
+       0,
        [
         9.2,
         45.47
        ],
-       445.592528
+       222.796264
       ]
      ]
     },
@@ -615,105 +624,114 @@
    },
    "layers": [
     {
-     "id": "ix-bubbles-points-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-points-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 3,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": false
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "8ab9c5ed7f54a2d2",
-     "setDigest": "8ab9c5ed7f54a2d2",
+     "digest": "273d0c76adef6839",
+     "setDigest": "273d0c76adef6839",
      "columnDigests": {
-      "getColor": "4bdd37889df299db",
-      "getIcon": "db2c389e9ef30ec2",
+      "getFillColor": "df5cd3aa32cb56f6",
+      "getLineColor": "2da68f4520a026eb",
+      "getLineWidth": "cffb57f282df1536",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "9536765124f63b71"
+      "getRadius": "442e308a601634b1"
      },
      "stats": {
-      "getColor": [
-       255,
-       255
+      "getFillColor": [
+       67,
+       230
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
       ],
       "getPosition": [
        9.18,
        9.2
       ],
-      "getSize": [
-       280.705703,
-       561.411406
+      "getRadius": [
+       140.352851,
+       280.705703
       ]
      },
      "sample": [
       [
        [
-        255,
-        255,
-        255,
+        230,
+        25,
+        75,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
+       0,
        [
         9.18,
         45.45
        ],
-       280.705703
+       140.352851
       ],
       [
        [
-        255,
-        255,
-        255,
+        230,
+        25,
+        75,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
+       0,
        [
         9.19,
         45.46
        ],
-       396.977812
+       198.488906
       ],
       [
        [
-        255,
-        255,
-        255,
+        67,
+        99,
+        216,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-67,99,216-0.85-none-0",
-        "url": "#7ea85d4d:1782",
-        "width": 48
-       },
+       0,
        [
         9.2,
         45.47
        ],
-       561.411406
+       280.705703
       ]
      ]
     },
@@ -1215,105 +1233,114 @@
    },
    "layers": [
     {
-     "id": "ix-bubbles-points-g0",
-     "type": "IconLayer",
+     "id": "ix-bubbles-points-circles-g0",
+     "type": "ScatterplotLayer",
      "count": 3,
      "constants": {
       "billboard": true,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "sizeUnits": "pixels"
+      "radiusUnits": "pixels",
+      "stroked": false
      },
      "columns": [
-      "getColor",
-      "getIcon",
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
       "getPosition",
-      "getSize"
+      "getRadius"
      ],
-     "digest": "31cb8f32948bac22",
-     "setDigest": "31cb8f32948bac22",
+     "digest": "9f8f8aca9c3025d5",
+     "setDigest": "9f8f8aca9c3025d5",
      "columnDigests": {
-      "getColor": "4bdd37889df299db",
-      "getIcon": "db2c389e9ef30ec2",
+      "getFillColor": "df5cd3aa32cb56f6",
+      "getLineColor": "2da68f4520a026eb",
+      "getLineWidth": "cffb57f282df1536",
       "getPosition": "4c28149854a8aaae",
-      "getSize": "594f1840974c61ba"
+      "getRadius": "5ba1854ecb00b595"
      },
      "stats": {
-      "getColor": [
-       255,
-       255
+      "getFillColor": [
+       67,
+       230
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
       ],
       "getPosition": [
        9.18,
        9.2
       ],
-      "getSize": [
-       176.833512,
-       353.667024
+      "getRadius": [
+       88.416756,
+       176.833512
       ]
      },
      "sample": [
       [
        [
-        255,
-        255,
-        255,
+        230,
+        25,
+        75,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
+       0,
        [
         9.18,
         45.45
        ],
-       176.833512
+       88.416756
       ],
       [
        [
-        255,
-        255,
-        255,
+        230,
+        25,
+        75,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-230,25,75-0.85-none-0",
-        "url": "#d94547c6:1750",
-        "width": 48
-       },
+       0,
        [
         9.19,
         45.46
        ],
-       250.080351
+       125.040175
       ],
       [
        [
-        255,
-        255,
-        255,
+        67,
+        99,
+        216,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
         255
        ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-67,99,216-0.85-none-0",
-        "url": "#7ea85d4d:1782",
-        "width": 48
-       },
+       0,
        [
         9.2,
         45.47
        ],
-       353.667024
+       176.833512
       ]
      ]
     },
