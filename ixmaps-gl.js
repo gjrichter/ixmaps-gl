@@ -2910,6 +2910,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         opacity: 1; transition: opacity 0.4s ease;
       }
       .ixmaps-splash.ixmaps-splash-hidden { opacity: 0; pointer-events: none; }
+      .ixmaps-splash.ixmaps-splash-dark { background: #1a1a1a; }
+      .ixmaps-splash-dark .ixmaps-splash-word { color: #e8e8e8; }
+      .ixmaps-splash-dark .ixmaps-splash-text { color: #9a9a9a; }
       .ixmaps-splash-mark { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
       .ixmaps-splash-ping {
         position: absolute; width: 16px; height: 16px; border-radius: 50%;
@@ -2966,7 +2969,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function anchorInside(el) {
     if (el && getComputedStyle(el).position === 'static') el.style.position = 'relative';
   }
-  function showSplash(el, text) {
+  function showSplash(el, text, dark) {
     ensureSplashStyle();
     // Checks the actual RENDERED position, not el.style (the inline
     // attribute only) — every example page's own #map_div already sets
@@ -2981,7 +2984,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // this at all.
     anchorInside(el);
     const splash = document.createElement('div');
-    splash.className = 'ixmaps-splash';
+    splash.className = 'ixmaps-splash' + (dark ? ' ixmaps-splash-dark' : '');
     splash.innerHTML = '<div class="ixmaps-splash-mark"><span class="ixmaps-splash-ping"></span><span class="ixmaps-splash-dot"></span></div>' +
       '<div class="ixmaps-splash-word">ixmaps<sup>gl</sup></div>' +
       '<div class="ixmaps-splash-text"></div>';
@@ -4459,8 +4462,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // overrides the default message, .options({splash:false}) skips it
       // entirely (e.g. for a map embedded somewhere a full-cover overlay
       // would be wrong, or one that's expected to load near-instantly).
+      // dark on a dark map (no basemap style yet: flatLegendLook's name/
+      // color rule, or a basemap faded to <= 0.5 over a dark page, as
+      // effectiveMapDark) — a light sheet flashed between a dark page and
+      // a dark map (the UNHCR page)
+      const splashOpacity = parseFloat(this._engineOptions.basemapopacity);
+      const splashLegendBg = this.mapOptions.legendBackground || this.mapOptions.legendbackground;
+      const splashDark = flatLegendLook(this.mapOptions.mapType, isNaN(splashOpacity) ? 1 : splashOpacity, splashLegendBg).dark
+        || (splashOpacity <= 0.5 && flatIsDarkColor('rgb(' + pageBackgroundColorOf(el).map(Math.round).join(',') + ')'));
       const splash = this._engineOptions.splash === false ? null
-        : showSplash(el, this._engineOptions.splashText || 'loading…');
+        : showSplash(el, this._engineOptions.splashText || 'loading…', splashDark);
 
       // ixmaps.getBoundingBox()/setTitle() for brokers called below, before
       // the MapLibre map exists (same default view as the map gets)
