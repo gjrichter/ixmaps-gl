@@ -4064,7 +4064,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             && !(Array.isArray(rt.style.ranges) && rt.style.ranges.length);
           if (flatSingleRowLegend) {
             renderRows = function() {
-              const rgb = rt.categoryColorsRgb[0] || [128, 128, 128];
+              const rgb = rt.classRgb(0);
               const unit = String(rt.style.legendunits || rt.style.units || '').replace(/ /g, '&nbsp;');
               const vMin = styleNum(rt.style.minvalue) || rt._valueMin, vMax = styleNum(rt.style.maxvalue) || rt._valueMax;
               const label = rt.style.label != null && !Array.isArray(rt.style.label) ? String(rt.style.label) : String(rt.binding.value || '');
@@ -4097,7 +4097,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
               for (let line = 0; line < nLines; line++) {
                 for (let c = 0; c < n; c++) {
                   const ix = flatFlag(rt.flags, 'INVERT') ? n - c - 1 : c;
-                  const rgb = rt.categoryColorsRgb[ix] || [128, 128, 128]; // colorscheme "none": no class colors
+                  const rgb = rt.classRgb(ix); // colorscheme "none": no class colors
                   const part = rt.partsA[ix];
                   const title = part ? flatFormatValue(part.min, dec, '') + unit + ' ... ' + flatFormatValue(part.max, dec, '') + unit : '';
                   const marked = rt._markedClasses.has(ix);
@@ -4128,7 +4128,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             // flat drops the rows without a count once any row has one
             // (legend.js 754-760, 787-789: fCountBars && !count)
             rowsEl.innerHTML = order.filter(i => !(maxTotal > 0) || totals[i]).map(i => {
-              const rgb = rt.categoryColorsRgb[i] || [128, 128, 128]; // colorscheme "none": no class colors
+              const rgb = rt.classRgb(i); // colorscheme "none": no class colors
               const color = legendFill(i) || `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
               const marked = rt._markedClasses.has(i);
               const dimmed = rt._markedClasses.size > 0 && !marked;
@@ -10895,6 +10895,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // reasonable rather than wrong.
     // borderOpacity (default 1): the border's own alpha (flat's
     // stroke-opacity, see flatBubbleLook)
+    // the color of class i; neutral grey when the theme has no class colors
+    // (colorscheme ["none"], or a class beyond the scheme)
+    classRgb(i) { return (this.categoryColorsRgb || [])[i] || [128, 128, 128]; }
+
     // colorscheme ["none"] — flat's explicit no-fill symbol
     _noFillScheme() {
       const cs = this.style.colorscheme;
@@ -11143,7 +11147,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       let rows = fields.map((field, i) => ({ i, v: parseFloat(raw[field]) })).filter(r => Number.isFinite(r.v));
       if (!rows.length) return '';
       if (this.flags.has('SORT')) rows.sort((a, b) => (this.flags.has('UP') ? a.v - b.v : b.v - a.v));
-      const color = i => { const c = (this.categoryColorsRgb || [])[i] || [128, 128, 128]; return `rgb(${c.slice(0, 3).join(',')})`; };
+      const color = i => { const c = this.classRgb(i); return `rgb(${c.slice(0, 3).join(',')})`; };
       const frac = v => (this._multiFieldMax ? Math.max(0, Math.abs(v) / this._multiFieldMax) : 0);
       const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
       if (this.flags.has('HORZ')) {
@@ -12328,7 +12332,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     _userChartColor(cat) {
       const cs = this.style.colorscheme;
       if (Array.isArray(cs) && cs.length === (this.categoryColorsRgb || []).length && !isGeneratedColorScheme(cs)) return String(cs[cat]);
-      const c = (this.categoryColorsRgb || [])[cat] || [128, 128, 128];
+      const c = this.classRgb(cat);
       return `rgb(${c[0]},${c[1]},${c[2]})`;
     }
     // USER charts (see resolveUserChartFunction): one icon per chart, drawn
@@ -12985,7 +12989,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const singleBorderColorRgb = this.style.linecolor && styleLineColor(this.style.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(this.style.linecolor)) : null;
       const singleBorderWidthPx = styleNum(this.style.linewidth) || 0;
 
-      const itemRgb = d => this.categoryColorsRgb[d.properties.counts ? dominant(d.properties.counts) : d.properties.cat] || [128, 128, 128];
+      const itemRgb = d => this.classRgb(d.properties.counts ? dominant(d.properties.counts) : d.properties.cat);
       const radiusOf = d => vRadius(sizeValueOf(d));
       // align / offsetx / offsety: the whole chart moves (flatChartAlignOffset)
       // MULTIQUAD / MULTISQUARE: the items at one position side by side
@@ -13274,7 +13278,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (!symbolOutline) return singleBorderColorRgb && singleBorderWidthPx > 0 ? singleBorderColorRgb : null;
         if (singleBorderColorRgb) return singleBorderColorRgb;
         if (flatFlag(this.flags, 'NOLINES') || (this.style.linecolor && styleLineColor(this.style.linecolor) === 'none')) return null;
-        const fill = (this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128];
+        const fill = this.classRgb(d.properties.cat);
         if (perPartBranch) return flatChartTextRgb(fill);
         return fill.slice(0, 3).every(c => c >= 255) ? [128, 128, 128] : fill;
       };
@@ -13299,7 +13303,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const lookUnit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1);
         // colorscheme ["none"]: flat draws the symbol unfilled (only its values / box / title)
         const noFill = this._noFillScheme();
-        const circleLook = flatLook ? d => flatBubbleLook((this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128], radiusPx(d), lookUnit, this.style, this.flags) : null;
+        const circleLook = flatLook ? d => flatBubbleLook(this.classRgb(d.properties.cat), radiusPx(d), lookUnit, this.style, this.flags) : null;
         const lineRgb = d => (circleLook ? circleLook(d).stroke : outlineRgb(d)) || [0, 0, 0];
         layers.push(new ScatterplotLayer({
           id: `ix-bubbles-${this.name}-circles-g${this._iconGeneration}`,
@@ -13307,7 +13311,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           getPosition: d => d.geometry.coordinates,
           getRadius: d => radiusPx(d) - (symbolOutline || circleLook ? 0 : outlinePx(d, radiusPx(d)) / 2),
           radiusUnits: 'pixels',
-          getFillColor: d => [...((this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128]).slice(0, 3), noFill ? 0 : Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).fillOpacity : fillOpacity))],
+          getFillColor: d => [...(this.classRgb(d.properties.cat)).slice(0, 3), noFill ? 0 : Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).fillOpacity : fillOpacity))],
           stroked: circleLook ? combined.some(d => circleLook(d).stroke) : combined.some(d => outlineRgb(d)),
           getLineColor: d => [...lineRgb(d).slice(0, 3), Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).strokeOpacity : 1))],
           getLineWidth: d => (circleLook ? (circleLook(d).stroke ? circleLook(d).width : 0) : outlinePx(d, radiusPx(d))),
@@ -13584,7 +13588,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const lineWidth = styleNum(st.linewidth) || 1;
       const symbols = Array.isArray(st.symbols) ? st.symbols : null;
       const shapeOf = i => { const sh = symbols && (symbols[i] || symbols[0]); return normalizeSymbolShape(sh); };
-      const colorOf = i => this.categoryColorsRgb[i] || [128, 128, 128];
+      const colorOf = i => this.classRgb(i);
       const parts = [], glows = [];
       for (const d of charts) {
         const counts = d.properties.parts || d.properties.counts;
@@ -13807,7 +13811,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         return null;
       };
       const sliceRgb = sl => (sl.complement ? (parseCssColor(String(st.nodatacolor || '')) || [0xee, 0xee, 0xee])
-        : ((byClass || sl.single) && classColor(sl.value)) || colors[sl.i] || [128, 128, 128]);
+        : ((byClass || sl.single) && classColor(sl.value)) || this.classRgb(sl.i));
       const fo = styleNum(st.fillopacity), op = styleNum(st.opacity);
       // flat sets the group's fill-opacity only for a truthy value
       const fillAlpha = op > 0 ? op : fo > 0 ? fo : 1;
@@ -13906,7 +13910,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (center) {
           const cr = ch.r * Math.sqrt(center.size / 100);
           ch.centerR = cr;
-          const rgb = colors[center.i] || [128, 128, 128];
+          const rgb = this.classRgb(center.i);
           if (cr > 0) centers.push({ position: ch.c, r: cr * 0.9, off: ch.off, properties: ch.properties, chart: ch, fill: [...rgb.slice(0, 3), Math.round(255 * fillAlpha)] });
           if (glowOn && cr > 0) {
             glows.push({ position: ch.c, r: cr * 6, off: ch.off, fill: [...rgb.slice(0, 3), Math.round(255 * 0.05)] });
@@ -14033,7 +14037,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const cv = ch.layout.center.value;
           const text = fmt(cv, dec != null ? dec : 0) + (unitText.length <= 5 ? unitText : '');
           const fontSize = Math.min(ch.centerR * 0.8, ch.centerR * (3.3 / Math.max(1, text.length))) * valueScale;
-          const rgb = (this.categoryColorsRgb || [])[ch.layout.center.i] || [128, 128, 128];
+          const rgb = this.classRgb(ch.layout.center.i);
           if (fontSize > VALUES_MIN_FONT_PX) centerTexts.push({ position: ch.c, text, fontSize, off: o, color: flatChartTextRgb(rgb), bold: true });
         } else if (!ch.layout.center && has(/CENTERVALUE/) && (ch.count || (ch.size !== undefined && !isNaN(ch.size)))) {
           // flat prints String(nCount || nSize): a record's item has no
@@ -14286,7 +14290,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             off: [box.title.x * unit + ch.off[0], (box.title.baseline - 0.8 * box.title.font) * unit + ch.off[1]] });
         }
         for (const b of L.bars) {
-          const rgb = colors[b.cls] || [128, 128, 128];
+          const rgb = this.classRgb(b.cls);
           const a = Math.round(255 * b.fill.opacity * b.opacity);
           const line = [...lineRgbOf(b.line, rgb).slice(0, 3), Math.round(255 * b.line.opacity * b.opacity)];
           shape(ch, b, [...rgb.slice(0, 3), a], line, b.line.width, ch.properties, false);
@@ -14294,7 +14298,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         for (const tx of L.texts) {
           const font = tx.font * unit;
           if (font <= VALUES_MIN_FONT_PX) continue;
-          const rgb = colors[tx.cls] || [128, 128, 128];
+          const rgb = this.classRgb(tx.cls);
           const color = tx.color === 'value' ? [0x79, 0x86, 0x97] : tx.color === 'contrast' ? flatChartTextRgb(rgb) : hexOrNamedToRgb(tx.color);
           // the baseline's start → the text's middle-left (arial: 0.35 font
           // above the baseline), perpendicular to its reading direction
@@ -14901,7 +14905,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const valueScale = styleNum(this.style.valuescale) || 1;
       const textOverride = this.style.valuecolor || this.style.textcolor;
       const opts = this._valueTextOpts();
-      const itemRgb = props => this.categoryColorsRgb[props.counts ? dominant(props.counts) : props.cat] || [128, 128, 128];
+      const itemRgb = props => this.classRgb(props.counts ? dominant(props.counts) : props.cat);
       const valueOf = props => (props.counts ? props.total : (props.classValue !== undefined ? props.classValue : props.value));
       const textOf = props => flatValueText(props.counts ? this._categoryValueRecord(dominant(props.counts)) : props.raw,
         this.binding.title && props.raw ? props.raw[this.binding.title] : undefined, valueOf(props), this.style, this.flags, opts);
