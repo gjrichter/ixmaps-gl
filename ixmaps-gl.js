@@ -4487,9 +4487,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // ixmaps.getBoundingBox()/setTitle() for brokers called below, before
       // the MapLibre map exists (same default view as the map gets)
       _titleHost = el;
-      const initialZoom = this._viewZoom != null && this._viewZoom !== '' ? flatToMapLibreZoom(Number(this._viewZoom)) : 8;
+      // a flat SVG map in another projection (equalearth.svg): its view
+      // framing and map scale (see FLAT_SVG_PROJECTIONS)
+      const svgProjection = flatSvgProjectionOf(this.mapOptions.map);
+      if (svgProjection) flatSvgProjectionByOptions.set(this._engineOptions, svgProjection);
+      const [vLat, vLng] = this._viewCenter || [45.5, 9.2];
+      const initialZoom = this._viewZoom != null && this._viewZoom !== ''
+        ? flatViewToMapLibreZoom(Number(this._viewZoom), Number(vLat), Number(vLng), el.clientWidth, el.clientHeight, svgProjection)
+        : 8;
       {
-        const [vLat, vLng] = this._viewCenter || [45.5, 9.2];
         _boundsSource = () => viewBounds(Number(vLat), Number(vLng), initialZoom, el.clientWidth, el.clientHeight);
       }
 
@@ -4608,7 +4614,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         style: mapTypeColor ? buildBlankBackgroundStyle(mapTypeColor)
                              : resolveBasemapStyleUrl(this.mapOptions.mapType),
         center: [lon, lat],
-        zoom: this._viewZoom != null && this._viewZoom !== '' ? flatToMapLibreZoom(Number(this._viewZoom)) : 8,
+        zoom: initialZoom,
         // MapLibre's own AttributionControl (bottom right) keeps the
         // basemap's required CARTO/OpenStreetMap credit; the page's own
         // .attribution() goes bottom left, as flat shows it
@@ -4632,6 +4638,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // world once, at the cost of that zoom limit.
         renderWorldCopies: this._engineOptions.worldcopies !== false
       });
+      engineOptionsByMap.set(map, this._engineOptions);
       // the live-SVG pane USER charts render into (see chartHostFor) —
       // registered here, keyed by this map's options object, so every
       // runtime (including later loadProject/map.layer ones) finds it
@@ -4679,7 +4686,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (typeof hook !== 'function' || !prev) return;
           const p = map.project(c), q = map.project(prev.c);
           if (z === prev.z && Math.abs(p.x - q.x) <= 10 && Math.abs(p.y - q.y) <= 10) return;
-          try { hook.call(global.ixmaps, mapLibreToFlatZoom(z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); }
+          try { hook.call(global.ixmaps, flatViewZoomOf(map, z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); }
         });
         notifyZoomAndPanMidGesture = () => {
           const hook = pageIxmaps() && pageIxmaps().htmlgui_onZoomAndPan;
@@ -4687,13 +4694,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const z = map.getZoom();
           if (z === last.z) return; // a pan alone waits for 'moveend' (and its 10 px rule)
           last = { z, c: map.getCenter() };
-          try { hook.call(global.ixmaps, mapLibreToFlatZoom(z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); }
+          try { hook.call(global.ixmaps, flatViewZoomOf(map, z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); }
         };
         // flat calls it on the first draw too (its old zoom is unset then)
         map.once('load', () => {
           last = { z: map.getZoom(), c: map.getCenter() };
           const hook = pageIxmaps() && pageIxmaps().htmlgui_onZoomAndPan;
-          if (typeof hook === 'function') { try { hook.call(global.ixmaps, mapLibreToFlatZoom(last.z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); } }
+          if (typeof hook === 'function') { try { hook.call(global.ixmaps, flatViewZoomOf(map, last.z)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onZoomAndPan:', e); } }
         });
       }
 
@@ -4885,7 +4892,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         resize: () => { map.resize(); return engineApi; },
         // broker calls in flight (themes whose data comes by name)
         pendingLoads: () => pendingLoads,
-        getZoom: () => mapLibreToFlatZoom(map.getZoom()),
+        getZoom: () => flatViewZoomOf(map),
         require: (url) => { loadRequiredScripts([url]); return engineApi; },
         // flat's theme-level calls by theme id (style.name / meta.name, else
         // the layer name): add(theme, flag) — "replace" swaps a theme of the
@@ -5158,7 +5165,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const z = isOpts ? latlonOrOpts.zoom : zoom;
           if (c) {
             const lngLat = Array.isArray(c) ? [c[1], c[0]] : [c.lng, c.lat];
-            jumpLive(Object.assign({ center: lngLat }, z != null ? { zoom: flatToMapLibreZoom(Number(z)) } : {}));
+            jumpLive(Object.assign({ center: lngLat }, z != null ? { zoom: mapLibreZoomOfFlatView(map, Number(z), lngLat[1], lngLat[0]) } : {}));
           }
           return engineApi;
         },
@@ -5565,6 +5572,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
 
       function applyProjectMap(m, f, report) {
         const svg = String(m.map || '');
+        // its view and map scale follow the project's map file, as on flat
+        if (svg) {
+          const svgProjection = flatSvgProjectionOf(svg);
+          if (svgProjection) flatSvgProjectionByOptions.set(builder._engineOptions, svgProjection);
+          else flatSvgProjectionByOptions.delete(builder._engineOptions);
+        }
         if (svg && !/generic\/(mercator|orthographic)\.svg$/i.test(svg)) report.notes.push(`flat SVG map "${svg.split('/').pop()}" is not available in ixmaps-gl — mercator used`);
         if (typeof map.setProjection === 'function') {
           try {
@@ -5585,8 +5598,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const c = m.center || {};
           const lat = Number(c.lat), lng = Number(c.lng);
           const z = m.zoom != null && m.zoom !== '' ? Number(m.zoom) : NaN;
-          if (Number.isFinite(lat) && Number.isFinite(lng)) jumpLive(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: flatToMapLibreZoom(z) } : {}));
-          else if (Number.isFinite(z)) jumpLive({ zoom: flatToMapLibreZoom(z) });
+          if (Number.isFinite(lat) && Number.isFinite(lng)) jumpLive(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: mapLibreZoomOfFlatView(map, z, lat, lng) } : {}));
+          else if (Number.isFinite(z)) jumpLive({ zoom: mapLibreZoomOfFlatView(map, z, map.getCenter().lat, map.getCenter().lng) });
         }
         // a project can't authorize its own scripts — trustedscripts is the page's
         if (m.options && typeof m.options === 'object') {
@@ -6260,6 +6273,110 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   const FLAT_ZOOM_OFFSET = 1;
   const flatToMapLibreZoom = z => z - FLAT_ZOOM_OFFSET;
   const mapLibreToFlatZoom = z => z + FLAT_ZOOM_OFFSET;
+
+  // flat's world SVG maps in a projection other than Mercator
+  // (map:".../generic/equalearth.svg"), which this engine draws in Web
+  // Mercator. Flat syncs such a map to its Leaflet view by fitting the
+  // Leaflet bounds' SW/NE corners, projected, into the map
+  // (htmlgui_sync.js setBoundsLatLon → mapscript2.js doSetMapToGeoBounds /
+  // doZoomMapToArea): both axes fit (min) while the bounds span ≥ 180° of
+  // longitude, else the x axis fits the width on its own (mapapi.js
+  // doSetMapToGeoBounds drops fPreserveMapRatio) — so the same view zoom
+  // frames these maps differently from Mercator (Equal Earth at 2 on
+  // 1024×748: 1.55× the Mercator scale; at 4: 1.09×).
+  // `project` is flat's own forward projection (mapscript.js
+  // _LLtoEqualEarth, _LLtoWinkelTripel — Winkel's cos(50.467) in radians
+  // included), in units of the earth radius.
+  // `scaleConstant`: flat's map scale (nTrueMapScale · nZoomScale, the
+  // scale its dynamic object scaling and gates use) × the screen pixels
+  // per degree of longitude on the equator — constant per map file,
+  // measured on flat (2026-10-09, view zooms 2-5): Equal Earth 170.1e6,
+  // Winkel 195.45e6; for flat's Mercator map 442 913 385 · 256 / 360 =
+  // 314.96e6 (FLAT_OBJECT_SCALE_CONSTANT). These SVG maps carry the
+  // Mercator map's mapscale (177 165 354), so at the same on-screen size
+  // flat calls their scale 0.54× (0.62×) the Mercator one, and its
+  // symbols are drawn larger by that ratio^(1/dynamicScalePow). Framing
+  // matches flat's pixels per degree of longitude at the view's center;
+  // the scale gates (scaleDenominatorAt) still use the Mercator scale.
+  const FLAT_MERCATOR_SCALE_CONSTANT = FLAT_OBJECT_SCALE_CONSTANT * 256 / 360;
+  const FLAT_SVG_PROJECTIONS = {
+    equalearth: {
+      svg: 'maps/svg/maps/generic/equalearth.svg',
+      scaleConstant: 170.1e6,
+      project: (lat, lon) => {
+        const M = Math.sqrt(3) / 2, A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796;
+        const l = Math.asin(M * Math.sin(lat * Math.PI / 180)), l2 = l * l, l6 = l2 * l2 * l2;
+        return [lon * Math.PI / 180 * Math.cos(l) / (M * (A1 + 3 * A2 * l2 + l6 * (7 * A3 + 9 * A4 * l2))), l * (A1 + A2 * l2 + l6 * (A3 + A4 * l2))];
+      }
+    },
+    winkel: {
+      svg: 'maps/svg/maps/generic/winkel.svg',
+      scaleConstant: 195.45e6,
+      project: (lat, lon) => {
+        const p = lat * Math.PI / 180, q = Math.max(-180, Math.min(180, lon)) * Math.PI / 360;
+        const D = Math.acos(Math.cos(p) * Math.cos(q));
+        let x1 = 0, y1 = 0;
+        if (D !== 0) { const C = Math.sin(p) / Math.sin(D); x1 = (q < 0 ? -2 : 2) * D * Math.sqrt(1 - C * C); y1 = D * C; }
+        return [0.5 * (x1 + 2 * q * Math.cos(50.467)), 0.5 * (y1 + p)];
+      }
+    }
+  };
+  // the flat SVG map projection of a map:/project map URL (generic file
+  // name), null for Mercator and every map drawn as is (orthographic → globe)
+  function flatSvgProjectionOf(svgUrl) {
+    const m = /(?:^|\/)(equalearth|winkel)\.svgz?(?:[?#].*)?$/i.exec(String(svgUrl || ''));
+    return m ? FLAT_SVG_PROJECTIONS[m[1].toLowerCase()] : null;
+  }
+  // the flat SVG projection a map's options object belongs to (set by the
+  // map's init and loadProject; the runtimes only see the options object)
+  const flatSvgProjectionByOptions = new WeakMap();
+  // flat SVG map scale ÷ the Mercator one at the same on-screen size (1
+  // without a flat SVG projection)
+  function flatMapScaleRatio(mapOptions) {
+    const proj = mapOptions && typeof mapOptions === 'object' ? flatSvgProjectionByOptions.get(mapOptions) : null;
+    return proj ? proj.scaleConstant / FLAT_MERCATOR_SCALE_CONSTANT : 1;
+  }
+  // a flat view zoom → the MapLibre zoom showing what flat shows at it:
+  // under a flat SVG projection the same screen pixels per degree of
+  // longitude at the center latitude as flat's fitted map (see
+  // FLAT_SVG_PROJECTIONS), else flatToMapLibreZoom
+  function flatViewToMapLibreZoom(flatZoom, lat, lng, width, height, proj) {
+    if (!proj || !(width > 0) || !(height > 0) || !Number.isFinite(lat) || !Number.isFinite(lng)) return flatToMapLibreZoom(flatZoom);
+    // flat's Leaflet bounds (256 px tiles) at this zoom
+    const [sw, ne] = viewBounds(lat, lng, flatToMapLibreZoom(flatZoom), width, height);
+    const a = proj.project(sw.lat, sw.lng), b = proj.project(ne.lat, ne.lng);
+    const kx = width / Math.abs(b[0] - a[0]), ky = height / Math.abs(b[1] - a[1]);
+    const k = ne.lng - sw.lng < 180 ? kx : Math.min(kx, ky);
+    const pxPerDegree = k * (proj.project(lat, lng + 0.5)[0] - proj.project(lat, lng - 0.5)[0]);
+    return Math.log2(pxPerDegree * 360 / 512);
+  }
+  // the inverse: the flat view zoom of a MapLibre zoom (bisection — the
+  // fit above is monotonic in the zoom)
+  function mapLibreToFlatViewZoom(mapLibreZoom, lat, lng, width, height, proj) {
+    if (!proj || !(width > 0) || !(height > 0) || !Number.isFinite(lat) || !Number.isFinite(lng)) return mapLibreToFlatZoom(mapLibreZoom);
+    let lo = mapLibreToFlatZoom(mapLibreZoom) - 4, hi = mapLibreToFlatZoom(mapLibreZoom) + 4;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      if (flatViewToMapLibreZoom(mid, lat, lng, width, height, proj) < mapLibreZoom) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+  // a live MapLibre map's options object (its runtimes' mapOptions), for
+  // the conversions below
+  const engineOptionsByMap = new WeakMap();
+  function mapSvgProjection(map) {
+    const options = engineOptionsByMap.get(map);
+    return (options && flatSvgProjectionByOptions.get(options)) || null;
+  }
+  // the flat view zoom a live map shows / the MapLibre zoom of a flat view
+  function flatViewZoomOf(map, mapLibreZoom) {
+    const c = map.getCenter(), el = map.getContainer();
+    return mapLibreToFlatViewZoom(mapLibreZoom == null ? map.getZoom() : mapLibreZoom, c.lat, c.lng, el.clientWidth, el.clientHeight, mapSvgProjection(map));
+  }
+  function mapLibreZoomOfFlatView(map, flatZoom, lat, lng) {
+    const el = map.getContainer();
+    return flatViewToMapLibreZoom(flatZoom, lat, lng, el.clientWidth, el.clientHeight, mapSvgProjection(map));
+  }
   // map scale denominator at a MapLibre zoom (null → the default reference):
   // flat's own map scale, the one its scale bar shows and every scale gate
   // (featureupper, chartupper, boxupper, valueupper, aggregation brackets)
@@ -6284,9 +6401,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // (e.g. "fixed") means they don't — same pixel size at every zoom.
   // the zoom at which flat's object scale equals normalSizeScale (symbols
   // at their normal size) — see FLAT_OBJECT_SCALE_CONSTANT
+  // (under a flat SVG projection, flat's scale at that zoom is
+  // flatMapScaleRatio × the Mercator one)
   function resolveZoomReference(mapOptions) {
     const scaleDenominator = parseFloat(normalSizeScaleOf(mapOptions)) || FLAT_DEFAULT_NORMAL_SIZE_SCALE;
-    return flatToMapLibreZoom(Math.log2(FLAT_OBJECT_SCALE_CONSTANT / scaleDenominator));
+    return flatToMapLibreZoom(Math.log2(FLAT_OBJECT_SCALE_CONSTANT * flatMapScaleRatio(mapOptions) / scaleDenominator));
   }
   // .options({normalSizeScale}) under any spelling: flat matches the key
   // case-insensitively (htmlgui.js, /normalSizeScale/i → setScaleParam;
@@ -15667,11 +15786,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const map = _lastMapApi.map;
     const center = map.getCenter();
     const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
+    const svgProjection = mapSvgProjection(map);
     return JSON.stringify({
       map: {
-        map: proj.type === 'globe' ? 'maps/svg/maps/generic/orthographic.svg' : 'maps/svg/maps/generic/mercator.svg',
+        map: proj.type === 'globe' ? 'maps/svg/maps/generic/orthographic.svg' : svgProjection ? svgProjection.svg : 'maps/svg/maps/generic/mercator.svg',
         center: { lat: center.lat, lng: center.lng },
-        zoom: mapLibreToFlatZoom(map.getZoom())
+        zoom: flatViewZoomOf(map)
       }
     });
   }
@@ -15784,7 +15904,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
-    flatToMapLibreZoom, mapLibreToFlatZoom, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
+    flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,

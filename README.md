@@ -179,8 +179,16 @@ Zoom numbers in the ixmaps API are ixmaps-flat's, i.e. Leaflet's (256px tiles):
 works on 512px tiles, so ixmaps-gl shows ixmaps zoom *z* at MapLibre zoom *z* − 1 — the
 same area a flat page shows. Map scales (`aggregation`, `valueupper`, `featureupper`/`featurelower`
 and `boxupper`/`boxlower` thresholds, `normalSizeScale`) are computed from the zoom that is
-actually displayed. Code that talks
+actually displayed; the `normalSizeScale` option key is matched in any spelling
+(`normalsizescale`), as flat does. Code that talks
 to the MapLibre map directly (`api.map.getZoom()`, `jumpTo`) sees MapLibre zooms.
+
+Flat's Equal Earth and Winkel world maps (`map: ".../generic/equalearth.svg"`, `winkel.svg`) are
+drawn in Mercator, but framed and scaled as flat shows them: flat fits its Leaflet view's bounds
+into the projected map, so the same zoom shows a different area there (Equal Earth at zoom 2:
+1.55× the Mercator scale). ixmaps-gl converts every API zoom to the MapLibre zoom with the same
+pixels per degree of longitude at the view's center, and back, and sizes dynamically scaled
+symbols (`objectscaling: "dynamic"`) from flat's own map scale for that map file.
 
 ### Theme normalization
 

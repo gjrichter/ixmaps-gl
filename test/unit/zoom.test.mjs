@@ -50,6 +50,47 @@ test('normalSizeScale: any key spelling, as flat (htmlgui.js /normalSizeScale/i)
     G.objectZoomFactor(3, { objectscaling: 'dynamic', normalSizeScale: '10000000' }), 'object zoom factor');
 });
 
+// flat's equalearth.svg on a 1024×748 map at view([12, 10], z), measured on
+// flat (2026-10-09): screen px per degree of longitude on the equator, and
+// flat's map scale (nTrueMapScale · nZoomScale) / nDynamicObjectScale with
+// normalSizeScale 1e7
+const EE_FLAT = { 2: [4.425, 38594698, 0.6375], 3: [5.625, 30246348, 0.6915], 4: [12.425, 13687734, 0.9007], 5: [23.675, 7180199, 1.1167] };
+const EE_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/maps/generic/equalearth.svg';
+
+test('flatSvgProjectionOf: equalearth / winkel maps, none for mercator and orthographic', () => {
+  assert.ok(G.flatSvgProjectionOf(EE_URL));
+  assert.ok(G.flatSvgProjectionOf('maps/svg/maps/generic/winkel.svg'));
+  for (const u of ['maps/svg/maps/generic/mercator.svg', 'maps/svg/maps/generic/orthographic.svg', '', undefined]) assert.equal(G.flatSvgProjectionOf(u), null, String(u));
+});
+
+test('flatViewToMapLibreZoom: frames a flat Equal Earth view as flat fits it', () => {
+  const ee = G.flatSvgProjectionOf(EE_URL);
+  const dx = lat => ee.project(lat, 10.5)[0] - ee.project(lat, 9.5)[0];
+  for (const [z, [pxPerDegEquator]] of Object.entries(EE_FLAT)) {
+    const ml = G.flatViewToMapLibreZoom(Number(z), 12, 10, 1024, 748, ee);
+    // MapLibre's px per degree = flat's at the center latitude
+    const expected = pxPerDegEquator * dx(12) / dx(0);
+    const got = 512 * Math.pow(2, ml) / 360;
+    assert.ok(Math.abs(got / expected - 1) < 0.006, `flat zoom ${z}: ${got} vs ${expected}`);
+    near(G.mapLibreToFlatViewZoom(ml, 12, 10, 1024, 748, ee), Number(z), `inverse at ${z}`);
+  }
+  // no flat SVG projection: the plain zoom convention
+  assert.equal(G.flatViewToMapLibreZoom(4, 12, 10, 1024, 748, null), 3);
+  assert.equal(G.mapLibreToFlatViewZoom(3, 12, 10, 1024, 748, null), 4);
+});
+
+test('objectZoomFactor under a flat Equal Earth map: flat\'s dynamic object scale at the same on-screen size', () => {
+  const opts = { objectscaling: 'dynamic', normalsizescale: '10000000' };
+  G.flatSvgProjectionByOptions.set(opts, G.flatSvgProjectionOf(EE_URL));
+  for (const [z, [pxPerDegEquator, , dynObj]] of Object.entries(EE_FLAT)) {
+    const ml = Math.log2(pxPerDegEquator * 360 / 512);
+    const f = G.objectZoomFactor(ml, opts);
+    assert.ok(Math.abs(f / dynObj - 1) < 0.01, `flat zoom ${z}: ${f} vs ${dynObj}`);
+  }
+  // a Mercator page is unchanged: flat's Mercator scale 442 913 385 / 2^zoom
+  near(G.objectZoomFactor(1, { objectscaling: 'dynamic', normalSizeScale: '10000000' }), Math.pow(1e7 / (442913385 / 4), 1 / 3), 'Mercator');
+});
+
 test('resolveAggregationPx / valuesHiddenByScale compare thresholds with the displayed scale', () => {
   const agg = ['1:1', '3px', '1:500000', '1px'];
   // flat's scale: flat zoom 12.5 = 1:76 468 → 3px; 1:500000 is crossed at
