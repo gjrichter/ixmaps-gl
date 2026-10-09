@@ -11884,6 +11884,28 @@ in vec4 vPieLineColor;
       // fillopacity and linecolor, as a single item (flat draws one
       // symbol) — the packed multi-category icon is for CATEGORICAL cells
       const singleSymbol = d => !d.properties.counts || (this._rangeClassed && d.properties.cat != null);
+      // flat's symbol outline (maptheme.js 21595-21610 and 21950-21997,
+      // drawn 21625-21634 / 21995-22035): every SYMBOL shape is stroked,
+      // (linewidth || 1) · normalX(min(2r / rMax, 0.2)) with rMax the
+      // normal radius normalX(30 / 2) — on screen min(2r / 15, 0.2 unit)
+      // × linewidth, centered on the outline like any SVG stroke. Its
+      // color: linecolor; NOLINES or linecolor "none" none; a CATEGORICAL
+      // theme without AGGREGATE/GROUP the symbol's own color (white: gray),
+      // every other symbol chart the darker ChartColors.textColor of its
+      // class color. BUBBLE keeps its linecolor/linewidth border, a width
+      // in icon pixels
+      const symbolOutline = flatChartBranch(this.flags) === 'symbol';
+      const outlineRgb = d => {
+        if (!symbolOutline) return singleBorderColorRgb && singleBorderWidthPx > 0 ? singleBorderColorRgb : null;
+        if (singleBorderColorRgb) return singleBorderColorRgb;
+        if (flatFlag(this.flags, 'NOLINES') || (this.style.linecolor && styleLineColor(this.style.linecolor) === 'none')) return null;
+        const fill = (this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128];
+        if (perPartBranch) return flatChartTextRgb(fill);
+        return fill.slice(0, 3).every(c => c >= 255) ? [128, 128, 128] : fill;
+      };
+      const outlinePx = (d, r) => (!outlineRgb(d) ? 0 : symbolOutline
+        ? (styleNum(this.style.linewidth) || 1) * Math.min(2 * r / NORMAL_RADIUS_PX, 0.2 * unitPx)
+        : singleBorderWidthPx * r * 2 / BUBBLE_ICON_SIZE);
       // only single circles (no group icon, no other shape, no pixel
       // offset — ScatterplotLayer has none): drawn as real circles. A
       // cached circle icon shrunk to a few device pixels samples a coarse
@@ -11892,20 +11914,22 @@ in vec4 vPieLineColor;
       // layers by id alone, so a theme switch turning the IconLayer of
       // this id into a ScatterplotLayer kept the icon layer's state and
       // drew nothing (the fuel-price page's station points); hover/click
-      // routing goes by the final id (layerRuntimeById). The border keeps
-      // the icon's look — inside the radius, width scaling with the size
+      // routing goes by the final id (layerRuntimeById). A symbol's outline
+      // is centered on its radius (flat); BUBBLE's border keeps the
+      // icon's look, inside the radius
       if (combined.length && !alignOf.active && combined.every(d => singleSymbol(d) && shapeOf(d.properties) === 'circle')) {
-        const borderPx = d => (singleBorderColorRgb && singleBorderWidthPx > 0 ? singleBorderWidthPx * vRadius(sizeValueOf(d)) * 2 / BUBBLE_ICON_SIZE : 0);
+        const radiusPx = d => vRadius(sizeValueOf(d));
+        const lineRgb = d => outlineRgb(d) || [0, 0, 0];
         layers.push(new ScatterplotLayer({
           id: `ix-bubbles-${this.name}-circles-g${this._iconGeneration}`,
           data: combined, pickable: true,
           getPosition: d => d.geometry.coordinates,
-          getRadius: d => vRadius(sizeValueOf(d)) - borderPx(d) / 2,
+          getRadius: d => radiusPx(d) - (symbolOutline ? 0 : outlinePx(d, radiusPx(d)) / 2),
           radiusUnits: 'pixels',
           getFillColor: d => [...((this.categoryColorsRgb || [])[d.properties.cat] || [128, 128, 128]).slice(0, 3), Math.round(this._iconAlpha(d) * fillOpacity)],
-          stroked: !!singleBorderColorRgb && singleBorderWidthPx > 0,
-          getLineColor: d => [...(singleBorderColorRgb || [0, 0, 0]).slice(0, 3), this._iconAlpha(d)],
-          getLineWidth: borderPx,
+          stroked: combined.some(d => outlineRgb(d)),
+          getLineColor: d => [...lineRgb(d).slice(0, 3), this._iconAlpha(d)],
+          getLineWidth: d => outlinePx(d, radiusPx(d)),
           lineWidthUnits: 'pixels',
           billboard: true,
           parameters: ICON_LAYER_GLOBE_PARAMETERS
@@ -11914,9 +11938,17 @@ in vec4 vPieLineColor;
         id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
         data: combined, pickable: true,
         getPosition: d => d.geometry.coordinates,
-        getIcon: d => !singleSymbol(d)
-          ? this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d), Array.isArray(this.style.symbols) ? this.style.symbols : null)
-          : this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, shapeOf(d.properties), singleBorderColorRgb, singleBorderWidthPx),
+        getIcon: d => {
+          if (!singleSymbol(d)) return this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d), Array.isArray(this.style.symbols) ? this.style.symbols : null);
+          const shape = shapeOf(d.properties), rgb = outlineRgb(d);
+          if (!symbolOutline || !rgb) return this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, shape, rgb, rgb ? singleBorderWidthPx : 0);
+          // the outline in the icon's own pixels, inside its edge; quarter
+          // pixel steps keep the icon cache small. flat's "empty" strokes
+          // #888888 whatever the class color
+          const r = vRadius(sizeValueOf(d));
+          const w = Math.round(outlinePx(d, r) * BUBBLE_ICON_SIZE / Math.max(1e-6, 2 * r) * 4) / 4;
+          return this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, shape, shape === 'empty' ? [136, 136, 136] : rgb, w);
+        },
         getSize: d => vRadius(sizeValueOf(d)) * 2,
         // group icons bake a fixed 0.9 alpha; an explicit fillopacity scales it
         // so a near-transparent theme doesn't show opaque 1-px-cell clusters
