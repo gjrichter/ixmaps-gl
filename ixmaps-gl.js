@@ -2948,15 +2948,21 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // flat's Dictionary.getLocalText (mapscript.js 5631-5648) over the page's
   // .local(text, translation) pairs: the whole text, else word by word
   // (a word's entry is written in quotes, 'word')
+  // plus the page-wide entries of ixmaps.setLocalString (flat's
+  // Api.setLocalString → Dictionary.replace, mapapi.js 123), read at call
+  // time so strings set after the map is built count; the later
+  // setLocalString wins over a .local() pair of the same text
+  const _localStrings = Object.create(null);
   function makeLocalText(locals) {
     const dict = {};
     (locals || []).forEach(a => {
       if (a && typeof a[0] === 'object' && a[0]) Object.assign(dict, a[0]);
       else if (a && a.length >= 2) dict[a[0]] = a[1];
     });
+    const entry = k => (_localStrings[k] !== undefined ? _localStrings[k] : dict[k]);
     return text => {
-      if (dict[text] !== undefined) return String(dict[text]);
-      return String(text).split(' ').map(w => (dict["'" + w + "'"] !== undefined ? String(dict["'" + w + "'"]) : w)).join(' ');
+      if (entry(text) !== undefined) return String(entry(text));
+      return String(text).split(' ').map(w => (entry("'" + w + "'") !== undefined ? String(entry("'" + w + "'")) : w)).join(' ');
     };
   }
   // make the map container the positioning context of what the engine
@@ -15702,6 +15708,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     htmlgui_getAttributionString: () => (_lastMapApi && _lastMapApi.getAttribution ? _lastMapApi.getAttribution() : ''),
     changeThemeStyle: compatChangeThemeStyle,
     removeTheme: compatRemoveTheme,
+    // flat's ixmaps.setLocalString(orig, local) (htmlgui.js 3814 →
+    // Api.setLocalString → Dictionary.replace): a page-wide translation,
+    // e.g. the migration page's ISO code → country name; usable before
+    // the map exists. getLocalString: its translation (flat's never
+    // returns it — a missing return there)
+    setLocalString: (szOrig, szLocal) => { _localStrings[szOrig] = szLocal; },
+    getLocalString: (szOrig) => makeLocalText([])(szOrig),
     // flat's ixmaps.newTheme(title, theme, flag) — on the last built map
     newTheme: (title, theme, flag) => _mapHandle.newTheme(title, theme, flag),
     // flat's time slider: show the records of a theme (null = all themes) whose timefield lies in [min, max)
