@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps · NYC Bike Sharing</title>
+</head>
+
+<body style="margin:0;padding:0;">
+
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+
+	<!-- include the ixmaps API -->
+	<script src="../ixmaps-gl.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+
+		// load the Citibike trip data and derive the columns the two
+		// themes below filter on (Start/End Hour, Start/End Day, self-trip flag);
+		// replaces the old external databroker_citibike.js + JSON-project setup
+		var lastSource = "";
+		var query = function (data, options) {
+			var szUrl = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/Citibike/201806-citibike-tripdata_3.csv.gz";
+			if (szUrl == lastSource) {
+				return false;
+			}
+			lastSource = szUrl;
+			Data.feed({ source: szUrl, type: "csv" })
+				.error(function (error) {
+					ixmaps.error(error);
+				})
+				.load(function (journeys) {
+					journeys.addColumn({ source: "starttime", destination: "Start Hour" }, function (value) {
+						return new Date(value).getHours();
+					});
+					journeys.addColumn({ source: "starttime", destination: "Start Day" }, function (value) {
+						return new Date(value).getDay();
+					});
+					journeys.addColumn({ source: "stoptime", destination: "End Hour" }, function (value) {
+						return new Date(value).getHours();
+					});
+					journeys.addColumn({ source: "stoptime", destination: "End Day" }, function (value) {
+						return new Date(value).getDay();
+					});
+					journeys = journeys.select('WHERE "Start Day" = "0"'); // Sunday
+					journeys.addColumn({ destination: "self" }, function (value) {
+						return (value[journeys.column("end station id").index] == value[journeys.column("start station id").index]) ? "true" : "false";
+					});
+					options.type = "jsonDB";
+					ixmaps.setExternalData(journeys, options);
+				});
+			return true;
+		};
+
+		// create and embed the map
+		// ! reference to "map-div", the hosting html div
+
+		ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "CartoDB - Positron",
+			map: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/maps/generic/mercator.svg",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			search: "New York",
+			about: "NYC Citi Bike trip flows, Sunday afternoon"
+		},
+		map => map
+		.options({
+			featurescaling: "true",
+			objectscaling: "dynamic",
+			normalSizeScale: "5000",
+			flushChartDraw: "50000",
+			basemapopacity: "1",
+			panhidden: "false"
+		})
+		.attribution("data: <a href='https://ride.citibikenyc.com/system-data' target='_blank'>Citi Bike NYC System Data</a>")
+		.view({
+			center: {
+				lat: "40.739583569403294",
+				lng: "-73.9624071121216"
+				},
+			zoom: "14"
+			})
+		.layer(ixmaps.layer("World Mercator", layer => layer
+			.data({
+				query: query.toString(),
+				name: "bike_journey_start_end"
+			})
+			.binding({
+				value: "end station id",
+				position: "start station latitude|start station longitude",
+				position2: "end station latitude|end station longitude"
+			})
+			.type("CHART|VECTOR|BEZIER|POINTER|GRADIENT|FADEIN|NOSCALE|EXACT|FAST|AGGREGATE|RELOCATE|SUM|COUNT|CATEGORICAL|TEXTLEGEND")
+			.style({
+				colorscheme: ["653", "white", "blue"],
+				fillopacity: "0.8",
+				shadow: "false",
+				filter: "WHERE \"Start Hour\" IN (13,14,15,16,17,18,19) AND \"self\" = \"false\"",
+				normalsizevalue: "20",
+				scale: "1",
+				rangescale: "3",
+				minvalue: "1",
+				maxcharts: "5000",
+				sizepow: "0.6",
+				linecolor: ["green", "RGB(57,162,225)"],
+				valuescale: "1"
+			})
+			.meta({
+				name: "vector",
+				title: "Start --&gt; End",
+				snippet: "Citi Bike trips, Sunday afternoon 13-19h, June 2018",
+				splash: "loading and aggregating data ...<br>this may take a bit ...<br>please give me some time ..."
+			})
+		))
+		.layer(ixmaps.layer("World Mercator", layer => layer
+			.data({
+				query: query.toString(),
+				name: "bike_journey_start_end"
+			})
+			.binding({
+				position: "start station latitude|start station longitude",
+				title: "end station name"
+			})
+			.type("CHART|BUBBLE|SIZE|EXACT|AGGREGATE|FAST|SUM|ZEROISVALUE|COUNT|CATEGORICAL")
+			.style({
+				colorscheme: ["71", "fruit"],
+				fillopacity: "0.01",
+				shadow: "false",
+				filter: "WHERE \"Start Hour\" IN (13,14,15,16,17,18,19) AND \"self\" = \"true\"",
+				itemfield: "start station id",
+				symbols: ["circle"],
+				normalsizevalue: "3",
+				scale: "1",
+				sizefield: "$item$",
+				minvalue: "5",
+				linecolor: ["RGB(57,162,225)"],
+				linewidth: "1.5",
+				aggregationfield: "start station id",
+				valuescale: "1"
+			})
+			.meta({
+				name: "closed",
+				title: "Closed trips",
+				snippet: "Trips ending at their start station, 5 or more per cell",
+				splash: "loading and aggregating data ...<br>this may take a bit ",
+				snipped: "only trips that start and end at the same station; only > 5 trips are shown"
+			})
+		))
+	);
+	</script>
+</body>
+</html>

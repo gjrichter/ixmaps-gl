@@ -3762,7 +3762,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       };
       // a plain FEATURE(S) base layer has one flat fill (no classes); FEATURE|CATEGORICAL
       // is coloured per category (see _buildFeaturesLayers), so it gets a legend
-      const legendApplies = rt => rt.categoryLabels && rt.categoryLabels.length
+      // a CATEGORICAL theme with no value binding (a count per aggregation cell) has no
+      // category rows: its panel is the text legend (title / snippet / description)
+      const countOnlyLegend = rt => !rt.categoryLabels && rt.flags.has('CATEGORICAL') && !rt.binding.value;
+      const legendApplies = rt => (countOnlyLegend(rt) || (rt.categoryLabels && rt.categoryLabels.length))
         && (!(rt.flags.has('FEATURE') || rt.flags.has('FEATURES')) || rt.flags.has('CATEGORICAL')) && !rt.flags.has('NOLEGEND');
       // One theme's panel — at build time for every theme, and again for a
       // theme defined later (map.layer(...) in a myMap.then(...) chain,
@@ -3898,7 +3901,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // dropdown and Chart-size slider stay: neither is a
           // "categorical item" or "colorscheme swatch", both are
           // independent controls unrelated to the row list.
-          const isTextOnly = rt.flags.has('TEXTLEGEND');
+          const isTextOnly = rt.flags.has('TEXTLEGEND') || countOnlyLegend(rt);
 
           // Map-view-aware per explicit request: totals reflect only
           // what's CURRENTLY on screen (the map's own bounds, plus the
@@ -12905,6 +12908,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // _buildTooltipContext's own `isGroup` check already uses).
       const sizeValueOf = d => d.properties.counts ? d.properties.total : d.properties.value;
       const combined = individual.concat(groups).sort((a, b) => sizeValueOf(a) - sizeValueOf(b));
+      // .style({minvalue}) on a bubble: flat skips an item whose size value is below it
+      // (maptheme.js 19826 / 20698, `this.nMinValue && nSizeValue < this.nMinValue`).
+      // combined is ascending, so the items below it are a prefix.
+      const bubbleMin = this.flags.has('SYMBOL') ? styleNum(this.style.minvalue) : NaN;
+      if (bubbleMin) {
+        let cut = 0;
+        while (cut < combined.length && sizeValueOf(combined[cut]) < bubbleMin) cut++;
+        combined.splice(0, cut);
+      }
       // maxcharts: like the flat engine (maptheme.js nMaxCharts), draw only the
       // biggest N items — combined is ascending, so drop from the front
       applyFlatMaxCharts(combined, this.style);
@@ -14957,7 +14969,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     }
 
     // pure: oneHot → see the pure-function sections above the class
-    _oneHot(cat, value) { return oneHot(cat, value, this.categoryLabels.length); }
+    // CATEGORICAL without a value binding (count per aggregation cell) has no categoryLabels: one bucket
+    _oneHot(cat, value) { return oneHot(cat, value, this.categoryLabels ? this.categoryLabels.length : 1); }
 
     // pure: groupCoLocated → see the pure-function sections above the class
     _groupCoLocated(clusterFeatures, zoom) { return groupCoLocated(clusterFeatures, zoom, this._clusterRadiusPx, this.categoryLabels ? this.categoryLabels.length : 1, this.flags); }
