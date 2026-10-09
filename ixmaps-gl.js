@@ -6735,6 +6735,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   //   the item's radius, SYMBOL: the theme's normal radius)
   // So "left" puts the chart's left edge o to the right of the point (and
   // drops offsetx), "2left" one more h. Returns deck.gl's pixel offset.
+  // flat's maxcharts (maptheme.js 16879-16885): chartMap sorts the charts
+  // ascending (the biggest drawn last, on top) and skips the first
+  // nToDraw − nMaxCharts, so only the biggest maxcharts are drawn — for
+  // every chart type (symbols, pies, bars, VECTOR/BEZIER). In place, on the
+  // already sorted list of charts to draw
+  function applyFlatMaxCharts(list, style) {
+    const n = Math.round(styleNum(style && style.maxcharts)) || 0;
+    if (n > 0 && list.length > n) list.splice(0, list.length - n);
+    return list;
+  }
+
   function flatChartAlignOffset(style, g) {
     const num = v => (isNaN(styleNum(v)) ? 0 : styleNum(v));
     const sym = g.symbolScale || 1;
@@ -12768,8 +12779,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const combined = individual.concat(groups).sort((a, b) => sizeValueOf(a) - sizeValueOf(b));
       // maxcharts: like the flat engine (maptheme.js nMaxCharts), draw only the
       // biggest N items — combined is ascending, so drop from the front
-      const maxCharts = Math.round(styleNum(this.style.maxcharts)) || 0;
-      if (maxCharts > 0 && combined.length > maxCharts) combined.splice(0, combined.length - maxCharts);
+      applyFlatMaxCharts(combined, this.style);
       if (this.flags.has('USER')) {
         const userLayers = this._buildUserChartLayers(combined, liveZoom, sizeValueOf);
         if (userLayers) return layers.concat(userLayers);
@@ -13684,6 +13694,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const down = has(/\bSORT\b/) && has(/\bUP\b/);
         charts.sort((a, b) => (down ? b.key - a.key : a.key - b.key) || 0);
       }
+      applyFlatMaxCharts(charts, st);
       // align / offsetx / offsety (flatChartAlignOffset) — flat's PIE
       // ptNull is (0, r + 5 units); the chart's half size taken as r, as
       // for BUBBLE (ASSUMPTION: not measured on flat for PIE)
@@ -14038,6 +14049,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const down = has(/\bSORT\b/) && has(/\bUP\b/);
         charts.sort((a, b) => (down ? b.key - a.key : a.key - b.key) || 0);
       }
+      applyFlatMaxCharts(charts, st);
 
       const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(st, liveZoom);
       const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title;
@@ -14395,6 +14407,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const down = has(/\bSORT\b/) && has(/\bUP\b/);
         keyed.sort((a, b) => (down ? b.y - a.y : a.y - b.y));
         order = keyed.map(d => d.it);
+      }
+      // the flows that would be drawn (as the loop below draws them), of
+      // which flat keeps the biggest maxcharts
+      if (Math.round(styleNum(st.maxcharts)) > 0) {
+        order = applyFlatMaxCharts(order.filter(it => it.p2 && !(minValue && it.nSize < minValue) && (inBox(it.p1) || inBox(it.p2))), st);
       }
 
       const paths = [], heads = [];
@@ -15751,7 +15768,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
