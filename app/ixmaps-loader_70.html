@@ -1695,7 +1695,7 @@
 
 <!-- iXmaps GL — deck.gl + MapLibre reimplementation, not the real ixmaps-flat/SVG engine.
      ixmaps-gl.js lazy-loads MapLibre/deck.gl/Supercluster/Mustache itself. -->
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.19/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.20/ixmaps-gl.js"></script>
 <!-- data.js — needed outside ixmaps callbacks for pre-loading and schema analysis -->
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
 
@@ -3514,7 +3514,7 @@ async function generateMapCode(options) {
     '</head>',
     '<body>',
     '<div id="map"></div>',
-    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.19/ixmaps-gl.js"><\/script>',
+    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.20/ixmaps-gl.js"><\/script>',
     '<script>',
     STATE.localFile ? '// data: the local file "' + STATE.localFile.name.replace(/[\r\n"]/g, '') + '" — put it next to this page (or replace the url with where it is published)' : null,
     'ixmaps.Map("map", ' + codeLiteral(cfg.map || {}, '') + ', map => {',
