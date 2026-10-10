@@ -158,3 +158,36 @@ test('3D vectors: an arrow head base sits on the arc where the line is that far 
   near(pathBackIndex([[0, 0], [0, 0]], 5), 0, 1e-9, 'a zero-length path');
 });
 
+test('Equal Earth: invert undoes project (the plane flat computes its flows in)', () => {
+  const proj = win.__ixmapsGlInternals.flatSvgProjectionOf('https://x/maps/svg/maps/generic/equalearth.svg');
+  assert.equal(typeof proj.invert, 'function');
+  for (const [lat, lon] of [[0, 0], [45.47, 9.19], [-33.9, 151.2], [71, -150], [-60, 179], [89, 20], [40.7, -74]]) {
+    const [la, lo] = proj.invert(...proj.project(lat, lon));
+    near(la, lat, 1e-7, `lat ${lat}`); near(lo, lon, 1e-7, `lon ${lon}`);
+  }
+});
+
+test('orthographic plane: project / invert round-trip, the face the viewer sees', () => {
+  const o = win.__ixmapsGlInternals.orthographicPlane(70, 10);
+  for (const [lat, lon] of [[70, 10], [51, 9], [40.7, -74], [35, 105], [80, -120]]) {
+    if (!o.inFront([lon, lat])) continue;
+    const [la, lo] = o.invert(...o.project(lat, lon));
+    near(la, lat, 1e-7, `lat ${lat}`); near(lo, lon, 1e-7, `lon ${lon}`);
+  }
+  assert.equal(o.inFront([10, 70]), true, 'the center faces the viewer');
+  assert.equal(o.inFront([-170, -60]), false, 'the far side does not');
+  assert.ok(Number.isNaN(o.invert(1.2, 0)[0]), 'outside the disc');
+  near(o.project(70, 10)[0], 0, 1e-12, 'the center projects to the origin');
+});
+
+test('orthographic framing: the view zoom 2.5 of a 768 px map shows flat\'s disc (338.6 px), the globe radius of the perspective inverts', () => {
+  const G = win.__ixmapsGlInternals;
+  const o = { orthographic: true, scaleConstant: 1 };
+  const z = G.flatViewToMapLibreZoom(2.5, 70, 10, 1024, 768, o);
+  // MapLibre's globe radius at that zoom, and the disc it draws (perspective, f = 1.5 · height)
+  const R = 512 * Math.pow(2, z) / (2 * Math.PI * Math.cos(70 * Math.PI / 180));
+  near(R / Math.sqrt(1 + 2 * R / (1.5 * 768)), 338.6, 0.5, 'the disc radius');
+  const z3 = G.flatViewToMapLibreZoom(3.5, 70, 10, 1024, 768, o);
+  const R3 = 512 * Math.pow(2, z3) / (2 * Math.PI * Math.cos(70 * Math.PI / 180));
+  near(R3 / Math.sqrt(1 + 2 * R3 / (1.5 * 768)), 677.2, 1, 'doubles per view zoom level');
+});

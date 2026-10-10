@@ -4512,8 +4512,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       _titleHost = el;
       // a flat SVG map in another projection (equalearth.svg): its view
       // framing and map scale (see FLAT_SVG_PROJECTIONS)
-      const svgProjection = flatSvgProjectionOf(this.mapOptions.map);
+      const svgProjection = flatSvgProjectionOf(this.mapOptions.map)
+        || (isFlatOrthographicName(this.mapOptions.mapProjection) ? FLAT_ORTHOGRAPHIC_PROJECTION : null);
       if (svgProjection) flatSvgProjectionByOptions.set(this._engineOptions, svgProjection);
+      const planeProjection = flatPlaneProjectionOf(this.mapOptions);
+      if (planeProjection) flatPlaneProjectionByOptions.set(this._engineOptions, planeProjection);
+      if (isFlatOrthographicName(this.mapOptions.mapProjection)) {
+        flatOrthographicByOptions.set(this._engineOptions, true);
+        if (this._viewCenter) flatViewCenterByOptions.set(this._engineOptions, { lat: this._viewCenter[0], lng: this._viewCenter[1] });
+      }
       const [vLat, vLng] = this._viewCenter || [45.5, 9.2];
       const initialZoom = this._viewZoom != null && this._viewZoom !== ''
         ? flatViewToMapLibreZoom(Number(this._viewZoom), Number(vLat), Number(vLng), el.clientWidth, el.clientHeight, svgProjection)
@@ -4639,6 +4646,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         center: [lon, lat],
         zoom: initialZoom,
         ...cameraOptions(this._engineOptions, this.mapOptions),
+        // flat's orthographic globe can be centered anywhere (the mechanical-goods page: 70°N);
+        // MapLibre's default keeps the world's Mercator edge out of view, which drags the
+        // center south (64° at 1024×768) and forces a larger zoom (MapLibre >= 6)
+        ...(isFlatOrthographicName(this.mapOptions.mapProjection)
+          ? { transformConstrain: (lngLat, zoom) => ({ center: new maplibregl.LngLat(lngLat.lng, globeCenterLat(lngLat.lat)), zoom }) }
+          : {}),
         // MapLibre's own AttributionControl (bottom right) keeps the
         // basemap's required CARTO/OpenStreetMap credit; the page's own
         // .attribution() goes bottom left, as flat shows it
@@ -5606,9 +5619,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const svg = String(m.map || '');
         // its view and map scale follow the project's map file, as on flat
         if (svg) {
-          const svgProjection = flatSvgProjectionOf(svg);
+          const svgProjection = flatSvgProjectionOf(svg) || (/orthographic\.svg$/i.test(svg) ? FLAT_ORTHOGRAPHIC_PROJECTION : null);
           if (svgProjection) flatSvgProjectionByOptions.set(builder._engineOptions, svgProjection);
           else flatSvgProjectionByOptions.delete(builder._engineOptions);
+          if (svgProjection && svgProjection.invert) flatPlaneProjectionByOptions.set(builder._engineOptions, svgProjection);
+          else flatPlaneProjectionByOptions.delete(builder._engineOptions);
+          if (/orthographic\.svg$/i.test(svg)) flatOrthographicByOptions.set(builder._engineOptions, true);
+          else { flatOrthographicByOptions.delete(builder._engineOptions); flatViewCenterByOptions.delete(builder._engineOptions); }
         }
         if (svg && !/generic\/(mercator|orthographic)\.svg$/i.test(svg)) report.notes.push(`flat SVG map "${svg.split('/').pop()}" is not available in ixmaps-gl — mercator used`);
         if (typeof map.setProjection === 'function') {
@@ -5711,7 +5728,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         return Math.round((z - Math.log2(Math.cos(lat))) * 1e6) / 1e6;
       }
       function refreshLayers() {
-        const liveZoom = map.getZoom();
+        const projNow = typeof map.getProjection === 'function' && map.getProjection();
+        const liveZoom = projNow && projNow.type === 'globe' && flatOrthographicByOptions.has(builder._engineOptions)
+          ? globeSizingZoom(map.getZoom(), map.getCenter().lat, map.getContainer().clientHeight) : map.getZoom();
         // frozen only while MapLibre really is zooming (see 'moveend')
         const zoom = isZooming && map.isZooming() ? stableGridZoom : gridZoomOf();
         const viewMoving = map.isMoving();
@@ -6339,6 +6358,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const M = Math.sqrt(3) / 2, A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796;
         const l = Math.asin(M * Math.sin(lat * Math.PI / 180)), l2 = l * l, l6 = l2 * l2 * l2;
         return [lon * Math.PI / 180 * Math.cos(l) / (M * (A1 + 3 * A2 * l2 + l6 * (7 * A3 + 9 * A4 * l2))), l * (A1 + A2 * l2 + l6 * (A3 + A4 * l2))];
+      },
+      // [lat, lon] in degrees of a projected point (Newton on the parametric latitude)
+      invert: (x, y) => {
+        const M = Math.sqrt(3) / 2, A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796;
+        let l = y, l2 = l * l, l6 = l2 * l2 * l2;
+        for (let i = 0; i < 12; i++) {
+          const delta = (l * (A1 + A2 * l2 + l6 * (A3 + A4 * l2)) - y) / (A1 + 3 * A2 * l2 + l6 * (7 * A3 + 9 * A4 * l2));
+          l -= delta; l2 = l * l; l6 = l2 * l2 * l2;
+          if (Math.abs(delta) < 1e-12) break;
+        }
+        return [Math.asin(Math.sin(l) / M) * 180 / Math.PI, M * x * (A1 + 3 * A2 * l2 + l6 * (7 * A3 + 9 * A4 * l2)) / Math.cos(l) * 180 / Math.PI];
       }
     },
     winkel: {
@@ -6362,6 +6392,59 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // the flat SVG projection a map's options object belongs to (set by the
   // map's init and loadProject; the runtimes only see the options object)
   const flatSvgProjectionByOptions = new WeakMap();
+  // the projection plane a map's VECTOR / BEZIER flows are drawn in: flat's
+  // map file, or the Map() option mapProjection ("equalearth") — flat computes
+  // the curves in its map's own coordinates, so the same flow bows around the
+  // pole there. (Unlike flatSvgProjectionByOptions it leaves the view framing alone.)
+  const flatPlaneProjectionByOptions = new WeakMap();
+  // a map that is flat's orthographic one (drawn as MapLibre's globe): its object scale is
+  // flat's (scale × the globe's pixels per degree at its center, measured on flat 2026-10-10
+  // on the mechanical-goods globe page, the same at view zooms 2.5 and 3.5: 197.44e6; the
+  // Mercator map's is FLAT_MERCATOR_SCALE_CONSTANT). MapLibre's globe zoom moves with the
+  // center latitude (the globe keeps its size), so symbols are sized at the zoom of the
+  // globe's real radius (globeSizingZoom). The view center the page asked for stays the
+  // plane its flows are curved in.
+  const FLAT_ORTHOGRAPHIC_SCALE_CONSTANT = 197.44e6;
+  // flat fits its orthographic globe to the map's height: the disc is 0.88 of it at the
+  // view zoom 2.5 and doubles per zoom level (338.6 px of 768 on the mechanical-goods
+  // globe page, as 450 px of 1013 in a real window)
+  const FLAT_ORTHOGRAPHIC_RADIUS_PER_HEIGHT = 338.6 / 768;
+  const FLAT_ORTHOGRAPHIC_PROJECTION = { orthographic: true, scaleConstant: FLAT_ORTHOGRAPHIC_SCALE_CONSTANT };
+  const FLAT_ORTHOGRAPHIC_FLOW_WIDTH = 8.96 / 5.585;
+  const flatOrthographicByOptions = new WeakMap();
+  const flatViewCenterByOptions = new WeakMap();
+  function isFlatOrthographicName(v) { return /^orth?ographic$/i.test(String(v || '').trim()); }
+  // MapLibre's zoom at which a Mercator map of the same pixel scale shows the globe: its
+  // radius is 512 · 2^zoom / 2π / cos(center latitude)
+  // MapLibre's globe is seen in perspective (vertical field of view 36.87°, so a focal length
+  // of 1.5 · the map height, in the px the surface is drawn at in the center): a globe of
+  // radius R (px per radian at its center) fills a disc of radius R / sqrt(1 + 2R / f) on
+  // the screen. Flat's orthographic globe has no perspective: its radius is its disc.
+  function globeDiscRadius(radiusAtCenter, height) {
+    return radiusAtCenter / Math.sqrt(1 + 2 * radiusAtCenter / (1.5 * height));
+  }
+  function globeRadiusOfDisc(discRadius, height) {
+    const f = 1.5 * height, a = discRadius * discRadius / f;
+    return a + Math.sqrt(a * a + discRadius * discRadius);
+  }
+  // the zoom a Mercator map would have for the globe's disc radius — what symbols are sized at,
+  // so they match flat's, whose scale follows its disc
+  // The globe's center stays within 85° of the equator: MapLibre's globe zoom is compensated by
+  // 1 / cos(latitude), so a pole-centered globe would need a zoom of about -7, where the
+  // overlay's layers collapse to one point (flat can center the pole).
+  const GLOBE_MAX_CENTER_LAT = 85;
+  function globeCenterLat(lat) { return Math.max(-GLOBE_MAX_CENTER_LAT, Math.min(GLOBE_MAX_CENTER_LAT, lat)); }
+  function globeSizingZoom(zoom, centerLat, height) {
+    const c = Math.cos(globeCenterLat(centerLat) * Math.PI / 180);
+    const radius = 512 * Math.pow(2, zoom) / (2 * Math.PI * c);
+    return Math.log2(globeDiscRadius(radius, height > 0 ? height : 768) * 2 * Math.PI / 512);
+  }
+  function flatPlaneProjectionOf(mapOptions) {
+    const byUrl = flatSvgProjectionOf(mapOptions.map);
+    if (byUrl) return byUrl;
+    const named = FLAT_SVG_PROJECTIONS[String(mapOptions.mapProjection || '').trim().toLowerCase()];
+    return named || null;
+  }
   // flat SVG map scale ÷ the Mercator one at the same on-screen size (1
   // without a flat SVG projection)
   function flatMapScaleRatio(mapOptions) {
@@ -6374,6 +6457,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // FLAT_SVG_PROJECTIONS), else flatToMapLibreZoom
   function flatViewToMapLibreZoom(flatZoom, lat, lng, width, height, proj) {
     if (!proj || !(width > 0) || !(height > 0) || !Number.isFinite(lat) || !Number.isFinite(lng)) return flatToMapLibreZoom(flatZoom);
+    if (proj.orthographic) {
+      // the globe's radius as flat draws it; MapLibre's is 512 · 2^zoom / 2π / cos(center lat)
+      const disc = FLAT_ORTHOGRAPHIC_RADIUS_PER_HEIGHT * height * Math.pow(2, flatZoom - 2.5);
+      return Math.log2(globeRadiusOfDisc(disc, height) * 2 * Math.PI * Math.cos(globeCenterLat(lat) * Math.PI / 180) / 512);
+    }
     // flat's Leaflet bounds (256 px tiles) at this zoom
     const [sw, ne] = viewBounds(lat, lng, flatToMapLibreZoom(flatZoom), width, height);
     const a = proj.project(sw.lat, sw.lng), b = proj.project(ne.lat, ne.lng);
@@ -8583,6 +8671,29 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       out.push([a * p0[0] + b * c1[0] + c * c2[0] + d * p3[0], a * p0[1] + b * c1[1] + c * c2[1] + d * p3[1]]);
     }
     return out;
+  }
+
+  // The orthographic plane around a view center (flat's orthographic map): project
+  // (lat, lon) → [x, y] in earth radii, y up; invert is the way back ([NaN, NaN]
+  // outside the disc); inFront([lng, lat]) tells the face the viewer sees
+  function orthographicPlane(lat0, lng0) {
+    const r = Math.PI / 180, p0 = lat0 * r, s0 = Math.sin(p0), c0 = Math.cos(p0);
+    return {
+      project: (lat, lon) => {
+        const p = lat * r, dl = (lon - lng0) * r;
+        return [Math.cos(p) * Math.sin(dl), c0 * Math.sin(p) - s0 * Math.cos(p) * Math.cos(dl)];
+      },
+      invert: (x, y) => {
+        const rho = Math.hypot(x, y);
+        if (!(rho <= 1)) return [NaN, NaN];
+        if (!rho) return [lat0, lng0];
+        const c = Math.asin(rho), sc = Math.sin(c), cc = Math.cos(c);
+        const lat = Math.asin(cc * s0 + y * sc * c0 / rho);
+        const lng = lng0 * r + Math.atan2(x * sc, rho * c0 * cc - y * s0 * sc);
+        return [lat / r, ((lng / r + 540) % 360) - 180];
+      },
+      inFront: ([lng, lat]) => s0 * Math.sin(lat * r) + c0 * Math.cos(lat * r) * Math.cos((lng - lng0) * r) > 0
+    };
   }
 
   // CHART|VECTOR|BEZIER with 3D (ixmaps-gl only; flat draws its flows flat): the
@@ -14582,6 +14693,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const has = re => re.test(t);
       const bezier = has(/\bBEZIER\b/);
       const lift = has(/\b3D\b/);
+      // flat's orthographic map draws a flow 1.604 times as wide as its Mercator formula gives at the
+      // same object scale (measured on the mechanical-goods globe page: the widest ribbon 8.96 px
+      // where scale 0.31 · 1.8 · 10 units gives 5.6; its pies, at the same scale, match)
+      const flowWidthK = flatOrthographicByOptions.has(this.mapOptions) ? FLAT_ORTHOGRAPHIC_FLOW_WIDTH : 1;
       const archRatio = isNaN(styleNum(st.archeight)) ? VECTOR_ARC_HEIGHT_RATIO : styleNum(st.archeight);
       if (!this.binding.lookup2) {
         if (!this._warnedNoPos2) {
@@ -14595,11 +14710,27 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const scale = styleNum(st.scale) || 1;
       const unit = oz * scale;
       const world = 512 * Math.pow(2, liveZoom);
-      const toPx = ([lng, lat]) => {
+      const mercToPx = ([lng, lat]) => {
         const s = Math.sin(Math.max(-85.0511, Math.min(85.0511, lat)) * Math.PI / 180);
         return [(lng + 180) / 360 * world, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * world];
       };
-      const toLngLat = ([x, y]) => [x / world * 360 - 180, (2 * Math.atan(Math.exp((0.5 - y / world) * 2 * Math.PI)) - Math.PI / 2) * 180 / Math.PI];
+      const mercToLngLat = ([x, y]) => [x / world * 360 - 180, (2 * Math.atan(Math.exp((0.5 - y / world) * 2 * Math.PI)) - Math.PI / 2) * 180 / Math.PI];
+      // the curves are computed in the plane of flat's map (Equal Earth), at the screen
+      // size of this map's degree of longitude on the equator, then mapped back: the
+      // flow bows around the pole as on flat. Mercator's plane stays the default.
+      // On the globe (flat's orthographic map) the plane is the one of the view center,
+      // for the flows whose two ends face the viewer; the others keep Mercator's.
+      const planeFns = (proj, k) => ({
+        toPx: ([lng, lat]) => { const q = proj.project(lat, lng); return [q[0] * k, -q[1] * k]; },
+        toLngLat: ([x, y]) => { const q = proj.invert(x / k, -y / k); return [q[1], q[0]]; }
+      });
+      const mercFns = { toPx: mercToPx, toLngLat: mercToLngLat };
+      const fixedPlane = flatPlaneProjectionByOptions.get(this.mapOptions);
+      const fixedFns = fixedPlane && fixedPlane.invert ? planeFns(fixedPlane, (world / 360) / fixedPlane.project(0, 1)[0]) : null;
+      const planeCenter = flatViewCenterByOptions.get(this.mapOptions) || globeCenter;
+      const ortho = !fixedFns && globeCenter ? orthographicPlane(planeCenter.lat, planeCenter.lng) : null;
+      const orthoFns = ortho ? planeFns(ortho, world / (2 * Math.PI)) : null;
+      const fnsOf = it => (fixedFns || (orthoFns && ortho.inFront(it.p1) && ortho.inFront(it.p2) ? orthoFns : mercFns));
       const inBox = c => c && c[0] >= bbox[0] && c[0] <= bbox[2] && c[1] >= bbox[1] && c[1] <= bbox[3];
 
       const sizePow = resolveSizePow(st, this.flags);
@@ -14663,8 +14794,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
 
       const paths = [], heads = [];
       const N = 32;
-      const visible = c => !globeCenter || isOnVisibleHemisphere(c[0], c[1], globeCenter);
+      const visible = c => Number.isFinite(c[0]) && Number.isFinite(c[1]) && (!globeCenter || isOnVisibleHemisphere(c[0], c[1], globeCenter));
       for (const it of order) {
+        const { toPx, toLngLat } = fnsOf(it);
         let p1 = it.p1, p2 = it.p2;
         if (!p2) continue;
         if (minValue && it.nSize < minValue) continue;
@@ -14675,7 +14807,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (p1[0] === p2[0] && p1[1] === p2[1]) continue;
           const w = rawLw != null && rawLw !== '' && lwNum ? lwNum
             : 10 / Math.pow(nsv || maxSize, 1 / sizePow) * Math.pow(Math.abs(it.nSize), 1 / sizePow);
-          sw = w * unit;
+          sw = w * unit * flowWidthK;
           if (!(sw > 0)) continue;
           if (has(/\bREVERSE\b/) || it.nSize < 0) [p1, p2] = [p2, p1];
           const a = toPx(p1), b = toPx(p2);
@@ -14702,7 +14834,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           end = [end[0] + a[0], end[1] + a[1]];
         } else {
           const w = (rawLw != null && rawLw !== '' && lwNum) || (2 / (nsv || 1) / maxSize * it.nSize) || 0.1;
-          sw = w * oz;
+          sw = w * oz * flowWidthK;
           const a = toPx(p1), b = toPx(p2);
           pts = [];
           for (let i = 0; i <= N; i++) pts.push([a[0] + (b[0] - a[0]) * i / N, a[1] + (b[1] - a[1]) * i / N]);
@@ -14747,6 +14879,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
               return [c[0], c[1], back > 0 ? vectorArcHeight(pathBackIndex(pts, back), pts.length - 1, chordM, archRatio) : 0];
             });
           }
+          if (tri.some(c => !Number.isFinite(c[0]) || !Number.isFinite(c[1]))) continue; // off the projection's outline
           heads.push({ type: 'Feature', properties, geometry: { type: 'Polygon', coordinates: [[...tri, tri[0]]] },
             fill: [...rgb.slice(0, 3), Math.round(255 * Math.min(1, headAlpha) * groupAlpha)] });
         }
@@ -16028,7 +16161,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
