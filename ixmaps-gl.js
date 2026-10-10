@@ -14589,7 +14589,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (c) return c;
         }
         if (it.cat != null) return it.cat >= 0 && colors[it.cat] ? colors[it.cat] : [0, 0, 0];
-        return Number.isInteger(it.value) && colors[it.value - 1] ? colors[it.value - 1] : [0, 0, 0];
+        // no value field: the item's value is 1, its color the scheme's first (flat's
+        // colorScheme[nValuesA[0] - 1]; mechanical_goods_flows.html draws one color per series)
+        const v = it.value === undefined ? 1 : it.value;
+        return Number.isInteger(v) && colors[v - 1] ? colors[v - 1] : [0, 0, 0];
       };
       const fade = has(/\bFADEIN\b/) ? 0.2 : 2;
       const gradient = bezier && has(/\bGRADIENT\b|\bFADEIN\b/);
