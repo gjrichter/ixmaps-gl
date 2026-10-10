@@ -84,7 +84,10 @@ page. It currently implements:
   heads (`markersize`), `GRADIENT`/`FADEIN`, `DOPACITY`/`DOPACITYMIN`, static `DASH` dashes; colored
   by `linecolor`, `colorfield` or the `CATEGORICAL`/`EXACT` category; densified, so they follow the
   globe. `VALUES` text along the curve, `DYNAMICWIDTH`, `LONG` and the dash animation are noted in
-  the console, not drawn
+  the console, not drawn. `3D` (ixmaps-gl only; flat draws its flows flat) lifts each flow into an
+  arc above the map — both ends on the ground, the top at `archeight` (default 0.3) times the
+  flow's length; tilt the map with `.options({pitch: 60})` (and `bearing`, degrees) or by dragging
+  with the right mouse button
 - **CHART\|BAR** (and `BARS`) — a bar chart per record or, with `AGGREGATE`/`CATEGORICAL`, per
   item (aggregated as the pies), a bar per value field or category, as flat draws it: width and
   length by `SIZE` (size field or the values' sum, `sizepow`), `normalsizevalue`, `rangescale`,

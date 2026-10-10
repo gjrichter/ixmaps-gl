@@ -2741,7 +2741,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
     'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale', 'rangecentervalue',
     'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety', 'gridx', 'boxmargin', 'borderwidth',
-    'borderradius', 'maxcharts'];
+    'borderradius', 'maxcharts', 'archeight'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -4638,6 +4638,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
                              : resolveBasemapStyleUrl(this.mapOptions.mapType),
         center: [lon, lat],
         zoom: initialZoom,
+        ...cameraOptions(this._engineOptions, this.mapOptions),
         // MapLibre's own AttributionControl (bottom right) keeps the
         // basemap's required CARTO/OpenStreetMap credit; the page's own
         // .attribution() goes bottom left, as flat shows it
@@ -8581,6 +8582,43 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const a = u * u * u, b = 3 * u * u * s, c = 3 * u * s * s, d = s * s * s;
       out.push([a * p0[0] + b * c1[0] + c * c2[0] + d * p3[0], a * p0[1] + b * c1[1] + c * c2[1] + d * p3[1]]);
     }
+    return out;
+  }
+
+  // CHART|VECTOR|BEZIER with 3D (ixmaps-gl only; flat draws its flows flat): the
+  // flow arcs above the map. Height in meters of the vertex i of last+1, a half
+  // sine over the flow: both ends stay on the ground (arrow heads sit there),
+  // the top is ratio · the flow's length (style.archeight, default 0.3)
+  const VECTOR_ARC_HEIGHT_RATIO = 0.3;
+  function vectorArcHeight(i, last, chordMeters, ratio) {
+    return last > 0 ? chordMeters * ratio * Math.sin(Math.PI * i / last) : 0;
+  }
+  // the fractional vertex index of a path (px points) `back` px before its last
+  // point (0 when the path is shorter): where an arrow head's base sits on the
+  // arc, so the head is lifted with the line it ends
+  function pathBackIndex(pts, back) {
+    let left = back;
+    for (let i = pts.length - 1; i > 0; i--) {
+      const len = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      if (left <= len) return len ? i - left / len : i;
+      left -= len;
+    }
+    return 0;
+  }
+  // great-circle distance between two [lng, lat], meters
+  function greatCircleMeters(p1, p2) {
+    const r = Math.PI / 180, dLat = (p2[1] - p1[1]) * r, dLng = (p2[0] - p1[0]) * r;
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(p1[1] * r) * Math.cos(p2[1] * r) * Math.sin(dLng / 2) ** 2;
+    return 2 * 6371008.8 * Math.asin(Math.sqrt(Math.min(1, h)));
+  }
+  // the map's initial camera tilt: .options({pitch, bearing}) or the Map() option
+  // of that name (degrees); maxPitch is raised to the pitch asked for
+  function cameraOptions(engineOptions, mapOptions) {
+    const num = k => { const v = engineOptions && engineOptions[k] != null ? engineOptions[k] : mapOptions && mapOptions[k]; const n = Number(v); return v == null || v === '' || !isFinite(n) ? undefined : n; };
+    const out = {};
+    const pitch = num('pitch'), bearing = num('bearing');
+    if (pitch !== undefined) { out.pitch = Math.max(0, Math.min(85, pitch)); out.maxPitch = Math.max(60, out.pitch); }
+    if (bearing !== undefined) out.bearing = bearing;
     return out;
   }
 
@@ -14543,6 +14581,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
       const has = re => re.test(t);
       const bezier = has(/\bBEZIER\b/);
+      const lift = has(/\b3D\b/);
+      const archRatio = isNaN(styleNum(st.archeight)) ? VECTOR_ARC_HEIGHT_RATIO : styleNum(st.archeight);
       if (!this.binding.lookup2) {
         if (!this._warnedNoPos2) {
           this._warnedNoPos2 = true;
@@ -14692,10 +14732,21 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (run.length > 1) paths.push({ path: run, colors: runColors, width: drawW, dash: dashArr ? [dashArr[0] / drawW, dashArr[1] / drawW] : [0, 0], properties, item: it });
           run = []; runColors = [];
         };
-        ll.forEach((c, i) => { if (visible(c)) { run.push(c); runColors.push(vertexColor(i)); } else flush(); });
+        const chordM = lift ? greatCircleMeters(p1, p2) : 0;
+        ll.forEach((c, i) => { if (visible(c)) { run.push(lift ? [c[0], c[1], vectorArcHeight(i, ll.length - 1, chordM, archRatio)] : c); runColors.push(vertexColor(i)); } else flush(); });
         flush();
         if (arrow && visible(toLngLat(end))) {
-          const tri = arrowMarkerTriangle(end, tan[0], tan[1], sw, headS, refX, refY).map(toLngLat);
+          const triPx = arrowMarkerTriangle(end, tan[0], tan[1], sw, headS, refX, refY);
+          let tri = triPx.map(toLngLat);
+          if (lift) {
+            // the head lies in the arc's plane: a vertex behind the line's end is as
+            // high as the arc there, the tip (past the end) on the ground
+            const tl = Math.hypot(tan[0], tan[1]) || 1;
+            tri = tri.map((c, k) => {
+              const back = -((triPx[k][0] - end[0]) * tan[0] + (triPx[k][1] - end[1]) * tan[1]) / tl;
+              return [c[0], c[1], back > 0 ? vectorArcHeight(pathBackIndex(pts, back), pts.length - 1, chordM, archRatio) : 0];
+            });
+          }
           heads.push({ type: 'Feature', properties, geometry: { type: 'Polygon', coordinates: [[...tri, tri[0]]] },
             fill: [...rgb.slice(0, 3), Math.round(255 * Math.min(1, headAlpha) * groupAlpha)] });
         }
@@ -15977,7 +16028,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

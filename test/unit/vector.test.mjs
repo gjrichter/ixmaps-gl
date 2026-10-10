@@ -15,7 +15,7 @@ const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location:
   document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
 win.window = win; win.globalThis = win;
 vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
-const { flatVectorItems, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, normalizeTheme } = win.__ixmapsGlInternals;
+const { flatVectorItems, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, normalizeTheme } = win.__ixmapsGlInternals;
 const plain = v => JSON.parse(JSON.stringify(v));
 const near = (a, b, eps, msg) => assert.ok(Math.abs(a - b) <= eps, `${msg}: ${a} vs ${b}`);
 
@@ -118,3 +118,43 @@ test('theme: EXACT is CATEGORICAL; position2 is the second position', () => {
   assert.equal(spec.binding.lookup2, 'B');
   assert.equal(spec.binding.lookup, 'A');
 });
+
+test('3D vectors: the arc is a half sine over the flow — ground at both ends, ratio · length on top', () => {
+  const chord = 10000, last = 32;
+  near(vectorArcHeight(0, last, chord, 0.3), 0, 1e-9, 'start on the ground');
+  near(vectorArcHeight(last, last, chord, 0.3), 0, 1e-9, 'end on the ground');
+  near(vectorArcHeight(last / 2, last, chord, 0.3), 3000, 1e-6, 'top = 0.3 · 10 km');
+  near(vectorArcHeight(last / 2, last, chord, 0.5), 5000, 1e-6, 'archeight 0.5');
+  assert.equal(vectorArcHeight(0, 0, chord, 0.3), 0, 'a single vertex stays on the ground');
+});
+
+test('3D vectors: great-circle meters between the two positions', () => {
+  near(greatCircleMeters([0, 0], [0, 1]), 111195, 50, 'one degree of latitude');
+  near(greatCircleMeters([9.19, 45.47], [9.19, 45.47]), 0, 1e-9, 'same point');
+  near(greatCircleMeters([-73.99, 40.73], [-73.96, 40.75]), 3000, 400, 'a Citi Bike trip, about 3 km');
+});
+
+test('3D vectors: the 3D flag and style.archeight', () => {
+  const t = normalizeTheme({ layer: 'L', style: { type: 'CHART|VECTOR|BEZIER|3D', archeight: '0.45' } });
+  assert.equal(t.flags.has('3D'), true);
+  assert.equal(t.style.archeight, 0.45, 'archeight is a number key');
+});
+
+test('camera: pitch / bearing from .options() or the Map() options, maxPitch raised to the pitch', () => {
+  assert.deepEqual(plain(cameraOptions({}, {})), {}, 'nothing asked: MapLibre defaults');
+  assert.deepEqual(plain(cameraOptions({ pitch: '55', bearing: 20 }, {})), { pitch: 55, maxPitch: 60, bearing: 20 });
+  assert.deepEqual(plain(cameraOptions({}, { pitch: 70 })), { pitch: 70, maxPitch: 70 }, 'the Map() option');
+  assert.deepEqual(plain(cameraOptions({ pitch: 40 }, { pitch: 70 })), { pitch: 40, maxPitch: 60 }, '.options() wins');
+  assert.deepEqual(plain(cameraOptions({ pitch: 99 }, {})), { pitch: 85, maxPitch: 85 }, 'clamped to MapLibre\'s 85');
+  assert.deepEqual(plain(cameraOptions({ pitch: 'x', bearing: '' }, {})), {}, 'not a number: ignored');
+});
+
+test('3D vectors: an arrow head base sits on the arc where the line is that far back', () => {
+  const pts = [[0, 0], [10, 0], [20, 0], [30, 0]];
+  near(pathBackIndex(pts, 0), 3, 1e-9, 'at the end');
+  near(pathBackIndex(pts, 10), 2, 1e-9, 'one segment back');
+  near(pathBackIndex(pts, 15), 1.5, 1e-9, 'half a segment further');
+  near(pathBackIndex(pts, 100), 0, 1e-9, 'longer than the path: the start');
+  near(pathBackIndex([[0, 0], [0, 0]], 5), 0, 1e-9, 'a zero-length path');
+});
+
