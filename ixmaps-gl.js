@@ -787,7 +787,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       }
       return false;
     });
-    return features.length === fc.features.length ? fc : Object.assign({}, fc, { features });
+    const out = features.length === fc.features.length ? fc : Object.assign({}, fc, { features });
+    // a {type:"Sphere"} feature is flat's ocean backdrop: not drawn as a shape, the globe's own
+    // surface takes its color (see applySphereBackdrop)
+    if (fc.features.some(f => f && f.geometry && f.geometry.type === 'Sphere')) Object.defineProperty(out, '_sphere', { value: true, enumerable: false });
+    return out;
   }
 
   // CHOROPLETH's own .data() (e.g. the comuni demographics CSV in
@@ -3170,6 +3174,29 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return false;
   }
 
+  // The ocean of flat's world / orthographic maps is a {type:"Sphere"} feature: the whole map disc,
+  // filled with the layer's color. Here it is the surface of the map (the globe, or the flat
+  // map): a background layer under everything, in that color and opacity.
+  const SPHERE_BACKDROP_LAYER_ID = '__ixmaps_gl_sphere_backdrop';
+  function applySphereBackdrop(map, style) {
+    const cs = style && style.colorscheme;
+    const color = Array.isArray(cs) ? cs[0] : cs;
+    if (!color || color === 'none') return;
+    const opacity = Number.isFinite(styleNum(style.fillopacity)) ? styleNum(style.fillopacity) : 1;
+    const paint = () => {
+      try {
+        const id = map.getLayer(BLANK_BACKGROUND_LAYER_ID) ? BLANK_BACKGROUND_LAYER_ID : SPHERE_BACKDROP_LAYER_ID;
+        if (id === SPHERE_BACKDROP_LAYER_ID && !map.getLayer(id)) {
+          const first = (map.getStyle().layers || [])[0];
+          map.addLayer({ id, type: 'background', paint: {} }, first && first.id);
+        }
+        map.setPaintProperty(id, 'background-color', color);
+        map.setPaintProperty(id, 'background-opacity', opacity);
+      } catch (e) { console.warn('[ixmaps-gl] the {type:"Sphere"} ocean backdrop could not be set:', e); }
+    };
+    if (map.isStyleLoaded()) paint(); else map.once('style.load', paint);
+  }
+
   function buildBlankBackgroundStyle(color) {
     return {
       version: 8,
@@ -4562,6 +4589,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // build() and every later defineLayer()/refreshTheme() share it
       const dataCache = this._dataCache = this._dataCache || new Map();
       const runtimes = [];
+      const sphereBackdrops = []; // {type:"Sphere"} layers read before the map exists
       // themes whose data comes by name (see namedDataTheme) start empty and
       // load on their own once the map is built, as in flat, where every
       // theme loads independently: a broker that answers late — or only
@@ -4618,6 +4646,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         rt._named = named;
         rt._zoomToPending = wantsZoomToExtent(spec.flags);
         runtimes.push(rt);
+        if (fc._sphere) sphereBackdrops.push(rt.style);
         notifyNewTheme(rt);
         _globalThemeRegistry.set(rt.name, rt);
         // See findRuntime's own comment on the three real theme-id
@@ -4676,6 +4705,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         renderWorldCopies: this._engineOptions.worldcopies !== false
       });
       engineOptionsByMap.set(map, this._engineOptions);
+      sphereBackdrops.forEach(style => applySphereBackdrop(map, style));
       // the live-SVG pane USER charts render into (see chartHostFor) —
       // registered here, keyed by this map's options object, so every
       // runtime (including later loadProject/map.layer ones) finds it
@@ -5552,6 +5582,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         rt._dataSourceKey = named ? 'name:' + spec.data.name
           : sourceKey || JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
         runtimes.push(rt);
+        if (fc._sphere) applySphereBackdrop(map, rt.style);
         _globalThemeRegistry.set(rt.name, rt);
         if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
         if (themeIdOf(rt) !== rt.name) _globalThemeRegistry.set(themeIdOf(rt), rt);
