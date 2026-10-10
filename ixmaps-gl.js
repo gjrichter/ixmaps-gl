@@ -14859,9 +14859,29 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           vector: { itemValue: it.cat != null ? (it.cat >= 0 ? it.cat + 1 : 0) : it.value } };
         // the line in map coordinates; on the globe only its visible runs
         const ll = pts.map(toLngLat);
+        // a flow that crosses the antimeridian (over the pole, or the Pacific) continues past ±180°
+        // instead of jumping back, which would draw it the long way round the globe
+        for (let i = 1; i < ll.length; i++) {
+          if (!Number.isFinite(ll[i][0]) || !Number.isFinite(ll[i - 1][0])) continue;
+          while (ll[i][0] - ll[i - 1][0] > 180) ll[i][0] -= 360;
+          while (ll[i][0] - ll[i - 1][0] < -180) ll[i][0] += 360;
+        }
         let run = [], runColors = [];
         const flush = () => {
-          if (run.length > 1) paths.push({ path: run, colors: runColors, width: drawW, dash: dashArr ? [dashArr[0] / drawW, dashArr[1] / drawW] : [0, 0], properties, item: it });
+          if (run.length > 1) {
+            const dash = dashArr ? [dashArr[0] / drawW, dashArr[1] / drawW] : [0, 0];
+            if (globeCenter && !dashArr) {
+              // on the globe deck.gl draws only the first three quarters of a path that has a
+              // color per vertex (also an equal one): one color per path, a gradient as one
+              // path per segment, its two colors averaged
+              const same = runColors.every(c => c[0] === runColors[0][0] && c[1] === runColors[0][1] && c[2] === runColors[0][2] && c[3] === runColors[0][3]);
+              if (same) paths.push({ path: run, colors: runColors[0], width: drawW, dash, properties, item: it });
+              else for (let k = 0; k < run.length - 1; k++) {
+                const c0 = runColors[k], c1 = runColors[k + 1];
+                paths.push({ path: [run[k], run[k + 1]], colors: [0, 1, 2, 3].map(j => Math.round((c0[j] + c1[j]) / 2)), width: drawW, dash, properties, item: it });
+              }
+            } else paths.push({ path: run, colors: runColors, width: drawW, dash, properties, item: it });
+          }
           run = []; runColors = [];
         };
         const chordM = lift ? greatCircleMeters(p1, p2) : 0;
