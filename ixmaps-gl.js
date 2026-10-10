@@ -8644,17 +8644,34 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   //  - HORZ: side by side from the center to the right
   //  - otherwise (or CENTER): all on the center
   // Returns the parts in drawing order: { i, v, r, x, y } (pixels, y down).
-  function sequenceLayout(counts, flags, radiusOf, opts = {}) {
+  // the flag tests sequenceLayout makes, resolved once per flag set: it runs for
+  // every chart on every redraw, and scanning the flags (and compiling a RegExp
+  // per word) each time cost ~135 ms per redraw on the accidents demo
+  const _sequenceFlagCache = new WeakMap();
+  function sequenceFlags(flags) {
+    const hit = _sequenceFlagCache.get(flags);
+    if (hit && hit.size === flags.size) return hit.info;
     const has = f => flatFlag(flags, f);
-    const word = w => [...flags].some(f => new RegExp('\\b' + w + '\\b').test(f));
+    const word = w => { const re = new RegExp('\\b' + w + '\\b'); return [...flags].some(f => re.test(f)); };
+    const info = {
+      sort: word('SORT'), up: word('UP'), down: word('DOWN'),
+      star: has('STAR') && !has('CENTER'), horz: has('HORZ') && !has('CENTER'),
+      expand: has('EXPAND'), expandmax: has('EXPANDMAX'), linear: has('LINEAR'), sizep1: has('SIZEP1'),
+      compress: has('COMPRESS'), compressmax: has('COMPRESSMAX')
+    };
+    _sequenceFlagCache.set(flags, { size: flags.size, info });
+    return info;
+  }
+  function sequenceLayout(counts, flags, radiusOf, opts = {}) {
+    const fl = sequenceFlags(flags);
     let order = counts.map((v, i) => ({ i, v }));
-    if (word('SORT')) {
-      if (word('UP')) order.sort((a, b) => a.v - b.v);
-      else if (word('DOWN')) order.sort((a, b) => b.v - a.v);
+    if (fl.sort) {
+      if (fl.up) order.sort((a, b) => a.v - b.v);
+      else if (fl.down) order.sort((a, b) => b.v - a.v);
     }
     const parts = [];
-    const star = has('STAR') && !has('CENTER'), horz = has('HORZ') && !has('CENTER');
-    const up = word('UP');
+    const star = fl.star, horz = fl.horz;
+    const up = fl.up;
     const maxR = opts.maxRadius || 0;
     const nStarParts = opts.nParts || counts.length;
     let angle = 0, starR = null, x = 0;
@@ -8666,11 +8683,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       if (star) {
         if (starR === null) {
           starR = r;
-          if (has('EXPAND') && word('SORT') && up) {
+          if (fl.expand && fl.sort && up) {
             const big = order[order.length - 1].v, mv = opts.maxValue || big || 1;
-            starR = (has('EXPANDMAX') ? 2 : 0.5) * maxR * (has('LINEAR') || has('SIZEP1') ? big / mv : Math.sqrt(big / mv));
+            starR = (fl.expandmax ? 2 : 0.5) * maxR * (fl.linear || fl.sizep1 ? big / mv : Math.sqrt(big / mv));
           }
-          if (has('COMPRESS')) starR *= has('COMPRESSMAX') ? 0.25 : 0.5;
+          if (fl.compress) starR *= fl.compressmax ? 0.25 : 0.5;
         }
         if (parts.length > 0 || up) {
           const c = starR + r;
@@ -8682,7 +8699,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             dist = starR * (1 + nStarParts / 5);
           }
           if (opts.rangeScale) dist *= opts.rangeScale;
-          else dist = has('EXPANDMAX') ? dist * 2 : (has('EXPAND') ? dist * 1.5 : dist);
+          else dist = fl.expandmax ? dist * 2 : (fl.expand ? dist * 1.5 : dist);
           angle += f;
           px = Math.cos(angle / 180 * Math.PI) * dist;
           py = Math.sin(angle / 180 * Math.PI) * dist;
@@ -13578,6 +13595,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const marking = this._markedClasses.size && !this._onMarksChanged;
       const gray = marking && String(st.evidence || 'isolate') === 'isolate_gray';
       const sorted = [...this.flags].some(f => /\bSORT\b/.test(f));
+      const star = flatFlag(this.flags, 'STAR');
       const fillOpacity = styleNum(st.fillopacity) || 0.85;
       const borderRgb = st.linecolor && styleLineColor(st.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(st.linecolor)) : null;
       const lineWidth = styleNum(st.linewidth) || 1;
@@ -13605,7 +13623,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           return item;
         });
         // STAR: the first part (its center) is put on top at the end (23145)
-        if (flatFlag(this.flags, 'STAR') && items.length > 1) items.push(items.shift());
+        if (star && items.length > 1) items.push(items.shift());
         parts.push(...items);
       }
       const alignOf = this._chartAlignFn(liveZoom, d => (d.chart || d)._seqLast || 0);
