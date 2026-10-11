@@ -218,6 +218,26 @@ test('aggregateOnGrid: records in one cell become one item with the summed value
   assert.equal(items.find(f => !f.properties.cluster).properties.value, 7, 'a single-record cell keeps its own properties');
 });
 
+test('aggregateOnGrid: MAX / MIN keep the cell\'s extreme record value, as flat (maptheme.js 10880-10901); SUM adds', () => {
+  // three records ~1 m apart (one cell) and one far away
+  const recs = () => [pt(9.19, 45.46, 3), pt(9.19001, 45.46001, 9), pt(9.19002, 45.46002, 5), pt(9.3, 45.5, 7)];
+  const merged = (...f) => G.aggregateOnGrid(recs(), 12, 10, flags('RECT', ...f)).find(i => i.properties.cluster).properties;
+  assert.equal(merged().value, 17, 'SUM (default)');
+  assert.equal(merged('SUM').value, 17);
+  assert.equal(merged('MAX').value, 9);
+  assert.equal(merged('MIN').value, 3);
+  assert.equal(merged('MAX').point_count, 3, 'the record count still counts the members');
+  const single = G.aggregateOnGrid(recs(), 12, 10, flags('RECT', 'MAX')).find(i => !i.properties.cluster);
+  assert.equal(single.properties.value, 7, 'a single-record cell keeps its own value');
+  // classValue and series follow the same rule
+  const cv = (v, c, s) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [9.19 + v * 1e-5, 45.46] }, properties: { value: v, classValue: c, series: s, raw: {} } });
+  const cell = (...f) => G.aggregateOnGrid([cv(1, 4, [1, 8]), cv(2, 6, [5, 2])], 12, 10, flags('RECT', ...f))[0].properties;
+  assert.equal(cell('MAX').classValue, 6);
+  assert.deepEqual(plain(cell('MAX').series), [5, 8]);
+  assert.deepEqual(plain(cell('MIN').series), [1, 2]);
+  assert.equal(cell().classValue, 10);
+});
+
 test('aggregateField100: flat\'s post-aggregation field100 on the cell sums (maptheme.js 11000-11052)', () => {
   const f = (...x) => flags('AGGREGATE', ...x);
   assert.equal(G.aggregateField100(5, 20, f(), {}), 25, 'percent of the sums');

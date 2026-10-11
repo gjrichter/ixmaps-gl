@@ -9791,6 +9791,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // (maptheme.js 11086-11101): each value becomes the next minus it
   // (RELATIVE: in % of it when it is above field100min, else 0), the last
   // one is dropped
+  // How a record joins its cell's running value (flat's MAX / MIN / SUM
+  // aggregation, maptheme.js 10880-10901): MAX / MIN keep the extreme
+  // (a missing part counts 0, as in flat), SUM adds. `first`: the cell's
+  // first record, which just starts the value.
+  function aggCombiner(flags) {
+    const max = flags.has('MAX'), min = flags.has('MIN');
+    return (acc, v, first) => (first ? v : max ? Math.max(acc || 0, v) : min ? Math.min(acc || 0, v) : acc + v);
+  }
+
   function cellAggregatedValues(cell, flags, style) {
     const useMean = flags.has('MEAN');
     const values = cell.sums.map((s, i) => (useMean && cell.counts[i] > 0 ? s / cell.counts[i] : s));
@@ -9856,6 +9865,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // relocates a field aggregation, maptheme.js 11141) — instead of a grid
   function aggregateOnGrid(features, zoom, cellPx, flags, post, field) {
     const relocate = flags.has('RELOCATE') || !!field;
+    const combine = aggCombiner(flags);
     const cells = new Map();
     for (const f of features) {
       const [lng, lat] = f.geometry.coordinates;
@@ -9877,16 +9887,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         (cell.raws = cell.raws || []).push(f.properties.raw);
       }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
-      cell.value += f.properties.value;
-      if (f.properties.classValue !== undefined) cell.classValue += f.properties.classValue;
-      if (post) cell.value100 += f.properties.value100 || 0;
+      const first = cell.n === 1;
+      cell.value = combine(cell.value, f.properties.value, first);
+      if (f.properties.classValue !== undefined) cell.classValue = combine(cell.classValue, f.properties.classValue, first);
+      if (post) cell.value100 = combine(cell.value100, f.properties.value100 || 0, first);
       // an AGGREGATE / CATEGORICAL pie's record (flatPieRecord): its parts
       // and size added to the cell's item as flat does (flatPieAccumulate)
       if (f.properties.pie) cell.pie = flatPieAccumulate(cell.pie || null, f.properties.pie, flags);
       const series = f.properties.series;
       if (series) {
         if (!cell.series) cell.series = new Array(series.length).fill(0);
-        for (let i = 0; i < series.length; i++) cell.series[i] += series[i];
+        for (let i = 0; i < series.length; i++) cell.series[i] = combine(cell.series[i], series[i], first);
       }
     }
     const out = [];
@@ -11848,6 +11859,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const categories = this._plotCategories();
 
       const cells = new Map();
+      const combine = aggCombiner(this.flags);
       source.forEach(f => {
         const ci = this._gridCategoryIndex(f.properties[this.binding.value]);
         if (ci == null) return;
@@ -11865,7 +11877,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           cells.set(key, cell);
         }
         const v = this._resolveAggregateValue(f.properties);
-        cell.sums[ci] += v;
+        cell.sums[ci] = combine(cell.sums[ci], v, cell.counts[ci] === 0);
         cell.counts[ci]++;
       });
 
