@@ -7821,6 +7821,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     switch (shape) {
       case 'squarefull': return Math.abs(dx) <= r && Math.abs(dy) <= r;
       case 'square': return Math.abs(dx) <= r * Math.SQRT1_2 && Math.abs(dy) <= r * Math.SQRT1_2;
+      case 'roundrectfull': return Math.abs(dx) <= r && Math.abs(dy) <= r;
       case 'roundrect': return Math.abs(dx) <= r * 0.8 && Math.abs(dy) <= r * 0.8;
       case 'diamond': case 'carot': return Math.abs(dx) + Math.abs(dy) <= r;
       case 'empty': return false;
@@ -13474,11 +13475,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       }
 
       // flat's per-part SYMBOL branch (everything but CATEGORICAL without
-      // AGGREGATE/GROUP) draws a square of side 2r, the other one 1.6r
-      // (drawSymbolPath's own square)
+      // AGGREGATE/GROUP) draws a square or roundrect of side 2r, the other
+      // one 1.6r (drawSymbolPath's own square / roundrect)
       const perPartBranch = flatChartBranch(this.flags) === 'symbol'
         && !(this.flags.has('CATEGORICAL') && !this.flags.has('AGGREGATE') && !flatFlag(this.flags, 'GROUP'));
-      const shapeOf = props => { const sh = this._resolveSymbolShape(props); return sh === 'square' && perPartBranch ? 'squarefull' : sh; };
+      const shapeOf = props => { const sh = this._resolveSymbolShape(props); return perPartBranch && (sh === 'square' || sh === 'roundrect') ? sh + 'full' : sh; };
       // a range-classed cell is ONE class: one symbol in its class color,
       // fillopacity and linecolor, as a single item (flat draws one
       // symbol) — the packed multi-category icon is for CATEGORICAL cells
@@ -15367,8 +15368,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         ctx.lineTo(cx + r, cy - r * 0.6);
         ctx.lineTo(cx, cy + r);
         break;
+      // flat's per-part SYMBOL roundrect (maptheme.js 22039): side 2r, like
+      // 'squarefull'; the other branch (21639) is 1.6r
+      case 'roundrectfull':
       case 'roundrect': {
-        const s = r * 0.8;
+        const s = shape === 'roundrectfull' ? r : r * 0.8;
         if (ctx.roundRect) ctx.roundRect(cx - s, cy - s, s * 2, s * 2, r * 0.3);
         else ctx.rect(cx - s, cy - s, s * 2, s * 2);
         break;

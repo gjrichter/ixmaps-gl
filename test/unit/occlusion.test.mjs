@@ -40,6 +40,8 @@ test('occlusion: translucent symbols compose as Π(1 − α)', () => {
 test('occlusion: symbol shapes as drawSymbolPath draws them', () => {
   assert.ok(G.insideSymbolShape('squarefull', 9, 9, 10), 'squarefull: side 2r');
   assert.ok(!G.insideSymbolShape('square', 9, 0, 10), 'square: side r·√2');
+  assert.ok(G.insideSymbolShape('roundrectfull', 9, 9, 10), 'roundrectfull: side 2r (flat per-part SYMBOL, 22039)');
+  assert.ok(!G.insideSymbolShape('roundrect', 9, 0, 10) && G.insideSymbolShape('roundrect', 7, 7, 10), 'roundrect: side 1.6r (flat 21639)');
   assert.ok(!G.insideSymbolShape('diamond', 6, 6, 10), 'diamond: |dx| + |dy| ≤ r');
   assert.ok(!G.insideSymbolShape('empty', 0, 0, 10), 'empty: no fill');
   assert.ok(G.insideSymbolShape('circle', 6, 6, 10) && !G.insideSymbolShape('circle', 8, 8, 10), 'circle');
