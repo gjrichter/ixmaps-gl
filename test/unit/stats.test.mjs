@@ -205,6 +205,36 @@ test('computeRangeClasses: without style.classes the class count follows the col
   assert.equal(G.computeRangeClasses(fs_, { value: 'v' }, { colorscheme: 'function (t) {}' }, flags(), String).partsA.length, 5, 'unknown count → default 5');
 });
 
+// ---- explicit class breaks: style.ranges + the RANGES flag (flat, maptheme.js 12905-12960)
+const WBGT_COLORS = ['#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#66bd63', '#a6d96a', '#d9ef8b', '#fee08b', '#fdae61', '#f46d43', '#d73027', '#a50026', '#7a0026', '#4d0026', '#2d0026', '#1a0016'];
+const WBGT_RANGES = '12,14,16,18,20,22,24,25,26,27,28,29,30,32,34,36';
+
+test('computeRangeClasses: RANGES + style.ranges → n+1 breaks are n classes, not equal intervals over the data', () => {
+  const fs_ = [5.8, 14, 15.5, 17.8, 19.4].map(v => feat({ wbgt: v }));
+  for (const ranges of [WBGT_RANGES, WBGT_RANGES.split(',').map(Number), WBGT_RANGES.replace(/,/g, '|')]) {
+    const r = G.computeRangeClasses(fs_, { value: 'wbgt' }, { colorscheme: WBGT_COLORS, ranges }, flags('CHART', 'USER', 'RANGES'), String);
+    assert.equal(r.partsA.length, 15, '16 break values → 15 classes');
+    assert.equal(r.categoryColorsRgb.length, 15);
+    assert.deepEqual([r.partsA[0].min, r.partsA[1].min, r.partsA[14].min], [12, 14, 34]);
+    assert.equal(r._valueMin, 5.8, 'the data stats stay the data\'s');
+    const cls = v => G.resolvePartsClass(v, r.partsA);
+    assert.equal(cls(14), 0, 'a break value belongs to the class below it (max + 1e-9), as flat');
+    assert.equal(cls(15.5), 1);
+    assert.equal(cls(17.8), 2);
+    assert.equal(cls(19.4), 3);
+    assert.equal(cls(5.8), 0, 'below the first break: class 0, as flat\'s class loop');
+  }
+});
+
+test('computeRangeClasses: ranges without the RANGES flag, or with CATEGORICAL, are ignored (flat 2324)', () => {
+  const fs_ = [5.8, 14, 19.4].map(v => feat({ wbgt: v }));
+  const parts = f => G.computeRangeClasses(fs_, { value: 'wbgt' }, { colorscheme: WBGT_COLORS, ranges: WBGT_RANGES }, flags(...f), String).partsA.length;
+  assert.equal(parts(['CHART']), 16, 'no RANGES flag: the colorscheme\'s equal intervals');
+  assert.equal(G.explicitRangeBreaks({ ranges: WBGT_RANGES }, flags('RANGES', 'CATEGORICAL')), null);
+  assert.equal(G.explicitRangeBreaks({ ranges: '5' }, flags('RANGES')), null, 'one value is no class');
+  assert.equal(G.explicitRangeBreaks({}, flags('RANGES')), null);
+});
+
 // ---- AGGREGATE grid (flat: snap to the grid, one item per cell)
 const pt = (lng, lat, value) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { value, raw: {} } });
 

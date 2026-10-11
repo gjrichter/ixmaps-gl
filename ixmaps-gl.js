@@ -9083,6 +9083,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // which every other caller here still relies on unchanged.
   function resolvePartsClass(value, partsA) {
     if (!partsA || isNaN(value)) return null;
+    // explicit ranges: a value below the first break is class 0, as flat's
+    // class loop (value < parts[0].max) puts it
+    if (partsA.length && partsA[0].clampLow && value < partsA[0].min) return 0;
     for (let i = 0; i < partsA.length; i++) {
       const isLast = i === partsA.length - 1;
       const inLower = value >= partsA[i].min;
@@ -9431,6 +9434,27 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     }
     return bins;
   }
+  // Explicit class breaks: .style({ranges}) with the RANGES flag (flat,
+  // maptheme.js 2324 / 12905-12960). n+1 break values (a comma or "|"
+  // separated string, or an array) are n classes [r_i, r_i+1] — a class
+  // max is nudged by 1e-9 as flat does, so a break value belongs to the class
+  // below it. Not for CATEGORICAL (there the values are exact categories).
+  // null when the theme has no usable explicit ranges.
+  function explicitRangeBreaks(style, flags) {
+    if (!flags || !flags.has('RANGES') || flags.has('CATEGORICAL')) return null;
+    let r = style && style.ranges;
+    if (typeof r === 'string') r = r.split(r.includes('|') ? '|' : ',');
+    if (!Array.isArray(r)) return null;
+    r = r.map(Number);
+    return r.length > 1 && r.every(isFinite) ? r : null;
+  }
+  function explicitRangeParts(breaks) {
+    const parts = [];
+    for (let i = 0; i < breaks.length - 1; i++) parts.push({ min: breaks[i], max: breaks[i + 1] + 0.000000001 });
+    parts[0].clampLow = true;
+    return parts;
+  }
+
   function flatRangeParts(values, nMin, nMax, nParts, flags, centerValue) {
     const rawMin = nMin, rawMax = nMax;
     if (centerValue != null && !isNaN(centerValue)) {
@@ -9649,11 +9673,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     out._valueMax = nMax;
     const sorted = values.slice().sort((a, b) => a - b);
     out._valueMedian = sorted[Math.floor((sorted.length - 1) / 2)];
-    const nParts = Math.trunc(styleNum(style.classes)) || colorSchemeClassCount(style.colorscheme) || DEFAULT_RANGE_CLASSES;
+    const breaks = explicitRangeBreaks(style, flags);
+    const nParts = breaks ? breaks.length - 1
+      : Math.trunc(styleNum(style.classes)) || colorSchemeClassCount(style.colorscheme) || DEFAULT_RANGE_CLASSES;
     const placeholders = new Array(nParts).fill('');
-    const colorsRgb = resolveClassColors(style.colorscheme, placeholders, style.classes);
+    const colorsRgb = resolveClassColors(style.colorscheme, placeholders, breaks ? nParts : style.classes);
 
-    out.partsA = flatRangeParts(values, nMin, nMax, nParts, flags, styleNum(style.rangecentervalue));
+    out.partsA = breaks ? explicitRangeParts(breaks) : flatRangeParts(values, nMin, nMax, nParts, flags, styleNum(style.rangecentervalue));
     out._nRangeParts = nParts; // the configured count; partsA may have fewer (all values equal)
 
     out.categoryLabels = out.partsA.map(p => `${formatValue(p.min)} - ${formatValue(p.max)}`);
@@ -12979,7 +13005,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const rangeSource = this._classSeparate && this.binding.size && !normalize ? rawSizeTotals : totals;
         let nMin = Infinity, nMax = -Infinity;
         for (const v of rangeSource) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
-        breaks = flatRangeParts(totals, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
+        const explicit = explicitRangeBreaks(this.style, this.flags);
+        breaks = explicit ? explicitRangeParts(explicit)
+          : flatRangeParts(totals, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
       }
 
       // The theme's own classes follow the aggregated items, as flat's do
@@ -16232,7 +16260,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,
