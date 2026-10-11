@@ -12753,8 +12753,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         ctx.arcTo(x, y + hh, x, y, rr); ctx.arcTo(x, y, x + ww, y, rr); ctx.closePath();
       };
       path();
-      ctx.globalAlpha = look.fillOpacity; ctx.fillStyle = look.fill; ctx.fill();
-      if (look.stroke && S > 0) { ctx.globalAlpha = look.strokeOpacity; ctx.strokeStyle = look.stroke; ctx.lineWidth = S * k; ctx.stroke(); }
+      if (!isNoneColor(look.fill)) { ctx.globalAlpha = look.fillOpacity; ctx.fillStyle = look.fill; ctx.fill(); }
+      if (look.stroke && !isNoneColor(look.stroke) && S > 0) { ctx.globalAlpha = look.strokeOpacity; ctx.strokeStyle = look.stroke; ctx.lineWidth = S * k; ctx.stroke(); }
       // getSize is the icon's height: the padding is part of it
       const icon = { url: canvas.toDataURL(), width: canvas.width, height: canvas.height, anchorX: canvas.width / 2, anchorY: canvas.height / 2, id: key };
       return this._cacheIcon(key, icon);
@@ -13386,9 +13386,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         return { d, r, w, boxR, rect, title };
       }) : null;
       if (boxShown && circular) {
-        const boxRgb = hexOrNamedToRgb(this.style.boxcolor || '#eeeeee');
-        const boxAlpha = Math.round(255 * boxOpacity);
-        const borderRgb = hexOrNamedToRgb(this.style.bordercolor || '#dddddd');
+        const boxNone = isNoneColor(this.style.boxcolor), borderNone = isNoneColor(this.style.bordercolor);
+        const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : this.style.boxcolor || '#eeeeee');
+        const boxAlpha = boxNone ? 0 : Math.round(255 * boxOpacity);
+        const borderRgb = borderNone ? null : hexOrNamedToRgb(this.style.bordercolor || '#dddddd');
         // ScatterplotLayer has no pixel offset: a moved chart (align,
         // offsetx/offsety) gets its circle as an icon
         if (alignOf.active) layers.push(new IconLayer({
@@ -13396,7 +13397,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           data: boxLayout, pickable: false,
           getPosition: b => b.d.geometry.coordinates,
           getIcon: b => this._buildSingleIcon(boxRgb, boxAlpha / 255, 'circle', borderRgb,
-            Math.round(unitPx / 20 * BUBBLE_ICON_SIZE / Math.max(1, 2 * b.boxR) * 4) / 4),
+            borderNone ? 0 : Math.round(unitPx / 20 * BUBBLE_ICON_SIZE / Math.max(1, 2 * b.boxR) * 4) / 4),
           getSize: b => b.boxR * 2,
           getPixelOffset: b => alignOf(b.d),
           sizeUnits: 'pixels',
@@ -13409,9 +13410,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           getPosition: b => b.d.geometry.coordinates,
           getRadius: b => b.boxR,
           radiusUnits: 'pixels',
-          stroked: true,
+          stroked: !borderNone,
           getFillColor: [...boxRgb.slice(0, 3), boxAlpha],
-          getLineColor: [...borderRgb.slice(0, 3), 255],
+          getLineColor: [...(borderRgb || boxRgb).slice(0, 3), 255],
           getLineWidth: unitPx / 20,
           lineWidthUnits: 'pixels',
           parameters: ICON_LAYER_GLOBE_PARAMETERS
@@ -13421,7 +13422,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const boxLook = {
           fill: this.style.boxcolor || 'white',
           fillOpacity: boxOpacity,
-          stroke: borderStyle === 'none' ? null : styleLineColor(this.style.bordercolor) || '#bbbbbb',
+          stroke: borderStyle === 'none' || isNoneColor(styleLineColor(this.style.bordercolor)) ? null : styleLineColor(this.style.bordercolor) || '#bbbbbb',
           strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3,
         };
         const borderWidth = styleNum(this.style.borderwidth) || 1;
@@ -14480,8 +14481,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const titleFont = 5 * (num(st.textscale) || num(st.valuescale) || 1);
       const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
       const borderStyle = String(st.borderstyle || '');
-      const boxFill = [...hexOrNamedToRgb(st.boxcolor || 'white').slice(0, 3), Math.round(255 * boxOpacity)];
-      const boxLine = borderStyle === 'none' ? [0, 0, 0, 0]
+      const boxFill = [...hexOrNamedToRgb(isNoneColor(st.boxcolor) ? 'white' : st.boxcolor || 'white').slice(0, 3), isNoneColor(st.boxcolor) ? 0 : Math.round(255 * boxOpacity)];
+      const boxLine = borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? [0, 0, 0, 0]
         : [...hexOrNamedToRgb(styleLineColor(st.bordercolor) || '#bbbbbb').slice(0, 3), Math.round(255 * (/^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3))];
       const borderWidth = num(st.borderwidth) || 1;
       const lc = st.linecolor != null && st.linecolor !== '' ? styleLineColor(st.linecolor) : null;
@@ -15436,6 +15437,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function withAlpha(rgb, a) {
     return a >= 1 ? rgb.slice(0, 3) : [...rgb.slice(0, 3), Math.round(255 * Math.max(0, a))];
   }
+  // a style color of "none": no paint (flat writes it into the SVG style:
+  // fill:none / stroke:none) — neither a color nor a canvas fillStyle
+  function isNoneColor(v) {
+    return typeof v === 'string' && v.trim().toLowerCase() === 'none';
+  }
   function hexOrNamedToRgb(v) {
     const NAMED = { gray: [128, 128, 128], grey: [128, 128, 128], black: [0, 0, 0], white: [255, 255, 255] };
     return parseCssColor(v) || NAMED[v] || [130, 130, 130];
@@ -16260,7 +16266,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,

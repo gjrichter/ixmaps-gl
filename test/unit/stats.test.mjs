@@ -235,6 +235,11 @@ test('computeRangeClasses: ranges without the RANGES flag, or with CATEGORICAL, 
   assert.equal(G.explicitRangeBreaks({}, flags('RANGES')), null);
 });
 
+test('isNoneColor: the string "none" (any case, padded) is no paint; colors, lists and empties are not', () => {
+  for (const v of ['none', 'None', ' NONE ']) assert.equal(G.isNoneColor(v), true, JSON.stringify(v));
+  for (const v of ['#fff', 'white', 'transparent', '', undefined, null, ['none']]) assert.equal(G.isNoneColor(v), false, JSON.stringify(v));
+});
+
 // ---- AGGREGATE grid (flat: snap to the grid, one item per cell)
 const pt = (lng, lat, value) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { value, raw: {} } });
 
