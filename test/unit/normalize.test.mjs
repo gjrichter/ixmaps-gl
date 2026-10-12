@@ -105,9 +105,12 @@ test('pure: the page\'s own binding/style/meta objects are never mutated', () =>
 
 test('an inert flag logs its "no rendering behavior" note once', () => {
   const { normalizeTheme, logs } = loadEngine();
-  normalizeTheme({ layer: 'a', style: { type: 'CHART|BUBBLE|SORT' } });
-  normalizeTheme({ layer: 'b', style: { type: 'CHART|BUBBLE|SORT' } });
-  assert.equal(logs.filter(([lvl, m]) => lvl === 'info' && m.includes('"SORT"')).length, 1);
+  // NOSORT is flat's own self-inflicted no-op (drawChart tests /\bSORT\b/,
+  // which never matches inside "NOSORT") — SORT itself is implemented now
+  // (the sequence symbol chart), so the sample flag here is NOSORT
+  normalizeTheme({ layer: 'a', style: { type: 'CHART|BUBBLE|NOSORT' } });
+  normalizeTheme({ layer: 'b', style: { type: 'CHART|BUBBLE|NOSORT' } });
+  assert.equal(logs.filter(([lvl, m]) => lvl === 'info' && m.includes('"NOSORT"')).length, 1);
 });
 
 test('the builder path end to end: definition() → normalizeTheme', () => {

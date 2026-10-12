@@ -2289,7 +2289,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // mean — see the NOOUTLIER block in _buildChartLayers) has real
   // behavior now; bare OUTLIER (the real source's "keep ONLY the
   // outliers" inverse mode) stays unimplemented — no config here uses it.
-  const KNOWN_INERT_FLAGS = ['SEQUENCE', 'STAR', 'SORT', 'DOWN', 'RECT', 'CLIPTOGEOBOUNDS', 'OUTLIER',
+  // SEQUENCE/STAR/SORT/DOWN/RECT are implemented now (the sequence
+  // symbol chart, sequenceLayout + snapToAggregationGrid) — removed from
+  // this list; the rest is still recognized-but-inert
+  const KNOWN_INERT_FLAGS = ['CLIPTOGEOBOUNDS', 'OUTLIER',
     'POW2', 'POW3', 'NOSORT'];
   // flat's PIE / DONUT variants with no rendering here (see _buildPieLayers)
   const PIE_INERT_FLAGS = [/3D/, /VOLUME/, /HEIGHT/, /STARBURST/, /FLOWER/, /RAYS/, /BOW/, /ZOOM/, /DIRECTION/, /DIRECTED/, /POLAR/];
@@ -7909,6 +7912,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // independently-rendered systems (deck.gl's icon quad, MapLibre's own
   // globe-sphere mesh) competing for the same depth-buffer real estate.
   const ICON_LAYER_GLOBE_PARAMETERS = { cullMode: 'none', depthCompare: 'always' };
+  // a transparent 1x1 PNG — the placeholder icon of an external symbol
+  // file still being rasterized (see _buildSequenceChartLayers' urlIcon)
+  const TRANSPARENT_1PX_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
   // GLOBE_HORIZON_DEG / isOnVisibleHemisphere: `depthCompare: 'always'`
   // above (needed to stop the near-surface z-fighting/half-moon bug —
@@ -9195,7 +9201,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const word = w => { const re = new RegExp('\\b' + w + '\\b'); return [...flags].some(f => re.test(f)); };
     const info = {
       sort: word('SORT'), up: word('UP'), down: word('DOWN'),
-      star: has('STAR') && !has('CENTER'), horz: has('HORZ') && !has('CENTER'),
+      star: has('STAR') && !flatFlag(flags, 'CENTER'), horz: has('HORZ') && !flatFlag(flags, 'CENTER'),
       expand: has('EXPAND'), expandmax: has('EXPANDMAX'), linear: has('LINEAR'), sizep1: has('SIZEP1'),
       compress: has('COMPRESS'), compressmax: has('COMPRESSMAX')
     };
@@ -10286,6 +10292,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function aggregateOnGrid(features, zoom, cellPx, flags, post, field) {
     const relocate = flags.has('RELOCATE') || !!field;
     const combine = aggCombiner(flags);
+    // MAX / MIN aggregation: the cell IS one defined record — the one
+    // holding the biggest (smallest) size — so its title follows THAT
+    // record, not the first one's (flat re-sets the merging record's
+    // szTitle under __fMax, maptheme.js 10870-10874; here it is the
+    // record that actually holds it)
+    const maxAgg = flags.has('MAX'), minAgg = flags.has('MIN');
     const cells = new Map();
     for (const f of features) {
       const [lng, lat] = f.geometry.coordinates;
@@ -10319,6 +10331,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (!cell.series) cell.series = new Array(series.length).fill(0);
         for (let i = 0; i < series.length; i++) cell.series[i] = combine(cell.series[i], series[i], first);
       }
+      // a multi-field SEQUENCE record's size-field value (flat's
+      // nValueSize): MAX/MIN/summed into the item's nSize, as flat does
+      if (f.properties.size !== undefined) cell.size = combine(typeof cell.size === 'number' ? cell.size : 0, f.properties.size, first);
+      // MAX / MIN: which record the cell's title belongs to (see the
+      // comment at the top — the size field carries the magnitude, else
+      // the combined value)
+      if (maxAgg || minAgg) {
+        const m = typeof f.properties.size === 'number' ? Math.abs(f.properties.size) : Math.abs(f.properties.value || 0);
+        if (cell.titleMax === undefined || (maxAgg ? m > cell.titleMax : m < cell.titleMax)) {
+          cell.titleMax = m;
+          cell.titleFrom = f;
+        }
+      }
     }
     const out = [];
     for (const cell of cells.values()) {
@@ -10328,14 +10353,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const geometry = { type: 'Point', coordinates: [ll.lng, ll.lat] };
       const hasClass = cell.first.properties.classValue !== undefined;
       let props = cell.n > 1
-        // titleRaw: the cell's first record — flat titles an aggregated
-        // item by it (itemTitle)
+        // titleRaw: the record the cell's title belongs to — with MAX/MIN
+        // the one holding the max (min), else the first (flat's itemTitle)
         ? { cluster: true, point_count: cell.n, value: cell.value, ...(hasClass ? { classValue: cell.classValue } : {}),
-            titleRaw: cell.first.properties.raw || cell.first.properties,
+            titleRaw: (cell.titleFrom || cell.first).properties.raw || (cell.titleFrom || cell.first).properties,
             ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}) }
         : cell.first.properties;
       if (cell.series && cell.n > 1) props = Object.assign({}, props, { series: cell.series });
       if (cell.pie) props = Object.assign({}, props, { pie: cell.pie });
+      if (typeof cell.size === 'number' && cell.n > 1) props = Object.assign({}, props, { size: cell.size });
       // a field aggregation's cell key (the field value): the categories of
       // one cell are merged by it (groupCoLocated), not by their positions
       if (field) props = Object.assign({}, props, { aggKey: cell.key });
@@ -10399,7 +10425,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       let cell = cells.get(key);
       if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, cx: snapped.x, cy: snapped.y, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0), classTotal: undefined }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
-      if (!cell.titleRaw) cell.titleRaw = f.properties.titleRaw || f.properties.raw || null;
+      // the cell's title: with MAX/MIN aggregation the member holding the
+      // biggest (smallest) size (the cell IS that one item), else the
+      // first — flat's itemTitle
+      const maxAgg = flags.has('MAX'), minAgg = flags.has('MIN');
+      const titleOf = f => f.properties.titleRaw || f.properties.raw || null;
+      if (maxAgg || minAgg) {
+        const m = typeof f.properties.size === 'number' ? Math.abs(f.properties.size) : Math.abs(f.properties.total || f.properties.value || 0);
+        if (cell.titleMax === undefined || (maxAgg ? m > cell.titleMax : m < cell.titleMax)) {
+          cell.titleMax = m;
+          cell.titleRaw = titleOf(f);
+        }
+      } else if (!cell.titleRaw) cell.titleRaw = titleOf(f);
       // the members' own records, for the tooltip's {{theme.item.data}} —
       // flat's __add_data tables them (numbered, up to 50) for aggregated
       // items too; references only, so no copy is made. A member can itself
@@ -10414,6 +10451,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       }
       cell.counts[f.properties.cat] += f.properties.value;
       if (f.properties.classValue !== undefined) cell.classTotal = (cell.classTotal || 0) + f.properties.classValue;
+      // a multi-field SEQUENCE cell's per-field parts and its size-field
+      // value (see _buildAggregationIndex) — combined with the theme's
+      // own MAX/MIN/sum combiner, so a re-grouped cell keeps them
+      const combineSeries = cell.combineSeries || (cell.combineSeries = aggCombiner(flags));
+      const memberSeries = f.properties.series;
+      if (memberSeries) {
+        if (!cell.series) cell.series = new Array(memberSeries.length).fill(0);
+        for (let i = 0; i < memberSeries.length; i++) cell.series[i] = combineSeries(cell.series[i], memberSeries[i], cell.n === 1);
+      }
+      if (typeof f.properties.size === 'number') {
+        cell.size = combineSeries(typeof cell.size === 'number' ? cell.size : 0, f.properties.size, cell.n === 1);
+      }
       // point_count is the aggregated-record count of a multi-record
       // cell (aggregateOnGrid; absent on a single-record cell)
       // — tracked separately from counts (the summed bound VALUE) purely
@@ -10427,7 +10476,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
         properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts, ...(cell.classTotal !== undefined ? { classTotal: cell.classTotal } : {}),
           ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}),
-          ...(cell.titleRaw ? { titleRaw: cell.titleRaw } : {}) }
+          ...(cell.titleRaw ? { titleRaw: cell.titleRaw } : {}),
+          ...(cell.series ? { series: cell.series } : {}),
+          ...(typeof cell.size === 'number' ? { size: cell.size } : {}) }
       };
     });
   }
@@ -10926,11 +10977,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // 7-class color once it knows each cell's actual aggregated total.
       if (this._multiFields && this._isMultiFieldSequence()) {
         // one bucket; each record carries its field values as the chart's
-        // parts. Its value — the draw order — is the first field's, as
-        // flat's chart node value (NYC status: value="63" = e-bikes)
+        // parts — and, the same array, as `series` so that an AGGREGATE
+        // theme's grid cells combine them PER FIELD (aggregateOnGrid), as
+        // flat accumulates its per-field nValuesA (maptheme.js 10876-10889)
+        // — plus its size-field value (flat's nValueSize, the item nSize
+        // MAX/MIN/sum). Its value — the draw order — is the first field's,
+        // as flat's chart node value (NYC status: value="63" = e-bikes)
+        const sizeField = this.binding.size && this.binding.size !== '$item$' ? this.binding.size : null;
         this._featuresByCategory = [sourceFeatures.map(f => {
           const parts = this._multiFields.map(k => parseFloat(f.properties[k]) || 0);
-          return { type: 'Feature', geometry: f.geometry, properties: { value: parts[0], parts, raw: f.properties } };
+          const size = sizeField ? Math.abs(parseFloat(f.properties[sizeField]) || 0) : undefined;
+          return { type: 'Feature', geometry: f.geometry,
+            properties: { value: parts[0], parts, series: parts, ...(size !== undefined ? { size } : {}), raw: f.properties } };
         })];
         this._clusterIndices = null;
         this._clusterRadiusPx = null;
@@ -11633,6 +11691,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const raw = props.raw || props.titleRaw;
       const title = this.binding.title && raw && raw[this.binding.title] != null ? String(raw[this.binding.title]) : '';
       const aggregated = !!(props.counts || props.cluster);
+      // MAX / MIN aggregation: the item IS one defined record — the one
+      // holding the max (min) — so it carries that record's real title;
+      // "(n)" is the label of a summed/mean aggregate
+      if (this.flags.has('MAX') || this.flags.has('MIN')) return title;
       if (aggregated && this._clusterRadiusPx && !this._clusterField) {
         const n = groupRecordCount(props);
         if (!title || n > 3) return '(' + n + ')';
@@ -12418,8 +12480,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // a per-item SEQUENCE chart: CHART|SYMBOL|SEQUENCE, several value
     // fields per item, one part per field (no CATEGORICAL, no AGGREGATE)
     _isMultiFieldSequence() {
+      // AGGREGATE is allowed: flat's loadAndAggregateValuesOfTheme
+      // aggregates a multi-field SEQUENCE theme per FIELD (its per-field
+      // nValuesA, MAX/MIN per field, else summed — maptheme.js 10876-10889)
+      // and AUTO100 then normalizes every item's parts to % of their own
+      // sum (12166-12176) — the parts ride the grid cells as `series` and
+      // the per-item % is applied in _buildSequenceChartLayers
       return this.flags.has('CHART') && this.flags.has('SYMBOL') && flatFlag(this.flags, 'SEQUENCE')
-        && !this.flags.has('CATEGORICAL') && !this.flags.has('AGGREGATE') && !this.flags.has('PLOT')
+        && !this.flags.has('CATEGORICAL') && !this.flags.has('PLOT')
         && String(this.binding.value || '').includes('|');
     }
     _itemPlotFields() {
@@ -14282,13 +14350,55 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     _buildSequenceChartLayers(charts, zoom, liveZoom) {
       const st = this.style;
       const multi = !!this._multiFields && this._isMultiFieldSequence();
-      const seqMax = multi ? (styleNum(st.normalsizevalue) || this._multiFieldPartMax) : this._sequenceMaxValue(zoom);
+      // AGGREGATE + AUTO100 (flat normalizes the aggregated item's
+      // nValuesA to % of their own sum, maptheme.js 12166-12176): every
+      // item's parts in % of that item. Without AGGLEARATE, applyField100
+      // already normalized the records' field values (auto100 there) —
+      // this must not run twice
+      const auto100 = multi && this.flags.has('AUTO100') && this.flags.has('AGGREGATE');
+      // The value scale must be measured on the SAME scale the parts are
+      // drawn in. With AGGREGATE, AUTO100 normalizes every item's parts to
+      // % of their own sum at layout time (the records themselves stay
+      // raw — applyField100 skips AGGREGATE themes), so the raw-features
+      // _multiFieldPartMax (~1.0 here) is 100x off the drawn values and
+      // would blow every part's radius up by sqrt(100). flat's own
+      // nMaxValue fallback (nNormalSizeValue || nAllMaxValue,
+      // maptheme.js 21796) measures nAllMaxValue on the NORMALIZED item
+      // values (12166-12176), so the scale matches the parts. Without
+      // AUTO100 the records were already normalized by applyField100 and
+      // _multiFieldPartMax IS that scale (NYC status page)
+      if (multi && auto100 && !this._seqAuto100Max) {
+        let m = 0;
+        for (const f of this.features) {
+          const parts = this._multiFields.map(k => parseFloat(f.properties && f.properties[k]) || 0);
+          const sum = parts.reduce((a, v) => a + v, 0);
+          if (sum > 0) for (const v of parts) { const nv = v / (sum / 100); if (nv > m) m = nv; }
+        }
+        this._seqAuto100Max = m || 1;
+      }
+      const seqMax = multi
+        ? (auto100 ? this._seqAuto100Max : (styleNum(st.normalsizevalue) || this._multiFieldPartMax))
+        : this._sequenceMaxValue(zoom);
       const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
       const normalR = NORMAL_RADIUS_PX * unit;
       const sizePow = resolveSizePow(st, this.flags);
-      const partRadius = multi
-        ? v => Math.max(VALUE_RADIUS_MIN, normalR * Math.pow(Math.abs(v) / seqMax, 1 / sizePow))
-        : v => valueRadius(v, liveZoom, st, this.mapOptions, this.flags, seqMax);
+      // flat's size field on a SEQUENCE chart part (maptheme.js 21851-21874):
+      // the radius carries BOTH the part's value AND the item's size —
+      // nMaxRadius · (nValue/nMaxValue)^(1/p) · (nSize/nMaxSize)^(1/p),
+      // nMaxSize the biggest item size (measured on the records; MAX, the
+      // one combiner flat's star-part charts pair with a size field, keeps
+      // the cells' max equal to the records' max)
+      const sizeField = multi && this.binding.size && this.binding.size !== '$item$' ? this.binding.size : null;
+      let sizeMax = 0;
+      if (sizeField) {
+        for (const f of this.features) { const v = Math.abs(parseFloat(f.properties && f.properties[sizeField]) || 0); if (v > sizeMax) sizeMax = v; }
+      }
+      const itemSizeFactor = d => {
+        if (!sizeField) return 1;
+        const sz = typeof d.properties.size === 'number' ? d.properties.size
+          : Math.abs(parseFloat((d.properties.raw || {})[sizeField]) || 0);
+        return sizeMax > 0 ? Math.pow(sz / sizeMax, 1 / sizePow) : 0;
+      };
       const rings = flatFlag(this.flags, 'RINGS');
       const centerValues = flatFlag(this.flags, 'CENTERVALUES');
       const noFill = this._partNoFill || new Set();
@@ -14301,17 +14411,98 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const borderRgb = st.linecolor && styleLineColor(st.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(st.linecolor)) : null;
       const lineWidth = styleNum(st.linewidth) || 1;
       const symbols = Array.isArray(st.symbols) ? st.symbols : null;
+      // flat draws an external .svg/.png/.jpeg symbol file as an <image>
+      // node (maptheme.js 22190-22199), the chart's own shape otherwise.
+      // Here the same URL is the part's IconLayer icon — deck.gl loads
+      // it itself (its ImageBitmap loader falls back to <img>, which
+      // rasterizes SVG) — NOT tinted: these files carry their own colors,
+      // and flat doesn't recolor an <image> either
+      const urlSymbolOf = i => {
+        const s = symbols && (symbols[i] || symbols[0]);
+        return typeof s === 'string' && /\.(svg|png|jpe?g)([?#]|$)/i.test(s.trim()) ? s.trim() : null;
+      };
+      if (!this._urlIconCache) this._urlIconCache = new Map();
+      const urlIcon = u => {
+        if (!this._urlIconCache.has(u)) {
+          // the placeholder is a transparent 1x1 PNG, NOT the raw symbol
+          // URL: deck.gl would immediately try to load that itself, and an
+          // SVG without natural dimensions (a viewBox only, the bus
+          // pictogram of the City-moving page) makes Chrome's
+          // createImageBitmap throw — a console error and a part that
+          // never renders. The real raster replaces it below
+          const entry = { url: TRANSPARENT_1PX_PNG, width: 256, height: 256, anchorX: 128, anchorY: 128, mask: false, id: 'seq-sym-pending:' + u };
+          this._urlIconCache.set(u, entry);
+          // fetch the symbol ONCE and rasterize it into the descriptor's
+          // own 256px cell here: deck then always sees exactly the declared
+          // dimensions, and dimension-less SVGs work like any other. The
+          // redraw lets the next getIcon see the patched descriptor
+          fetch(u).then(r => r.ok ? r.text() : null).then(text => new Promise((resolve, reject) => {
+            if (typeof text !== 'string' || !/<svg[\s>]/i.test(text)) { reject(new Error('not svg')); return; }
+            if (!/\swidth\s*=/i.test(text) || !/\sheight\s*=/i.test(text)) {
+              const vb = text.match(/viewBox\s*=\s*["']([^"']*)["']/i);
+              const p = vb && vb[1].trim().split(/[\s,]+/).map(Number);
+              if (p && p.length === 4 && isFinite(p[2]) && p[2] > 0 && isFinite(p[3]) && p[3] > 0) {
+                text = text.replace(/<svg/i, '<svg width="' + p[2] + '" height="' + p[3] + '"');
+              }
+            }
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('svg decode failed'));
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text);
+          })).then(img => {
+            const size = entry.width;
+            const canvas = document.createElement('canvas');
+            canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const s = Math.min(size / (img.naturalWidth || size), size / (img.naturalHeight || size));
+            const dw = (img.naturalWidth || size) * s, dh = (img.naturalHeight || size) * s;
+            ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
+            entry.url = canvas.toDataURL('image/png');
+            entry.id = 'seq-sym-raster:' + u;
+            if (this._triggerRedraw) this._triggerRedraw();
+          }).catch(() => {
+            // not an SVG (a PNG/JPEG symbol): deck's own URL loading takes
+            // it from here — and a pre-sized SVG that failed to rasterize
+            // gets that same second chance
+            entry.url = u;
+            entry.id = 'seq-sym-natural:' + u;
+            if (this._triggerRedraw) this._triggerRedraw();
+          });
+        }
+        return this._urlIconCache.get(u);
+      };
       const shapeOf = i => { const sh = symbols && (symbols[i] || symbols[0]); return normalizeSymbolShape(sh); };
       const colorOf = i => this.classRgb(i);
       const parts = [], glows = [];
       for (const d of charts) {
-        const counts = d.properties.parts || d.properties.counts;
+        // parts: the record's own field values (a per-item chart, or the
+        // single-record cell of an aggregated one); series: a multi-record
+        // AGGREGATE cell's per-field combination (aggregateOnGrid); counts:
+        // the CATEGORICAL variant
+        let counts = d.properties.parts || d.properties.series || d.properties.counts;
+        if (!Array.isArray(counts)) continue;
+        if (auto100) {
+          const sum = counts.reduce((a, v) => a + (v || 0), 0);
+          counts = counts.map(v => sum > 0 ? v / (sum / 100) : 0);
+        }
+        const sizeFactor = itemSizeFactor(d);
+        const partRadius = multi
+          ? v => Math.max(VALUE_RADIUS_MIN, normalR * Math.pow(Math.abs(v) / seqMax, 1 / sizePow) * sizeFactor)
+          : v => valueRadius(v, liveZoom, st, this.mapOptions, this.flags, seqMax);
         let layout = rings ? ringsLayout(counts, partRadius)
           : sequenceLayout(counts, this.flags, partRadius, { maxRadius: normalR, maxValue: seqMax, nParts: nCats, rangeScale: styleNum(st.rangescale) || 0 });
         if (!layout.length) continue;
         // GLOW belongs to the first part (sorted) or to every part, and
         // hides with it when its class is not marked
         const glowParts = new Set(sorted ? [layout[0].i] : layout.map(p => p.i));
+        // the chart's drawn extent (flat: map.Dom.getBox of its shape
+        // group) — the parts' star cluster — for BOX / CIRCULARBOX sizing
+        let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;
+        layout.forEach(p => {
+          ex0 = Math.min(ex0, p.x - p.r); ey0 = Math.min(ey0, p.y - p.r);
+          ex1 = Math.max(ex1, p.x + p.r); ey1 = Math.max(ey1, p.y + p.r);
+        });
+        d._seqExtent = [ex0, ey0, ex1, ey1];
         if (marking && !gray) {
           layout = layout.filter(p => this._markedClasses.has(p.i)).map(p => ({ ...p, x: 0, y: 0 }));
           if (!layout.length) continue;
@@ -14331,6 +14522,162 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const offsetOf = item => { const o = alignOf(item.chart); return [o[0] + item.part.x, o[1] + item.part.y]; };
       const alphaOf = item => (gray && !this._markedClasses.has(item.part.i) ? DIMMED_ICON_ALPHA : 255);
       const layers = [];
+      // BOX / CIRCULARBOX with TITLE / BOTTOMTITLE — flat's own box block
+      // (maptheme.js 18757-18925) on a SEQUENCE chart's extent: the star
+      // cluster of parts (d._seqExtent), not one bubble's radius.
+      //  - CIRCULARBOX: a circle of max(w,h)/2 · 1.1 + margin, margin
+      //    min(2m, m·w/30u), m = boxmargin (2) · u; boxcolor (#eeeeee) at
+      //    boxopacity, stroke bordercolor (#dddddd) one SVG unit (u/20)
+      //  - the title (TITLE / BOTTOMTITLE) in textcolor (#888888) over
+      //    the half-opaque white halo, centered under the circle
+      //    (BOTTOMTITLE: one font below its bottom edge), DTEXT font
+      //    max(0.9u, min(w/5, 14u/scale)) · textscale, wrapped to the
+      //    circle's width — gated by titleupper (shown while the map
+      //    scale is that bound or coarser, 18810) and boxupper/boxlower
+      const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(st, liveZoom);
+      const circular = flatFlag(this.flags, 'CIRCULAR');
+      const bottomTitle = flatFlag(this.flags, 'BOTTOMTITLE');
+      const titleUpper = scaleDenom(st.titleupper);
+      const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title
+        && !(titleUpper && scaleDenominatorAt(liveZoom) > titleUpper);
+      let boxLayout = null;
+      if (boxShown) {
+        const boxMarginU = styleNum(st.boxmargin) || 2;
+        const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
+        const titleScale = styleNum(st.textscale) || styleNum(st.valuescale) || 1;
+        const titleFontOf = w => (flatFlag(this.flags, 'DTEXT')
+          ? Math.max(0.9 * unit, Math.min(w / 5, 14 * unit / (styleNum(st.scale) || 1)))
+          : 5 * unit) * titleScale;
+        const alignRight = /right/.test(String(st.align || ''));
+        boxLayout = charts.filter(d => d._seqExtent).map(d => {
+          const [ex0, ey0, ex1, ey1] = d._seqExtent;
+          const w = ex1 - ex0, h = ey1 - ey0;
+          // flat centers the circular box (and its title) on the chart's
+          // bounding-box CENTER (maptheme.js 18793-18798: center =
+          // bBox.x + bBox.width/2, bBox.y + bBox.height/2), not on the
+          // chart's anchor — a star cluster's satellites spread
+          // asymmetrically around it
+          const cx = (ex0 + ex1) / 2, cy = (ey0 + ey1) / 2;
+          const margin = Math.min(2 * boxMarginU * unit, boxMarginU * w / 30);
+          const boxR = circular ? Math.max(w, h) / 2 * 1.1 + margin : 0;
+          let title = null;
+          if (titleShown) {
+            // flat appends style.titleunits to the box title (its parse
+            // gives it the leading space, maptheme.js 1470; szTitle += at
+            // 18827): "27.5" + "km/h" -> "27.5 km/h"
+            const units = st.titleunits ? ' ' + st.titleunits : '';
+            const text = this._itemTitle(d.properties) ? this._itemTitle(d.properties) + units : null;
+            if (text) {
+              const f = titleFontOf(w);
+              const lines = wrapTitleLines(text, f, circular ? boxR * 2 : w).split('\n');
+              const width = Math.max(...lines.map(l => titleTextWidth(l, f)));
+              // flat's title baselines are measured on the resized box
+              // (the circle spans center ± radius, 18798-18830)
+              const base = circular
+                ? (bottomTitle ? cy + boxR + f : cy - boxR - 0.7 * f - (lines.length - 1) * f)
+                : (bottomTitle ? ey1 + f : ey0 - 0.7 * f - (lines.length - 1) * f);
+              const x = circular ? cx + unit / 2 : (alignRight ? ex1 : ex0);
+              const anchor = circular ? 'middle' : (alignRight ? 'end' : 'start');
+              const x0 = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
+              title = { text: lines.join('\n'), x, anchor, top: base - 0.8 * f, f,
+                extent: [x0, base - 0.905 * f, x0 + width, base + (lines.length - 1) * f + 0.212 * f] };
+            }
+          }
+          let rect = null;
+          if (!circular) {
+            const e = [ex0, ey0, ex1, ey1];
+            if (title) { e[0] = Math.min(e[0], title.extent[0]); e[1] = Math.min(e[1], title.extent[1]) + 0.1 * title.f; e[2] = Math.max(e[2], title.extent[2]); e[3] = Math.max(e[3], title.extent[3]); }
+            rect = [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin];
+          }
+          return { d, w, boxR, rect, title, boxOpacity, cx, cy };
+        });
+        if (circular) {
+          const boxNone = isNoneColor(st.boxcolor), borderNone = isNoneColor(st.bordercolor);
+          const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : st.boxcolor || '#eeeeee');
+          const borderRgb = borderNone ? null : hexOrNamedToRgb(st.bordercolor || '#dddddd');
+          // ScatterplotLayer has no pixel offset: a moved chart (align,
+          // offsetx/offsety) gets its circle as an icon — at the chart's
+          // bounding-box center, flat's circular box position (18793)
+          if (alignOf.active) layers.push(new IconLayer({
+            id: `ix-seqbox-${this.name}-g${this._iconGeneration}`,
+            data: boxLayout, pickable: false,
+            getPosition: b => b.d.geometry.coordinates,
+            getIcon: b => this._buildSingleIcon(boxRgb, b.boxOpacity, 'circle', borderRgb,
+              borderNone ? 0 : Math.round(unit / 20 * BUBBLE_ICON_SIZE / Math.max(1, 2 * b.boxR) * 4) / 4),
+            getSize: b => b.boxR * 2,
+            getPixelOffset: b => { const o = alignOf(b.d); return [o[0] + b.cx, o[1] + b.cy]; },
+            sizeUnits: 'pixels', billboard: true,
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+          else layers.push(new ScatterplotLayer({
+            id: `ix-seqbox-${this.name}`,
+            data: boxLayout, pickable: false,
+            getPosition: b => {
+              // the circle at the chart's bbox center: with no align
+              // offset it moves in map coordinates
+              const o = pixelOffsetLngLat(b.d.geometry.coordinates, [b.cx, b.cy], liveZoom);
+              return o;
+            },
+            getRadius: b => b.boxR,
+            radiusUnits: 'pixels',
+            stroked: !borderNone,
+            getFillColor: b => [...boxRgb.slice(0, 3), Math.round(255 * b.boxOpacity)],
+            getLineColor: [...(borderRgb || boxRgb).slice(0, 3), 255],
+            getLineWidth: unit / 20,
+            lineWidthUnits: 'pixels',
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        } else {
+          // flat's rectangular box (the chart and its title plus the
+          // margin), the single-symbol path's own _buildBoxIcon drawing
+          const borderStyle = String(st.borderstyle || '');
+          const boxLook = {
+            fill: st.boxcolor || 'white',
+            fillOpacity: isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity),
+            stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
+            strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3
+          };
+          const borderWidth = styleNum(st.borderwidth) || 1;
+          const borderRadius = styleNum(st.borderradius);
+          const strokeOf = b => borderWidth * 0.2 * b.w / 30;
+          boxLayout.forEach(b => {
+            b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
+              isNaN(borderRadius) ? 0 : borderRadius * Math.min(unit, b.w / 30),
+              strokeOf(b), boxLook);
+          });
+          if (boxLayout.length) layers.push(new IconLayer({
+            id: `ix-seqbox-${this.name}-g${this._iconGeneration}`,
+            data: boxLayout, pickable: false,
+            getPosition: b => b.d.geometry.coordinates,
+            getIcon: b => b.icon,
+            getSize: b => b.icon.height / 2,
+            getPixelOffset: b => { const o = alignOf(b.d); return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
+            sizeUnits: 'pixels', billboard: true,
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        }
+        if (titleShown) {
+          const titleData = boxLayout.filter(b => b.title);
+          if (titleData.length) layers.push(new TextLayer({
+            id: `ix-seqtitles-${this.name}`,
+            data: titleData, pickable: false,
+            getPosition: b => b.d.geometry.coordinates,
+            getText: b => b.title.text,
+            getSize: b => b.title.f,
+            sizeUnits: 'pixels', fontFamily: 'arial',
+            characterSet: 'auto',
+            lineHeight: 1,
+            getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
+            fontSettings: { sdf: true },
+            outlineWidth: 1 / 7,
+            outlineColor: [255, 255, 255, 128],
+            getTextAnchor: b => b.title.anchor,
+            getAlignmentBaseline: 'top',
+            getPixelOffset: b => { const o = alignOf(b.d); return [b.title.x + o[0], b.title.top + o[1]]; },
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        }
+      }
       if (glows.length && this.flags.has('GLOW') && !glowHiddenByScale(st, liveZoom)) {
         layers.push(new IconLayer({
           id: `ix-glow-${this.name}-g${this._iconGeneration}`,
@@ -14361,20 +14708,35 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         data: parts, pickable: true,
         getPosition: d => d.geometry.coordinates,
         // the stroke, in the icon raster's pixels (the icon is drawn at 2r)
-        getIcon: d => this._buildSingleIcon(colorOf(d.part.i), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), borderRgb,
-          borderRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0),
+        getIcon: d => {
+          // an external symbol file: the URL icon as flat's <image> (see
+          // urlSymbolOf above), scaled to the part's diameter like flat's
+          // fu.scale(nRadius / nMaxRadius) on a nChartSize image
+          const u = urlSymbolOf(d.part.i);
+          if (u) return urlIcon(u);
+          return this._buildSingleIcon(colorOf(d.part.i), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), borderRgb,
+            borderRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0);
+        },
         getSize: d => d.part.r * 2,
         getPixelOffset: offsetOf,
         getColor: d => [255, 255, 255, alphaOf(d)],
         sizeUnits: 'pixels', billboard: true,
         parameters: ICON_LAYER_GLOBE_PARAMETERS
       }));
-      // VALUES on each part (maptheme.js 22188-22250): the part's value — with
+      // VALUES on each part (maptheme.js 22188-22260): the part's value — with
       // COUNT its record count, with valuefield on the categorical field the
-      // class name — formatted with valuedecimals (else none) plus the unit;
-      // font min(1, 3.2 / L) · r · valuescale, L the length of the theme's
-      // biggest value text (szMaxText), normal weight, in valuecolor /
-      // textcolor, else ChartColors.textColor of the part color.
+      // class name — formatted with valuedecimals (else none) plus the unit.
+      //  - a SHAPE part (circle & kin): font min(1, 3.2 / L) · r · valuescale,
+      //    L the length of the theme's biggest value text (szMaxText), normal
+      //    weight, in valuecolor / textcolor, else ChartColors.textColor of
+      //    the part color
+      //  - an IMAGE-symbol part (an external .svg, the TELRAAM pictograms):
+      //    flat's own other branch (22253-22256) — font max(r · 0.8, 1) ·
+      //    valuescale, the text over createTextLabel's background box (white,
+      //    its rgba(…,0.3) fill × the 0.5 fill-opacity) and in
+      //    ChartColors.lowColor — the 0.7 derivate of the part color —
+      //    regardless of valuecolor/textcolor (flat passes cColor.lowColor
+      //    straight into createTextLabel)
       // CENTERVALUES: only on the first part (class 0), its own value
       if ((this.flags.has('VALUES') || centerValues) && !valuesHiddenByScale(st, zoom)) {
         const valueScale = styleNum(st.valuescale) || 1;
@@ -14394,14 +14756,88 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const name = rec ? String(rec[st.valuefield]) : null;
           const t = counting && d.properties.recordCounts ? d.properties.recordCounts[d.part.i] : d.part.v;
           const text = name != null ? name : fmt(t);
+          const image = !!urlSymbolOf(d.part.i);
           const L = Math.max((name != null ? name.length : 0) + 1, maxLen);
-          const fontSize = Math.min(1, 3.2 / L) * d.part.r * valueScale;
+          const fontSize = image
+            ? Math.max(d.part.r * 0.8, 1) * valueScale
+            : Math.min(1, 3.2 / L) * d.part.r * valueScale;
           if (fontSize > VALUES_MIN_FONT_PX) {
             labels.push({ geometry: d.geometry, text, fontSize, pixelOffset: offsetOf(d), alpha: alphaOf(d),
-              color: textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(colorOf(d.part.i)) });
+              image,
+              color: image ? flatDerivateRgb(colorOf(d.part.i), 0.7)
+                : textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(colorOf(d.part.i)) });
           }
         });
         if (labels.length) {
+          // VALUEBACKGROUND on URL-symbol parts: a fading white border
+          // around the value's own CHARACTER SHAPES — the glyphs
+          // re-drawn in white on rings of pixel offsets (a stroke of
+          // copies, no box): the width is a fraction of the font size,
+          // so the halo scales with every label; the shape-part values
+          // keep flat's plain text (no outline)
+          if (flatFlag(this.flags, 'VALUEBACKGROUND')) {
+            const haloLabels = labels.filter(l => l.image);
+            const plainLabels = labels.filter(l => !l.image);
+            if (haloLabels.length) {
+              // a real outline around the characters: the label's own
+              // glyphs re-drawn in white on rings of pixel offsets — a
+              // stroke of copies that hugs the character shapes (deck's
+              // SDF outline is only a faint, buffer-clipped rim). The
+              // base radius is a small fraction of the font size (the
+              // 1px floor keeps it tiny until labels get big), and the
+              // ring alphas fall off, so the border fades to nothing
+              const DIRS = 16, RINGS = [[1, 210], [2, 120], [3.2, 65]];
+              const haloCopies = [];
+              for (const l of haloLabels) {
+                const rb = Math.max(0.75, l.fontSize * 0.015);
+                for (let ring = 0; ring < RINGS.length; ring++) {
+                  for (let dir = 0; dir < DIRS; dir++) {
+                    const a = (dir / DIRS) * 2 * Math.PI;
+                    haloCopies.push({ ...l,
+                      dx: Math.cos(a), dy: Math.sin(a),
+                      radius: rb * RINGS[ring][0],
+                      haloAlpha: Math.round(RINGS[ring][1] * l.alpha / 255) });
+                  }
+                }
+              }
+              layers.push(new TextLayer({
+                id: `ix-cluster-values-halo-${this.name}`,
+                data: haloCopies, pickable: false,
+                getPosition: d => d.geometry.coordinates,
+                getText: d => d.text,
+                getSize: d => d.fontSize,
+                getColor: d => [255, 255, 255, d.haloAlpha],
+                getPixelOffset: d => [d.pixelOffset[0] + d.dx * d.radius, d.pixelOffset[1] + d.dy * d.radius],
+                sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
+                characterSet: 'auto',
+                getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+              }));
+              layers.push(new TextLayer({
+                id: `ix-cluster-values-${this.name}`,
+                data: haloLabels, pickable: false,
+                getPosition: d => d.geometry.coordinates,
+                getText: d => d.text,
+                getSize: d => d.fontSize,
+                getColor: d => [...d.color.slice(0, 3), d.alpha],
+                getPixelOffset: d => d.pixelOffset,
+                sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
+                characterSet: 'auto',
+                getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+              }));
+            }
+            if (plainLabels.length) layers.push(new TextLayer({
+              id: `ix-cluster-values-plain-${this.name}`,
+              data: plainLabels, pickable: false,
+              getPosition: d => d.geometry.coordinates,
+              getText: d => d.text,
+              getSize: d => d.fontSize,
+              getColor: d => [...d.color.slice(0, 3), d.alpha],
+              getPixelOffset: d => d.pixelOffset,
+              sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
+              characterSet: 'auto',
+              getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+            }));
+          } else {
           layers.push(new TextLayer({
             id: `ix-cluster-values-${this.name}`,
             data: labels, pickable: false,
@@ -14414,6 +14850,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             characterSet: 'auto',
             getTextAnchor: 'middle', getAlignmentBaseline: 'center'
           }));
+          }
         }
       }
       return layers;
