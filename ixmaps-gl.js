@@ -3105,7 +3105,58 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
     dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
   };
+  // flat's own raster-tile basemaps (htmlgui_sync_Leaflet.js __addTileLayer
+  // list, ArcGIS block): a mapType NAME flat resolves to real raster tiles
+  // resolves to the SAME tiles here, as a built MapLibre raster style —
+  // "ArcGIS - Topo" was falling through to CARTO Positron before, a
+  // non-topographic look nothing like flat's. Styles are built once per
+  // name, so the same name is the SAME style object and setMapType's
+  // "same style: nothing to reload" identity test keeps working.
+  const ESRI_ATTRIBUTION = 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community';
+  const FLAT_RASTER_BASEMAPS = [
+    { name: 'ArcGIS - Topo', aliases: ['terrain'], maxzoom: 19,
+      tiles: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}.png' },
+    { name: 'ArcGIS - Light Gray Base', maxzoom: 19,
+      tiles: 'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}.png' },
+    { name: 'ArcGIS - Ocean Basemap', maxzoom: 13,
+      tiles: 'https://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}.png' },
+    { name: 'ArcGIS - Hillshade', maxzoom: 16,
+      tiles: 'https://server.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}.png' },
+  ];
+  const _rasterBasemapStyles = new Map();
+  function buildRasterBasemapStyle(entry) {
+    if (_rasterBasemapStyles.has(entry.name)) return _rasterBasemapStyles.get(entry.name);
+    const sourceId = 'ixmaps-raster-basemap';
+    const style = {
+      version: 8,
+      sources: {
+        [sourceId]: {
+          type: 'raster',
+          tiles: [entry.tiles],
+          tileSize: 256,
+          maxzoom: entry.maxzoom,
+          attribution: ESRI_ATTRIBUTION
+        }
+      },
+      // raster-opacity (applyBasemapOpacity's raster entry) fades this
+      // layer like any other basemap
+      layers: [{ id: sourceId, type: 'raster', source: sourceId, paint: {} }]
+    };
+    _rasterBasemapStyles.set(entry.name, style);
+    return style;
+  }
+  // flat's mapTypeTranslate ("terrain" → "ArcGIS - Topo", ...) applies to
+  // the raster names too
+  function flatRasterBasemap(mapType) {
+    if (typeof mapType !== 'string') return null;
+    const t = mapType.trim();
+    for (const entry of FLAT_RASTER_BASEMAPS) {
+      if (t === entry.name || (entry.aliases || []).includes(t)) return entry;
+    }
+  }
   function resolveBasemapStyleUrl(mapType) {
+    const raster = flatRasterBasemap(mapType);
+    if (raster) return buildRasterBasemapStyle(raster);
     return typeof mapType === 'string' && /dark|black|night|matter/i.test(mapType) ? BASEMAP_STYLE_URLS.dark : BASEMAP_STYLE_URLS.light;
   }
   // Real ixmaps-flat's legend look (tools/legend.js 3773-3845, via
