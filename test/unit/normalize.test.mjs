@@ -191,3 +191,14 @@ test('style.opacity is the fill opacity unless fillopacity is set; empty/null op
   assert.notEqual(fo({ opacity: '' }), 0);
   assert.notEqual(fo({ opacity: null }), 0);
 });
+
+test('choroplethOutlineColor: line shapes take the value color, polygons the outline (a color, never a function)', () => {
+  const { choroplethOutlineColor } = loadEngine();
+  const value = () => [1, 2, 3, 4], hide = () => 'hide', show = () => 'show', line = [9, 9, 9];
+  assert.deepEqual(plain(choroplethOutlineColor(true, value, {}, true, hide, line)), [1, 2, 3, 4]);
+  assert.deepEqual(plain(choroplethOutlineColor(false, value, {}, false, hide, line)), [9, 9, 9]);
+  assert.deepEqual(plain(choroplethOutlineColor(false, value, {}, true, show, line)), [9, 9, 9]);
+  const hidden = choroplethOutlineColor(false, value, {}, true, hide, line);
+  assert.ok(Array.isArray(hidden));
+  assert.deepEqual(plain(hidden), [0, 0, 0, 0]);
+});

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>FEATURE · plain fill ($item$)</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 320px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>FEATURE · plain fill</b>
+  <span>Shapes drawn as they are: <code>value: "$item$"</code> is no data field, so every polygon keeps the one colorscheme color (a regression once painted them all in a class gray) and the line keeps its own stroke.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  var __shapes = {
+    type: "FeatureCollection",
+    features: [
+      { type: "Feature", properties: { name: "A" },
+        geometry: { type: "Polygon", coordinates: [[[9.15, 45.44], [9.19, 45.44], [9.19, 45.47], [9.15, 45.47], [9.15, 45.44]]] } },
+      { type: "Feature", properties: { name: "B" },
+        geometry: { type: "Polygon", coordinates: [[[9.20, 45.45], [9.24, 45.45], [9.24, 45.48], [9.20, 45.48], [9.20, 45.45]]] } },
+      { type: "Feature", properties: { name: "C" },
+        geometry: { type: "LineString", coordinates: [[9.14, 45.43], [9.19, 45.48], [9.25, 45.44]] } }
+    ]
+  };
+
+  var __polygons = ixmaps.layer("polygons", layer => layer
+    .data({ obj: __shapes, type: "geojson" })
+    .type("FEATURE")
+    .binding({ geo: "geometry", value: "$item$" })
+    .style({ colorscheme: ["#ddbb22"], fillopacity: "0.7", linecolor: "#444444", linewidth: "1" })
+    .meta({ title: "FEATURE · plain fill", tooltip: "{{name}}" })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([45.46, 9.19], 12).layer(__polygons)
+  );
+</script>
+</body>
+</html>

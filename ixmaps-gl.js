@@ -1814,6 +1814,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return isFinite(o) ? Math.max(0, Math.min(1, o)) : 0;
   }
 
+  // a choropleth shape's outline color: a LINE shape strokes with its value
+  // color; any other shape keeps the theme's outline, hidden while a class
+  // is isolated and the shape is not in it
+  function choroplethOutlineColor(isLine, valueColorOf, d, isolating, unmarkedEvidence, lineRgb) {
+    if (isLine) return valueColorOf(d);
+    return isolating && unmarkedEvidence(d) === 'hide' ? [0, 0, 0, 0] : lineRgb;
+  }
+
   function joinChoroplethFeatures(spec, table, runtimes) {
     // a page can define several FEATURE layers of one name — e.g. the
     // comuni as polygons and as center points (for chart positions); flat
@@ -12034,6 +12042,20 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // each shape by its class), not one flat fill
       const byCategory = filled && this.flags.has('CATEGORICAL') && this.categoryIndexByLabel && this.binding.value
         && this.categoryColorsRgb && this.categoryColorsRgb.length;
+      // a NUMERIC bound value classes every shape too (flat's
+      // distributeValues → partsA; paintShape, maptheme.js 13991-14018,
+      // paints each shape in `colorScheme[nIndex]` — a line as
+      // fill:none;stroke:class-color, a polygon filled with it): the
+      // TELRAAM speed segments, green→red by v85
+      const byClass = !byCategory && this._rangeClassed && this.partsA
+        && this.categoryColorsRgb && this.categoryColorsRgb.length
+        // "$item$" (or a field list) is no numeric field: a plain FEATURE
+        // layer keeps its one fill color
+        && this.binding.value && this.binding.value !== '$item$' && !String(this.binding.value).includes('|');
+      const classColorOf = f => {
+        const cls = this._resolvePartsClass(parseFloat(f.properties && f.properties[this.binding.value]));
+        return this.classRgb(cls);
+      };
       const catAlpha = Math.round(255 * (styleNum(this.style.fillopacity) || 1));
       const nodataRgb = parseCssColor(this.style.nodatacolor) || [255, 255, 255];
       const shadow = filled && flatShadowOn(this.style, this.features.length, zoom)
@@ -12053,14 +12075,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // flat puts fillopacity into the shape's fill-opacity only
         // (maptheme.js 13407, 14071-14078): the outline stays opaque
         // (a fill color's own alpha — rgba(…, 0.5) — times fillopacity)
-        ...(byCategory ? { updateTriggers: { getFillColor: JSON.stringify(this.categoryColorsRgb) } } : {}),
+        ...(byCategory || byClass ? { updateTriggers: { getFillColor: JSON.stringify(this.categoryColorsRgb), getLineColor: JSON.stringify(this.categoryColorsRgb) } } : {}),
         getFillColor: byCategory
           ? f => {
             const cat = this._resolveClassIndex(f.properties[this.binding.value]);
             return [...(cat != null ? (this.categoryColorsRgb || [])[cat] || nodataRgb : nodataRgb).slice(0, 3), catAlpha];
           }
+          : byClass ? f => [...classColorOf(f).slice(0, 3), catAlpha]
           : filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * cssColorAlpha(raw) * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0],
-        getLineColor: this.style.linecolor
+        getLineColor: byClass
+          // flat's paintShape strokes a line shape with its class color
+          // (fill:none;stroke:class-color), at stroke-opacity fillopacity
+          ? f => [...classColorOf(f).slice(0, 3), catAlpha]
+          : this.style.linecolor
           ? withAlpha(hexOrNamedToRgb(styleLineColor(this.style.linecolor)), cssColorAlpha(styleLineColor(this.style.linecolor)))
           : [130, 130, 130],
         lineWidthMinPixels: styleNum(this.style.linewidth) || 1,
@@ -12263,6 +12290,29 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // deck.gl re-runs the color accessors only for new data or a changed trigger
       const colorKey = JSON.stringify([[...this._markedClasses], !!this._onMarksChanged, evidenceMode,
         this.categoryColorsRgb, fallbackRgb, classAlpha, lineRgb]);
+      // flat paints a LINE shape's value color as its STROKE (paintShape on
+      // a line shape, szShapeType line — its DOPACITY writes stroke-opacity
+      // there too): a choropleth over line geometry, the Milano street lines,
+      // shows the value color ON the line; a polygon keeps it as its fill
+      const isLineGeometry = d => { const t = d.geometry && d.geometry.type; return t === 'LineString' || t === 'MultiLineString'; };
+      const valueColorOf = d => {
+        if (!hasData(d)) return [0, 0, 0, 0];
+        const rgb = d.properties.composedColor
+          || (d.properties.cat != null ? (this.categoryColorsRgb || [])[d.properties.cat] : null) || fallbackRgb;
+        const evidence = unmarkedEvidence(d);
+        if (evidence === 'hide') return [0, 0, 0, 0];
+        if (evidence === 'gray') return [...grayOf(rgb), 90];
+        const a = alphaOfClass(d.properties.cat);
+        return d.properties.dopacityAlpha != null ? [...rgb.slice(0, 3), Math.round(d.properties.dopacityAlpha * a * 255)] : withAlpha(rgb, a);
+      };
+      // flat re-styles the SAME shape nodes the FEATURE base drew, so a line
+      // choropleth keeps the base's own line width — the donor's linewidth
+      // is the fallback when the choropleth has none of its own
+      const donorRt = [..._globalThemeRegistry.values()].find(r => r.name === this.name && r._isChoroplethGeometryDonor);
+      const anyLine = collection.features.some(isLineGeometry);
+      const isolating = !!(this._markedClasses.size && !this._onMarksChanged && evidenceMode === 'isolate');
+      const lineW = styleNum(this.style.linewidth)
+        || (anyLine && donorRt && styleNum(donorRt.style.linewidth)) || 1;
       return [new GeoJsonLayer({
         id: this._dataLayerId(`ix-choropleth-${this.name}`),
         data: collection,
@@ -12270,21 +12320,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         pickable: true,
         stroked: true,
         filled: true,
-        getFillColor: d => {
-          if (!hasData(d)) return [0, 0, 0, 0];
-          const rgb = d.properties.composedColor
-            || (d.properties.cat != null ? (this.categoryColorsRgb || [])[d.properties.cat] : null) || fallbackRgb;
-          const evidence = unmarkedEvidence(d);
-          if (evidence === 'hide') return [0, 0, 0, 0];
-          if (evidence === 'gray') return [...grayOf(rgb), 90];
-          const a = alphaOfClass(d.properties.cat);
-          return d.properties.dopacityAlpha != null ? [...rgb.slice(0, 3), Math.round(d.properties.dopacityAlpha * a * 255)] : withAlpha(rgb, a);
-        },
-        // a per-polygon accessor only while a class is isolated
-        getLineColor: this._markedClasses.size && !this._onMarksChanged && evidenceMode === 'isolate'
-          ? d => (unmarkedEvidence(d) === 'hide' ? [0, 0, 0, 0] : lineRgb)
-          : lineRgb,
-        lineWidthMinPixels: styleNum(this.style.linewidth) || 1,
+        getFillColor: d => valueColorOf(d),
+        // a constant unless a shape needs its own color (line geometry, or a
+        // class isolated) — deck.gl then skips a per-item accessor call
+        getLineColor: !anyLine && !isolating ? lineRgb
+          : d => choroplethOutlineColor(isLineGeometry(d), valueColorOf, d, isolating, unmarkedEvidence, lineRgb),
+        lineWidthMinPixels: lineW,
         // per-feature alpha (baked above) already carries the resolved
         // base opacity — a layer-level opacity on TOP of that would
         // multiply it a second time.
@@ -16701,7 +16742,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
-    normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
+    choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,

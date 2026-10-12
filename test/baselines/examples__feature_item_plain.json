@@ -1,0 +1,360 @@
+{
+ "page": "examples/feature_item_plain.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 11,
+    "center": [
+     9.19,
+     45.46
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-polygons-d1",
+     "type": "GeoJsonLayer",
+     "count": 3,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       221,
+       187,
+       34,
+       179
+      ],
+      "getLineColor": [
+       68,
+       68,
+       68
+      ],
+      "lineWidthMinPixels": 1,
+      "pickable": false,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "b18b7099460b26aa",
+     "setDigest": "0446b52fce4c0729",
+     "columnDigests": {
+      "~geometry": "422629c6924af2d6"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "Polygon",
+        5,
+        [
+         9.15,
+         45.44
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        5,
+        [
+         9.2,
+         45.45
+        ]
+       ]
+      ],
+      [
+       [
+        "LineString",
+        3,
+        [
+         9.14,
+         45.43
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "polygons",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "1.00 - 1.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 1.00101,
+       "min": 1
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 1,
+     "valueMedian": 1
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "polygons": [
+     "",
+     "",
+     ""
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 12,
+    "center": [
+     9.19,
+     45.46
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-polygons-d1",
+     "type": "GeoJsonLayer",
+     "count": 3,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       221,
+       187,
+       34,
+       179
+      ],
+      "getLineColor": [
+       68,
+       68,
+       68
+      ],
+      "lineWidthMinPixels": 1,
+      "pickable": false,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "b18b7099460b26aa",
+     "setDigest": "0446b52fce4c0729",
+     "columnDigests": {
+      "~geometry": "422629c6924af2d6"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "Polygon",
+        5,
+        [
+         9.15,
+         45.44
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        5,
+        [
+         9.2,
+         45.45
+        ]
+       ]
+      ],
+      [
+       [
+        "LineString",
+        3,
+        [
+         9.14,
+         45.43
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "polygons",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "1.00 - 1.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 1.00101,
+       "min": 1
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 1,
+     "valueMedian": 1
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "polygons": [
+     "",
+     "",
+     ""
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.19,
+     45.46
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-features-polygons-d1",
+     "type": "GeoJsonLayer",
+     "count": 3,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       221,
+       187,
+       34,
+       179
+      ],
+      "getLineColor": [
+       68,
+       68,
+       68
+      ],
+      "lineWidthMinPixels": 1,
+      "pickable": false,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "b18b7099460b26aa",
+     "setDigest": "0446b52fce4c0729",
+     "columnDigests": {
+      "~geometry": "422629c6924af2d6"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "Polygon",
+        5,
+        [
+         9.15,
+         45.44
+        ]
+       ]
+      ],
+      [
+       [
+        "Polygon",
+        5,
+        [
+         9.2,
+         45.45
+        ]
+       ]
+      ],
+      [
+       [
+        "LineString",
+        3,
+        [
+         9.14,
+         45.43
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "polygons",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 3,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "1.00 - 1.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       221,
+       187,
+       34
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 1.00101,
+       "min": 1
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 1,
+     "valueMedian": 1
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "polygons": [
+     "",
+     "",
+     ""
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}
