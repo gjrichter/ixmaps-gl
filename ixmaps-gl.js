@@ -670,8 +670,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     }
   }
 
-  function topojsonToFeatureCollection(topo) {
-    const objName = Object.keys(topo.objects)[0];
+  function topojsonToFeatureCollection(topo, objectName) {
+    // .data({object: "NAME"}) selects the topojson object to show; without
+    // one (or with an unknown name) it stays the file's FIRST object, the
+    // previous behaviour
+    const objName = (objectName && topo.objects[objectName]) ? objectName : Object.keys(topo.objects)[0];
     const obj = topo.objects[objName];
     const geoms = obj.type === 'GeometryCollection' ? obj.geometries : [obj];
     const features = geoms.map(g => ({
@@ -830,7 +833,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function dataSourceKey(data) {
     const d = data || {};
     return JSON.stringify({ url: d.url, urls: d.urls, type: d.type, query: d.query,
-      process: d.process && String(d.process), ext: d.ext, name: d.ext ? d.name : undefined });
+      process: d.process && String(d.process), ext: d.ext, name: d.ext ? d.name : undefined,
+      // .data({object}) selects a topojson object — two themes on the same
+      // URL with different objects must NOT share one cache entry (the
+      // DISS page's 5 layers of one file)
+      object: d.object });
   }
   function dataCacheKey(data, binding) {
     const b = binding || {};
@@ -1375,7 +1382,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // genuinely CSV-shaped .obj with a missing binding.position would
     // throw, even though this .obj was never row data in the first place.
     if (dataConfig.obj) {
-      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(dataConfig.obj);
+      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(dataConfig.obj, dataConfig.object);
       if (dataConfig.type === 'geojson') return sanitizeGeoJSON(dataConfig.obj);
       let obj = dataConfig.obj;
       if (dataConfig.process) {
@@ -1448,7 +1455,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // them into a table with a geometry column, and back)
       const resp = await fetch(dataConfig.url);
       if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${dataConfig.url}: ${resp.status}`);
-      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(await resp.json());
+      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(await resp.json(), dataConfig.object);
       return sanitizeGeoJSON(await resp.json());
     }
     // every other format (json, jsonstat, ndjson, rss, kml, gml, geobuf,
