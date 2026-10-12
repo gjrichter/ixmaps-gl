@@ -4661,9 +4661,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // instead of colliding with each other under one 'null' entry.
         let raw, cacheKey;
         const deferred = deferredFeatureLoad(spec, initialZoom);
-        if (deferred || named) {
+        // flat's WMS theme type (maptheme.js 8207-8247, the szFlag /\bWMS|IMAGE\b/
+        // realize branch) has NO data of its own — .data({server}) is an
+        // Esri MapServer export endpoint rendered as one image per view.
+        // Here the same theme becomes a MapLibre raster tile source (one
+        // 256px image per XYZ tile via the {bbox-epsg-3857} placeholder —
+        // real cached tiles, not a re-fetched viewport image per pan), see
+        // syncWmsLayers: no records to load, ever
+        const wms = spec.flags.has('WMS') || spec.flags.has('IMAGE');
+        if (deferred || named || wms) {
           raw = { type: 'FeatureCollection', features: [] };
-          cacheKey = named ? 'name:' + spec.data.name : 'deferred:' + spec.name;
+          cacheKey = named ? 'name:' + spec.data.name : wms ? 'wms:' + spec.name : 'deferred:' + spec.name;
         } else if (spec.data && spec.data.obj) {
           raw = await fetchLayerData(spec.data, spec.binding, this._engineOptions);
           cacheKey = 'obj:' + spec.name;
@@ -5370,9 +5378,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           for (const rt of targets) {
             if (rt._named) { await loadNamedTheme(rt, true); continue; }
             const spec = normalizeTheme(rt._definition);
-            // flat's refresh reloads, cache or not (maptheme.js 2366: datacache = false);
-            // the fresh result also replaces the cached one for later themes
-            const raw = spec.data && spec.data.obj
+            // a WMS theme has no records to reload (see build()'s wms
+            // branch) — its raster layer is re-synced by the refresh below
+            const raw = (spec.flags.has('WMS') || spec.flags.has('IMAGE'))
+              ? { type: 'FeatureCollection', features: [] }
+              : spec.data && spec.data.obj
               ? await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions)
               : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload: true }).promise;
             rt.replaceFeatures(filterAndJoin(raw, spec, runtimes));
@@ -5601,8 +5611,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         let raw;
         const deferred = deferredFeatureLoad(spec, map.getZoom());
         const named = namedDataTheme(spec);
+        // WMS themes carry no records (see build()'s own wms branch)
+        const wms = spec.flags.has('WMS') || spec.flags.has('IMAGE');
         let sourceKey = null;
-        if (deferred || named) {
+        if (deferred || named || wms) {
           raw = { type: 'FeatureCollection', features: [] };
         } else if (spec.data && spec.data.obj) {
           // in memory already — nothing to cache (see build())
@@ -5865,7 +5877,71 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (order !== refreshLayers._lastOrder) { refreshLayers._lastOrder = order; console.info('[ixmaps-gl debug] draw order (bottom → top): ' + order); }
         }
         overlay.setProps({ layers });
+        // flat's WMS themes render as native raster layers, not deck.gl —
+        // reconcile them with the current runtimes on every rebuild
+        syncWmsLayers();
       }
+
+      // flat's WMS theme type (szFlag /\bWMS|IMAGE\b/, maptheme.js 8207-8247):
+      // .data({server}) names an Esri MapServer export endpoint, flat draws
+      // ONE f=image request per view (bbox in 4326, the view's pixel size),
+      // opacity from fillOpacity || nOpacity || 0.8. Here the same theme is
+      // a MapLibre raster tile source instead — the SAME export call per
+      // 256px XYZ tile ({bbox-epsg-3857} → bboxSR=3857), which MapLibre
+      // caches, loads progressively and never re-fetches per pan step;
+      // deck.gl's interleaved layers stay on top of it. server is read
+      // from .style() as flat does (maptheme.js 1408: styleObj.server),
+      // or from .data() as this port's own pages write it.
+      // ids of the raster layers this function ever added — lets it skip
+      // map.getStyle() (a deep copy of the whole style) on every rebuild
+      // of a page that has no WMS theme
+      const wmsLayerIds = new Set();
+      function syncWmsLayers() {
+        if (!map || !map.getLayer) return;
+        const idOf = name => 'ixmaps-wms:' + String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
+        const desired = new Map();
+        runtimes.forEach(rt => {
+          if (!(rt.flags.has('WMS') || rt.flags.has('IMAGE'))) return;
+          const server = (rt.style && rt.style.server) || (rt._definition && rt._definition.data && rt._definition.data.server);
+          if (server) desired.set(rt.name, { rt, server });
+        });
+        if (!desired.size && !wmsLayerIds.size) return;
+        // a removed WMS theme takes its raster layer with it — as flat's
+        // clearWMS does (ids are sanitized names, compare id-to-id)
+        const ownedIds = new Set([...desired.keys()].map(idOf));
+        [...wmsLayerIds].forEach(id => {
+          if (ownedIds.has(id)) return;
+          wmsLayerIds.delete(id);
+          try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) { /* already gone */ }
+          try { if (map.getSource(id)) map.removeSource(id); } catch (e) { /* already gone */ }
+        });
+        desired.forEach(({ rt, server }, name) => {
+          const id = idOf(name);
+          wmsLayerIds.add(id);
+          const sep = server.indexOf('?') >= 0 ? '&' : '?';
+          const tiles = [server + sep + 'f=image&transparent=true&bbox={bbox-epsg-3857}&bboxSR=3857&size=256,256'];
+          if (!map.getSource(id)) {
+            map.addSource(id, { type: 'raster', tiles, tileSize: 256 });
+          }
+          if (!map.getLayer(id)) {
+            map.addLayer({ id, type: 'raster', source: id, paint: { 'raster-opacity': 1 } });
+          }
+          // flat's own opacity reading (maptheme.js 8240): fillOpacity ||
+          // nOpacity || 0.8 — style "opacity" already folded into
+          // fillopacity by normalizeTheme
+          const opacity = styleNum(rt.style.fillopacity) || 0.8;
+          if ((map.getPaintProperty(id, 'raster-opacity') || 1) !== opacity) {
+            map.setPaintProperty(id, 'raster-opacity', opacity);
+          }
+          const vis = rt._hidden ? 'none' : 'visible';
+          if ((map.getLayoutProperty(id, 'visibility') || 'visible') !== vis) {
+            map.setLayoutProperty(id, 'visibility', vis);
+          }
+        });
+      }
+      // a style swap (setMapType) drops every native layer — rebuild the
+      // WMS ones once the new style stands
+      map.on('style.load', () => syncWmsLayers());
 
       // isZooming flips true/false on every 'zoomstart'/'zoomend' pair —
       // and a scroll-wheel or trackpad zoom fires MANY such pairs per
@@ -11607,6 +11683,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // unmatched polygon, so the donor's fill serves no purpose once
       // superseded.
       if (this._isChoroplethGeometryDonor) return [];
+      // flat's WMS theme (one server image over the view) renders here as
+      // a native MapLibre raster source+layer managed by syncWmsLayers —
+      // not as deck.gl layers — so its own build returns nothing
+      if (this.flags.has('WMS') || this.flags.has('IMAGE')) return [];
       // flat's POSITION theme (maptheme.js 8328-8353): loads its data and
       // draws nothing — it only exists as this layer's id→position provider
       // for the join (joinChartPositions reads its features, its binding.id
