@@ -45,7 +45,11 @@
 // range adjustments; see flatRangeParts). A CHOROPLETH
 // layer's geometry is borrowed from a FEATURE base layer sharing the same
 // .layer() name (the real engine's own convention), joined via
-// binding.lookup — see joinChoroplethFeatures. HEADTAIL breaks are flat's
+// binding.lookup — see joinChoroplethFeatures. POSITION (maptheme.js
+// 8328-8353) is a theme that renders nothing itself: it loads a table of
+// id + position pairs and provides the id→position join that other themes
+// on the same .layer() name consume via binding.lookup — see
+// joinChartPositions. HEADTAIL breaks are flat's
 // (headTailBreaks); LOG/POW2/POW3 are recognized type flags but not
 // implemented, see KNOWN_INERT_FLAGS. CHART|USER draws a page's own chart
 // function (style.userdraw, _buildUserChartLayers), CHART|LABEL flat's
@@ -1560,7 +1564,29 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // first filter left.
   function filterAndJoin(raw, spec, runtimes, expr = spec.filter) {
     const f = applyWhereFilter(raw, expr);
-    return f.type === 'Table' ? joinTableFeatures(spec, f, runtimes) : f;
+    return f.type === 'Table' ? joinTableFeatures(spec, f, runtimes) : chartAnchoredFeatures(f, spec);
+  }
+  // a CHART theme over geojson SHAPES (the TELRAAM page binds
+  // lookup:"geometry" — each chart at its own feature's shape): lines and
+  // polygons carry no [lng, lat] position, so every chart pipeline test
+  // (typeof c[0] === 'number', inViewport, ...) drops them silently and
+  // nothing renders. flat positions such a chart at the shape's center
+  // (its ptPos, flatShapeCenter) — normalize the features to Point at
+  // that anchor up front. FEATURE(S)/CHOROPLETH keep their real geometry,
+  // VECTOR/BEZIER keep their lines (their own renderers)
+  function chartAnchoredFeatures(fc, spec) {
+    const chart = fc && fc.type === 'FeatureCollection' && spec.flags && spec.flags.has('CHART')
+      && !spec.flags.has('FEATURE') && !spec.flags.has('FEATURES')
+      && !spec.flags.has('CHOROPLETH') && !isVectorChart(spec.flags)
+      && fc.features.some(f => f && f.geometry && f.geometry.type !== 'Point');
+    if (!chart) return fc;
+    const features = fc.features.map(f => {
+      const t = f && f.geometry && f.geometry.type;
+      if (!t || t === 'Point') return f;
+      const anchor = flatShapeCenter(f.geometry);
+      return anchor ? { type: 'Feature', geometry: { type: 'Point', coordinates: anchor }, properties: f.properties } : f;
+    });
+    return { type: 'FeatureCollection', features };
   }
   function applyWhereFilter(fc, filterExpr) {
     if (!filterExpr) return fc;
@@ -1669,6 +1695,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // each layer where its shape is found (maptheme.js 9324, 10376); records
   // with no shape are left out (10387-10392)
   //
+  // A POSITION theme is a layer's id→position PROVIDER: flat loads it, draws
+  // nothing, and only registers its records as themeNodesPosA entries
+  // (maptheme.js 8328-8353 — "don't create SVG objects but only entries in
+  // map.Themes.themeNodesPosA[]"), the same registry getNodePosition reads
+  // — so here it takes part in the join index exactly like a FEATURE layer
+  // of center points, its binding.id against the consumer's lookup key
+  //
   // flat runs the after-aggregation steps after EACH layer's pass, over all
   // items; DIFFERENCE turns a record's value fields into their difference
   // and drops the last, so a second pass leaves the earlier layers' items
@@ -1683,7 +1716,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const features = [];
     const indexes = layers.map(layer => {
       const index = new Map();
-      runtimes.filter(r => r.name === layer && (r.flags.has('FEATURE') || r.flags.has('FEATURES'))).forEach(r => {
+      runtimes.filter(r => r.name === layer && (r.flags.has('FEATURE') || r.flags.has('FEATURES') || r.flags.has('POSITION'))).forEach(r => {
         // in theme order, as flat's layer holds the themes' shapes
         for (const [k, v] of featurePositionIndex(r)) { if (flatShapeWins(index.get(k), v.area)) index.set(k, v); }
       });
@@ -11574,6 +11607,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // unmatched polygon, so the donor's fill serves no purpose once
       // superseded.
       if (this._isChoroplethGeometryDonor) return [];
+      // flat's POSITION theme (maptheme.js 8328-8353): loads its data and
+      // draws nothing — it only exists as this layer's id→position provider
+      // for the join (joinChartPositions reads its features, its binding.id
+      // against the consumers' lookup key), so no renderer runs for it
+      if (this.flags.has('POSITION')) return [];
       if (this.flags.has('FEATURE') || this.flags.has('FEATURES')) {
         return featuresHiddenByScale(this.style, liveZoom) ? [] : this._buildFeaturesLayers(liveZoom, bbox);
       }
