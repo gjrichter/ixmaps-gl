@@ -180,3 +180,14 @@ test('basemap names: dark/black/night/matter -> Dark Matter, anything else -> Po
   assert.equal(color('#0b1020'), '#0b1020');
   assert.equal(color('VT_DATAVIZ_DARK'), null);
 });
+
+test('style.opacity is the fill opacity unless fillopacity is set; empty/null opacity is ignored', () => {
+  const { normalizeTheme } = loadEngine();
+  const fo = style => normalizeTheme({ layer: 'a', style: { type: 'CHART|BUBBLE', ...style } }).style.fillopacity;
+  assert.equal(fo({ opacity: 0.4 }), 0.4);
+  assert.equal(fo({ opacity: '0.4' }), 0.4);
+  assert.equal(fo({ opacity: 0.4, fillopacity: 0.8 }), 0.8);
+  // Number('') and Number(null) are 0 — must not turn the theme invisible
+  assert.notEqual(fo({ opacity: '' }), 0);
+  assert.notEqual(fo({ opacity: null }), 0);
+});

@@ -1803,6 +1803,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return Math.min(0.9, o);
   }
 
+  // flat's DOPACITY formula inside the COMPOSECOLOR branch (maptheme.js
+  // 13489-13505): (dopacityscale || 1) · (v/max)^(1/dopacitypow) — no 0.9
+  // cap and no 0.0001 clip here, unlike the DOMINANT branch: flat writes
+  // the raw SVG stroke-/fill-opacity property and the browser clamps at 1
+  function composedDopacityAlpha(style, flags, v, max) {
+    const scale = styleNum(style.dopacityscale) || 1;
+    const pow = 1 / (styleNum(style.dopacitypow) || 1);
+    const o = scale * Math.pow(v, pow) / Math.pow(max, pow);
+    return isFinite(o) ? Math.max(0, Math.min(1, o)) : 0;
+  }
+
   function joinChoroplethFeatures(spec, table, runtimes) {
     // a page can define several FEATURE layers of one name — e.g. the
     // comuni as polygons and as center points (for chart positions); flat
@@ -2135,6 +2146,36 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // colorscheme (isGeneratedColorScheme above), never as the step count.
   function resolveColorScheme(colorscheme, labels, classes) {
     if (!colorscheme) return labels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]);
+    // flat's custom per-value color function (maptheme.js 12677-12705):
+    // colorscheme: ["byvalue", function(value){ return color; }] — every
+    // known category value gets its color from the function and the
+    // result REPLACES the whole scheme (so neither classes nor the
+    // generated-sweep machinery below ever see it, as in flat). A
+    // function that throws, or one a non-categorical theme hands no
+    // values to iterate, falls back to the default palette — exactly
+    // flat's own two fallbacks. The function may also arrive serialized
+    // (a project-JSON string), like the whole-scheme string function
+    // below evaluates one.
+    if (Array.isArray(colorscheme) && colorscheme.length > 1 && colorscheme[0] === 'byvalue') {
+      let fnByValue = null;
+      if (typeof colorscheme[1] === 'function') fnByValue = colorscheme[1];
+      else if (typeof colorscheme[1] === 'string') {
+        try {
+          const f = new Function('return (' + colorscheme[1] + ')')();
+          if (typeof f === 'function') fnByValue = f;
+        } catch (err) { /* not code */ }
+      }
+      if (fnByValue) {
+        try {
+          const byValueA = labels.map(l => fnByValue(l));
+          if (byValueA.length) return byValueA;
+          console.warn('[ixmaps-gl] colorscheme "byvalue" function needs a categorical theme with known values — using the fallback palette');
+        } catch (err) {
+          console.warn('[ixmaps-gl] colorscheme "byvalue" function threw "' + err + '" — using the fallback palette');
+        }
+      }
+      return labels.map((_, i) => FALLBACK_PALETTE[i % FALLBACK_PALETTE.length]);
+    }
     colorscheme = applyClassesToColorScheme(colorscheme, classes);
     if (isGeneratedColorScheme(colorscheme)) {
       const [, cc1, cc2, nParam1, nParam2] = colorscheme;
@@ -2949,6 +2990,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     }
 
     typeStyleNumbers(style);
+    // flat's own fill-opacity fallback (maptheme.js 13406:
+    // `this.fillOpacity = this.fillOpacity ? this.fillOpacity : this.nOpacity`)
+    // — an "opacity" style is the fill opacity whenever "fillopacity" is
+    // not set, as flat realizes every theme
+    // (Number("") and Number(null) are 0: an empty opacity must not hide the theme)
+    if (!styleNum(style.fillopacity) && style.opacity != null && String(style.opacity).trim() !== ''
+      && Number.isFinite(Number(style.opacity))) {
+      style.fillopacity = Number(style.opacity);
+    }
     return { name: def.layer, data: def.data, binding, targets, geometry, flags, typeStr, style, meta, filter };
   }
 
@@ -9880,6 +9930,33 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // On copies of the features' properties — the page's data is not changed.
   // AGGREGATE themes: not here — flat computes field100 on the aggregated
   // sums (aggregateField100).
+  // .style({weights}) — flat's weighted values: every record's per-field
+  // value × its field's weight, BEFORE the field100 arithmetic (the
+  // per-record multiply in addItemValues, maptheme.js 9007-9009; the
+  // aggregate loader reads the weight per value field at 10506-10508).
+  // One number, or a pipe list with one weight per value field; a field
+  // beyond the list takes the first weight (flat: `szWeightsA[i] ||
+  // szWeightsA[0]`), the aggregate loader instead repeats the LAST one
+  // (10262-10266) — `repeatLast`; no weights at all leaves the values raw.
+  // The Milano page: weights 0.1 over km-long street lengths + FRACTION →
+  // cars per 100 m
+  function fieldWeightOf(style, nFields, repeatLast) {
+    const w = style && style.weights;
+    if (w == null || w === '') return null;
+    const list = (Array.isArray(w) ? w.join('|') : String(w)).split('|').map(v => parseFloat(v));
+    if (!list.some(v => !isNaN(v))) return null;
+    if (repeatLast) { const last = list[list.length - 1]; while (list.length < nFields) list.push(last); }
+    return i => list[i] || list[0] || 1;
+  }
+  // flat's weighted record for the AGGREGATE path (maptheme.js 10506-10508):
+  // the value fields' own values weighted — the class value and the field100
+  // value stay raw, exactly as flat reads them
+  function weightedRecord(f, weightOf) {
+    const p = Object.assign({}, f.properties);
+    if (p.value !== undefined && !isNaN(p.value)) p.value = p.value * weightOf(0);
+    if (Array.isArray(p.series)) p.series = p.series.map((v, i) => (isNaN(v) ? v : v * weightOf(i)));
+    return Object.assign({}, f, { properties: p });
+  }
   function applyField100(features, binding, flags, style) {
     if (!binding || !binding.value || !Array.isArray(features)) return features;
     // AGGREGATE: flat applies field100 to the aggregated sums
@@ -9889,7 +9966,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const fields = String(binding.value).split('|');
     const auto100 = flags.has('AUTO100') && !flags.has('AGGREGATE');
     const seriesDifference = flags.has('DIFFERENCE') && fields.length > 1;
-    if (!f100 && !auto100 && !seriesDifference) return features;
+    // flat's weights run even without a field100 (addItemValues multiplies
+    // every record's values, maptheme.js 9007-9009)
+    const weightOf = fieldWeightOf(style, fields.length, false);
+    if (!f100 && !auto100 && !seriesDifference && !weightOf) return features;
     const f100A = f100 ? String(f100).split('|') : null;
     const fractionScale = styleNum(style && style.fractionscale) || 1;
     const names = fields.map(field => (field[0] === '!' ? field.slice(1) : field));
@@ -9898,6 +9978,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       if (!f || !f.properties) return f;
       const props = Object.assign({}, f.properties);
       let values = names.map(name => parseFloat(f.properties[name]));
+      // the weights run BEFORE the field100 arithmetic, as in flat's
+      // addItemValues — the FRACTION of a weighted value is the weighted
+      // per-unit value
+      if (weightOf) values = values.map((v, i) => (isNaN(v) ? v : v * weightOf(i)));
       if (f100A || auto100) {
         const sum = auto100 ? values.reduce((a, v) => a + (isNaN(v) ? 0 : v), 0) : 0;
         values = values.map((v, i) => {
@@ -10739,6 +10823,33 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // pure: resolveComposedColor → see "Classification — pure functions"
     _resolveComposedColor(props) { return resolveComposedColor(this, props); }
 
+    // flat's DOPACITY value inside the COMPOSECOLOR branch (maptheme.js
+    // 13489-13505): nMyValue = the item's raw weighted value sum /
+    // ((field100/100) || 1), the max the color blend's own (nMax). The
+    // raw weighted sum is reconstructed from the part values the field100
+    // arithmetic left in the properties — those carry the arithmetic's own
+    // multiplier (FRACTION ×fractionscale, PERMILLE ×1000, the default
+    // percent ×100, see applyField100), which must be divided back out:
+    // flat's nValueSum is the RAW weighted sum, whatever the flags.
+    // (RELATIVE/INVERT subtract after the multiply — not reconstructable
+    // from the parts; flat's own composed branch never pairs them.)
+    _composedDopacityAlpha(props) {
+      const fields = this._multiFields || [];
+      const f100A = this.binding && this.binding.field100 ? String(this.binding.field100).split('|') : null;
+      const multiplier = this.flags.has('FRACTION') ? (styleNum(this.style.fractionscale) || 1)
+        : this.flags.has('PERMILLE') ? 1000 : 100;
+      let sum = 0;
+      fields.forEach((field, i) => {
+        const part = parseFloat(props[field]);
+        if (isNaN(part)) return;
+        const v100 = f100A ? parseFloat(props[f100A[Math.min(i, f100A.length - 1)]]) : NaN;
+        sum += isNaN(v100) ? part : (part * v100) / multiplier;
+      });
+      const v100_0 = f100A ? parseFloat(props[f100A[0]]) : NaN;
+      const nMyValue = sum / ((v100_0 / 100) || 1);
+      return composedDopacityAlpha(this.style, this.flags, nMyValue, this._composeColorMax || 1);
+    }
+
     // pure: buildPartsA → see "Classification — pure functions"
     _buildPartsA() { const r = computeRangeClasses(this.features, this.binding, this.style, this.flags, v => this._formatTooltipValue(v)); if (r) Object.assign(this, r); }
 
@@ -11258,7 +11369,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const post = this._seriesDifference
         ? (v, v100, series) => (series ? cellAggregatedValues({ sums: series, counts: series.map(() => 1) }, this.flags, this.style)[0] : v)
         : this._aggregateField100 ? (v, v100) => aggregateField100(v, v100, this.flags, this.style) : undefined;
-      this._clusterIndices = this._featuresByCategory.map(feats => new GridAggregateIndex(radiusPx, this.flags, post, aggField).load(feats));
+      // flat's weights multiply every record's value fields as they are
+      // accumulated (maptheme.js 10506-10508), before the sums' field100
+      // arithmetic above — a weighted SUM, not a sum weighted afterward
+      const weightOf = fieldWeightOf(this.style, (this._multiFields || [this.binding && this.binding.value]).length, true);
+      this._clusterIndices = this._featuresByCategory.map(feats =>
+        new GridAggregateIndex(radiusPx, this.flags, post, aggField).load(weightOf ? feats.map(f => weightedRecord(f, weightOf)) : feats));
     }
 
     // Reverted from the source-accurate two-flat-circle GLOW (radius*6
@@ -12034,12 +12150,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const isComposeColor = this.flags.has('COMPOSECOLOR');
       const baseOpacity = resolveFillOpacity(this.style, this.mapOptions, zoom);
       // DOPACITY needs a PER-FEATURE opacity, which deck.gl only supports
-      // via getFillColor's own alpha channel (its layer-level `opacity`
-      // prop is one number for every feature) — see _resolveDopacityAlpha.
-      // Not meaningful combined with COMPOSECOLOR (no single driving value
-      // per polygon there), matching the real engine's own separate
-      // DOPACITY/COMPOSECOLOR branches.
-      const dopacityActive = !isComposeColor &&
+      // via the color accessors' own alpha channel (its layer-level
+      // `opacity` prop is one number for every feature) — see
+      // _resolveDopacityAlpha. COMPOSECOLOR runs DOPACITY too, with its own
+      // formula on the item's value sum (flat maptheme.js 13485-13506,
+      // composedDopacityAlpha) — it is only the DOMINANT/range
+      // _resolveDopacityAlpha that has no single driving value there
+      const dopacityActive =
         (this.flags.has('DOPACITY') || this.flags.has('DOPACITYMIN') || this.flags.has('DOPACITYMAX') || this.flags.has('DOPACITYMINMAX'));
       // AGGREGATE CATEGORICAL: every polygon's parts and dominant class
       // (aggregatedCategoricalClass), the biggest part per class over all
@@ -12082,7 +12199,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             return {
               type: 'Feature',
               geometry: f.geometry,
-              properties: { raw: f.properties, composedColor: this._resolveComposedColor(f.properties) }
+              properties: {
+                raw: f.properties, composedColor: this._resolveComposedColor(f.properties),
+                // flat's DOPACITY inside the COMPOSECOLOR branch (maptheme.js
+                // 13485-13506): opacity from the item's raw weighted value
+                // sum over (field100/100), against the same nMax the color
+                // blend normalizes by. The raw weighted sum is reconstructed
+                // from the fractioned part values (raw = part × its field100)
+                dopacityAlpha: dopacityActive ? this._composedDopacityAlpha(f.properties) : null
+              }
             };
           }
           if (isDominant) {
@@ -13670,7 +13795,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const titleFontPx = titleFontOf(w);
         let title = null;
         if (titleShown) {
-          const text = this._itemTitle(d.properties);
+          // flat appends style.titleunits (its parse adds the leading
+          // space, maptheme.js 1470; szTitle += at 18827)
+          const units = this.style.titleunits ? ' ' + this.style.titleunits : '';
+          const text = this._itemTitle(d.properties) ? this._itemTitle(d.properties) + units : null;
           if (text) {
             const f = titleFontPx;
             const lines = wrapTitleLines(text, f, circular ? boxR * 2 : w).split('\n');
