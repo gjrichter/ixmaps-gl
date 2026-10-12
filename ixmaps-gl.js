@@ -3777,6 +3777,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // explicit request (real engine's own fallback is right-anchored
       // too, just without an opinion on vertical placement).
       const legendAlignCss = legendAlignCssFor(builder.mapOptions);
+      // flat's align:"center"/"top" legend realizing (htmlgui_flat.js
+      // 445-480, legend.css 516-550): not a floating corner panel but a
+      // full-width bar over the map's top edge — width 100% capped at
+      // legendMaxWidth (1200px), legendBackground (default
+      // rgba(255,255,255,0.9)), rounded BOTTOM corners only, the title
+      // centered above, the class chips inline-block side by side and
+      // the chart-size slider inline in that same row
+      const legendCenter = /^(center|top)$/i.test(String(builder.mapOptions.align || '').trim());
       // Real ixmaps-flat's SUB-THEME (MapTheme.createSubTheme,
       // maptheme.js 14284-14292 / 15010-15160; map.Themes.enableSubThemes
       // defaults to true): marking fields of a multi-field choropleth
@@ -3846,7 +3854,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (legendStack && legendStack.parentNode) return legendStack;
         legendStack = document.createElement('div');
         legendStack.className = 'ix-legend-stack';
-        legendStack.style.cssText = 'position:absolute;' + legendAlignCss + 'z-index:6;width:280px;'
+        legendStack.style.cssText = legendCenter
+          // flat's center legend: the full-width bar, the panel carries
+          // the background (no stack-level radius or shadow)
+          ? 'position:absolute;left:50%;transform:translateX(-50%);top:0;z-index:6;width:100%;max-width:1200px;'
+            + 'display:flex;flex-direction:column;pointer-events:none;'
+          : 'position:absolute;' + legendAlignCss + 'z-index:6;width:280px;'
           + 'display:flex;flex-direction:column;max-height:66.6%;overflow-y:auto;'
           + 'border-radius:6px;box-shadow:' + shadow + ';pointer-events:auto;';
         if (!document.getElementById('ix-legend-stack-css')) {
@@ -3956,7 +3969,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             const looksDark = typeof builder.__effectiveDark === 'function'
               ? builder.__effectiveDark(isNaN(opacityOpt) ? 1 : opacityOpt, builder.mapOptions.mapType, legendBackground)
               : flatLook.dark;
-            const isLightLegend = rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !looksDark);
+            const isLightLegend = legendCenter || rt.style.legendtheme === 'light' || (rt.style.legendtheme !== 'dark' && !looksDark);
             const colors = isLightLegend
               ? { bg: 'rgba(255,255,255,0.92)', fg: '#1a1a1a', shadow: '0 2px 10px rgba(0,0,0,0.18)',
                   rowMarked: 'rgba(0,0,0,0.08)', track: 'rgba(0,0,0,0.08)',
@@ -3967,7 +3980,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             // the panel bg follows the same effective decision (flatLegendLook
             // would hand the dark look a light bg here: its dark branch never
             // ran for this map, its light bg would clash with dark rows/text)
-            if (!rt.style.legendtheme) colors.bg = looksDark ? '#111' : flatLook.bg;
+            if (!rt.style.legendtheme && !legendCenter) colors.bg = looksDark ? '#111' : flatLook.bg;
             return colors;
           };
           const legendColors = lookColors();
@@ -3985,7 +3998,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // one box for every theme, as flat's #map-legend (legend.js
           // 2200-2460): the panels stack in the legend stack in theme
           // order, a line between them (see layoutLegends)
-          panel.style.cssText = 'position:relative;flex:0 1 auto;min-height:0;overflow:hidden;'
+          panel.style.cssText = legendCenter
+            // flat's center legend bar: full width, centered text, the
+            // light legendBackground, rounded bottom corners only
+            ? 'position:relative;display:flex;flex-direction:column;text-align:center;'
+              + 'background:' + legendColors.bg + ';color:' + legendColors.fg + ';font:12px/1.4 -apple-system,Arial,sans-serif;'
+              + 'padding:6px 12px 10px;pointer-events:auto;border-radius:0 0 6px 6px;'
+            : 'position:relative;flex:0 1 auto;min-height:0;overflow:hidden;'
             + 'display:flex;flex-direction:column;text-align:left;'
             + 'background:' + legendColors.bg + ';color:' + legendColors.fg + ';font:12px/1.4 -apple-system,Arial,sans-serif;'
             + 'padding:10px 12px 12px;pointer-events:auto;';
@@ -4055,6 +4074,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // branch uses (no antimeridian wraparound handling — matches
           // that existing convention, not a new gap this introduces).
           let totals, maxTotal, order, rowsScroll;
+          // hoisted so the chart-size slider below can join the chips row
+          // in flat's center legend (legend-top-align's inline slider)
+          let rowsEl = null;
           // No-op default: TEXTLEGEND never reassigns this (see below),
           // so the LATER unconditional-looking `renderRows()` call
           // safely does nothing rather than needing its own isTextOnly
@@ -4111,8 +4133,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // share, then overflow-y:auto scrolls just the row list) —
           // the header above and description/slider below stay put.
           rowsScroll = document.createElement('div');
-          rowsScroll.style.cssText = 'flex:1 1 auto;min-height:0;overflow-y:auto;';
-          const rowsEl = document.createElement('div');
+          rowsScroll.style.cssText = legendCenter
+            // flat's center bar: one wrapped, centered row holding the
+            // chips AND the inline chart-size slider (legend.css 521-550)
+            ? 'flex:0 1 auto;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;'
+            : 'flex:1 1 auto;min-height:0;overflow-y:auto;';
+          rowsEl = document.createElement('div');
           rowsEl.className = 'ix-legend-rows';
           // .type("...|SIMPLELEGEND") — real ixmaps-flat's OTHER legend
           // variant (confirmed against a real-engine screenshot, per
@@ -4137,7 +4163,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // smaller categories packed 3-4 per row) rather than a fixed
           // column count.
           if (rt.flags.has('SIMPLELEGEND') || rt.flags.has('COMPACTLEGEND')) {
-            rowsEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+            // centered: inline-flex so the chips shrink to content inside
+            // the wrapping centered row (the slider joins as a sibling)
+            rowsEl.style.cssText = legendCenter ? 'display:inline-flex;flex-wrap:wrap;gap:4px;'
+              : 'display:flex;flex-wrap:wrap;gap:4px;';
           }
           rowsScroll.appendChild(rowsEl);
 
@@ -4447,6 +4476,101 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             bodyEl.appendChild(desc);
           }
 
+          // flat's TIME SLIDER (legend.js 2488-2530, the szTimeField
+          // branch of makeColorLegendHTMLLong): a theme with a timefield
+          // (style.timefield, resolved into binding.time) gets a slider
+          // over its records' time span — at the span's start every
+          // record shows (setTimeFrame's own start-of-frame rule),
+          // elsewhere a [value, value+range) window. The window size is
+          // flat's own default (a day; 28 days for a span over 120 days,
+          // an hour under 7 — legend.js 2722-2729) and the range buttons
+          // below (hour/day/week/month/year, only the ones the span
+          // supports, and only when there's more than one — legend.js
+          // 2512-2543) replace it, as flat's ixmaps.setSliderRange.
+          if (rt.binding && rt.binding.time) {
+            const timeField = rt.binding.time;
+            const toMs = v => (typeof v === 'number' ? v : new Date(v).getTime());
+            let uMin = Infinity, uMax = -Infinity;
+            rt.features.forEach(f => {
+              const t = toMs((f.properties || {})[timeField]);
+              if (!isNaN(t)) { if (t < uMin) uMin = t; if (t > uMax) uMax = t; }
+            });
+            // one step guard: no span (no/broken time values) — no slider
+            if (Number.isFinite(uMin) && Number.isFinite(uMax) && uMax > uMin) {
+              const uDay = 1000 * 60 * 60 * 24;
+              const days = (uMax - uMin) / uDay;
+              let range = days > 120 ? uDay * 28 : days < 7 ? 1000 * 60 * 60 : uDay;
+              const timeRow = document.createElement('div');
+              timeRow.style.cssText = 'margin-top:10px;font-size:11px;opacity:0.8;';
+              // textContent: the field name comes from the page / project JSON
+              const timeLabel = document.createElement('span');
+              timeLabel.style.cssText = 'font-weight:600;';
+              timeLabel.textContent = String(rt.style.timefield || timeField);
+              const timeSpan = document.createElement('span');
+              timeSpan.className = 'ix-legend-time-span';
+              timeRow.append(timeLabel, ': ', timeSpan);
+              bodyEl.appendChild(timeRow);
+              const timeSlider = document.createElement('input');
+              timeSlider.type = 'range';
+              timeSlider.min = String(uMin);
+              timeSlider.max = String(uMax);
+              timeSlider.value = String(uMin);
+              timeSlider.style.cssText = 'width:100%;margin-top:0.4em;'; // flat's own slider width (legend.js 2503)
+              timeRow.appendChild(timeSlider);
+              const spanEl = () => timeRow.querySelector('.ix-legend-time-span');
+              const applyTimeFrame = () => {
+                const v = Number(timeSlider.value);
+                if (v <= uMin) {
+                  // flat: slider at its start position = every record
+                  rt.setTimeFrame(null, null);
+                  spanEl().textContent = '';
+                } else {
+                  rt.setTimeFrame(v, v + range);
+                  // flat's span text (legend.js 2737-2745): date - date
+                  // for a day-and-up window, date-time under it
+                  spanEl().textContent = range < uDay
+                    ? new Date(v).toLocaleDateString() + ' ' + new Date(v).toLocaleTimeString()
+                    : new Date(v).toLocaleDateString() + ' - ' + new Date(v + range).toLocaleDateString();
+                }
+                // a discrete control, not a pan/zoom stream: full refresh,
+                // so the rows/totals (onRedraw → computeTotals) follow live
+                refresh();
+              };
+              timeSlider.addEventListener('input', applyTimeFrame);
+              const rangeChoices = [
+                ['hour', 1000 * 60 * 60, days < 2],
+                ['day', uDay, days > 1],
+                ['week', uDay * 7, days > 13],
+                ['month', uDay * 28, days > 55],
+                ['year', uDay * 356, days > 365]
+              ].filter(c => c[2]);
+              if (rangeChoices.length > 1) {
+                const btnRow = document.createElement('div');
+                btnRow.style.cssText = 'display:flex;gap:4px;margin-top:4px;';
+                rangeChoices.forEach(([name, ms]) => {
+                  const b = document.createElement('button');
+                  b.type = 'button';
+                  b.textContent = name;
+                  const paint = active => {
+                    b.style.cssText = 'background:transparent;border:1px solid '
+                      + (active ? 'currentColor' : 'rgba(128,128,128,0.5)')
+                      + ';color:inherit;font:inherit;font-size:10px;padding:1px 7px;'
+                      + 'border-radius:4px;cursor:pointer;opacity:' + (active ? 1 : 0.55) + ';'
+                      + (active ? 'font-weight:600;' : '');
+                  };
+                  paint(ms === range);
+                  b.addEventListener('click', () => {
+                    range = ms;
+                    [...btnRow.children].forEach(x => paint(x === b));
+                    applyTimeFrame();
+                  });
+                  btnRow.appendChild(b);
+                });
+                timeRow.appendChild(btnRow);
+              }
+            }
+          }
+
           // Chart-size slider — real engine's own range (legend.js:
           // 3196-3202), 100% == scale:1, wired to changeThemeStyle(
           // themeId,"scale:"+pct/100,"set")+redrawTheme there; this
@@ -4471,20 +4595,30 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             : Math.round((styleNum(rt.style.scale) || 1) * 100);
           const sliderLabel = isOpacitySlider ? 'Opacity' : 'Chart size';
           sliderRow.innerHTML = sliderLabel + ': <span class="ix-legend-scale-val">' + initialPct + '</span>%';
-          bodyEl.appendChild(sliderRow);
+          // flat's center legend: the slider is INLINE in the chips row
+          // (legend.css 541-550: inline-block, one item width, no wrap,
+          // its input 80px) — a sibling of the chips container so the
+          // row re-render can't wipe it
+          const sliderHost = legendCenter && rowsScroll ? rowsScroll : bodyEl;
+          sliderRow.style.cssText = legendCenter && rowsScroll
+            ? 'display:inline-block;margin:0 0 0.5em 1.5em;font-size:11px;opacity:0.8;white-space:nowrap;'
+            : sliderRow.style.cssText;
+          sliderHost.appendChild(sliderRow);
           const slider = document.createElement('input');
           slider.type = 'range';
           slider.min = isOpacitySlider ? '0' : '25';
           slider.max = isOpacitySlider ? '100' : '200';
           slider.value = String(initialPct);
-          slider.style.cssText = 'width:50%;margin-top:0.4em;'; // flat's own inline slider style (legend.js 2392)
+          slider.style.cssText = legendCenter && rowsScroll
+            ? 'width:80px;vertical-align:middle;margin:0 0 0 0.5em;' // flat's inline slider width (legend.css 548)
+            : 'width:50%;margin-top:0.4em;'; // flat's own inline slider style (legend.js 2392)
           slider.addEventListener('input', () => {
             const pct = parseInt(slider.value, 10);
             sliderRow.querySelector('.ix-legend-scale-val').textContent = pct;
             rt.setStyle(isOpacitySlider ? { fillopacity: pct / 100 } : { scale: pct / 100 });
             quietRefresh();
           });
-          bodyEl.appendChild(slider);
+          sliderHost.appendChild(slider);
           }
         }
       };
