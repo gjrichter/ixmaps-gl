@@ -1,0 +1,2343 @@
+{
+ "page": "examples/box_title_user.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-user-box-user-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "b659ae1e9a9269c0",
+     "setDigest": "4a695e934fb983c2",
+     "columnDigests": {
+      "getIcon": "f6bde7ee66550081",
+      "getPixelOffset": "0a1d34cd6fe606f6",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "b5af7d076cb77859"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       11.912925
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       27.5,
+       80
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 42.5,
+        "anchorY": 27.5,
+        "height": 55,
+        "id": "box|41.5|26.5|0|0|white|1|#bbbbbb|0.3",
+        "url": "#fc178c5d:530",
+        "width": 85
+       },
+       [
+        11.912925,
+        -8.382709
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       27.5
+      ],
+      [
+       {
+        "anchorX": 33,
+        "anchorY": 31,
+        "height": 62,
+        "id": "box|31|29|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#cb9e037a:486",
+        "width": 66
+       },
+       [
+        4.585763,
+        -8.382709
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       31
+      ],
+      [
+       {
+        "anchorX": 41.5,
+        "anchorY": 33.5,
+        "height": 67,
+        "id": "box|39.5|31.5|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#56fcf052:658",
+        "width": 83
+       },
+       [
+        6.43642,
+        -8.382709
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       33.5
+      ],
+      [
+       {
+        "anchorX": 35,
+        "anchorY": 80,
+        "height": 160,
+        "id": "box|33|78|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#5e69c919:950",
+        "width": 70
+       },
+       [
+        1.781924,
+        -30.662336
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       80
+      ],
+      [
+       {
+        "anchorX": 35.5,
+        "anchorY": 37.5,
+        "height": 75,
+        "id": "box|33.5|35.5|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#e114d006:586",
+        "width": 71
+       },
+       [
+        0,
+        -8.382709
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       37.5
+      ],
+      [
+       {
+        "anchorX": 40,
+        "anchorY": 40,
+        "height": 80,
+        "id": "box|38|38|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#e0d5db7a:622",
+        "width": 80
+       },
+       [
+        0,
+        -8.382709
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       40
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-user-box",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "pickable": true,
+      "radiusMinPixels": 1,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "9ada1c7592e1f440",
+     "setDigest": "7d3c111119ba1be9",
+     "columnDigests": {
+      "getPosition": "4813d597ce7d4942",
+      "getRadius": "c00acb6a194b5246"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       9.936263,
+       19.828867
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.5
+       ],
+       9.936263
+      ],
+      [
+       [
+        9.05,
+        45.5
+       ],
+       11.919026
+      ],
+      [
+       [
+        9.33,
+        45.5
+       ],
+       14.347404
+      ],
+      [
+       [
+        9.12,
+        45.5
+       ],
+       15.74408
+      ],
+      [
+       [
+        9.26,
+        45.5
+       ],
+       17.61896
+      ],
+      [
+       [
+        9.4,
+        45.5
+       ],
+       19.828867
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-titles-user-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "9e2493b474182433",
+     "setDigest": "57a63b147a17273d",
+     "columnDigests": {
+      "getPixelOffset": "b20b8e2e620d45ae",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "2e45944092a3b058",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -16.70972,
+       -7.877037
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       11.139813,
+       11.139813
+      ]
+     },
+     "sample": [
+      [
+       [
+        -7.877037,
+        -20.648239
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       11.139813,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -9.647361,
+        -21.5334
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       11.139813,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -11.815556,
+        -22.617498
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       11.139813,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -13.062589,
+        -67.800267
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       11.139813,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "start"
+      ],
+      [
+       [
+        -14.736588,
+        -24.078014
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       11.139813,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -16.70972,
+        -25.06458
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       11.139813,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-box-user-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
+      "getLineColor": [
+       221,
+       221,
+       221,
+       255
+      ],
+      "getLineWidth": 0.111398,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "8e37c6f966ed8973",
+     "setDigest": "49f1204e1706ac85",
+     "columnDigests": {
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "6ff25b60db75a82d"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       9.715013,
+       20.608654
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.35
+       ],
+       9.715013
+      ],
+      [
+       [
+        9.05,
+        45.35
+       ],
+       11.898412
+      ],
+      [
+       [
+        9.33,
+        45.35
+       ],
+       14.572519
+      ],
+      [
+       [
+        9.12,
+        45.35
+       ],
+       16.110526
+      ],
+      [
+       [
+        9.26,
+        45.35
+       ],
+       18.175125
+      ],
+      [
+       [
+        9.4,
+        45.35
+       ],
+       20.608654
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-user-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "pickable": true,
+      "radiusMinPixels": 1,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "411da472ff034af2",
+     "setDigest": "bbe04d80cae9483f",
+     "columnDigests": {
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "c00acb6a194b5246"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       9.936263,
+       19.828867
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.35
+       ],
+       9.936263
+      ],
+      [
+       [
+        9.05,
+        45.35
+       ],
+       11.919026
+      ],
+      [
+       [
+        9.33,
+        45.35
+       ],
+       14.347404
+      ],
+      [
+       [
+        9.12,
+        45.35
+       ],
+       15.74408
+      ],
+      [
+       [
+        9.26,
+        45.35
+       ],
+       17.61896
+      ],
+      [
+       [
+        9.4,
+        45.35
+       ],
+       19.828867
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-titles-user-circular",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "0b403c8ee4c72b1d",
+     "setDigest": "0b403c8ee4c72b1d",
+     "columnDigests": {
+      "getPixelOffset": "811ae65bcedf4c16",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "2e45944092a3b058",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "5e007831773263c4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       1.113981,
+       1.113981
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       11.139813,
+       11.139813
+      ]
+     },
+     "sample": [
+      [
+       [
+        1.113981,
+        11.942975
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       11.139813,
+       "Gamma",
+       "middle"
+      ],
+      [
+       [
+        1.113981,
+        14.126375
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       11.139813,
+       "Alpha",
+       "middle"
+      ],
+      [
+       [
+        1.113981,
+        16.800482
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       11.139813,
+       "Epsilon",
+       "middle"
+      ],
+      [
+       [
+        1.113981,
+        18.338489
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       11.139813,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "middle"
+      ],
+      [
+       [
+        1.113981,
+        20.403088
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       11.139813,
+       "Delta",
+       "middle"
+      ],
+      [
+       [
+        1.113981,
+        22.836617
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       11.139813,
+       "Zeta",
+       "middle"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "user-box",
+     "flags": [
+      "BOX",
+      "CHART",
+      "SIZE",
+      "TITLE",
+      "USER"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 90.0019,
+       "min": 20
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 20,
+     "valueMax": 90,
+     "valueMedian": 45,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "user-circular",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "CIRCULARBOX",
+      "SIZE",
+      "TITLE",
+      "USER"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 90.0019,
+       "min": 20
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 20,
+     "valueMax": 90,
+     "valueMedian": 45,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "user-box": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "user-circular": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-user-box-user-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "9fd8b2b4312891bb",
+     "setDigest": "45cbbec9ea8c620c",
+     "columnDigests": {
+      "getIcon": "8cb21fda45dc3c02",
+      "getPixelOffset": "c2fcb83a894c27a7",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "c192f8c74e038b96"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       15.021943
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       35.5,
+       100
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 54.5,
+        "anchorY": 35.5,
+        "height": 71,
+        "id": "box|52.5|33.5|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#edc8be87:762",
+        "width": 109
+       },
+       [
+        15.021943,
+        -10.561552
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       35.5
+      ],
+      [
+       {
+        "anchorX": 41,
+        "anchorY": 38.5,
+        "height": 77,
+        "id": "box|39|36.5|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#b8252ed0:698",
+        "width": 82
+       },
+       [
+        5.786752,
+        -10.561552
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       38.5
+      ],
+      [
+       {
+        "anchorX": 52,
+        "anchorY": 42,
+        "height": 84,
+        "id": "box|50|40|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#9f20c5e5:862",
+        "width": 104
+       },
+       [
+        8.121,
+        -10.561552
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       42
+      ],
+      [
+       {
+        "anchorX": 44,
+        "anchorY": 100,
+        "height": 200,
+        "id": "box|42|98|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#f5d54e51:1330",
+        "width": 88
+       },
+       [
+        2.254526,
+        -38.632122
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       100
+      ],
+      [
+       {
+        "anchorX": 44,
+        "anchorY": 46.5,
+        "height": 93,
+        "id": "box|42|44.5|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#fb738f40:778",
+        "width": 88
+       },
+       [
+        0,
+        -10.561552
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       46.5
+      ],
+      [
+       {
+        "anchorX": 49.5,
+        "anchorY": 50,
+        "height": 100,
+        "id": "box|47.5|48|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#df88fa60:958",
+        "width": 99
+       },
+       [
+        0,
+        -10.561552
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       50
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-user-box",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "pickable": true,
+      "radiusMinPixels": 1,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "8fa8fc4e711de0af",
+     "setDigest": "66f7dbfa6f1467b8",
+     "columnDigests": {
+      "getPosition": "4813d597ce7d4942",
+      "getRadius": "14305f5dc5874771"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       12.518907,
+       24.982808
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.5
+       ],
+       12.518907
+      ],
+      [
+       [
+        9.05,
+        45.5
+       ],
+       15.017031
+      ],
+      [
+       [
+        9.33,
+        45.5
+       ],
+       18.076597
+      ],
+      [
+       [
+        9.12,
+        45.5
+       ],
+       19.836298
+      ],
+      [
+       [
+        9.26,
+        45.5
+       ],
+       22.198498
+      ],
+      [
+       [
+        9.4,
+        45.5
+       ],
+       24.982808
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-titles-user-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "d1c13cb0ac0bb3e2",
+     "setDigest": "fe116c8191a5b349",
+     "columnDigests": {
+      "getPixelOffset": "c9d895ba03b5f881",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "c0faac8b0413fb45",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -21.052928,
+       -9.924445
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       14.035285,
+       14.035285
+      ]
+     },
+     "sample": [
+      [
+       [
+        -9.924445,
+        -26.01515
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       14.035285,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -12.154913,
+        -27.130384
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       14.035285,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -14.886668,
+        -28.496262
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       14.035285,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -16.45783,
+        -85.422983
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       14.035285,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "start"
+      ],
+      [
+       [
+        -18.566937,
+        -30.336396
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       14.035285,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -21.052928,
+        -31.579392
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       14.035285,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-box-user-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
+      "getLineColor": [
+       221,
+       221,
+       221,
+       255
+      ],
+      "getLineWidth": 0.140353,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "eef0d603f7071ec6",
+     "setDigest": "8d48fdaa2832daa9",
+     "columnDigests": {
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "be899a49cd59683a"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       12.240149,
+       25.965278
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.35
+       ],
+       12.240149
+      ],
+      [
+       [
+        9.05,
+        45.35
+       ],
+       14.99106
+      ],
+      [
+       [
+        9.33,
+        45.35
+       ],
+       18.360224
+      ],
+      [
+       [
+        9.12,
+        45.35
+       ],
+       20.297991
+      ],
+      [
+       [
+        9.26,
+        45.35
+       ],
+       22.899223
+      ],
+      [
+       [
+        9.4,
+        45.35
+       ],
+       25.965278
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-user-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "pickable": true,
+      "radiusMinPixels": 1,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "455a95724ded5bea",
+     "setDigest": "2a06860a3e075b5d",
+     "columnDigests": {
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "14305f5dc5874771"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       12.518907,
+       24.982808
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.35
+       ],
+       12.518907
+      ],
+      [
+       [
+        9.05,
+        45.35
+       ],
+       15.017031
+      ],
+      [
+       [
+        9.33,
+        45.35
+       ],
+       18.076597
+      ],
+      [
+       [
+        9.12,
+        45.35
+       ],
+       19.836298
+      ],
+      [
+       [
+        9.26,
+        45.35
+       ],
+       22.198498
+      ],
+      [
+       [
+        9.4,
+        45.35
+       ],
+       24.982808
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-titles-user-circular",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "78f22299e09a66dc",
+     "setDigest": "78f22299e09a66dc",
+     "columnDigests": {
+      "getPixelOffset": "b023b213685a3568",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "c0faac8b0413fb45",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "5e007831773263c4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       1.403529,
+       1.403529
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       14.035285,
+       14.035285
+      ]
+     },
+     "sample": [
+      [
+       [
+        1.403529,
+        15.047206
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       14.035285,
+       "Gamma",
+       "middle"
+      ],
+      [
+       [
+        1.403529,
+        17.798117
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       14.035285,
+       "Alpha",
+       "middle"
+      ],
+      [
+       [
+        1.403529,
+        21.167281
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       14.035285,
+       "Epsilon",
+       "middle"
+      ],
+      [
+       [
+        1.403529,
+        23.105048
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       14.035285,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "middle"
+      ],
+      [
+       [
+        1.403529,
+        25.70628
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       14.035285,
+       "Delta",
+       "middle"
+      ],
+      [
+       [
+        1.403529,
+        28.772335
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       14.035285,
+       "Zeta",
+       "middle"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "user-box",
+     "flags": [
+      "BOX",
+      "CHART",
+      "SIZE",
+      "TITLE",
+      "USER"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 90.0019,
+       "min": 20
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 20,
+     "valueMax": 90,
+     "valueMedian": 45,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "user-circular",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "CIRCULARBOX",
+      "SIZE",
+      "TITLE",
+      "USER"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 90.0019,
+       "min": 20
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 20,
+     "valueMax": 90,
+     "valueMedian": 45,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "user-box": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "user-circular": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-user-box-user-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "5c549c8535d188c4",
+     "setDigest": "09e093f17a424a02",
+     "columnDigests": {
+      "getIcon": "7286f6b471b528dd",
+      "getPixelOffset": "cd160649bbf7fd6b",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "fb199bf778ab6f9f"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       9.466169
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       22,
+       64
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 34,
+        "anchorY": 22,
+        "height": 44,
+        "id": "box|33|21|0|0|white|1|#bbbbbb|0.3",
+        "url": "#ab15723c:390",
+        "width": 68
+       },
+       [
+        9.466169,
+        -6.653361
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       22
+      ],
+      [
+       {
+        "anchorX": 25.5,
+        "anchorY": 24,
+        "height": 48,
+        "id": "box|24.5|23|0|0|white|1|#bbbbbb|0.3",
+        "url": "#53a7913d:334",
+        "width": 51
+       },
+       [
+        3.647541,
+        -6.653361
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       24
+      ],
+      [
+       {
+        "anchorX": 33.5,
+        "anchorY": 27,
+        "height": 54,
+        "id": "box|31.5|25|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#91072fbf:458",
+        "width": 67
+       },
+       [
+        5.118622,
+        -6.653361
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       27
+      ],
+      [
+       {
+        "anchorX": 28.5,
+        "anchorY": 64,
+        "height": 128,
+        "id": "box|26.5|62|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#48fca340:762",
+        "width": 57
+       },
+       [
+        1.422469,
+        -24.336712
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       64
+      ],
+      [
+       {
+        "anchorX": 28.5,
+        "anchorY": 30,
+        "height": 60,
+        "id": "box|26.5|28|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#7491f7ee:482",
+        "width": 57
+       },
+       [
+        0,
+        -6.653361
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       30
+      ],
+      [
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "box|30|30|0|0.25|white|1|#bbbbbb|0.3",
+        "url": "#fcf24747:490",
+        "width": 64
+       },
+       [
+        0,
+        -6.653361
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       32
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-user-box",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "pickable": true,
+      "radiusMinPixels": 1,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "dab5e3692aff6fd9",
+     "setDigest": "0778846dd1b7cf0c",
+     "columnDigests": {
+      "getPosition": "4813d597ce7d4942",
+      "getRadius": "7c8c19dbbafd7819"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       7.886417,
+       15.738183
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.5
+       ],
+       7.886417
+      ],
+      [
+       [
+        9.05,
+        45.5
+       ],
+       9.460137
+      ],
+      [
+       [
+        9.33,
+        45.5
+       ],
+       11.387542
+      ],
+      [
+       [
+        9.12,
+        45.5
+       ],
+       12.496085
+      ],
+      [
+       [
+        9.26,
+        45.5
+       ],
+       13.984178
+      ],
+      [
+       [
+        9.4,
+        45.5
+       ],
+       15.738183
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-titles-user-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "a17747758fd63a4d",
+     "setDigest": "4f6fab17a5b88ca8",
+     "columnDigests": {
+      "getPixelOffset": "9e8cf991366ff1bc",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "8253dc8524fe314e",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -13.262513,
+       -6.252009
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       8.841676,
+       8.841676
+      ]
+     },
+     "sample": [
+      [
+       [
+        -6.252009,
+        -16.388518
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       8.841676,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -7.657116,
+        -17.091071
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       8.841676,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -9.378013,
+        -17.95152
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       8.841676,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -10.367783,
+        -53.813107
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       8.841676,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "start"
+      ],
+      [
+       [
+        -11.696438,
+        -19.110732
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       8.841676,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -13.262513,
+        -19.89377
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       8.841676,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-box-user-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
+      "getLineColor": [
+       221,
+       221,
+       221,
+       255
+      ],
+      "getLineWidth": 0.088417,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "6c529398bc49f89d",
+     "setDigest": "2c9092f1c4f3d558",
+     "columnDigests": {
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "0bd4e852d41ba5fc"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       7.710811,
+       16.3571
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.35
+       ],
+       7.710811
+      ],
+      [
+       [
+        9.05,
+        45.35
+       ],
+       9.443776
+      ],
+      [
+       [
+        9.33,
+        45.35
+       ],
+       11.566216
+      ],
+      [
+       [
+        9.12,
+        45.35
+       ],
+       12.786933
+      ],
+      [
+       [
+        9.26,
+        45.35
+       ],
+       14.425606
+      ],
+      [
+       [
+        9.4,
+        45.35
+       ],
+       16.3571
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-user-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "pickable": true,
+      "radiusMinPixels": 1,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "a635b43241215a75",
+     "setDigest": "de45fa2f7572f5bb",
+     "columnDigests": {
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "7c8c19dbbafd7819"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       7.886417,
+       15.738183
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.35
+       ],
+       7.886417
+      ],
+      [
+       [
+        9.05,
+        45.35
+       ],
+       9.460137
+      ],
+      [
+       [
+        9.33,
+        45.35
+       ],
+       11.387542
+      ],
+      [
+       [
+        9.12,
+        45.35
+       ],
+       12.496085
+      ],
+      [
+       [
+        9.26,
+        45.35
+       ],
+       13.984178
+      ],
+      [
+       [
+        9.4,
+        45.35
+       ],
+       15.738183
+      ]
+     ]
+    },
+    {
+     "id": "ix-user-titles-user-circular",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "ca3d8651cabbac04",
+     "setDigest": "059e0f8f1fc3c4fe",
+     "columnDigests": {
+      "getPixelOffset": "daabd0b15bb48b16",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "8253dc8524fe314e",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "5e007831773263c4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0.884168,
+       0.884168
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       8.841676,
+       8.841676
+      ]
+     },
+     "sample": [
+      [
+       [
+        0.884168,
+        9.479146
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       8.841676,
+       "Gamma",
+       "middle"
+      ],
+      [
+       [
+        0.884168,
+        11.212111
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       8.841676,
+       "Alpha",
+       "middle"
+      ],
+      [
+       [
+        0.884168,
+        13.334551
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       8.841676,
+       "Epsilon",
+       "middle"
+      ],
+      [
+       [
+        0.884168,
+        14.555268
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       8.841676,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "middle"
+      ],
+      [
+       [
+        0.884168,
+        16.193941
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       8.841676,
+       "Delta",
+       "middle"
+      ],
+      [
+       [
+        0.884168,
+        18.125435
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       8.841676,
+       "Zeta",
+       "middle"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "user-box",
+     "flags": [
+      "BOX",
+      "CHART",
+      "SIZE",
+      "TITLE",
+      "USER"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 90.0019,
+       "min": 20
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 20,
+     "valueMax": 90,
+     "valueMedian": 45,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "user-circular",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "CIRCULARBOX",
+      "SIZE",
+      "TITLE",
+      "USER"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 90.0019,
+       "min": 20
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 20,
+     "valueMax": 90,
+     "valueMedian": 45,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "user-box": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "user-circular": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

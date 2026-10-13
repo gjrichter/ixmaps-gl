@@ -13486,7 +13486,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (def) chartHost.defs.appendChild(def.cloneNode(true));
         }
         items.push({ d, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit,
-          r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2 });
+          r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2,
+          // the chart's measured box (flat's getBox of the chart group) in px
+          // around the map position: the pane draws a chart point at
+          // p + s · (point − origin)
+          ext: [(chart.bb.x - chart.ox) * pxPerUnit, (chart.bb.y - chart.oy) * pxPerUnit,
+            (chart.bb.x + chart.bb.width - chart.ox) * pxPerUnit, (chart.bb.y + chart.bb.height - chart.oy) * pxPerUnit] });
       }
       if (glDebug()) console.info(`[ixmaps-gl debug] ${themeIdOf(this)}: zoom ${mapLibreToFlatZoom(liveZoom).toFixed(2)}, ${combined.length} charts, ${items.length} drawn${this._viewMoving ? ' (moving)' : ''}`);
       if (!items.length) {
@@ -13507,7 +13512,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // picking: a transparent circle per chart — the VISIBLE chart is the
       // live SVG in the pane; this deck layer only serves hover, click and
       // the tooltips (pickedFeature unwraps the {d, icon} entry shape)
-      this._userChartLastLayers = [new ScatterplotLayer({
+      // BOX / TITLE: flat's chart-group box around the chart as the page's
+      // function drew it (its measured box). The chart itself is a live SVG in
+      // the pane above the deck canvas, so the box lies under it and the title
+      // (outside the box) beside it
+      const extOf = new Map(items.map(it => [it.d, it.ext]));
+      const boxRows = this._boxRows(items.map(it => it.d), {
+        unit: objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1), liveZoom, extentOf: d => extOf.get(d) });
+      const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
+        unit: objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1), liveZoom,
+        positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
+        ids: { circle: `ix-user-box-${this.name}`, icon: `ix-user-box-${this.name}`, polygons: `ix-user-box-polygons-${this.name}`, titles: `ix-user-titles-${this.name}` }
+      }) : { box: [], titles: [] };
+      this._userChartLastLayers = [...boxLayers.box, new ScatterplotLayer({
         id: `ix-bubbles-${this.name}`,
         data: items.map(it => ({ d: it.d, icon: true, r: it.r })),
         pickable: true,
@@ -13516,7 +13533,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         radiusUnits: 'pixels', radiusMinPixels: 1,
         stroked: false, filled: true, getFillColor: [0, 0, 0, 0],
         parameters: ICON_LAYER_GLOBE_PARAMETERS
-      })];
+      }), ...boxLayers.titles];
       return this._userChartLastLayers;
     }
     // the chart's SVG, cached by its draw parameters — a failing draw
@@ -13571,7 +13588,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const vx = bb.x - pad, vy = bb.y - pad, vw = bb.width + 2 * pad, vh = bb.height + 2 * pad;
           // the chart's origin (0,0 — or the point flat moves it to, ret) sits at the map position
           const ox = (ret && ret.x) || 0, oy = (ret && ret.y) || 0;
-          chart = { vx, vy, vw, vh, ox, oy, markup, ids: [...ids],
+          chart = { vx, vy, vw, vh, ox, oy, markup, ids: [...ids], bb: { x: bb.x, y: bb.y, width: bb.width, height: bb.height },
             svg: `<svg xmlns="${SVG_NS}" width="__W__" height="__H__" viewBox="${vx} ${vy} ${vw} ${vh}"><defs>${defs}</defs>${markup}</svg>` };
         }
       } catch (e) {

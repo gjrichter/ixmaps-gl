@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>BOX · TITLE · USER</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>BOX · TITLE · USER</b>
+  <span>A USER chart (the page draws it with its own function) with its box and title: the box is the chart's measured size.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data: six items per layer, a row of layers one above the other
+  function items(lat0) {
+    var rows = [["Alpha", 9, 4, 2, 30], ["Beta, long name that wraps", 3, 8, 1, 55], ["Gamma", 6, 6, 6, 20],
+                ["Delta", 1, 2, 9, 70], ["Epsilon", 7, 1, 3, 45], ["Zeta", 4, 5, 8, 90]];
+    return { type: "FeatureCollection", features: rows.map(function (r, i) { return {
+      type: "Feature", properties: { name: r[0], a: r[1], b: r[2], c: r[3], n: r[4] },
+      geometry: { type: "Point", coordinates: [9.05 + i * 0.07, lat0] } }; }) };
+  }
+  function themeAt(name, lat0, type, binding, style) {
+    return ixmaps.layer(name, layer => layer
+      .data({ obj: items(lat0), type: "geojson" })
+      .binding(Object.assign({ geo: "geometry", title: "name" }, binding))
+      .type(type)
+      .style(Object.assign({ colorscheme: ["#e8a33d", "#3d8be8", "#5bb55b"], scale: "2", showdata: "true" }, style || {}))
+      .meta({ title: name, tooltip: "<b>{{name}}</b>" })
+    );
+  }
+  // the page's own chart function: a bar whose width follows the size, with its value
+  ixmaps.boxchart = function (doc, a) {
+    var NS = "http://www.w3.org/2000/svg", g = a.target, s = a.size;
+    var r = doc.createElementNS(NS, "rect");
+    r.setAttribute("x", -s / 2); r.setAttribute("y", -s / 4); r.setAttribute("width", s); r.setAttribute("height", s / 2);
+    r.setAttribute("rx", s / 10); r.setAttribute("fill", a.color); g.appendChild(r);
+    var t = doc.createElementNS(NS, "text");
+    t.setAttribute("x", 0); t.setAttribute("y", s / 12); t.setAttribute("text-anchor", "middle");
+    t.setAttribute("font-size", s / 4); t.setAttribute("fill", "#fff"); t.textContent = String(a.value); g.appendChild(t);
+    return {};
+  };
+  var L0 = themeAt("user-box", 45.5, "CHART|USER|SIZE|BOX|TITLE", { value: "n", size: "n" }, { userdraw: "boxchart", colorscheme: ["#3d8be8"], scale: "0.3" });
+  var L1 = themeAt("user-circular", 45.35, "CHART|USER|SIZE|BOX|CIRCULARBOX|TITLE|BOTTOMTITLE", { value: "n", size: "n" }, { userdraw: "boxchart", colorscheme: ["#e8a33d"], scale: "0.3" });
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([45.4, 9.2], 10)
+      .layer(L0)
+      .layer(L1)
+  );
+</script>
+</body>
+</html>

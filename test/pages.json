@@ -35,6 +35,7 @@
     "examples/box_title_pie.html",
     "examples/box_title_plot.html",
     "examples/box_title_label.html",
+    "examples/box_title_user.html",
     "examples/dot_categorical.html",
     "examples/dot_range_equidistant.html",
     "examples/plot_curves.html",
