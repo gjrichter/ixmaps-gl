@@ -14164,31 +14164,28 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (title) { e[0] = Math.min(e[0], title.extent[0]); e[1] = Math.min(e[1], title.extent[1]) + 0.1 * titleFontPx; e[2] = Math.max(e[2], title.extent[2]); e[3] = Math.max(e[3], title.extent[3]); }
           rect = [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin];
         }
-        return { d, r, w, boxR, rect, title };
+        // geometry/properties of the chart's feature on the row: the
+        // circular box is pickable, and the tooltip (buildTooltipHtml,
+        // the click-pin) works on the feature's own properties
+        return { d, geometry: d.geometry, properties: d.properties, r, w, boxR, rect, title };
       }) : null;
       if (boxShown && circular) {
         const boxNone = isNoneColor(this.style.boxcolor), borderNone = isNoneColor(this.style.bordercolor);
         const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : this.style.boxcolor || '#eeeeee');
         const boxAlpha = boxNone ? 0 : Math.round(255 * boxOpacity);
         const borderRgb = borderNone ? null : hexOrNamedToRgb(this.style.bordercolor || '#dddddd');
-        // ScatterplotLayer has no pixel offset: a moved chart (align,
-        // offsetx/offsety) gets its circle as an icon
-        if (alignOf.active) layers.push(new IconLayer({
-          id: `ix-box-${this.name}-g${this._iconGeneration}`,
-          data: boxLayout, pickable: false,
-          getPosition: b => b.d.geometry.coordinates,
-          getIcon: b => this._buildSingleIcon(boxRgb, boxAlpha / 255, 'circle', borderRgb,
-            borderNone ? 0 : Math.round(unitPx / 20 * BUBBLE_ICON_SIZE / Math.max(1, 2 * b.boxR) * 4) / 4),
-          getSize: b => b.boxR * 2,
-          getPixelOffset: b => alignOf(b.d),
-          sizeUnits: 'pixels',
-          billboard: true,
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-        else layers.push(new ScatterplotLayer({
+        // Always a ScatterplotLayer: its shader circle is smooth at any
+        // size, where the icon a moved chart (align, offsetx/offsety) used
+        // — a 48px canvas texture deck.gl scales up — pixelated with
+        // large boxes. ScatterplotLayer has no pixel offset, so the
+        // chart's align/offsetx/offsety move is baked into map
+        // coordinates (pixelOffsetLngLat). Pickable: flat's box is part
+        // of the chart group, so hovering it fires the chart's tooltip —
+        // the symbols sit above it, so they keep their own
+        layers.push(new ScatterplotLayer({
           id: `ix-box-${this.name}`,
-          data: boxLayout, pickable: false,
-          getPosition: b => b.d.geometry.coordinates,
+          data: boxLayout, pickable: true,
+          getPosition: b => pixelOffsetLngLat(b.d.geometry.coordinates, alignOf(b.d), liveZoom),
           getRadius: b => b.boxR,
           radiusUnits: 'pixels',
           stroked: !borderNone,
@@ -14706,7 +14703,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       };
       const shapeOf = i => { const sh = symbols && (symbols[i] || symbols[0]); return normalizeSymbolShape(sh); };
       const colorOf = i => this.classRgb(i);
-      const parts = [], glows = [];
+      const allParts = [], allGlows = [];
       for (const d of charts) {
         // parts: the record's own field values (a per-item chart, or the
         // single-record cell of an aggregated one); series: a multi-record
@@ -14744,12 +14741,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         d._seqLast = layout[layout.length - 1].r;
         const items = layout.map(p => {
           const item = { geometry: d.geometry, properties: d.properties, chart: d, part: p };
-          if (glowParts.has(p.i)) glows.push(item);
+          if (glowParts.has(p.i)) allGlows.push(item);
           return item;
         });
         // STAR: the first part (its center) is put on top at the end (23145)
         if (star && items.length > 1) items.push(items.shift());
-        parts.push(...items);
+        allParts.push(...items);
       }
       const alignOf = this._chartAlignFn(liveZoom, d => (d.chart || d)._seqLast || 0);
       const offsetOf = item => { const o = alignOf(item.chart); return [o[0] + item.part.x, o[1] + item.part.y]; };
@@ -14773,7 +14770,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const titleUpper = scaleDenom(st.titleupper);
       const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title
         && !(titleUpper && scaleDenominatorAt(liveZoom) > titleUpper);
-      let boxLayout = null;
+      let boxLayoutAll = null;
+      // per-chart overlap bands (see the band computation in the
+      // boxShown block): a Map chart → band index, filled only when
+      // boxes are drawn; empty (single band) otherwise
+      const bandOfChart = new Map();
+      let nBands = 1;
       if (boxShown) {
         const boxMarginU = styleNum(st.boxmargin) || 2;
         const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
@@ -14782,7 +14784,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           ? Math.max(0.9 * unit, Math.min(w / 5, 14 * unit / (styleNum(st.scale) || 1)))
           : 5 * unit) * titleScale;
         const alignRight = /right/.test(String(st.align || ''));
-        boxLayout = charts.filter(d => d._seqExtent).map(d => {
+        boxLayoutAll = charts.filter(d => d._seqExtent).map(d => {
           const [ex0, ey0, ex1, ey1] = d._seqExtent;
           const w = ex1 - ex0, h = ey1 - ey0;
           // flat centers the circular box (and its title) on the chart's
@@ -14822,232 +14824,293 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             if (title) { e[0] = Math.min(e[0], title.extent[0]); e[1] = Math.min(e[1], title.extent[1]) + 0.1 * title.f; e[2] = Math.max(e[2], title.extent[2]); e[3] = Math.max(e[3], title.extent[3]); }
             rect = [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin];
           }
-          return { d, w, boxR, rect, title, boxOpacity, cx, cy };
+          // geometry/properties of the chart's feature on the row: the
+          // circular box is pickable, and the tooltip (buildTooltipHtml,
+          // the click-pin) works on the feature's own properties
+          return { d, geometry: d.geometry, properties: d.properties, w, boxR, rect, title, boxOpacity, cx, cy };
         });
-        if (circular) {
-          const boxNone = isNoneColor(st.boxcolor), borderNone = isNoneColor(st.bordercolor);
-          const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : st.boxcolor || '#eeeeee');
-          const borderRgb = borderNone ? null : hexOrNamedToRgb(st.bordercolor || '#dddddd');
-          // ScatterplotLayer has no pixel offset: a moved chart (align,
-          // offsetx/offsety) gets its circle as an icon — at the chart's
-          // bounding-box center, flat's circular box position (18793)
-          if (alignOf.active) layers.push(new IconLayer({
-            id: `ix-seqbox-${this.name}-g${this._iconGeneration}`,
-            data: boxLayout, pickable: false,
-            getPosition: b => b.d.geometry.coordinates,
-            getIcon: b => this._buildSingleIcon(boxRgb, b.boxOpacity, 'circle', borderRgb,
-              borderNone ? 0 : Math.round(unit / 20 * BUBBLE_ICON_SIZE / Math.max(1, 2 * b.boxR) * 4) / 4),
-            getSize: b => b.boxR * 2,
-            getPixelOffset: b => { const o = alignOf(b.d); return [o[0] + b.cx, o[1] + b.cy]; },
-            sizeUnits: 'pixels', billboard: true,
-            parameters: ICON_LAYER_GLOBE_PARAMETERS
-          }));
-          else layers.push(new ScatterplotLayer({
-            id: `ix-seqbox-${this.name}`,
-            data: boxLayout, pickable: false,
-            getPosition: b => {
-              // the circle at the chart's bbox center: with no align
-              // offset it moves in map coordinates
-              const o = pixelOffsetLngLat(b.d.geometry.coordinates, [b.cx, b.cy], liveZoom);
-              return o;
-            },
-            getRadius: b => b.boxR,
-            radiusUnits: 'pixels',
-            stroked: !borderNone,
-            getFillColor: b => [...boxRgb.slice(0, 3), Math.round(255 * b.boxOpacity)],
-            getLineColor: [...(borderRgb || boxRgb).slice(0, 3), 255],
-            getLineWidth: unit / 20,
-            lineWidthUnits: 'pixels',
-            parameters: ICON_LAYER_GLOBE_PARAMETERS
-          }));
-        } else {
-          // flat's rectangular box (the chart and its title plus the
-          // margin), the single-symbol path's own _buildBoxIcon drawing
-          const borderStyle = String(st.borderstyle || '');
-          const boxLook = {
-            fill: st.boxcolor || 'white',
-            fillOpacity: isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity),
-            stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
-            strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3
-          };
-          const borderWidth = styleNum(st.borderwidth) || 1;
-          const borderRadius = styleNum(st.borderradius);
-          const strokeOf = b => borderWidth * 0.2 * b.w / 30;
-          boxLayout.forEach(b => {
-            b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
-              isNaN(borderRadius) ? 0 : borderRadius * Math.min(unit, b.w / 30),
-              strokeOf(b), boxLook);
-          });
-          if (boxLayout.length) layers.push(new IconLayer({
-            id: `ix-seqbox-${this.name}-g${this._iconGeneration}`,
-            data: boxLayout, pickable: false,
-            getPosition: b => b.d.geometry.coordinates,
-            getIcon: b => b.icon,
-            getSize: b => b.icon.height / 2,
-            getPixelOffset: b => { const o = alignOf(b.d); return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
-            sizeUnits: 'pixels', billboard: true,
-            parameters: ICON_LAYER_GLOBE_PARAMETERS
-          }));
+        // flat draws every chart as ONE group — its box, its symbols,
+        // its title, its values together — and the groups are sorted by
+        // size, so a bigger chart covers a smaller one ENTIRELY
+        // (chartMap's ascending sort, the biggest drawn last). deck.gl
+        // stacks whole layers, so with every box in one layer below
+        // every symbol, a bigger chart's box covered a smaller chart's
+        // box while that chart's symbols floated on top of it (the
+        // City-moving page's overlapping circles). Charts are grouped
+        // into overlap "bands" instead — an interval coloring assigned
+        // biggest-chart-first: within a band no two charts overlap
+        // (their box + title extents, in map pixel space, disjoint),
+        // and a chart is always in a band above every smaller chart it
+        // overlaps. Each band then draws its charts' complete group
+        // (box, title, glow, symbols, values), the smallest band first
+        // — deck.gl draws the first layer at the bottom — so between
+        // two overlapping charts the bigger one is wholly on top, as
+        // flat draws it. Overlap-free themes keep one band and today's
+        // exact single layers
+        const world = 512 * Math.pow(2, liveZoom);
+        const anchorPx = d => {
+          const o = alignOf(d), c = d.geometry.coordinates;
+          const lat = c[1] * Math.PI / 180;
+          return [(c[0] + 180) / 360 * world + o[0],
+            (0.5 - Math.log(Math.tan(Math.PI / 4 + lat / 2)) / (2 * Math.PI)) * world + o[1]];
+        };
+        const sizeOfBand = b => circular ? b.boxR
+          : b.rect ? Math.max(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1]) / 2 : 0;
+        const bandRects = [];
+        for (const b of boxLayoutAll.slice().sort((a, c) => sizeOfBand(c) - sizeOfBand(a))) {
+          // the chart's whole drawn extent: parts cluster, box and
+          // title, as px around the (align-moved) anchor
+          const e = b.d._seqExtent || [0, 0, 0, 0];
+          let x0 = e[0], y0 = e[1], x1 = e[2], y1 = e[3];
+          if (circular) { x0 = Math.min(x0, b.cx - b.boxR); y0 = Math.min(y0, b.cy - b.boxR); x1 = Math.max(x1, b.cx + b.boxR); y1 = Math.max(y1, b.cy + b.boxR); }
+          else if (b.rect) { x0 = Math.min(x0, b.rect[0]); y0 = Math.min(y0, b.rect[1]); x1 = Math.max(x1, b.rect[2]); y1 = Math.max(y1, b.rect[3]); }
+          if (b.title) { x0 = Math.min(x0, b.title.extent[0]); y0 = Math.min(y0, b.title.extent[1]); x1 = Math.max(x1, b.title.extent[2]); y1 = Math.max(y1, b.title.extent[3]); }
+          const p = anchorPx(b.d);
+          const r = [p[0] + x0, p[1] + y0, p[0] + x1, p[1] + y1];
+          let k = 0;
+          while (bandRects[k] && bandRects[k].some(q => r[0] < q[2] && q[0] < r[2] && r[1] < q[3] && q[1] < r[3])) k++;
+          (bandRects[k] = bandRects[k] || []).push(r);
+          bandOfChart.set(b.d, k);
         }
-        if (titleShown) {
-          const titleData = boxLayout.filter(b => b.title);
-          if (titleData.length) layers.push(new TextLayer({
-            id: `ix-seqtitles-${this.name}`,
-            data: titleData, pickable: false,
-            getPosition: b => b.d.geometry.coordinates,
-            getText: b => b.title.text,
-            getSize: b => b.title.f,
-            sizeUnits: 'pixels', fontFamily: 'arial',
-            characterSet: 'auto',
-            lineHeight: 1,
-            getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
-            fontSettings: { sdf: true },
-            outlineWidth: 1 / 7,
-            outlineColor: [255, 255, 255, 128],
-            getTextAnchor: b => b.title.anchor,
-            getAlignmentBaseline: 'top',
-            getPixelOffset: b => { const o = alignOf(b.d); return [b.title.x + o[0], b.title.top + o[1]]; },
-            parameters: ICON_LAYER_GLOBE_PARAMETERS
-          }));
-        }
+        nBands = bandRects.length;
       }
-      if (glows.length && this.flags.has('GLOW') && !glowHiddenByScale(st, liveZoom)) {
-        layers.push(new IconLayer({
-          id: `ix-glow-${this.name}-g${this._iconGeneration}`,
-          data: glows, pickable: false,
-          getPosition: d => d.geometry.coordinates,
-          getIcon: d => this._getGlowIcon(colorOf(d.part.i)),
-          getSize: d => d.part.r * 11,
-          getPixelOffset: offsetOf,
-          getColor: d => [255, 255, 255, alphaOf(d)],
-          sizeUnits: 'pixels', billboard: true,
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-      } else if (glows.length && this.flags.has('AURA') && !glowHiddenByScale(st, liveZoom)) {
-        layers.push(new IconLayer({
-          id: `ix-aura-${this.name}-g${this._iconGeneration}`,
-          data: glows, pickable: false,
-          getPosition: d => d.geometry.coordinates,
-          getIcon: d => this._buildSingleIcon(borderRgb || colorOf(d.part.i), 0.3, 'circle', null, 0),
-          getSize: d => d.part.r * 2 * 1.3,
-          getPixelOffset: offsetOf,
-          getColor: d => [255, 255, 255, alphaOf(d)],
-          sizeUnits: 'pixels', billboard: true,
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-      }
-      layers.push(new IconLayer({
-        id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
-        data: parts, pickable: true,
-        getPosition: d => d.geometry.coordinates,
-        // the stroke, in the icon raster's pixels (the icon is drawn at 2r)
-        getIcon: d => {
-          // an external symbol file: the URL icon as flat's <image> (see
-          // urlSymbolOf above), scaled to the part's diameter like flat's
-          // fu.scale(nRadius / nMaxRadius) on a nChartSize image
-          const u = urlSymbolOf(d.part.i);
-          if (u) return urlIcon(u);
-          return this._buildSingleIcon(colorOf(d.part.i), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), borderRgb,
-            borderRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0);
-        },
-        getSize: d => d.part.r * 2,
-        getPixelOffset: offsetOf,
-        getColor: d => [255, 255, 255, alphaOf(d)],
-        sizeUnits: 'pixels', billboard: true,
-        parameters: ICON_LAYER_GLOBE_PARAMETERS
-      }));
-      // VALUES on each part (maptheme.js 22188-22260): the part's value — with
-      // COUNT its record count, with valuefield on the categorical field the
-      // class name — formatted with valuedecimals (else none) plus the unit.
-      //  - a SHAPE part (circle & kin): font min(1, 3.2 / L) · r · valuescale,
-      //    L the length of the theme's biggest value text (szMaxText), normal
-      //    weight, in valuecolor / textcolor, else ChartColors.textColor of
-      //    the part color
-      //  - an IMAGE-symbol part (an external .svg, the TELRAAM pictograms):
-      //    flat's own other branch (22253-22256) — font max(r · 0.8, 1) ·
-      //    valuescale, the text over createTextLabel's background box (white,
-      //    its rgba(…,0.3) fill × the 0.5 fill-opacity) and in
-      //    ChartColors.lowColor — the 0.7 derivate of the part color —
-      //    regardless of valuecolor/textcolor (flat passes cColor.lowColor
-      //    straight into createTextLabel)
-      // CENTERVALUES: only on the first part (class 0), its own value
-      if ((this.flags.has('VALUES') || centerValues) && !valuesHiddenByScale(st, zoom)) {
-        const valueScale = styleNum(st.valuescale) || 1;
-        const { noBreaks } = this._valueTextOpts();
-        const units = st.units ? String(st.units) : '';
-        const unit = units ? (units[0] === '.' ? '' : ' ') + units : '';
-        const unitText = unit.length <= 5 ? unit : '';
-        const dec = explicitValueDecimals(st) || 0;
-        const fmt = v => flatGroupedValue(v, dec, noBreaks) + unitText;
-        const maxLen = fmt(seqMax).length;
-        const textOverride = st.valuecolor || st.textcolor;
-        const counting = flatFlag(this.flags, 'COUNT');
-        const labels = [];
-        parts.forEach(d => {
-          if (centerValues && d.part.i !== 0) return;
-          const rec = this._categoryValueRecord(d.part.i);
-          const name = rec ? String(rec[st.valuefield]) : null;
-          const t = counting && d.properties.recordCounts ? d.properties.recordCounts[d.part.i] : d.part.v;
-          const text = name != null ? name : fmt(t);
-          const image = !!urlSymbolOf(d.part.i);
-          const L = Math.max((name != null ? name.length : 0) + 1, maxLen);
-          const fontSize = image
-            ? Math.max(d.part.r * 0.8, 1) * valueScale
-            : Math.min(1, 3.2 / L) * d.part.r * valueScale;
-          if (fontSize > VALUES_MIN_FONT_PX) {
-            labels.push({ geometry: d.geometry, text, fontSize, pixelOffset: offsetOf(d), alpha: alphaOf(d),
-              image,
-              color: image ? flatDerivateRgb(colorOf(d.part.i), 0.7)
-                : textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(colorOf(d.part.i)) });
+      // one band's whole chart group — box, title, glow, symbols and
+      // values of ITS charts only (the closure's boxLayout, glows and
+      // parts are the band's slices) — pushed as one deck.gl layer
+      // sequence, in today's order. bs: the band's id suffix
+      const drawBand = (boxLayout, glows, parts, bs) => {
+        if (boxLayout) {
+          if (circular) {
+            const boxNone = isNoneColor(st.boxcolor), borderNone = isNoneColor(st.bordercolor);
+            const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : st.boxcolor || '#eeeeee');
+            const borderRgb = borderNone ? null : hexOrNamedToRgb(st.bordercolor || '#dddddd');
+            // Always a ScatterplotLayer: its shader circle is smooth at any
+            // size, where the icon the align path used — a 48px canvas
+            // texture deck.gl scales up — pixelated with large boxes (the
+            // City-moving page). ScatterplotLayer has no pixel offset, so
+            // the chart's align/offsetx/offsety move and flat's circular
+            // box position (the chart's bounding-box center, 18793) are
+            // baked into map coordinates (pixelOffsetLngLat). Pickable:
+            // flat's box is part of the chart group, so hovering it fires
+            // the chart's tooltip — the parts layers sit above it, so they
+            // keep their own (per-part) tooltips
+            layers.push(new ScatterplotLayer({
+              id: `ix-seqbox-${this.name}${bs}`,
+              data: boxLayout, pickable: true,
+              getPosition: b => {
+                const o = alignOf(b.d);
+                return pixelOffsetLngLat(b.d.geometry.coordinates, [o[0] + b.cx, o[1] + b.cy], liveZoom);
+              },
+              getRadius: b => b.boxR,
+              radiusUnits: 'pixels',
+              stroked: !borderNone,
+              getFillColor: b => [...boxRgb.slice(0, 3), Math.round(255 * b.boxOpacity)],
+              getLineColor: [...(borderRgb || boxRgb).slice(0, 3), 255],
+              getLineWidth: unit / 20,
+              lineWidthUnits: 'pixels',
+              parameters: ICON_LAYER_GLOBE_PARAMETERS
+            }));
+          } else {
+            // flat's rectangular box (the chart and its title plus the
+            // margin), the single-symbol path's own _buildBoxIcon drawing
+            const borderStyle = String(st.borderstyle || '');
+            const boxLook = {
+              fill: st.boxcolor || 'white',
+              fillOpacity: isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity),
+              stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
+              strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3
+            };
+            const borderWidth = styleNum(st.borderwidth) || 1;
+            const borderRadius = styleNum(st.borderradius);
+            const strokeOf = b => borderWidth * 0.2 * b.w / 30;
+            boxLayout.forEach(b => {
+              b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
+                isNaN(borderRadius) ? 0 : borderRadius * Math.min(unit, b.w / 30),
+                strokeOf(b), boxLook);
+            });
+            if (boxLayout.length) layers.push(new IconLayer({
+              id: `ix-seqbox-${this.name}${bs}-g${this._iconGeneration}`,
+              data: boxLayout, pickable: false,
+              getPosition: b => b.d.geometry.coordinates,
+              getIcon: b => b.icon,
+              getSize: b => b.icon.height / 2,
+              getPixelOffset: b => { const o = alignOf(b.d); return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
+              sizeUnits: 'pixels', billboard: true,
+              parameters: ICON_LAYER_GLOBE_PARAMETERS
+            }));
           }
-        });
-        if (labels.length) {
-          // VALUEBACKGROUND on URL-symbol parts: a fading white border
-          // around the value's own CHARACTER SHAPES — the glyphs
-          // re-drawn in white on rings of pixel offsets (a stroke of
-          // copies, no box): the width is a fraction of the font size,
-          // so the halo scales with every label; the shape-part values
-          // keep flat's plain text (no outline)
-          if (flatFlag(this.flags, 'VALUEBACKGROUND')) {
-            const haloLabels = labels.filter(l => l.image);
-            const plainLabels = labels.filter(l => !l.image);
-            if (haloLabels.length) {
-              // a real outline around the characters: the label's own
-              // glyphs re-drawn in white on rings of pixel offsets — a
-              // stroke of copies that hugs the character shapes (deck's
-              // SDF outline is only a faint, buffer-clipped rim). The
-              // base radius is a small fraction of the font size (the
-              // 1px floor keeps it tiny until labels get big), and the
-              // ring alphas fall off, so the border fades to nothing
-              const DIRS = 16, RINGS = [[1, 210], [2, 120], [3.2, 65]];
-              const haloCopies = [];
-              for (const l of haloLabels) {
-                const rb = Math.max(0.75, l.fontSize * 0.015);
-                for (let ring = 0; ring < RINGS.length; ring++) {
-                  for (let dir = 0; dir < DIRS; dir++) {
-                    const a = (dir / DIRS) * 2 * Math.PI;
-                    haloCopies.push({ ...l,
-                      dx: Math.cos(a), dy: Math.sin(a),
-                      radius: rb * RINGS[ring][0],
-                      haloAlpha: Math.round(RINGS[ring][1] * l.alpha / 255) });
+          if (titleShown) {
+            const titleData = boxLayout.filter(b => b.title);
+            if (titleData.length) layers.push(new TextLayer({
+              id: `ix-seqtitles-${this.name}${bs}`,
+              data: titleData, pickable: false,
+              getPosition: b => b.d.geometry.coordinates,
+              getText: b => b.title.text,
+              getSize: b => b.title.f,
+              sizeUnits: 'pixels', fontFamily: 'arial',
+              characterSet: 'auto',
+              lineHeight: 1,
+              getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
+              fontSettings: { sdf: true },
+              outlineWidth: 1 / 7,
+              outlineColor: [255, 255, 255, 128],
+              getTextAnchor: b => b.title.anchor,
+              getAlignmentBaseline: 'top',
+              getPixelOffset: b => { const o = alignOf(b.d); return [b.title.x + o[0], b.title.top + o[1]]; },
+              parameters: ICON_LAYER_GLOBE_PARAMETERS
+            }));
+          }
+        }
+        if (glows.length && this.flags.has('GLOW') && !glowHiddenByScale(st, liveZoom)) {
+          layers.push(new IconLayer({
+            id: `ix-glow-${this.name}${bs}-g${this._iconGeneration}`,
+            data: glows, pickable: false,
+            getPosition: d => d.geometry.coordinates,
+            getIcon: d => this._getGlowIcon(colorOf(d.part.i)),
+            getSize: d => d.part.r * 11,
+            getPixelOffset: offsetOf,
+            getColor: d => [255, 255, 255, alphaOf(d)],
+            sizeUnits: 'pixels', billboard: true,
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        } else if (glows.length && this.flags.has('AURA') && !glowHiddenByScale(st, liveZoom)) {
+          layers.push(new IconLayer({
+            id: `ix-aura-${this.name}${bs}-g${this._iconGeneration}`,
+            data: glows, pickable: false,
+            getPosition: d => d.geometry.coordinates,
+            getIcon: d => this._buildSingleIcon(borderRgb || colorOf(d.part.i), 0.3, 'circle', null, 0),
+            getSize: d => d.part.r * 2 * 1.3,
+            getPixelOffset: offsetOf,
+            getColor: d => [255, 255, 255, alphaOf(d)],
+            sizeUnits: 'pixels', billboard: true,
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        }
+        layers.push(new IconLayer({
+          id: `ix-bubbles-${this.name}${bs}-g${this._iconGeneration}`,
+          data: parts, pickable: true,
+          getPosition: d => d.geometry.coordinates,
+          // the stroke, in the icon raster's pixels (the icon is drawn at 2r)
+          getIcon: d => {
+            // an external symbol file: the URL icon as flat's <image> (see
+            // urlSymbolOf above), scaled to the part's diameter like flat's
+            // fu.scale(nRadius / nMaxRadius) on a nChartSize image
+            const u = urlSymbolOf(d.part.i);
+            if (u) return urlIcon(u);
+            return this._buildSingleIcon(colorOf(d.part.i), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), borderRgb,
+              borderRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0);
+          },
+          getSize: d => d.part.r * 2,
+          getPixelOffset: offsetOf,
+          getColor: d => [255, 255, 255, alphaOf(d)],
+          sizeUnits: 'pixels', billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+        // VALUES on each part (maptheme.js 22188-22260): the part's value — with
+        // COUNT its record count, with valuefield on the categorical field the
+        // class name — formatted with valuedecimals (else none) plus the unit.
+        //  - a SHAPE part (circle & kin): font min(1, 3.2 / L) · r · valuescale,
+        //    L the length of the theme's biggest value text (szMaxText), normal
+        //    weight, in valuecolor / textcolor, else ChartColors.textColor of
+        //    the part color
+        //  - an IMAGE-symbol part (an external .svg, the TELRAAM pictograms):
+        //    flat's own other branch (22253-22256) — font max(r · 0.8, 1) ·
+        //    valuescale, the text over createTextLabel's background box (white,
+        //    its rgba(…,0.3) fill × the 0.5 fill-opacity) and in
+        //    ChartColors.lowColor — the 0.7 derivate of the part color —
+        //    regardless of valuecolor/textcolor (flat passes cColor.lowColor
+        //    straight into createTextLabel)
+        // CENTERVALUES: only on the first part (class 0), its own value
+        if ((this.flags.has('VALUES') || centerValues) && !valuesHiddenByScale(st, zoom)) {
+          const valueScale = styleNum(st.valuescale) || 1;
+          const { noBreaks } = this._valueTextOpts();
+          const units = st.units ? String(st.units) : '';
+          const unit = units ? (units[0] === '.' ? '' : ' ') + units : '';
+          const unitText = unit.length <= 5 ? unit : '';
+          const dec = explicitValueDecimals(st) || 0;
+          const fmt = v => flatGroupedValue(v, dec, noBreaks) + unitText;
+          const maxLen = fmt(seqMax).length;
+          const textOverride = st.valuecolor || st.textcolor;
+          const counting = flatFlag(this.flags, 'COUNT');
+          const labels = [];
+          parts.forEach(d => {
+            if (centerValues && d.part.i !== 0) return;
+            const rec = this._categoryValueRecord(d.part.i);
+            const name = rec ? String(rec[st.valuefield]) : null;
+            const t = counting && d.properties.recordCounts ? d.properties.recordCounts[d.part.i] : d.part.v;
+            const text = name != null ? name : fmt(t);
+            const image = !!urlSymbolOf(d.part.i);
+            const L = Math.max((name != null ? name.length : 0) + 1, maxLen);
+            const fontSize = image
+              ? Math.max(d.part.r * 0.8, 1) * valueScale
+              : Math.min(1, 3.2 / L) * d.part.r * valueScale;
+            if (fontSize > VALUES_MIN_FONT_PX) {
+              labels.push({ geometry: d.geometry, text, fontSize, pixelOffset: offsetOf(d), alpha: alphaOf(d),
+                image,
+                color: image ? flatDerivateRgb(colorOf(d.part.i), 0.7)
+                  : textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(colorOf(d.part.i)) });
+            }
+          });
+          if (labels.length) {
+            // VALUEBACKGROUND on URL-symbol parts: a fading white border
+            // around the value's own CHARACTER SHAPES — the glyphs
+            // re-drawn in white on rings of pixel offsets (a stroke of
+            // copies, no box): the width is a fraction of the font size,
+            // so the halo scales with every label; the shape-part values
+            // keep flat's plain text (no outline)
+            if (flatFlag(this.flags, 'VALUEBACKGROUND')) {
+              const haloLabels = labels.filter(l => l.image);
+              const plainLabels = labels.filter(l => !l.image);
+              if (haloLabels.length) {
+                // a real outline around the characters: the label's own
+                // glyphs re-drawn in white on rings of pixel offsets — a
+                // stroke of copies that hugs the character shapes (deck's
+                // SDF outline is only a faint, buffer-clipped rim). The
+                // base radius is a small fraction of the font size (the
+                // 1px floor keeps it tiny until labels get big), and the
+                // ring alphas fall off, so the border fades to nothing
+                const DIRS = 16, RINGS = [[1, 210], [2, 120], [3.2, 65]];
+                const haloCopies = [];
+                for (const l of haloLabels) {
+                  const rb = Math.max(0.75, l.fontSize * 0.015);
+                  for (let ring = 0; ring < RINGS.length; ring++) {
+                    for (let dir = 0; dir < DIRS; dir++) {
+                      const a = (dir / DIRS) * 2 * Math.PI;
+                      haloCopies.push({ ...l,
+                        dx: Math.cos(a), dy: Math.sin(a),
+                        radius: rb * RINGS[ring][0],
+                        haloAlpha: Math.round(RINGS[ring][1] * l.alpha / 255) });
+                    }
                   }
                 }
+                layers.push(new TextLayer({
+                  id: `ix-cluster-values-halo-${this.name}${bs}`,
+                  data: haloCopies, pickable: false,
+                  getPosition: d => d.geometry.coordinates,
+                  getText: d => d.text,
+                  getSize: d => d.fontSize,
+                  getColor: d => [255, 255, 255, d.haloAlpha],
+                  getPixelOffset: d => [d.pixelOffset[0] + d.dx * d.radius, d.pixelOffset[1] + d.dy * d.radius],
+                  sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
+                  characterSet: 'auto',
+                  getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+                }));
+                layers.push(new TextLayer({
+                  id: `ix-cluster-values-${this.name}${bs}`,
+                  data: haloLabels, pickable: false,
+                  getPosition: d => d.geometry.coordinates,
+                  getText: d => d.text,
+                  getSize: d => d.fontSize,
+                  getColor: d => [...d.color.slice(0, 3), d.alpha],
+                  getPixelOffset: d => d.pixelOffset,
+                  sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
+                  characterSet: 'auto',
+                  getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+                }));
               }
-              layers.push(new TextLayer({
-                id: `ix-cluster-values-halo-${this.name}`,
-                data: haloCopies, pickable: false,
-                getPosition: d => d.geometry.coordinates,
-                getText: d => d.text,
-                getSize: d => d.fontSize,
-                getColor: d => [255, 255, 255, d.haloAlpha],
-                getPixelOffset: d => [d.pixelOffset[0] + d.dx * d.radius, d.pixelOffset[1] + d.dy * d.radius],
-                sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
-                characterSet: 'auto',
-                getTextAnchor: 'middle', getAlignmentBaseline: 'center'
-              }));
-              layers.push(new TextLayer({
-                id: `ix-cluster-values-${this.name}`,
-                data: haloLabels, pickable: false,
+              if (plainLabels.length) layers.push(new TextLayer({
+                id: `ix-cluster-values-plain-${this.name}${bs}`,
+                data: plainLabels, pickable: false,
                 getPosition: d => d.geometry.coordinates,
                 getText: d => d.text,
                 getSize: d => d.fontSize,
@@ -15057,10 +15120,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
                 characterSet: 'auto',
                 getTextAnchor: 'middle', getAlignmentBaseline: 'center'
               }));
-            }
-            if (plainLabels.length) layers.push(new TextLayer({
-              id: `ix-cluster-values-plain-${this.name}`,
-              data: plainLabels, pickable: false,
+            } else {
+            layers.push(new TextLayer({
+              id: `ix-cluster-values-${this.name}${bs}`,
+              data: labels, pickable: false,
               getPosition: d => d.geometry.coordinates,
               getText: d => d.text,
               getSize: d => d.fontSize,
@@ -15070,21 +15133,20 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
               characterSet: 'auto',
               getTextAnchor: 'middle', getAlignmentBaseline: 'center'
             }));
-          } else {
-          layers.push(new TextLayer({
-            id: `ix-cluster-values-${this.name}`,
-            data: labels, pickable: false,
-            getPosition: d => d.geometry.coordinates,
-            getText: d => d.text,
-            getSize: d => d.fontSize,
-            getColor: d => [...d.color.slice(0, 3), d.alpha],
-            getPixelOffset: d => d.pixelOffset,
-            sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
-            characterSet: 'auto',
-            getTextAnchor: 'middle', getAlignmentBaseline: 'center'
-          }));
+            }
           }
         }
+      };
+      const chartBand = c => bandOfChart.get(c) || 0;
+      if (nBands > 1) {
+        // deck.gl draws the FIRST layer at the bottom: the smallest
+        // charts' band first, the biggest (band 0) last, on top
+        for (let k = nBands - 1; k >= 0; k--) drawBand(
+          boxLayoutAll ? boxLayoutAll.filter(b => chartBand(b.d) === k) : null,
+          allGlows.filter(g => chartBand(g.chart) === k),
+          allParts.filter(p => chartBand(p.chart) === k), '-b' + k);
+      } else {
+        drawBand(boxLayoutAll, allGlows, allParts, '');
       }
       return layers;
     }
