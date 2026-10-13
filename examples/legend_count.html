@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>LEGEND · COUNT</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>LEGEND · COUNT</b>
+  <span>A CATEGORICAL symbol chart with the COUNT flag: its legend rows are record counts — whole numbers, no unit (flat prints them so even when style.units is set); without COUNT the second layer shows the units.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data: 12 records in 3 categories
+  var cats = ["red", "green", "blue"];
+  var data = { type: "FeatureCollection", features: Array.from({ length: 12 }, function (_, i) { return {
+    type: "Feature", properties: { cat: cats[i % 3 === 0 ? 0 : i % 3 === 1 ? 1 : 2], n: 10 + i },
+    geometry: { type: "Point", coordinates: [9.0 + (i % 6) * 0.08, 45.55 - Math.floor(i / 6) * 0.1] } }; }) };
+  function themeAt(name, type) {
+    return ixmaps.layer(name, layer => layer
+      .data({ obj: data, type: "geojson" })
+      .binding({ geo: "geometry", value: "cat" })
+      .type(type)
+      .style({ colorscheme: ["#d9534f", "#5cb85c", "#428bca"], units: "€", scale: "0.25" })
+      .meta({ title: name, tooltip: "{{cat}}" })
+    );
+  }
+  var L0 = themeAt("count", "CHART|SYMBOL|CATEGORICAL|COUNT");
+  var L1 = themeAt("nocount", "CHART|SYMBOL|CATEGORICAL");
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "open" },
+    map => map.view([45.5, 9.2], 10)
+      .layer(L0)
+      .layer(L1)
+  );
+</script>
+</body>
+</html>

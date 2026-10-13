@@ -4243,13 +4243,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // twin pages)
           const flatUnitLegend = rt._isVectorChart() || rt._isAggregatedPie();
           const rawLegendUnit = rt.style.legendunits || rt.style.units || '';
-          const legendUnit = flatUnitLegend && rawLegendUnit && rawLegendUnit[0] !== '.' && rawLegendUnit[0] !== ' ' ? ' ' + rawLegendUnit : rawLegendUnit;
+          // COUNT: the rows are record counts — flat prints them as whole numbers
+          // with no unit (legend.js 705, 810: __formatValue(count, nDecimals,
+          // "BLANK") + (COUNT ? "" : " " + unit))
+          const countLegend = flatFlag(rt.flags, 'COUNT') && !useSum;
+          const legendUnit = countLegend ? '' : flatUnitLegend && rawLegendUnit && rawLegendUnit[0] !== '.' && rawLegendUnit[0] !== ' ' ? ' ' + rawLegendUnit : rawLegendUnit;
           // a per-item chart over several value fields: the row values as
           // flat's legend prints them (legend.js 610, 810: __formatValue
           // with valuedecimals, else 2, "BLANK" — whole numbers without
           // decimals), a colorscheme "none" part as an outline in linecolor
           const multiFieldLegend = rt._isMultiFieldChart();
-          const legendTotalText = v => ((multiFieldLegend || flatUnitLegend)
+          const legendTotalText = v => ((multiFieldLegend || flatUnitLegend || countLegend)
             ? flatFormatValue(v, legendDecimals(rt.style), 'BLANK')
             : rt._formatTooltipValue(v));
           const outlineRgb = rt.style.linecolor && styleLineColor(rt.style.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(rt.style.linecolor)) : [128, 128, 128];
