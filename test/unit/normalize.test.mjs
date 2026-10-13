@@ -233,3 +233,28 @@ test('chartBoxLayout: the one box/title layout — rect, title above, bottom tit
   const s = chartBoxLayout([-10, -10, 10, 10], { unit: 2, margin: 2, circular: true, radius: 10, center: [0, 0], measure });
   near(s.boxR, 10 * 1.1 + Math.min(2 * 2 * 2, 2 * 20 / 30)); near(s.cx, 0);
 });
+
+test('_boxSpec: the box owns its title — no BOX, no title; one set of gates for every chart type', () => {
+  const { normalizeTheme, LayerRuntime } = loadEngine();
+  const spec = (type, style = {}, zoom = 10) => {
+    const rt = new LayerRuntime(normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'v', title: 't' }, style: { type, ...style } }),
+      { type: 'FeatureCollection', features: [] }, {});
+    return rt._boxSpec(zoom);
+  };
+  assert.equal(spec('CHART|BUBBLE|TITLE'), null, 'TITLE without BOX: nothing — the title belongs to the box');
+  const plain = spec('CHART|BUBBLE|BOX');
+  assert.equal(plain.titleShown, false, 'a box without TITLE has no title');
+  assert.equal(plain.circular, false);
+  assert.equal(plain.margin, 2);
+  const full = spec('CHART|BUBBLE|BOX|CIRCULARBOX|TITLE|BOTTOMTITLE', { align: 'right', boxmargin: 3 });
+  assert.deepEqual([full.titleShown, full.circular, full.bottomTitle, full.alignRight, full.margin], [true, true, true, true, 3]);
+  // the title font: 5 u · textscale; DTEXT follows the chart's width
+  assert.equal(full.titleFontOf(2, 100), 10);
+  const dtext = spec('CHART|BUBBLE|BOX|TITLE|DTEXT', { textscale: 2, scale: 1 });
+  assert.equal(dtext.titleFontOf(1, 100), 2 * Math.max(0.9, Math.min(100 / 5, 14)));
+  // titleupper: shown only while the map scale is that bound or coarser
+  assert.equal(spec('CHART|BUBBLE|BOX|TITLE', { titleupper: '1:1000' }, 10).titleShown, false, 'zoomed out beyond the bound');
+  assert.equal(spec('CHART|BUBBLE|BOX|TITLE', { titleupper: '1:1000' }, 22).titleShown, true, 'zoomed in within it');
+  // boxupper hides the box and with it the title
+  assert.equal(spec('CHART|BUBBLE|BOX|TITLE', { boxupper: '1:1000' }, 10), null);
+});

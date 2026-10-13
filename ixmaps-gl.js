@@ -8824,22 +8824,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return { rect, boxR, cx: center[0], cy: center[1], w, margin, title };
   }
 
-  // flat's BOX and TITLE around a chart (maptheme.js 18758-18905), in the
-  // chart's units: `extent` the chart's [x0, y0, x1, y1]; o: { margin
-  // (boxmargin, 2), titleFont, title (text or ''), bottomTitle, alignRight,
-  // measure }. The margin is min(2 m, m · width / 30); the title's first
-  // baseline 0.7 font above the chart (BOTTOMTITLE: one font below), its
-  // lines wrapped to the chart's width and stacked upward; the box encloses
-  // chart and title, its top trimmed by 0.1 font when titled. Returns
-  // { rect: [x0, y0, x1, y1], title: { lines, x, anchor, baseline, font } | null }
-  function flatChartBox(extent, o) {
-    const L = chartBoxLayout(extent, { unit: 1, margin: o.margin, titleText: o.title, titleFont: o.titleFont,
-      bottomTitle: o.bottomTitle, alignRight: o.alignRight,
-      measure: o.measure || ((text, font) => text.length * font * 0.55) });
-    const t = L.title;
-    return { rect: L.rect, title: t ? { lines: t.lines, x: t.x, anchor: t.anchor, baseline: t.baseline, font: t.f } : null, width: L.w };
-  }
-
   // CHART|PIE / DONUT: one pie's slices as real ixmaps-flat lays them out —
   // maptheme.js drawChart's PIE branch (19939-20330) and piechart.js
   // DonutChart.realize (181-510). `values`: the item's part values (field
@@ -13580,23 +13564,79 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return chart;
     }
 
-    // THE box-and-title layers of every chart type (flat's BOX block): rows are
-    // chartBoxLayout results, each with its `rect` / `boxR` / `cx` / `cy` /
-    // `title` / `w` (the chart's size measure, its stroke and corner basis)
-    // plus whatever the caller needs for picking (geometry, properties).
-    // o: { circular, unit, liveZoom, positionOf (row -> [lng, lat]), offsetOf
-    // (row -> the chart's [dx, dy] px move: align / offsetx / offsety),
-    // titleShown, ids: { circle, icon, polygons, titles } } — the layer ids
-    // stay each chart type's own. Returns { box: [layers], titles: [layers] }:
-    // the caller pushes them where its draw order wants them.
+    // flat's BOX block belongs to the box: the box owns its TITLE — no BOX, no
+    // title — so everything about both is decided here and in _boxRows, for
+    // every chart type (single symbol, SEQUENCE, PIE, BAR): the gates (BOX /
+    // TITLE flags, boxupper / boxlower / titleupper scale), the margin, the
+    // title font (DTEXT follows the chart), BOTTOMTITLE, align, CIRCULARBOX.
+    // null when there is no box at this zoom.
+    _boxSpec(liveZoom) {
+      const st = this.style;
+      if (!(flatFlag(this.flags, 'BOX') && !boxHiddenByScale(st, liveZoom))) return null;
+      const titleUpper = scaleDenom(st.titleupper);
+      const titleScale = styleNum(st.textscale) || styleNum(st.valuescale) || 1;
+      return {
+        circular: flatFlag(this.flags, 'CIRCULAR'),
+        margin: styleNum(st.boxmargin) || 2,
+        bottomTitle: flatFlag(this.flags, 'BOTTOMTITLE'),
+        alignRight: /right/.test(String(st.align || '')),
+        titleShown: flatFlag(this.flags, 'TITLE') && !!this.binding.title
+          && !(titleUpper && scaleDenominatorAt(liveZoom) > titleUpper),
+        // DTEXT: the title font follows the chart, max(0.9u, min(W/5, 14u /
+        // scale)) (18815) — measured on the fire areas page's SIF chart
+        // (W 362 units → font 72.35)
+        titleFontOf: (unit, w) => (flatFlag(this.flags, 'DTEXT')
+          ? Math.max(0.9 * unit, Math.min(w / 5, 14 * unit / (styleNum(st.scale) || 1)))
+          : 5 * unit) * titleScale
+      };
+    }
+
+    // the layout row of every item's box and title (chartBoxLayout + the spec
+    // above); null without a box (items: the array, or a function building it
+    // only when there is a box). o: { unit (px per flat unit), liveZoom,
+    // extentOf (item -> its drawn [x0, y0, x1, y1], px around the anchor),
+    // radiusOf / centerOf (the circular box's base, default the extent's) }.
+    // A row: { d: item, geometry, properties, w (the chart's width — flat's
+    // size measure W, the stroke and corner basis), boxR / cx / cy (circle),
+    // rect (rectangle), title }
+    _boxRows(items, o) {
+      const spec = this._boxSpec(o.liveZoom);
+      if (!spec) return null;
+      // flat appends style.titleunits (its parse adds the leading space,
+      // maptheme.js 1470; szTitle += at 18827)
+      const units = this.style.titleunits ? ' ' + this.style.titleunits : '';
+      return (typeof items === 'function' ? items() : items).map(d => {
+        const itemTitle = spec.titleShown ? this._itemTitle(d.properties) : null;
+        const L = chartBoxLayout(o.extentOf(d), { unit: o.unit, margin: spec.margin, circular: spec.circular,
+          radius: o.radiusOf ? o.radiusOf(d) : undefined, center: o.centerOf ? o.centerOf(d) : undefined,
+          titleText: itemTitle ? itemTitle + units : null, titleFont: w => spec.titleFontOf(o.unit, w),
+          bottomTitle: spec.bottomTitle, alignRight: spec.alignRight });
+        // geometry/properties of the chart's feature on the row: the circular
+        // box is pickable, and the tooltip (buildTooltipHtml, the click-pin)
+        // works on the feature's own properties
+        return { d, geometry: d.geometry, properties: d.properties, w: L.w, boxR: L.boxR, cx: L.cx, cy: L.cy,
+          rect: L.rect, title: L.title };
+      });
+    }
+
+    // THE box-and-title layers of every chart type: rows are _boxRows results.
+    // o: { unit, liveZoom, positionOf (row -> [lng, lat]), offsetOf (row ->
+    // the chart's [dx, dy] px move: align / offsetx / offsety), box (false:
+    // the title layer only — a BAR draws its box as a shader shape), ids:
+    // { circle, icon, polygons, titles } } — the layer ids stay each chart
+    // type's own. Returns { box: [layers], titles: [layers] }: the caller
+    // pushes them where its draw order wants them.
     _boxTitleLayers(rows, o) {
       const st = this.style;
       const { unit, liveZoom, positionOf, offsetOf, ids } = o;
+      const circular = flatFlag(this.flags, 'CIRCULAR');
       const box = [], titles = [];
       // flat: fill-opacity (boxopacity || 1) on the raw style value — the usual
       // string "0" is transparent; typed here, a given 0 is too
       const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
-      if (o.circular) {
+      if (o.box === false) {
+        // the title layer only
+      } else if (circular) {
         const boxNone = isNoneColor(st.boxcolor), borderNone = isNoneColor(st.bordercolor);
         const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : st.boxcolor || '#eeeeee');
         const boxAlpha = boxNone ? 0 : Math.round(255 * boxOpacity);
@@ -13681,7 +13721,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           parameters: ICON_LAYER_GLOBE_PARAMETERS
         }));
       }
-      const titleData = o.titleShown ? rows.filter(b => b.title) : [];
+      const titleData = rows.filter(b => b.title);
       if (titleData.length) titles.push(new TextLayer({
         id: ids.titles,
         data: titleData, pickable: false,
@@ -14294,15 +14334,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // DTEXT: the title font follows the chart, max(0.9u, min(W/5,
       // 14u / scale)) (18815) — measured on the fire areas page's SIF chart
       // (W 362 units → font 72.35).
-      const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(this.style, liveZoom);
-      const circular = flatFlag(this.flags, 'CIRCULAR');
       const unitPx = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1);
-      const boxMarginU = styleNum(this.style.boxmargin) || 2;
-      const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title;
-      const titleScale = styleNum(this.style.textscale) || styleNum(this.style.valuescale) || 1;
-      const titleFontOf = W => (flatFlag(this.flags, 'DTEXT')
-        ? Math.max(0.9 * unitPx, Math.min(W / 5, 14 * unitPx / (styleNum(this.style.scale) || 1)))
-        : 5 * unitPx) * titleScale;
       // the chart's value text and label (see VALUES and LABEL below), shared
       // with the box: flat's box encloses whatever the chart group draws
       const valuesShown = this.flags.has('VALUES') && !valuesHiddenByScale(this.style, zoom);
@@ -14310,33 +14342,24 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const labelShown = !!this.style.labelfield && !flatFlag(this.flags, 'NORMSIZE') && !flatFlag(this.flags, 'ZOOM')
         && !labelHiddenByScale(this.style, zoom);
       const labelOf = labelShown ? this._chartLabelFn(unitPx) : null;
-      const bottomTitle = flatFlag(this.flags, 'BOTTOMTITLE');
-      const alignRight = /right/.test(String(this.style.align || ''));
-      // with MULTIQUAD only the first item of a position gets its box/title
-      const boxLayout = boxShown ? combined.filter(d => !multi || multi.index.get(d) === 0).map(d => {
-        const r = vRadius(sizeValueOf(d));
-        const ext = multi ? multi.extent.get(d) : [0, 0, 0, 0];
-        const chart = [ext[0] - r, ext[1] - r, ext[2] + r, ext[3] + r];
-        const grow = e => { if (!e) return; chart[0] = Math.min(chart[0], e[0]); chart[1] = Math.min(chart[1], e[1]); chart[2] = Math.max(chart[2], e[2]); chart[3] = Math.max(chart[3], e[3]); };
-        if (valueTextOf && !d.properties.counts) { const v = valueTextOf(d, r); if (v) grow(v.extent); }
-        if (labelOf) { const l = labelOf(d, r); if (l) grow(l.extent); }
-        // flat appends style.titleunits (its parse adds the leading space,
-        // maptheme.js 1470; szTitle += at 18827); the circle sits on the
-        // anchor (0, 0), its base radius the symbol's
-        const units = this.style.titleunits ? ' ' + this.style.titleunits : '';
-        const itemTitle = titleShown ? this._itemTitle(d.properties) : null;
-        const L = chartBoxLayout(chart, { unit: unitPx, margin: boxMarginU, circular, radius: r, center: [0, 0],
-          titleText: itemTitle ? itemTitle + units : null, titleFont: titleFontOf, bottomTitle, alignRight });
-        const { w, rect, title } = L;
-        const boxR = circular ? L.boxR : r;
-        // geometry/properties of the chart's feature on the row: the
-        // circular box is pickable, and the tooltip (buildTooltipHtml,
-        // the click-pin) works on the feature's own properties
-        return { d, geometry: d.geometry, properties: d.properties, r, w, boxR, cx: L.cx, cy: L.cy, rect, title };
-      }) : null;
+      // with MULTIQUAD only the first item of a position gets its box/title;
+      // the circle sits on the anchor (0, 0), its base radius the symbol's
+      const boxLayout = this._boxRows(() => combined.filter(d => !multi || multi.index.get(d) === 0), {
+        unit: unitPx, liveZoom,
+        radiusOf: d => vRadius(sizeValueOf(d)), centerOf: () => [0, 0],
+        extentOf: d => {
+          const r = vRadius(sizeValueOf(d));
+          const ext = multi ? multi.extent.get(d) : [0, 0, 0, 0];
+          const chart = [ext[0] - r, ext[1] - r, ext[2] + r, ext[3] + r];
+          const grow = e => { if (!e) return; chart[0] = Math.min(chart[0], e[0]); chart[1] = Math.min(chart[1], e[1]); chart[2] = Math.max(chart[2], e[2]); chart[3] = Math.max(chart[3], e[3]); };
+          if (valueTextOf && !d.properties.counts) { const v = valueTextOf(d, r); if (v) grow(v.extent); }
+          if (labelOf) { const l = labelOf(d, r); if (l) grow(l.extent); }
+          return chart;
+        }
+      });
       // (the title layers are pushed after the symbols, below)
-      const boxLayers = boxShown ? this._boxTitleLayers(boxLayout, {
-        circular, unit: unitPx, liveZoom, titleShown,
+      const boxLayers = boxLayout ? this._boxTitleLayers(boxLayout, {
+        unit: unitPx, liveZoom,
         positionOf: b => b.d.geometry.coordinates, offsetOf: b => alignOf(b.d),
         ids: { circle: `ix-box-${this.name}`, icon: `ix-box-${this.name}`, polygons: `ix-box-polygons-${this.name}`, titles: `ix-titles-${this.name}` }
       }) : null;
@@ -14833,48 +14856,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       //    max(0.9u, min(w/5, 14u/scale)) · textscale, wrapped to the
       //    circle's width — gated by titleupper (shown while the map
       //    scale is that bound or coarser, 18810) and boxupper/boxlower
-      const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(st, liveZoom);
+      // (flat centers the circular box and its title on the chart's
+      // bounding-box CENTER — maptheme.js 18793-18798 — not on its anchor: a
+      // star cluster's satellites spread asymmetrically around it; the
+      // circle's title baselines are measured on the resized box, 18798-18830)
       const circular = flatFlag(this.flags, 'CIRCULAR');
-      const bottomTitle = flatFlag(this.flags, 'BOTTOMTITLE');
-      const titleUpper = scaleDenom(st.titleupper);
-      const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title
-        && !(titleUpper && scaleDenominatorAt(liveZoom) > titleUpper);
-      let boxLayoutAll = null;
+      const boxLayoutAll = this._boxRows(() => charts.filter(d => d._seqExtent), { unit, liveZoom, extentOf: d => d._seqExtent });
       // per-chart overlap bands (see the band computation in the
-      // boxShown block): a Map chart → band index, filled only when
+      // box block): a Map chart → band index, filled only when
       // boxes are drawn; empty (single band) otherwise
       const bandOfChart = new Map();
       let nBands = 1;
-      if (boxShown) {
-        const boxMarginU = styleNum(st.boxmargin) || 2;
-        const titleScale = styleNum(st.textscale) || styleNum(st.valuescale) || 1;
-        const titleFontOf = w => (flatFlag(this.flags, 'DTEXT')
-          ? Math.max(0.9 * unit, Math.min(w / 5, 14 * unit / (styleNum(st.scale) || 1)))
-          : 5 * unit) * titleScale;
-        const alignRight = /right/.test(String(st.align || ''));
-        boxLayoutAll = charts.filter(d => d._seqExtent).map(d => {
-          const [ex0, ey0, ex1, ey1] = d._seqExtent;
-          const w = ex1 - ex0;
-          // flat centers the circular box (and its title) on the chart's
-          // bounding-box CENTER (maptheme.js 18793-18798: center =
-          // bBox.x + bBox.width/2, bBox.y + bBox.height/2), not on the
-          // chart's anchor — a star cluster's satellites spread
-          // asymmetrically around it
-          const cx = (ex0 + ex1) / 2, cy = (ey0 + ey1) / 2;
-          // flat appends style.titleunits to the box title (its parse gives it
-          // the leading space, maptheme.js 1470; szTitle += at 18827):
-          // "27.5" + "km/h" -> "27.5 km/h". The circle's title baselines are
-          // measured on the resized box (the circle spans center ± radius,
-          // 18798-18830)
-          const units = st.titleunits ? ' ' + st.titleunits : '';
-          const itemTitle = titleShown ? this._itemTitle(d.properties) : null;
-          const { boxR, rect, title } = chartBoxLayout([ex0, ey0, ex1, ey1], { unit, margin: boxMarginU, circular,
-            titleText: itemTitle ? itemTitle + units : null, titleFont: titleFontOf, bottomTitle, alignRight });
-          // geometry/properties of the chart's feature on the row: the
-          // circular box is pickable, and the tooltip (buildTooltipHtml,
-          // the click-pin) works on the feature's own properties
-          return { d, geometry: d.geometry, properties: d.properties, w, boxR, rect, title, cx, cy };
-        });
+      if (boxLayoutAll) {
         // flat draws every chart as ONE group — its box, its symbols,
         // its title, its values together — and the groups are sorted by
         // size, so a bigger chart covers a smaller one ENTIRELY
@@ -14927,7 +14920,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const drawBand = (boxLayout, glows, parts, bs) => {
         if (boxLayout) {
           const L = this._boxTitleLayers(boxLayout, {
-            circular, unit, liveZoom, titleShown,
+            unit, liveZoom,
             positionOf: b => b.d.geometry.coordinates, offsetOf: b => alignOf(b.d),
             ids: { circle: `ix-seqbox-${this.name}${bs}`, icon: `ix-seqbox-${this.name}${bs}`,
               polygons: `ix-seqbox-polygons-${this.name}${bs}`, titles: `ix-seqtitles-${this.name}${bs}` }
@@ -15440,32 +15433,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // borderwidth · 0.2 · width/chartSize px wide. Both are removed
       // outside boxupper / titleupper (maptheme.js 18758-18760, the
       // TITLE gate 18809-18811)
-      const boxShown = has(/BOX/) && !boxHiddenByScale(st, liveZoom);
-      const titleUpper = scaleDenom(st.titleupper);
-      const titleShown = boxShown && has(/TITLE/) && !!this.binding.title
-        && !(titleUpper && scaleDenominatorAt(liveZoom) > titleUpper);
-      const boxRows = [];
-      if (boxShown) for (const ch of charts) {
-        const boxMarginU = styleNum(st.boxmargin) || 2;
-        const titleScale = styleNum(st.textscale) || styleNum(st.valuescale) || 1;
-        // the chart's drawn extent, px around the anchor (flat's getBox
-        // of the shape group — the longest ray on a STARBURST)
+      // the chart's drawn extent, px around the anchor (flat's getBox of the
+      // shape group — the longest ray on a STARBURST)
+      const boxRows = this._boxRows(charts, { unit, liveZoom, extentOf: ch => {
         let e = ch.r;
         if (star) { const in0 = starInnerOf(ch); for (const sl of ch.layout.slices) e = Math.max(e, starRadius(sl.value, ch.r, in0)); }
-        // a pie has no BOTTOMTITLE / align / CIRCULARBOX variant here (yet):
-        // the layout's defaults — left-aligned title above the box
-        const itemTitle = titleShown ? this._itemTitle(ch.properties) : null;
-        const { rect, title } = chartBoxLayout([-e, -e, e, e], { unit, margin: boxMarginU,
-          titleText: itemTitle ? itemTitle + (st.titleunits ? ' ' + st.titleunits : '') : null, titleFont: 5 * unit * titleScale });
-        // the pie's stroke and corner basis is the box's own width (title included)
-        boxRows.push({ ch, title, rect, w: rect[2] - rect[0] });
-      }
+        return [-e, -e, e, e];
+      } });
       const layers = [];
-      if (boxRows.length) {
+      if (boxRows && boxRows.length) {
         const L = this._boxTitleLayers(boxRows, {
-          circular: false, unit, liveZoom, titleShown,
-          positionOf: b => b.ch.c, offsetOf: b => b.ch.off,
-          ids: { icon: `ix-pie-box-${this.name}`, polygons: `ix-pie-box-polygons-${this.name}`, titles: `ix-pie-titles-${this.name}` }
+          unit, liveZoom,
+          positionOf: b => b.d.c, offsetOf: b => b.d.off,
+          ids: { circle: `ix-pie-box-${this.name}`, icon: `ix-pie-box-${this.name}`, polygons: `ix-pie-box-polygons-${this.name}`, titles: `ix-pie-titles-${this.name}` }
         });
         layers.push(...L.box, ...L.titles);
       }
@@ -15726,7 +15706,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     //    STACKED beside the column on leader lines; flat's values color
     //    #798697 (textcolor), negative red (valuecolor); DTEXT and a sized
     //    POINTER fade small values
-    //  - BOX / TITLE (flatChartBox): a box around chart and title, the
+    //  - BOX / TITLE (chartBoxLayout): a box around chart and title, the
     //    item's title above it — boxcolor (white) at boxopacity, bordercolor
     //    (#bbbbbb) at 0.3, borderwidth · 0.2 · w / 30; title 5 u ·
     //    textscale in textcolor (#888888) over a white halo
@@ -15822,9 +15802,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       }
       applyFlatMaxCharts(charts, st);
 
-      const boxShown = flatFlag(this.flags, 'BOX') && !boxHiddenByScale(st, liveZoom);
-      const titleShown = boxShown && flatFlag(this.flags, 'TITLE') && !!this.binding.title;
-      const titleFont = 5 * (num(st.textscale) || num(st.valuescale) || 1);
+      // a BAR draws its box as a shader shape (rectangle only, no CIRCULARBOX):
+      // the gates, margin, title font and placement are the box's, shared with
+      // every chart type (_boxSpec / chartBoxLayout, here in chart units)
+      const boxSpec = this._boxSpec(liveZoom);
+      const boxUnits = st.titleunits ? ' ' + st.titleunits : '';
       const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
       const borderStyle = String(st.borderstyle || '');
       const boxFill = [...hexOrNamedToRgb(isNoneColor(st.boxcolor) ? 'white' : st.boxcolor || 'white').slice(0, 3), isNoneColor(st.boxcolor) ? 0 : Math.round(255 * boxOpacity)];
@@ -15853,10 +15835,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       for (const ch of charts) {
         const L = ch.layout;
         let box = null;
-        if (boxShown) {
-          const title = titleShown ? this._itemTitle(ch.properties) : '';
-          box = flatChartBox(L.extent, { margin: num(st.boxmargin) || 2, titleFont, title: title ? title + (st.titleunits || '') : '',
-            bottomTitle: flatFlag(this.flags, 'BOTTOMTITLE'), alignRight: /right/.test(String(st.align || '')), measure });
+        if (boxSpec) {
+          const title = boxSpec.titleShown ? this._itemTitle(ch.properties) : '';
+          box = chartBoxLayout(L.extent, { unit: 1, margin: boxSpec.margin, titleText: title ? title + boxUnits : '',
+            titleFont: w => boxSpec.titleFontOf(1, w), bottomTitle: boxSpec.bottomTitle, alignRight: boxSpec.alignRight, measure });
         }
         const ext = box ? box.rect : L.extent;
         // align / offsetx / offsety (flatChartAlignOffset), the chart's
@@ -15865,9 +15847,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (box) {
           const r = box.rect;
           shape(ch, { base: [(r[0] + r[2]) / 2, r[3]], dir: 0, len: r[3] - r[1], w2: (r[2] - r[0]) / 2, sw: (r[2] - r[0]) / 2, band: 0, head: 0 },
-            boxFill, boxLine, borderWidth * 0.2 * box.width / 30, null, true);
-          if (box.title) titles.push({ position: ch.c, text: box.title.lines.join('\n'), font: box.title.font * unit, anchor: box.title.anchor,
-            off: [box.title.x * unit + ch.off[0], (box.title.baseline - 0.8 * box.title.font) * unit + ch.off[1]] });
+            boxFill, boxLine, borderWidth * 0.2 * box.w / 30, null, true);
+          // the title in px, rendered by the shared title layer
+          if (box.title) titles.push({ d: ch, title: { text: box.title.text, x: box.title.x * unit, anchor: box.title.anchor,
+            top: box.title.top * unit, f: box.title.f * unit } });
         }
         for (const b of L.bars) {
           const rgb = this.classRgb(b.cls);
@@ -15935,18 +15918,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           backgroundPadding: [0.3, 0, 0.4, 0.1].map(k => k * boxed.reduce((a, d) => a + d.font, 0) / boxed.length)
         })));
       }
-      if (titles.length) {
-        layers.push(new TextLayer({
-          id: `ix-bar-titles-${this.name}`, data: titles, pickable: false,
-          getPosition: d => d.position, getText: d => d.text, getSize: d => d.font,
-          sizeUnits: 'pixels', fontFamily: 'arial', characterSet: 'auto', lineHeight: 1,
-          getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
-          fontSettings: { sdf: true }, outlineWidth: 1 / 7, outlineColor: [255, 255, 255, 128],
-          getTextAnchor: d => d.anchor, getAlignmentBaseline: 'top',
-          getPixelOffset: d => d.off,
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-      }
+      if (titles.length) layers.push(...this._boxTitleLayers(titles, {
+        box: false, unit, liveZoom, positionOf: b => b.d.c, offsetOf: b => b.d.off,
+        ids: { titles: `ix-bar-titles-${this.name}` }
+      }).titles);
       return layers;
     }
 
@@ -17655,7 +17630,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,

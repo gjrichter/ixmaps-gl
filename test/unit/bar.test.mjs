@@ -15,7 +15,7 @@ const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location:
   document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
 win.window = win; win.globalThis = win;
 vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
-const { isBarChart, flatBarLayout, flatChartBox, normalizeTheme, LayerRuntime } = win.__ixmapsGlInternals;
+const { isBarChart, flatBarLayout, chartBoxLayout, normalizeTheme, LayerRuntime } = win.__ixmapsGlInternals;
 const near = (a, b, msg, eps = 1e-3) => assert.ok(Math.abs(a - b) <= eps, `${msg}: ${a} vs ${b}`);
 const flagsOf = t => { const f = new Set(t.split('|')); Object.defineProperty(f, 'typeString', { value: t }); return f; };
 const measure = (text, font) => text.length * font * 0.5;
@@ -125,13 +125,13 @@ test('bar: NONEGATIVE leaves a negative bar out, NOZERO a 0 one (no gap)', () =>
   near(neg.base[1], neg.len, 'below the zero line, drawn upward to it');
 });
 
-test('bar: BOX margin and TITLE above the chart (flatChartBox)', () => {
-  const b = flatChartBox([0, -44, 78, 4], { margin: 5, titleFont: 6.5, title: 'Türkiye', measure });
+test('bar: BOX margin and TITLE above the chart (chartBoxLayout)', () => {
+  const b = chartBoxLayout([0, -44, 78, 4], { margin: 5, titleFont: 6.5, titleText: 'Türkiye', measure });
   near(b.rect[0], -10, 'margin min(2 m, m · width / 30)');
   near(b.title.baseline, -44 - 0.7 * 6.5, 'the title\'s baseline 0.7 font above');
   near(b.rect[1], -44 - 0.7 * 6.5 - 0.905 * 6.5 + 0.1 * 6.5 - 10, 'the box encloses it, its top trimmed by 0.1 font');
   assert.equal(b.title.anchor, 'start');
-  const small = flatChartBox([0, 0, 15, 10], { margin: 5, measure });
+  const small = chartBoxLayout([0, 0, 15, 10], { margin: 5, measure });
   near(small.rect[0], -2.5, 'a small chart: a smaller margin');
 });
 
