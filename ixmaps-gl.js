@@ -220,7 +220,12 @@
   let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension;
   // PieSliceLayer (see makePieSliceLayer) and BarShapeLayer
   // (makeBarShapeLayer) are derived from ScatterplotLayer once deck.gl is there
-  let PieSliceLayer, BarShapeLayer;
+  let PieSliceLayer, BarShapeLayer, FlowPathLayer;
+  // the DASH flow animation's repaint loop (see refreshLayers): MapLibre
+  // renders on demand only, so the shader's wall-clock dash (see
+  // makeFlowPathLayer) needs a continuous frame request while any flow
+  // layer is on screen
+  let _flowRepaintRAF = null;
 
   // CHART|PIE / DONUT slices (_buildPieLayers): one instance per slice — a
   // ScatterplotLayer circle (billboarded, pixel radius, pixel offset, the
@@ -242,6 +247,111 @@
   // without anti-aliasing between them (a hard partition: no background
   // seam shows between two slices); the circle's rim keeps
   // ScatterplotLayer's own anti-aliasing.
+  // flat's VECTOR|DASH (maptheme.js 18240-18256, the bezier branch):
+  // the flow lines are dashed — one long dash, a small gap — and the
+  // dash pattern MOVES toward the target: flat animates each SVG line's
+  // stroke-dashoffset from d1+d2+random down to random (1-2s, infinite),
+  // the offset decreasing walking the pattern along the path direction.
+  // Here the same in the fragment shader — but deck.gl tessellates a
+  // path into per-SEGMENT quads whose vPathPosition.y restarts at 0 at
+  // every segment vertex (and is in half-stroke-width units, not
+  // pixels), so the pattern is NOT continuous from the segment
+  // coordinate alone. deck's own PathStyleExtension with dashMode
+  // 'path' (HIGH_PRECISION_DASH) supplies the missing cumulative term:
+  // its calculateDashMetrics fills per-segment [distance so far, path
+  // length] and its vertex shader turns it into vDashOffset, making
+  //   alongPath = vPathPosition.y + vDashOffset
+  // continuous across segments (deck's own dash shader uses exactly
+  // this; the pattern is periodic, so the mod() in vDashOffset is
+  // seamless). The extension's own gap stays 0 (getDashArray's second
+  // component — it renders the line solid); THIS layer's
+  // DECKGL_FILTER_COLOR discards the moving gap: the solid length and
+  // flat's random per-arc phase as an instanced attribute, a time
+  // uniform advanced by the wall clock (one full dash cycle every 2s),
+  // and fragments outside the moving dash window discarded — the layers
+  // themselves are NOT rebuilt per frame. The discard skips the picking
+  // pass (picking.isActive): flat's dashed SVG line is hover-tested
+  // across its gaps too, so the arcs keep their tooltips while the
+  // dash runs
+  function makeFlowPathLayer(Base) {
+    // deck.gl 9: a layer's custom uniforms live in shader MODULES — an
+    // std140 block named <module>Uniforms, its layout declared by the
+    // module's own GLSL and uniformTypes, values pushed per draw via
+    // setShaderModuleProps (the picking module's picking.isActive works
+    // exactly the same way). A plain GLSL uniform would have no backing
+    // buffer, and deck 8's state.model.setUniforms() no longer exists.
+    const FLOW_MODULE = {
+      name: 'flow',
+      uniformTypes: { uFlowTime: 'f32' },
+      defaultUniforms: { uFlowTime: 0 },
+      vs: 'layout(std140) uniform flowUniforms { float uFlowTime; } flow;',
+      fs: 'layout(std140) uniform flowUniforms { float uFlowTime; } flow;'
+    };
+    class Layer extends Base {
+      getShaders() {
+        const shaders = super.getShaders();
+        shaders.modules = (shaders.modules || []).concat(FLOW_MODULE);
+        const inject = Object.assign({}, shaders.inject || {});
+        inject['vs:#decl'] = (inject['vs:#decl'] || '') + `
+in vec2 instanceFlowPhase;
+out vec2 vFlowPhase;
+`;
+        inject['vs:#main-end'] = (inject['vs:#main-end'] || '') + `
+vFlowPhase = instanceFlowPhase;
+`;
+        inject['fs:#decl'] = (inject['fs:#decl'] || '') + `
+in vec2 vFlowPhase;
+`;
+        // before the picking module's own filter; the dash is skipped
+        // there (see the class comment). vDashArray/vDashOffset come
+        // from the PathStyleExtension (see the layer's extensions),
+        // the position along the path is geometry.uv (the path
+        // layer's main sets it to vPathPosition before the filter
+        // runs; the varying itself is NOT redeclared here — the base
+        // shader already declares it, and the injected block lands
+        // before the base source, so a redeclaration is a
+        // redefinition error). uFlowTime comes from the flow module's
+        // block (see FLOW_MODULE)
+        inject['fs:DECKGL_FILTER_COLOR'] = (inject['fs:DECKGL_FILTER_COLOR'] || '') + `
+{
+  float period = vDashArray.x;
+  float pickingActive = 0.0;
+#ifdef MODULE_PICKING
+  pickingActive = picking.isActive;
+#endif
+  if (period > 0.0 && pickingActive < 0.5) {
+    float alongPath = geometry.uv.y + vDashOffset;
+    float pos = fract((alongPath - flow.uFlowTime * period + vFlowPhase.y) / period);
+    if (pos * period > vFlowPhase.x) discard;
+  }
+}
+`;
+        shaders.inject = inject;
+        return shaders;
+      }
+      initializeState() {
+        super.initializeState();
+        this.getAttributeManager().addInstanced({
+          instanceFlowPhase: { size: 2, accessor: 'getFlowPhase', defaultValue: [0, 0] }
+        });
+      }
+      draw(opts) {
+        // one full dash cycle every 2s — flat's animate dur (the bezier
+        // branch); the offset decreases, so the pattern walks toward
+        // the target (alongPath grows along the path). setProps on
+        // the shader inputs; the model's predraw flushes the uniform
+        // buffer when super.draw renders
+        this.setShaderModuleProps({ flow: { uFlowTime: (Date.now() % 2000) / 2000 } });
+        super.draw(opts);
+      }
+    }
+    Layer.layerName = 'FlowPathLayer';
+    Layer.defaultProps = Object.assign({}, Base.defaultProps, {
+      getFlowPhase: { type: 'accessor', value: [0, 0] }
+    });
+    return Layer;
+  }
+
   function makePieSliceLayer(Base) {
     class Layer extends Base {
       getShaders() {
@@ -503,6 +613,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension } = global.deck);
         PieSliceLayer = makePieSliceLayer(ScatterplotLayer);
         BarShapeLayer = makeBarShapeLayer(ScatterplotLayer);
+        FlowPathLayer = makeFlowPathLayer(PathLayer);
         // which engine and libraries this page really runs (a page may
         // bring its own MapLibre/deck.gl — the loaded ones are named)
         const ml = global.maplibregl && typeof global.maplibregl.getVersion === 'function' ? global.maplibregl.getVersion() : '?';
@@ -2310,11 +2421,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     /^DIFFERENCE$/, /^FRACTION$/, /^PERCENT$/, /^PERMILLE$/, /^PRODUCT$/, /^CALCVAL$/, /^RELATIVE$/];
   // flat's VECTOR / BEZIER modifiers with no rendering here (see
   // _buildVectorLayers), the word → what happens instead
+  // (DASH IS drawn — the animated flow, see makeFlowPathLayer)
   const VECTOR_INERT_FLAGS = {
     VALUES: 'the value text along the curve is not drawn yet',
     DYNAMICWIDTH: 'not drawn yet (flat widens by the log of the length in its own map units) — the plain width instead',
-    LONG: 'not drawn yet (its bow depends on flat\'s own map units) — the default bow instead',
-    DASH: 'drawn as static dashes — flat\'s dash animation is not ported'
+    LONG: 'not drawn yet (its bow depends on flat\'s own map units) — the default bow instead'
   };
   const _warnedFlags = new Set();
 
@@ -4869,8 +4980,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const svgProjection = flatSvgProjectionOf(this.mapOptions.map)
         || (isFlatOrthographicName(this.mapOptions.mapProjection) ? FLAT_ORTHOGRAPHIC_PROJECTION : null);
       if (svgProjection) flatSvgProjectionByOptions.set(this._engineOptions, svgProjection);
-      const planeProjection = flatPlaneProjectionOf(this.mapOptions);
-      if (planeProjection) flatPlaneProjectionByOptions.set(this._engineOptions, planeProjection);
       if (isFlatOrthographicName(this.mapOptions.mapProjection)) {
         flatOrthographicByOptions.set(this._engineOptions, true);
         if (this._viewCenter) flatViewCenterByOptions.set(this._engineOptions, { lat: this._viewCenter[0], lng: this._viewCenter[1] });
@@ -6002,8 +6111,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const svgProjection = flatSvgProjectionOf(svg) || (/orthographic\.svg$/i.test(svg) ? FLAT_ORTHOGRAPHIC_PROJECTION : null);
           if (svgProjection) flatSvgProjectionByOptions.set(builder._engineOptions, svgProjection);
           else flatSvgProjectionByOptions.delete(builder._engineOptions);
-          if (svgProjection && svgProjection.invert) flatPlaneProjectionByOptions.set(builder._engineOptions, svgProjection);
-          else flatPlaneProjectionByOptions.delete(builder._engineOptions);
           if (/orthographic\.svg$/i.test(svg)) flatOrthographicByOptions.set(builder._engineOptions, true);
           else { flatOrthographicByOptions.delete(builder._engineOptions); flatViewCenterByOptions.delete(builder._engineOptions); }
         }
@@ -6174,6 +6281,22 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (order !== refreshLayers._lastOrder) { refreshLayers._lastOrder = order; console.info('[ixmaps-gl debug] draw order (bottom → top): ' + order); }
         }
         overlay.setProps({ layers });
+        // start/stop the flow repaint loop: any layer whose paths carry
+        // dash offsets animates, and only then (a static map renders
+        // nothing new; the loop is one rAF, one triggerRepaint each)
+        const flowOn = layers.some(l => l.constructor.layerName === 'FlowPathLayer'
+          && l.props.data && l.props.data.some(d => d.dash && d.dash[0] + d.dash[1] > 0));
+        if (glDebug()) console.info('[ixmaps-gl debug] flow loop on: ' + flowOn + ' (' + layers.filter(l => l.constructor.layerName === 'FlowPathLayer').length + ' flow layers, '
+          + (layers.find(l => l.constructor.layerName === 'FlowPathLayer') || {props: {data: []}}).props.data.length + ' paths)');
+        if (flowOn) {
+          if (_flowRepaintRAF == null) {
+            const loop = () => { if (map.triggerRepaint) map.triggerRepaint(); _flowRepaintRAF = global.requestAnimationFrame(loop); };
+            _flowRepaintRAF = global.requestAnimationFrame(loop);
+          }
+        } else if (_flowRepaintRAF != null) {
+          global.cancelAnimationFrame(_flowRepaintRAF);
+          _flowRepaintRAF = null;
+        }
         // flat's WMS themes render as native raster layers, not deck.gl —
         // reconcile them with the current runtimes on every rebuild
         syncWmsLayers();
@@ -6838,11 +6961,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // the flat SVG projection a map's options object belongs to (set by the
   // map's init and loadProject; the runtimes only see the options object)
   const flatSvgProjectionByOptions = new WeakMap();
-  // the projection plane a map's VECTOR / BEZIER flows are drawn in: flat's
-  // map file, or the Map() option mapProjection ("equalearth") — flat computes
-  // the curves in its map's own coordinates, so the same flow bows around the
-  // pole there. (Unlike flatSvgProjectionByOptions it leaves the view framing alone.)
-  const flatPlaneProjectionByOptions = new WeakMap();
   // a map that is flat's orthographic one (drawn as MapLibre's globe): its object scale is
   // flat's (scale × the globe's pixels per degree at its center, measured on flat 2026-10-10
   // on the mechanical-goods globe page, the same at view zooms 2.5 and 3.5: 197.44e6; the
@@ -6884,12 +7002,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const c = Math.cos(globeCenterLat(centerLat) * Math.PI / 180);
     const radius = 512 * Math.pow(2, zoom) / (2 * Math.PI * c);
     return Math.log2(globeDiscRadius(radius, height > 0 ? height : 768) * 2 * Math.PI / 512);
-  }
-  function flatPlaneProjectionOf(mapOptions) {
-    const byUrl = flatSvgProjectionOf(mapOptions.map);
-    if (byUrl) return byUrl;
-    const named = FLAT_SVG_PROJECTIONS[String(mapOptions.mapProjection || '').trim().toLowerCase()];
-    return named || null;
   }
   // flat SVG map scale ÷ the Mercator one at the same on-screen size (1
   // without a flat SVG projection)
@@ -15757,22 +15869,28 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         return [(lng + 180) / 360 * world, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * world];
       };
       const mercToLngLat = ([x, y]) => [x / world * 360 - 180, (2 * Math.atan(Math.exp((0.5 - y / world) * 2 * Math.PI)) - Math.PI / 2) * 180 / Math.PI];
-      // the curves are computed in the plane of flat's map (Equal Earth), at the screen
-      // size of this map's degree of longitude on the equator, then mapped back: the
-      // flow bows around the pole as on flat. Mercator's plane stays the default.
-      // On the globe (flat's orthographic map) the plane is the one of the view center,
-      // for the flows whose two ends face the viewer; the others keep Mercator's.
+      // the curves are computed in the plane the map is DISPLAYED in: Web
+      // Mercator under MapLibre's mercator projection; on the globe (flat's
+      // orthographic map) the orthographic plane of the view center, for
+      // the flows whose two ends face the viewer (the others keep
+      // Mercator's). flat's own Equal Earth / Winkel plane (e1cb264) is NOT
+      // used: this engine displays those maps in Web Mercator too (a flat
+      // SVG map in another projection is reported "not available — mercator
+      // used"), and a curve bowed in the Equal Earth plane swings far
+      // toward the pole once Mercator renders it — measured on
+      // mechanical_goods_flows.html: Japan→USA at 82°N, its bow almost half
+      // the chord, where the Mercator curve stays at 63°N — the "deviated
+      // near the north pole" vectors. Flat bows its curves in the plane of
+      // ITS map; here the plane of the display.
       const planeFns = (proj, k) => ({
         toPx: ([lng, lat]) => { const q = proj.project(lat, lng); return [q[0] * k, -q[1] * k]; },
         toLngLat: ([x, y]) => { const q = proj.invert(x / k, -y / k); return [q[1], q[0]]; }
       });
       const mercFns = { toPx: mercToPx, toLngLat: mercToLngLat };
-      const fixedPlane = flatPlaneProjectionByOptions.get(this.mapOptions);
-      const fixedFns = fixedPlane && fixedPlane.invert ? planeFns(fixedPlane, (world / 360) / fixedPlane.project(0, 1)[0]) : null;
       const planeCenter = flatViewCenterByOptions.get(this.mapOptions) || globeCenter;
-      const ortho = !fixedFns && globeCenter ? orthographicPlane(planeCenter.lat, planeCenter.lng) : null;
+      const ortho = globeCenter ? orthographicPlane(planeCenter.lat, planeCenter.lng) : null;
       const orthoFns = ortho ? planeFns(ortho, world / (2 * Math.PI)) : null;
-      const fnsOf = it => (fixedFns || (orthoFns && ortho.inFront(it.p1) && ortho.inFront(it.p2) ? orthoFns : mercFns));
+      const fnsOf = it => (orthoFns && ortho.inFront(it.p1) && ortho.inFront(it.p2) ? orthoFns : mercFns);
       const inBox = c => c && c[0] >= bbox[0] && c[0] <= bbox[2] && c[1] >= bbox[1] && c[1] <= bbox[3];
 
       const sizePow = resolveSizePow(st, this.flags);
@@ -15871,7 +15989,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // — every size equal — SVG ignores: the opacity stays)
           if (dop || dopMin) { const d = dopacity(it); if (isFinite(d)) { lineAlpha = d; headAlpha = d; } }
           if (gradient) stops = fadeGradientStops(pts, lay.vx, lay.vy, fade);
-          if (dash) dashArr = [50 * oz, 5 * oz + sw];
           pts = pts.map(p => [p[0] + a[0], p[1] + a[1]]);
           end = [end[0] + a[0], end[1] + a[1]];
         } else {
@@ -15885,7 +16002,25 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           headS = 4; refX = 4; refY = 2;
           lineAlpha = fo || 0.3;
           headAlpha = Math.min(1, (fo || 0.3) * 2);
-          if (dash) dashArr = [50 * oz, 15 * oz];
+        }
+        if (dash) {
+          // flat's dash pattern: one long dash (50 px at the object scale)
+          // and a small gap, its phase walking toward the target — a flow
+          // of any length gets its own count of dashes that way: long ones
+          // many, short ones none at all (a solid line). style.dashcount
+          // instead divides the flow into that many dash+gap periods:
+          // every flow, long or short, shows the same pattern and moves at
+          // the same relative speed (one full dash cycle every 2s), the
+          // arrows as on the region-migration page
+          const nDashes = Math.round(styleNum(st.dashcount) || 0);
+          if (nDashes >= 1) {
+            let flowPx = 0;
+            for (let i = 1; i < pts.length; i++) flowPx += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+            const period = flowPx / nDashes;
+            dashArr = [period * 0.85, period * 0.15];
+          } else {
+            dashArr = bezier ? [50 * oz, 5 * oz + sw] : [50 * oz, 15 * oz];
+          }
         }
         // a line under a pixel: one pixel at its width as opacity
         const drawW = Math.max(1, sw);
@@ -15911,7 +16046,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         let run = [], runColors = [];
         const flush = () => {
           if (run.length > 1) {
-            const dash = dashArr ? [dashArr[0] / drawW, dashArr[1] / drawW] : [0, 0];
+            // the flow triple: [dash, gap] in px (the shader's path
+            // distance unit) + flat's random per-arc dashoffset phase
+            // (maptheme.js 18249)
+            const dash = dashArr ? [dashArr[0], dashArr[1], Math.random()] : [0, 0, 0];
             if (globeCenter && !dashArr) {
               // on the globe deck.gl draws only the first three quarters of a path that has a
               // color per vertex (also an equal one): one color per path, a gradient as one
@@ -15946,12 +16084,22 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             fill: [...rgb.slice(0, 3), Math.round(255 * Math.min(1, headAlpha) * groupAlpha)] });
         }
       }
-      const layers = [new PathLayer({
+      // always FlowPathLayer: without dash offsets its flow hook no-ops
+      // (solid lines), with them the pattern walks toward the target
+      // (see makeFlowPathLayer). The dash triple is px; deck's path
+      // shader measures along-path positions in HALF-STROKE-WIDTH
+      // units (see makeFlowPathLayer), so the accessors convert:
+      // getDashArray carries the pattern period (its gap stays 0 — the
+      // extension renders solid, the moving gap is the flow hook),
+      // getFlowPhase the solid length and flat's random per-arc phase
+      const layers = [new FlowPathLayer({
         id: `ix-vector-${this.name}`, data: paths, pickable: true,
         getPath: d => d.path, getColor: d => d.colors, getWidth: d => d.width,
+        getDashArray: d => [(d.dash[0] + d.dash[1]) * 2 / Math.max(d.width, 1), 0],
+        getFlowPhase: d => [d.dash[0] * 2 / Math.max(d.width, 1), d.dash[2]],
         widthUnits: 'pixels', capRounded: dash && bezier, jointRounded: false, billboard: false,
-        parameters: ICON_LAYER_GLOBE_PARAMETERS,
-        ...(dash ? { getDashArray: d => d.dash, extensions: [new PathStyleExtension({ dash: true })] } : {})
+        extensions: [new PathStyleExtension({ dash: true, dashMode: 'path' })],
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
       })];
       if (heads.length) {
         // the head count in the id: deck kept a same-id polygon layer's
