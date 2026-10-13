@@ -1,0 +1,6207 @@
+{
+ "page": "examples/box_title_symbol.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-box-box-rect-g2",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "98e824eac2425e93",
+     "setDigest": "55049e04613e2d3d",
+     "columnDigests": {
+      "getIcon": "d74ed26d913f3815",
+      "getPixelOffset": "d388960b9e17679a",
+      "getPosition": "2b9ff0990920e417",
+      "getSize": "5e405245bfbd0afd"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       27.012751
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       353,
+       659
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 295,
+        "anchorY": 353,
+        "height": 706,
+        "id": "box|292|350|0|1.5|white|1|#bbbbbb|0.3",
+        "url": "#efb4e78c:14982",
+        "width": 590
+       },
+       [
+        27.012751,
+        -55.88473
+       ],
+       [
+        9.19,
+        45.55
+       ],
+       353
+      ],
+      [
+       {
+        "anchorX": 294.5,
+        "anchorY": 406.5,
+        "height": 813,
+        "id": "box|291.5|403.5|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#1eb954a9:17114",
+        "width": 589
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.05,
+        45.55
+       ],
+       406.5
+      ],
+      [
+       {
+        "anchorX": 360,
+        "anchorY": 472,
+        "height": 944,
+        "id": "box|357|469|0|2|white|1|#bbbbbb|0.3",
+        "url": "#1fb818fe:22938",
+        "width": 720
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.33,
+        45.55
+       ],
+       472
+      ],
+      [
+       {
+        "anchorX": 399,
+        "anchorY": 659,
+        "height": 1318,
+        "id": "box|395|655|0|2.25|white|1|#bbbbbb|0.3",
+        "url": "#95f71e02:34886",
+        "width": 798
+       },
+       [
+        0,
+        -130.150151
+       ],
+       [
+        9.12,
+        45.55
+       ],
+       659
+      ],
+      [
+       {
+        "anchorX": 449.5,
+        "anchorY": 561,
+        "height": 1122,
+        "id": "box|445.5|557|0|2.5|white|1|#bbbbbb|0.3",
+        "url": "#54d9ad33:32466",
+        "width": 899
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.26,
+        45.55
+       ],
+       561
+      ],
+      [
+       {
+        "anchorX": 509,
+        "anchorY": 621,
+        "height": 1242,
+        "id": "box|505|617|0|3|white|1|#bbbbbb|0.3",
+        "url": "#e84b9ced:39598",
+        "width": 1018
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.4,
+        45.55
+       ],
+       621
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-rect-circles-g2",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "70c63f2d46ed40cb",
+     "setDigest": "7c74cde2d950e0cc",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "e80fae9ff7d0b73e",
+      "getPosition": "2b9ff0990920e417",
+      "getRadius": "e439adb74c272562"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       2.970617,
+       2.970617
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       105.027166,
+       222.796264
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.19,
+        45.55
+       ],
+       105.027166
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.05,
+        45.55
+       ],
+       128.631483
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.33,
+        45.55
+       ],
+       157.540749
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.12,
+        45.55
+       ],
+       174.167851
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.26,
+        45.55
+       ],
+       196.487836
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.4,
+        45.55
+       ],
+       222.796264
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-rect",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "e0d096b4a80cd4b9",
+     "setDigest": "e0d096b4a80cd4b9",
+     "columnDigests": {
+      "getPixelOffset": "82bdbb334023d9a3",
+      "getPosition": "2b9ff0990920e417",
+      "getSize": "68be0616bf11ca40",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -222.796264,
+       -105.027166
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       74.265421,
+       74.265421
+      ]
+     },
+     "sample": [
+      [
+       [
+        -105.027166,
+        -216.425298
+       ],
+       [
+        9.19,
+        45.55
+       ],
+       74.265421,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -128.631483,
+        -240.029615
+       ],
+       [
+        9.05,
+        45.55
+       ],
+       74.265421,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -157.540749,
+        -268.938881
+       ],
+       [
+        9.33,
+        45.55
+       ],
+       74.265421,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -174.167851,
+        -434.096826
+       ],
+       [
+        9.12,
+        45.55
+       ],
+       74.265421,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -196.487836,
+        -307.885968
+       ],
+       [
+        9.26,
+        45.55
+       ],
+       74.265421,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -222.796264,
+        -334.194396
+       ],
+       [
+        9.4,
+        45.55
+       ],
+       74.265421,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
+      "getLineColor": [
+       221,
+       221,
+       221,
+       255
+      ],
+      "getLineWidth": 0.742654,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "0ed6b534c9a95094",
+     "setDigest": "6eed741cebd312cc",
+     "columnDigests": {
+      "getPosition": "372464cfb362c31e",
+      "getRadius": "bec0c7cbf527e2ec"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       129.533505,
+       274.782059
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.45
+       ],
+       129.533505
+      ],
+      [
+       [
+        9.05,
+        45.45
+       ],
+       158.645496
+      ],
+      [
+       [
+        9.33,
+        45.45
+       ],
+       194.300257
+      ],
+      [
+       [
+        9.12,
+        45.45
+       ],
+       214.807017
+      ],
+      [
+       [
+        9.26,
+        45.45
+       ],
+       242.334998
+      ],
+      [
+       [
+        9.4,
+        45.45
+       ],
+       274.782059
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-circular-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "757a6674043ddd06",
+     "setDigest": "1bc509e567dabe15",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "e80fae9ff7d0b73e",
+      "getPosition": "372464cfb362c31e",
+      "getRadius": "e439adb74c272562"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       2.970617,
+       2.970617
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       105.027166,
+       222.796264
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.19,
+        45.45
+       ],
+       105.027166
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.05,
+        45.45
+       ],
+       128.631483
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.33,
+        45.45
+       ],
+       157.540749
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.12,
+        45.45
+       ],
+       174.167851
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.26,
+        45.45
+       ],
+       196.487836
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.4,
+        45.45
+       ],
+       222.796264
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-circular",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "fa0db2671ba784a7",
+     "setDigest": "fa0db2671ba784a7",
+     "columnDigests": {
+      "getPixelOffset": "4756acb4c9124e65",
+      "getPosition": "372464cfb362c31e",
+      "getSize": "68be0616bf11ca40",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "5e007831773263c4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       7.426542,
+       7.426542
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       74.265421,
+       74.265421
+      ]
+     },
+     "sample": [
+      [
+       [
+        7.426542,
+        144.386589
+       ],
+       [
+        9.19,
+        45.45
+       ],
+       74.265421,
+       "Gamma",
+       "middle"
+      ],
+      [
+       [
+        7.426542,
+        173.49858
+       ],
+       [
+        9.05,
+        45.45
+       ],
+       74.265421,
+       "Alpha",
+       "middle"
+      ],
+      [
+       [
+        7.426542,
+        209.153341
+       ],
+       [
+        9.33,
+        45.45
+       ],
+       74.265421,
+       "Epsilon",
+       "middle"
+      ],
+      [
+       [
+        7.426542,
+        229.660101
+       ],
+       [
+        9.12,
+        45.45
+       ],
+       74.265421,
+       "Beta, long\nname that\nwraps",
+       "middle"
+      ],
+      [
+       [
+        7.426542,
+        257.188082
+       ],
+       [
+        9.26,
+        45.45
+       ],
+       74.265421,
+       "Delta",
+       "middle"
+      ],
+      [
+       [
+        7.426542,
+        289.635143
+       ],
+       [
+        9.4,
+        45.45
+       ],
+       74.265421,
+       "Zeta",
+       "middle"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-dtext-g2",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "189ccda798cec6f9",
+     "setDigest": "189ccda798cec6f9",
+     "columnDigests": {
+      "getIcon": "9486e95e5267084a",
+      "getPixelOffset": "5c316e8e8e60893f",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "0179e50276bce257"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       7.009386
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       350,
+       997.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 269,
+        "anchorY": 350,
+        "height": 700,
+        "id": "box|266|347|0|1.5|#f4f0e0|1|#aa8844|1",
+        "url": "#b0455b09:13994",
+        "width": 538
+       },
+       [
+        7.009386,
+        -47.419765
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       350
+      ],
+      [
+       {
+        "anchorX": 311.5,
+        "anchorY": 428,
+        "height": 856,
+        "id": "box|308.5|425|0|1.75|#f4f0e0|1|#aa8844|1",
+        "url": "#1e59b74a:18814",
+        "width": 623
+       },
+       [
+        0,
+        -58.077115
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       428
+      ],
+      [
+       {
+        "anchorX": 381,
+        "anchorY": 523.5,
+        "height": 1047,
+        "id": "box|378|520.5|0|2|#f4f0e0|1|#aa8844|1",
+        "url": "#d24f866:26554",
+        "width": 762
+       },
+       [
+        0,
+        -71.129648
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       523.5
+      ],
+      [
+       {
+        "anchorX": 422,
+        "anchorY": 997.5,
+        "height": 1995,
+        "id": "box|418|993.5|0|2.25|#f4f0e0|1|#aa8844|1",
+        "url": "#e276340c:54578",
+        "width": 844
+       },
+       [
+        0,
+        -287.638206
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       997.5
+      ],
+      [
+       {
+        "anchorX": 475.5,
+        "anchorY": 653,
+        "height": 1306,
+        "id": "box|471.5|649|0|2.5|#f4f0e0|1|#aa8844|1",
+        "url": "#e8ec2364:39514",
+        "width": 951
+       },
+       [
+        0,
+        -88.714258
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       653
+      ],
+      [
+       {
+        "anchorX": 538.5,
+        "anchorY": 740,
+        "height": 1480,
+        "id": "box|534.5|736|0|3|#f4f0e0|1|#aa8844|1",
+        "url": "#13898f85:49622",
+        "width": 1077
+       },
+       [
+        0,
+        -100.592513
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       740
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-dtext-circles-g2",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "915934148a64b017",
+     "setDigest": "94daa283cde5a6bb",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "e80fae9ff7d0b73e",
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "e439adb74c272562"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       2.970617,
+       2.970617
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       105.027166,
+       222.796264
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.19,
+        45.35
+       ],
+       105.027166
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.05,
+        45.35
+       ],
+       128.631483
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.33,
+        45.35
+       ],
+       157.540749
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.12,
+        45.35
+       ],
+       174.167851
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.26,
+        45.35
+       ],
+       196.487836
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.970617,
+       [
+        9.4,
+        45.35
+       ],
+       222.796264
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-dtext",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "fac02e673d8b32eb",
+     "setDigest": "fac02e673d8b32eb",
+     "columnDigests": {
+      "getPixelOffset": "47fcca88c5d6c82d",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "a55423639ea003e3",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -222.796264,
+       -105.027166
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       63.0163,
+       133.677758
+      ]
+     },
+     "sample": [
+      [
+       [
+        -105.027166,
+        -199.551616
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       63.0163,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -128.631483,
+        -244.399818
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       77.17889,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -157.540749,
+        -299.327423
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       94.524449,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -174.167851,
+        -748.921761
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       104.500711,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "start"
+      ],
+      [
+       [
+        -196.487836,
+        -373.326888
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       117.892702,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -222.796264,
+        -423.312902
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       133.677758,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-multiquad-g2",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "689f38966ce2da82",
+     "setDigest": "d7cfaca5c16238c3",
+     "columnDigests": {
+      "getIcon": "d74ed26d913f3815",
+      "getPixelOffset": "d388960b9e17679a",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "5e405245bfbd0afd"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       27.012751
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       353,
+       659
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 295,
+        "anchorY": 353,
+        "height": 706,
+        "id": "box|292|350|0|1.5|white|1|#bbbbbb|0.3",
+        "url": "#efb4e78c:14982",
+        "width": 590
+       },
+       [
+        27.012751,
+        -55.88473
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       353
+      ],
+      [
+       {
+        "anchorX": 294.5,
+        "anchorY": 406.5,
+        "height": 813,
+        "id": "box|291.5|403.5|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#1eb954a9:17114",
+        "width": 589
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       406.5
+      ],
+      [
+       {
+        "anchorX": 360,
+        "anchorY": 472,
+        "height": 944,
+        "id": "box|357|469|0|2|white|1|#bbbbbb|0.3",
+        "url": "#1fb818fe:22938",
+        "width": 720
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       472
+      ],
+      [
+       {
+        "anchorX": 399,
+        "anchorY": 659,
+        "height": 1318,
+        "id": "box|395|655|0|2.25|white|1|#bbbbbb|0.3",
+        "url": "#95f71e02:34886",
+        "width": 798
+       },
+       [
+        0,
+        -130.150151
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       659
+      ],
+      [
+       {
+        "anchorX": 449.5,
+        "anchorY": 561,
+        "height": 1122,
+        "id": "box|445.5|557|0|2.5|white|1|#bbbbbb|0.3",
+        "url": "#54d9ad33:32466",
+        "width": 899
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       561
+      ],
+      [
+       {
+        "anchorX": 509,
+        "anchorY": 621,
+        "height": 1242,
+        "id": "box|505|617|0|3|white|1|#bbbbbb|0.3",
+        "url": "#e84b9ced:39598",
+        "width": 1018
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       621
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-multiquad-g2",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "da0a45f3a7a222a6",
+     "setDigest": "a05a10e0106e3149",
+     "columnDigests": {
+      "getColor": "587f5d75dc721e2c",
+      "getIcon": "4df96a4bdc2e0033",
+      "getPixelOffset": "50db23dd8813527a",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "766ed947129966f6"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       210.054332,
+       445.592528
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.75",
+        "url": "#3b4bdcf1:2386",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       210.054332
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       257.262966
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       315.081498
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       348.335703
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.25",
+        "url": "#332af156:2270",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       392.975672
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.25",
+        "url": "#332af156:2270",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       445.592528
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-multiquad",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "231284f3f2ecafd0",
+     "setDigest": "231284f3f2ecafd0",
+     "columnDigests": {
+      "getPixelOffset": "82bdbb334023d9a3",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "68be0616bf11ca40",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -222.796264,
+       -105.027166
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       74.265421,
+       74.265421
+      ]
+     },
+     "sample": [
+      [
+       [
+        -105.027166,
+        -216.425298
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       74.265421,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -128.631483,
+        -240.029615
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       74.265421,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -157.540749,
+        -268.938881
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       74.265421,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -174.167851,
+        -434.096826
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       74.265421,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -196.487836,
+        -307.885968
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       74.265421,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -222.796264,
+        -334.194396
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       74.265421,
+       "Zeta",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "box-rect",
+     "flags": [
+      "BOX",
+      "CHART",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-circular",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "CIRCULARBOX",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-dtext",
+     "flags": [
+      "BOX",
+      "CHART",
+      "DTEXT",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-multiquad",
+     "flags": [
+      "BOX",
+      "CHART",
+      "MULTIQUAD",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "box-rect": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-circular": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-dtext": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-multiquad": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-box-box-rect-g4",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "0255f948c1368974",
+     "setDigest": "0255f948c1368974",
+     "columnDigests": {
+      "getIcon": "050c7d907a2a0f5f",
+      "getPixelOffset": "fa24a21ea0a3494f",
+      "getPosition": "2b9ff0990920e417",
+      "getSize": "f9227a621db215cc"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       34.030844
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       444,
+       829.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 371,
+        "anchorY": 444,
+        "height": 888,
+        "id": "box|368|441|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#cc5ed744:22190",
+        "width": 742
+       },
+       [
+        34.030844,
+        -70.410347
+       ],
+       [
+        9.19,
+        45.55
+       ],
+       444
+      ],
+      [
+       {
+        "anchorX": 371.5,
+        "anchorY": 512,
+        "height": 1024,
+        "id": "box|367.5|508|0|2.25|white|1|#bbbbbb|0.3",
+        "url": "#1a0a64e5:25538",
+        "width": 743
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.05,
+        45.55
+       ],
+       512
+      ],
+      [
+       {
+        "anchorX": 454,
+        "anchorY": 594.5,
+        "height": 1189,
+        "id": "box|450|590.5|0|2.75|white|1|#bbbbbb|0.3",
+        "url": "#4cd242df:34718",
+        "width": 908
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.33,
+        45.55
+       ],
+       594.5
+      ],
+      [
+       {
+        "anchorX": 501.5,
+        "anchorY": 829.5,
+        "height": 1659,
+        "id": "box|497.5|825.5|0|3|white|1|#bbbbbb|0.3",
+        "url": "#45cf309f:52206",
+        "width": 1003
+       },
+       [
+        0,
+        -163.978915
+       ],
+       [
+        9.12,
+        45.55
+       ],
+       829.5
+      ],
+      [
+       {
+        "anchorX": 566,
+        "anchorY": 707,
+        "height": 1414,
+        "id": "box|561|702|0|3.25|white|1|#bbbbbb|0.3",
+        "url": "#2392c60e:49678",
+        "width": 1132
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.26,
+        45.55
+       ],
+       707
+      ],
+      [
+       {
+        "anchorX": 641.5,
+        "anchorY": 782,
+        "height": 1564,
+        "id": "box|636.5|777|0|3.75|white|1|#bbbbbb|0.3",
+        "url": "#2ccde5ec:60742",
+        "width": 1283
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.4,
+        45.55
+       ],
+       782
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-rect-circles-g4",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "3cd3ae18314c5073",
+     "setDigest": "7559f1b43e8eee7e",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "0596df41787cd961",
+      "getPosition": "2b9ff0990920e417",
+      "getRadius": "bb785a709ca9585e"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       3.742743,
+       3.742743
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       132.325937,
+       280.705703
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.19,
+        45.55
+       ],
+       132.325937
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.05,
+        45.55
+       ],
+       162.065513
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.33,
+        45.55
+       ],
+       198.488906
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.12,
+        45.55
+       ],
+       219.437742
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.26,
+        45.55
+       ],
+       247.55916
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.4,
+        45.55
+       ],
+       280.705703
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-rect",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "495278956fa95b23",
+     "setDigest": "495278956fa95b23",
+     "columnDigests": {
+      "getPixelOffset": "4c889f2dbf6e605e",
+      "getPosition": "2b9ff0990920e417",
+      "getSize": "1a3de9432e916327",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -280.705703,
+       -132.325937
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       93.568568,
+       93.568568
+      ]
+     },
+     "sample": [
+      [
+       [
+        -132.325937,
+        -272.678789
+       ],
+       [
+        9.19,
+        45.55
+       ],
+       93.568568,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -162.065513,
+        -302.418365
+       ],
+       [
+        9.05,
+        45.55
+       ],
+       93.568568,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -198.488906,
+        -338.841757
+       ],
+       [
+        9.33,
+        45.55
+       ],
+       93.568568,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -219.437742,
+        -546.927729
+       ],
+       [
+        9.12,
+        45.55
+       ],
+       93.568568,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -247.55916,
+        -387.912012
+       ],
+       [
+        9.26,
+        45.55
+       ],
+       93.568568,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -280.705703,
+        -421.058554
+       ],
+       [
+        9.4,
+        45.55
+       ],
+       93.568568,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
+      "getLineColor": [
+       221,
+       221,
+       221,
+       255
+      ],
+      "getLineWidth": 0.935686,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "e0276a5a1d017c7f",
+     "setDigest": "63258ac4ecd584d0",
+     "columnDigests": {
+      "getPosition": "372464cfb362c31e",
+      "getRadius": "6af5c02bf29d5bf3"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       163.201989,
+       346.2037
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.45
+       ],
+       163.201989
+      ],
+      [
+       [
+        9.05,
+        45.45
+       ],
+       199.8808
+      ],
+      [
+       [
+        9.33,
+        45.45
+       ],
+       244.802984
+      ],
+      [
+       [
+        9.12,
+        45.45
+       ],
+       270.639882
+      ],
+      [
+       [
+        9.26,
+        45.45
+       ],
+       305.322965
+      ],
+      [
+       [
+        9.4,
+        45.45
+       ],
+       346.2037
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-circular-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "2849a95c1d01114a",
+     "setDigest": "48a5d5df34deaec4",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "0596df41787cd961",
+      "getPosition": "372464cfb362c31e",
+      "getRadius": "bb785a709ca9585e"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       3.742743,
+       3.742743
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       132.325937,
+       280.705703
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.19,
+        45.45
+       ],
+       132.325937
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.05,
+        45.45
+       ],
+       162.065513
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.33,
+        45.45
+       ],
+       198.488906
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.12,
+        45.45
+       ],
+       219.437742
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.26,
+        45.45
+       ],
+       247.55916
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.4,
+        45.45
+       ],
+       280.705703
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-circular",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "bc0c67800284a816",
+     "setDigest": "bc0c67800284a816",
+     "columnDigests": {
+      "getPixelOffset": "aa1019bdc1f83494",
+      "getPosition": "372464cfb362c31e",
+      "getSize": "1a3de9432e916327",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "5e007831773263c4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       9.356857,
+       9.356857
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       93.568568,
+       93.568568
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.356857,
+        181.915703
+       ],
+       [
+        9.19,
+        45.45
+       ],
+       93.568568,
+       "Gamma",
+       "middle"
+      ],
+      [
+       [
+        9.356857,
+        218.594513
+       ],
+       [
+        9.05,
+        45.45
+       ],
+       93.568568,
+       "Alpha",
+       "middle"
+      ],
+      [
+       [
+        9.356857,
+        263.516698
+       ],
+       [
+        9.33,
+        45.45
+       ],
+       93.568568,
+       "Epsilon",
+       "middle"
+      ],
+      [
+       [
+        9.356857,
+        289.353595
+       ],
+       [
+        9.12,
+        45.45
+       ],
+       93.568568,
+       "Beta, long\nname that\nwraps",
+       "middle"
+      ],
+      [
+       [
+        9.356857,
+        324.036678
+       ],
+       [
+        9.26,
+        45.45
+       ],
+       93.568568,
+       "Delta",
+       "middle"
+      ],
+      [
+       [
+        9.356857,
+        364.917414
+       ],
+       [
+        9.4,
+        45.45
+       ],
+       93.568568,
+       "Zeta",
+       "middle"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-dtext-g5",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "808786ef3322e5d4",
+     "setDigest": "808786ef3322e5d4",
+     "columnDigests": {
+      "getIcon": "307983a81864a115",
+      "getPixelOffset": "66f51c123ce8d143",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "4d2af0feb2521565"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       8.835516
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       440,
+       1255.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 338.5,
+        "anchorY": 440,
+        "height": 880,
+        "id": "box|335.5|437|0|1.75|#f4f0e0|1|#aa8844|1",
+        "url": "#9e589a44:20438",
+        "width": 677
+       },
+       [
+        8.835516,
+        -59.745161
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       440
+      ],
+      [
+       {
+        "anchorX": 393,
+        "anchorY": 539.5,
+        "height": 1079,
+        "id": "box|389|535.5|0|2.25|#f4f0e0|1|#aa8844|1",
+        "url": "#39a9b43:28186",
+        "width": 786
+       },
+       [
+        0,
+        -73.172579
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       539.5
+      ],
+      [
+       {
+        "anchorX": 480.5,
+        "anchorY": 659.5,
+        "height": 1319,
+        "id": "box|476.5|655.5|0|2.75|#f4f0e0|1|#aa8844|1",
+        "url": "#2e6df6a:40290",
+        "width": 961
+       },
+       [
+        0,
+        -89.617741
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       659.5
+      ],
+      [
+       {
+        "anchorX": 530.5,
+        "anchorY": 1255.5,
+        "height": 2511,
+        "id": "box|526.5|1251.5|0|3|#f4f0e0|1|#aa8844|1",
+        "url": "#b547754:82958",
+        "width": 1061
+       },
+       [
+        0,
+        -362.401431
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       1255.5
+      ],
+      [
+       {
+        "anchorX": 599,
+        "anchorY": 822.5,
+        "height": 1645,
+        "id": "box|594|817.5|0|3.25|#f4f0e0|1|#aa8844|1",
+        "url": "#a1a14646:60290",
+        "width": 1198
+       },
+       [
+        0,
+        -111.772961
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       822.5
+      ],
+      [
+       {
+        "anchorX": 678.5,
+        "anchorY": 932,
+        "height": 1864,
+        "id": "box|673.5|927|0|3.75|#f4f0e0|1|#aa8844|1",
+        "url": "#a76de263:75686",
+        "width": 1357
+       },
+       [
+        0,
+        -126.738625
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       932
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-dtext-circles-g5",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "737a4a47b4cb8c02",
+     "setDigest": "06bbba06376949df",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "0596df41787cd961",
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "bb785a709ca9585e"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       3.742743,
+       3.742743
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       132.325937,
+       280.705703
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.19,
+        45.35
+       ],
+       132.325937
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.05,
+        45.35
+       ],
+       162.065513
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.33,
+        45.35
+       ],
+       198.488906
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.12,
+        45.35
+       ],
+       219.437742
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.26,
+        45.35
+       ],
+       247.55916
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       3.742743,
+       [
+        9.4,
+        45.35
+       ],
+       280.705703
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-dtext",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "f8cb8493f79075a7",
+     "setDigest": "f8cb8493f79075a7",
+     "columnDigests": {
+      "getPixelOffset": "f0c3733568fea6cb",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "f4bf28ddc2cd080b",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -280.705703,
+       -132.325937
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       79.395562,
+       168.423422
+      ]
+     },
+     "sample": [
+      [
+       [
+        -132.325937,
+        -251.419281
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       79.395562,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -162.065513,
+        -307.924475
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       97.239308,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -198.488906,
+        -377.128921
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       119.093344,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -219.437742,
+        -943.582291
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       131.662645,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "start"
+      ],
+      [
+       [
+        -247.55916,
+        -470.362405
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       148.535496,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -280.705703,
+        -533.340835
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       168.423422,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-multiquad-g4",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "acb53576213d0cc5",
+     "setDigest": "acb53576213d0cc5",
+     "columnDigests": {
+      "getIcon": "050c7d907a2a0f5f",
+      "getPixelOffset": "fa24a21ea0a3494f",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "f9227a621db215cc"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       34.030844
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       444,
+       829.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 371,
+        "anchorY": 444,
+        "height": 888,
+        "id": "box|368|441|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#cc5ed744:22190",
+        "width": 742
+       },
+       [
+        34.030844,
+        -70.410347
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       444
+      ],
+      [
+       {
+        "anchorX": 371.5,
+        "anchorY": 512,
+        "height": 1024,
+        "id": "box|367.5|508|0|2.25|white|1|#bbbbbb|0.3",
+        "url": "#1a0a64e5:25538",
+        "width": 743
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       512
+      ],
+      [
+       {
+        "anchorX": 454,
+        "anchorY": 594.5,
+        "height": 1189,
+        "id": "box|450|590.5|0|2.75|white|1|#bbbbbb|0.3",
+        "url": "#4cd242df:34718",
+        "width": 908
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       594.5
+      ],
+      [
+       {
+        "anchorX": 501.5,
+        "anchorY": 829.5,
+        "height": 1659,
+        "id": "box|497.5|825.5|0|3|white|1|#bbbbbb|0.3",
+        "url": "#45cf309f:52206",
+        "width": 1003
+       },
+       [
+        0,
+        -163.978915
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       829.5
+      ],
+      [
+       {
+        "anchorX": 566,
+        "anchorY": 707,
+        "height": 1414,
+        "id": "box|561|702|0|3.25|white|1|#bbbbbb|0.3",
+        "url": "#2392c60e:49678",
+        "width": 1132
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       707
+      ],
+      [
+       {
+        "anchorX": 641.5,
+        "anchorY": 782,
+        "height": 1564,
+        "id": "box|636.5|777|0|3.75|white|1|#bbbbbb|0.3",
+        "url": "#2ccde5ec:60742",
+        "width": 1283
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       782
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-multiquad-g4",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "801382d41991363d",
+     "setDigest": "c7d507ae82ed5bb6",
+     "columnDigests": {
+      "getColor": "587f5d75dc721e2c",
+      "getIcon": "4df96a4bdc2e0033",
+      "getPixelOffset": "50db23dd8813527a",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "43db6229d7c456e2"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       264.651875,
+       561.411406
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.75",
+        "url": "#3b4bdcf1:2386",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       264.651875
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       324.131026
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       396.977812
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       438.875484
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.25",
+        "url": "#332af156:2270",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       495.118321
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.25",
+        "url": "#332af156:2270",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       561.411406
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-multiquad",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "88d563f4647096c7",
+     "setDigest": "88d563f4647096c7",
+     "columnDigests": {
+      "getPixelOffset": "4c889f2dbf6e605e",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "1a3de9432e916327",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -280.705703,
+       -132.325937
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       93.568568,
+       93.568568
+      ]
+     },
+     "sample": [
+      [
+       [
+        -132.325937,
+        -272.678789
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       93.568568,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -162.065513,
+        -302.418365
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       93.568568,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -198.488906,
+        -338.841757
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       93.568568,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -219.437742,
+        -546.927729
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       93.568568,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -247.55916,
+        -387.912012
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       93.568568,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -280.705703,
+        -421.058554
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       93.568568,
+       "Zeta",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "box-rect",
+     "flags": [
+      "BOX",
+      "CHART",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-circular",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "CIRCULARBOX",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-dtext",
+     "flags": [
+      "BOX",
+      "CHART",
+      "DTEXT",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-multiquad",
+     "flags": [
+      "BOX",
+      "CHART",
+      "MULTIQUAD",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "box-rect": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-circular": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-dtext": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-multiquad": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-box-box-rect-g6",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "573ebbc1fd249495",
+     "setDigest": "573ebbc1fd249495",
+     "columnDigests": {
+      "getIcon": "f6d77220ba86c710",
+      "getPixelOffset": "c8c72c1ba4b6fbbb",
+      "getPosition": "2b9ff0990920e417",
+      "getSize": "9d811f3a8a32cf59"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       21.43968
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       279.5,
+       523
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 234,
+        "anchorY": 279.5,
+        "height": 559,
+        "id": "box|232|277.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#85f7afe7:9962",
+        "width": 468
+       },
+       [
+        21.43968,
+        -44.355739
+       ],
+       [
+        9.19,
+        45.55
+       ],
+       279.5
+      ],
+      [
+       {
+        "anchorX": 234.5,
+        "anchorY": 323,
+        "height": 646,
+        "id": "box|231.5|320|0|1.25|white|1|#bbbbbb|0.3",
+        "url": "#16af6efe:11678",
+        "width": 469
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.05,
+        45.55
+       ],
+       323
+      ],
+      [
+       {
+        "anchorX": 286.5,
+        "anchorY": 375,
+        "height": 750,
+        "id": "box|283.5|372|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#dde393df:15630",
+        "width": 573
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.33,
+        45.55
+       ],
+       375
+      ],
+      [
+       {
+        "anchorX": 316.5,
+        "anchorY": 523,
+        "height": 1046,
+        "id": "box|313.5|520|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#2225b254:23262",
+        "width": 633
+       },
+       [
+        0,
+        -103.300243
+       ],
+       [
+        9.12,
+        45.55
+       ],
+       523
+      ],
+      [
+       {
+        "anchorX": 356.5,
+        "anchorY": 445,
+        "height": 890,
+        "id": "box|353.5|442|0|2|white|1|#bbbbbb|0.3",
+        "url": "#82201dd3:21354",
+        "width": 713
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.26,
+        45.55
+       ],
+       445
+      ],
+      [
+       {
+        "anchorX": 405,
+        "anchorY": 493.5,
+        "height": 987,
+        "id": "box|401|489.5|0|2.25|white|1|#bbbbbb|0.3",
+        "url": "#18fb41c6:26370",
+        "width": 810
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.4,
+        45.55
+       ],
+       493.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-rect-circles-g6",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "01c64a610aac00d6",
+     "setDigest": "1a59bd3da42dbbc2",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "b7b99eca0c273372",
+      "getPosition": "2b9ff0990920e417",
+      "getRadius": "2a03d772dc58a841"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       2.35778,
+       2.35778
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       83.360117,
+       176.833512
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.19,
+        45.55
+       ],
+       83.360117
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.05,
+        45.55
+       ],
+       102.094876
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.33,
+        45.55
+       ],
+       125.040175
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.12,
+        45.55
+       ],
+       138.237115
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.26,
+        45.55
+       ],
+       155.952499
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.4,
+        45.55
+       ],
+       176.833512
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-rect",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "c419a0db36833420",
+     "setDigest": "f1d615dad4bace6a",
+     "columnDigests": {
+      "getPixelOffset": "acd042cf5d37383d",
+      "getPosition": "2b9ff0990920e417",
+      "getSize": "0f528de5e211cf44",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -176.833512,
+       -83.360117
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       58.944504,
+       58.944504
+      ]
+     },
+     "sample": [
+      [
+       [
+        -83.360117,
+        -171.776873
+       ],
+       [
+        9.19,
+        45.55
+       ],
+       58.944504,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -102.094876,
+        -190.511632
+       ],
+       [
+        9.05,
+        45.55
+       ],
+       58.944504,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -125.040175,
+        -213.456931
+       ],
+       [
+        9.33,
+        45.55
+       ],
+       58.944504,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -138.237115,
+        -344.542879
+       ],
+       [
+        9.12,
+        45.55
+       ],
+       58.944504,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -155.952499,
+        -244.369255
+       ],
+       [
+        9.26,
+        45.55
+       ],
+       58.944504,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -176.833512,
+        -265.250268
+       ],
+       [
+        9.4,
+        45.55
+       ],
+       58.944504,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-circular",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
+      "getLineColor": [
+       221,
+       221,
+       221,
+       255
+      ],
+      "getLineWidth": 0.589445,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "a472541a249fa8d4",
+     "setDigest": "a986c05bb2d94778",
+     "columnDigests": {
+      "getPosition": "372464cfb362c31e",
+      "getRadius": "9ca3d223c7a64c3d"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       102.810811,
+       218.094665
+      ]
+     },
+     "sample": [
+      [
+       [
+        9.19,
+        45.45
+       ],
+       102.810811
+      ],
+      [
+       [
+        9.05,
+        45.45
+       ],
+       125.917013
+      ],
+      [
+       [
+        9.33,
+        45.45
+       ],
+       154.216216
+      ],
+      [
+       [
+        9.12,
+        45.45
+       ],
+       170.492442
+      ],
+      [
+       [
+        9.26,
+        45.45
+       ],
+       192.341415
+      ],
+      [
+       [
+        9.4,
+        45.45
+       ],
+       218.094665
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-circular-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "856d36ec3d0d9020",
+     "setDigest": "114e4a2058289093",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "b7b99eca0c273372",
+      "getPosition": "372464cfb362c31e",
+      "getRadius": "2a03d772dc58a841"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       2.35778,
+       2.35778
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       83.360117,
+       176.833512
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.19,
+        45.45
+       ],
+       83.360117
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.05,
+        45.45
+       ],
+       102.094876
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.33,
+        45.45
+       ],
+       125.040175
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.12,
+        45.45
+       ],
+       138.237115
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.26,
+        45.45
+       ],
+       155.952499
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.4,
+        45.45
+       ],
+       176.833512
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-circular",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "4b6f5c6e5a6c80cb",
+     "setDigest": "4b6f5c6e5a6c80cb",
+     "columnDigests": {
+      "getPixelOffset": "7160c8db32dcc35a",
+      "getPosition": "372464cfb362c31e",
+      "getSize": "0f528de5e211cf44",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "5e007831773263c4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       5.89445,
+       5.89445
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       58.944504,
+       58.944504
+      ]
+     },
+     "sample": [
+      [
+       [
+        5.89445,
+        114.599712
+       ],
+       [
+        9.19,
+        45.45
+       ],
+       58.944504,
+       "Gamma",
+       "middle"
+      ],
+      [
+       [
+        5.89445,
+        137.705914
+       ],
+       [
+        9.05,
+        45.45
+       ],
+       58.944504,
+       "Alpha",
+       "middle"
+      ],
+      [
+       [
+        5.89445,
+        166.005117
+       ],
+       [
+        9.33,
+        45.45
+       ],
+       58.944504,
+       "Epsilon",
+       "middle"
+      ],
+      [
+       [
+        5.89445,
+        182.281343
+       ],
+       [
+        9.12,
+        45.45
+       ],
+       58.944504,
+       "Beta, long\nname that\nwraps",
+       "middle"
+      ],
+      [
+       [
+        5.89445,
+        204.130316
+       ],
+       [
+        9.26,
+        45.45
+       ],
+       58.944504,
+       "Delta",
+       "middle"
+      ],
+      [
+       [
+        5.89445,
+        229.883566
+       ],
+       [
+        9.4,
+        45.45
+       ],
+       58.944504,
+       "Zeta",
+       "middle"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-dtext-g6",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "3571013ef071dc85",
+     "setDigest": "3571013ef071dc85",
+     "columnDigests": {
+      "getIcon": "c3c1f62fd6ed1dfe",
+      "getPixelOffset": "7bce59bd0dc0eecc",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "ee805d4e1548cead"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       5.561445
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       277.5,
+       791.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 213,
+        "anchorY": 277.5,
+        "height": 555,
+        "id": "box|211|275.5|0|1|#f4f0e0|1|#aa8844|1",
+        "url": "#69728b68:9230",
+        "width": 426
+       },
+       [
+        5.561445,
+        -37.637093
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       277.5
+      ],
+      [
+       {
+        "anchorX": 248,
+        "anchorY": 340,
+        "height": 680,
+        "id": "box|245|337|0|1.25|#f4f0e0|1|#aa8844|1",
+        "url": "#e56b2e2c:12682",
+        "width": 496
+       },
+       [
+        0,
+        -46.095836
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       340
+      ],
+      [
+       {
+        "anchorX": 303,
+        "anchorY": 416,
+        "height": 832,
+        "id": "box|300|413|0|1.75|#f4f0e0|1|#aa8844|1",
+        "url": "#82a48ec3:18026",
+        "width": 606
+       },
+       [
+        0,
+        -56.455639
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       416
+      ],
+      [
+       {
+        "anchorX": 335,
+        "anchorY": 791.5,
+        "height": 1583,
+        "id": "box|332|788.5|0|1.75|#f4f0e0|1|#aa8844|1",
+        "url": "#5215dc17:36454",
+        "width": 670
+       },
+       [
+        0,
+        -228.298596
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       791.5
+      ],
+      [
+       {
+        "anchorX": 377.5,
+        "anchorY": 518,
+        "height": 1036,
+        "id": "box|374.5|515|0|2|#f4f0e0|1|#aa8844|1",
+        "url": "#9ec89d24:26018",
+        "width": 755
+       },
+       [
+        0,
+        -70.412553
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       518
+      ],
+      [
+       {
+        "anchorX": 428.5,
+        "anchorY": 588,
+        "height": 1176,
+        "id": "box|424.5|584|0|2.25|#f4f0e0|1|#aa8844|1",
+        "url": "#31b121f4:32878",
+        "width": 857
+       },
+       [
+        0,
+        -79.840331
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       588
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-dtext-circles-g6",
+     "type": "ScatterplotLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "d1df47edc78e73df",
+     "setDigest": "80a4407220b12594",
+     "columnDigests": {
+      "getFillColor": "584435dbce093f41",
+      "getLineColor": "c4197a8c2325e8bb",
+      "getLineWidth": "b7b99eca0c273372",
+      "getPosition": "09cb0d45b61d0379",
+      "getRadius": "2a03d772dc58a841"
+     },
+     "stats": {
+      "getFillColor": [
+       232,
+       232
+      ],
+      "getLineColor": [
+       139,
+       139
+      ],
+      "getLineWidth": [
+       2.35778,
+       2.35778
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       83.360117,
+       176.833512
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.19,
+        45.35
+       ],
+       83.360117
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.05,
+        45.35
+       ],
+       102.094876
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.33,
+        45.35
+       ],
+       125.040175
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.12,
+        45.35
+       ],
+       138.237115
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.26,
+        45.35
+       ],
+       155.952499
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        139,
+        97,
+        36,
+        255
+       ],
+       2.35778,
+       [
+        9.4,
+        45.35
+       ],
+       176.833512
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-dtext",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "e6007e68ec5d2e4a",
+     "setDigest": "9079c957ceca7886",
+     "columnDigests": {
+      "getPixelOffset": "f7925196318ecadc",
+      "getPosition": "09cb0d45b61d0379",
+      "getSize": "872828e636c99346",
+      "getText": "87009f7c6d73bdf8",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -176.833512,
+       -83.360117
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       50.01607,
+       106.100107
+      ]
+     },
+     "sample": [
+      [
+       [
+        -83.360117,
+        -158.384222
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       50.01607,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -102.094876,
+        -193.980264
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       61.256925,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -125.040175,
+        -237.576333
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       75.024105,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -138.237115,
+        -594.419595
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       82.942269,
+       "Beta,\nlong\nname\nthat\nwraps",
+       "start"
+      ],
+      [
+       [
+        -155.952499,
+        -296.309747
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       93.571499,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -176.833512,
+        -335.983673
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       106.100107,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-box-box-multiquad-g6",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "df015888a8e6dc6e",
+     "setDigest": "df015888a8e6dc6e",
+     "columnDigests": {
+      "getIcon": "f6d77220ba86c710",
+      "getPixelOffset": "c8c72c1ba4b6fbbb",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "9d811f3a8a32cf59"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       21.43968
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       279.5,
+       523
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 234,
+        "anchorY": 279.5,
+        "height": 559,
+        "id": "box|232|277.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#85f7afe7:9962",
+        "width": 468
+       },
+       [
+        21.43968,
+        -44.355739
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       279.5
+      ],
+      [
+       {
+        "anchorX": 234.5,
+        "anchorY": 323,
+        "height": 646,
+        "id": "box|231.5|320|0|1.25|white|1|#bbbbbb|0.3",
+        "url": "#16af6efe:11678",
+        "width": 469
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       323
+      ],
+      [
+       {
+        "anchorX": 286.5,
+        "anchorY": 375,
+        "height": 750,
+        "id": "box|283.5|372|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#dde393df:15630",
+        "width": 573
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       375
+      ],
+      [
+       {
+        "anchorX": 316.5,
+        "anchorY": 523,
+        "height": 1046,
+        "id": "box|313.5|520|0|1.75|white|1|#bbbbbb|0.3",
+        "url": "#2225b254:23262",
+        "width": 633
+       },
+       [
+        0,
+        -103.300243
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       523
+      ],
+      [
+       {
+        "anchorX": 356.5,
+        "anchorY": 445,
+        "height": 890,
+        "id": "box|353.5|442|0|2|white|1|#bbbbbb|0.3",
+        "url": "#82201dd3:21354",
+        "width": 713
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       445
+      ],
+      [
+       {
+        "anchorX": 405,
+        "anchorY": 493.5,
+        "height": 987,
+        "id": "box|401|489.5|0|2.25|white|1|#bbbbbb|0.3",
+        "url": "#18fb41c6:26370",
+        "width": 810
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       493.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-box-multiquad-g6",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "8d06a761187dcdcd",
+     "setDigest": "fbfb0e172c91bfc6",
+     "columnDigests": {
+      "getColor": "587f5d75dc721e2c",
+      "getIcon": "4df96a4bdc2e0033",
+      "getPixelOffset": "50db23dd8813527a",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "dd4a84ca45086c8e"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       166.720234,
+       353.667024
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.75",
+        "url": "#3b4bdcf1:2386",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       166.720234
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       204.189751
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       250.080351
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.5",
+        "url": "#7a93a8c1:2314",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       276.47423
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.25",
+        "url": "#332af156:2270",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       311.904997
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-139,97,36-0.25",
+        "url": "#332af156:2270",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       353.667024
+      ]
+     ]
+    },
+    {
+     "id": "ix-titles-box-multiquad",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "3eee68d9d9062170",
+     "setDigest": "abc9723ba8254d97",
+     "columnDigests": {
+      "getPixelOffset": "acd042cf5d37383d",
+      "getPosition": "61ddb243af537b3e",
+      "getSize": "0f528de5e211cf44",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -176.833512,
+       -83.360117
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       58.944504,
+       58.944504
+      ]
+     },
+     "sample": [
+      [
+       [
+        -83.360117,
+        -171.776873
+       ],
+       [
+        9.19,
+        45.25
+       ],
+       58.944504,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -102.094876,
+        -190.511632
+       ],
+       [
+        9.05,
+        45.25
+       ],
+       58.944504,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -125.040175,
+        -213.456931
+       ],
+       [
+        9.33,
+        45.25
+       ],
+       58.944504,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -138.237115,
+        -344.542879
+       ],
+       [
+        9.12,
+        45.25
+       ],
+       58.944504,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -155.952499,
+        -244.369255
+       ],
+       [
+        9.26,
+        45.25
+       ],
+       58.944504,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -176.833512,
+        -265.250268
+       ],
+       [
+        9.4,
+        45.25
+       ],
+       58.944504,
+       "Zeta",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "box-rect",
+     "flags": [
+      "BOX",
+      "CHART",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-circular",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "CIRCULARBOX",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-dtext",
+     "flags": [
+      "BOX",
+      "CHART",
+      "DTEXT",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "box-multiquad",
+     "flags": [
+      "BOX",
+      "CHART",
+      "MULTIQUAD",
+      "SIZE",
+      "SYMBOL",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "20.00 - 43.00",
+      "43.00 - 66.00",
+      "66.00 - 90.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 43,
+       "min": 20
+      },
+      {
+       "max": 66,
+       "min": 43
+      },
+      {
+       "max": 90.0019,
+       "min": 66
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 1,
+     "valueMax": 9,
+     "valueMedian": 4,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "box-rect": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-circular": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-dtext": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ],
+    "box-multiquad": [
+     "<b>Gamma</b>",
+     "<b>Beta, long name that wraps</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

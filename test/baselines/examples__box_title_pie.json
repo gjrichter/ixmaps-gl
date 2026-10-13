@@ -1,0 +1,7506 @@
+{
+ "page": "examples/box_title_pie.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-pie-box-pie-box-g2",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "329f80cf99e1aab3",
+     "setDigest": "676c7387cb0298f9",
+     "columnDigests": {
+      "getIcon": "f33e731ee33d8e99",
+      "getPixelOffset": "d388960b9e17679a",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "bdbf483fca2c9ef2"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       27.012751
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       353,
+       659
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 295,
+        "anchorY": 353,
+        "height": 706,
+        "id": "box|292|350|0|2|white|1|#bbbbbb|0.3",
+        "url": "#795d093:14818",
+        "width": 590
+       },
+       [
+        27.012751,
+        -55.88473
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       353
+      ],
+      [
+       {
+        "anchorX": 294.5,
+        "anchorY": 406.5,
+        "height": 813,
+        "id": "box|291.5|403.5|0|2|white|1|#bbbbbb|0.3",
+        "url": "#c373ea66:16946",
+        "width": 589
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       406.5
+      ],
+      [
+       {
+        "anchorX": 361,
+        "anchorY": 473,
+        "height": 946,
+        "id": "box|357|469|0|2.5|white|1|#bbbbbb|0.3",
+        "url": "#c270f707:23206",
+        "width": 722
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       473
+      ],
+      [
+       {
+        "anchorX": 399,
+        "anchorY": 659,
+        "height": 1318,
+        "id": "box|395|655|0|2.75|white|1|#bbbbbb|0.3",
+        "url": "#163ec486:34874",
+        "width": 798
+       },
+       [
+        0,
+        -130.150151
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       659
+      ],
+      [
+       {
+        "anchorX": 449.5,
+        "anchorY": 561,
+        "height": 1122,
+        "id": "box|445.5|557|0|3|white|1|#bbbbbb|0.3",
+        "url": "#9bb1bf59:32266",
+        "width": 899
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       561
+      ],
+      [
+       {
+        "anchorX": 510,
+        "anchorY": 622,
+        "height": 1244,
+        "id": "box|505|617|0|3.25|white|1|#bbbbbb|0.3",
+        "url": "#c620e06c:39910",
+        "width": 1020
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       622
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "3ae7aaf86230b5a3",
+     "setDigest": "3ae7aaf86230b5a3",
+     "columnDigests": {
+      "getPixelOffset": "82bdbb334023d9a3",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "68be0616bf11ca40",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -222.796264,
+       -105.027166
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       74.265421,
+       74.265421
+      ]
+     },
+     "sample": [
+      [
+       [
+        -105.027166,
+        -216.425298
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       74.265421,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -128.631483,
+        -240.029615
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       74.265421,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -157.540749,
+        -268.938881
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       74.265421,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -174.167851,
+        -434.096826
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       74.265421,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -196.487836,
+        -307.885968
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       74.265421,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -222.796264,
+        -334.194396
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       74.265421,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-box",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "dc5d423d08052fcb",
+     "setDigest": "6669d7b30f981b51",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "7bde6ffc500605ac",
+      "getRadius": "b12ecf599fd819ce",
+      "getSlice": "c01aeebada36f963",
+      "getSliceLineWidth": "8d502b0ebd0be086"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       105.027166,
+       222.796264
+      ],
+      "getSlice": [
+       0,
+       5.759587
+      ],
+      "getSliceLineWidth": [
+       1,
+       1.485308
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       105.027166,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       105.027166,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       105.027166,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       128.631483,
+       [
+        0,
+        3.769911,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       128.631483,
+       [
+        3.769911,
+        1.675516,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       128.631483,
+       [
+        5.445427,
+        0.837758,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       157.540749,
+       [
+        0,
+        3.998391,
+        0
+       ],
+       1.050272
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       157.540749,
+       [
+        3.998391,
+        0.571199,
+        0
+       ],
+       1.050272
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       157.540749,
+       [
+        4.569589,
+        1.713596,
+        0
+       ],
+       1.050272
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       174.167851,
+       [
+        0,
+        1.570796,
+        0
+       ],
+       1.161119
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       174.167851,
+       [
+        1.570796,
+        4.18879,
+        0
+       ],
+       1.161119
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       174.167851,
+       [
+        5.759587,
+        0.523599,
+        0
+       ],
+       1.161119
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       196.487836,
+       [
+        0,
+        0.523599,
+        0
+       ],
+       1.309919
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       196.487836,
+       [
+        0.523599,
+        1.047198,
+        0
+       ],
+       1.309919
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       196.487836,
+       [
+        1.570796,
+        4.712389,
+        0
+       ],
+       1.309919
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       222.796264,
+       [
+        0,
+        1.478397,
+        0
+       ],
+       1.485308
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       222.796264,
+       [
+        1.478397,
+        1.847996,
+        0
+       ],
+       1.485308
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       222.796264,
+       [
+        3.326392,
+        2.956793,
+        0
+       ],
+       1.485308
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-box-pie-bottom-g2",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "a011d20be204ca4e",
+     "setDigest": "f2ad8dd74961e797",
+     "columnDigests": {
+      "getIcon": "ad5ed134f97773a3",
+      "getPixelOffset": "11efebe242ca95c8",
+      "getPosition": "7954cba9da6af9ee",
+      "getSize": "102a6a7f8f595ead"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       27.012751
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       427,
+       659
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 295,
+        "anchorY": 427,
+        "height": 854,
+        "id": "box|292|424|0|2|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#c5e90917:17874",
+        "width": 590
+       },
+       [
+        27.012751,
+        -93.01744
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       427
+      ],
+      [
+       {
+        "anchorX": 294.5,
+        "anchorY": 480.5,
+        "height": 961,
+        "id": "box|291.5|477.5|0|2|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#5af74f2c:19986",
+        "width": 589
+       },
+       [
+        0,
+        -93.01744
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       480.5
+      ],
+      [
+       {
+        "anchorX": 361,
+        "anchorY": 547,
+        "height": 1094,
+        "id": "box|357|543|0|2.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#b4b19817:26766",
+        "width": 722
+       },
+       [
+        0,
+        -93.01744
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       547
+      ],
+      [
+       {
+        "anchorX": 399,
+        "anchorY": 659,
+        "height": 1318,
+        "id": "box|395|655|0|2.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#ebb5353a:34882",
+        "width": 798
+       },
+       [
+        0,
+        -130.150151
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       659
+      ],
+      [
+       {
+        "anchorX": 449.5,
+        "anchorY": 561,
+        "height": 1122,
+        "id": "box|445.5|557|0|3|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#2bf6d7f4:32278",
+        "width": 899
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       561
+      ],
+      [
+       {
+        "anchorX": 510,
+        "anchorY": 622,
+        "height": 1244,
+        "id": "box|505|617|0|3.25|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#54202cb0:39926",
+        "width": 1020
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       622
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-bottom",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "f3a13593f795817f",
+     "setDigest": "f3a13593f795817f",
+     "columnDigests": {
+      "getPixelOffset": "a3721250e24df956",
+      "getPosition": "7954cba9da6af9ee",
+      "getSize": "68be0616bf11ca40",
+      "getText": "150c8534f3381ecd",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -222.796264,
+       -105.027166
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       74.265421,
+       74.265421
+      ]
+     },
+     "sample": [
+      [
+       [
+        -105.027166,
+        -290.690719
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       74.265421,
+       "Gamma\npcs",
+       "start"
+      ],
+      [
+       [
+        -128.631483,
+        -314.295036
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       74.265421,
+       "Alpha\npcs",
+       "start"
+      ],
+      [
+       [
+        -157.540749,
+        -343.204302
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       74.265421,
+       "Epsilon\npcs",
+       "start"
+      ],
+      [
+       [
+        -174.167851,
+        -434.096826
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       74.265421,
+       "Beta, long\nname that\nwraps pcs",
+       "start"
+      ],
+      [
+       [
+        -196.487836,
+        -307.885968
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       74.265421,
+       "Delta pcs",
+       "start"
+      ],
+      [
+       [
+        -222.796264,
+        -334.194396
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       74.265421,
+       "Zeta pcs",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-bottom",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "260465f92dc13165",
+     "setDigest": "b45d0a6fddb33ad6",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "eb4dfbd89f3b2605",
+      "getRadius": "b12ecf599fd819ce",
+      "getSlice": "c01aeebada36f963",
+      "getSliceLineWidth": "8d502b0ebd0be086"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       105.027166,
+       222.796264
+      ],
+      "getSlice": [
+       0,
+       5.759587
+      ],
+      "getSliceLineWidth": [
+       1,
+       1.485308
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       105.027166,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       105.027166,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       105.027166,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       128.631483,
+       [
+        0,
+        3.769911,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       128.631483,
+       [
+        3.769911,
+        1.675516,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       128.631483,
+       [
+        5.445427,
+        0.837758,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       157.540749,
+       [
+        0,
+        3.998391,
+        0
+       ],
+       1.050272
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       157.540749,
+       [
+        3.998391,
+        0.571199,
+        0
+       ],
+       1.050272
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       157.540749,
+       [
+        4.569589,
+        1.713596,
+        0
+       ],
+       1.050272
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       174.167851,
+       [
+        0,
+        1.570796,
+        0
+       ],
+       1.161119
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       174.167851,
+       [
+        1.570796,
+        4.18879,
+        0
+       ],
+       1.161119
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       174.167851,
+       [
+        5.759587,
+        0.523599,
+        0
+       ],
+       1.161119
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       196.487836,
+       [
+        0,
+        0.523599,
+        0
+       ],
+       1.309919
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       196.487836,
+       [
+        0.523599,
+        1.047198,
+        0
+       ],
+       1.309919
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       196.487836,
+       [
+        1.570796,
+        4.712389,
+        0
+       ],
+       1.309919
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       222.796264,
+       [
+        0,
+        1.478397,
+        0
+       ],
+       1.485308
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       222.796264,
+       [
+        1.478397,
+        1.847996,
+        0
+       ],
+       1.485308
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       222.796264,
+       [
+        3.326392,
+        2.956793,
+        0
+       ],
+       1.485308
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-box-pie-starburst-g5",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "fa0292665420bdfc",
+     "setDigest": "2cc5d70a514a0268",
+     "columnDigests": {
+      "getIcon": "9fbed61d3caa35bd",
+      "getPixelOffset": "f78501cda7cd6c6f",
+      "getPosition": "d64b454fe67c695c",
+      "getSize": "d0a4c8d1edfe2636"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       1001,
+       1212
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 889.5,
+        "anchorY": 1001,
+        "height": 2002,
+        "id": "box|882.5|994|0|6|white|1|#bbbbbb|0.3",
+        "url": "#acba079e:102158",
+        "width": 1779
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       1001
+      ],
+      [
+       {
+        "anchorX": 1081.5,
+        "anchorY": 1193,
+        "height": 2386,
+        "id": "box|1072.5|1184|0|7.25|white|1|#bbbbbb|0.3",
+        "url": "#114777e4:145106",
+        "width": 2163
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       1193
+      ],
+      [
+       {
+        "anchorX": 961,
+        "anchorY": 1073,
+        "height": 2146,
+        "id": "box|953|1065|0|6.25|white|1|#bbbbbb|0.3",
+        "url": "#eb8a5941:117358",
+        "width": 1922
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       1073
+      ],
+      [
+       {
+        "anchorX": 1026,
+        "anchorY": 1212,
+        "height": 2424,
+        "id": "box|1018|1204|0|6.75|white|1|#bbbbbb|0.3",
+        "url": "#8885fdd:140754",
+        "width": 2052
+       },
+       [
+        0,
+        -93.01744
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       1212
+      ],
+      [
+       {
+        "anchorX": 1081.5,
+        "anchorY": 1193,
+        "height": 2386,
+        "id": "box|1072.5|1184|0|7.25|white|1|#bbbbbb|0.3",
+        "url": "#114777e4:145106",
+        "width": 2163
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       1193
+      ],
+      [
+       {
+        "anchorX": 1026,
+        "anchorY": 1137.5,
+        "height": 2275,
+        "id": "box|1018|1129.5|0|6.75|white|1|#bbbbbb|0.3",
+        "url": "#582e8c6a:132146",
+        "width": 2052
+       },
+       [
+        0,
+        -55.88473
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       1137.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-starburst",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "2f15bb5a64577dfa",
+     "setDigest": "8588872d3473de94",
+     "columnDigests": {
+      "getPixelOffset": "0e4d57c6bb4ea2d9",
+      "getPosition": "d64b454fe67c695c",
+      "getSize": "68be0616bf11ca40",
+      "getText": "15c092aff97dbc6e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -476.784005,
+       -389.29251
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       74.265421,
+       74.265421
+      ]
+     },
+     "sample": [
+      [
+       [
+        -389.29251,
+        -500.690642
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       74.265421,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -476.784005,
+        -588.182137
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       74.265421,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -420.483969,
+        -531.882101
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       74.265421,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -449.516271,
+        -635.179824
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       74.265421,
+       "Beta, long name that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -476.784005,
+        -588.182137
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       74.265421,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -449.516271,
+        -560.914403
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       74.265421,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-starburst",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "e128921168098b90",
+     "setDigest": "a47f1f24ec8f91b2",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "1521a2dc9544ed4d",
+      "getRadius": "2de869d89dcf0689",
+      "getSlice": "c8c5e884875c1059",
+      "getSliceLineWidth": "f3fe4fa2fe731670"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       158.928002,
+       476.784005
+      ],
+      "getSlice": [
+       0,
+       4.18879
+      ],
+      "getSliceLineWidth": [
+       1.05952,
+       3.17856
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       389.29251,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.595283
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       389.29251,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.595283
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       389.29251,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       2.595283
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       476.784005,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       3.17856
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       317.856003,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.11904
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       224.758135,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1.498388
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       420.483969,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.803226
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       158.928002,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1.05952
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       275.271374,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1.835142
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       275.271374,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1.835142
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       449.516271,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.996775
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       158.928002,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1.05952
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       158.928002,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1.05952
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       224.758135,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1.498388
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       476.784005,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       3.17856
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       317.856003,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.11904
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       355.373815,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.369159
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       449.516271,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       2.996775
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "pie-box",
+     "flags": [
+      "BOX",
+      "CHART",
+      "PIE",
+      "SIZE",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "pie-bottom",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "PIE",
+      "SIZE",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "pie-starburst",
+     "flags": [
+      "BOX",
+      "CHART",
+      "PIE",
+      "STARBURST",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "pie-box": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ],
+    "pie-bottom": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ],
+    "pie-starburst": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-pie-box-pie-box-g4",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "da9f65dbdc961d4f",
+     "setDigest": "00137b6759c7cf58",
+     "columnDigests": {
+      "getIcon": "e2dd057379d55bc0",
+      "getPixelOffset": "fa24a21ea0a3494f",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "45d09deb8f27d1ae"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       34.030844
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       445,
+       830.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 372,
+        "anchorY": 445,
+        "height": 890,
+        "id": "box|368|441|0|2.5|white|1|#bbbbbb|0.3",
+        "url": "#a0a7e091:22294",
+        "width": 744
+       },
+       [
+        34.030844,
+        -70.410347
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       445
+      ],
+      [
+       {
+        "anchorX": 371.5,
+        "anchorY": 512,
+        "height": 1024,
+        "id": "box|367.5|508|0|2.5|white|1|#bbbbbb|0.3",
+        "url": "#87fc3741:25522",
+        "width": 743
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       512
+      ],
+      [
+       {
+        "anchorX": 454,
+        "anchorY": 594.5,
+        "height": 1189,
+        "id": "box|450|590.5|0|3|white|1|#bbbbbb|0.3",
+        "url": "#bd6a8a0b:34522",
+        "width": 908
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       594.5
+      ],
+      [
+       {
+        "anchorX": 502.5,
+        "anchorY": 830.5,
+        "height": 1661,
+        "id": "box|497.5|825.5|0|3.25|white|1|#bbbbbb|0.3",
+        "url": "#4e41c348:52590",
+        "width": 1005
+       },
+       [
+        0,
+        -163.978915
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       830.5
+      ],
+      [
+       {
+        "anchorX": 566,
+        "anchorY": 707,
+        "height": 1414,
+        "id": "box|561|702|0|3.75|white|1|#bbbbbb|0.3",
+        "url": "#4bd71b52:49674",
+        "width": 1132
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       707
+      ],
+      [
+       {
+        "anchorX": 642.5,
+        "anchorY": 783,
+        "height": 1566,
+        "id": "box|636.5|777|0|4.25|white|1|#bbbbbb|0.3",
+        "url": "#9e37a3fc:60982",
+        "width": 1285
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       783
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "d75e8288a9307b83",
+     "setDigest": "d75e8288a9307b83",
+     "columnDigests": {
+      "getPixelOffset": "4c889f2dbf6e605e",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "1a3de9432e916327",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -280.705703,
+       -132.325937
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       93.568568,
+       93.568568
+      ]
+     },
+     "sample": [
+      [
+       [
+        -132.325937,
+        -272.678789
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       93.568568,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -162.065513,
+        -302.418365
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       93.568568,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -198.488906,
+        -338.841757
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       93.568568,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -219.437742,
+        -546.927729
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       93.568568,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -247.55916,
+        -387.912012
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       93.568568,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -280.705703,
+        -421.058554
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       93.568568,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-box",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "5b4ca8857026a781",
+     "setDigest": "17630b984fc060bb",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "7bde6ffc500605ac",
+      "getRadius": "572986db1f13c689",
+      "getSlice": "c01aeebada36f963",
+      "getSliceLineWidth": "5a7b2bea6ded45d0"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       132.325937,
+       280.705703
+      ],
+      "getSlice": [
+       0,
+       5.759587
+      ],
+      "getSliceLineWidth": [
+       1,
+       1.871371
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       132.325937,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       132.325937,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       132.325937,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       162.065513,
+       [
+        0,
+        3.769911,
+        0
+       ],
+       1.080437
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       162.065513,
+       [
+        3.769911,
+        1.675516,
+        0
+       ],
+       1.080437
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       162.065513,
+       [
+        5.445427,
+        0.837758,
+        0
+       ],
+       1.080437
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       198.488906,
+       [
+        0,
+        3.998391,
+        0
+       ],
+       1.323259
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       198.488906,
+       [
+        3.998391,
+        0.571199,
+        0
+       ],
+       1.323259
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       198.488906,
+       [
+        4.569589,
+        1.713596,
+        0
+       ],
+       1.323259
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       219.437742,
+       [
+        0,
+        1.570796,
+        0
+       ],
+       1.462918
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       219.437742,
+       [
+        1.570796,
+        4.18879,
+        0
+       ],
+       1.462918
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       219.437742,
+       [
+        5.759587,
+        0.523599,
+        0
+       ],
+       1.462918
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       247.55916,
+       [
+        0,
+        0.523599,
+        0
+       ],
+       1.650394
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       247.55916,
+       [
+        0.523599,
+        1.047198,
+        0
+       ],
+       1.650394
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       247.55916,
+       [
+        1.570796,
+        4.712389,
+        0
+       ],
+       1.650394
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       280.705703,
+       [
+        0,
+        1.478397,
+        0
+       ],
+       1.871371
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       280.705703,
+       [
+        1.478397,
+        1.847996,
+        0
+       ],
+       1.871371
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       280.705703,
+       [
+        3.326392,
+        2.956793,
+        0
+       ],
+       1.871371
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-box-pie-bottom-g4",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "1e31ca58888c42ca",
+     "setDigest": "0627d50f62432cf9",
+     "columnDigests": {
+      "getIcon": "2eb9da8c0c9d871f",
+      "getPixelOffset": "c4a10743c7a97cba",
+      "getPosition": "7954cba9da6af9ee",
+      "getSize": "a6ea924b99eb2d30"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       34.030844
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       538.5,
+       830.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 372,
+        "anchorY": 538.5,
+        "height": 1077,
+        "id": "box|368|534.5|0|2.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#e85312e8:26870",
+        "width": 744
+       },
+       [
+        34.030844,
+        -117.194631
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       538.5
+      ],
+      [
+       {
+        "anchorX": 371.5,
+        "anchorY": 605.5,
+        "height": 1211,
+        "id": "box|367.5|601.5|0|2.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#139c7d9e:30122",
+        "width": 743
+       },
+       [
+        0,
+        -117.194631
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       605.5
+      ],
+      [
+       {
+        "anchorX": 454,
+        "anchorY": 688.5,
+        "height": 1377,
+        "id": "box|450|684.5|0|3|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#131b12bc:39926",
+        "width": 908
+       },
+       [
+        0,
+        -117.194631
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       688.5
+      ],
+      [
+       {
+        "anchorX": 502.5,
+        "anchorY": 830.5,
+        "height": 1661,
+        "id": "box|497.5|825.5|0|3.25|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#5971434:52602",
+        "width": 1005
+       },
+       [
+        0,
+        -163.978915
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       830.5
+      ],
+      [
+       {
+        "anchorX": 566,
+        "anchorY": 707,
+        "height": 1414,
+        "id": "box|561|702|0|3.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#4ab28a94:49678",
+        "width": 1132
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       707
+      ],
+      [
+       {
+        "anchorX": 642.5,
+        "anchorY": 783,
+        "height": 1566,
+        "id": "box|636.5|777|0|4.25|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#574abf8a:60994",
+        "width": 1285
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       783
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-bottom",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "1a6ce1537da460d6",
+     "setDigest": "1a6ce1537da460d6",
+     "columnDigests": {
+      "getPixelOffset": "d6a6637d3ec52d34",
+      "getPosition": "7954cba9da6af9ee",
+      "getSize": "1a3de9432e916327",
+      "getText": "150c8534f3381ecd",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -280.705703,
+       -132.325937
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       93.568568,
+       93.568568
+      ]
+     },
+     "sample": [
+      [
+       [
+        -132.325937,
+        -366.247356
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       93.568568,
+       "Gamma\npcs",
+       "start"
+      ],
+      [
+       [
+        -162.065513,
+        -395.986932
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       93.568568,
+       "Alpha\npcs",
+       "start"
+      ],
+      [
+       [
+        -198.488906,
+        -432.410325
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       93.568568,
+       "Epsilon\npcs",
+       "start"
+      ],
+      [
+       [
+        -219.437742,
+        -546.927729
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       93.568568,
+       "Beta, long\nname that\nwraps pcs",
+       "start"
+      ],
+      [
+       [
+        -247.55916,
+        -387.912012
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       93.568568,
+       "Delta pcs",
+       "start"
+      ],
+      [
+       [
+        -280.705703,
+        -421.058554
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       93.568568,
+       "Zeta pcs",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-bottom",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "f79a745e647fdce4",
+     "setDigest": "014622d3b2792660",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "eb4dfbd89f3b2605",
+      "getRadius": "572986db1f13c689",
+      "getSlice": "c01aeebada36f963",
+      "getSliceLineWidth": "5a7b2bea6ded45d0"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       132.325937,
+       280.705703
+      ],
+      "getSlice": [
+       0,
+       5.759587
+      ],
+      "getSliceLineWidth": [
+       1,
+       1.871371
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       132.325937,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       132.325937,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       132.325937,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       162.065513,
+       [
+        0,
+        3.769911,
+        0
+       ],
+       1.080437
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       162.065513,
+       [
+        3.769911,
+        1.675516,
+        0
+       ],
+       1.080437
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       162.065513,
+       [
+        5.445427,
+        0.837758,
+        0
+       ],
+       1.080437
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       198.488906,
+       [
+        0,
+        3.998391,
+        0
+       ],
+       1.323259
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       198.488906,
+       [
+        3.998391,
+        0.571199,
+        0
+       ],
+       1.323259
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       198.488906,
+       [
+        4.569589,
+        1.713596,
+        0
+       ],
+       1.323259
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       219.437742,
+       [
+        0,
+        1.570796,
+        0
+       ],
+       1.462918
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       219.437742,
+       [
+        1.570796,
+        4.18879,
+        0
+       ],
+       1.462918
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       219.437742,
+       [
+        5.759587,
+        0.523599,
+        0
+       ],
+       1.462918
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       247.55916,
+       [
+        0,
+        0.523599,
+        0
+       ],
+       1.650394
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       247.55916,
+       [
+        0.523599,
+        1.047198,
+        0
+       ],
+       1.650394
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       247.55916,
+       [
+        1.570796,
+        4.712389,
+        0
+       ],
+       1.650394
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       280.705703,
+       [
+        0,
+        1.478397,
+        0
+       ],
+       1.871371
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       280.705703,
+       [
+        1.478397,
+        1.847996,
+        0
+       ],
+       1.871371
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       280.705703,
+       [
+        3.326392,
+        2.956793,
+        0
+       ],
+       1.871371
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-box-pie-starburst-g10",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "a6af44fde9de9079",
+     "setDigest": "d487be290f71c703",
+     "columnDigests": {
+      "getIcon": "df5cb5b139ce15d7",
+      "getPixelOffset": "d8060c0b71991fc0",
+      "getPosition": "d64b454fe67c695c",
+      "getSize": "8d9112e129217c33"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       1261.5,
+       1527
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 1120.5,
+        "anchorY": 1261.5,
+        "height": 2523,
+        "id": "box|1111.5|1252.5|0|7.5|white|1|#bbbbbb|0.3",
+        "url": "#dbcfde94:158234",
+        "width": 2241
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       1261.5
+      ],
+      [
+       {
+        "anchorX": 1361,
+        "anchorY": 1502,
+        "height": 3004,
+        "id": "box|1351|1492|0|9|white|1|#bbbbbb|0.3",
+        "url": "#9b34b90:223674",
+        "width": 2722
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       1502
+      ],
+      [
+       {
+        "anchorX": 1210,
+        "anchorY": 1350.5,
+        "height": 2701,
+        "id": "box|1201|1341.5|0|8|white|1|#bbbbbb|0.3",
+        "url": "#d915d995:181154",
+        "width": 2420
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       1350.5
+      ],
+      [
+       {
+        "anchorX": 1292.5,
+        "anchorY": 1527,
+        "height": 3054,
+        "id": "box|1282.5|1517|0|8.5|white|1|#bbbbbb|0.3",
+        "url": "#428e0ebd:217198",
+        "width": 2585
+       },
+       [
+        0,
+        -117.194631
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       1527
+      ],
+      [
+       {
+        "anchorX": 1361,
+        "anchorY": 1502,
+        "height": 3004,
+        "id": "box|1351|1492|0|9|white|1|#bbbbbb|0.3",
+        "url": "#9b34b90:223674",
+        "width": 2722
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       1502
+      ],
+      [
+       {
+        "anchorX": 1292.5,
+        "anchorY": 1433,
+        "height": 2866,
+        "id": "box|1282.5|1423|0|8.5|white|1|#bbbbbb|0.3",
+        "url": "#4c699844:203938",
+        "width": 2585
+       },
+       [
+        0,
+        -70.410347
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       1433
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-starburst",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "152dc9101967f6e2",
+     "setDigest": "15810b14188b4091",
+     "columnDigests": {
+      "getPixelOffset": "6f9616ac6b5da72b",
+      "getPosition": "d64b454fe67c695c",
+      "getSize": "1a3de9432e916327",
+      "getText": "15c092aff97dbc6e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -600.710204,
+       -490.477828
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       93.568568,
+       93.568568
+      ]
+     },
+     "sample": [
+      [
+       [
+        -490.477828,
+        -630.830679
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       93.568568,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -600.710204,
+        -741.063056
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       93.568568,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -529.776603,
+        -670.129455
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       93.568568,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -566.355012,
+        -800.276431
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       93.568568,
+       "Beta, long name that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -600.710204,
+        -741.063056
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       93.568568,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -566.355012,
+        -706.707863
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       93.568568,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-starburst",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "2e15be3624f836e0",
+     "setDigest": "a8a3609ed3a15902",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "1521a2dc9544ed4d",
+      "getRadius": "0dce485451fe8826",
+      "getSlice": "c8c5e884875c1059",
+      "getSliceLineWidth": "3b3872535968955e"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       200.236735,
+       600.710204
+      ],
+      "getSlice": [
+       0,
+       4.18879
+      ],
+      "getSliceLineWidth": [
+       1.334912,
+       4.004735
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       490.477828,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       3.269852
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       490.477828,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       3.269852
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       490.477828,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       3.269852
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       600.710204,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       4.004735
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       400.473469,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.669823
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       283.177506,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1.88785
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       529.776603,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       3.531844
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       200.236735,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1.334912
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       346.820198,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       2.312135
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       346.820198,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.312135
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       566.355012,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       3.7757
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       200.236735,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1.334912
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       200.236735,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1.334912
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       283.177506,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1.88785
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       600.710204,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       4.004735
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       400.473469,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.669823
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       447.74295,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.984953
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       566.355012,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       3.7757
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "pie-box",
+     "flags": [
+      "BOX",
+      "CHART",
+      "PIE",
+      "SIZE",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "pie-bottom",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "PIE",
+      "SIZE",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "pie-starburst",
+     "flags": [
+      "BOX",
+      "CHART",
+      "PIE",
+      "STARBURST",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "pie-box": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ],
+    "pie-bottom": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ],
+    "pie-starburst": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-pie-box-pie-box-g6",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "6ca5804434d4a6cd",
+     "setDigest": "2ee3f1a66f7bebed",
+     "columnDigests": {
+      "getIcon": "4f0aeb053a1233a0",
+      "getPixelOffset": "c8c72c1ba4b6fbbb",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "a78fef370ce00a3c"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       21.43968
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       280.5,
+       523
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 235,
+        "anchorY": 280.5,
+        "height": 561,
+        "id": "box|232|277.5|0|1.5|white|1|#bbbbbb|0.3",
+        "url": "#9e76623:10182",
+        "width": 470
+       },
+       [
+        21.43968,
+        -44.355739
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       280.5
+      ],
+      [
+       {
+        "anchorX": 234.5,
+        "anchorY": 323,
+        "height": 646,
+        "id": "box|231.5|320|0|1.5|white|1|#bbbbbb|0.3",
+        "url": "#e4f9494f:11666",
+        "width": 469
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       323
+      ],
+      [
+       {
+        "anchorX": 286.5,
+        "anchorY": 375,
+        "height": 750,
+        "id": "box|283.5|372|0|2|white|1|#bbbbbb|0.3",
+        "url": "#4536d409:15450",
+        "width": 573
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       375
+      ],
+      [
+       {
+        "anchorX": 316.5,
+        "anchorY": 523,
+        "height": 1046,
+        "id": "box|313.5|520|0|2|white|1|#bbbbbb|0.3",
+        "url": "#3f0ed50c:23074",
+        "width": 633
+       },
+       [
+        0,
+        -103.300243
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       523
+      ],
+      [
+       {
+        "anchorX": 357.5,
+        "anchorY": 446,
+        "height": 892,
+        "id": "box|353.5|442|0|2.25|white|1|#bbbbbb|0.3",
+        "url": "#adbd1b00:21678",
+        "width": 715
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       446
+      ],
+      [
+       {
+        "anchorX": 405,
+        "anchorY": 493.5,
+        "height": 987,
+        "id": "box|401|489.5|0|2.75|white|1|#bbbbbb|0.3",
+        "url": "#f9c484f9:26358",
+        "width": 810
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       493.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "4d4eaa59c9d4e058",
+     "setDigest": "b6cc23510462f7b7",
+     "columnDigests": {
+      "getPixelOffset": "acd042cf5d37383d",
+      "getPosition": "4813d597ce7d4942",
+      "getSize": "0f528de5e211cf44",
+      "getText": "f21c0856de32708e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -176.833512,
+       -83.360117
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       58.944504,
+       58.944504
+      ]
+     },
+     "sample": [
+      [
+       [
+        -83.360117,
+        -171.776873
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       58.944504,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -102.094876,
+        -190.511632
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       58.944504,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -125.040175,
+        -213.456931
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       58.944504,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -138.237115,
+        -344.542879
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       58.944504,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -155.952499,
+        -244.369255
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       58.944504,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -176.833512,
+        -265.250268
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       58.944504,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-box",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "019d1e7f150ca058",
+     "setDigest": "2704526478b403d1",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "7bde6ffc500605ac",
+      "getRadius": "54737c34d5ef1096",
+      "getSlice": "c01aeebada36f963",
+      "getSliceLineWidth": "f38655625d36de13"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       83.360117,
+       176.833512
+      ],
+      "getSlice": [
+       0,
+       5.759587
+      ],
+      "getSliceLineWidth": [
+       1,
+       1.17889
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       83.360117,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       83.360117,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       83.360117,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       102.094876,
+       [
+        0,
+        3.769911,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       102.094876,
+       [
+        3.769911,
+        1.675516,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       102.094876,
+       [
+        5.445427,
+        0.837758,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       125.040175,
+       [
+        0,
+        3.998391,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       125.040175,
+       [
+        3.998391,
+        0.571199,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       125.040175,
+       [
+        4.569589,
+        1.713596,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       138.237115,
+       [
+        0,
+        1.570796,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       138.237115,
+       [
+        1.570796,
+        4.18879,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       138.237115,
+       [
+        5.759587,
+        0.523599,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       155.952499,
+       [
+        0,
+        0.523599,
+        0
+       ],
+       1.039683
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       155.952499,
+       [
+        0.523599,
+        1.047198,
+        0
+       ],
+       1.039683
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       155.952499,
+       [
+        1.570796,
+        4.712389,
+        0
+       ],
+       1.039683
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       176.833512,
+       [
+        0,
+        1.478397,
+        0
+       ],
+       1.17889
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       176.833512,
+       [
+        1.478397,
+        1.847996,
+        0
+       ],
+       1.17889
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       176.833512,
+       [
+        3.326392,
+        2.956793,
+        0
+       ],
+       1.17889
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-box-pie-bottom-g6",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "381ed38049afce2e",
+     "setDigest": "87cdbeaea2fafd41",
+     "columnDigests": {
+      "getIcon": "2e229b00234bbc33",
+      "getPixelOffset": "5b55aa4ccd21fa38",
+      "getPosition": "7954cba9da6af9ee",
+      "getSize": "bff6a7344cf7a519"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       21.43968
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       339.5,
+       523
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 235,
+        "anchorY": 339.5,
+        "height": 679,
+        "id": "box|232|336.5|0|1.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#b48209cf:12254",
+        "width": 470
+       },
+       [
+        21.43968,
+        -73.827991
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       339.5
+      ],
+      [
+       {
+        "anchorX": 234.5,
+        "anchorY": 382,
+        "height": 764,
+        "id": "box|231.5|379|0|1.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#5914d550:13714",
+        "width": 469
+       },
+       [
+        0,
+        -73.827991
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       382
+      ],
+      [
+       {
+        "anchorX": 286.5,
+        "anchorY": 434,
+        "height": 868,
+        "id": "box|283.5|431|0|2|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#d7d44849:17850",
+        "width": 573
+       },
+       [
+        0,
+        -73.827991
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       434
+      ],
+      [
+       {
+        "anchorX": 316.5,
+        "anchorY": 523,
+        "height": 1046,
+        "id": "box|313.5|520|0|2|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#61028bdc:23090",
+        "width": 633
+       },
+       [
+        0,
+        -103.300243
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       523
+      ],
+      [
+       {
+        "anchorX": 357.5,
+        "anchorY": 446,
+        "height": 892,
+        "id": "box|353.5|442|0|2.25|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#3eaa3c40:21690",
+        "width": 715
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       446
+      ],
+      [
+       {
+        "anchorX": 405,
+        "anchorY": 493.5,
+        "height": 987,
+        "id": "box|401|489.5|0|2.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#8cfaff0b:26370",
+        "width": 810
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       493.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-bottom",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "b1fd780df47182e1",
+     "setDigest": "7a8947ad67e8cf29",
+     "columnDigests": {
+      "getPixelOffset": "bbb3125376aa458f",
+      "getPosition": "7954cba9da6af9ee",
+      "getSize": "0f528de5e211cf44",
+      "getText": "150c8534f3381ecd",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -176.833512,
+       -83.360117
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       58.944504,
+       58.944504
+      ]
+     },
+     "sample": [
+      [
+       [
+        -83.360117,
+        -230.721377
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       58.944504,
+       "Gamma\npcs",
+       "start"
+      ],
+      [
+       [
+        -102.094876,
+        -249.456136
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       58.944504,
+       "Alpha\npcs",
+       "start"
+      ],
+      [
+       [
+        -125.040175,
+        -272.401435
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       58.944504,
+       "Epsilon\npcs",
+       "start"
+      ],
+      [
+       [
+        -138.237115,
+        -344.542879
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       58.944504,
+       "Beta, long\nname that\nwraps pcs",
+       "start"
+      ],
+      [
+       [
+        -155.952499,
+        -244.369255
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       58.944504,
+       "Delta pcs",
+       "start"
+      ],
+      [
+       [
+        -176.833512,
+        -265.250268
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       58.944504,
+       "Zeta pcs",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-bottom",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "37a562aa986a39a4",
+     "setDigest": "267f1c893fa34052",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "eb4dfbd89f3b2605",
+      "getRadius": "54737c34d5ef1096",
+      "getSlice": "c01aeebada36f963",
+      "getSliceLineWidth": "f38655625d36de13"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       83.360117,
+       176.833512
+      ],
+      "getSlice": [
+       0,
+       5.759587
+      ],
+      "getSliceLineWidth": [
+       1,
+       1.17889
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       83.360117,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       83.360117,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.4
+       ],
+       83.360117,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       102.094876,
+       [
+        0,
+        3.769911,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       102.094876,
+       [
+        3.769911,
+        1.675516,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.4
+       ],
+       102.094876,
+       [
+        5.445427,
+        0.837758,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       125.040175,
+       [
+        0,
+        3.998391,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       125.040175,
+       [
+        3.998391,
+        0.571199,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.4
+       ],
+       125.040175,
+       [
+        4.569589,
+        1.713596,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       138.237115,
+       [
+        0,
+        1.570796,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       138.237115,
+       [
+        1.570796,
+        4.18879,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.4
+       ],
+       138.237115,
+       [
+        5.759587,
+        0.523599,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       155.952499,
+       [
+        0,
+        0.523599,
+        0
+       ],
+       1.039683
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       155.952499,
+       [
+        0.523599,
+        1.047198,
+        0
+       ],
+       1.039683
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.4
+       ],
+       155.952499,
+       [
+        1.570796,
+        4.712389,
+        0
+       ],
+       1.039683
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       176.833512,
+       [
+        0,
+        1.478397,
+        0
+       ],
+       1.17889
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       176.833512,
+       [
+        1.478397,
+        1.847996,
+        0
+       ],
+       1.17889
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.4
+       ],
+       176.833512,
+       [
+        3.326392,
+        2.956793,
+        0
+       ],
+       1.17889
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-box-pie-starburst-g15",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "dba4070dcce0f378",
+     "setDigest": "7953d6546365580a",
+     "columnDigests": {
+      "getIcon": "13c66a81ab3b9b5c",
+      "getPixelOffset": "c909db383e0b6c34",
+      "getPosition": "d64b454fe67c695c",
+      "getSize": "ad9bb579f2c859a3"
+     },
+     "stats": {
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       795,
+       962.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 706.5,
+        "anchorY": 795,
+        "height": 1590,
+        "id": "box|700.5|789|0|4.75|white|1|#bbbbbb|0.3",
+        "url": "#eaaff006:66990",
+        "width": 1413
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       795
+      ],
+      [
+       {
+        "anchorX": 858,
+        "anchorY": 947,
+        "height": 1894,
+        "id": "box|851|940|0|5.75|white|1|#bbbbbb|0.3",
+        "url": "#3d5f4ebb:93990",
+        "width": 1716
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       947
+      ],
+      [
+       {
+        "anchorX": 762.5,
+        "anchorY": 851,
+        "height": 1702,
+        "id": "box|756.5|845|0|5|white|1|#bbbbbb|0.3",
+        "url": "#eb0df474:76050",
+        "width": 1525
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       851
+      ],
+      [
+       {
+        "anchorX": 815,
+        "anchorY": 962.5,
+        "height": 1925,
+        "id": "box|808|955.5|0|5.5|white|1|#bbbbbb|0.3",
+        "url": "#773dc499:91330",
+        "width": 1630
+       },
+       [
+        0,
+        -73.827991
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       962.5
+      ],
+      [
+       {
+        "anchorX": 858,
+        "anchorY": 947,
+        "height": 1894,
+        "id": "box|851|940|0|5.75|white|1|#bbbbbb|0.3",
+        "url": "#3d5f4ebb:93990",
+        "width": 1716
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       947
+      ],
+      [
+       {
+        "anchorX": 815,
+        "anchorY": 903.5,
+        "height": 1807,
+        "id": "box|808|896.5|0|5.5|white|1|#bbbbbb|0.3",
+        "url": "#bb524af3:85774",
+        "width": 1630
+       },
+       [
+        0,
+        -44.355739
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       903.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-titles-pie-starburst",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "97ad1482908ce825",
+     "setDigest": "b8fed20d15e373a4",
+     "columnDigests": {
+      "getPixelOffset": "08c4a3884ea36874",
+      "getPosition": "d64b454fe67c695c",
+      "getSize": "0f528de5e211cf44",
+      "getText": "15c092aff97dbc6e",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -378.423716,
+       -308.98167
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       58.944504,
+       58.944504
+      ]
+     },
+     "sample": [
+      [
+       [
+        -308.98167,
+        -397.398426
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       58.944504,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -378.423716,
+        -466.840472
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       58.944504,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -333.738347,
+        -422.155103
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       58.944504,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -356.781301,
+        -504.142561
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       58.944504,
+       "Beta, long name that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -378.423716,
+        -466.840472
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       58.944504,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -356.781301,
+        -445.198057
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       58.944504,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-pie-pie-starburst",
+     "type": "PieSliceLayer",
+     "count": 18,
+     "constants": {
+      "antialiasing": true,
+      "billboard": true,
+      "filled": true,
+      "getLineColor": [
+       85,
+       85,
+       102,
+       255
+      ],
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getPixelOffset",
+      "getPosition",
+      "getRadius",
+      "getSlice",
+      "getSliceLineWidth"
+     ],
+     "digest": "0481f08691e12bfc",
+     "setDigest": "49c3c822da64668f",
+     "columnDigests": {
+      "getFillColor": "c176482c19c19973",
+      "getPixelOffset": "b537bb15fba52b7d",
+      "getPosition": "1521a2dc9544ed4d",
+      "getRadius": "7f5fcb2bf969cd4d",
+      "getSlice": "c8c5e884875c1059",
+      "getSliceLineWidth": "7996d95b59f42b9a"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       232
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getRadius": [
+       126.141239,
+       378.423716
+      ],
+      "getSlice": [
+       0,
+       4.18879
+      ],
+      "getSliceLineWidth": [
+       1,
+       2.522825
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       308.98167,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.059878
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       308.98167,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.059878
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.19,
+        45.3
+       ],
+       308.98167,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       2.059878
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       378.423716,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.522825
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       252.282477,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1.681883
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.05,
+        45.3
+       ],
+       178.39065,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1.189271
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       333.738347,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       2.224922
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       126.141239,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.33,
+        45.3
+       ],
+       218.483034,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1.456554
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       218.483034,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1.456554
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       356.781301,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       2.378542
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.3
+       ],
+       126.141239,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       126.141239,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       178.39065,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1.189271
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.26,
+        45.3
+       ],
+       378.423716,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       2.522825
+      ],
+      [
+       [
+        232,
+        163,
+        61,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       252.282477,
+       [
+        0,
+        2.094395,
+        0
+       ],
+       1.681883
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       282.060384,
+       [
+        2.094395,
+        2.094395,
+        0
+       ],
+       1.880403
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.4,
+        45.3
+       ],
+       356.781301,
+       [
+        4.18879,
+        2.094395,
+        0
+       ],
+       2.378542
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "pie-box",
+     "flags": [
+      "BOX",
+      "CHART",
+      "PIE",
+      "SIZE",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "pie-bottom",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "PIE",
+      "SIZE",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    },
+    {
+     "name": "pie-starburst",
+     "flags": [
+      "BOX",
+      "CHART",
+      "PIE",
+      "STARBURST",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 3,
+       "min": 1
+      },
+      {
+       "max": 5,
+       "min": 3
+      },
+      {
+       "max": 9.00109,
+       "min": 5
+      }
+     ],
+     "valueMin": 1,
+     "valueMax": 9,
+     "maxSizeValue": 90
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "pie-box": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ],
+    "pie-bottom": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ],
+    "pie-starburst": [
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')",
+     "~err:Cannot read properties of undefined (reading 'counts')"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}
