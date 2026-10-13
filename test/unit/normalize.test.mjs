@@ -205,3 +205,31 @@ test('choroplethOutlineColor: line shapes take the value color, polygons the out
   assert.ok(Array.isArray(hidden));
   assert.deepEqual(plain(hidden), [0, 0, 0, 0]);
 });
+
+test('chartBoxLayout: the one box/title layout — rect, title above, bottom title, circle', () => {
+  const { chartBoxLayout } = loadEngine();
+  const measure = (text, f) => text.length * f;
+  const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, a + ' != ' + b);
+  const arrEq = (a, b) => { assert.equal(a.length, b.length); a.forEach((v, i) => near(v, b[i])); };
+  // margin = min(2 m u, m w / 30) = min(4, 4) = 4; no title: the extent plus the margin
+  const plain = chartBoxLayout([0, 0, 60, 30], { margin: 2, measure });
+  arrEq(plain.rect, [-4, -4, 64, 34]);
+  assert.equal(plain.title, null);
+  // title: first baseline 0.7 font above the extent, box grows to it, top trimmed by 0.1 font
+  const t = chartBoxLayout([0, 0, 60, 30], { margin: 2, titleText: 'ab cd', titleFont: 5, measure });
+  near(t.title.baseline, -3.5); near(t.title.top, -7.5); assert.equal(t.title.anchor, 'start');
+  arrEq(t.rect, [-4, -11.525, 64, 34]);
+  // BOTTOMTITLE: one font below the extent; alignRight: anchored at the right edge
+  const b = chartBoxLayout([0, 0, 60, 30], { margin: 2, titleText: 'ab', titleFont: 5, bottomTitle: true, alignRight: true, measure });
+  near(b.title.baseline, 35); assert.equal(b.title.anchor, 'end'); near(b.title.x, 60);
+  // a title wider than the chart wraps; DTEXT-style font as a function of the width
+  const w = chartBoxLayout([0, 0, 40, 10], { margin: 2, titleText: 'aaaa bbbb', titleFont: width => width / 8, measure });
+  assert.equal(w.title.f, 5); assert.equal(w.title.lines.length, 2);
+  // CIRCULARBOX: radius max(w,h)/2 · 1.1 + margin on the extent's center, the title wrapped to the diameter
+  const c = chartBoxLayout([0, 0, 60, 30], { margin: 2, circular: true, titleText: 'ab', titleFont: 5, bottomTitle: true, measure });
+  near(c.boxR, 37); near(c.cx, 30); near(c.cy, 15); assert.equal(c.rect, null);
+  near(c.title.baseline, 15 + 37 + 5); near(c.title.x, 30.5); assert.equal(c.title.anchor, 'middle');
+  // an explicit radius / center (a single symbol sits on its anchor)
+  const s = chartBoxLayout([-10, -10, 10, 10], { unit: 2, margin: 2, circular: true, radius: 10, center: [0, 0], measure });
+  near(s.boxR, 10 * 1.1 + Math.min(2 * 2 * 2, 2 * 20 / 30)); near(s.cx, 0);
+});

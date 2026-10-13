@@ -7822,8 +7822,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     _measureCtx.font = fontPx + 'px arial';
     return _measureCtx.measureText(text).width;
   }
-  function wrapTitleLines(text, fontPx, widthPx) {
-    const width = w => titleTextWidth(w, fontPx);
+  function wrapTitleLines(text, fontPx, widthPx, measure = titleTextWidth) {
+    const width = w => measure(w, fontPx);
     const lines = [];
     for (const word of String(text).split(/\s+/).filter(Boolean)) {
       const last = lines.length ? lines[lines.length - 1] + ' ' + word : null;
@@ -8773,6 +8773,57 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return { bars, texts, lines, extent: ext[0] <= ext[2] ? ext : [0, 0, 0, 0], width: W, sizer };
   }
 
+  // THE box-and-title layout of every chart type (flat's BOX block,
+  // maptheme.js 18757-18925): single symbol, SEQUENCE, PIE and BAR all call
+  // this. `extent`: the chart's drawn [x0, y0, x1, y1] around its anchor (px;
+  // chart units with unit 1). o: { unit (px per flat unit, default 1), margin
+  // (boxmargin, flat's 2), circular (CIRCULARBOX), radius / center (the
+  // circle's base radius and center; default the extent's half longer side
+  // and its center), titleText (with the titleunits suffix, '' / null: no
+  // title), titleFont (px, or w => px for DTEXT), bottomTitle, alignRight,
+  // wrap, measure }. Returns { rect (rectangular box), boxR / cx / cy (the
+  // circular box: radius, center), w (the extent's width), title { text,
+  // lines, x, anchor, top, baseline, f, extent } }.
+  // The margin is min(2 m u, m w / 30); the title's first baseline 0.7 font
+  // above the box (BOTTOMTITLE: one font below), wrapped to the chart's width
+  // (the circle's diameter); a rectangular box grows to enclose the title,
+  // its top trimmed by 0.1 font. arial: ascent 0.905, descent 0.212.
+  function chartBoxLayout(extent, o) {
+    const e = extent.slice();
+    const w = e[2] - e[0], h = e[3] - e[1];
+    const unit = o.unit == null ? 1 : o.unit;
+    const circular = !!o.circular;
+    const margin = Math.min(2 * o.margin * unit, o.margin * w / 30);
+    const center = o.center || [(e[0] + e[2]) / 2, (e[1] + e[3]) / 2];
+    const boxR = circular ? (o.radius != null ? o.radius : Math.max(w, h) / 2) * 1.1 + margin : 0;
+    let title = null;
+    if (o.titleText) {
+      const f = typeof o.titleFont === 'function' ? o.titleFont(w) : o.titleFont;
+      const measure = o.measure || titleTextWidth;
+      const lines = wrapTitleLines(o.titleText, f, circular ? boxR * 2 : w, measure).split('\n');
+      const width = Math.max(...lines.map(l => measure(l, f)));
+      // first baseline; lines go down one font each
+      const base = circular
+        ? (o.bottomTitle ? center[1] + boxR + f : center[1] - boxR - 0.7 * f - (lines.length - 1) * f)
+        : (o.bottomTitle ? e[3] + f : e[1] - 0.7 * f - (lines.length - 1) * f);
+      const x = circular ? center[0] + unit / 2 : (o.alignRight ? e[2] : e[0]);
+      const anchor = circular ? 'middle' : (o.alignRight ? 'end' : 'start');
+      const x0 = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
+      title = { text: lines.join('\n'), lines, x, anchor, top: base - 0.8 * f, baseline: base, f,
+        extent: [x0, base - 0.905 * f, x0 + width, base + (lines.length - 1) * f + 0.212 * f] };
+    }
+    let rect = null;
+    if (!circular) {
+      const b = e.slice();
+      if (title) {
+        b[0] = Math.min(b[0], title.extent[0]); b[1] = Math.min(b[1], title.extent[1]) + 0.1 * title.f;
+        b[2] = Math.max(b[2], title.extent[2]); b[3] = Math.max(b[3], title.extent[3]);
+      }
+      rect = [b[0] - margin, b[1] - margin, b[2] + margin, b[3] + margin];
+    }
+    return { rect, boxR, cx: center[0], cy: center[1], w, margin, title };
+  }
+
   // flat's BOX and TITLE around a chart (maptheme.js 18758-18905), in the
   // chart's units: `extent` the chart's [x0, y0, x1, y1]; o: { margin
   // (boxmargin, 2), titleFont, title (text or ''), bottomTitle, alignRight,
@@ -8782,30 +8833,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // chart and title, its top trimmed by 0.1 font when titled. Returns
   // { rect: [x0, y0, x1, y1], title: { lines, x, anchor, baseline, font } | null }
   function flatChartBox(extent, o) {
-    const e = extent.slice();
-    const w = e[2] - e[0];
-    const margin = Math.min(2 * o.margin, o.margin * w / 30);
-    let title = null;
-    if (o.title) {
-      const f = o.titleFont;
-      const measure = o.measure || ((text, font) => text.length * font * 0.55);
-      const lines = [];
-      for (const word of String(o.title).split(/\s+/).filter(Boolean)) {
-        const last = lines.length ? lines[lines.length - 1] + ' ' + word : null;
-        if (last !== null && measure(last, f) <= w) lines[lines.length - 1] = last;
-        else lines.push(word);
-      }
-      const width = Math.max(...lines.map(l => measure(l, f)));
-      const baseline = o.bottomTitle ? e[3] + f : e[1] - 0.7 * f - (lines.length - 1) * f;
-      const x = o.alignRight ? e[2] : e[0];
-      const x0 = o.alignRight ? x - width : x;
-      title = { lines, x, anchor: o.alignRight ? 'end' : 'start', baseline, font: f };
-      e[0] = Math.min(e[0], x0);
-      e[1] = Math.min(e[1], baseline - 0.905 * f) + 0.1 * f;
-      e[2] = Math.max(e[2], x0 + width);
-      e[3] = Math.max(e[3], baseline + (lines.length - 1) * f + 0.212 * f);
-    }
-    return { rect: [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin], title, width: w };
+    const L = chartBoxLayout(extent, { unit: 1, margin: o.margin, titleText: o.title, titleFont: o.titleFont,
+      bottomTitle: o.bottomTitle, alignRight: o.alignRight,
+      measure: o.measure || ((text, font) => text.length * font * 0.55) });
+    const t = L.title;
+    return { rect: L.rect, title: t ? { lines: t.lines, x: t.x, anchor: t.anchor, baseline: t.baseline, font: t.f } : null, width: L.w };
   }
 
   // CHART|PIE / DONUT: one pie's slices as real ixmaps-flat lays them out —
@@ -14166,39 +14198,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const grow = e => { if (!e) return; chart[0] = Math.min(chart[0], e[0]); chart[1] = Math.min(chart[1], e[1]); chart[2] = Math.max(chart[2], e[2]); chart[3] = Math.max(chart[3], e[3]); };
         if (valueTextOf && !d.properties.counts) { const v = valueTextOf(d, r); if (v) grow(v.extent); }
         if (labelOf) { const l = labelOf(d, r); if (l) grow(l.extent); }
-        const w = chart[2] - chart[0];
-        const margin = Math.min(2 * boxMarginU * unitPx, boxMarginU * w / 30);
-        const boxR = circular ? r * 1.1 + margin : r;
-        const titleFontPx = titleFontOf(w);
-        let title = null;
-        if (titleShown) {
-          // flat appends style.titleunits (its parse adds the leading
-          // space, maptheme.js 1470; szTitle += at 18827)
-          const units = this.style.titleunits ? ' ' + this.style.titleunits : '';
-          const text = this._itemTitle(d.properties) ? this._itemTitle(d.properties) + units : null;
-          if (text) {
-            const f = titleFontPx;
-            const lines = wrapTitleLines(text, f, circular ? boxR * 2 : w).split('\n');
-            const width = Math.max(...lines.map(l => titleTextWidth(l, f)));
-            // first baseline; lines go down one font each
-            const base = circular
-              ? (bottomTitle ? boxR + f : -boxR - 0.7 * f - (lines.length - 1) * f)
-              : (bottomTitle ? chart[3] + f : chart[1] - 0.7 * f - (lines.length - 1) * f);
-            const x = circular ? unitPx / 2 : (alignRight ? chart[2] : chart[0]);
-            const anchor = circular ? 'middle' : (alignRight ? 'end' : 'start');
-            const x0 = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
-            // arial: ascent 0.905, descent 0.212 of the font size
-            title = { text: lines.join('\n'), x, anchor, top: base - 0.8 * f, f,
-              extent: [x0, base - 0.905 * f, x0 + width, base + (lines.length - 1) * f + 0.212 * f] };
-          }
-        }
-        let rect = null;
-        if (!circular) {
-          const e = chart.slice();
-          // with a title flat trims 0.1 font off the top of chart + title
-          if (title) { e[0] = Math.min(e[0], title.extent[0]); e[1] = Math.min(e[1], title.extent[1]) + 0.1 * titleFontPx; e[2] = Math.max(e[2], title.extent[2]); e[3] = Math.max(e[3], title.extent[3]); }
-          rect = [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin];
-        }
+        // flat appends style.titleunits (its parse adds the leading space,
+        // maptheme.js 1470; szTitle += at 18827); the circle sits on the
+        // anchor (0, 0), its base radius the symbol's
+        const units = this.style.titleunits ? ' ' + this.style.titleunits : '';
+        const itemTitle = titleShown ? this._itemTitle(d.properties) : null;
+        const L = chartBoxLayout(chart, { unit: unitPx, margin: boxMarginU, circular, radius: r, center: [0, 0],
+          titleText: itemTitle ? itemTitle + units : null, titleFont: titleFontOf, bottomTitle, alignRight });
+        const { w, rect, title } = L;
+        const boxR = circular ? L.boxR : r;
         // geometry/properties of the chart's feature on the row: the
         // circular box is pickable, and the tooltip (buildTooltipHtml,
         // the click-pin) works on the feature's own properties
@@ -14821,44 +14829,22 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const alignRight = /right/.test(String(st.align || ''));
         boxLayoutAll = charts.filter(d => d._seqExtent).map(d => {
           const [ex0, ey0, ex1, ey1] = d._seqExtent;
-          const w = ex1 - ex0, h = ey1 - ey0;
+          const w = ex1 - ex0;
           // flat centers the circular box (and its title) on the chart's
           // bounding-box CENTER (maptheme.js 18793-18798: center =
           // bBox.x + bBox.width/2, bBox.y + bBox.height/2), not on the
           // chart's anchor — a star cluster's satellites spread
           // asymmetrically around it
           const cx = (ex0 + ex1) / 2, cy = (ey0 + ey1) / 2;
-          const margin = Math.min(2 * boxMarginU * unit, boxMarginU * w / 30);
-          const boxR = circular ? Math.max(w, h) / 2 * 1.1 + margin : 0;
-          let title = null;
-          if (titleShown) {
-            // flat appends style.titleunits to the box title (its parse
-            // gives it the leading space, maptheme.js 1470; szTitle += at
-            // 18827): "27.5" + "km/h" -> "27.5 km/h"
-            const units = st.titleunits ? ' ' + st.titleunits : '';
-            const text = this._itemTitle(d.properties) ? this._itemTitle(d.properties) + units : null;
-            if (text) {
-              const f = titleFontOf(w);
-              const lines = wrapTitleLines(text, f, circular ? boxR * 2 : w).split('\n');
-              const width = Math.max(...lines.map(l => titleTextWidth(l, f)));
-              // flat's title baselines are measured on the resized box
-              // (the circle spans center ± radius, 18798-18830)
-              const base = circular
-                ? (bottomTitle ? cy + boxR + f : cy - boxR - 0.7 * f - (lines.length - 1) * f)
-                : (bottomTitle ? ey1 + f : ey0 - 0.7 * f - (lines.length - 1) * f);
-              const x = circular ? cx + unit / 2 : (alignRight ? ex1 : ex0);
-              const anchor = circular ? 'middle' : (alignRight ? 'end' : 'start');
-              const x0 = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
-              title = { text: lines.join('\n'), x, anchor, top: base - 0.8 * f, f,
-                extent: [x0, base - 0.905 * f, x0 + width, base + (lines.length - 1) * f + 0.212 * f] };
-            }
-          }
-          let rect = null;
-          if (!circular) {
-            const e = [ex0, ey0, ex1, ey1];
-            if (title) { e[0] = Math.min(e[0], title.extent[0]); e[1] = Math.min(e[1], title.extent[1]) + 0.1 * title.f; e[2] = Math.max(e[2], title.extent[2]); e[3] = Math.max(e[3], title.extent[3]); }
-            rect = [e[0] - margin, e[1] - margin, e[2] + margin, e[3] + margin];
-          }
+          // flat appends style.titleunits to the box title (its parse gives it
+          // the leading space, maptheme.js 1470; szTitle += at 18827):
+          // "27.5" + "km/h" -> "27.5 km/h". The circle's title baselines are
+          // measured on the resized box (the circle spans center ± radius,
+          // 18798-18830)
+          const units = st.titleunits ? ' ' + st.titleunits : '';
+          const itemTitle = titleShown ? this._itemTitle(d.properties) : null;
+          const { boxR, rect, title } = chartBoxLayout([ex0, ey0, ex1, ey1], { unit, margin: boxMarginU, circular,
+            titleText: itemTitle ? itemTitle + units : null, titleFont: titleFontOf, bottomTitle, alignRight });
           // geometry/properties of the chart's feature on the row: the
           // circular box is pickable, and the tooltip (buildTooltipHtml,
           // the click-pin) works on the feature's own properties
@@ -15514,24 +15500,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // of the shape group — the longest ray on a STARBURST)
         let e = ch.r;
         if (star) { const in0 = starInnerOf(ch); for (const sl of ch.layout.slices) e = Math.max(e, starRadius(sl.value, ch.r, in0)); }
-        let title = null;
-        if (titleShown) {
-          const text = this._itemTitle(ch.properties) ? this._itemTitle(ch.properties) + (st.titleunits ? ' ' + st.titleunits : '') : null;
-          if (text) {
-            const f = 5 * unit * titleScale;
-            const lines = wrapTitleLines(text, f, 2 * e).split('\n');
-            const width = Math.max(...lines.map(l => titleTextWidth(l, f)));
-            const base = -e - 0.7 * f - (lines.length - 1) * f;
-            title = { text: lines.join('\n'), x: -e, anchor: 'start', top: base - 0.8 * f, f,
-              extent: [-e, base - 0.905 * f, -e + width, base + (lines.length - 1) * f + 0.212 * f] };
-          }
-        }
-        // the box: chart + title plus the margin (min(2m, m·w / 30u))
-        const ex = title
-          ? [-e, Math.min(-e, title.extent[1]) + 0.1 * title.f, Math.max(e, title.extent[2]), Math.max(e, title.extent[3])]
-          : [-e, -e, e, e];
-        const margin = Math.min(2 * boxMarginU * unit, boxMarginU * 2 * e / 30);
-        boxRows.push({ ch, title, rect: [ex[0] - margin, ex[1] - margin, ex[2] + margin, ex[3] + margin] });
+        // a pie has no BOTTOMTITLE / align / CIRCULARBOX variant here (yet):
+        // the layout's defaults — left-aligned title above the box
+        const itemTitle = titleShown ? this._itemTitle(ch.properties) : null;
+        const { rect, title } = chartBoxLayout([-e, -e, e, e], { unit, margin: boxMarginU,
+          titleText: itemTitle ? itemTitle + (st.titleunits ? ' ' + st.titleunits : '') : null, titleFont: 5 * unit * titleScale });
+        boxRows.push({ ch, title, rect });
       }
       const layers = [];
       if (boxRows.length) {
@@ -17772,7 +17746,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatChartBox, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
-    choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
+    chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
