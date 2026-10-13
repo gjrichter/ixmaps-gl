@@ -13580,6 +13580,131 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return chart;
     }
 
+    // THE box-and-title layers of every chart type (flat's BOX block): rows are
+    // chartBoxLayout results, each with its `rect` / `boxR` / `cx` / `cy` /
+    // `title` / `w` (the chart's size measure, its stroke and corner basis)
+    // plus whatever the caller needs for picking (geometry, properties).
+    // o: { circular, unit, liveZoom, positionOf (row -> [lng, lat]), offsetOf
+    // (row -> the chart's [dx, dy] px move: align / offsetx / offsety),
+    // titleShown, ids: { circle, icon, polygons, titles } } — the layer ids
+    // stay each chart type's own. Returns { box: [layers], titles: [layers] }:
+    // the caller pushes them where its draw order wants them.
+    _boxTitleLayers(rows, o) {
+      const st = this.style;
+      const { unit, liveZoom, positionOf, offsetOf, ids } = o;
+      const box = [], titles = [];
+      // flat: fill-opacity (boxopacity || 1) on the raw style value — the usual
+      // string "0" is transparent; typed here, a given 0 is too
+      const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
+      if (o.circular) {
+        const boxNone = isNoneColor(st.boxcolor), borderNone = isNoneColor(st.bordercolor);
+        const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : st.boxcolor || '#eeeeee');
+        const boxAlpha = boxNone ? 0 : Math.round(255 * boxOpacity);
+        const borderRgb = borderNone ? null : hexOrNamedToRgb(st.bordercolor || '#dddddd');
+        // Always a ScatterplotLayer: its shader circle is smooth at any
+        // size, where an icon — a 48px canvas texture deck.gl scales up —
+        // pixelated with large boxes. ScatterplotLayer has no pixel offset,
+        // so the chart's align/offsetx/offsety move and flat's circular box
+        // position (the chart's bounding-box center, 18793) are baked into
+        // map coordinates (pixelOffsetLngLat). Pickable: flat's box is part
+        // of the chart group, so hovering it fires the chart's tooltip — the
+        // symbols sit above it, so they keep their own
+        box.push(new ScatterplotLayer({
+          id: ids.circle,
+          data: rows, pickable: true,
+          getPosition: b => { const f = offsetOf(b); return pixelOffsetLngLat(positionOf(b), [f[0] + b.cx, f[1] + b.cy], liveZoom); },
+          getRadius: b => b.boxR,
+          radiusUnits: 'pixels',
+          stroked: !borderNone,
+          getFillColor: [...boxRgb.slice(0, 3), boxAlpha],
+          getLineColor: [...(borderRgb || boxRgb).slice(0, 3), 255],
+          getLineWidth: unit / 20,
+          lineWidthUnits: 'pixels',
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      } else {
+        // flat's rectangular box (the chart and its title plus the margin)
+        const borderStyle = String(st.borderstyle || '');
+        const boxLook = {
+          fill: st.boxcolor || 'white',
+          fillOpacity: boxOpacity,
+          stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
+          strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3,
+        };
+        const borderWidth = styleNum(st.borderwidth) || 1;
+        const borderRadius = styleNum(st.borderradius);
+        const strokeOf = b => borderWidth * 0.2 * b.w / 30;
+        // a box larger than BOX_ICON_MAX_PX (a MULTIQUAD grid of thousands
+        // of items) would need a huge canvas: it is drawn as a polygon in
+        // map coordinates instead (square corners)
+        const bigBox = b => Math.max(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1]) > BOX_ICON_MAX_PX;
+        const iconBoxes = rows.filter(b => !bigBox(b)), polygonBoxes = rows.filter(bigBox);
+        iconBoxes.forEach(b => {
+          b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
+            isNaN(borderRadius) ? 0 : borderRadius * Math.min(unit, b.w / 30),
+            strokeOf(b), boxLook);
+        });
+        if (polygonBoxes.length) {
+          const fillRgb = hexOrNamedToRgb(boxLook.fill);
+          const strokeRgb = boxLook.stroke ? hexOrNamedToRgb(boxLook.stroke) : null;
+          box.push(new GeoJsonLayer({
+            id: ids.polygons,
+            data: polygonBoxes.map(b => {
+              const f = offsetOf(b), c = positionOf(b), r = b.rect;
+              const at = (x, y) => pixelOffsetLngLat(c, [x + f[0], y + f[1]], liveZoom);
+              return { type: 'Feature', properties: { stroke: strokeOf(b) },
+                geometry: { type: 'Polygon', coordinates: [[at(r[0], r[1]), at(r[2], r[1]), at(r[2], r[3]), at(r[0], r[3]), at(r[0], r[1])]] } };
+            }),
+            pickable: false,
+            filled: boxLook.fillOpacity > 0,
+            stroked: !!strokeRgb,
+            getFillColor: [...fillRgb.slice(0, 3), Math.round(255 * boxLook.fillOpacity)],
+            getLineColor: strokeRgb ? [...strokeRgb.slice(0, 3), Math.round(255 * boxLook.strokeOpacity)] : [0, 0, 0, 0],
+            getLineWidth: f => f.properties.stroke,
+            lineWidthUnits: 'pixels',
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        }
+        if (iconBoxes.length) box.push(new IconLayer({
+          // the generation suffix (like every icon-atlas layer id, see
+          // ICON_ATLAS_RESET_AFTER): every zoom creates a new set of box
+          // rasters, and deck.gl's atlas never evicts
+          id: `${ids.icon}-g${this._iconGeneration}`,
+          data: iconBoxes, pickable: false,
+          getPosition: positionOf,
+          getIcon: b => b.icon,
+          // the icon is drawn at 2× with a stroke padding around the box
+          getSize: b => b.icon.height / 2,
+          getPixelOffset: b => { const f = offsetOf(b); return [(b.rect[0] + b.rect[2]) / 2 + f[0], (b.rect[1] + b.rect[3]) / 2 + f[1]]; },
+          sizeUnits: 'pixels',
+          billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+      const titleData = o.titleShown ? rows.filter(b => b.title) : [];
+      if (titleData.length) titles.push(new TextLayer({
+        id: ids.titles,
+        data: titleData, pickable: false,
+        getPosition: positionOf,
+        getText: b => b.title.text,
+        getSize: b => b.title.f,
+        sizeUnits: 'pixels',
+        fontFamily: 'arial',
+        characterSet: 'auto',
+        lineHeight: 1,
+        getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
+        fontSettings: { sdf: true },
+        outlineWidth: 1 / 7,
+        outlineColor: [255, 255, 255, 128],
+        getTextAnchor: b => b.title.anchor,
+        // top of the text ≈ first baseline − 0.8 font
+        getAlignmentBaseline: 'top',
+        getPixelOffset: b => { const f = offsetOf(b); return [b.title.x + f[0], b.title.top + f[1]]; },
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      }));
+      return { box, titles };
+    }
+
     // BOX (see the BOX block in _buildChartLayers): a rectangle icon
     // w×h px, rounded corners rx, stroke sw px; drawn at twice the size
     _buildBoxIcon(w, h, rx, sw, look) {
@@ -14185,9 +14310,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const labelShown = !!this.style.labelfield && !flatFlag(this.flags, 'NORMSIZE') && !flatFlag(this.flags, 'ZOOM')
         && !labelHiddenByScale(this.style, zoom);
       const labelOf = labelShown ? this._chartLabelFn(unitPx) : null;
-      // flat: fill-opacity (boxopacity || 1) on the raw style value — the
-      // usual string "0" is transparent; typed here, a given 0 is too
-      const boxOpacity = isNaN(styleNum(this.style.boxopacity)) ? 1 : styleNum(this.style.boxopacity);
       const bottomTitle = flatFlag(this.flags, 'BOTTOMTITLE');
       const alignRight = /right/.test(String(this.style.align || ''));
       // with MULTIQUAD only the first item of a position gets its box/title
@@ -14210,89 +14332,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // geometry/properties of the chart's feature on the row: the
         // circular box is pickable, and the tooltip (buildTooltipHtml,
         // the click-pin) works on the feature's own properties
-        return { d, geometry: d.geometry, properties: d.properties, r, w, boxR, rect, title };
+        return { d, geometry: d.geometry, properties: d.properties, r, w, boxR, cx: L.cx, cy: L.cy, rect, title };
       }) : null;
-      if (boxShown && circular) {
-        const boxNone = isNoneColor(this.style.boxcolor), borderNone = isNoneColor(this.style.bordercolor);
-        const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : this.style.boxcolor || '#eeeeee');
-        const boxAlpha = boxNone ? 0 : Math.round(255 * boxOpacity);
-        const borderRgb = borderNone ? null : hexOrNamedToRgb(this.style.bordercolor || '#dddddd');
-        // Always a ScatterplotLayer: its shader circle is smooth at any
-        // size, where the icon a moved chart (align, offsetx/offsety) used
-        // — a 48px canvas texture deck.gl scales up — pixelated with
-        // large boxes. ScatterplotLayer has no pixel offset, so the
-        // chart's align/offsetx/offsety move is baked into map
-        // coordinates (pixelOffsetLngLat). Pickable: flat's box is part
-        // of the chart group, so hovering it fires the chart's tooltip —
-        // the symbols sit above it, so they keep their own
-        layers.push(new ScatterplotLayer({
-          id: `ix-box-${this.name}`,
-          data: boxLayout, pickable: true,
-          getPosition: b => pixelOffsetLngLat(b.d.geometry.coordinates, alignOf(b.d), liveZoom),
-          getRadius: b => b.boxR,
-          radiusUnits: 'pixels',
-          stroked: !borderNone,
-          getFillColor: [...boxRgb.slice(0, 3), boxAlpha],
-          getLineColor: [...(borderRgb || boxRgb).slice(0, 3), 255],
-          getLineWidth: unitPx / 20,
-          lineWidthUnits: 'pixels',
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-      } else if (boxShown) {
-        const borderStyle = String(this.style.borderstyle || '');
-        const boxLook = {
-          fill: this.style.boxcolor || 'white',
-          fillOpacity: boxOpacity,
-          stroke: borderStyle === 'none' || isNoneColor(styleLineColor(this.style.bordercolor)) ? null : styleLineColor(this.style.bordercolor) || '#bbbbbb',
-          strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3,
-        };
-        const borderWidth = styleNum(this.style.borderwidth) || 1;
-        const borderRadius = styleNum(this.style.borderradius);
-        const strokeOf = b => borderWidth * 0.2 * b.w / 30;
-        // a box larger than BOX_ICON_MAX_PX (a MULTIQUAD grid of thousands
-        // of items) would need a huge canvas: it is drawn as a polygon in
-        // map coordinates instead (square corners)
-        const bigBox = b => Math.max(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1]) > BOX_ICON_MAX_PX;
-        const iconBoxes = boxLayout.filter(b => !bigBox(b)), polygonBoxes = boxLayout.filter(bigBox);
-        iconBoxes.forEach(b => {
-          b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
-            isNaN(borderRadius) ? 0 : borderRadius * Math.min(unitPx, b.w / 30),
-            strokeOf(b), boxLook);
-        });
-        if (polygonBoxes.length) {
-          const fillRgb = hexOrNamedToRgb(boxLook.fill);
-          const strokeRgb = boxLook.stroke ? hexOrNamedToRgb(boxLook.stroke) : null;
-          layers.push(new GeoJsonLayer({
-            id: `ix-box-polygons-${this.name}`,
-            data: polygonBoxes.map(b => {
-              const o = alignOf(b.d), c = b.d.geometry.coordinates, r = b.rect;
-              const at = (x, y) => pixelOffsetLngLat(c, [x + o[0], y + o[1]], liveZoom);
-              return { type: 'Feature', properties: { stroke: strokeOf(b) },
-                geometry: { type: 'Polygon', coordinates: [[at(r[0], r[1]), at(r[2], r[1]), at(r[2], r[3]), at(r[0], r[3]), at(r[0], r[1])]] } };
-            }),
-            pickable: false,
-            filled: boxLook.fillOpacity > 0,
-            stroked: !!strokeRgb,
-            getFillColor: [...fillRgb.slice(0, 3), Math.round(255 * boxLook.fillOpacity)],
-            getLineColor: strokeRgb ? [...strokeRgb.slice(0, 3), Math.round(255 * boxLook.strokeOpacity)] : [0, 0, 0, 0],
-            getLineWidth: f => f.properties.stroke,
-            lineWidthUnits: 'pixels',
-            parameters: ICON_LAYER_GLOBE_PARAMETERS
-          }));
-        }
-        if (iconBoxes.length) layers.push(new IconLayer({
-          id: `ix-box-${this.name}-g${this._iconGeneration}`,
-          data: iconBoxes, pickable: false,
-          getPosition: b => b.d.geometry.coordinates,
-          getIcon: b => b.icon,
-          // the icon is drawn at 2× with a stroke padding around the box
-          getSize: b => b.icon.height / 2,
-          getPixelOffset: b => { const o = alignOf(b.d); return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
-          sizeUnits: 'pixels',
-          billboard: true,
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-      }
+      // (the title layers are pushed after the symbols, below)
+      const boxLayers = boxShown ? this._boxTitleLayers(boxLayout, {
+        circular, unit: unitPx, liveZoom, titleShown,
+        positionOf: b => b.d.geometry.coordinates, offsetOf: b => alignOf(b.d),
+        ids: { circle: `ix-box-${this.name}`, icon: `ix-box-${this.name}`, polygons: `ix-box-polygons-${this.name}`, titles: `ix-titles-${this.name}` }
+      }) : null;
+      if (boxLayers) layers.push(...boxLayers.box);
 
       // flat's per-part SYMBOL branch (everything but CATEGORICAL without
       // AGGREGATE/GROUP) draws a square or roundrect of side 2r, the other
@@ -14400,29 +14448,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         parameters: ICON_LAYER_GLOBE_PARAMETERS
       }));
 
-      const titleData = boxLayout ? boxLayout.filter(b => b.title) : [];
-      if (titleData.length) {
-        layers.push(new TextLayer({
-          id: `ix-titles-${this.name}`,
-          data: titleData, pickable: false,
-          getPosition: b => b.d.geometry.coordinates,
-          getText: b => b.title.text,
-          getSize: b => b.title.f,
-          sizeUnits: 'pixels',
-          fontFamily: 'arial',
-          characterSet: 'auto',
-          lineHeight: 1,
-          getColor: [...hexOrNamedToRgb(this.style.textcolor || '#888888').slice(0, 3), 255],
-          fontSettings: { sdf: true },
-          outlineWidth: 1 / 7,
-          outlineColor: [255, 255, 255, 128],
-          getTextAnchor: b => b.title.anchor,
-          // top of the text ≈ first baseline − 0.8 font
-          getAlignmentBaseline: 'top',
-          getPixelOffset: b => { const o = alignOf(b.d); return [b.title.x + o[0], b.title.top + o[1]]; },
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-      }
+      if (boxLayers) layers.push(...boxLayers.titles);
 
       // VALUES: bold value label centered on each bubble (see
       // flatValueText/valuesFontSizePx above). Labels are their own
@@ -14821,7 +14847,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       let nBands = 1;
       if (boxShown) {
         const boxMarginU = styleNum(st.boxmargin) || 2;
-        const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
         const titleScale = styleNum(st.textscale) || styleNum(st.valuescale) || 1;
         const titleFontOf = w => (flatFlag(this.flags, 'DTEXT')
           ? Math.max(0.9 * unit, Math.min(w / 5, 14 * unit / (styleNum(st.scale) || 1)))
@@ -14848,7 +14873,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // geometry/properties of the chart's feature on the row: the
           // circular box is pickable, and the tooltip (buildTooltipHtml,
           // the click-pin) works on the feature's own properties
-          return { d, geometry: d.geometry, properties: d.properties, w, boxR, rect, title, boxOpacity, cx, cy };
+          return { d, geometry: d.geometry, properties: d.properties, w, boxR, rect, title, cx, cy };
         });
         // flat draws every chart as ONE group — its box, its symbols,
         // its title, its values together — and the groups are sorted by
@@ -14901,86 +14926,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // sequence, in today's order. bs: the band's id suffix
       const drawBand = (boxLayout, glows, parts, bs) => {
         if (boxLayout) {
-          if (circular) {
-            const boxNone = isNoneColor(st.boxcolor), borderNone = isNoneColor(st.bordercolor);
-            const boxRgb = hexOrNamedToRgb(boxNone ? '#eeeeee' : st.boxcolor || '#eeeeee');
-            const borderRgb = borderNone ? null : hexOrNamedToRgb(st.bordercolor || '#dddddd');
-            // Always a ScatterplotLayer: its shader circle is smooth at any
-            // size, where the icon the align path used — a 48px canvas
-            // texture deck.gl scales up — pixelated with large boxes (the
-            // City-moving page). ScatterplotLayer has no pixel offset, so
-            // the chart's align/offsetx/offsety move and flat's circular
-            // box position (the chart's bounding-box center, 18793) are
-            // baked into map coordinates (pixelOffsetLngLat). Pickable:
-            // flat's box is part of the chart group, so hovering it fires
-            // the chart's tooltip — the parts layers sit above it, so they
-            // keep their own (per-part) tooltips
-            layers.push(new ScatterplotLayer({
-              id: `ix-seqbox-${this.name}${bs}`,
-              data: boxLayout, pickable: true,
-              getPosition: b => {
-                const o = alignOf(b.d);
-                return pixelOffsetLngLat(b.d.geometry.coordinates, [o[0] + b.cx, o[1] + b.cy], liveZoom);
-              },
-              getRadius: b => b.boxR,
-              radiusUnits: 'pixels',
-              stroked: !borderNone,
-              getFillColor: b => [...boxRgb.slice(0, 3), Math.round(255 * b.boxOpacity)],
-              getLineColor: [...(borderRgb || boxRgb).slice(0, 3), 255],
-              getLineWidth: unit / 20,
-              lineWidthUnits: 'pixels',
-              parameters: ICON_LAYER_GLOBE_PARAMETERS
-            }));
-          } else {
-            // flat's rectangular box (the chart and its title plus the
-            // margin), the single-symbol path's own _buildBoxIcon drawing
-            const borderStyle = String(st.borderstyle || '');
-            const boxLook = {
-              fill: st.boxcolor || 'white',
-              fillOpacity: isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity),
-              stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
-              strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3
-            };
-            const borderWidth = styleNum(st.borderwidth) || 1;
-            const borderRadius = styleNum(st.borderradius);
-            const strokeOf = b => borderWidth * 0.2 * b.w / 30;
-            boxLayout.forEach(b => {
-              b.icon = this._buildBoxIcon(b.rect[2] - b.rect[0], b.rect[3] - b.rect[1],
-                isNaN(borderRadius) ? 0 : borderRadius * Math.min(unit, b.w / 30),
-                strokeOf(b), boxLook);
-            });
-            if (boxLayout.length) layers.push(new IconLayer({
-              id: `ix-seqbox-${this.name}${bs}-g${this._iconGeneration}`,
-              data: boxLayout, pickable: false,
-              getPosition: b => b.d.geometry.coordinates,
-              getIcon: b => b.icon,
-              getSize: b => b.icon.height / 2,
-              getPixelOffset: b => { const o = alignOf(b.d); return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
-              sizeUnits: 'pixels', billboard: true,
-              parameters: ICON_LAYER_GLOBE_PARAMETERS
-            }));
-          }
-          if (titleShown) {
-            const titleData = boxLayout.filter(b => b.title);
-            if (titleData.length) layers.push(new TextLayer({
-              id: `ix-seqtitles-${this.name}${bs}`,
-              data: titleData, pickable: false,
-              getPosition: b => b.d.geometry.coordinates,
-              getText: b => b.title.text,
-              getSize: b => b.title.f,
-              sizeUnits: 'pixels', fontFamily: 'arial',
-              characterSet: 'auto',
-              lineHeight: 1,
-              getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
-              fontSettings: { sdf: true },
-              outlineWidth: 1 / 7,
-              outlineColor: [255, 255, 255, 128],
-              getTextAnchor: b => b.title.anchor,
-              getAlignmentBaseline: 'top',
-              getPixelOffset: b => { const o = alignOf(b.d); return [b.title.x + o[0], b.title.top + o[1]]; },
-              parameters: ICON_LAYER_GLOBE_PARAMETERS
-            }));
-          }
+          const L = this._boxTitleLayers(boxLayout, {
+            circular, unit, liveZoom, titleShown,
+            positionOf: b => b.d.geometry.coordinates, offsetOf: b => alignOf(b.d),
+            ids: { circle: `ix-seqbox-${this.name}${bs}`, icon: `ix-seqbox-${this.name}${bs}`,
+              polygons: `ix-seqbox-polygons-${this.name}${bs}`, titles: `ix-seqtitles-${this.name}${bs}` }
+          });
+          layers.push(...L.box, ...L.titles);
         }
         if (glows.length && this.flags.has('GLOW') && !glowHiddenByScale(st, liveZoom)) {
           layers.push(new IconLayer({
@@ -15505,59 +15457,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const itemTitle = titleShown ? this._itemTitle(ch.properties) : null;
         const { rect, title } = chartBoxLayout([-e, -e, e, e], { unit, margin: boxMarginU,
           titleText: itemTitle ? itemTitle + (st.titleunits ? ' ' + st.titleunits : '') : null, titleFont: 5 * unit * titleScale });
-        boxRows.push({ ch, title, rect });
+        // the pie's stroke and corner basis is the box's own width (title included)
+        boxRows.push({ ch, title, rect, w: rect[2] - rect[0] });
       }
       const layers = [];
       if (boxRows.length) {
-        const borderStyle = String(st.borderstyle || '');
-        const boxLook = {
-          fill: st.boxcolor || 'white',
-          fillOpacity: isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity),
-          stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
-          strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3
-        };
-        const borderWidth = styleNum(st.borderwidth) || 1;
-        const borderRadius = styleNum(st.borderradius);
-        boxRows.forEach(b => {
-          const w = b.rect[2] - b.rect[0], h = b.rect[3] - b.rect[1];
-          b.icon = this._buildBoxIcon(w, h,
-            isNaN(borderRadius) ? 0 : borderRadius * Math.min(unit, w / 30),
-            borderWidth * 0.2 * w / 30, boxLook);
+        const L = this._boxTitleLayers(boxRows, {
+          circular: false, unit, liveZoom, titleShown,
+          positionOf: b => b.ch.c, offsetOf: b => b.ch.off,
+          ids: { icon: `ix-pie-box-${this.name}`, polygons: `ix-pie-box-polygons-${this.name}`, titles: `ix-pie-titles-${this.name}` }
         });
-        layers.push(new IconLayer({
-          // the generation suffix (like every icon-atlas layer id, see
-          // ICON_ATLAS_RESET_AFTER): every zoom creates a new set of
-          // box rasters, and deck.gl's atlas never evicts — without the
-          // suffix the pie's boxes would not reset their atlas and
-          // turn black once it overflows
-          id: `ix-pie-box-${this.name}-g${this._iconGeneration}`,
-          data: boxRows, pickable: false,
-          getPosition: b => b.ch.c,
-          getIcon: b => b.icon,
-          getSize: b => b.icon.height / 2,
-          getPixelOffset: b => { const o = b.ch.off; return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
-          sizeUnits: 'pixels', billboard: true,
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
-        const titleData = boxRows.filter(b => b.title);
-        if (titleData.length) layers.push(new TextLayer({
-          id: `ix-pie-titles-${this.name}`,
-          data: titleData, pickable: false,
-          getPosition: b => b.ch.c,
-          getText: b => b.title.text,
-          getSize: b => b.title.f,
-          sizeUnits: 'pixels', fontFamily: 'arial',
-          characterSet: 'auto',
-          lineHeight: 1,
-          getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
-          fontSettings: { sdf: true },
-          outlineWidth: 1 / 7,
-          outlineColor: [255, 255, 255, 128],
-          getTextAnchor: b => b.title.anchor,
-          getAlignmentBaseline: 'top',
-          getPixelOffset: b => { const o = b.ch.off; return [b.title.x + o[0], b.title.top + o[1]]; },
-          parameters: ICON_LAYER_GLOBE_PARAMETERS
-        }));
+        layers.push(...L.box, ...L.titles);
       }
       if (polar.length) {
         layers.push(new ScatterplotLayer({

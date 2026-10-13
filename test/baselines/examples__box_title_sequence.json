@@ -1525,6 +1525,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -1538,22 +1544,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "430c16b23caa4de9",
-     "setDigest": "430c16b23caa4de9",
+     "digest": "6ef8574aa440b2a0",
+     "setDigest": "6ef8574aa440b2a0",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "82860dc395ed4eaa",
       "getRadius": "3ef7d00c781974cc"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.424858,
        9.424858
@@ -1565,12 +1565,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.424858,
         45.304004
@@ -1776,6 +1770,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -1789,22 +1789,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "046626284e9e17b5",
-     "setDigest": "046626284e9e17b5",
+     "digest": "187b817781e36e5c",
+     "setDigest": "187b817781e36e5c",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "42479dc65bcfa224",
       "getRadius": "e471731adf92e39f"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.358336,
        9.358336
@@ -1816,12 +1810,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.358336,
         45.259295
@@ -2027,6 +2015,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -2040,22 +2034,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "390f5cc283f838c9",
-     "setDigest": "390f5cc283f838c9",
+     "digest": "530e888dbc6b97af",
+     "setDigest": "530e888dbc6b97af",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "51f1449e20120155",
       "getRadius": "f9a3e2d281d6baf2"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.175976,
        9.175976
@@ -2067,12 +2055,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.175976,
         45.204403
@@ -2278,6 +2260,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -2291,22 +2279,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "021ffc952e9d92bc",
-     "setDigest": "021ffc952e9d92bc",
+     "digest": "5c1f0df8f398172e",
+     "setDigest": "5c1f0df8f398172e",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "3c95b6568e2b6ba1",
       "getRadius": "6ae14e564e25273c"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.512279,
        9.512279
@@ -2318,12 +2300,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.512279,
         45.19951
@@ -2529,6 +2505,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -2542,22 +2524,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "76bc4ffc2157d96e",
-     "setDigest": "76bc4ffc2157d96e",
+     "digest": "82abb0997b8abc85",
+     "setDigest": "82abb0997b8abc85",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "b82b4a71732f97f7",
       "getRadius": "adace3a7bdcbe06c"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.23269,
        9.23269
@@ -2569,12 +2545,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.23269,
         45.312501
@@ -2780,6 +2750,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -2793,22 +2769,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "6966f70732e4e2d5",
-     "setDigest": "6966f70732e4e2d5",
+     "digest": "a3fc5d5c992bab7b",
+     "setDigest": "a3fc5d5c992bab7b",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "87e6ab31182616b0",
       "getRadius": "caea8f2f1d9dee5a"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.406349,
        9.406349
@@ -2820,12 +2790,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.406349,
         45.224317
@@ -3031,6 +2995,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -3044,22 +3014,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "c1b8ba50a65c9993",
-     "setDigest": "c1b8ba50a65c9993",
+     "digest": "e610c0bfd79510bb",
+     "setDigest": "e610c0bfd79510bb",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "9481e32f0cdf7253",
       "getRadius": "28a05aeb0b2e53d4"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.291988,
        9.291988
@@ -3071,12 +3035,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.291988,
         45.217104
@@ -3282,6 +3240,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -3295,22 +3259,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "7139c5270df3aca2",
-     "setDigest": "7139c5270df3aca2",
+     "digest": "37102f89b4a0a195",
+     "setDigest": "37102f89b4a0a195",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "93a5a9385149bf80",
       "getRadius": "44fab1791703c721"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.155476,
        9.155476
@@ -3322,12 +3280,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.155476,
         45.24941
@@ -3533,6 +3485,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -3546,22 +3504,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "be71211c0916f2aa",
-     "setDigest": "be71211c0916f2aa",
+     "digest": "8f24835aa911ac65",
+     "setDigest": "8f24835aa911ac65",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "0df228a71926a669",
       "getRadius": "8d643e362b78748e"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.397075,
        9.397075
@@ -3573,12 +3525,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.397075,
         45.232017
@@ -3784,6 +3730,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -3797,22 +3749,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "7c98d84b055594a4",
-     "setDigest": "7c98d84b055594a4",
+     "digest": "c7c8a8c35bbfaba6",
+     "setDigest": "c7c8a8c35bbfaba6",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "6886caa2fe90e4f4",
       "getRadius": "f2ad0265e61f2bc9"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.306316,
        9.306316
@@ -3824,12 +3770,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.306316,
         45.189842
@@ -4035,6 +3975,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -4048,22 +3994,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "b254a1a1bbbc1ab8",
-     "setDigest": "b254a1a1bbbc1ab8",
+     "digest": "4c8fc22ea9bbe065",
+     "setDigest": "4c8fc22ea9bbe065",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "2c3d1b8c38cda158",
       "getRadius": "27a886ff1b7d541a"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.185898,
        9.185898
@@ -4075,12 +4015,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.185898,
         45.127231
@@ -4286,6 +4220,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -4299,22 +4239,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "8b46f3e58db83fc0",
-     "setDigest": "8b46f3e58db83fc0",
+     "digest": "39bfff7ca6703138",
+     "setDigest": "39bfff7ca6703138",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "bac5fd009da43408",
       "getRadius": "6ae14e564e25273c"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.512279,
        9.512279
@@ -4326,12 +4260,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.512279,
         45.099156
@@ -6594,6 +6522,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -6607,22 +6541,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "73f3e5865d596eff",
-     "setDigest": "73f3e5865d596eff",
+     "digest": "a440e7e8f53943ff",
+     "setDigest": "a440e7e8f53943ff",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "00c3c69c5b4282da",
       "getRadius": "d904440b731d7d11"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.389757,
        9.389757
@@ -6634,12 +6562,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.389757,
         45.339545
@@ -6845,6 +6767,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -6858,22 +6786,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "6acdebe14e234352",
-     "setDigest": "6acdebe14e234352",
+     "digest": "c5dffcce648e1d85",
+     "setDigest": "c5dffcce648e1d85",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "8a592e9f6af8ab80",
       "getRadius": "bf924825527bbbb7"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.270142,
        9.270142
@@ -6885,12 +6807,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.270142,
         45.311402
@@ -7096,6 +7012,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -7109,22 +7031,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "ca66a4e7d34e0e69",
-     "setDigest": "ca66a4e7d34e0e69",
+     "digest": "9080ec89eab7d972",
+     "setDigest": "9080ec89eab7d972",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "9d65a9bd4e55a792",
       "getRadius": "e220ba8c9c7bf3ff"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.207069,
        9.207069
@@ -7136,12 +7052,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.207069,
         45.27686
@@ -7347,6 +7257,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -7360,22 +7276,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "db1ac99d87e70d4d",
-     "setDigest": "db1ac99d87e70d4d",
+     "digest": "4ad5e1392d9e6b57",
+     "setDigest": "4ad5e1392d9e6b57",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "6c7d92c88b39c48d",
       "getRadius": "aa6550f23e0606ad"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.470731,
        9.470731
@@ -7387,12 +7297,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.470731,
         45.273782
@@ -7598,6 +7502,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -7611,22 +7521,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "fd878e28c4f6872d",
-     "setDigest": "fd878e28c4f6872d",
+     "digest": "c0c791d56967621e",
+     "setDigest": "c0c791d56967621e",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "2d266e7e5d162ec0",
       "getRadius": "f91fe88565fd6644"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.165087,
        9.165087
@@ -7638,12 +7542,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.165087,
         45.344895
@@ -7849,6 +7747,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -7862,22 +7766,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "9a0b43d337fdd9e0",
-     "setDigest": "9a0b43d337fdd9e0",
+     "digest": "e7b4d6f0ea207f5a",
+     "setDigest": "e7b4d6f0ea207f5a",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "5730b13168eccb28",
       "getRadius": "25c535eda11cd379"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.326292,
        9.326292
@@ -7889,12 +7787,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.326292,
         45.28939
@@ -8100,6 +7992,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -8113,22 +8011,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "fbbb77350ef9e53a",
-     "setDigest": "fbbb77350ef9e53a",
+     "digest": "3cc6cb113560cc4f",
+     "setDigest": "3cc6cb113560cc4f",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "c2dd9819843294ca",
       "getRadius": "94b2da530f6beb06"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.254248,
        9.254248
@@ -8140,12 +8032,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.254248,
         45.247793
@@ -8351,6 +8237,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -8364,22 +8256,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "04fe5a49007d5a4f",
-     "setDigest": "04fe5a49007d5a4f",
+     "digest": "c4a9edec3e7f6b3f",
+     "setDigest": "c4a9edec3e7f6b3f",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "638cc91f299d5bf2",
       "getRadius": "af3d9c802b8d77cc"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.116446,
        9.116446
@@ -8391,12 +8277,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.116446,
         45.268135
@@ -8602,6 +8482,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -8615,22 +8501,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "188cc0815381c609",
-     "setDigest": "188cc0815381c609",
+     "digest": "def7b040207321cc",
+     "setDigest": "def7b040207321cc",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "32c49f84067e3ee3",
       "getRadius": "225bdc0d00f9184a"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.372254,
        9.372254
@@ -8642,12 +8522,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.372254,
         45.257183
@@ -8853,6 +8727,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -8866,22 +8746,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "dc2ffc2a302729a8",
-     "setDigest": "dc2ffc2a302729a8",
+     "digest": "fad63d47f6ef36bd",
+     "setDigest": "fad63d47f6ef36bd",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "e669454d9ce77b45",
       "getRadius": "77937af8129a7805"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.237372,
        9.237372
@@ -8893,12 +8767,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.237372,
         45.230629
@@ -9104,6 +8972,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -9117,22 +8991,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "c494318ed317636b",
-     "setDigest": "c494318ed317636b",
+     "digest": "8c5b8979318bdbfa",
+     "setDigest": "8c5b8979318bdbfa",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "545181d94087bc0e",
       "getRadius": "9f7b81df414a0f14"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.213319,
        9.213319
@@ -9144,12 +9012,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.213319,
         45.191223
@@ -9355,6 +9217,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -9368,22 +9236,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "bbecb2db03b612d1",
-     "setDigest": "bbecb2db03b612d1",
+     "digest": "1cc2210b8618eefb",
+     "setDigest": "1cc2210b8618eefb",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "0abe077f18b3bcd1",
       "getRadius": "aa6550f23e0606ad"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.470731,
        9.470731
@@ -9395,12 +9257,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.470731,
         45.173559
@@ -11318,6 +11174,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -11331,22 +11193,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "6afa860323c1ec12",
-     "setDigest": "6afa860323c1ec12",
+     "digest": "546885454d27bd78",
+     "setDigest": "546885454d27bd78",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "9f47e1ca5d3ec412",
       "getRadius": "ce6109cd5ab67684"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.480577,
        9.480577
@@ -11358,12 +11214,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.480577,
         45.24754
@@ -11569,6 +11419,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -11582,22 +11438,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "e2e60f5891195c8e",
-     "setDigest": "e2e60f5891195c8e",
+     "digest": "7ff6dd1e6c2250aa",
+     "setDigest": "7ff6dd1e6c2250aa",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "12fbf69a4875f8ef",
       "getRadius": "dcdb6918db77e43d"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.498335,
        9.498335
@@ -11609,12 +11459,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.498335,
         45.176482
@@ -11820,6 +11664,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -11833,22 +11683,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "b3b112053eef0ca5",
-     "setDigest": "b3b112053eef0ca5",
+     "digest": "ce678a02a5c0a30f",
+     "setDigest": "ce678a02a5c0a30f",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "ba23ab1178c4ad1b",
       "getRadius": "a7dc358dae3af47a"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.126621,
        9.126621
@@ -11860,12 +11704,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.126621,
         45.089195
@@ -12071,6 +11909,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -12084,22 +11928,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "32e685985b8e96f2",
-     "setDigest": "32e685985b8e96f2",
+     "digest": "d5ed4643cf9c31c5",
+     "setDigest": "d5ed4643cf9c31c5",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "02a193ecb7a00d0f",
       "getRadius": "1208d6f8c4e6568b"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.578231,
        9.578231
@@ -12111,12 +11949,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.578231,
         45.081411
@@ -12322,6 +12154,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -12335,22 +12173,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "845df40b9442eb90",
-     "setDigest": "845df40b9442eb90",
+     "digest": "a4224ac61395bb20",
+     "setDigest": "a4224ac61395bb20",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "de00ae2e5834a3d4",
       "getRadius": "bf1a4b0cc7280dcf"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.340002,
        9.340002
@@ -12362,12 +12194,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.340002,
         45.261041
@@ -12573,6 +12399,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       255
+      ],
       "getLineColor": [
        221,
        221,
@@ -12586,22 +12418,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "76e6b42891a57704",
-     "setDigest": "76e6b42891a57704",
+     "digest": "4cc44685bec3232f",
+     "setDigest": "4cc44685bec3232f",
      "columnDigests": {
-      "getFillColor": "64969e4917d68cd7",
       "getPosition": "b45abcb2032a4837",
       "getRadius": "b279caec26d07e6b"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.533433,
        9.533433
@@ -12613,12 +12439,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        255
-       ],
        [
         9.533433,
         45.120866
@@ -12824,6 +12644,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -12837,22 +12663,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "34251bc08d6f3edc",
-     "setDigest": "34251bc08d6f3edc",
+     "digest": "2d2665f5494d2c10",
+     "setDigest": "2d2665f5494d2c10",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "f5ed7dac301a02c9",
       "getRadius": "2d2c55ebdab94e79"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.351896,
        9.351896
@@ -12864,12 +12684,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.351896,
         45.168354
@@ -13075,6 +12889,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -13088,22 +12908,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "bb85ebfc78ca410a",
-     "setDigest": "bb85ebfc78ca410a",
+     "digest": "ff151ff189ea6c1c",
+     "setDigest": "ff151ff189ea6c1c",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "f63f7a87665a65c7",
       "getRadius": "b3c91b86ebc46729"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.217433,
        9.217433
@@ -13115,12 +12929,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.217433,
         45.219672
@@ -13326,6 +13134,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -13339,22 +13153,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "01854577982c7d24",
-     "setDigest": "01854577982c7d24",
+     "digest": "8860e81e628c94ed",
+     "setDigest": "8860e81e628c94ed",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "b7b570a2515c3177",
       "getRadius": "925121a2d3047352"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.436474,
        9.436474
@@ -13366,12 +13174,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.436474,
         45.192046
@@ -13577,6 +13379,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -13590,22 +13398,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "d97a0d076c4fab67",
-     "setDigest": "d97a0d076c4fab67",
+     "digest": "e4ba45a259066b68",
+     "setDigest": "e4ba45a259066b68",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "4e6841a9f7063cdc",
       "getRadius": "70420721a2bb3fe7"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.415758,
        9.415758
@@ -13617,12 +13419,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.415758,
         45.125035
@@ -13828,6 +13624,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -13841,22 +13643,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "15236fd673d67f50",
-     "setDigest": "15236fd673d67f50",
+     "digest": "11334696eb70df95",
+     "setDigest": "11334696eb70df95",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "3595e6a6c343d04c",
       "getRadius": "0872412accd1ee3f"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.142371,
        9.142371
@@ -13868,12 +13664,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.142371,
         45.025501
@@ -14079,6 +13869,12 @@
      "type": "ScatterplotLayer",
      "count": 1,
      "constants": {
+      "getFillColor": [
+       238,
+       238,
+       238,
+       153
+      ],
       "getLineColor": [
        221,
        221,
@@ -14092,22 +13888,16 @@
       "stroked": true
      },
      "columns": [
-      "getFillColor",
       "getPosition",
       "getRadius"
      ],
-     "digest": "64c501b65a90dc06",
-     "setDigest": "64c501b65a90dc06",
+     "digest": "5d5b86199b85a6a4",
+     "setDigest": "5d5b86199b85a6a4",
      "columnDigests": {
-      "getFillColor": "39678e1411ae0ddb",
       "getPosition": "6b3e512d78b58e77",
       "getRadius": "1208d6f8c4e6568b"
      },
      "stats": {
-      "getFillColor": [
-       238,
-       238
-      ],
       "getPosition": [
        9.578231,
        9.578231
@@ -14119,12 +13909,6 @@
      },
      "sample": [
       [
-       [
-        238,
-        238,
-        238,
-        153
-       ],
        [
         9.578231,
         44.98085
