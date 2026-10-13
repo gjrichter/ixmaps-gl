@@ -403,12 +403,15 @@ in vec4 vPieLineColor;
   }
   // in device pixels (fwidth: CSS px per device pixel), so a hairline
   // stays one at any device pixel ratio. Half the outline lies inside
-  // each slice (the other half in its neighbour); below a pixel it fades
-  // in by its width
+  // each slice (the other half in its neighbour). No fade-in by the
+  // width: the browser rasterizes flat's sub-pixel SVG strokes as
+  // hairlines — one device pixel at FULL opacity (Skia's stroke floor,
+  // measured on the ISTAT story: 0.17 CSS px strokes render gray 32) —
+  // so the line keeps full alpha and only its extent grows past 1px
   float pieAA = max(fwidth(pieR), 1e-4);
   float pieH = vPieLineWidth * 0.5 / pieAA;
   float pieDD = pieD / pieAA;
-  float pieLine = pieH > 0.0 ? clamp(min(pieH + 0.5 - pieDD, 2.0 * pieH), 0.0, 1.0) : 0.0;
+  float pieLine = pieH > 0.0 ? clamp(pieH + 0.5 - pieDD, 0.0, 1.0) : 0.0;
   float pieRim = clamp((vPieRadius - pieR) / pieAA + 0.5, 0.0, 1.0);
   color = vec4(mix(color.rgb, vPieLineColor.rgb, pieLine), mix(color.a, vPieLineColor.a * pieRim, pieLine));
   if (pieInner > 0.0) color.a *= clamp((pieR - pieInner) / pieAA + 0.5, 0.0, 1.0);
@@ -2405,13 +2408,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // this list; the rest is still recognized-but-inert
   const KNOWN_INERT_FLAGS = ['CLIPTOGEOBOUNDS', 'OUTLIER',
     'POW2', 'POW3', 'NOSORT'];
-  // flat's PIE / DONUT variants with no rendering here (see _buildPieLayers)
-  const PIE_INERT_FLAGS = [/3D/, /VOLUME/, /HEIGHT/, /STARBURST/, /FLOWER/, /RAYS/, /BOW/, /ZOOM/, /DIRECTION/, /DIRECTED/, /POLAR/];
+  // flat's PIE / DONUT variants with no rendering here (see _buildPieLayers).
+  // STARBURST / FLOWER / RAYS (the starburst rays, with the XLRAYS & kin
+  // angle/gap variants) and POLAR (its reference circles) ARE drawn — see
+  // pieSliceLayout; the rest is still recognized-but-inert
+  const PIE_INERT_FLAGS = [/3D/, /VOLUME/, /HEIGHT/, /BOW/, /ZOOM/, /DIRECTION/, /DIRECTED/];
   // ... and of AGGREGATE / CATEGORICAL pies: GRIDSIZE's pie the size of its
-  // grid cell (drawn by the SIZE rule instead), AUTOSIZE, DOPACITY, the
-  // chart BOX and TITLE, GAUGE, MULTIPLE / DIFFUSE, the post-aggregation
-  // value arithmetic (DIFFERENCE, FRACTION, PERCENT …, field100)
-  const PIE_AGGREGATE_INERT_FLAGS = [/^GRIDSIZE$/, /AUTOSIZE/, /DOPACITY/, /BOX/, /TITLE/, /^GAUGE$/, /^MULTIPLE$/, /^DIFFUSE$/,
+  // grid cell (drawn by the SIZE rule instead), AUTOSIZE, DOPACITY,
+  // GAUGE, MULTIPLE / DIFFUSE, the post-aggregation
+  // value arithmetic (DIFFERENCE, FRACTION, PERCENT …, field100).
+  // The chart BOX and TITLE ARE drawn (see _buildPieLayers)
+  const PIE_AGGREGATE_INERT_FLAGS = [/^GRIDSIZE$/, /AUTOSIZE/, /DOPACITY/, /^GAUGE$/, /^MULTIPLE$/, /^DIFFUSE$/,
     /^DIFFERENCE$/, /^FRACTION$/, /^PERCENT$/, /^PERMILLE$/, /^PRODUCT$/, /^CALCVAL$/, /^RELATIVE$/];
   // flat's BAR / BARS variants with no rendering here (see flatBarLayout):
   // the bar is drawn plain (SMALLARROW as ARROW) — tested as substrings,
@@ -8805,10 +8812,38 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   //    centered on 12 o'clock), HALF over 180° from 270° (HALFPLUS10 200°
   //    from 260°, HALFMINUS10 160° from 280°, HALFPLUS20 220° from 250°,
   //    HALFMINUS20 140° from 290°)
+  //  - STARBURST (piechart.js 246, 324-355, 415-420): every part >= 0, the
+  //    angles EQUAL (the value is the ray's radius, not its sweep) and the
+  //    percents NOT normalized — raw values. The FLOWER/RAYS variants
+  //    (XLFLOWER/XLRAYS, LFLOWER/LRAYS, XSFLOWER/XSRAYS, SFLOWER/SRAYS,
+  //    FLOWER/RAYS) cap the ray angle (maxAngle / 4 / 12 / 10 / none) and
+  //    inset a gap (10 / 20 / 40 / 33 / 35 % of it) on both sides of each
+  //    ray. The ray RADIUS is
+  //    computed in _buildPieLayers (it needs the theme's maxValue)
   function pieSliceLayout(values, t, opts = {}) {
     t = String(t || '');
     const has = re => re.test(t);
-    const parts = values.map(v => (isNaN(v) ? 0 : v));
+    // flat's STARBURST (piechart.js realize 246, 324-355, 415-420): the
+    // parts get EQUAL angles — the value is the ray's radius, not its
+    // sweep — and every part is clamped to >= 0. The FLOWER/RAYS
+    // variants (flat maps XLFLOWER to XLRAYS & kin, maptheme.js
+    // 20169-20186) cap the ray angle and leave a gap between the rays.
+    // flat's `nRadInner = max(5, nRadInner)` for the ray variants is 5
+    // units of the chart's INTERNAL coordinate system — measured on the
+    // ISTAT story: 5 of the disc's 197 internal units, 0.28 screen px,
+    // sub-pixel and invisible (the petals go to the center; an inner
+    // radius shows only with DONUT) — so starInner here is 0 for the
+    // ray variants too, and only DONUT+STARBURST starts its rays at
+    // the donut's inner radius (see _buildPieLayers)
+    const star = has(/STARBURST/);
+    const starRay = !star ? null
+      : /XLFLOWER|XLRAYS/.test(t) ? { cap: 4, gap: 0.10 }
+      : /LFLOWER|LRAYS/.test(t) ? { cap: 4, gap: 0.20 }
+      : /XSFLOWER|XSRAYS/.test(t) ? { cap: 12, gap: 0.40 }
+      : /SFLOWER|SRAYS/.test(t) ? { cap: 10, gap: 0.33 }
+      : /FLOWER|RAYS/.test(t) ? { cap: 1, gap: 0.35 }
+      : { cap: 1, gap: 0 };
+    const parts = values.map(v => (isNaN(v) ? 0 : star ? Math.max(0, v) : v));
     const sum = parts.reduce((a, v) => a + v, 0);
     const autocomplete = has(/AUTOCOMPLETE/);
     if (sum === 0 && !autocomplete) return null;
@@ -8861,13 +8896,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // flat draws its "Pie error: no values !" circle here
     if (!any && !autocomplete) return null;
     const pctSum = slices.reduce((a, sl) => a + sl.percent, 0);
-    if (pctSum !== 100) {
+    // flat's STARBURST keeps the parts' raw values (piechart.js 246-258:
+    // no 100% normalization, no AUTOCOMPLETE) — the value is the radius
+    if (!star && pctSum !== 100) {
       if (autocomplete && pctSum < 100) slices.push({ i: -1, value: null, percent: Math.floor((100 - pctSum) * 100000) / 100000, complement: true });
       else slices.forEach(sl => { sl.percent = sl.percent / pctSum * 100; });
     }
     let end = 0;
     if (has(/SYMMETRIC/) && slices.length) {
-      if (has(/BIGTOTOP/)) {
+      if (star) {
+        // flat piechart.js 296-299: the first ray centered on 12 o'clock
+        end = 360 - Math.floor(360 / parts.length / 2);
+      } else if (has(/BIGTOTOP/)) {
         end = 360;
         let x = 0;
         for (; x < slices.length && slices[x] !== biggest; x++) end -= slices[x].percent < 100 ? Math.floor(360 / 100 * slices[x].percent) : 0;
@@ -8888,6 +8928,20 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (has(/HALFMINUS20/)) maxAngle = 140;
     const out = [];
     slices.forEach((sl, k) => {
+      if (star) {
+        // flat piechart.js 324-355, 395-403: the angles advance by the
+        // FULL equal angle (the ray variants capped), the gap inset on
+        // both sides of a ray; a ray's own sweep is that reduced angle
+        const angle = Math.min(maxAngle / starRay.cap, maxAngle / parts.length);
+        const base = end % 360;
+        end = base + angle;
+        if (end > 360) end = end % 360;
+        const sweep = angle * (1 - 2 * starRay.gap);
+        const start = base + angle * starRay.gap;
+        if (sweep <= 0 || start < 0) return;
+        out.push(Object.assign(sl, { start, sweep, k }));
+        return;
+      }
       const sweep = sl.percent / 100 * maxAngle;
       const start = end % 360;
       end = start + sweep;
@@ -9014,6 +9068,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const parts = [], zeroNot = [];
     for (let k = 0; k < o.fields.length; k++) {
       let v = parseFloat(raw[o.fields[k]]);
+      // flat's weights multiply every record's per-field value as it is
+      // accumulated (maptheme.js 10506-10508) — the SIZE (nValueSize)
+      // stays raw, exactly as there
+      if (o.weights) v = v * o.weights(k);
       zeroNot[k] = false;
       if (isNaN(v)) {
         if (!r.undefinedOk) return null;
@@ -10131,9 +10189,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // the value fields' own values weighted — the class value and the field100
   // value stay raw, exactly as flat reads them
   function weightedRecord(f, weightOf) {
+    // a pie record's parts were weighted in flatPieRecord, and its size
+    // (nValueSize) stays raw — nothing to do here
+    if (f.properties && f.properties.pie) return f;
     const p = Object.assign({}, f.properties);
     if (p.value !== undefined && !isNaN(p.value)) p.value = p.value * weightOf(0);
     if (Array.isArray(p.series)) p.series = p.series.map((v, i) => (isNaN(v) ? v : v * weightOf(i)));
+    // the multi-field pie's parts — the SAME per-field values as series,
+    // but the grid cell's pie accumulates THESE (flatPieAccumulate's
+    // rec.parts), so they carry the weights too
+    if (Array.isArray(p.parts)) p.parts = p.parts.map((v, i) => (isNaN(v) ? v : v * weightOf(i)));
     return Object.assign({}, f, { properties: p });
   }
   function applyField100(features, binding, flags, style) {
@@ -11109,6 +11174,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const rules = flatValueRules(t, fields ? fields.length : 1);
         const sizeField = this.binding.size && this.binding.size !== '$item$' ? this.binding.size : null;
         const feats = [];
+        // flat's per-field weights (maptheme.js 10506-10508), applied to
+        // every record's parts inside flatPieRecord
+        const pieWeightOf = fieldWeightOf(this.style, fields ? fields.length : 1, true);
         for (const f of sourceFeatures) {
           const c = f.geometry && f.geometry.coordinates;
           if (!c || typeof c[0] !== 'number' || !isFinite(c[0]) || !isFinite(c[1])) continue;
@@ -11119,7 +11187,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             const i = k == null ? undefined : this._pieCategoryIndex.get(k);
             cat = i == null ? -1 : i;
           }
-          const pie = flatPieRecord(p, { rules, sizeField, cat, fields });
+          const pie = flatPieRecord(p, { rules, sizeField, cat, fields, weights: pieWeightOf });
           if (!pie) continue;
           feats.push({ type: 'Feature', geometry: f.geometry, properties: { value: pie.size, pie, raw: p } });
         }
@@ -15076,8 +15144,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     //    CENTERVALUE the item's record count
     // Not drawn here (a console note at type parsing, PIE_INERT_FLAGS,
     // PIE_AGGREGATE_INERT_FLAGS):
-    // 3D, VOLUME, HEIGHT, STARBURST, FLOWER/RAYS, BOW, ZOOM, DIRECTION /
-    // DIRECTED, POLAR — the pie is drawn flat and plain instead. Nor
+    // 3D, VOLUME, HEIGHT, BOW, ZOOM, DIRECTION / DIRECTED — the pie is
+    // drawn flat and plain instead; POLAR without STARBURST has no
+    // effect in flat either. STARBURST (with the FLOWER/RAYS angle/gap
+    // variants) and its POLAR circles ARE drawn (pieSliceLayout). Nor
     // style.clipparts, showparts, gridx (flat's several pies per item).
     // Known divergence: flat draws a chart's value labels in the chart's
     // own group, so a bigger pie drawn later covers a smaller neighbour's
@@ -15141,6 +15211,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const lineRgb = line === 'none' ? null : hexOrNamedToRgb(line);
       const lineWidthOf = r => (lineRgb ? (styleNum(st.linewidth) || 0.1) * r / 15 : 0);
       const lineRgba = lineRgb ? [...lineRgb.slice(0, 3), Math.round(255 * lineAlpha)] : [0, 0, 0, 0];
+      // flat's STARBURST (maptheme.js 20262-20275, piechart.js 281-287,
+      // 415-420): the parts get equal angles and a ray's radius carries
+      // its value — inner + span · sqrt(v / maxValue) · scale, scale =
+      // maxValue / (normalsizevalue || maxValue) · 2.14 (with SIZE flat
+      // sets only maxValue, so a part at the reference value reaches
+      // 2.14 R). maxValue: style.maxvalue (the reference — the ISTAT
+      // story's national mean), else the biggest part value over the
+      // items (flat's max of the per-part maxima nMaxA). The star's
+      // inner px (the ray variants' 5px) comes off the layout
+      const star = has(/STARBURST/);
+      let starMaxPart = 0;
 
       const charts = [];
       if (agg) {
@@ -15155,6 +15236,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (!layout) continue;
           if (cat) layout.slices.forEach(sl => { sl.single = values.length === 1; });
           const sum = values.reduce((a, v) => a + (isNaN(v) ? 0 : v), 0);
+          if (star) for (const v of values) if (v > starMaxPart) starMaxPart = v;
           const r = nSizeOf(sum, size) * unit;
           if (!(r > 0) || !isFinite(r)) continue;
           // flat's draw-order key (maptheme.js 16812-16860): with a size
@@ -15179,6 +15261,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const layout = pieSliceLayout(values, t, { centerPart: st.centerpart });
         if (!layout) continue;
         const sum = values.reduce((a, v) => a + v, 0);
+        if (star) for (const v of values) if (v > starMaxPart) starMaxPart = v;
         const size = this.binding.size ? parseFloat(raw[this.binding.size]) : undefined;
         const r = nSizeOf(sum, size) * unit;
         if (!(r > 0) || !isFinite(r)) continue;
@@ -15211,14 +15294,80 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       });
 
       const TAU = 2 * Math.PI;
-      const slices = [], centers = [], glows = [];
+      const slices = [], centers = [], glows = [], polar = [], polarDashes = [];
       const glowOn = has(/GLOW/) && !has(/ZOOM/) && !glowHiddenByScale(st, liveZoom);
+      // the STARBURST ray scale (see the star comment above): style
+      // maxvalue, else the biggest part value over the items — flat's
+      // `this.nMaxValue || max(nMaxA)`. Without SIZE flat also sets the
+      // donut's normalSizeValue (normalsizevalue, else maxValue), which
+      // dampens the scale
+      const starMax = styleNum(st.maxvalue);
+      const starRef = !isNaN(starMax) && starMax > 0 ? starMax : (starMaxPart > 0 ? starMaxPart : 1);
+      const starNsv = has(/\bSIZE\b/) ? starRef : (nsv || starRef);
+      const starScale = starRef / starNsv * 2.14;
+      // a chart's rays start at the CENTER — flat's `max(5, nRadInner)`
+      // for the ray variants is 5 units of the chart's internal
+      // coordinate system, sub-pixel and invisible on screen (see
+      // pieSliceLayout) — and only with DONUT at the donut's inner
+      // radius (flat piechart.js 326-327: nRadOuter += nRadInner, the
+      // span stays R)
+      const starInnerOf = ch => (ch.layout.inner || 0) * ch.r;
+      const starRadius = (v, R, inner) => Math.max(1, inner + (R - inner) * Math.sqrt(Math.max(0, v) / starRef) * starScale);
       for (const ch of charts) {
+        const starInner = star ? starInnerOf(ch) : 0;
+        if (star && has(/POLAR/)) {
+          // flat piechart.js 435-452: the STARBURST's reference circles —
+          // a white disc at the reference value (fill-opacity 0.25,
+          // #444444 border, solid) and range rings at 75 / 50 / 25 % of
+          // it, the 75% and 25% rings DASHED (stroke-dasharray 50 50 in
+          // the chart group's units, on for half of each cycle). All of
+          // them under every ray. The stroke widths are flat's 1px /
+          // 3px — in the CHART GROUP's coordinate system, whose scale
+          // is ~0.017 of the screen, so on screen they are sub-pixel
+          // hairlines (measured on the ISTAT story: the disc's 197
+          // group-units radius is 11.2px on screen); 1px ≈ 1.1% and
+          // 3px ≈ 3.2% of the base radius R, taken here as fractions
+          // of ch.r so they stay hairlines at every zoom, as in flat
+          const lw1 = ch.r * 0.0108, lw3 = ch.r * 0.0325;
+          const w = ch.r - starInner;
+          polar.push({ position: ch.c, r: starInner + w * starScale, off: ch.off,
+            fill: [255, 255, 255, 64], line: [68, 68, 68, 255], lw: lw1 });
+          polar.push({ position: ch.c, r: starInner + w * Math.sqrt(0.5) * starScale, off: ch.off,
+            fill: [0, 0, 0, 0], line: [68, 68, 68, 255], lw: lw1 });
+          // the dashed rings: one chord per dash — flat's own arcs are
+          // octant polylines, so straight chords are as faithful. The
+          // dash count is flat's geometry: a 50-unit dash on the ring's
+          // group radius — the ring in group units is ~17.7 × its
+          // screen radius (the chart group scale measured on the
+          // story), so a cycle is 100 group units = 100/(17.7 · 2π ·
+          // ringR_screen) of the circle: ~11 dashes around the 75%,
+          // ~6 around the 25% ring, at every zoom
+          for (const q of [0.75, 0.25]) {
+            const rr = starInner + w * Math.sqrt(q) * starScale;
+            const cycles = Math.max(q > 0.5 ? 4 : 3, Math.round((q > 0.5 ? 2.06 : 1.19) * ch.r));
+            const seg = 2 * Math.PI / cycles;
+            for (let i = 0; i < cycles; i++) {
+              const a0 = i * seg, a1 = a0 + seg / 2;
+              // 0 at 12 o'clock, clockwise (pieSliceLayout's convention);
+              // pixelOffsetLngLat's y grows down
+              polarDashes.push({
+                path: [
+                  pixelOffsetLngLat(ch.c, [Math.sin(a0) * rr, -Math.cos(a0) * rr], liveZoom),
+                  pixelOffsetLngLat(ch.c, [Math.sin(a1) * rr, -Math.cos(a1) * rr], liveZoom)
+                ], lw: lw3
+              });
+            }
+          }
+        }
         for (const sl of ch.layout.slices) {
           const rgb = sliceRgb(sl);
+          // STARBURST: this ray's own radius (the value), its inner the
+          // px starInner as a fraction of that radius — the shader takes
+          // a fraction of the instance radius, which varies per ray here
+          const rayR = star ? starRadius(sl.value, ch.r, starInner) : ch.r;
           slices.push({
-            position: ch.c, r: ch.r, off: ch.off, properties: ch.properties, chart: ch, part: sl,
-            slice: [sl.start * Math.PI / 180, sl.sweep >= 360 ? TAU : sl.sweep * Math.PI / 180, ch.layout.inner],
+            position: ch.c, r: rayR, off: ch.off, properties: ch.properties, chart: ch, part: sl,
+            slice: [sl.start * Math.PI / 180, sl.sweep >= 360 ? TAU : sl.sweep * Math.PI / 180, star ? starInner / rayR : ch.layout.inner],
             fill: [...rgb.slice(0, 3), !sl.complement && noFill.has(sl.i) ? 0 : Math.round(255 * fillAlpha)]
           });
         }
@@ -15242,13 +15391,147 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         radiusUnits: 'pixels', billboard: true, stroked: false, filled: true, antialiasing: true,
         parameters: ICON_LAYER_GLOBE_PARAMETERS
       };
-      const layers = [new PieSliceLayer(Object.assign({}, discProps, {
+      // flat's BOX / TITLE for a pie (maptheme.js 18446-18925, the same
+      // block the sequence builder draws): a rectangle around the
+      // chart's drawn extent — on a STARBURST the longest ray, the
+      // disc otherwise — plus, with TITLE, the item's title (an
+      // aggregated grid cell of more than 3 records without its own:
+      // "(n)", see _itemTitle) at the chart's left edge, wrapped to
+      // the chart's width, in textcolor (#888888) over a half-opaque
+      // white halo, its first baseline 0.7 font above the box — the
+      // box grows to enclose it, its top trimmed by 0.1 font. The
+      // box: white at boxopacity, #bbbbbb border at 0.3 opacity
+      // (borderstyle solid/dotted/dashed: 1, none: no border),
+      // borderwidth · 0.2 · width/chartSize px wide. Both are removed
+      // outside boxupper / titleupper (maptheme.js 18758-18760, the
+      // TITLE gate 18809-18811)
+      const boxShown = has(/BOX/) && !boxHiddenByScale(st, liveZoom);
+      const titleUpper = scaleDenom(st.titleupper);
+      const titleShown = boxShown && has(/TITLE/) && !!this.binding.title
+        && !(titleUpper && scaleDenominatorAt(liveZoom) > titleUpper);
+      const boxRows = [];
+      if (boxShown) for (const ch of charts) {
+        const boxMarginU = styleNum(st.boxmargin) || 2;
+        const titleScale = styleNum(st.textscale) || styleNum(st.valuescale) || 1;
+        // the chart's drawn extent, px around the anchor (flat's getBox
+        // of the shape group — the longest ray on a STARBURST)
+        let e = ch.r;
+        if (star) { const in0 = starInnerOf(ch); for (const sl of ch.layout.slices) e = Math.max(e, starRadius(sl.value, ch.r, in0)); }
+        let title = null;
+        if (titleShown) {
+          const text = this._itemTitle(ch.properties) ? this._itemTitle(ch.properties) + (st.titleunits ? ' ' + st.titleunits : '') : null;
+          if (text) {
+            const f = 5 * unit * titleScale;
+            const lines = wrapTitleLines(text, f, 2 * e).split('\n');
+            const width = Math.max(...lines.map(l => titleTextWidth(l, f)));
+            const base = -e - 0.7 * f - (lines.length - 1) * f;
+            title = { text: lines.join('\n'), x: -e, anchor: 'start', top: base - 0.8 * f, f,
+              extent: [-e, base - 0.905 * f, -e + width, base + (lines.length - 1) * f + 0.212 * f] };
+          }
+        }
+        // the box: chart + title plus the margin (min(2m, m·w / 30u))
+        const ex = title
+          ? [-e, Math.min(-e, title.extent[1]) + 0.1 * title.f, Math.max(e, title.extent[2]), Math.max(e, title.extent[3])]
+          : [-e, -e, e, e];
+        const margin = Math.min(2 * boxMarginU * unit, boxMarginU * 2 * e / 30);
+        boxRows.push({ ch, title, rect: [ex[0] - margin, ex[1] - margin, ex[2] + margin, ex[3] + margin] });
+      }
+      const layers = [];
+      if (boxRows.length) {
+        const borderStyle = String(st.borderstyle || '');
+        const boxLook = {
+          fill: st.boxcolor || 'white',
+          fillOpacity: isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity),
+          stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
+          strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3
+        };
+        const borderWidth = styleNum(st.borderwidth) || 1;
+        const borderRadius = styleNum(st.borderradius);
+        boxRows.forEach(b => {
+          const w = b.rect[2] - b.rect[0], h = b.rect[3] - b.rect[1];
+          b.icon = this._buildBoxIcon(w, h,
+            isNaN(borderRadius) ? 0 : borderRadius * Math.min(unit, w / 30),
+            borderWidth * 0.2 * w / 30, boxLook);
+        });
+        layers.push(new IconLayer({
+          // the generation suffix (like every icon-atlas layer id, see
+          // ICON_ATLAS_RESET_AFTER): every zoom creates a new set of
+          // box rasters, and deck.gl's atlas never evicts — without the
+          // suffix the pie's boxes would not reset their atlas and
+          // turn black once it overflows
+          id: `ix-pie-box-${this.name}-g${this._iconGeneration}`,
+          data: boxRows, pickable: false,
+          getPosition: b => b.ch.c,
+          getIcon: b => b.icon,
+          getSize: b => b.icon.height / 2,
+          getPixelOffset: b => { const o = b.ch.off; return [(b.rect[0] + b.rect[2]) / 2 + o[0], (b.rect[1] + b.rect[3]) / 2 + o[1]]; },
+          sizeUnits: 'pixels', billboard: true,
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+        const titleData = boxRows.filter(b => b.title);
+        if (titleData.length) layers.push(new TextLayer({
+          id: `ix-pie-titles-${this.name}`,
+          data: titleData, pickable: false,
+          getPosition: b => b.ch.c,
+          getText: b => b.title.text,
+          getSize: b => b.title.f,
+          sizeUnits: 'pixels', fontFamily: 'arial',
+          characterSet: 'auto',
+          lineHeight: 1,
+          getColor: [...hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3), 255],
+          fontSettings: { sdf: true },
+          outlineWidth: 1 / 7,
+          outlineColor: [255, 255, 255, 128],
+          getTextAnchor: b => b.title.anchor,
+          getAlignmentBaseline: 'top',
+          getPixelOffset: b => { const o = b.ch.off; return [b.title.x + o[0], b.title.top + o[1]]; },
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+      }
+      if (polar.length) {
+        layers.push(new ScatterplotLayer({
+          id: `ix-pie-polar-${this.name}`,
+          data: polar, pickable: false,
+          getPosition: d => d.position,
+          getRadius: d => d.r,
+          getPixelOffset: d => d.off,
+          radiusUnits: 'pixels', billboard: true,
+          filled: true, stroked: true,
+          getFillColor: d => d.fill,
+          getLineColor: d => d.line,
+          getLineWidth: d => d.lw,
+          lineWidthUnits: 'pixels',
+          parameters: ICON_LAYER_GLOBE_PARAMETERS
+        }));
+        // flat's dashed range rings (see the polar block): one chord per
+        // dash, drawn in map coordinates at the current zoom — the
+        // chart anchors move on zoom, and the layers rebuild with them
+        if (polarDashes.length) {
+          layers.push(new PathLayer({
+            id: `ix-pie-polar-dashes-${this.name}`,
+            data: polarDashes, pickable: false,
+            getPath: d => d.path,
+            getColor: [68, 68, 68, 255],
+            getWidth: d => d.lw,
+            widthUnits: 'pixels',
+            parameters: ICON_LAYER_GLOBE_PARAMETERS
+          }));
+        }
+      }
+      layers.push(new PieSliceLayer(Object.assign({}, discProps, {
         id: `ix-pie-${this.name}`,
         data: slices, pickable: true,
         getLineColor: lineRgba,
         getSlice: d => d.slice,
-        getSliceLineWidth: d => lineWidthOf(d.r)
-      }))];
+        // flat's pie outline (piechart.js: normalX(linewidth) · R / 300)
+        // is 2% of the radius — sub-pixel for every small chart, and the
+        // browser rasterizes it as a HAIRLINE: one device pixel at full
+        // opacity (Skia's stroke floor). The 1 device-px floor here
+        // matches that: the width is in the shader's device-pixel
+        // space (pieAA = fwidth), so the CSS width is scaled by the
+        // device pixel ratio first
+        getSliceLineWidth: d => (lineWidthOf(d.r) > 0 ? Math.max(lineWidthOf(d.r) * (global.devicePixelRatio || 1), 1) : 0)
+      })));
       if (centers.length) {
         layers.push(new PieSliceLayer(Object.assign({}, discProps, { id: `ix-pie-center-${this.name}`, data: centers, pickable: true })));
       }
