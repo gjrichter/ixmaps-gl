@@ -2596,7 +2596,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // key wins. Always into a new object — the page's own objects are never
     // mutated. Aliases (geo → position, ...) are resolved in normalizeTheme.
     binding(b) {
-      this._binding = Object.assign({}, this._binding, b);
+      // flat's toString joins an array with '|' (maptheme.js 1014): a
+      // binding given as an ARRAY — .binding({value: ["out","in"]}, the
+      // pendolari page's saldo pie) is a MULTI-FIELD binding, not one
+      // field named "out,in" (which would find no column and draw
+      // nothing). Normalized once, here, for every consumer that
+      // splits binding.value on '|'
+      const norm = {};
+      // (an empty or missing argument keeps what earlier calls set)
+      for (const [k, v] of Object.entries(b || {})) norm[k] = Array.isArray(v) ? v.join('|') : v;
+      this._binding = Object.assign({}, this._binding, norm);
       return this;
     }
     filter(expr) { this._filterExpr = expr; return this; }
@@ -4930,7 +4939,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         el = document.createElement('div');
         el.id = this.containerId;
         el.style.width = (this.mapOptions && this.mapOptions.width) ? String(this.mapOptions.width) : '100%';
-        el.style.height = (this.mapOptions && this.mapOptions.height) ? String(this.mapOptions.height) : '100%';
+        // a percentage height would collapse against a body without a
+        // height of its own (the blank-screen case): the window's
+        // innerHeight instead, like flat's fullscreen fallback
+        el.style.height = (this.mapOptions && this.mapOptions.height) ? String(this.mapOptions.height)
+          : (global.innerHeight || 800) + 'px';
         document.body.appendChild(el);
       }
       // flat's init replaces the container's content with its own map page
@@ -4954,13 +4967,22 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         else if (typeof v === 'string' && /^\s*\d+(\.\d+)?\s*%\s*$/.test(v)
           && !(dim === 'width' ? el.clientWidth : el.clientHeight)) el.style[dim] = v.trim();
       }
-      // without width/height flat's map is "fullscreen" (htmlgui_flat.js
+      // without height flat's map is "fullscreen" (htmlgui_flat.js
       // 847-876): it fills the window, whatever the page's CSS gives the
-      // container — a container left without a height gets the window's
-      if (!(this.mapOptions && (this.mapOptions.width || this.mapOptions.height))) {
-        if (!el.clientHeight) el.style.height = '100vh';
-        if (!el.clientWidth) el.style.width = '100%';
+      // container. PER SIDE — also when only a width is given (the World
+      // Dataviz Prize pages: width 100%, no height), where the old
+      // both-sides gate left the container collapsed at 0 (a blank
+      // screen): no height option and no effective CSS height gets the
+      // window's innerHeight, kept current on window resizes (MapLibre
+      // follows its container's own size)
+      if (!(this.mapOptions && this.mapOptions.height) && !el.clientHeight) {
+        this._heightFallbackToWindow = true;
+        el.style.height = (global.innerHeight || 800) + 'px';
+        global.addEventListener('resize', () => {
+          if (this._heightFallbackToWindow) el.style.height = (global.innerHeight || 800) + 'px';
+        });
       }
+      if (!(this.mapOptions && this.mapOptions.width) && !el.clientWidth) el.style.width = '100%';
 
       // shown for the whole build() (library lazy-load + every layer's own
       // data fetch, real-world verified as the two slowest phases) through
@@ -5291,7 +5313,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // a page legend (map.legend(html)) is positioned by the map's
         // own align option — the same rule that places the native stack
         legendEl.style.cssText = 'position:absolute;' + legendAlignCssFor(this.mapOptions) + 'z-index:5;pointer-events:none';
-        legendEl.innerHTML = this._legendHtml;
+        // flat's legend takes the pane's html OR a URL to it (htmlgui):
+        // a value without a tag is fetched, its html shown
+        if (/<[a-z!]/i.test(this._legendHtml)) legendEl.innerHTML = this._legendHtml;
+        else fetch(this._legendHtml).then(r => r.ok ? r.text() : '').then(t => { legendEl.innerHTML = t; }).catch(() => {});
         // inside the map container, never the page's body (see the pinned
         // tooltip mount) — styling body breaks page-positioned elements
         anchorInside(el);
@@ -10007,7 +10032,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // 7740-7801): a value that is no number counts as 0 — unless
   // UNDEFINEDISNOTVALUE —, and 0 is a value — unless ZEROISNOTVALUE
   function flatNumber(v, flags) {
-    let n = parseFloat(v);
+    // flat's own value scan (maptheme.js __scanValue 9265-9272): a
+    // value with a comma is EUROPEAN format — dots stripped as
+    // thousands separators, the comma is the decimal ("78,8" -> 78.8);
+    // a value without one is parsed plain, blanks stripped. Applied
+    // to every theme value in flat, so also here
+    const s = String(v);
+    let n = s.includes(',') ? parseFloat(s.replace(/\./g, '').replace(/,/g, '.')) : parseFloat(s.replace(/ /g, ''));
     if (isNaN(n)) n = flags && flags.has('UNDEFINEDISNOTVALUE') ? NaN : 0;
     if (n === 0 && flags && flags.has('ZEROISNOTVALUE')) return NaN;
     return n;
@@ -10180,7 +10211,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function fieldWeightOf(style, nFields, repeatLast) {
     const w = style && style.weights;
     if (w == null || w === '') return null;
-    const list = (Array.isArray(w) ? w.join('|') : String(w)).split('|').map(v => parseFloat(v));
+    // flat's toArray (maptheme.js 999-1014): split on '|' when the
+    // string has one, else on ',' — "1,10,10" is a THREE-weight list
+    // (the Happy Planet page), not one weight of 1
+    const s = Array.isArray(w) ? w.join('|') : String(w);
+    const list = (s.includes('|') ? s.split('|') : s.split(',')).map(v => parseFloat(v));
     if (!list.some(v => !isNaN(v))) return null;
     if (repeatLast) { const last = list[list.length - 1]; while (list.length < nFields) list.push(last); }
     return i => list[i] || list[0] || 1;

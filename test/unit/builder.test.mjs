@@ -97,3 +97,9 @@ test('an empty or missing argument keeps what earlier calls set', () => {
   assert.equal(def.binding.value, 'v');
   assert.equal(def.style.a, 1);
 });
+
+test('.binding() with an array value joins it with "|" (flat\'s toString); null/undefined is a no-op', () => {
+  const def = ixmaps.layer('x').binding({ value: ['out', 'in'], position: 'geometry' }).binding(null).definition();
+  assert.equal(def.binding.value, 'out|in');
+  assert.equal(def.binding.position, 'geometry');
+});
