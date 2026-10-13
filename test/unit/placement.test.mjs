@@ -244,6 +244,22 @@ test('SEQUENCE|STAR layout, as measured on flat (PNRR regions, Lombardia, radius
   assert.deepEqual(plain(horz.map(p => p.x)), [1, 4], 'HORZ: side by side');
 });
 
+test('SEQUENCE|STAR|SORT|UP|EXPAND: the star radius is set by the FIRST part of the order only — a chart with a zero part stays on its center', () => {
+  // flat maptheme.js 22301-22340: nStarRadius (0 per chart) is set at `i === 0`, a part of value 0 is skipped
+  // before (22222); with UP every other part sits on the circle of radius nStarRadius · (1 + parts / 5) · 1.5,
+  // which is 0 when the first (smallest) part of a CATEGORICAL AGGREGATE cell is a category it lacks
+  const f = flags('CHART', 'SYMBOL', 'SEQUENCE', 'STAR', 'SORT', 'UP', 'EXPAND', 'CATEGORICAL', 'AGGREGATE');
+  const radiusOf = v => 15 * Math.sqrt(v / 100);
+  const opts = { maxRadius: 15, maxValue: 100, nParts: 3 };
+  const single = G.sequenceLayout([0, 0, 25], f, radiusOf, opts);
+  assert.deepEqual(plain(single.map(p => [p.x, p.y])), [[0, 0]], 'one part of three categories: on the center, not on the star circle');
+  const withZero = G.sequenceLayout([0, 9, 25], f, radiusOf, opts);
+  assert.deepEqual(plain(withZero.map(p => [p.x, p.y])), [[0, 0], [0, 0]], 'a zero first part: every part on the center');
+  const full = G.sequenceLayout([4, 9, 25], f, radiusOf, opts);
+  assert.ok(full.every(p => Math.hypot(p.x, p.y) > 0), 'all parts non-zero: every part on the star circle');
+  near(Math.hypot(full[0].x, full[0].y), 0.5 * 15 * Math.sqrt(25 / 100) * (1 + 3 / 5) * 1.5, 'its distance: star radius · (1 + parts / 5) · EXPAND');
+});
+
 test('NOSIZE radius by flat\'s symbol sub-branch, as measured on the fire areas SIF chart', () => {
   const opts = { objectscaling: 'fixed' };
   const r = f => G.valueRadius(1, 10, { scale: 1, normalsizevalue: 1000 }, opts, flags('CHART', ...f), 1000);

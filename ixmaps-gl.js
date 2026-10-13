@@ -9484,14 +9484,21 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const up = fl.up;
     const maxR = opts.maxRadius || 0;
     const nStarParts = opts.nParts || counts.length;
-    let angle = 0, starR = null, x = 0;
+    // flat's star radius (nStarRadius, 0 per chart) is set ONLY by the FIRST
+    // part of the sorted order (maptheme.js 22301-22316: `if (i === 0)`), and a
+    // part of value 0 is skipped before it (22222): a chart whose first part
+    // (with SORT|UP the smallest) is 0 keeps star radius 0, so with UP every
+    // part sits on the center — only a chart with ALL parts non-zero spreads
+    // into its star. (A cell of a CATEGORICAL AGGREGATE theme has a zero part
+    // for every category it lacks.)
+    let angle = 0, starR = 0, x = 0;
     order.forEach((p, k) => {
       if (!p.v) return;
       const r = radiusOf(p.v);
       if (!(r > 0)) return;
       let px = 0, py = 0;
       if (star) {
-        if (starR === null) {
+        if (k === 0) {
           starR = r;
           if (fl.expand && fl.sort && up) {
             const big = order[order.length - 1].v, mv = opts.maxValue || big || 1;
@@ -9499,7 +9506,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           }
           if (fl.compress) starR *= fl.compressmax ? 0.25 : 0.5;
         }
-        if (parts.length > 0 || up) {
+        // flat: `(i > 0 || UP) && nRadius` — i the part's index in the sorted order
+        if (k > 0 || up) {
           const c = starR + r;
           const b = Math.sqrt(Math.max(0, c * c - r * r));
           let f = 90 - Math.asin(Math.min(1, b / c)) / Math.PI * 180;
