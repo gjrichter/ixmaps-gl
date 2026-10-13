@@ -1,0 +1,2817 @@
+{
+ "page": "examples/box_title_plot.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-itemplot-box-plot-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e0f0eb8f64250534",
+     "setDigest": "6f42e785b7e75db5",
+     "columnDigests": {
+      "getIcon": "36e98dec176e98ee",
+      "getPixelOffset": "73dca57ffbd49d3f",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "aa61eaf0d226598e"
+     },
+     "stats": {
+      "getPixelOffset": [
+       29.003098,
+       38.989346
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       113.5,
+       155
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 106.5,
+        "anchorY": 131,
+        "height": 262,
+        "id": "box|104.5|129|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#8810d1a1:3058",
+        "width": 213
+       },
+       [
+        29.003098,
+        -54.014169
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       131
+      ],
+      [
+       {
+        "anchorX": 97,
+        "anchorY": 155,
+        "height": 310,
+        "id": "box|95|153|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#5c28db35:3402",
+        "width": 194
+       },
+       [
+        31.380712,
+        -66.068637
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       155
+      ],
+      [
+       {
+        "anchorX": 109,
+        "anchorY": 113.5,
+        "height": 227,
+        "id": "box|107|111.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#af60d022:2762",
+        "width": 218
+       },
+       [
+        33.41944,
+        -45.158018
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       113.5
+      ],
+      [
+       {
+        "anchorX": 104,
+        "anchorY": 131,
+        "height": 262,
+        "id": "box|102|129|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#f6ef7b66:3062",
+        "width": 208
+       },
+       [
+        38.989346,
+        -54.014169
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       131
+      ],
+      [
+       {
+        "anchorX": 106,
+        "anchorY": 113.5,
+        "height": 227,
+        "id": "box|104|111.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#cc8fc673:2750",
+        "width": 212
+       },
+       [
+        30.874826,
+        -45.158018
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       113.5
+      ],
+      [
+       {
+        "anchorX": 108.5,
+        "anchorY": 121.5,
+        "height": 243,
+        "id": "box|106.5|119.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#d282ba2d:2878",
+        "width": 217
+       },
+       [
+        35.72657,
+        -49.358917
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       121.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-plot-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "03ad5f90a07ad782",
+     "setDigest": "eda22397308b8306",
+     "columnDigests": {
+      "getIcon": "b378d4af09580035",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "d201907a4af5b88b"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       77.198905,
+       94.911208
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 13.44,
+        "anchorY": 63.84,
+        "height": 69,
+        "heightUnits": 2.84,
+        "id": "itemplot|9,4,2|1:9|9",
+        "url": "#d194c60:3070",
+        "width": 69
+       },
+       [
+        9.05,
+        45.5
+       ],
+       94.911208
+      ],
+      [
+       {
+        "anchorX": 8.368203,
+        "anchorY": 57.153708,
+        "height": 62,
+        "heightUnits": 2.561405,
+        "id": "itemplot|3,8,1|1:9|9",
+        "url": "#64158394:2922",
+        "width": 62
+       },
+       [
+        9.12,
+        45.5
+       ],
+       85.600704
+      ],
+      [
+       {
+        "anchorX": 11.237959,
+        "anchorY": 51.12,
+        "height": 56,
+        "heightUnits": 2.31,
+        "id": "itemplot|6,6,6|1:9|9",
+        "url": "#2283307b:1934",
+        "width": 71
+       },
+       [
+        9.19,
+        45.5
+       ],
+       77.198905
+      ],
+      [
+       {
+        "anchorX": 5.44,
+        "anchorY": 63.84,
+        "height": 69,
+        "heightUnits": 2.84,
+        "id": "itemplot|1,2,9|1:9|9",
+        "url": "#4ac89b06:2806",
+        "width": 67
+       },
+       [
+        9.26,
+        45.5
+       ],
+       94.911208
+      ],
+      [
+       {
+        "anchorX": 12.023005,
+        "anchorY": 51.12,
+        "height": 56,
+        "heightUnits": 2.31,
+        "id": "itemplot|7,1,3|1:9|9",
+        "url": "#612868ac:2746",
+        "width": 69
+       },
+       [
+        9.33,
+        45.5
+       ],
+       77.198905
+      ],
+      [
+       {
+        "anchorX": 9.44,
+        "anchorY": 57.153708,
+        "height": 62,
+        "heightUnits": 2.561405,
+        "id": "itemplot|4,5,8|1:9|9",
+        "url": "#13040a03:3246",
+        "width": 71
+       },
+       [
+        9.4,
+        45.5
+       ],
+       85.600704
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-plot-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "436edaa7c3f1e403",
+     "setDigest": "bce6168e83af3f7c",
+     "columnDigests": {
+      "getPixelOffset": "274732afa3af638c",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "5e5476b6b1a66137",
+      "getText": "7d2fdbb2ccc3f915",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -18.714886,
+       -7.575073
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       16.70972,
+       16.70972
+      ]
+     },
+     "sample": [
+      [
+       [
+        -18.714886,
+        -113.960289
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       16.70972,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -11.652528,
+        -138.069224
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       16.70972,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -15.648595,
+        -96.247986
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       16.70972,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -7.575073,
+        -113.960289
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       16.70972,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -16.741754,
+        -96.247986
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       16.70972,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -13.14498,
+        -104.649784
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       16.70972,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-box-plot-bottom-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "36627bc766a07e70",
+     "setDigest": "d52d9d56f23fb545",
+     "columnDigests": {
+      "getIcon": "86ad79e1a43dff3a",
+      "getPixelOffset": "9b44a05ef227b7ab",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "fd54589c1729cf3f"
+     },
+     "stats": {
+      "getPixelOffset": [
+       29.003098,
+       38.989346
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       101.5,
+       146.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 106.5,
+        "anchorY": 119.5,
+        "height": 239,
+        "id": "box|104.5|117.5|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#39618b7f:2842",
+        "width": 213
+       },
+       [
+        29.003098,
+        -32.984987
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       119.5
+      ],
+      [
+       {
+        "anchorX": 97,
+        "anchorY": 146.5,
+        "height": 293,
+        "id": "box|95|144.5|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#13449bbe:3250",
+        "width": 194
+       },
+       [
+        31.380712,
+        -10.004742
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       146.5
+      ],
+      [
+       {
+        "anchorX": 109,
+        "anchorY": 101.5,
+        "height": 203,
+        "id": "box|107|99.5|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#5fc38b81:2506",
+        "width": 218
+       },
+       [
+        33.41944,
+        -24.128835
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       101.5
+      ],
+      [
+       {
+        "anchorX": 104,
+        "anchorY": 122.5,
+        "height": 245,
+        "id": "box|102|120.5|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#87a81230:2898",
+        "width": 208
+       },
+       [
+        38.989346,
+        -31.369714
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       122.5
+      ],
+      [
+       {
+        "anchorX": 106,
+        "anchorY": 105,
+        "height": 210,
+        "id": "box|104|103|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#2d6330d:2578",
+        "width": 212
+       },
+       [
+        30.874826,
+        -22.513562
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       105
+      ],
+      [
+       {
+        "anchorX": 108.5,
+        "anchorY": 110,
+        "height": 220,
+        "id": "box|106.5|108|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#c013adf3:2630",
+        "width": 217
+       },
+       [
+        35.72657,
+        -28.329734
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       110
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-plot-bottom-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "2d07db64101aba1f",
+     "setDigest": "77a0ec2685b7895e",
+     "columnDigests": {
+      "getIcon": "0c887484129a9b99",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "34fe779e477643ab"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       72.18599,
+       93.128838
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 13.44,
+        "anchorY": 63.84,
+        "height": 65,
+        "heightUnits": 2.69,
+        "id": "itemplot|9,4,2|1:9|9",
+        "url": "#3efb0262:3094",
+        "width": 69
+       },
+       [
+        9.05,
+        45.35
+       ],
+       89.898293
+      ],
+      [
+       {
+        "anchorX": 8.368203,
+        "anchorY": 57.153708,
+        "height": 61,
+        "heightUnits": 2.508071,
+        "id": "itemplot|3,8,1|1:9|9",
+        "url": "#8957342c:2962",
+        "width": 62
+       },
+       [
+        9.12,
+        45.35
+       ],
+       83.818334
+      ],
+      [
+       {
+        "anchorX": 11.237959,
+        "anchorY": 51.12,
+        "height": 52,
+        "heightUnits": 2.16,
+        "id": "itemplot|6,6,6|1:9|9",
+        "url": "#7c94f80d:1574",
+        "width": 71
+       },
+       [
+        9.19,
+        45.35
+       ],
+       72.18599
+      ],
+      [
+       {
+        "anchorX": 5.44,
+        "anchorY": 63.84,
+        "height": 67,
+        "heightUnits": 2.786667,
+        "id": "itemplot|1,2,9|1:9|9",
+        "url": "#a400573f:2818",
+        "width": 67
+       },
+       [
+        9.26,
+        45.35
+       ],
+       93.128838
+      ],
+      [
+       {
+        "anchorX": 12.023005,
+        "anchorY": 51.12,
+        "height": 55,
+        "heightUnits": 2.256667,
+        "id": "itemplot|7,1,3|1:9|9",
+        "url": "#eece8de5:2690",
+        "width": 69
+       },
+       [
+        9.33,
+        45.35
+       ],
+       75.416535
+      ],
+      [
+       {
+        "anchorX": 9.44,
+        "anchorY": 57.153708,
+        "height": 58,
+        "heightUnits": 2.411405,
+        "id": "itemplot|4,5,8|1:9|9",
+        "url": "#214bb506:3314",
+        "width": 71
+       },
+       [
+        9.4,
+        45.35
+       ],
+       80.587788
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-plot-bottom",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "63e082b0462cbdbc",
+     "setDigest": "c27d1cee25f44b83",
+     "columnDigests": {
+      "getPixelOffset": "3a145d311a441df9",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "5e5476b6b1a66137",
+      "getText": "aaf8df90f2d3fb4f",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -18.714886,
+       -7.575073
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       16.70972,
+       16.70972
+      ]
+     },
+     "sample": [
+      [
+       [
+        -18.714886,
+        4.344527
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       16.70972,
+       "Alpha pcs",
+       "start"
+      ],
+      [
+       [
+        -11.652528,
+        7.575073
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       16.70972,
+       "Beta, long\nname that\nwraps pcs",
+       "start"
+      ],
+      [
+       [
+        -15.648595,
+        4.344527
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       16.70972,
+       "Gamma pcs",
+       "start"
+      ],
+      [
+       [
+        -7.575073,
+        7.575073
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       16.70972,
+       "Delta pcs",
+       "start"
+      ],
+      [
+       [
+        -16.741754,
+        7.575073
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       16.70972,
+       "Epsilon pcs",
+       "start"
+      ],
+      [
+       [
+        -13.14498,
+        4.344527
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       16.70972,
+       "Zeta pcs",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "plot-box",
+     "flags": [
+      "AREA",
+      "BOX",
+      "CHART",
+      "LINES",
+      "PLOT",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    },
+    {
+     "name": "plot-bottom",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "LINES",
+      "PLOT",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "plot-box": [
+     "<b>Alpha</b>",
+     "<b>Delta</b>",
+     "<b>Zeta</b>"
+    ],
+    "plot-bottom": [
+     "<b>Alpha</b>",
+     "<b>Delta</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-itemplot-box-plot-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "a9e62fd5cc49d1a0",
+     "setDigest": "0fe4dce792e2a69d",
+     "columnDigests": {
+      "getIcon": "69b292ea08513d77",
+      "getPixelOffset": "07633f9bf497a751",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "aa188d0a8c8071bf"
+     },
+     "stats": {
+      "getPixelOffset": [
+       36.541614,
+       49.123498
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       142,
+       195
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 133.5,
+        "anchorY": 164.5,
+        "height": 329,
+        "id": "box|131.5|162.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#544306f5:4378",
+        "width": 267
+       },
+       [
+        36.541614,
+        -68.053589
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       164.5
+      ],
+      [
+       {
+        "anchorX": 121.5,
+        "anchorY": 195,
+        "height": 390,
+        "id": "box|119.5|193|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#ff94774d:4698",
+        "width": 243
+       },
+       [
+        39.53722,
+        -83.241266
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       195
+      ],
+      [
+       {
+        "anchorX": 137,
+        "anchorY": 142,
+        "height": 284,
+        "id": "box|135|140|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#9f0d2508:3822",
+        "width": 274
+       },
+       [
+        42.105855,
+        -56.895537
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       142
+      ],
+      [
+       {
+        "anchorX": 130.5,
+        "anchorY": 164.5,
+        "height": 329,
+        "id": "box|128.5|162.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#f203ff42:4274",
+        "width": 261
+       },
+       [
+        49.123498,
+        -68.053589
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       164.5
+      ],
+      [
+       {
+        "anchorX": 133,
+        "anchorY": 142,
+        "height": 284,
+        "id": "box|131|140|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#88585a5f:3774",
+        "width": 266
+       },
+       [
+        38.899844,
+        -56.895537
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       142
+      ],
+      [
+       {
+        "anchorX": 136.5,
+        "anchorY": 153,
+        "height": 306,
+        "id": "box|134.5|151|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#dd801726:4082",
+        "width": 273
+       },
+       [
+        45.012658,
+        -62.188338
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       153
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-plot-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "95d4854b02d9af66",
+     "setDigest": "a6e7d1de15915522",
+     "columnDigests": {
+      "getIcon": "b378d4af09580035",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "0a6b21902a7b2925"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       97.264526,
+       119.580629
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 13.44,
+        "anchorY": 63.84,
+        "height": 69,
+        "heightUnits": 2.84,
+        "id": "itemplot|9,4,2|1:9|9",
+        "url": "#d194c60:3070",
+        "width": 69
+       },
+       [
+        9.05,
+        45.5
+       ],
+       119.580629
+      ],
+      [
+       {
+        "anchorX": 8.368203,
+        "anchorY": 57.153708,
+        "height": 62,
+        "heightUnits": 2.561405,
+        "id": "itemplot|3,8,1|1:9|9",
+        "url": "#64158394:2922",
+        "width": 62
+       },
+       [
+        9.12,
+        45.5
+       ],
+       107.850128
+      ],
+      [
+       {
+        "anchorX": 11.237959,
+        "anchorY": 51.12,
+        "height": 56,
+        "heightUnits": 2.31,
+        "id": "itemplot|6,6,6|1:9|9",
+        "url": "#2283307b:1934",
+        "width": 71
+       },
+       [
+        9.19,
+        45.5
+       ],
+       97.264526
+      ],
+      [
+       {
+        "anchorX": 5.44,
+        "anchorY": 63.84,
+        "height": 69,
+        "heightUnits": 2.84,
+        "id": "itemplot|1,2,9|1:9|9",
+        "url": "#4ac89b06:2806",
+        "width": 67
+       },
+       [
+        9.26,
+        45.5
+       ],
+       119.580629
+      ],
+      [
+       {
+        "anchorX": 12.023005,
+        "anchorY": 51.12,
+        "height": 56,
+        "heightUnits": 2.31,
+        "id": "itemplot|7,1,3|1:9|9",
+        "url": "#612868ac:2746",
+        "width": 69
+       },
+       [
+        9.33,
+        45.5
+       ],
+       97.264526
+      ],
+      [
+       {
+        "anchorX": 9.44,
+        "anchorY": 57.153708,
+        "height": 62,
+        "heightUnits": 2.561405,
+        "id": "itemplot|4,5,8|1:9|9",
+        "url": "#13040a03:3246",
+        "width": 71
+       },
+       [
+        9.4,
+        45.5
+       ],
+       107.850128
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-plot-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "ce06e170b70d6c6b",
+     "setDigest": "8ddfaf9c6f61a894",
+     "columnDigests": {
+      "getPixelOffset": "2d0bb81c7014706d",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "fa3bbc7d366e1991",
+      "getText": "7d2fdbb2ccc3f915",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -23.579279,
+       -9.543994
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       21.052928,
+       21.052928
+      ]
+     },
+     "sample": [
+      [
+       [
+        -23.579279,
+        -143.580967
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       21.052928,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -14.681265,
+        -173.956321
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       21.052928,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -19.715995,
+        -121.264864
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       21.052928,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -9.543994,
+        -143.580967
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       21.052928,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -21.093288,
+        -121.264864
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       21.052928,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -16.561636,
+        -131.850466
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       21.052928,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-box-plot-bottom-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e6d8593a3561b592",
+     "setDigest": "494fa56e7c34aa9a",
+     "columnDigests": {
+      "getIcon": "2122ca6235dfb555",
+      "getPixelOffset": "1233027ebe12ff86",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "5bc4827f0732d55d"
+     },
+     "stats": {
+      "getPixelOffset": [
+       36.541614,
+       49.123498
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       127.5,
+       184.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 133.5,
+        "anchorY": 150,
+        "height": 300,
+        "id": "box|131.5|148|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#de4d649b:4042",
+        "width": 267
+       },
+       [
+        36.541614,
+        -41.558479
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       150
+      ],
+      [
+       {
+        "anchorX": 121.5,
+        "anchorY": 184.5,
+        "height": 369,
+        "id": "box|119.5|182.5|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#747bdb9d:4462",
+        "width": 243
+       },
+       [
+        39.53722,
+        -12.605185
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       184.5
+      ],
+      [
+       {
+        "anchorX": 137,
+        "anchorY": 127.5,
+        "height": 255,
+        "id": "box|135|125.5|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#ba1fda01:3474",
+        "width": 274
+       },
+       [
+        42.105855,
+        -30.400428
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       127.5
+      ],
+      [
+       {
+        "anchorX": 130.5,
+        "anchorY": 154,
+        "height": 308,
+        "id": "box|128.5|152|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#589f3f4c:4038",
+        "width": 261
+       },
+       [
+        49.123498,
+        -39.523363
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       154
+      ],
+      [
+       {
+        "anchorX": 133,
+        "anchorY": 131.5,
+        "height": 263,
+        "id": "box|131|129.5|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#4a35a928:3530",
+        "width": 266
+       },
+       [
+        38.899844,
+        -28.365311
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       131.5
+      ],
+      [
+       {
+        "anchorX": 136.5,
+        "anchorY": 138,
+        "height": 276,
+        "id": "box|134.5|136|0|0.75|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#3b286ef7:3734",
+        "width": 273
+       },
+       [
+        45.012658,
+        -35.693229
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       138
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-plot-bottom-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "7dc655fdc874a5d5",
+     "setDigest": "e9e1ad34bb45fa9c",
+     "columnDigests": {
+      "getIcon": "0c887484129a9b99",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "a2f2fda7c0407c9c"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       90.948648,
+       117.334984
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 13.44,
+        "anchorY": 63.84,
+        "height": 65,
+        "heightUnits": 2.69,
+        "id": "itemplot|9,4,2|1:9|9",
+        "url": "#3efb0262:3094",
+        "width": 69
+       },
+       [
+        9.05,
+        45.35
+       ],
+       113.264751
+      ],
+      [
+       {
+        "anchorX": 8.368203,
+        "anchorY": 57.153708,
+        "height": 61,
+        "heightUnits": 2.508071,
+        "id": "itemplot|3,8,1|1:9|9",
+        "url": "#8957342c:2962",
+        "width": 62
+       },
+       [
+        9.12,
+        45.35
+       ],
+       105.604483
+      ],
+      [
+       {
+        "anchorX": 11.237959,
+        "anchorY": 51.12,
+        "height": 52,
+        "heightUnits": 2.16,
+        "id": "itemplot|6,6,6|1:9|9",
+        "url": "#7c94f80d:1574",
+        "width": 71
+       },
+       [
+        9.19,
+        45.35
+       ],
+       90.948648
+      ],
+      [
+       {
+        "anchorX": 5.44,
+        "anchorY": 63.84,
+        "height": 67,
+        "heightUnits": 2.786667,
+        "id": "itemplot|1,2,9|1:9|9",
+        "url": "#a400573f:2818",
+        "width": 67
+       },
+       [
+        9.26,
+        45.35
+       ],
+       117.334984
+      ],
+      [
+       {
+        "anchorX": 12.023005,
+        "anchorY": 51.12,
+        "height": 55,
+        "heightUnits": 2.256667,
+        "id": "itemplot|7,1,3|1:9|9",
+        "url": "#eece8de5:2690",
+        "width": 69
+       },
+       [
+        9.33,
+        45.35
+       ],
+       95.01888
+      ],
+      [
+       {
+        "anchorX": 9.44,
+        "anchorY": 57.153708,
+        "height": 58,
+        "heightUnits": 2.411405,
+        "id": "itemplot|4,5,8|1:9|9",
+        "url": "#214bb506:3314",
+        "width": 71
+       },
+       [
+        9.4,
+        45.35
+       ],
+       101.53425
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-plot-bottom",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "11ae26af823f9967",
+     "setDigest": "f28138878c2af091",
+     "columnDigests": {
+      "getPixelOffset": "91bb7be2c4829986",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "fa3bbc7d366e1991",
+      "getText": "aaf8df90f2d3fb4f",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -23.579279,
+       -9.543994
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       21.052928,
+       21.052928
+      ]
+     },
+     "sample": [
+      [
+       [
+        -23.579279,
+        5.473761
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       21.052928,
+       "Alpha pcs",
+       "start"
+      ],
+      [
+       [
+        -14.681265,
+        9.543994
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       21.052928,
+       "Beta, long\nname that\nwraps pcs",
+       "start"
+      ],
+      [
+       [
+        -19.715995,
+        5.473761
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       21.052928,
+       "Gamma pcs",
+       "start"
+      ],
+      [
+       [
+        -9.543994,
+        9.543994
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       21.052928,
+       "Delta pcs",
+       "start"
+      ],
+      [
+       [
+        -21.093288,
+        9.543994
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       21.052928,
+       "Epsilon pcs",
+       "start"
+      ],
+      [
+       [
+        -16.561636,
+        5.473761
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       21.052928,
+       "Zeta pcs",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "plot-box",
+     "flags": [
+      "AREA",
+      "BOX",
+      "CHART",
+      "LINES",
+      "PLOT",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    },
+    {
+     "name": "plot-bottom",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "LINES",
+      "PLOT",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "plot-box": [
+     "<b>Alpha</b>",
+     "<b>Delta</b>",
+     "<b>Zeta</b>"
+    ],
+    "plot-bottom": [
+     "<b>Alpha</b>",
+     "<b>Delta</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.2,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-itemplot-box-plot-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "cde54c3d3ccfb118",
+     "setDigest": "9eee8d6907b96abc",
+     "columnDigests": {
+      "getIcon": "1e066c58cdfb55af",
+      "getPixelOffset": "8fc771093c2b84f3",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "d3d743611d176275"
+     },
+     "stats": {
+      "getPixelOffset": [
+       23.019774,
+       30.945865
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       90.5,
+       123.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 85,
+        "anchorY": 104.5,
+        "height": 209,
+        "id": "box|83|102.5|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#c6cab630:2282",
+        "width": 170
+       },
+       [
+        23.019774,
+        -42.871075
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       104.5
+      ],
+      [
+       {
+        "anchorX": 77.5,
+        "anchorY": 123.5,
+        "height": 247,
+        "id": "box|75.5|121.5|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#463d9767:2502",
+        "width": 155
+       },
+       [
+        24.906888,
+        -52.438712
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       123.5
+      ],
+      [
+       {
+        "anchorX": 87,
+        "anchorY": 90.5,
+        "height": 181,
+        "id": "box|85|88.5|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#659f06f1:1998",
+        "width": 174
+       },
+       [
+        26.525027,
+        -35.841942
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       90.5
+      ],
+      [
+       {
+        "anchorX": 83,
+        "anchorY": 104.5,
+        "height": 209,
+        "id": "box|81|102.5|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#55276d96:2262",
+        "width": 166
+       },
+       [
+        30.945865,
+        -42.871075
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       104.5
+      ],
+      [
+       {
+        "anchorX": 84.5,
+        "anchorY": 90.5,
+        "height": 181,
+        "id": "box|82.5|88.5|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#1f03a2e3:2018",
+        "width": 169
+       },
+       [
+        24.505366,
+        -35.841942
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       90.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 97,
+        "height": 194,
+        "id": "box|84.5|95|0|0.5|white|1|#bbbbbb|0.3",
+        "url": "#b383b1e9:2102",
+        "width": 173
+       },
+       [
+        28.356198,
+        -39.176198
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       97
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-plot-box-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "d2841e6aabbfc06f",
+     "setDigest": "4d506efdced06577",
+     "columnDigests": {
+      "getIcon": "b378d4af09580035",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "17324ed98594a787"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       61.272812,
+       75.331076
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 13.44,
+        "anchorY": 63.84,
+        "height": 69,
+        "heightUnits": 2.84,
+        "id": "itemplot|9,4,2|1:9|9",
+        "url": "#d194c60:3070",
+        "width": 69
+       },
+       [
+        9.05,
+        45.5
+       ],
+       75.331076
+      ],
+      [
+       {
+        "anchorX": 8.368203,
+        "anchorY": 57.153708,
+        "height": 62,
+        "heightUnits": 2.561405,
+        "id": "itemplot|3,8,1|1:9|9",
+        "url": "#64158394:2922",
+        "width": 62
+       },
+       [
+        9.12,
+        45.5
+       ],
+       67.941324
+      ],
+      [
+       {
+        "anchorX": 11.237959,
+        "anchorY": 51.12,
+        "height": 56,
+        "heightUnits": 2.31,
+        "id": "itemplot|6,6,6|1:9|9",
+        "url": "#2283307b:1934",
+        "width": 71
+       },
+       [
+        9.19,
+        45.5
+       ],
+       61.272812
+      ],
+      [
+       {
+        "anchorX": 5.44,
+        "anchorY": 63.84,
+        "height": 69,
+        "heightUnits": 2.84,
+        "id": "itemplot|1,2,9|1:9|9",
+        "url": "#4ac89b06:2806",
+        "width": 67
+       },
+       [
+        9.26,
+        45.5
+       ],
+       75.331076
+      ],
+      [
+       {
+        "anchorX": 12.023005,
+        "anchorY": 51.12,
+        "height": 56,
+        "heightUnits": 2.31,
+        "id": "itemplot|7,1,3|1:9|9",
+        "url": "#612868ac:2746",
+        "width": 69
+       },
+       [
+        9.33,
+        45.5
+       ],
+       61.272812
+      ],
+      [
+       {
+        "anchorX": 9.44,
+        "anchorY": 57.153708,
+        "height": 62,
+        "heightUnits": 2.561405,
+        "id": "itemplot|4,5,8|1:9|9",
+        "url": "#13040a03:3246",
+        "width": 71
+       },
+       [
+        9.4,
+        45.5
+       ],
+       67.941324
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-plot-box",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "ff9e0542e87e0151",
+     "setDigest": "a1cdd2adc85913b1",
+     "columnDigests": {
+      "getPixelOffset": "764481e66920cf01",
+      "getPosition": "85746a4e6308f7ab",
+      "getSize": "b11e2993f13ba7ee",
+      "getText": "7d2fdbb2ccc3f915",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -14.854015,
+       -6.012339
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       13.262513,
+       13.262513
+      ]
+     },
+     "sample": [
+      [
+       [
+        -14.854015,
+        -90.450341
+       ],
+       [
+        9.05,
+        45.5
+       ],
+       13.262513,
+       "Alpha",
+       "start"
+      ],
+      [
+       [
+        -9.248617,
+        -109.585616
+       ],
+       [
+        9.12,
+        45.5
+       ],
+       13.262513,
+       "Beta, long\nname that\nwraps",
+       "start"
+      ],
+      [
+       [
+        -12.420298,
+        -76.392077
+       ],
+       [
+        9.19,
+        45.5
+       ],
+       13.262513,
+       "Gamma",
+       "start"
+      ],
+      [
+       [
+        -6.012339,
+        -90.450341
+       ],
+       [
+        9.26,
+        45.5
+       ],
+       13.262513,
+       "Delta",
+       "start"
+      ],
+      [
+       [
+        -13.287939,
+        -76.392077
+       ],
+       [
+        9.33,
+        45.5
+       ],
+       13.262513,
+       "Epsilon",
+       "start"
+      ],
+      [
+       [
+        -10.433177,
+        -83.060589
+       ],
+       [
+        9.4,
+        45.5
+       ],
+       13.262513,
+       "Zeta",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-box-plot-bottom-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "667605cce52e2fa5",
+     "setDigest": "80ba82b237ddb5af",
+     "columnDigests": {
+      "getIcon": "9bee7d81f2cd4ec7",
+      "getPixelOffset": "16c9a3fe38faa2b0",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "2e3f4e10727c5f0a"
+     },
+     "stats": {
+      "getPixelOffset": [
+       23.019774,
+       30.945865
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       81,
+       117
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 85,
+        "anchorY": 95,
+        "height": 190,
+        "id": "box|83|93|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#9dd56f0c:2106",
+        "width": 170
+       },
+       [
+        23.019774,
+        -26.180201
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       95
+      ],
+      [
+       {
+        "anchorX": 77.5,
+        "anchorY": 117,
+        "height": 234,
+        "id": "box|75.5|115|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#81622944:2390",
+        "width": 155
+       },
+       [
+        24.906888,
+        -7.940769
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       117
+      ],
+      [
+       {
+        "anchorX": 87,
+        "anchorY": 81,
+        "height": 162,
+        "id": "box|85|79|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#63e848d:1830",
+        "width": 174
+       },
+       [
+        26.525027,
+        -19.151069
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       81
+      ],
+      [
+       {
+        "anchorX": 83,
+        "anchorY": 97.5,
+        "height": 195,
+        "id": "box|81|95.5|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#73958768:2138",
+        "width": 166
+       },
+       [
+        30.945865,
+        -24.898158
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       97.5
+      ],
+      [
+       {
+        "anchorX": 84.5,
+        "anchorY": 83.5,
+        "height": 167,
+        "id": "box|82.5|81.5|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#177b7967:1898",
+        "width": 169
+       },
+       [
+        24.505366,
+        -17.869026
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       83.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 88,
+        "height": 176,
+        "id": "box|84.5|86|0|0.5|#eef4ff|1|#bbbbbb|0.3",
+        "url": "#b4ae905a:1946",
+        "width": 173
+       },
+       [
+        28.356198,
+        -22.485325
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       88
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-plot-bottom-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "6990a6e36505a736",
+     "setDigest": "5b2841fb400b60c3",
+     "columnDigests": {
+      "getIcon": "0c887484129a9b99",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "7f7b97038234cfb1"
+     },
+     "stats": {
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       57.294058,
+       73.916408
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 13.44,
+        "anchorY": 63.84,
+        "height": 65,
+        "heightUnits": 2.69,
+        "id": "itemplot|9,4,2|1:9|9",
+        "url": "#3efb0262:3094",
+        "width": 69
+       },
+       [
+        9.05,
+        45.35
+       ],
+       71.352322
+      ],
+      [
+       {
+        "anchorX": 8.368203,
+        "anchorY": 57.153708,
+        "height": 61,
+        "heightUnits": 2.508071,
+        "id": "itemplot|3,8,1|1:9|9",
+        "url": "#8957342c:2962",
+        "width": 62
+       },
+       [
+        9.12,
+        45.35
+       ],
+       66.526655
+      ],
+      [
+       {
+        "anchorX": 11.237959,
+        "anchorY": 51.12,
+        "height": 52,
+        "heightUnits": 2.16,
+        "id": "itemplot|6,6,6|1:9|9",
+        "url": "#7c94f80d:1574",
+        "width": 71
+       },
+       [
+        9.19,
+        45.35
+       ],
+       57.294058
+      ],
+      [
+       {
+        "anchorX": 5.44,
+        "anchorY": 63.84,
+        "height": 67,
+        "heightUnits": 2.786667,
+        "id": "itemplot|1,2,9|1:9|9",
+        "url": "#a400573f:2818",
+        "width": 67
+       },
+       [
+        9.26,
+        45.35
+       ],
+       73.916408
+      ],
+      [
+       {
+        "anchorX": 12.023005,
+        "anchorY": 51.12,
+        "height": 55,
+        "heightUnits": 2.256667,
+        "id": "itemplot|7,1,3|1:9|9",
+        "url": "#eece8de5:2690",
+        "width": 69
+       },
+       [
+        9.33,
+        45.35
+       ],
+       59.858144
+      ],
+      [
+       {
+        "anchorX": 9.44,
+        "anchorY": 57.153708,
+        "height": 58,
+        "heightUnits": 2.411405,
+        "id": "itemplot|4,5,8|1:9|9",
+        "url": "#214bb506:3314",
+        "width": 71
+       },
+       [
+        9.4,
+        45.35
+       ],
+       63.96257
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-plot-bottom",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "164424991195baa7",
+     "setDigest": "3351acd0a03ec176",
+     "columnDigests": {
+      "getPixelOffset": "075d25ef681759c3",
+      "getPosition": "e1a13a74a5328289",
+      "getSize": "b11e2993f13ba7ee",
+      "getText": "aaf8df90f2d3fb4f",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -14.854015,
+       -6.012339
+      ],
+      "getPosition": [
+       9.05,
+       9.4
+      ],
+      "getSize": [
+       13.262513,
+       13.262513
+      ]
+     },
+     "sample": [
+      [
+       [
+        -14.854015,
+        3.448253
+       ],
+       [
+        9.05,
+        45.35
+       ],
+       13.262513,
+       "Alpha pcs",
+       "start"
+      ],
+      [
+       [
+        -9.248617,
+        6.012339
+       ],
+       [
+        9.12,
+        45.35
+       ],
+       13.262513,
+       "Beta, long\nname that\nwraps pcs",
+       "start"
+      ],
+      [
+       [
+        -12.420298,
+        3.448253
+       ],
+       [
+        9.19,
+        45.35
+       ],
+       13.262513,
+       "Gamma pcs",
+       "start"
+      ],
+      [
+       [
+        -6.012339,
+        6.012339
+       ],
+       [
+        9.26,
+        45.35
+       ],
+       13.262513,
+       "Delta pcs",
+       "start"
+      ],
+      [
+       [
+        -13.287939,
+        6.012339
+       ],
+       [
+        9.33,
+        45.35
+       ],
+       13.262513,
+       "Epsilon pcs",
+       "start"
+      ],
+      [
+       [
+        -10.433177,
+        3.448253
+       ],
+       [
+        9.4,
+        45.35
+       ],
+       13.262513,
+       "Zeta pcs",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "plot-box",
+     "flags": [
+      "AREA",
+      "BOX",
+      "CHART",
+      "LINES",
+      "PLOT",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    },
+    {
+     "name": "plot-bottom",
+     "flags": [
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "LINES",
+      "PLOT",
+      "TITLE"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "plot-box": [
+     "<b>Alpha</b>",
+     "<b>Delta</b>",
+     "<b>Zeta</b>"
+    ],
+    "plot-bottom": [
+     "<b>Alpha</b>",
+     "<b>Delta</b>",
+     "<b>Zeta</b>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

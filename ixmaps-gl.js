@@ -12311,7 +12311,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // companion layer) takes the uniform mesh shortcut.
       if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox);
       // PLOT without GRIDSIZE: one line chart per item over its value fields
-      if (this.flags.has('PLOT') && this._isItemPlot()) return this._buildItemPlotLayers(zoom);
+      if (this.flags.has('PLOT') && this._isItemPlot()) return this._buildItemPlotLayers(zoom, liveZoom);
       // a plain grid (one color, no values or glow — the Germany page's
       // companion "grid" layer) as one square per cell; a classed GRIDSIZE
       // chart (the fuel-price page) is a symbol chart sized to the grid,
@@ -12897,7 +12897,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return explicit ? fields.map((f, i) => String(explicit[i] != null ? explicit[i] : f)) : fields;
     }
 
-    _buildItemPlotLayers(zoom) {
+    _buildItemPlotLayers(zoom, liveZoom = zoom) {
       const fields = this._itemPlotFields();
       const items = [];
       let dMin = Infinity, dMax = -Infinity;
@@ -12925,7 +12925,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const S = 2 * NORMAL_RADIUS_PX * (styleNum(this.style.scale) || 1) * objectZoomFactor(zoom, this.mapOptions);
       const color = parseCssColor(Array.isArray(this.style.colorscheme) ? this.style.colorscheme[0] : this.style.colorscheme) || [0, 102, 204];
       const fillOpacity = styleNum(this.style.fillopacity);
-      return [new IconLayer({
+      // BOX / TITLE: flat's chart-group box around every chart; the chart's
+      // drawn extent is its plot geometry's bounding box (chart units × S px,
+      // y up in the geometry, down on screen)
+      const boxRows = this._boxRows(items, { unit: S / (2 * NORMAL_RADIUS_PX), liveZoom, extentOf: d => {
+        const b = itemPlotGeometry(d.properties.values, rangeFor(d.properties.values), this.style, this.flags, sizeMax).bbox;
+        return [b.x0 * S, -b.y1 * S, b.x1 * S, -b.y0 * S];
+      } });
+      const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
+        unit: S / (2 * NORMAL_RADIUS_PX), liveZoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
+        ids: { circle: `ix-itemplot-box-${this.name}`, icon: `ix-itemplot-box-${this.name}`, polygons: `ix-itemplot-box-polygons-${this.name}`, titles: `ix-itemplot-titles-${this.name}` }
+      }) : { box: [], titles: [] };
+      return [...boxLayers.box, new IconLayer({
         id: `ix-itemplot-${this.name}-g${this._iconGeneration}`,
         data: items, pickable: true,
         getPosition: d => d.geometry.coordinates,
@@ -12935,7 +12946,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         getSize: d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity).heightUnits * S,
         sizeUnits: 'pixels',
         updateTriggers: { getSize: [S] }
-      })];
+      }), ...boxLayers.titles];
     }
 
     // canvas for one per-item PLOT chart (itemPlotGeometry), RASTER px per
@@ -13073,14 +13084,22 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       datasetMax = datasetMax || 1;
       if (isNaN(normalSizeValue)) normalSizeValue = datasetMax;
 
-      return [new IconLayer({
+      // BOX / TITLE: flat's chart-group box around every chart; the chart is
+      // the iconSize square on the cell's center (flat's chart size is 30 units)
+      const boxRows = this._boxRows(data, { unit: iconSize / 30, liveZoom: zoom,
+        extentOf: () => [-iconSize / 2, -iconSize / 2, iconSize / 2, iconSize / 2] });
+      const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
+        unit: iconSize / 30, liveZoom: zoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
+        ids: { circle: `ix-plot-box-${this.name}`, icon: `ix-plot-box-${this.name}`, polygons: `ix-plot-box-polygons-${this.name}`, titles: `ix-plot-titles-${this.name}` }
+      }) : { box: [], titles: [] };
+      return [...boxLayers.box, new IconLayer({
         id: `ix-plot-${this.name}-g${this._iconGeneration}`,
         data, pickable: true,
         getPosition: d => d.geometry.coordinates,
         getIcon: d => this._buildPlotIcon(d.properties.values, categories, labels, normalSizeValue, datasetMax, datasetMin),
         getSize: iconSize,
         sizeUnits: 'pixels'
-      })];
+      }), ...boxLayers.titles];
     }
 
     // Canvas rendering for one cell's mini-chart — BOX background, AREA
@@ -13198,9 +13217,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
 
-      // BOX
+      // BOX (a plot without the BOX flag keeps its own canvas box; with it the
+      // shared box layer draws it — see _buildPlotLayers)
       const boxOpacity = styleNum(this.style.boxopacity);
-      if (!isNaN(boxOpacity) && boxOpacity > 0) {
+      if (!flatFlag(this.flags, 'BOX') && !isNaN(boxOpacity) && boxOpacity > 0) {
         ctx.fillStyle = `rgba(255,255,255,${boxOpacity})`;
         ctx.fillRect(0, 0, W, H);
       }
@@ -16610,6 +16630,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // the box is sized by the value's own text, not the valuefield's
       const boxStyle = Object.assign({}, this.style, { valuefield: undefined });
       const boxes = [], texts = [];
+      // the label's drawn extent for the chart-group BOX (below): x from -r
+      // to 1.05r, y from -0.83f to 0.77f around the chart origin
+      const labelExtent = new Map();
       for (const d of combined) {
         const r = radiusOf(d);
         if (!(r > 0)) continue;
@@ -16624,6 +16647,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const o = alignOf(d);
         // the box's center relative to the chart's: x from −r to 1.05r, y from −0.83f to 0.77f
         boxes.push({ ...d, icon, pixelOffset: [o[0] + 0.025 * r, o[1] - 0.03 * f] });
+        labelExtent.set(d, [-r, -0.83 * f, 1.05 * r, 0.77 * f]);
         if (showValues) {
           const text = textOf(props);
           const fontSize = Math.min(r * 0.8, r * 3.3 / Math.max(1, text.length)) * valueScale;
@@ -16631,7 +16655,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (fontSize > 0) texts.push({ ...d, text, fontSize, color, pixelOffset: o });
         }
       }
-      const layers = [];
+      // BOX / TITLE: flat's chart-group box around the label chart
+      const boxRows = this._boxRows(() => combined.filter(d => labelExtent.has(d)), { unit, liveZoom, extentOf: d => labelExtent.get(d) });
+      const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
+        unit, liveZoom, positionOf: b => b.d.geometry.coordinates, offsetOf: b => alignOf(b.d),
+        ids: { circle: `ix-label-box-${this.name}`, icon: `ix-label-box-${this.name}`, polygons: `ix-label-box-polygons-${this.name}`, titles: `ix-label-titles-${this.name}` }
+      }) : null;
+      const layers = boxLayers ? [...boxLayers.box] : [];
       if (boxes.length) {
         layers.push(new IconLayer({
           id: `ix-bubbles-${this.name}-g${this._iconGeneration}`,
@@ -16665,6 +16695,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           parameters: ICON_LAYER_GLOBE_PARAMETERS
         }));
       }
+      if (boxLayers) layers.push(...boxLayers.titles);
       return layers;
     }
 
