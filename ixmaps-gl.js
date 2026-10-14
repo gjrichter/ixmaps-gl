@@ -10127,6 +10127,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const bins = [arr.reduce((a, v) => (v < a ? v : a), Infinity), m];
     while (arr.length > 1) {
       arr = arr.filter(d => d > m);
+      // every value left equals the last mean (a tie at the top): there is
+      // no head above it — mean([]) would add a NaN break (flat's own bug)
+      if (!arr.length) break;
       m = mean(arr);
       bins.push(m);
     }
@@ -10177,6 +10180,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // values above the last mean, while more than one is left
     if (flags.has('HEADTAIL')) {
       const b = headTailBreaks(values);
+      // fewer breaks than classes (small or low-variance data): the surplus
+      // classes padded at the top with the last break, as naturalBreaks
+      // does — flat reads past the end (undefined bounds, records in no class)
+      while (b.length < nParts + 1) b.push(b[b.length - 1]);
       parts = new Array(nParts).fill(null).map((_, i) => ({ min: b[i], max: b[i + 1] - 0.000001 }));
     } else if (flags.has('QUANTILE')) parts = quantileBreaks(values, nParts);
     else if (flags.has('NATURAL')) parts = naturalBreaks(values, nParts);

@@ -134,3 +134,23 @@ for (const [mname, fn] of Object.entries(methods)) {
     }
   }
 }
+
+// HEADTAIL: a tie at the top adds no NaN break, and fewer breaks than
+// classes are padded at the top (as naturalBreaks) — every value lands in
+// a class; flat has both bugs (records in no class, NaN bounds)
+test('HEADTAIL: finite bounds and every value in a class, also with ties at the top or fewer breaks than classes', () => {
+  const HT = new Set(['HEADTAIL']);
+  const partsOf = (vals, n) => G.flatRangeParts(vals, Math.min(...vals), Math.max(...vals), n, HT);
+  for (const [vals, n] of [[[1, 1, 1, 5, 5], 5], [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 7]]) {
+    const parts = partsOf(vals, n);
+    assert.equal(parts.length, n, 'as many classes as asked for');
+    assert.ok(parts.every(p => Number.isFinite(p.min) && Number.isFinite(p.max)), `finite bounds: ${JSON.stringify(parts)}`);
+    for (const v of vals) assert.notEqual(G.resolvePartsClass(v, parts), null, `${v} is in a class`);
+    assert.equal(G.resolvePartsClass(Math.max(...vals), parts), n - 1, 'the top value in the top class');
+  }
+  // enough breaks (heavy-tailed data): the bounds are the head/tail means, unchanged
+  const heavy = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 40, 80, 160, 320, 640, 1280, 2560];
+  const parts = partsOf(heavy, 5);
+  assert.deepEqual(plain(parts.map(p => p.min)), [1, 286.3888888888889, 1200, 1920, 2560]);
+  assert.equal(parts[4].max, 2560.001);
+});
