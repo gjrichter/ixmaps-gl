@@ -6868,7 +6868,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // flat's mapApi.setView(center, zoom) (htmlgui_flat.js 1327) — the
       // same live-or-build-time split as .view() above
       promise.setView = (...args) => promise.view(...args);
-      promise.options = (...args) => { builder.options(...args); return promise; };
+      // post-build: the live map's options() (merged into the options
+      // object the running themes hold), as .view() above — the builder's
+      // own is read once, by build()
+      promise.options = (...args) => { if (resolvedApi) resolvedApi.options(...args); else builder.options(...args); return promise; };
       promise.attribution = (...args) => { builder.attribution(...args); return promise; };
       promise.legend = (...args) => { builder.legend(...args); return promise; };
       promise.local = (...args) => { builder.local(...args); return promise; };
