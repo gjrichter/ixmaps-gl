@@ -17594,9 +17594,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // their own comments) are still real, directly-callable globals a
       // page's OWN custom UI can use too — only THIS generated markup
       // happens to reach them via delegation instead of inline HTML.
+      // the handlers below outlive this call: they read the theme id of
+      // the LATEST call into this container (a theme switch re-renders
+      // the same div for another theme)
+      container._ixFacetsId = szId;
       if (!container.dataset.ixFacetsWired) {
         container.dataset.ixFacetsWired = '1';
         container.addEventListener('click', e => {
+          const szId = container._ixFacetsId;
           const moreBtn = e.target.closest('[data-role="more"]');
           if (moreBtn) { moreBtn.hidden = true; moreBtn.nextElementSibling.hidden = false; return; }
 
@@ -17622,7 +17627,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         container.addEventListener('keyup', e => {
           if (e.key !== 'Enter') return;
           const input = e.target.closest('[data-role="search"]');
-          if (input) global.__setFilter(szId, input.closest('[data-field]').dataset.field, input.value);
+          if (input) global.__setFilter(container._ixFacetsId, input.closest('[data-field]').dataset.field, input.value);
         });
       }
     }
