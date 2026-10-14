@@ -3721,7 +3721,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // visible (an element larger than the viewport ends up at its edge)
     function keepTooltipVisible(tipEl, x, y) {
       const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
-      const vw = global.innerWidth || 1200, vh = global.innerHeight || 800;
+      // x/y and the translate are relative to the map container (it clips,
+      // overflow:hidden): its size is the room, not the window's — they
+      // differ on an embedded map
+      const vw = el.clientWidth || global.innerWidth || 1200, vh = el.clientHeight || global.innerHeight || 800;
       let tx = x > vw / 2 ? x - w - 30 : x + 30;
       let ty = y > vh / 2 ? y - h - 20 : y + 20;
       tx = Math.min(Math.max(8, tx), Math.max(8, vw - w - 8));
