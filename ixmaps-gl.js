@@ -10284,7 +10284,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return features.map(f => {
       if (!f || !f.properties) return f;
       const props = Object.assign({}, f.properties);
-      let values = names.map(name => parseFloat(f.properties[name]));
+      let values = names.map(name => flatScanValue(f.properties[name]));
       // the weights run BEFORE the field100 arithmetic, as in flat's
       // addItemValues — the FRACTION of a weighted value is the weighted
       // per-unit value
@@ -10293,7 +10293,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const sum = auto100 ? values.reduce((a, v) => a + (isNaN(v) ? 0 : v), 0) : 0;
         values = values.map((v, i) => {
           if (isNaN(v)) return v;
-          const v100 = auto100 ? sum : parseFloat(f.properties[f100A[Math.min(i, f100A.length - 1)]]);
+          const v100 = auto100 ? sum : flatScanValue(f.properties[f100A[Math.min(i, f100A.length - 1)]]);
           if (v === 0 && !flags.has('ZEROISVALUE')) return 0;
           if (fields[i][0] === '!') return (isNaN(v100) ? 0 : v100) - v;
           if (flags.has('CALCVAL') || flags.has('CALC100')) return v100 ? Math.round(v * v100 / 100) : v;
