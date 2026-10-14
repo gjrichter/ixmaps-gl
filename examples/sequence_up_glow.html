@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SEQUENCE · UP · GLOW</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>SEQUENCE · UP · GLOW</b>
+  <span>A categorical SEQUENCE|STAR|SORT|UP|EXPAND chart with GLOW at four sites: flat gives a chart its star spread and its glow only when its categories are 0..k without a gap — red; red+green (glow, spread); green only; red+blue (a gap: neither).</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data: the categories present at four sites (red = 0, green = 1, blue = 2)
+  var sites = [[0], [0, 1], [1], [0, 2]];
+  var features = [];
+  sites.forEach(function (cats, s) {
+    cats.forEach(function (c, k) {
+      for (var n = 0; n < 3 + 2 * k; n++) {
+        features.push({ type: "Feature", properties: { cat: ["red", "green", "blue"][c] },
+          geometry: { type: "Point", coordinates: [9.0 + s * 0.25, 45.5] } });
+      }
+    });
+  });
+  var layer = ixmaps.layer("seq", layer => layer
+    .data({ obj: { type: "FeatureCollection", features: features }, type: "geojson" })
+    .binding({ geo: "geometry", value: "cat" })
+    .type("CHART|GLOW|SYMBOL|SIZEP3|SEQUENCE|STAR|SORT|UP|EXPAND|AGGREGATE|RELOCATE|CATEGORICAL|COUNT")
+    .style({ colorscheme: ["#d9534f", "#5cb85c", "#428bca"], values: ["red", "green", "blue"], normalsizevalue: "30", gridwidthpx: "3", scale: "0.4" })
+    .meta({ title: "seq", tooltip: "{{cat}}" })
+  );
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "open" },
+    map => map.view([45.5, 9.4], 10)
+      .layer(layer)
+  );
+</script>
+</body>
+</html>

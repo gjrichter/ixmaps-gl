@@ -1,0 +1,1041 @@
+{
+ "page": "examples/sequence_up_glow.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.4,
+     45.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-seq-g0",
+     "type": "IconLayer",
+     "count": 2,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "7e4d240918b2aea5",
+     "setDigest": "7e4d240918b2aea5",
+     "columnDigests": {
+      "getColor": "1d5642e1d1c73016",
+      "getIcon": "5ea48bfd88185bf6",
+      "getPixelOffset": "8fd11f36b2ad43f8",
+      "getPosition": "f9a7515781e4bbe8",
+      "getSize": "0f2b6ade8d089090"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       34.723168,
+       46.867087
+      ],
+      "getPosition": [
+       9,
+       9.25
+      ],
+      "getSize": [
+       227.508303,
+       227.508303
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-217,83,79",
+        "url": "#886bd406:9830",
+        "width": 64
+       },
+       [
+        34.723168,
+        22.578683
+       ],
+       [
+        9,
+        45.5
+       ],
+       227.508303
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-217,83,79",
+        "url": "#886bd406:9830",
+        "width": 64
+       },
+       [
+        46.867087,
+        25.741699
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       227.508303
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-seq-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "803195582ec8d4a8",
+     "setDigest": "20cd6fd47cc946b6",
+     "columnDigests": {
+      "getColor": "587f5d75dc721e2c",
+      "getIcon": "5c4af3517e748cd3",
+      "getPixelOffset": "72af208f27ca3f61",
+      "getPosition": "1db3cc87b9cbf960",
+      "getSize": "c539d62a7b24bee5"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       46.867087
+      ],
+      "getPosition": [
+       9,
+       9.75
+      ],
+      "getSize": [
+       41.365146,
+       49.043804
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        34.723168,
+        22.578683
+       ],
+       [
+        9,
+        45.5
+       ],
+       41.365146
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-92,184,92-0.85-none-0",
+        "url": "#73e5e0f7:1754",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.5,
+        45.5
+       ],
+       41.365146
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-92,184,92-0.85-none-0",
+        "url": "#73e5e0f7:1754",
+        "width": 48
+       },
+       [
+        0.790037,
+        53.465267
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       49.043804
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        46.867087,
+        25.741699
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       41.365146
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-66,139,202-0.85-none-0",
+        "url": "#3ace1365:1790",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       49.043804
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       41.365146
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "seq",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "COUNT",
+      "EXPAND",
+      "GLOW",
+      "RELOCATE",
+      "SEQUENCE",
+      "SIZEP3",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "UP"
+     ],
+     "features": 22,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "red",
+      "green",
+      "blue"
+     ],
+     "categoryColorsRgb": [
+      [
+       217,
+       83,
+       79
+      ],
+      [
+       92,
+       184,
+       92
+      ],
+      [
+       66,
+       139,
+       202
+      ]
+     ]
+    }
+   ],
+   "legend": [
+    "seq ▾ red 9 green 8 blue 5 Chart size: 40%"
+   ],
+   "tooltips": {
+    "seq": [
+     "",
+     ""
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.4,
+     45.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-seq-g0",
+     "type": "IconLayer",
+     "count": 1,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "604fd0c8a8c31bcb",
+     "setDigest": "604fd0c8a8c31bcb",
+     "columnDigests": {
+      "getColor": "5ac25ca8e5b3f835",
+      "getIcon": "622cd64d1435f082",
+      "getPixelOffset": "9bd9a5a5649965ca",
+      "getPosition": "f3c49bb169628d0c",
+      "getSize": "1ec0a1e62ecae3e3"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       59.048829,
+       59.048829
+      ],
+      "getPosition": [
+       9.25,
+       9.25
+      ],
+      "getSize": [
+       286.6425,
+       286.6425
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-217,83,79",
+        "url": "#886bd406:9830",
+        "width": 64
+       },
+       [
+        59.048829,
+        32.432508
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       286.6425
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-seq-g0",
+     "type": "IconLayer",
+     "count": 5,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "822d73c0b42f3d67",
+     "setDigest": "065e57fee7be55ee",
+     "columnDigests": {
+      "getColor": "dc44885067785037",
+      "getIcon": "1036a3a39aeac0a3",
+      "getPixelOffset": "6bc1d26e1930189e",
+      "getPosition": "5de06bb07616af70",
+      "getSize": "ff55991a6f5de92e"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       59.048829
+      ],
+      "getPosition": [
+       9.25,
+       9.75
+      ],
+      "getSize": [
+       52.116818,
+       61.791321
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-92,184,92-0.85-none-0",
+        "url": "#73e5e0f7:1754",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.5,
+        45.5
+       ],
+       52.116818
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-92,184,92-0.85-none-0",
+        "url": "#73e5e0f7:1754",
+        "width": 48
+       },
+       [
+        0.995384,
+        67.362015
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       61.791321
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        59.048829,
+        32.432508
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       52.116818
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-66,139,202-0.85-none-0",
+        "url": "#3ace1365:1790",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       61.791321
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       52.116818
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "seq",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "COUNT",
+      "EXPAND",
+      "GLOW",
+      "RELOCATE",
+      "SEQUENCE",
+      "SIZEP3",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "UP"
+     ],
+     "features": 22,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "red",
+      "green",
+      "blue"
+     ],
+     "categoryColorsRgb": [
+      [
+       217,
+       83,
+       79
+      ],
+      [
+       92,
+       184,
+       92
+      ],
+      [
+       66,
+       139,
+       202
+      ]
+     ]
+    }
+   ],
+   "legend": [
+    "seq ▾ green 8 red 6 blue 5 Chart size: 40%"
+   ],
+   "tooltips": {
+    "seq": [
+     ""
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.4,
+     45.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-seq-g0",
+     "type": "IconLayer",
+     "count": 2,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "b2e0209b5ffac58b",
+     "setDigest": "b2e0209b5ffac58b",
+     "columnDigests": {
+      "getColor": "1d5642e1d1c73016",
+      "getIcon": "5ea48bfd88185bf6",
+      "getPixelOffset": "07f07624a2a2628f",
+      "getPosition": "f9a7515781e4bbe8",
+      "getSize": "be9380ac87610e2f"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       27.559797,
+       37.198432
+      ],
+      "getPosition": [
+       9,
+       9.25
+      ],
+      "getSize": [
+       180.57346,
+       180.57346
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-217,83,79",
+        "url": "#886bd406:9830",
+        "width": 64
+       },
+       [
+        27.559797,
+        17.920713
+       ],
+       [
+        9,
+        45.5
+       ],
+       180.57346
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-217,83,79",
+        "url": "#886bd406:9830",
+        "width": 64
+       },
+       [
+        37.198432,
+        20.4312
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       180.57346
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-seq-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "621057a66c10808f",
+     "setDigest": "b4b610b22a6faa60",
+     "columnDigests": {
+      "getColor": "587f5d75dc721e2c",
+      "getIcon": "5c4af3517e748cd3",
+      "getPixelOffset": "0ba1fc464cb168e5",
+      "getPosition": "1db3cc87b9cbf960",
+      "getSize": "3752903e7f62f6fb"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       37.198432
+      ],
+      "getPosition": [
+       9,
+       9.75
+      ],
+      "getSize": [
+       32.831538,
+       38.926093
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        27.559797,
+        17.920713
+       ],
+       [
+        9,
+        45.5
+       ],
+       32.831538
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-92,184,92-0.85-none-0",
+        "url": "#73e5e0f7:1754",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.5,
+        45.5
+       ],
+       32.831538
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-92,184,92-0.85-none-0",
+        "url": "#73e5e0f7:1754",
+        "width": 48
+       },
+       [
+        0.627053,
+        42.43541
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       38.926093
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        37.198432,
+        20.4312
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       32.831538
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-66,139,202-0.85-none-0",
+        "url": "#3ace1365:1790",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       38.926093
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       32.831538
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "seq",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CHART",
+      "COUNT",
+      "EXPAND",
+      "GLOW",
+      "RELOCATE",
+      "SEQUENCE",
+      "SIZEP3",
+      "SORT",
+      "STAR",
+      "SYMBOL",
+      "UP"
+     ],
+     "features": 22,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "red",
+      "green",
+      "blue"
+     ],
+     "categoryColorsRgb": [
+      [
+       217,
+       83,
+       79
+      ],
+      [
+       92,
+       184,
+       92
+      ],
+      [
+       66,
+       139,
+       202
+      ]
+     ]
+    }
+   ],
+   "legend": [
+    "seq ▾ red 9 green 8 blue 5 Chart size: 40%"
+   ],
+   "tooltips": {
+    "seq": [
+     "",
+     ""
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

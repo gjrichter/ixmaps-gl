@@ -14777,6 +14777,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const marking = this._markedClasses.size && !this._onMarksChanged;
       const gray = marking && String(st.evidence || 'isolate') === 'isolate_gray';
       const sorted = [...this.flags].some(f => /\bSORT\b/.test(f));
+      const seqFlags = sequenceFlags(this.flags);
       const star = flatFlag(this.flags, 'STAR');
       const fillOpacity = styleNum(st.fillopacity) || 0.85;
       const borderRgb = st.linecolor && styleLineColor(st.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(st.linecolor)) : null;
@@ -14856,6 +14857,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           const sum = counts.reduce((a, v) => a + (v || 0), 0);
           counts = counts.map(v => sum > 0 ? v / (sum / 100) : 0);
         }
+        // flat's aggregated CATEGORICAL item holds a value per category only up
+        // to the highest category it has (measured on flat: the chart's star and
+        // glow follow the categories present as 0..k, 985 of 988 charts of the
+        // concessioni page): trailing zeros are no parts, so with SORT|UP the
+        // smallest part — order index 0, the one that sets the star radius and
+        // carries the glow — is a zero only when a category BELOW the highest
+        // one is missing
+        if (!d.properties.parts && !d.properties.series) {
+          let n = counts.length;
+          while (n > 0 && !counts[n - 1]) n--;
+          if (n < counts.length) counts = counts.slice(0, n);
+        }
         const sizeFactor = itemSizeFactor(d);
         const partRadius = multi
           ? v => Math.max(VALUE_RADIUS_MIN, normalR * Math.pow(Math.abs(v) / seqMax, 1 / sizePow) * sizeFactor)
@@ -14865,7 +14878,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (!layout.length) continue;
         // GLOW belongs to the first part (sorted) or to every part, and
         // hides with it when its class is not marked
-        const glowParts = new Set(sorted ? [layout[0].i] : layout.map(p => p.i));
+        // flat draws the glow with the part at order index 0 only (maptheme.js
+        // 22009: `!sortedIndex || i == nStartI`), a part of value 0 is skipped
+        // before: with SORT|UP that is the smallest part (see the trimmed
+        // counts above), with SORT|DOWN the biggest
+        const orderFirst = seqFlags.up ? Math.min(...counts) : seqFlags.down ? Math.max(...counts) : null;
+        const glowParts = new Set(sorted ? (orderFirst === null || orderFirst ? [layout[0].i] : []) : layout.map(p => p.i));
         // the chart's drawn extent (flat: map.Dom.getBox of its shape
         // group) — the parts' star cluster — for BOX / CIRCULARBOX sizing
         let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;
