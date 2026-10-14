@@ -1057,11 +1057,40 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // ixmaps-flat dev tree, Themes.prototype.setExternalData). This engine
   // has no such pipeline to resume, so the bridge only needs to do the
   // ONE thing fetchLayerData actually needs: resolve the promise a
-  // query()-mode fetch is awaiting. build()'s layer-loading loop is
-  // strictly sequential (one .data({query}) in flight at a time, see its
-  // dataCache), so a single pending-resolver slot is enough — not a
-  // registry keyed by data name like the real engine's.
-  let _pendingQueryResolve = null;
+  // query()-mode fetch is awaiting. Queries run in parallel (several
+  // layers, a later map.layer()), so every pending one has its own entry,
+  // keyed by the options object its query function received — real pages
+  // hand that same object back: query(themeObj, options) …
+  // ixmaps.setExternalData(data, options). In data order: oldest first.
+  const _pendingQueries = new Map(); // options object → { name, resolve, reject, timer }
+  // a pending query's timeout (0: DATAJS_LOAD_TIMEOUT_MS) — a field so the
+  // unit tests can shorten it
+  const QUERY_HANDOFF = { timeoutMs: 0 };
+  function settleQuery(opts, err, data) {
+    const q = _pendingQueries.get(opts);
+    if (!q) return;
+    _pendingQueries.delete(opts);
+    clearTimeout(q.timer);
+    if (err) q.reject(err); else q.resolve(data);
+  }
+  // the pending query a setExternalData(data, opt) belongs to: the one
+  // given that very options object, else the one of that data name, else —
+  // no name — the oldest (exact while only one is pending)
+  function pendingQueryOf(opt) {
+    if (opt && _pendingQueries.has(opt)) return opt;
+    const name = opt && opt.name;
+    if (name != null && name !== '') {
+      for (const [o, q] of _pendingQueries) if (q.name === String(name)) return o;
+      return null;
+    }
+    const first = _pendingQueries.keys().next();
+    if (first.done) return null;
+    if (_pendingQueries.size > 1) {
+      console.warn('[ixmaps-gl] ixmaps.setExternalData without its query\'s options object or a name, while ' + _pendingQueries.size +
+        ' .data({query}) fetches are pending — handed to the oldest; pass the options the query function received');
+    }
+    return first.value;
+  }
   // Data by name, as flat (maptheme.js 2570-2593, 8286-8310):
   // setExternalData(data, {type, name}) makes a data.js Table of the data
   // and keeps it as window[name]; whoever waits for that name gets it, and
@@ -1107,6 +1136,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // globals a data name must not overwrite
   const _engineGlobalsGuard = { ixmaps: 1, Data: 1, deck: 1, maplibregl: 1, window: 1, document: 1, $: 1, jQuery: 1 };
   function setExternalDataBridge(dataObj, opt) {
+    const query = pendingQueryOf(opt);
+    if (query) {
+      if (dataObj == null) settleQuery(query, new Error('[ixmaps-gl] .data({query}): the query handed over no data (ixmaps.setExternalData(null, …))'));
+      else settleQuery(query, null, dataObj);
+      return;
+    }
     const name = opt && opt.name;
     if (name != null && name !== '') {
       (dataObj == null ? Promise.resolve(null) : externalDataToTable(dataObj, opt))
@@ -1114,13 +1149,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         .catch(err => { console.error(err); publishNamedData(String(name), null); });
       return;
     }
-    if (!_pendingQueryResolve) {
-      console.warn('[ixmaps-gl] ixmaps.setExternalData called with no pending .data({query}) fetch — ignored');
-      return;
-    }
-    const resolve = _pendingQueryResolve;
-    _pendingQueryResolve = null;
-    resolve(dataObj);
+    console.warn('[ixmaps-gl] ixmaps.setExternalData called with no pending .data({query}) fetch — ignored');
   }
 
   // ---------------------------------------------------------------
@@ -1531,9 +1560,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           '<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"> before ixmaps-gl.js');
       }
       const queryFn = typeof dataConfig.query === 'function' ? dataConfig.query : new Function(`return (${dataConfig.query});`)();
-      const dataObj = await new Promise(resolve => {
-        _pendingQueryResolve = resolve;
-        queryFn({}, {});
+      // its own options object: the query hands it back with the data
+      const opts = { type: dataConfig.type, name: dataConfig.name };
+      const timeoutMs = QUERY_HANDOFF.timeoutMs || DATAJS_LOAD_TIMEOUT_MS;
+      const dataObj = await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => settleQuery(opts, new Error(`[ixmaps-gl] .data({query}): no data handed over (ixmaps.setExternalData) within ${timeoutMs / 1000}s`)), timeoutMs);
+        _pendingQueries.set(opts, { name: dataConfig.name != null ? String(dataConfig.name) : null, resolve, reject, timer });
+        try { queryFn({}, opts); } catch (err) { settleQuery(opts, err); }
       });
       return rowsResult((dataConfig.process ? runDataProcess(dataObj, dataConfig) : dataObj).json(), binding);
     }
@@ -17900,7 +17933,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,

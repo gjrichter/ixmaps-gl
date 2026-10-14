@@ -11,6 +11,8 @@ const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 
 const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location: { search: '' },
   document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
 win.window = win; win.globalThis = win;
+// timers for the .data({query}) timeouts
+win.setTimeout = setTimeout; win.clearTimeout = clearTimeout;
 // a minimal stand-in for data.js's CSV import (Data.object(...).import(cb)):
 // a Table-shaped {table, fields: [{id}], records: [[...]]}, as data.js makes it
 win.Data = {
@@ -64,4 +66,39 @@ test('choropleth: a polygon without id and a row without lookup value do not joi
     const fc = G.joinChoroplethFeatures({ name: 'L', flags: new Set(type), binding: { lookup: 'k', value: 'v' }, style: {} }, table, rts);
     assert.deepEqual(plain(fc.features.map(f => f.properties.v ?? null)), [1, null, null], type.join('|'));
   }
+});
+
+// .data({query}): queries run in parallel, each handed its own options
+// object, which the query passes back with ixmaps.setExternalData
+test('.data({query}): parallel queries get their own data, by options object, name or oldest; timeouts, throws and null fail cleanly', async () => {
+  const set = (d, o) => win.ixmaps.setExternalData(d, o);
+  const table = v => ({ json: () => [{ k: v }] });
+  const rowsOf = r => r.rows.map(x => x.k);
+  const hold = {};
+  const q = (key, fn) => G.fetchLayerData({ query: (theme, options) => { hold[key] = options; if (fn) fn(options); } , name: key }, { lookup: 'k' }, {});
+  // two in flight, answered in reverse order, each with its own options object
+  const a = q('A'), b = q('B');
+  set(table('b'), hold.B);
+  set(table('a'), hold.A);
+  assert.deepEqual(rowsOf(await a), ['a']);
+  assert.deepEqual(rowsOf(await b), ['b']);
+  // a new options object naming the query's data
+  const c = q('C'), d = q('D');
+  set(table('d'), { name: 'D' });
+  set(table('c'), { name: 'C' });
+  assert.deepEqual([rowsOf(await c), rowsOf(await d)], [['c'], ['d']]);
+  // neither: the only pending one gets it
+  const e = q('E');
+  set(table('e'), { type: 'dbtable' });
+  assert.deepEqual(rowsOf(await e), ['e']);
+  // null, a throwing query function, a timeout: each rejects, nothing stays pending
+  const n = q('N');
+  set(null, hold.N);
+  await assert.rejects(n, /handed over no data/);
+  await assert.rejects(q('T', () => { throw new Error('boom'); }), /boom/);
+  G.QUERY_HANDOFF.timeoutMs = 30;
+  try { await assert.rejects(q('W'), /no data handed over/); } finally { G.QUERY_HANDOFF.timeoutMs = 0; }
+  const late = q('L');
+  set(table('l'), {});
+  assert.deepEqual(rowsOf(await late), ['l'], 'the timed-out query left no stale entry');
 });
