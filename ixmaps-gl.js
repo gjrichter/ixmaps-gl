@@ -1972,7 +1972,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (isAggregatedCategoricalChoropleth(spec)) {
       const groups = new Map();
       for (const row of table.rows) {
-        const key = String(row[lookupField]);
+        const key = flatLookupKey(row[lookupField], spec.style);
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(row);
       }
@@ -1986,7 +1986,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         })
       };
     }
-    const rowsByKey = new Map(table.rows.map(row => [String(row[lookupField]), row]));
+    // the data side's key as flat makes it (lookupdigits/toupper/tonumber),
+    // the geometry id as is — the same rule as joinChartPositions
+    const rowsByKey = new Map(table.rows.map(row => [flatLookupKey(row[lookupField], spec.style), row]));
     // Unmatched polygons (no CSV row for that id) keep their geometry with
     // empty properties — real-world data: not every comune necessarily has
     // a row in every demographic source. Renders as "no data" (see
@@ -17720,7 +17722,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     fetchLayerData, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
-    applyWhereFilter, joinChartPositions, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
+    applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,
     dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn,

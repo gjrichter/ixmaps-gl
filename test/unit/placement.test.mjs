@@ -440,3 +440,19 @@ test('symbolsFlagCompat: flat matches flags as substrings, so SYMBOLS is a SYMBO
   G.symbolsFlagCompat(input, { symbols: ['label'] });
   assert.ok(!input.has('LABEL'), 'the spec flags are not mutated');
 });
+
+// CHOROPLETH join: the data side's key is made as flat makes it
+// (lookupdigits / lookuptoupper / lookuptonumber), the geometry id as is —
+// the same rule as the chart join above
+test('choropleth: the lookup key is padded to lookupdigits, plain and AGGREGATE CATEGORICAL', () => {
+  const rts = [featureRt('L', 'PRO_COM', [poly({ PRO_COM: '001001' }, square), poly({ PRO_COM: '001002' }, square)])];
+  const rows = { rows: [{ k: '1001', v: 7 }, { k: 1002, v: 9 }] };
+  const spec = (type, style, value) => ({ name: 'L', flags: flags(...type.split('|')), binding: { lookup: 'k', value }, style });
+  const joined = fc => fc.features.map(f => f.properties.v);
+  assert.deepEqual(plain(joined(G.joinChoroplethFeatures(spec('CHOROPLETH', { lookupdigits: '6' }, 'v'), rows, rts))), [7, 9], '"1001" → "001001"');
+  assert.deepEqual(plain(joined(G.joinChoroplethFeatures(spec('CHOROPLETH', {}, 'v'), rows, rts))), [null, null], 'without lookupdigits: no match (no row → empty properties)');
+  assert.deepEqual(plain(joined(G.joinChoroplethFeatures(spec('CHOROPLETH|CATEGORICAL|AGGREGATE', { lookupdigits: '6' }, 'v'), rows, rts))), [7, 9], 'the AGGREGATE CATEGORICAL branch too');
+  assert.equal(G.joinChoroplethFeatures(spec('CHOROPLETH', { lookuptoupper: 'true' }, 'v'),
+    { rows: [{ k: 'ab', v: 1 }] }, [featureRt('L', 'id', [poly({ id: 'AB' }, square)])]).features[0].properties.v, 1, 'lookuptoupper');
+});
+
