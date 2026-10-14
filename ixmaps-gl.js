@@ -10444,7 +10444,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // DIFFERENCE over several value fields: the difference is the value
     const fields = String(binding.value).split('|');
     const valueOf = flags && flags.has('DIFFERENCE') && fields.length > 1
-      ? p => cellAggregatedValues({ sums: fields.map(k => parseFloat(p[k]) || 0), counts: fields.map(() => 1) }, flags, style)[0]
+      // without AGGREGATE applyField100 already differenced every record
+      // (flat's nValuesA, popped): the first field IS the value
+      ? (!flags.has('AGGREGATE') ? p => flatNumber(p[fields[0]], flags)
+        : p => cellAggregatedValues({ sums: fields.map(k => parseFloat(p[k]) || 0), counts: fields.map(() => 1) }, flags, style)[0])
       // "$item$" is flat's record count: 1 per record
       : binding.value === '$item$' ? () => 1
       : p => (p && Object.keys(p).length ? flatNumber(p[binding.value], flags) : NaN);
@@ -11420,7 +11423,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const seriesFields = String(this.binding.value || '').split('|');
         this._seriesDifference = this.flags.has('DIFFERENCE') && seriesFields.length > 1 && !this._aggregateField100;
         const seriesOf = props => seriesFields.map(k => parseFloat(props[k]) || 0);
-        const seriesValue = props => cellAggregatedValues({ sums: seriesOf(props), counts: seriesFields.map(() => 1) }, this.flags, this.style)[0];
+        // without AGGREGATE the records are already differenced (applyField100)
+        const seriesValue = !this.flags.has('AGGREGATE') ? props => parseFloat(props[seriesFields[0]]) || 0 : props => cellAggregatedValues({ sums: seriesOf(props), counts: seriesFields.map(() => 1) }, this.flags, this.style)[0];
         this._featuresByCategory = [sourceFeatures.map(f => ({
           type: 'Feature',
           geometry: f.geometry,

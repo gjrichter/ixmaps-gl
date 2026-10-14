@@ -454,6 +454,17 @@ test('applyField100 + field100Binding: DIFFERENCE over several fields → next m
   assert.equal(G.field100Binding(b, flags()), b);
 });
 
+test('DIFFERENCE over 3 fields without AGGREGATE: the classes and the item value are the FIRST difference, taken once (flat 11086-11100)', () => {
+  const pt = (p, x) => ({ type: 'Feature', properties: p, geometry: { type: 'Point', coordinates: [x, 45] } });
+  const feats = [pt({ a: 10, b: 20, c: 21 }, 9), pt({ a: 10, b: 15, c: 25 }, 10), pt({ a: 0, b: 50, c: 50 }, 11)];
+  const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value: 'a|b|c' }, style: { type: 'CHART|BUBBLE|DIFFERENCE|EQUIDISTANT', colorscheme: ['3', '#f00', '#0f0', '#00f'] } }),
+    { type: 'FeatureCollection', features: feats }, {});
+  assert.equal(rt._valueMin, 5);
+  assert.equal(rt._valueMax, 50);
+  const r = rt._computeAggregatedItems([-180, -90, 180, 90], 10);
+  assert.deepEqual(plain(r.individual.map(f => f.properties.value)), [10, 5, 50], 'b − a, not (c − b) − (b − a)');
+});
+
 test('normalizeTheme routes value100 / field100 to binding.field100', () => {
   const spec = G.normalizeTheme({ layer: 'x', binding: { value: 'a', value100: 'T', position: 'geometry' }, style: { type: 'CHOROPLETH' } });
   assert.equal(spec.binding.field100, 'T');
