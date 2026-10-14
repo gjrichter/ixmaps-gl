@@ -13040,12 +13040,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const fields = this._itemPlotFields();
       const items = [];
       let dMin = Infinity, dMax = -Infinity;
+      // facet / runtime WHERE / time frame narrow the drawn charts, as in
+      // every other renderer; the value range stays the full data's (as
+      // the bubbles' _maxSizeValue), so a filter does not rescale them
+      const active = this._activeFeatures ? new Set(this._activeFeatures) : null;
       for (const f of this.features) {
         const pos = itemAnchor(f.geometry);
         if (!pos) continue;
         const values = fields.map(k => parseFloat(f.properties[k]));
         for (const v of values) if (!isNaN(v)) { dMin = Math.min(dMin, v); dMax = Math.max(dMax, v); }
-        items.push({ geometry: { type: 'Point', coordinates: pos }, properties: { values, raw: f.properties } });
+        if (!active || active.has(f)) items.push({ geometry: { type: 'Point', coordinates: pos }, properties: { values, raw: f.properties } });
       }
       if (!items.length) return [];
       const sMin = styleNum(this.style.minvalue), sMaxRaw = this.style.maxvalue;

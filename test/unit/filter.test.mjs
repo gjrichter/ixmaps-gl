@@ -51,3 +51,25 @@ test('filter: features are filtered by their properties', () => {
   const fc = { type: 'FeatureCollection', features: rows.map(r => ({ type: 'Feature', geometry: null, properties: r })) };
   assert.deepEqual(G.applyWhereFilter(fc, 'WHERE P1.1 > 50').features.map(f => f.properties.id), ['b', 'c']);
 });
+
+// a per-item PLOT (several value fields) draws only the filtered records,
+// as every other renderer does
+test('filter: a per-item PLOT chart follows the facet and the runtime WHERE filter', () => {
+  const pt = (p, x, y) => ({ type: 'Feature', properties: p, geometry: { type: 'Point', coordinates: [x, y] } });
+  const feats = [pt({ r: 'Lazio', a: 1, b: 2, c: 3 }, 12, 42), pt({ r: 'Puglia', a: 4, b: 5, c: 6 }, 16, 41), pt({ r: 'Lazio', a: 2, b: 2, c: 2 }, 12.5, 41.8)];
+  const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value: 'a|b|c' }, style: { type: 'CHART|PLOT|LINES', colorscheme: ['#00f'] } }), { type: 'FeatureCollection', features: feats }, {});
+  assert.ok(rt._isItemPlot());
+  // the drawn items reach _boxRows before any deck.gl layer is built
+  const drawn = () => {
+    let got;
+    rt._boxRows = items => { got = items; throw 'stop'; };
+    try { rt._buildItemPlotLayers(6); } catch (e) { if (e !== 'stop') throw e; }
+    return got.map(d => d.properties.raw.r).join(',');
+  };
+  assert.equal(drawn(), 'Lazio,Puglia,Lazio');
+  rt.setFacetFilter('r', 'Lazio');
+  assert.equal(drawn(), 'Lazio,Lazio', 'facet');
+  rt.clearAllFacetFilters();
+  rt.setRuntimeFilter('WHERE "r" == "Puglia"');
+  assert.equal(drawn(), 'Puglia', 'runtime WHERE');
+});
