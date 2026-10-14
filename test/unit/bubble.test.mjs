@@ -75,3 +75,20 @@ test('bubble icon look: canvas width in quarter-octave steps, zoom-independent, 
   assert.equal(bubbleIconLook(60, 1, {}, flags('OUTLINE'), 48).outlineRatio, 1, 'OUTLINE stops growing from the normal radius up');
   assert.equal(bubbleIconLook(7.5, 1, {}, flags('OUTLINE'), 48).outlineRatio, 0.5);
 });
+
+// a chart LABEL (labelfield) is read as flat reads it (__scanValue,
+// maptheme.js 24541): with a comma, the comma is the decimal and dots
+// group thousands; without one, blanks group thousands
+test('chart LABEL: "1.234,5" and "12 500" are read as 1234.5 and 12500, as flat', () => {
+  const G = win.__ixmapsGlInternals;
+  // titleTextWidth measures on a canvas: a fixed-width stand-in
+  win.document.createElement = () => ({ getContext: () => ({ measureText: s => ({ width: String(s).length * 5 }) }) });
+  const pt = p => ({ type: 'Feature', properties: p, geometry: { type: 'Point', coordinates: [9, 45] } });
+  const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value: 'v' }, style: { type: 'CHART|BUBBLE', labelfield: 'L' } }), { type: 'FeatureCollection', features: [pt({ v: 1, L: 'x' })] }, {});
+  const label = L => rt._chartLabelFn(1)({ properties: { raw: { L } } }, 10).text;
+  const same = label('1234,5');
+  assert.equal(label('1.234,5'), same, 'dots group thousands');
+  assert.equal(label('12 500'), label('12500'), 'blanks group thousands');
+  assert.notEqual(label('12 500'), label('12'));
+  assert.equal(label('Roma'), 'Roma', 'not a number: the text');
+});

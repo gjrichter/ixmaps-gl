@@ -16651,7 +16651,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const v = raw && raw[this.style.labelfield];
         let text = v == null || v === '' ? '' : String(v);
         if (!text) return null;
-        const num = parseFloat(text.replace(',', '.'));
+        // flat reads it with __scanValue: "1.234,5", "12 500"
+        const num = flatScanValue(text);
         text = (!isNaN(num) ? flatGroupedValue(num, dec != null ? dec : 2, noBreaks) : text) + units;
         const width = Math.max(titleTextWidth(text, f), (text.length + 2) * f * 0.5);
         const x = width / 3, y = f / 3 + r + 5 * unitPx;
