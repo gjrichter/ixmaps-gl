@@ -570,3 +570,17 @@ test('groupRecordCount: RELOCATE groups sum recordCounts, plain grid groups sum 
   assert.equal(groupRecordCount({ point_count: 7 }), 7);
   assert.equal(groupRecordCount({}), 1);
 });
+
+// AGGREGATE|AUTO100 multi-field SEQUENCE: its part scale is measured on the
+// current data — new data (refreshTheme, a broker, a re-filter) re-measures it
+test('multi-field SEQUENCE AUTO100: the part scale follows replaced data', () => {
+  const pt = (p, x) => ({ type: 'Feature', properties: p, geometry: { type: 'Point', coordinates: [x, 45] } });
+  const fc = feats => ({ type: 'FeatureCollection', features: feats });
+  const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value: 'a|b' }, style: { type: 'CHART|SYMBOL|SEQUENCE|AGGREGATE|AUTO100', colorscheme: ['#f00', '#00f'] } }),
+    fc([pt({ a: 9, b: 1 }, 9)]), {});
+  // the scale is measured first; building the deck.gl layers then fails headless
+  const scale = () => { try { rt._buildSequenceChartLayers([], 10, 10); } catch (e) { /* no deck.gl */ } return rt._seqAuto100Max; };
+  assert.equal(scale(), 90, 'the biggest part share: 9 of 10');
+  rt.replaceFeatures(fc([pt({ a: 1, b: 1 }, 9)]));
+  assert.equal(scale(), 50, 'the new data\'s share, not the old 90');
+});

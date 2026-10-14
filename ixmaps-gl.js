@@ -11139,6 +11139,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         let max = 0;
         for (const f of this.features) for (const field of this._multiFields) { const v = Math.abs(parseFloat(f.properties[field])); if (v > max) max = v; }
         this._multiFieldPartMax = max || 1;
+        // AUTO100's scale, measured on these features by _buildSequenceChartLayers
+        this._seqAuto100Max = null;
       } else if (this.binding.value) {
         // real engine's OTHER coloring mode (maptheme.js distributeValues,
         // partsA): a NUMERIC bound value, not CATEGORICAL, is classed into
