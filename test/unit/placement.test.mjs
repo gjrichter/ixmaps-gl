@@ -490,3 +490,18 @@ test('chart: a record with geometry null is not drawn and does not break the the
     assert.equal(rt.features.length, 2, `${type}: the unlocated record stays in the data`);
   }
 });
+
+// a meters cell is converted at the data's latitude — also when it comes
+// from flat's aggregationscale alias, or from a gridwidth set at runtime
+test('aggregation: a meters cell under aggregationscale or a runtime gridwidth uses the data latitude, not the equator', () => {
+  const feats = [pt({ v: 1 }, 9.1, 45.4), pt({ v: 2 }, 9.2, 45.6)];
+  const mk = style => new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value: 'v' }, style: Object.assign({ type: 'CHART|BUBBLE|AGGREGATE|SUM' }, style) }), { type: 'FeatureCollection', features: feats }, {});
+  const radius = rt => { rt._ensureClusterIndices(12); return rt._clusterRadiusPx; };
+  const ref = radius(mk({ aggregation: ['1:1', '1000'] }));
+  near(radius(mk({ aggregationscale: ['1:1', '1000'] })), ref, 'aggregationscale = aggregation');
+  const rt = mk({ gridwidthpx: '40' });
+  radius(rt);
+  rt.setStyle({ gridwidthpx: null, gridwidth: '1000' });
+  near(radius(rt), ref, 'gridwidth set by setStyle');
+});
+

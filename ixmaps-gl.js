@@ -11050,17 +11050,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // could ever need it (a plain "px" gridwidth, or an aggregation
       // array with only "px" entries, never reads this field).
       const gridwidthIsMeters = typeof this.style.gridwidth === 'string' ? !/px\s*$/i.test(this.style.gridwidth) : this.style.gridwidth != null;
-      if (gridwidthIsMeters || aggregationHasMetersEntry(this.style.aggregation)) {
-        let minLat = Infinity, maxLat = -Infinity;
-        this.features.forEach(f => {
-          const lat = f.geometry && f.geometry.coordinates && f.geometry.coordinates[1];
-          if (typeof lat === 'number' && !isNaN(lat)) {
-            if (lat < minLat) minLat = lat;
-            if (lat > maxLat) maxLat = lat;
-          }
-        });
-        this._gridRefLat = (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
-      }
+      // aggregationscale: flat's alias of aggregation, read the same way in
+      // _ensureClusterIndices
+      if (gridwidthIsMeters || aggregationHasMetersEntry(this.style.aggregation || this.style.aggregationscale)) this._scanGridRefLat();
 
       // a bar chart's parts are a pie's (its value fields or categories)
       if ((this._isPieChart() || this._isBarChart()) && this.binding.value) {
@@ -11782,6 +11774,20 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       });
     }
 
+    // the meters grid's reference latitude: the middle of the data's own
+    // latitude extent (see _prepare)
+    _scanGridRefLat() {
+      let minLat = Infinity, maxLat = -Infinity;
+      this.features.forEach(f => {
+        const lat = f.geometry && f.geometry.coordinates && f.geometry.coordinates[1];
+        if (typeof lat === 'number' && !isNaN(lat)) {
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+        }
+      });
+      this._gridRefLat = (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
+    }
+
     // (re)builds the per-category GridAggregateIndex for the grid width
     // resolved at the given zoom, only when that width changed. Grid width,
     // as flat reads it (maptheme.js:1892-1908, 7990-8008): gridwidthpx and
@@ -11792,6 +11798,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // style.aggregation bracket; none → no grid (exact positions).
     _ensureClusterIndices(zoom) {
       let radiusPx;
+      // a meters grid set later by setStyle (gridwidth / aggregation) never
+      // went through _prepare's scan — not the equator, the data's latitude
+      if (this._gridRefLat === undefined) this._scanGridRefLat();
       // GL-PORT COMPAT: a real-ixmaps-flat page's own gridwidth is
       // sometimes a fixed SCREEN-PIXEL size (e.g. style.gridwidth:"3px",
       // confirmed against a real ported page) rather than this engine's
