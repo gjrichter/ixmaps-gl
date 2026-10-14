@@ -4637,7 +4637,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // same 400ms as the facets sidebar's own onRedraw use), same
           // signal already used elsewhere in this file for "the visible
           // data just changed, recompute".
-          engineApi.onRedraw(() => { computeTotals(); renderRows(); });
+          // a panel replaced (rebuild, legend off) or a removed theme: the
+          // listener goes with it — else one per rebuild piles up, each
+          // recomputing a stale runtime on every redraw
+          const offRedraw = engineApi.onRedraw(() => {
+            if (rt._legendPanel !== panel || !runtimes.includes(rt)) { offRedraw(); return; }
+            computeTotals(); renderRows();
+          });
           }
 
           // rt._triggerRedraw: see its own doc comment on LayerRuntime
@@ -5776,7 +5782,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // called after every redraw (pan/zoom, or any of the setters above)
         // so a page can keep a facets sidebar in sync, mirroring the real
         // engine's htmlgui_onDrawTheme hook
-        onRedraw: (cb) => { redrawListeners.push(cb); },
+        // returns an unsubscribe (the legend drops its listener with its panel)
+        onRedraw: (cb) => {
+          redrawListeners.push(cb);
+          return () => { const i = redrawListeners.indexOf(cb); if (i >= 0) redrawListeners.splice(i, 1); };
+        },
         refresh: () => refresh(),
         // Adds ONE new layer/theme to an ALREADY-BUILT map — build()'s own
         // loop above only ever runs once, at construction, so a caller
@@ -6574,7 +6584,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         } finally { inDrawThemeHook = false; }
       }
       function notifyRedraw() {
-        redrawListeners.forEach(cb => { try { cb(); } catch (err) { console.error('[ixmaps-gl] onRedraw callback failed:', err); } });
+        redrawListeners.slice().forEach(cb => { try { cb(); } catch (err) { console.error('[ixmaps-gl] onRedraw callback failed:', err); } });
         callDrawThemeHooks();
       }
 
