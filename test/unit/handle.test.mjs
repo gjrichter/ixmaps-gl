@@ -129,3 +129,11 @@ test('setProjection: the projection-only swap, on the handle and the builder —
   const b = new G.MapBuilder('map-div', {});
   assert.equal(typeof b.setProjection, 'function', 'builder delegates setProjection');
 });
+
+test('builder options(): successive calls merge, as flat (setOptions) and the live map do', () => {
+  const b = new G.MapBuilder('map-div', {});
+  const held = b._engineOptions;
+  b.options({ worldcopies: false }).options({ splash: false }).options(null);
+  assert.deepEqual(JSON.parse(JSON.stringify(b._engineOptions)), { worldcopies: false, splash: false });
+  assert.equal(b._engineOptions, held, 'the same options object (themes and the projection maps are keyed on it)');
+});

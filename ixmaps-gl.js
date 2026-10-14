@@ -4953,7 +4953,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       }
       return this;
     }
-    options(o) { this._engineOptions = o; return this; }
+    // merged, as flat's options() sets each key on its own (ixmaps.setOptions)
+    // and the live map's options() below does — .options({a}).options({b})
+    // keeps a
+    options(o) { if (o && typeof o === 'object') Object.assign(this._engineOptions, o); return this; }
     local(...args) { this._locals.push(args); return this; }
     // flat's .require(url) (htmlgui.js ixmaps.require): a script the page
     // needs (a chart library, a user chart) — page code, like a <script>
