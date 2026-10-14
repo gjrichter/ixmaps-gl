@@ -505,3 +505,18 @@ test('aggregation: a meters cell under aggregationscale or a runtime gridwidth u
   near(radius(rt), ref, 'gridwidth set by setStyle');
 });
 
+// the zoom-keyed aggregate stats follow the cells: a new grid width at
+// the same zoom must not keep the old cells' breaks / sizeMax
+test('aggregation: a runtime gridwidth change recomputes the aggregate stats at the same zoom', () => {
+  const feats = Array.from({ length: 20 }, (_, i) => pt({ v: i + 1 }, 9 + i * 0.01, 45));
+  const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value: 'v' }, style: { type: 'CHART|BUBBLE|AGGREGATE|SUM|EQUIDISTANT', gridwidthpx: 5, colorscheme: ['3', '#f00', '#0f0', '#00f'] } }),
+    { type: 'FeatureCollection', features: feats }, {});
+  rt._ensureClusterIndices(10);
+  assert.equal(rt._ensureAggregateStats(10).sizeMax, 20, 'one record per cell');
+  rt.setStyle({ gridwidthpx: 500 });
+  rt._ensureClusterIndices(10);
+  const { groups, individual } = rt._computeAggregatedItems([-180, -85, 180, 85], 10);
+  const biggest = Math.max(...groups.map(g => g.properties.total), ...individual.map(d => d.properties.value));
+  assert.ok(biggest > 20);
+  assert.equal(rt._ensureAggregateStats(10).sizeMax, biggest, 'the new cells\' largest sum');
+});

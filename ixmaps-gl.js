@@ -11847,6 +11847,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         this._clusterUsesFixedZoom = false;
       }
       if (this._clusterIndices && this._clusterRadiusPx === radiusPx && this._clusterField === aggField) return;
+      // new cells (e.g. a runtime gridwidth): the zoom-keyed stats of the
+      // old ones (breaks, NORMALIZE, NOOUTLIER, sizeMax) no longer apply
+      this._aggregateStatsCache = null;
       this._clusterRadiusPx = radiusPx;
       this._clusterField = aggField;
       // after aggregation, on the cell sums: field100 of a value-based
