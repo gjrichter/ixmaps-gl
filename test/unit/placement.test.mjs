@@ -520,3 +520,19 @@ test('aggregation: a runtime gridwidth change recomputes the aggregate stats at 
   assert.ok(biggest > 20);
   assert.equal(rt._ensureAggregateStats(10).sizeMax, biggest, 'the new cells\' largest sum');
 });
+
+// RELOCATE with MAX / MIN: the cell IS the record holding the max (min) —
+// it is placed there (as its title), not at the mean of the records
+test('aggregation: RELOCATE|MAX / MIN places the item at the record holding the max / min', () => {
+  const feats = [pt({ v: 1 }, 9, 45), pt({ v: 5 }, 9.0001, 45), pt({ v: 2 }, 9.001, 45)];
+  const lngOf = type => {
+    const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value: 'v' }, style: { type, gridwidth: '200px' } }), { type: 'FeatureCollection', features: feats }, {});
+    rt._ensureClusterIndices(12);
+    const g = rt._computeAggregatedItems([-180, -90, 180, 90], 12).groups;
+    assert.equal(g.length, 1, type + ': one cell');
+    return g[0].geometry.coordinates[0];
+  };
+  near(lngOf('CHART|BUBBLE|AGGREGATE|MAX|RELOCATE'), 9.0001, 'MAX: at the v=5 record', 1e-7);
+  near(lngOf('CHART|BUBBLE|AGGREGATE|MIN|RELOCATE'), 9, 'MIN: at the v=1 record', 1e-7);
+  near(lngOf('CHART|BUBBLE|AGGREGATE|SUM|RELOCATE'), (9 + 9.0001 + 9.001) / 3, 'SUM: at the mean', 1e-6);
+});

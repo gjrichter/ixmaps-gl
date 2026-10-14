@@ -10765,13 +10765,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (cell.titleMax === undefined || (maxAgg ? m > cell.titleMax : m < cell.titleMax)) {
           cell.titleMax = m;
           cell.titleFrom = f;
+          cell.titleX = p.x; cell.titleY = p.y;
         }
       }
     }
     const out = [];
     for (const cell of cells.values()) {
-      const x = relocate ? cell.sumX / cell.n : cell.snapped.x;
-      const y = relocate ? cell.sumY / cell.n : cell.snapped.y;
+      // RELOCATE: at the records' mean position — with MAX / MIN at the
+      // record holding the max (min), the one the cell IS (and its title's);
+      // only the position follows it, never a value
+      const atTitle = relocate && cell.titleFrom;
+      const x = atTitle ? cell.titleX : relocate ? cell.sumX / cell.n : cell.snapped.x;
+      const y = atTitle ? cell.titleY : relocate ? cell.sumY / cell.n : cell.snapped.y;
       const ll = worldPixelToLngLat(x, y, zoom);
       const geometry = { type: 'Point', coordinates: [ll.lng, ll.lat] };
       const hasClass = cell.first.properties.classValue !== undefined;
