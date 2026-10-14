@@ -14777,7 +14777,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const marking = this._markedClasses.size && !this._onMarksChanged;
       const gray = marking && String(st.evidence || 'isolate') === 'isolate_gray';
       const sorted = [...this.flags].some(f => /\bSORT\b/.test(f));
-      const seqFlags = sequenceFlags(this.flags);
       const star = flatFlag(this.flags, 'STAR');
       const fillOpacity = styleNum(st.fillopacity) || 0.85;
       const borderRgb = st.linecolor && styleLineColor(st.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(st.linecolor)) : null;
@@ -14878,12 +14877,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (!layout.length) continue;
         // GLOW belongs to the first part (sorted) or to every part, and
         // hides with it when its class is not marked
-        // flat draws the glow with the part at order index 0 only (maptheme.js
-        // 22009: `!sortedIndex || i == nStartI`), a part of value 0 is skipped
-        // before: with SORT|UP that is the smallest part (see the trimmed
-        // counts above), with SORT|DOWN the biggest
-        const orderFirst = seqFlags.up ? Math.min(...counts) : seqFlags.down ? Math.max(...counts) : null;
-        const glowParts = new Set(sorted ? (orderFirst === null || orderFirst ? [layout[0].i] : []) : layout.map(p => p.i));
+        // every chart glows (deliberately NOT flat's rule, which gives the glow to
+        // the part at sorted order index 0 — a zero, skipped, whenever a category
+        // below the highest is missing — so only about a quarter of flat's charts
+        // glow): a sorted chart's glow belongs to its biggest part, an unsorted
+        // one glows with every part as in flat
+        const biggest = layout.reduce((m, p) => (p.v > m.v ? p : m), layout[0]);
+        const glowParts = new Set(sorted ? [biggest.i] : layout.map(p => p.i));
         // the chart's drawn extent (flat: map.Dom.getBox of its shape
         // group) — the parts' star cluster — for BOX / CIRCULARBOX sizing
         let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;

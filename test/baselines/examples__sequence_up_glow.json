@@ -17,7 +17,7 @@
     {
      "id": "ix-glow-seq-g0",
      "type": "IconLayer",
-     "count": 2,
+     "count": 4,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -30,14 +30,14 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "7e4d240918b2aea5",
-     "setDigest": "7e4d240918b2aea5",
+     "digest": "8bfa4f2de41a6eac",
+     "setDigest": "fc77fda7344b27f2",
      "columnDigests": {
-      "getColor": "1d5642e1d1c73016",
-      "getIcon": "5ea48bfd88185bf6",
-      "getPixelOffset": "8fd11f36b2ad43f8",
-      "getPosition": "f9a7515781e4bbe8",
-      "getSize": "0f2b6ade8d089090"
+      "getColor": "cf59682237868850",
+      "getIcon": "bd5fd5076be5b01f",
+      "getPixelOffset": "ae18e454d40be9e7",
+      "getPosition": "dcd8290bf5f8fbce",
+      "getSize": "c14dcc0784da4a13"
      },
      "stats": {
       "getColor": [
@@ -45,16 +45,16 @@
        255
       ],
       "getPixelOffset": [
-       34.723168,
-       46.867087
+       0,
+       34.723168
       ],
       "getPosition": [
        9,
-       9.25
+       9.75
       ],
       "getSize": [
        227.508303,
-       227.508303
+       269.74092
       ]
      },
      "sample": [
@@ -94,19 +94,69 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-217,83,79",
-        "url": "#886bd406:9830",
+        "id": "glow-92,184,92",
+        "url": "#1e53eb41:9310",
         "width": 64
        },
        [
-        46.867087,
-        25.741699
+        0,
+        0
+       ],
+       [
+        9.5,
+        45.5
+       ],
+       227.508303
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-92,184,92",
+        "url": "#1e53eb41:9310",
+        "width": 64
+       },
+       [
+        0.790037,
+        53.465267
        ],
        [
         9.25,
         45.5
        ],
-       227.508303
+       269.74092
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-66,139,202",
+        "url": "#c409fe9e:10002",
+        "width": 64
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       269.74092
       ]
      ]
     },
@@ -358,6 +408,7 @@
    "tooltips": {
     "seq": [
      "",
+     "",
      ""
     ]
    },
@@ -379,7 +430,7 @@
     {
      "id": "ix-glow-seq-g0",
      "type": "IconLayer",
-     "count": 1,
+     "count": 3,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -392,14 +443,14 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "604fd0c8a8c31bcb",
-     "setDigest": "604fd0c8a8c31bcb",
+     "digest": "5bc248d7ddf4d0a5",
+     "setDigest": "2b1ca954a604116c",
      "columnDigests": {
-      "getColor": "5ac25ca8e5b3f835",
-      "getIcon": "622cd64d1435f082",
-      "getPixelOffset": "9bd9a5a5649965ca",
-      "getPosition": "f3c49bb169628d0c",
-      "getSize": "1ec0a1e62ecae3e3"
+      "getColor": "4bdd37889df299db",
+      "getIcon": "368a014ffe39f90d",
+      "getPixelOffset": "6e417461de26707e",
+      "getPosition": "94ac4b4056b3c7f5",
+      "getSize": "e29e72d5eb11925b"
      },
      "stats": {
       "getColor": [
@@ -407,16 +458,16 @@
        255
       ],
       "getPixelOffset": [
-       59.048829,
-       59.048829
+       0,
+       0.995384
       ],
       "getPosition": [
        9.25,
-       9.25
+       9.75
       ],
       "getSize": [
        286.6425,
-       286.6425
+       339.852263
       ]
      },
      "sample": [
@@ -431,19 +482,69 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-217,83,79",
-        "url": "#886bd406:9830",
+        "id": "glow-92,184,92",
+        "url": "#1e53eb41:9310",
         "width": 64
        },
        [
-        59.048829,
-        32.432508
+        0,
+        0
+       ],
+       [
+        9.5,
+        45.5
+       ],
+       286.6425
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-92,184,92",
+        "url": "#1e53eb41:9310",
+        "width": 64
+       },
+       [
+        0.995384,
+        67.362015
        ],
        [
         9.25,
         45.5
        ],
-       286.6425
+       339.852263
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-66,139,202",
+        "url": "#c409fe9e:10002",
+        "width": 64
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       339.852263
       ]
      ]
     },
@@ -669,6 +770,8 @@
    ],
    "tooltips": {
     "seq": [
+     "",
+     "",
      ""
     ]
    },
@@ -690,7 +793,7 @@
     {
      "id": "ix-glow-seq-g0",
      "type": "IconLayer",
-     "count": 2,
+     "count": 4,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -703,14 +806,14 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "b2e0209b5ffac58b",
-     "setDigest": "b2e0209b5ffac58b",
+     "digest": "22e06ca043bb481f",
+     "setDigest": "bb692bc272d35e63",
      "columnDigests": {
-      "getColor": "1d5642e1d1c73016",
-      "getIcon": "5ea48bfd88185bf6",
-      "getPixelOffset": "07f07624a2a2628f",
-      "getPosition": "f9a7515781e4bbe8",
-      "getSize": "be9380ac87610e2f"
+      "getColor": "cf59682237868850",
+      "getIcon": "bd5fd5076be5b01f",
+      "getPixelOffset": "31dd41b0c9033697",
+      "getPosition": "dcd8290bf5f8fbce",
+      "getSize": "2e8699696fbf05e8"
      },
      "stats": {
       "getColor": [
@@ -718,16 +821,16 @@
        255
       ],
       "getPixelOffset": [
-       27.559797,
-       37.198432
+       0,
+       27.559797
       ],
       "getPosition": [
        9,
-       9.25
+       9.75
       ],
       "getSize": [
        180.57346,
-       180.57346
+       214.09351
       ]
      },
      "sample": [
@@ -767,19 +870,69 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-217,83,79",
-        "url": "#886bd406:9830",
+        "id": "glow-92,184,92",
+        "url": "#1e53eb41:9310",
         "width": 64
        },
        [
-        37.198432,
-        20.4312
+        0,
+        0
+       ],
+       [
+        9.5,
+        45.5
+       ],
+       180.57346
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-92,184,92",
+        "url": "#1e53eb41:9310",
+        "width": 64
+       },
+       [
+        0.627053,
+        42.43541
        ],
        [
         9.25,
         45.5
        ],
-       180.57346
+       214.09351
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-66,139,202",
+        "url": "#c409fe9e:10002",
+        "width": 64
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.75,
+        45.5
+       ],
+       214.09351
       ]
      ]
     },
@@ -1030,6 +1183,7 @@
    ],
    "tooltips": {
     "seq": [
+     "",
      "",
      ""
     ]
