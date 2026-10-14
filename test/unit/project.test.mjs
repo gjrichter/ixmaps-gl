@@ -153,3 +153,25 @@ test('end to end: neither a project byvalue string nor a meta colorscheme ever r
   resolveClassColors(spec.style.colorscheme, ['a', 'b'], null);
   assert.equal(win.PWNED, 0);
 });
+
+// a project's legend texts (title, snippet, description in style or meta)
+// are cleaned of anything that runs; without a DOM (here) they are escaped
+test('project legend texts: markup in title/snippet/description is cleaned (escaped without a DOM); plain text and the page\'s own meta stay', () => {
+  const report = { notes: [] };
+  const t = {
+    layer: 'L',
+    style: { type: 'CHOROPLETH', title: '<img src=x onerror="PWNED=6">', snippet: 'plain words' },
+    meta: { description: 'Source: <a href="https://x.org">X</a>', name: 'n' },
+  };
+  const before = JSON.stringify(t);
+  const out = withoutProjectCode(t, report);
+  assert.equal(out.style.title, '&lt;img src=x onerror=&quot;PWNED=6&quot;&gt;');
+  assert.equal(out.style.snippet, 'plain words');
+  assert.equal(out.meta.description, 'Source: &lt;a href=&quot;https://x.org&quot;&gt;X&lt;/a&gt;');
+  assert.equal(out.meta.name, 'n');
+  assert.equal(JSON.stringify(t), before, 'the project theme object is not mutated');
+  assert.equal(report.notes.length, 1);
+  assert.match(report.notes[0], /title, description HTML is cleaned/);
+  const plainTheme = { layer: 'L', meta: { title: 'Population 2021', snippet: 'per km²' } };
+  assert.equal(withoutProjectCode(plainTheme, { notes: [] }), plainTheme, 'text without markup: returned as is');
+});

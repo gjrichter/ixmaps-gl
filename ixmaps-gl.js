@@ -2910,17 +2910,62 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     ['style', 'dbtableQuery', 'data.query function'],
     ['style', 'colorscheme', 'colorscheme function', isColorSchemeCode],
   ].flatMap(k => (k[0] === 'style' ? [k, ['meta', ...k.slice(1)]] : [k]));
+  // A project's legend texts (title, snippet, description — in style or
+  // meta, normalizeTheme fills meta from either) are shown as HTML, as on
+  // flat: citation links in a description are real. A project's markup is
+  // cleaned to formatting tags and plain attributes so nothing in it runs;
+  // a page's own .meta()/.style() HTML stays as given.
+  const PROJECT_HTML_KEYS = ['title', 'snippet', 'description'];
+  const PROJECT_HTML_DROP = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'FRAME', 'FRAMESET', 'OBJECT', 'EMBED', 'SVG', 'MATH',
+    'TEMPLATE', 'NOSCRIPT', 'LINK', 'META', 'BASE', 'FORM', 'INPUT', 'BUTTON', 'SELECT', 'TEXTAREA', 'AUDIO', 'VIDEO', 'SOURCE']);
+  const PROJECT_HTML_TAGS = new Set(['A', 'B', 'I', 'EM', 'STRONG', 'U', 'S', 'SMALL', 'SUB', 'SUP', 'BR', 'P', 'DIV', 'SPAN',
+    'UL', 'OL', 'LI', 'HR', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'IMG', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TD', 'TH', 'CODE', 'BLOCKQUOTE']);
+  const PROJECT_HTML_ATTRS = new Set(['href', 'src', 'alt', 'title', 'target', 'rel', 'class', 'style', 'width', 'height', 'colspan', 'rowspan']);
+  function sanitizeProjectHtml(html) {
+    const s = String(html);
+    if (!/[<&]/.test(s)) return s;
+    // no DOM to parse with (Node): the text, escaped
+    if (typeof global.DOMParser !== 'function') return escapeHtml(s);
+    // an inert document: nothing in it runs or loads while it is cleaned
+    const body = new global.DOMParser().parseFromString('<!doctype html><body>' + s, 'text/html').body;
+    for (const el of Array.from(body.querySelectorAll('*'))) {
+      if (PROJECT_HTML_DROP.has(el.tagName.toUpperCase())) { el.remove(); continue; }
+      if (!PROJECT_HTML_TAGS.has(el.tagName.toUpperCase())) { el.replaceWith(...el.childNodes); continue; }
+      for (const a of Array.from(el.attributes)) {
+        const name = a.name.toLowerCase();
+        if (!PROJECT_HTML_ATTRS.has(name)
+          || ((name === 'href' || name === 'src') && /^(javascript|vbscript|data):/i.test(a.value.replace(/[\s\u0000-\u001f]/g, '')))) {
+          el.removeAttribute(a.name);
+        }
+      }
+    }
+    return body.innerHTML;
+  }
+
   function withoutProjectCode(t, report) {
     const found = PROJECT_CODE_KEYS.filter(([part, key, , isCode]) =>
       t[part] && t[part][key] != null && (!isCode || isCode(t[part][key])));
-    if (!found.length) return t;
+    const html = [];
+    for (const part of ['style', 'meta']) {
+      for (const key of PROJECT_HTML_KEYS) {
+        const v = t[part] && t[part][key];
+        if (typeof v !== 'string') continue;
+        const clean = sanitizeProjectHtml(v);
+        if (clean !== v) html.push([part, key, clean]);
+      }
+    }
+    if (!found.length && !html.length) return t;
     const copy = Object.assign({}, t);
-    found.forEach(([part, key]) => {
-      if (copy[part] === t[part]) copy[part] = Object.assign({}, t[part]);
-      delete copy[part][key];
-    });
-    const what = [...new Set(found.map(f => f[2]))].join(', ');
-    report.notes.push(`theme "${t.layer}": the project's ${what} is never run by ixmaps-gl`);
+    const own = part => { if (copy[part] === t[part]) copy[part] = Object.assign({}, t[part]); return copy[part]; };
+    found.forEach(([part, key]) => { delete own(part)[key]; });
+    html.forEach(([part, key, clean]) => { own(part)[key] = clean; });
+    if (found.length) {
+      const what = [...new Set(found.map(f => f[2]))].join(', ');
+      report.notes.push(`theme "${t.layer}": the project's ${what} is never run by ixmaps-gl`);
+    }
+    if (html.length) {
+      report.notes.push(`theme "${t.layer}": the project's ${[...new Set(html.map(h => h[1]))].join(', ')} HTML is cleaned to formatting markup by ixmaps-gl`);
+    }
     return copy;
   }
 
