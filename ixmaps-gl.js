@@ -5936,6 +5936,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // layers — leaving its groups mounted keeps the charts on the
           // map after map.remove()/replace() (censimenti's sidebar)
           if (rt._clearUserChartPane) rt._clearUserChartPane();
+          if (rt._chartPaneDefs) { rt._chartPaneDefs.remove(); rt._chartPaneDefs = null; }
           if (rt._chartHost && rt._chartHost.runtimes) rt._chartHost.runtimes.delete(rt);
         });
         const removed = removedRuntimes.length > 0;
@@ -13582,6 +13583,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // async image decode, the whole drawing is synchronous
       const items = [];
       const defsSeen = new Set();
+      // this drawing's defs, swapped in for the previous drawing's below —
+      // appended to the shared pane <defs> on every draw they grew without
+      // bound (and getElementById then found a stale earlier copy)
+      const paneDefs = document.createElementNS(SVG_NS, 'g');
       let html = '';
       for (const d of combined) {
         const value = valueOf(d);
@@ -13598,8 +13603,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         for (const id of chart.ids) {
           if (defsSeen.has(id)) continue;
           defsSeen.add(id);
-          const def = this._userChartGroup.ownerDocument.getElementById(id);
-          if (def) chartHost.defs.appendChild(def.cloneNode(true));
+          // drawn now (fresh), else a cached chart's: the previous drawing's copy
+          const def = this._userChartGroup.querySelector('#' + CSS.escape(id)) || this._userChartGroup.ownerDocument.getElementById(id);
+          if (def) paneDefs.appendChild(def.cloneNode(true));
         }
         items.push({ d, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit,
           r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2,
@@ -13616,6 +13622,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         this._chartItems = null;
         return (this._userChartLastLayers = []);
       }
+      chartHost.defs.appendChild(paneDefs);
+      if (this._chartPaneDefs) this._chartPaneDefs.remove();
+      this._chartPaneDefs = paneDefs;
       if (this._chartPaneGroup) this._chartPaneGroup.remove();
       this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
       chartHost.pane.appendChild(this._chartPaneGroup);
