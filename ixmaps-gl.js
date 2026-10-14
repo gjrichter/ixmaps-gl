@@ -1523,7 +1523,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         }
         obj = runDataProcess(obj, dataConfig);
       }
-      const rows = typeof obj.json === 'function' ? obj.json() : obj;
+      // a raw jsonDB object ({fields, records}) → rows, with or without
+      // process (and without needing data.js)
+      const isJsonDb = !Array.isArray(obj) && Array.isArray(obj.fields) && Array.isArray(obj.records);
+      const rows = typeof obj.json === 'function' ? obj.json() : isJsonDb ? dataTableRows(obj) : obj;
       return rowsResult(rows, binding);
     }
 

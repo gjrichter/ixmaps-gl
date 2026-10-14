@@ -37,3 +37,9 @@ test('topojson: quantized Point / MultiPoint positions are decoded with the tran
   assert.deepEqual(plain((await G.fetchLayerData({ obj: raw, type: 'topojson' }, {})).features[0].geometry.coordinates), [9.5, 46]);
 });
 
+test('.data({obj}): a raw jsonDB object ({fields, records}) loads without process', async () => {
+  const db = { table: { records: 2, fields: 3 }, fields: [{ id: 'lat' }, { id: 'lon' }, { id: 'v' }], records: [['45', '9', '1'], ['46', '10', '2']] };
+  const fc = await G.fetchLayerData({ obj: db, type: 'jsondb' }, { position: 'lat|lon' });
+  assert.deepEqual(plain(fc.features.map(f => [f.geometry.coordinates, f.properties.v])), [[[9, 45], '1'], [[10, 46], '2']]);
+});
+
