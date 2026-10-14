@@ -5938,6 +5938,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (rt._clearUserChartPane) rt._clearUserChartPane();
           if (rt._chartPaneDefs) { rt._chartPaneDefs.remove(); rt._chartPaneDefs = null; }
           if (rt._chartHost && rt._chartHost.runtimes) rt._chartHost.runtimes.delete(rt);
+          // and its hidden <name>_init group (userChartHost, on the body)
+          if (rt._userChartGroup) { rt._userChartGroup.remove(); rt._userChartGroup = null; }
         });
         const removed = removedRuntimes.length > 0;
         // stale-registry guard: _globalThemeRegistry is a bare name->
@@ -13633,6 +13635,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       for (let i = 0; i < items.length; i++) items[i].el = els[i];
       this._chartItems = items;
       chartHost.runtimes.add(this);
+      this._chartHost = chartHost; // removeRuntimes takes it out again
       chartHost.update();
       // picking: a transparent circle per chart — the VISIBLE chart is the
       // live SVG in the pane; this deck layer only serves hover, click and
