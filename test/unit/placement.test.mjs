@@ -475,3 +475,18 @@ test('aggregation: RELOCATE never changes a value — SUM, CATEGORICAL, MEAN, MA
   assert.equal(sum.counts[0], 26, 'counts holds the summed value, not the record count');
   assert.equal(sum.recordCounts[0], 4, 'the record count');
 });
+
+// a record without a point position (GeoJSON geometry null, RFC 7946) has
+// no chart, but stays in the data; it used to throw on every redraw
+test('chart: a record with geometry null is not drawn and does not break the theme — every chart type', () => {
+  const feats = [pt({ c: 'a', v: 2 }, 9, 45), { type: 'Feature', properties: { c: 'b', v: 3 }, geometry: null }];
+  for (const type of ['CHART|BUBBLE|CATEGORICAL', 'CHART|BUBBLE|CATEGORICAL|AGGREGATE', 'CHART|BUBBLE|QUANTILE',
+    'CHART|BUBBLE|AGGREGATE|SUM', 'CHART|SEQUENCE|AGGREGATE', 'CHART|PIE|AGGREGATE']) {
+    const value = /CATEGORICAL/.test(type) ? 'c' : /SEQUENCE|PIE/.test(type) ? 'v|v' : 'v';
+    const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: { value }, style: { type } }), { type: 'FeatureCollection', features: feats }, {});
+    if (rt.flags.has('AGGREGATE')) rt._ensureClusterIndices(10);
+    const r = rt._computeAggregatedItems([-180, -90, 180, 90], 10);
+    assert.equal(r.individual.length + r.groups.length, 1, `${type}: the located record only`);
+    assert.equal(rt.features.length, 2, `${type}: the unlocated record stays in the data`);
+  }
+});

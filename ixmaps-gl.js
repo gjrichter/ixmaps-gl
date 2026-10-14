@@ -11285,6 +11285,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     _resolveAggregateValue(props) { return resolveAggregateValue(this.binding, this.flags, props); }
 
     _buildAggregationIndex(sourceFeatures) {
+      // only records with a point position are drawn: a GeoJSON feature may
+      // have geometry null (RFC 7946 — open-data exports of unlocated
+      // records), or a shape chartAnchoredFeatures could not anchor; they
+      // stay in the data (counts, facets), as on flat, but have no chart
+      sourceFeatures = sourceFeatures.filter(f => {
+        const c = f.geometry && f.geometry.coordinates;
+        return !!c && typeof c[0] === 'number' && isFinite(c[0]) && isFinite(c[1]);
+      });
       // an AGGREGATE / CATEGORICAL pie: one bucket, each record carrying its
       // contribution to its item (flatPieRecord), added up per position or
       // grid cell by aggregateOnGrid (flatPieAccumulate)
@@ -11298,8 +11306,6 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // every record's parts inside flatPieRecord
         const pieWeightOf = fieldWeightOf(this.style, fields ? fields.length : 1, true);
         for (const f of sourceFeatures) {
-          const c = f.geometry && f.geometry.coordinates;
-          if (!c || typeof c[0] !== 'number' || !isFinite(c[0]) || !isFinite(c[1])) continue;
           const p = f.properties || {};
           let cat;
           if (this._pieCategorical) {
