@@ -776,10 +776,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return ring;
   }
 
+  // a quantized topology's point positions are absolute (not delta-encoded
+  // like arcs) quantized integers: x * scale + translate
+  function decodePoint(p, transform) {
+    if (!transform) return p;
+    return [p[0] * transform.scale[0] + transform.translate[0], p[1] * transform.scale[1] + transform.translate[1]];
+  }
+
   function topoGeometryToGeoJSON(geom, arcs, transform) {
     switch (geom.type) {
-      case 'Point': return { type: 'Point', coordinates: geom.coordinates };
-      case 'MultiPoint': return { type: 'MultiPoint', coordinates: geom.coordinates };
+      case 'Point': return { type: 'Point', coordinates: decodePoint(geom.coordinates, transform) };
+      case 'MultiPoint': return { type: 'MultiPoint', coordinates: geom.coordinates.map(p => decodePoint(p, transform)) };
       case 'LineString': return { type: 'LineString', coordinates: ringCoords(geom.arcs, arcs, transform) };
       case 'MultiLineString': return { type: 'MultiLineString', coordinates: geom.arcs.map(a => ringCoords(a, arcs, transform)) };
       case 'Polygon': return { type: 'Polygon', coordinates: geom.arcs.map(ring => ringCoords(ring, arcs, transform)) };

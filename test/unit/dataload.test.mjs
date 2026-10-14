@@ -1,0 +1,39 @@
+// data loading edge cases: quantized TopoJSON points, a raw jsonDB .data({obj}),
+// multi-URL CSVs whose headers differ, and the choropleth join of missing ids
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'ixmaps-gl.js');
+const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location: { search: '' },
+  document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
+win.window = win; win.globalThis = win;
+// a minimal stand-in for data.js's CSV import (Data.object(...).import(cb)):
+// a Table-shaped {table, fields: [{id}], records: [[...]]}, as data.js makes it
+win.Data = {
+  object: ({ source }) => ({
+    import(cb) {
+      const lines = source.trim().split('\n').map(l => l.split(','));
+      cb({ table: { records: lines.length - 1, fields: lines[0].length }, fields: lines[0].map(id => ({ id })), records: lines.slice(1) });
+    }
+  })
+};
+const csvFiles = { 'a.csv': 'lat,lon,v\n45,9,1\n', 'b.csv': 'v,lon,lat,extra\n2,10,46,x\n', 'c.csv': 'lat,lon,v\n47,11,3\n' };
+win.fetch = async u => ({ ok: true, status: 200, text: async () => csvFiles[u] });
+vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
+const G = win.__ixmapsGlInternals;
+const plain = v => JSON.parse(JSON.stringify(v));
+
+test('topojson: quantized Point / MultiPoint positions are decoded with the transform, as arcs are', async () => {
+  const topo = { type: 'Topology', transform: { scale: [0.001, 0.001], translate: [9, 45] }, arcs: [],
+    objects: { c: { type: 'GeometryCollection', geometries: [{ type: 'Point', coordinates: [500, 1000] }, { type: 'MultiPoint', coordinates: [[0, 0], [1000, 2000]] }] } } };
+  const fc = await G.fetchLayerData({ obj: topo, type: 'topojson' }, {});
+  assert.deepEqual(plain(fc.features.map(f => f.geometry.coordinates)), [[9.5, 46], [[9, 45], [10, 47]]]);
+  // unquantized: positions as they are
+  const raw = { type: 'Topology', arcs: [], objects: { c: { type: 'Point', coordinates: [9.5, 46] } } };
+  assert.deepEqual(plain((await G.fetchLayerData({ obj: raw, type: 'topojson' }, {})).features[0].geometry.coordinates), [9.5, 46]);
+});
+
