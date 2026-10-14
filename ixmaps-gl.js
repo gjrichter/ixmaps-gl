@@ -1995,6 +1995,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (isAggregatedCategoricalChoropleth(spec)) {
       const groups = new Map();
       for (const row of table.rows) {
+        if (row[lookupField] == null) continue;
         const key = flatLookupKey(row[lookupField], spec.style);
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(row);
@@ -2002,7 +2003,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return {
         type: 'FeatureCollection',
         features: geomRt.features.map(f => {
-          const rows = groups.get(String(f.properties[idField]));
+          const rows = f.properties[idField] == null ? null : groups.get(String(f.properties[idField]));
           const properties = rows ? Object.assign({}, rows[0]) : {};
           if (rows) Object.defineProperty(properties, AGGREGATED_ROWS, { value: rows });
           return { type: 'Feature', geometry: f.geometry, properties, _flatAreaKm2: flatShapeAreaKm2(geomRt, f) };
@@ -2011,7 +2012,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     }
     // the data side's key as flat makes it (lookupdigits/toupper/tonumber),
     // the geometry id as is — the same rule as joinChartPositions
-    const rowsByKey = new Map(table.rows.map(row => [flatLookupKey(row[lookupField], spec.style), row]));
+    // a missing key on either side joins nothing (not "undefined" to "undefined")
+    const rowsByKey = new Map(table.rows.filter(row => row[lookupField] != null).map(row => [flatLookupKey(row[lookupField], spec.style), row]));
     // Unmatched polygons (no CSV row for that id) keep their geometry with
     // empty properties — real-world data: not every comune necessarily has
     // a row in every demographic source. Renders as "no data" (see
@@ -2020,7 +2022,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const features = geomRt.features.map(f => ({
       type: 'Feature',
       geometry: f.geometry,
-      properties: rowsByKey.get(String(f.properties[idField])) || {},
+      properties: (f.properties[idField] != null && rowsByKey.get(String(f.properties[idField]))) || {},
       _flatAreaKm2: flatShapeAreaKm2(geomRt, f)
     }));
     return { type: 'FeatureCollection', features };

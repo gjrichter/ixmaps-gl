@@ -53,3 +53,15 @@ test('.data({urls}) csv through data.js: each file\'s columns are aligned by nam
   assert.deepEqual(plain(fc.features.map(f => f.geometry.coordinates)), [[9, 45], [10, 46], [11, 47]]);
 });
 
+test('choropleth: a polygon without id and a row without lookup value do not join ("undefined" ≠ a key)', () => {
+  const sq = [[[0, 0], [1, 0], [1, 1], [0, 0]]];
+  const rts = [{ name: 'L', flags: new Set(['FEATURE']), binding: { id: 'id' }, features: [
+    { type: 'Feature', properties: { id: 'A' }, geometry: { type: 'Polygon', coordinates: sq } },
+    { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: sq } },
+    { type: 'Feature', properties: { id: null }, geometry: { type: 'Polygon', coordinates: sq } }] }];
+  const table = { rows: [{ k: 'A', v: 1 }, { v: 99 }, { k: null, v: 98 }] };
+  for (const type of [['CHOROPLETH'], ['CHOROPLETH', 'CATEGORICAL', 'AGGREGATE']]) {
+    const fc = G.joinChoroplethFeatures({ name: 'L', flags: new Set(type), binding: { lookup: 'k', value: 'v' }, style: {} }, table, rts);
+    assert.deepEqual(plain(fc.features.map(f => f.properties.v ?? null)), [1, null, null], type.join('|'));
+  }
+});
