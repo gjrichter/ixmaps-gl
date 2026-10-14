@@ -13969,7 +13969,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const groups = doRelocate ? this._groupCoLocated(clusterFeatures, effectiveZoom) : clusterFeatures.map(f => {
         return {
           geometry: f.geometry,
-          properties: { counts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value,
+          // counts is the summed bound VALUE and recordCounts the record
+          // count, as groupCoLocated builds them (RELOCATE) — RELOCATE
+          // moves the item, it never changes a value
+          properties: { counts: this._oneHot(f.properties.cat, f.properties.value),
+            recordCounts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value,
             ...(f.properties.classValue !== undefined ? { classTotal: f.properties.classValue } : {}),
             ...(f.properties.titleRaw ? { titleRaw: f.properties.titleRaw } : {}) }
         };

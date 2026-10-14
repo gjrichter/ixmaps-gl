@@ -456,3 +456,22 @@ test('choropleth: the lookup key is padded to lookupdigits, plain and AGGREGATE 
     { rows: [{ k: 'ab', v: 1 }] }, [featureRt('L', 'id', [poly({ id: 'AB' }, square)])]).features[0].properties.v, 1, 'lookuptoupper');
 });
 
+// RELOCATE only moves an aggregated item — every value (counts, record
+// counts, total) is the same with and without it, for every combiner
+test('aggregation: RELOCATE never changes a value — SUM, CATEGORICAL, MEAN, MAX, MIN, COUNT', () => {
+  const feats = [pt({ c: 'a', v: 5 }, 9, 45), pt({ c: 'a', v: 7 }, 9.0001, 45), pt({ c: 'b', v: 3 }, 9.0002, 45.0001), pt({ c: 'a', v: 11 }, 9.0003, 45.0001)];
+  const values = type => {
+    const binding = type.includes('CATEGORICAL') ? { value: 'c', size: 'v' } : { value: 'v' };
+    const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding, style: { type, gridwidth: '60px' } }), { type: 'FeatureCollection', features: feats }, {});
+    rt._ensureClusterIndices(12);
+    const r = rt._computeAggregatedItems([-180, -90, 180, 90], 12);
+    return plain({ individual: r.individual.length, groups: r.groups.map(g => ({ counts: g.properties.counts, recordCounts: g.properties.recordCounts, total: g.properties.total })) });
+  };
+  for (const t of ['SUM', 'CATEGORICAL|SUM', 'MEAN', 'MAX', 'MIN', 'COUNT']) {
+    const type = 'CHART|BUBBLE|AGGREGATE|' + t;
+    assert.deepEqual(values(type), values(type + '|RELOCATE'), t);
+  }
+  const sum = values('CHART|BUBBLE|AGGREGATE|SUM').groups[0];
+  assert.equal(sum.counts[0], 26, 'counts holds the summed value, not the record count');
+  assert.equal(sum.recordCounts[0], 4, 'the record count');
+});
