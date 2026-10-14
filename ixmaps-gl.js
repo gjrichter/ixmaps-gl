@@ -2499,6 +2499,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // makes while the map is still building wait for it
   let _resolveMapReady;
   const _mapReady = new Promise(r => { _resolveMapReady = r; });
+  // a map declared with an options name (Map(id, {name})) → the deferred of
+  // ITS build: ixmaps.map("name") calls made while it is still building wait
+  // for that map, not whichever map is built first
+  const _namedMapReady = Object.create(null);
+  function namedMapReady(name) {
+    if (!_namedMapReady[name]) {
+      let resolve;
+      const promise = new Promise(r => { resolve = r; });
+      _namedMapReady[name] = { promise, resolve };
+    }
+    return _namedMapReady[name];
+  }
 
   // flat's ixmaps.require(url) fetches the script and evals it
   // (htmlgui.js 3911-3934); here each one runs globally, in order, before
@@ -6773,6 +6785,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         };
       }
       _resolveMapReady(engineApi);
+      if (this.mapOptions && this.mapOptions.name) namedMapReady(this.mapOptions.name).resolve(engineApi);
       resolveBuilt();
       namedLoads.forEach(rt => { listenNamedData(rt); if (!rt._deferredLoad) loadNamedTheme(rt, false); });
       return engineApi;
@@ -6804,6 +6817,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // class used throughout this file — a real bug caught during testing
   // (every `new Map()` below silently resolved to *this* function instead)
   function createMap(containerId, options, mapFn) {
+    if (options && options.name) namedMapReady(options.name);
     const builder = new MapBuilder(containerId, options);
     if (mapFn) mapFn(builder);
     // If build() rejects (bad data URL, misconfigured CHOROPLETH join,
@@ -17156,12 +17170,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   const _mapHandles = Object.create(null);
   function makeMapHandle(szMap) {
     const h = {};
-    const api = () => (szMap && _mapApis[szMap]) || _lastMapApi;
+    // a name a Map() declared waits for that map; any other name (or none)
+    // is the last built map, as before
+    const declared = () => szMap && _namedMapReady[szMap];
+    const api = () => (szMap && _mapApis[szMap]) || (declared() ? null : _lastMapApi);
     for (const m of MAP_HANDLE_METHODS) {
       h[m] = (...args) => {
         const a = api();
         if (a) { const r = a[m](...args); return r === a ? h : r; }
-        _mapReady.then(ready => ready[m](...args));
+        (declared() ? declared().promise : _mapReady).then(ready => ready[m](...args))
+          .catch(err => console.error(`[ixmaps-gl] map(${szMap ? '"' + szMap + '"' : ''}).${m}:`, err));
         return h;
       };
     }
