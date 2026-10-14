@@ -3569,7 +3569,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         map.setPaintProperty(id, 'background-opacity', opacity);
       } catch (e) { console.warn('[ixmaps-gl] the {type:"Sphere"} ocean backdrop could not be set:', e); }
     };
-    if (map.isStyleLoaded()) paint(); else map.once('style.load', paint);
+    // isStyleLoaded() is also false AFTER the style loaded while tiles or
+    // images load (every pan/zoom) — 'style.load' never fires again then, so
+    // a Sphere theme defined at such a moment would never get its color
+    if (map.isStyleLoaded() || (map.style && map.style._loaded)) paint(); else map.once('style.load', paint);
   }
 
   function buildBlankBackgroundStyle(color) {
@@ -17812,7 +17815,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,
-    dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn,
+    dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn, applySphereBackdrop,
   };
   global.__setFilter = __setFilter;
   global.__removeFacets = __removeFacets;
