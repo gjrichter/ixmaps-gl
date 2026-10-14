@@ -221,11 +221,6 @@
   // PieSliceLayer (see makePieSliceLayer) and BarShapeLayer
   // (makeBarShapeLayer) are derived from ScatterplotLayer once deck.gl is there
   let PieSliceLayer, BarShapeLayer, FlowPathLayer;
-  // the DASH flow animation's repaint loop (see refreshLayers): MapLibre
-  // renders on demand only, so the shader's wall-clock dash (see
-  // makeFlowPathLayer) needs a continuous frame request while any flow
-  // layer is on screen
-  let _flowRepaintRAF = null;
 
   // CHART|PIE / DONUT slices (_buildPieLayers): one instance per slice — a
   // ScatterplotLayer circle (billboarded, pixel radius, pixel offset, the
@@ -5011,6 +5006,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // the Map(id, opts, map => map.options(...)) callback form worked).
       // One microtask lets the caller's whole synchronous chain land first.
       await null;
+      // the DASH flow animation's repaint loop (see refreshLayers): MapLibre
+      // renders on demand only, so the shader's wall-clock dash (see
+      // makeFlowPathLayer) needs a continuous frame request while any flow
+      // layer is on screen — one handle per map, or another map's refresh
+      // cancels (or blocks) this map's loop
+      let _flowRepaintRAF = null;
       let el = document.getElementById(this.containerId);
       if (!el) {
         // flat's own fallback for a missing target div (htmlgui_flat.js
