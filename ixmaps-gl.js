@@ -1560,8 +1560,21 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // parser (PapaParse), so the Table arrives via the callback
         const tables = await Promise.all(texts.map(dataJsCsvTable));
         let table = tables[0];
-        for (const t of tables.slice(1)) table.records = table.records.concat(t.records);
-        if (table.table) table.table.records = table.records.length;
+        // records are positional: align each later file's columns to the
+        // first file's by name (a column only a later file has is added),
+        // as the no-data.js path below gets from each file's own header
+        for (const t of tables.slice(1)) {
+          const ids = table.fields.map(f => f.id);
+          const tIds = t.fields.map(f => f.id);
+          if (tIds.length === ids.length && tIds.every((id, c) => id === ids[c])) {
+            table.records = table.records.concat(t.records);
+            continue;
+          }
+          t.fields.forEach(f => { if (!ids.includes(f.id)) { ids.push(f.id); table.fields.push(f); } });
+          const src = ids.map(id => tIds.indexOf(id));
+          table.records = table.records.concat(t.records.map(rec => src.map(c => (c < 0 ? undefined : rec[c]))));
+        }
+        if (table.table) { table.table.records = table.records.length; table.table.fields = table.fields.length; }
         if (scriptProcess) table = scriptProcess(table);
         else if (dataConfig.process) table = runDataProcess(table, dataConfig);
         rows = dataTableRows(table);

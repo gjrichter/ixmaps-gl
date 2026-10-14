@@ -43,3 +43,13 @@ test('.data({obj}): a raw jsonDB object ({fields, records}) loads without proces
   assert.deepEqual(plain(fc.features.map(f => [f.geometry.coordinates, f.properties.v])), [[[9, 45], '1'], [[10, 46], '2']]);
 });
 
+test('.data({urls}) csv through data.js: each file\'s columns are aligned by name, not by position', async () => {
+  const fc = await G.fetchLayerData({ urls: ['a.csv', 'b.csv', 'c.csv'], type: 'csv' }, { position: 'lat|lon' });
+  assert.deepEqual(plain(fc.features.map(f => f.properties)), [
+    { lat: '45', lon: '9', v: '1' },
+    { lat: '46', lon: '10', v: '2', extra: 'x' },
+    { lat: '47', lon: '11', v: '3' },
+  ]);
+  assert.deepEqual(plain(fc.features.map(f => f.geometry.coordinates)), [[9, 45], [10, 46], [11, 47]]);
+});
+
