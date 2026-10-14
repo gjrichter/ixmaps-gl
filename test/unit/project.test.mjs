@@ -112,3 +112,44 @@ test('end to end: a stripped project colorscheme never runs; the query is gone f
   resolveClassColors(spec.style.colorscheme, ['a', 'b'], null);
   assert.equal(win.PWNED, 0);
 });
+
+test('a project ["byvalue", "<fn>"] colorscheme and every code key under meta are stripped too', () => {
+  const report = { notes: [] };
+  const t = {
+    layer: 'L',
+    style: { type: 'CHART|BUBBLE|CATEGORICAL', colorscheme: ['byvalue', 'function(v){ PWNED = 3; return "#f00" }'] },
+    meta: { colorscheme: '(function(o){ PWNED = 4 })', dbtableProcess: 'function(d){ PWNED = 5 }', dbtableQuery: 'function(){}', title: 'T' },
+  };
+  const out = withoutProjectCode(t, report);
+  assert.deepEqual(plain(out.style), { type: 'CHART|BUBBLE|CATEGORICAL' });
+  assert.deepEqual(plain(out.meta), { title: 'T' });
+  assert.equal(report.notes.length, 1);
+});
+
+test('a byvalue FUNCTION and a plain color array are not code a project names as a string — they stay', () => {
+  const report = { notes: [] };
+  const fn = v => '#f00';
+  const t = { layer: 'L', style: { colorscheme: ['byvalue', fn] }, meta: { colorscheme: ['#ff0000', '#00ff00'] } };
+  assert.equal(withoutProjectCode(t, report), t);
+  assert.equal(report.notes.length, 0);
+});
+
+test('end to end: neither a project byvalue string nor a meta colorscheme ever runs', () => {
+  const raw = {
+    layer: 'L',
+    style: { type: 'CHART|BUBBLE|CATEGORICAL', colorscheme: ['byvalue', 'function(v){ PWNED = 3; return "#f00" }'] },
+    meta: { colorscheme: '(function(o){ PWNED = 4 })' },
+  };
+  // control: unstripped, both forms are evaluated (meta wins over style)
+  win.PWNED = 0;
+  resolveClassColors(normalizeTheme(toDef(raw)).style.colorscheme, ['a', 'b'], null);
+  assert.equal(win.PWNED, 4);
+  win.PWNED = 0;
+  resolveClassColors(raw.style.colorscheme, ['a', 'b'], null);
+  assert.equal(win.PWNED, 3);
+  win.PWNED = 0;
+  const spec = normalizeTheme(toDef(withoutProjectCode(raw, { notes: [] })));
+  assert.equal(spec.style.colorscheme, undefined);
+  resolveClassColors(spec.style.colorscheme, ['a', 'b'], null);
+  assert.equal(win.PWNED, 0);
+});

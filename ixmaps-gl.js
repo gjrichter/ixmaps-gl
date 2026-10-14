@@ -2895,16 +2895,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // that kind: the data processing function (data.process /
   // style.dbtableProcess), the broker query (data.query /
   // style.dbtableQuery — without it a data.name still reaches a
-  // provider the PAGE defined as ixmaps[name]) and a colorscheme given
-  // as a string, which resolveColorScheme evaluates as a function
-  // (an array colorscheme is data and stays).
+  // provider the PAGE defined as ixmaps[name]) and a colorscheme
+  // resolveColorScheme would evaluate: a string, or ["byvalue", "<fn>"]
+  // (any other array colorscheme is data and stays). normalizeTheme
+  // merges meta INTO style, so every style key is checked under meta too.
+  const isColorSchemeCode = v => typeof v === 'string'
+    || (Array.isArray(v) && v[0] === 'byvalue' && typeof v[1] === 'string');
   const PROJECT_CODE_KEYS = [
     ['data', 'process', 'data.process function'],
     ['style', 'dbtableProcess', 'data.process function'],
     ['data', 'query', 'data.query function'],
     ['style', 'dbtableQuery', 'data.query function'],
-    ['style', 'colorscheme', 'colorscheme function', v => typeof v === 'string'],
-  ];
+    ['style', 'colorscheme', 'colorscheme function', isColorSchemeCode],
+  ].flatMap(k => (k[0] === 'style' ? [k, ['meta', ...k.slice(1)]] : [k]));
   function withoutProjectCode(t, report) {
     const found = PROJECT_CODE_KEYS.filter(([part, key, , isCode]) =>
       t[part] && t[part][key] != null && (!isCode || isCode(t[part][key])));
