@@ -191,3 +191,14 @@ test('orthographic framing: the view zoom 2.5 of a 768 px map shows flat\'s disc
   const R3 = 512 * Math.pow(2, z3) / (2 * Math.PI * Math.cos(70 * Math.PI / 180));
   near(R3 / Math.sqrt(1 + 2 * R3 / (1.5 * 768)), 677.2, 1, 'doubles per view zoom level');
 });
+
+// the dash phase of an animated flow: flat's random per-arc phase, but the
+// layers are rebuilt on every pan/zoom — a new random one each time made
+// the dashes jump; it is fixed per arc
+test('vector flow dash phase: in [0, 1), the same for the same arc on every rebuild, different per arc', () => {
+  const { flowDashPhase } = win.__ixmapsGlInternals;
+  const p = flowDashPhase(A, B);
+  assert.ok(p >= 0 && p < 1);
+  assert.equal(flowDashPhase([...A], [...B]), p, 'same arc');
+  assert.notEqual(flowDashPhase(A, C), p, 'another arc');
+});

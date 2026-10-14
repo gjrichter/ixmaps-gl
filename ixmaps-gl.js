@@ -9424,6 +9424,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0) / 4294967296;
   }
+  // a flow's dash phase in [0, 1): flat's random one, the same for the
+  // same arc on every rebuild
+  function flowDashPhase(p1, p2) {
+    return hashUnit('dash:' + p1[0] + ',' + p1[1] + '&' + p2[0] + ',' + p2[1]);
+  }
 
   // points of a cubic Bézier, n segments (n + 1 points)
   function cubicBezierPoints(p0, c1, c2, p3, n) {
@@ -16500,8 +16505,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (run.length > 1) {
             // the flow triple: [dash, gap] in px (the shader's path
             // distance unit) + flat's random per-arc dashoffset phase
-            // (maptheme.js 18249)
-            const dash = dashArr ? [dashArr[0], dashArr[1], Math.random()] : [0, 0, 0];
+            // (maptheme.js 18249), fixed per arc: the layers are rebuilt on
+            // every pan/zoom, a new random phase each time made dashes jump
+            const dash = dashArr ? [dashArr[0], dashArr[1], flowDashPhase(p1, p2)] : [0, 0, 0];
             if (globeCenter && !dashArr) {
               // on the globe deck.gl draws only the first three quarters of a path that has a
               // color per vertex (also an equal one): one color per path, a gradient as one
@@ -17860,7 +17866,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
