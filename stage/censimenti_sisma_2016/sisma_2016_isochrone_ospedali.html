@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sisma 2016 - Isocrone degli ospedali nel cratere</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
+    #map_div { width: 100%; height: 100%; }
+    #iso-panel {
+      position: absolute; left: 50px; top: 12px; z-index: 1000; width: 300px;
+      background: rgba(255,255,255,0.96); border-radius: 8px; padding: 10px 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.25); font-size: 13px; color: #222;
+    }
+    #iso-panel h3 { margin: 0 0 6px; font-size: 14px; }
+    #iso-panel select { width: 100%; font-size: 13px; padding: 4px; margin: 4px 0 8px; }
+    #iso-panel .scope label { display: block; margin: 2px 0; cursor: pointer; }
+    #iso-panel th { font-weight: 600; font-size: 11px; color: #555; text-align: right; padding: 2px 4px; }
+    #iso-panel table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    #iso-panel td { padding: 2px 4px; }
+    #iso-panel td.n { text-align: right; font-variant-numeric: tabular-nums; }
+    #iso-panel .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -3px; margin-right: 5px; opacity: .8; }
+    #iso-panel .note { margin-top: 8px; font-size: 11px; color: #666; line-height: 1.35; }
+    #app-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #fafafa; z-index: 2000; font-size: 14px; color: #555; }
+  </style>
+</head>
+<body>
+  <div id="map_div"></div>
+  <div id="app-loading">caricamento dati ...</div>
+  <div id="iso-panel" style="display:none">
+    <h3>Tempo di guida dagli ospedali del cratere</h3>
+    <div class="scope">
+      <label><input type="radio" name="scope" value="in" checked> Solo i 13 ospedali dentro il cratere</label>
+      <label><input type="radio" name="scope" value="all"> + 17 ospedali vicini fuori cratere</label>
+    </div>
+    <label>Popolazione 2023:</label>
+    <div class="scope" id="age">
+      <label><input type="radio" name="age" value="pop2023" checked> Tutti</label>
+      <label><input type="radio" name="age" value="pop_0_4"> 0-4 anni</label>
+      <label><input type="radio" name="age" value="pop_70p"> 70 anni e oltre</label>
+      <label><input type="radio" name="age" value="share_0_4"> 0-4 anni, quota sulla popolazione</label>
+      <label><input type="radio" name="age" value="share_70p"> 70 anni e oltre, quota sulla popolazione</label>
+    </div>
+    <label for="hosp">Mostra:</label>
+    <select id="hosp"></select>
+    <table id="stats"></table>
+    <div class="note" id="method"></div>
+  </div>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="../../ixmaps-gl.js"></script>
+  <!-- generated isochrone data (global SISMA_ISO); a plain script works from file:// as well -->
+  <script type="text/javascript" src="./data/sisma_isochrones_data.js"></script>
+  <!-- 2023 resident population per comune (global SISMA_POP2023) -->
+  <script type="text/javascript" src="./data/sisma_popolazione_2023.js"></script>
+
+  <script type="text/javascript" charset="utf-8">
+    // boundaries: github.com/gjrichter/ixmaps-data (by-project/sisma-2016-cratere), pinned commit
+    var RAW = "https://raw.githubusercontent.com/gjrichter/ixmaps-data/9f794a1/by-project/sisma-2016-cratere/";
+
+    var BANDS = [   // drawn from the largest to the smallest area
+      { min: 60, color: "#fc8d59", label: "entro 60 minuti" },
+      { min: 45, color: "#fee08b", label: "entro 45 minuti" },
+      { min: 30, color: "#91cf60", label: "entro 30 minuti" },
+      { min: 15, color: "#1a9850", label: "entro 15 minuti" }
+    ];
+    var ISO = window.SISMA_ISO;
+    ISO.hospitalsIn.features.concat(ISO.hospitalsOut.features).forEach(function (f) { f.properties.cat = "Ospedale"; });
+    var SCOPE = "in";          // "in" = hospitals inside the crater, "all" = + neighbouring hospitals outside
+    var CURRENT = "all";       // "all" = merged (time to the nearest hospital) or one hospital's osm_id
+
+    function bandSource(osmId, min) {
+      var src = (osmId === "all") ? ISO.union[SCOPE] : ISO.byHospital[osmId];
+      return src[String(min)];
+    }
+
+    function themeBand(b, osmId) {
+      return ixmaps.layer("isocrona_" + b.min, layer => layer
+        .data({ obj: bandSource(osmId, b.min), type: "geojson" })
+        .type("FEATURE|SILENT|NOLEGEND")
+        .style({
+          colorscheme: [b.color], fillopacity: "0.5",
+          linecolor: "#ffffff", linewidth: "0.5",
+          name: "isocrona_" + b.min
+        })
+        .meta({ name: "isocrona_" + b.min })
+      );
+    }
+
+    function showOutside(on) {
+      try { ixmaps.map().setThemeVisible("ospedali_fuori_cratere", !!on); } catch (e) {}
+    }
+
+    // replace keeps the theme's place in the stack, so the bands stay under the boundary lines and the hospitals
+    function drawBands() {
+      BANDS.forEach(function (b) { ixmaps.map().replace("isocrona_" + b.min, themeBand(b, CURRENT), "silent"); });
+    }
+
+    function setHospital(osmId) {
+      CURRENT = osmId;
+      drawBands();
+      if (osmId !== "all") {
+        var all = ISO.hospitalsIn.features.concat(ISO.hospitalsOut.features);
+        var h = all.filter(function (f) { return f.properties.osm_id === osmId; })[0];
+        ixmaps.map().view({ center: { lat: h.geometry.coordinates[1], lng: h.geometry.coordinates[0] }, zoom: 9 });
+      } else {
+        ixmaps.map().view({ center: { lat: "42.8", lng: "13.2" }, zoom: "8" });
+      }
+    }
+
+    function pct(x) { return Math.round(x * 100) + " %"; }
+    function nf(x) { return x.toLocaleString("it-IT"); }
+
+    function themeRegioni() { return ixmaps.layer("regioni_sisma", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016_regions.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#555555", linewidth: "1.5", name: "regioni_sisma" })
+    ); }
+    function themeComuni() { return ixmaps.layer("cratere_sisma_2016", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "0.6", name: "cratere_sisma_2016" })
+    ); }
+    function themeOutline() { return ixmaps.layer("cratere_sisma_2016_outline", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016_outline.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
+    ); }
+    function themeSalaria() { return ixmaps.layer("salaria_ss4", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016_salaria.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#1f6fe5", linewidth: "3", name: "salaria_ss4" })
+    ); }
+    // age classes of the 2023 census (P14 = under 5, P28 + P29 = 70 and over); each one is scaled to its own
+    // maximum, so the biggest circle keeps its size (normalsizevalue = class max x 190000 / 51630, the total's)
+    var nf0 = "Residenti";
+    var AGE = {
+      pop2023: { field: "pop2023", color: "#222222", normal: "190000", title: "Popolazione residente 2023", label: "Popolazione 2023" },
+      pop_0_4: { field: "pop_0_4", color: "#0097c7", normal: "5877",   title: "Residenti 0-4 anni, 2023", label: "Residenti 0-4 anni" },
+      pop_70p: { field: "pop_70p", color: "#6a1b9a", normal: "38046",  title: "Residenti 70 anni e oltre, 2023", label: "Residenti 70+ anni" },
+      // shares (% of the comune's residents, circle area proportional to the share; max 4.9 % / 45.1 %)
+      share_0_4: { field: "share_0_4", color: "#0097c7", normal: "18",  scale: "0.3", decimals: "1", unit: "%", txt: "share_0_4_txt", count: "pop_0_4", title: "Quota residenti 0-4 anni, 2023", label: "Quota 0-4 anni" },
+      share_70p: { field: "share_70p", color: "#6a1b9a", normal: "166", scale: "0.3", unit: "%", txt: "share_70p_txt", count: "pop_70p", title: "Quota residenti 70 anni e oltre, 2023", label: "Quota 70+ anni" }
+    };
+    function themePopolazione(cls) { cls = cls || AGE.pop2023; return ixmaps.layer("popolazione_2023", layer => layer
+      .data({ obj: window.SISMA_POP2023, type: "geojson" })
+      .binding({ geo: "geometry", value: "cat", title: "name", size: cls.field })
+      .type("CHART|BUBBLE|SIZE|CATEGORICAL|VALUES|SIMPLELEGEND")
+      .style({
+        colorscheme: ["none"], sizefield: cls.field, normalsizevalue: cls.normal, sizepow: "2", scale: cls.scale || "0.8",
+        values: ["Popolazione 2023"], label: [cls.title],
+        linecolor: cls.color, linewidth: "1.2", valuedecimals: cls.decimals || "0", units: cls.unit || "", valuecolor: cls.color, name: "popolazione_2023"
+      })
+      .meta({
+        name: "popolazione_2023",
+        title: cls.title,
+        snippet: "138 comuni (ISTAT, censimento permanente" + (cls === AGE.pop2023 ? ")" : cls.txt ? "; area proporzionale alla quota)" : "; dimensione relativa alla classe)"),
+        tooltip: "<b>{{name}}</b> ({{prov}})<br>" + cls.label + ": <b>{{" + (cls.txt || cls.field) + "}}</b>"
+          + (cls.count ? "<br>" + nf0 + ": {{" + cls.count + "}}" : "")
+      })
+    ); }
+
+    function themeOspedali() { return ixmaps.layer("ospedali_cratere", layer => layer
+      .data({ obj: ISO.hospitalsIn, type: "geojson" })
+      .binding({ geo: "geometry", value: "cat", title: "name", size: "size_beds" })
+      .type("CHART|SYMBOL|SIZE|CATEGORICAL")
+      .style({
+        colorscheme: ["#d7191c"], symbols: ["data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2230%22 fill=%22%23d7191c%22 stroke=%22%23fff%22 stroke-width=%223%22/%3E%3Cpath fill=%22%23fff%22 d=%22M27 15h10v12h12v10H37v12H27V37H15V27h12z%22/%3E%3C/svg%3E"],
+        sizefield: "size_beds", normalsizevalue: "12000", sizepow: "3", scale: "0.7", minvaluesize: "0", valuedecimals: "0",
+        values: ["Ospedale"], label: ["Ospedale dentro il cratere"], fillopacity: "1",
+        showdata: true, name: "ospedali_cratere"
+      })
+      .meta({
+        name: "ospedali_cratere",
+        title: "Ospedali nel cratere",
+        snippet: "13 ospedali (OpenStreetMap)",
+        tooltip: "<b>{{name}}</b><br>{{tipo}} &middot; {{comune}} ({{prov}})<br>Posti letto (2019): <b>{{posti_letto_txt}}</b>"
+      })
+    ); }
+
+    function themeOspedaliFuori() { return ixmaps.layer("ospedali_fuori_cratere", layer => layer
+      .data({ obj: ISO.hospitalsOut, type: "geojson" })
+      .binding({ geo: "geometry", value: "cat", title: "name", size: "size_beds" })
+      .type("CHART|SYMBOL|SIZE|CATEGORICAL")
+      .style({
+        colorscheme: ["#6b7a8f"], symbols: ["data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2230%22 fill=%22%236b7a8f%22 stroke=%22%23fff%22 stroke-width=%223%22/%3E%3Cpath fill=%22%23fff%22 d=%22M27 15h10v12h12v10H37v12H27V37H15V27h12z%22/%3E%3C/svg%3E"],
+        sizefield: "size_beds", normalsizevalue: "12000", sizepow: "3", scale: "0.7", minvaluesize: "0", valuedecimals: "0",
+        values: ["Ospedale"], label: ["Ospedale fuori cratere"],
+        fillopacity: "1",
+        showdata: true, name: "ospedali_fuori_cratere"
+      })
+      .meta({
+        name: "ospedali_fuori_cratere",
+        title: "Ospedali vicini fuori cratere",
+        snippet: "17 ospedali entro ~25 km (OpenStreetMap)",
+        tooltip: "<b>{{name}}</b><br>{{tipo}} &middot; {{comune}} (fuori cratere)<br>Posti letto (2019): <b>{{posti_letto_txt}}</b>"
+      })
+    ); }
+
+
+    function start() {
+      var sel = document.getElementById("hosp");
+      var o = document.createElement("option"); o.value = "all"; o.textContent = "Tutti gli ospedali (tempo al più vicino)"; sel.appendChild(o);
+      function addGroup(label, features) {
+        var g = document.createElement("optgroup"); g.label = label;
+        features.slice().sort(function (a, b) { return a.properties.comune.localeCompare(b.properties.comune); })
+          .forEach(function (f) {
+            var op = document.createElement("option"); op.value = f.properties.osm_id;
+            op.textContent = f.properties.comune + " - " + f.properties.name; g.appendChild(op);
+          });
+        sel.appendChild(g);
+      }
+      addGroup("Dentro il cratere", ISO.hospitalsIn.features);
+      addGroup("Fuori cratere (vicini)", ISO.hospitalsOut.features);
+      sel.onchange = function () {
+        // an outside hospital is only shown (with its isochrones) when the scope includes the neighbours
+        var out = ISO.hospitalsOut.features.some(function (f) { return f.properties.osm_id === sel.value; });
+        if (out && SCOPE !== "all") {
+          SCOPE = "all"; document.querySelector('input[name="scope"][value="all"]').checked = true; showOutside(true);
+        }
+        setHospital(sel.value);
+      };
+
+      // age class of the population circles; replace keeps the theme's place under the hospitals
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="age"]'), function (r) {
+        r.onchange = function () { ixmaps.map().replace("popolazione_2023", themePopolazione(AGE[r.value]), "silent"); };
+      });
+
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="scope"]'), function (r) {
+        r.onchange = function () {
+          SCOPE = r.value;
+          if (CURRENT !== "all") { CURRENT = "all"; sel.value = "all"; }
+          showOutside(SCOPE === "all");
+          drawBands();
+        };
+      });
+
+      var cin = ISO.coverage["in"], call = ISO.coverage["all"], rows = "";
+      BANDS.slice().reverse().forEach(function (b) {
+        var k = "entro_" + b.min + "_min";
+        rows += '<tr><td><span class="sw" style="background:' + b.color + '"></span>' + b.label + '</td>' +
+                '<td class="n">' + pct(cin[k].quota_abitanti) + '</td><td class="n">' + pct(call[k].quota_abitanti) + '</td></tr>';
+      });
+      document.getElementById("stats").innerHTML =
+        '<tr><td colspan="3" style="color:#666">Quota dei ' + nf(cin.population_total) + ' abitanti dei 138 comuni:</td></tr>' +
+        '<tr><th></th><th>solo cratere</th><th>+ vicini</th></tr>' + rows;
+      document.getElementById("method").textContent =
+        "Dimensione = posti letto (Min. Salute, 2019; area proporzionale a posti^0,67, minimo 30; n.d. = dato non disponibile, simbolo minimo). Gli ospedali fuori cratere compaiono solo quando sono inclusi nelle isocrone. Linea arancione: confine del cratere; linea blu: SS4 Salaria. Auto, condizioni normali (Valhalla su dati OpenStreetMap). Ospedali: 13 dentro il cratere, più 17 vicini fuori se inclusi. " +
+        "Oltre 60 minuti: " + cin.oltre_60_min_comuni.length + " comuni solo con gli ospedali del cratere, " +
+        call.oltre_60_min_comuni.length + " con quelli vicini (" + call.oltre_60_min_comuni.join(", ") + ").";
+
+      var m = ixmaps.Map("map_div", {
+          mapService: "leaflet_vt",
+          mapType: "VT_DATAVIZ_LIGHT",
+          mode: "info",
+          legend: "true",
+          tools: "true",
+          search: "Italy",
+          about: "test"
+        },
+        map => map
+          .view({ center: { lat: "42.8", lng: "13.2" }, zoom: "8" })
+          .options({ featurescaling: "dynamic", flushChartDraw: "1000000", flushPaintShape: "1000000", basemapopacity: "1" })
+          .attribution("Valhalla / &copy; OpenStreetMap contributors, ISTAT (popolazione: censimento permanente 2023), Commissario sisma 2016")
+          .layer(themeBand(BANDS[0], "all"))
+          .layer(themeBand(BANDS[1], "all"))
+          .layer(themeBand(BANDS[2], "all"))
+          .layer(themeBand(BANDS[3], "all"))
+          .layer(themeComuni())
+          .layer(themeOutline())
+          .layer(themeSalaria())
+          .layer(themeRegioni())
+          .layer(themePopolazione())
+          .layer(themeOspedaliFuori())
+          .layer(themeOspedali())
+      );
+      // the outside hospitals are only shown while the scope includes them: hide as soon as the theme exists
+      var tries = 0;
+      (function hideWhenReady() {
+        var ready = false;
+        try { ready = ixmaps.getThemes().some(function (t) { return (t.szId || t.name) === "ospedali_fuori_cratere"; }); } catch (e) {}
+        if (ready) { setTimeout(function () { showOutside(SCOPE === "all"); }, 500); }
+        else if (tries++ < 240) { setTimeout(hideWhenReady, 500); }
+      })();
+      document.getElementById("app-loading").style.display = "none";
+      document.getElementById("iso-panel").style.display = "block";
+    }
+    start();
+  </script>
+</body>
+</html>

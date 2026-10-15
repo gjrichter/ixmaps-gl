@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sisma 2016 - Fonti ufficiali nel cratere</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
+    #map_div { width: 100%; height: 100%; }
+    #measure-panel {
+      position: absolute; left: 50px; top: 12px; z-index: 1000; max-width: 280px;
+      background: rgba(255,255,255,0.95); border-radius: 8px; padding: 10px 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.25); font-size: 13px; color: #222;
+    }
+    #measure-panel h3 { margin: 0 0 6px; font-size: 14px; }
+    #measure-panel select { width: 100%; font-size: 13px; padding: 4px; }
+    #measure-panel .note { margin-top: 6px; font-size: 11px; color: #666; line-height: 1.35; }
+    #app-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #fafafa; z-index: 2000; font-size: 14px; color: #555; }
+  </style>
+</head>
+<body>
+  <div id="map_div"></div>
+  <div id="app-loading">caricamento dati ...</div>
+  <div id="measure-panel" style="display:none">
+    <h3>Fonti ufficiali nel cratere</h3>
+    <label for="measure">Colora i comuni per:</label>
+    <select id="measure"></select>
+    <div class="note">
+      MIM (scuole, edifici scolastici), Ministero della Salute (farmacie, posti letto, consultori),
+      Commissario sisma 2016 (opere pubbliche, aprile 2023), ISTAT (nidi, servizi sociali, musei, posti letto).
+      Punti: farmacie attive con coordinate.
+    </div>
+  </div>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="../../ixmaps-gl.js"></script>
+
+  <script type="text/javascript" charset="utf-8">
+    // geodata + official-source tables: github.com/gjrichter/ixmaps-data, pinned commit
+    // (raw.githubusercontent.com sends CORS headers; jsDelivr was unreliable on 2026-10-15)
+    var RAW = "https://raw.githubusercontent.com/gjrichter/ixmaps-data/9f794a1/by-project/sisma-2016-cratere/";
+    var SRC = RAW + "official-sources/";
+
+    var MEASURES = {
+      importo_meur:   { label: "Opere pubbliche: importo programmato (milioni €)", units: " M€", dec: 1 },
+      opere:          { label: "Opere pubbliche programmate (n.)", units: "", dec: 0 },
+      opere_attive:   { label: "Opere in lavori o concluse (n.)", units: "", dec: 0 },
+      scuole_statali: { label: "Scuole statali (n.)", units: "", dec: 0 },
+      edifici:        { label: "Edifici scolastici (n.)", units: "", dec: 0 },
+      farmacie:       { label: "Farmacie attive (n.)", units: "", dec: 0 },
+      posti_letto:    { label: "Posti letto ospedalieri 2019 (n.)", units: "", dec: 0, cls: "EQUIDISTANT" },
+      consultori:     { label: "Consultori familiari 2019 (n.)", units: "", dec: 0, cls: "EQUIDISTANT" },
+      nidi_posti:     { label: "ISTAT - Nidi: posti autorizzati 2024 (n.)", units: "", dec: 0 },
+      nidi_100:       { label: "ISTAT - Nidi: posti per 100 bambini 0-2, 2024", units: "", dec: 1 },
+      spesa_soc_meur: { label: "ISTAT - Servizi sociali dei comuni: spesa 2022 (milioni €)", units: " M€", dec: 2 },
+      spesa_pro_capite: { label: "ISTAT - Servizi sociali: spesa pro capite 2022 (€)", units: " €", dec: 0 },
+      musei:          { label: "ISTAT - Musei e istituzioni simili (n.)", units: "", dec: 0, cls: "EQUIDISTANT" },
+      posti_letto_istat: { label: "ISTAT - Posti letto ospedalieri ordinari 2023 (n.)", units: "", dec: 0, cls: "EQUIDISTANT" }
+    };
+    var CURRENT = "importo_meur";
+    var COMUNI = null;      // crater comuni + joined official-source fields
+    var PHARMA = null;      // pharmacy points
+
+    function parseCSV(text) {
+      var rows = [], row = [], cur = "", q = false;
+      for (var i = 0; i < text.length; i++) {
+        var c = text[i];
+        if (q) { if (c === '"') { if (text[i+1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+        else if (c === '"') q = true;
+        else if (c === ",") { row.push(cur); cur = ""; }
+        else if (c === "\n") { row.push(cur); rows.push(row); row = []; cur = ""; }
+        else if (c !== "\r") cur += c;
+      }
+      if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+      var h = rows.shift();
+      return rows.filter(function (r) { return r.length === h.length; }).map(function (r) {
+        var o = {}; h.forEach(function (k, i) { o[k] = r[i]; }); return o;
+      });
+    }
+
+    function themeComuni(key) {
+      var m = MEASURES[key];
+      return ixmaps.layer("comuni_fonti", layer => layer
+        .data({ obj: COMUNI, type: "geojson" })
+        .binding({ geo: "geometry", value: key, title: "name" })
+        .type("CHOROPLETH|" + (m.cls || "QUANTILE") + "|ZEROISVALUE")
+        .style({
+          colorscheme: ["6", "#fff7bc", "#c2410c"],
+          linecolor: "#ffffff", linewidth: "0.6", fillopacity: "0.85",
+          units: m.units, valuedecimals: String(m.dec),
+          showdata: true, name: "comuni_fonti"
+        })
+        .meta({
+          name: "comuni_fonti",
+          title: m.label,
+          snippet: "138 comuni del cratere",
+          tooltip: "<b>{{name}}</b> ({{prov}}, {{region}})<br>" +
+                   "Opere pubbliche: {{opere}} &middot; {{importo_meur}} M&euro;<br>" +
+                   "Scuole statali: {{scuole_statali}} &middot; edifici: {{edifici}}<br>" +
+                   "Farmacie: {{farmacie}} &middot; posti letto: {{posti_letto}} &middot; consultori: {{consultori}}<br>" +
+                   "ISTAT: nidi {{nidi_posti}} posti ({{nidi_100}}/100 bambini) &middot; spesa sociale {{spesa_soc_meur}} M&euro; ({{spesa_pro_capite}} &euro;/ab.) &middot; musei {{musei}}"
+        })
+      );
+    }
+
+    function setMeasure(key) {
+      CURRENT = key;
+      ixmaps.map().add(themeComuni(key), "replace|silent");
+    }
+
+    Promise.all([
+      fetch(RAW + "cratere_sisma_2016.geojson").then(r => r.json()),
+      fetch(SRC + "sisma_infrastrutture_per_comune.csv").then(r => r.text()),
+      fetch(SRC + "salute_farmacie_attive.geojson").then(r => r.json())
+    ]).then(function (res) {
+      var geo = res[0], sum = {};
+      parseCSV(res[1]).forEach(function (r) { sum[r.istat] = r; });
+      geo.features.forEach(function (f) {
+        var s = sum[f.properties.istat] || {}, p = f.properties;
+        p.opere = +s.opere_pubbliche_programmate || 0;
+        p.importo_meur = Math.round((+s.importo_programmato_eur || 0) / 1e4) / 100;
+        p.opere_attive = +s.opere_lavori_in_corso_o_conclusi || 0;
+        p.scuole_statali = +s.scuole_statali || 0;
+        p.edifici = +s.edifici_scolastici || 0;
+        p.farmacie = +s.farmacie || 0;
+        p.posti_letto = +s.posti_letto || 0;
+        p.consultori = +s.consultori || 0;
+        p.nidi_posti = +s.istat_nidi_posti_autorizzati_2024 || 0;
+        p.nidi_100 = Math.round((+s.istat_nidi_posti_per_100_bambini_2024 || 0) * 10) / 10;
+        p.spesa_soc_meur = Math.round((+s.istat_spesa_sociale_comune_2022_eur || 0) / 1e4) / 100;
+        p.spesa_pro_capite = +s.istat_spesa_sociale_pro_capite_2022_eur || 0;
+        p.musei = +s.istat_musei_istituti || 0;
+        p.posti_letto_istat = +s.istat_posti_letto_ordinari_2023 || 0;
+      });
+      COMUNI = geo;
+      PHARMA = res[2];
+      PHARMA.features.forEach(function (f) { f.properties.cat = "Farmacia"; });
+      start();
+    }).catch(function (e) {
+      document.getElementById("app-loading").textContent = "errore nel caricamento dei dati: " + e;
+    });
+
+    function start() {
+      var sel = document.getElementById("measure");
+      Object.keys(MEASURES).forEach(function (k) {
+        var o = document.createElement("option"); o.value = k; o.textContent = MEASURES[k].label; sel.appendChild(o);
+      });
+      sel.onchange = function () { setMeasure(sel.value); };
+
+      var regioni = ixmaps.layer("regioni_sisma", layer => layer
+        .data({ url: RAW + "cratere_sisma_2016_regions.geojson", type: "geojson" })
+        .type("FEATURE|SILENT|NOLEGEND")
+        .style({ colorscheme: ["none"], linecolor: "#555555", linewidth: "1.5", name: "regioni_sisma" })
+      );
+      var outline = ixmaps.layer("cratere_sisma_2016_outline", layer => layer
+        .data({ url: RAW + "cratere_sisma_2016_outline.geojson", type: "geojson" })
+        .type("FEATURE|SILENT|NOLEGEND")
+        .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
+      );
+      var farmacie = ixmaps.layer("farmacie_attive", layer => layer
+        .data({ obj: PHARMA, type: "geojson" })
+        .binding({ geo: "geometry", value: "cat", title: "nome" })
+        .type("CHART|BUBBLE|CATEGORICAL")
+        .style({
+          colorscheme: ["#1b7837"], values: ["Farmacia"], label: ["Farmacie attive (Min. Salute)"],
+          scale: "0.06", fillopacity: "0.9", linecolor: "white", linewidth: "0.5",
+          showdata: true, name: "farmacie_attive"
+        })
+        .meta({
+          name: "farmacie_attive",
+          title: "Farmacie attive",
+          tooltip: "<b>{{nome}}</b><br>{{indirizzo}}, {{comune}} ({{prov}})"
+        })
+      );
+
+      ixmaps.Map("map_div", {
+          mapService: "leaflet_vt",
+          mapType: "CartoDB - Positron",
+          mode: "info",
+          legend: "true",
+          tools: "true",
+          search: "Italy",
+          about: "test"
+        },
+        map => map
+          .view({ center: { lat: "42.8", lng: "13.2" }, zoom: "8" })
+          .options({
+            featurescaling: "true",
+            flushChartDraw: "1000000",
+            flushPaintShape: "1000000",
+            basemapopacity: "0.6"
+          })
+          .attribution("MIM, Ministero della Salute, Commissario sisma 2016, ISTAT, &copy; OpenStreetMap contributors")
+          .layer(themeComuni(CURRENT))
+          .layer(regioni)
+          .layer(outline)
+          .layer(farmacie)
+      );
+      document.getElementById("app-loading").style.display = "none";
+      document.getElementById("measure-panel").style.display = "block";
+    }
+  </script>
+</body>
+</html>

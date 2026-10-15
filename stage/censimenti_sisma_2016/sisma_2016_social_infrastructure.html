@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sisma 2016 - Infrastrutture sociali nel cratere</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    #map_div { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map_div"></div>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="../../ixmaps-gl.js"></script>
+
+  <script type="text/javascript" charset="utf-8">
+    // geodata: github.com/gjrichter/ixmaps-data  (by-project/sisma-2016-cratere), pinned commit.
+    // raw.githubusercontent.com sends CORS headers; swap for
+    // https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@0154fb8/by-project/sisma-2016-cratere/ when jsDelivr is healthy
+    var DATA = "https://raw.githubusercontent.com/gjrichter/ixmaps-data/0154fb8/by-project/sisma-2016-cratere/";
+
+    // social infrastructure points (OpenStreetMap, Overpass 2026-10-14), clipped to the 138 crater comuni
+    var SOCIAL_URL = DATA + "sisma_social_infrastructure.geojson";
+
+    var __regioni = ixmaps.layer("regioni_sisma", layer => layer
+      .data({ url: DATA + "cratere_sisma_2016_regions.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#555555", linewidth: "2.5", name: "regioni_sisma" })
+    );
+
+    var __cratere = ixmaps.layer("cratere_sisma_2016", layer => layer
+      .data({ url: DATA + "cratere_sisma_2016.geojson", type: "geojson" })
+      .binding({ id: "istat", title: "name" })
+      .type("FEATURE|NOLEGEND")
+      .style({ colorscheme: ["#e6550d"], fillopacity: "0.08", linecolor: "#e6550d", linewidth: "1", name: "cratere_sisma_2016" })
+    );
+
+    var __cratere_outline = ixmaps.layer("cratere_sisma_2016_outline", layer => layer
+      .data({ url: DATA + "cratere_sisma_2016_outline.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
+    );
+
+    var __salaria = ixmaps.layer("salaria_ss4", layer => layer
+      .data({ url: DATA + "cratere_sisma_2016_salaria.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#1f6fe5", linewidth: "3", name: "salaria_ss4" })
+    );
+
+    var __social = ixmaps.layer("social_infrastructure", layer => layer
+      .data({ url: SOCIAL_URL, type: "geojson" })
+      .binding({ geo: "geometry", value: "group", title: "name" })
+      .type("CHART|BUBBLE|CATEGORICAL")
+      .style({
+        colorscheme: ["#2e86de", "#e74c3c", "#8e44ad", "#27ae60"],
+        values: ["education", "health", "care", "community"],
+        label: ["Istruzione (scuole, nidi, università)", "Salute (ospedali, ambulatori, medici, farmacie)", "Assistenza (strutture sociali, case di riposo)", "Comunità (centri, biblioteche)"],
+        scale: "1",
+        normalsizevalue: "500",
+        fillopacity: "0.85",
+        linecolor: "white",
+        linewidth: "0.5",
+        showdata: true,
+        name: "social_infrastructure"
+      })
+      .meta({
+        name: "social_infrastructure",
+        title: "Infrastrutture sociali nel cratere",
+        snippet: "OpenStreetMap, 730 punti nei 138 comuni",
+        tooltip: "<b>{{name}}</b><br>{{tipo}} &middot; {{comune}} ({{prov}})"
+      })
+    );
+
+    ixmaps.Map("map_div", {
+        mapService: "leaflet_vt",
+        mapType: "ArcGIS - Hillshade",
+        mode: "info",
+        legend: "true",
+        tools: "true",
+        search: "Italy",
+        about: "test"
+      },
+      map => map
+        .view({ center: { lat: "42.8", lng: "13.2" }, zoom: "8" })
+        .options({
+          featurescaling: "true",
+          flushChartDraw: "1000000",
+          flushPaintShape: "1000000",
+          basemapopacity: "1"
+        })
+        .attribution("Commissario sisma 2016, ISTAT, &copy; OpenStreetMap contributors")
+        .layer(__regioni)
+        .layer(__cratere)
+        .layer(__cratere_outline)
+        .layer(__salaria)
+        .layer(__social)
+    );
+  </script>
+</body>
+</html>
