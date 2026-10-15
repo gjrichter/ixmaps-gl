@@ -12128,7 +12128,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // an external symbol file (.svg/.png/.jpeg) named by `symbols` — flat draws it as an
     // <image> (maptheme.js 21743, 22168), not as the chart's own shape. null for a shape name
     _urlSymbolOf(sym) {
-      return typeof sym === 'string' && /\.(svg|png|jpe?g)([?#]|$)/i.test(sym.trim()) ? sym.trim() : null;
+      if (typeof sym !== 'string') return null;
+      const s = sym.trim();
+      // a data: URI is a symbol file too, and the only kind fetch() can read on a file:// page
+      return /\.(svg|png|jpe?g)([?#]|$)/i.test(s) || /^data:image\/(svg\+xml|png|jpe?g)[;,]/i.test(s) ? s : null;
     }
 
     // the symbol file as an IconLayer icon descriptor, NOT tinted (flat doesn't recolor an
@@ -12173,6 +12176,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           entry.id = 'seq-sym-raster:' + u;
           if (this._triggerRedraw) this._triggerRedraw();
         }).catch(() => {
+          // a symbol FILE of a file:// page can't be fetched (nor loaded by deck): say so once
+          let onDisk = false;
+          try { onDisk = new URL(u, location.href).protocol === 'file:'; } catch (e) { /* not a URL */ }
+          if (onDisk && !this._warnedFileSymbol) {
+            this._warnedFileSymbol = true;
+            console.warn('[ixmaps-gl] symbol file "' + u + '" cannot be loaded from a file:// page — serve the page over http(s) or give the symbol as a data: URI');
+          }
           // not an SVG (a PNG/JPEG symbol): deck's own URL loading takes
           // it from here — and a pre-sized SVG that failed to rasterize
           // gets that same second chance

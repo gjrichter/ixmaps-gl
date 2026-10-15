@@ -40,3 +40,11 @@ test('_resolveSymbolUrl: symbolfield/symbolvalues picks the file by record value
   assert.equal(r._resolveSymbolUrl({ raw: { k: 'bus' } }), 'bus.svg');
   assert.equal(r._resolveSymbolUrl({ raw: { k: 'tram' } }), null);
 });
+
+test('_urlSymbolOf: a data: image URI is a symbol file (fetch reads it on file:// pages), other data: is not', () => {
+  const r = rt({});
+  assert.equal(r._urlSymbolOf('data:image/svg+xml,%3Csvg%2F%3E'), 'data:image/svg+xml,%3Csvg%2F%3E');
+  assert.equal(r._urlSymbolOf('data:image/png;base64,AAAA'), 'data:image/png;base64,AAAA');
+  assert.equal(r._urlSymbolOf('data:text/html,<b>x</b>'), null);
+  assert.equal(rt({ symbols: ['data:image/svg+xml,x'] })._resolveSymbolUrl({ cat: 0 }), 'data:image/svg+xml,x');
+});
