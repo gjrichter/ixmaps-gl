@@ -93,6 +93,12 @@ The crater, outline, SS4 Salaria and region geodata, the official-source tables 
 <sub>Authorised nursery places per comune (ISTAT 2024) against the 2023 population — all ages, 0–4 or 70+, as counts or shares — with OpenStreetMap nurseries and infant schools as optional points.</sub><br>
 <a href="https://gl.ixmaps.com/stage/censimenti_sisma_2016/sisma_2016_nidi_popolazione.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/censimenti_sisma_2016/sisma_2016_nidi_popolazione.html">see code →</a>
 </div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/censimenti_sisma_2016/sisma_2016_rischi_comuni_sidebar.html"><img src="screenshots/rischi_comuni.png" width="100%"></a><br>
+<b>Risk map of the Italian comuni</b><br>
+<sub>ISTAT risk indicators for all comuni (seismic, landslide and flood exposure, social vulnerability, population) as a theme explorer with a filterable indicator list; the earthquake crater and the SS4 Salaria are drawn on top. Port of the ixmaps-flat original.</sub><br>
+<a href="https://gl.ixmaps.com/stage/censimenti_sisma_2016/sisma_2016_rischi_comuni_sidebar.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/censimenti_sisma_2016/sisma_2016_rischi_comuni_sidebar.html">see code →</a>
+</div>
 </div>
 
 ---
