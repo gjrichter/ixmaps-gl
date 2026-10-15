@@ -12125,6 +12125,77 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return Array.isArray(cs) && cs.length === 1 && String(cs[0]).trim().toLowerCase() === 'none';
     }
 
+    // an external symbol file (.svg/.png/.jpeg) named by `symbols` — flat draws it as an
+    // <image> (maptheme.js 21743, 22168), not as the chart's own shape. null for a shape name
+    _urlSymbolOf(sym) {
+      return typeof sym === 'string' && /\.(svg|png|jpe?g)([?#]|$)/i.test(sym.trim()) ? sym.trim() : null;
+    }
+
+    // the symbol file as an IconLayer icon descriptor, NOT tinted (flat doesn't recolor an
+    // <image> either); fetched and rasterized once per URL, shared by SEQUENCE and plain symbols
+    _urlSymbolIcon(u) {
+      if (!this._urlIconCache) this._urlIconCache = new Map();
+      if (!this._urlIconCache.has(u)) {
+        // the placeholder is a transparent 1x1 PNG, NOT the raw symbol
+        // URL: deck.gl would immediately try to load that itself, and an
+        // SVG without natural dimensions (a viewBox only, the bus
+        // pictogram of the City-moving page) makes Chrome's
+        // createImageBitmap throw — a console error and a part that
+        // never renders. The real raster replaces it below
+        const entry = { url: TRANSPARENT_1PX_PNG, width: 256, height: 256, anchorX: 128, anchorY: 128, mask: false, id: 'seq-sym-pending:' + u };
+        this._urlIconCache.set(u, entry);
+        // fetch the symbol ONCE and rasterize it into the descriptor's
+        // own 256px cell here: deck then always sees exactly the declared
+        // dimensions, and dimension-less SVGs work like any other. The
+        // redraw lets the next getIcon see the patched descriptor
+        fetch(u).then(r => r.ok ? r.text() : null).then(text => new Promise((resolve, reject) => {
+          if (typeof text !== 'string' || !/<svg[\s>]/i.test(text)) { reject(new Error('not svg')); return; }
+          if (!/\swidth\s*=/i.test(text) || !/\sheight\s*=/i.test(text)) {
+            const vb = text.match(/viewBox\s*=\s*["']([^"']*)["']/i);
+            const p = vb && vb[1].trim().split(/[\s,]+/).map(Number);
+            if (p && p.length === 4 && isFinite(p[2]) && p[2] > 0 && isFinite(p[3]) && p[3] > 0) {
+              text = text.replace(/<svg/i, '<svg width="' + p[2] + '" height="' + p[3] + '"');
+            }
+          }
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('svg decode failed'));
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text);
+        })).then(img => {
+          const size = entry.width;
+          const canvas = document.createElement('canvas');
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const s = Math.min(size / (img.naturalWidth || size), size / (img.naturalHeight || size));
+          const dw = (img.naturalWidth || size) * s, dh = (img.naturalHeight || size) * s;
+          ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
+          entry.url = canvas.toDataURL('image/png');
+          entry.id = 'seq-sym-raster:' + u;
+          if (this._triggerRedraw) this._triggerRedraw();
+        }).catch(() => {
+          // not an SVG (a PNG/JPEG symbol): deck's own URL loading takes
+          // it from here — and a pre-sized SVG that failed to rasterize
+          // gets that same second chance
+          entry.url = u;
+          entry.id = 'seq-sym-natural:' + u;
+          if (this._triggerRedraw) this._triggerRedraw();
+        });
+      }
+      return this._urlIconCache.get(u);
+    }
+
+    // the symbol file of a plain (non-SEQUENCE) item, or null: the same class→symbol /
+    // symbolfield mapping as _resolveSymbolShape, before it folds unknown names to 'circle'
+    _resolveSymbolUrl(props) {
+      const s = this.style.symbols;
+      if (!Array.isArray(s)) return null;
+      if (!this.style.symbolfield) {
+        const cat = props && props.cat != null ? props.cat : 0;
+        return this._urlSymbolOf(s[Math.min(cat, s.length - 1)]);
+      }
+      return this._urlSymbolOf(this._resolveSymbolShape(props));
+    }
+
     _buildSingleIcon(colorRgb, opacity, shape, borderColorRgb, borderWidth, borderOpacity = 1) {
       if (!colorRgb) { colorRgb = [128, 128, 128]; opacity = 0; } // no class colour (["none"]): unfilled
       shape = shape || 'circle';
@@ -14698,7 +14769,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // routing goes by the final id (layerRuntimeById). A symbol's outline
       // is centered on its radius (flat); BUBBLE's border keeps the
       // icon's look, inside the radius
-      if (combined.length && !alignOf.active && combined.every(d => singleSymbol(d) && shapeOf(d.properties) === 'circle')) {
+      if (combined.length && !alignOf.active && combined.every(d => singleSymbol(d) && shapeOf(d.properties) === 'circle' && !this._resolveSymbolUrl(d.properties))) {
         const radiusPx = d => vRadius(sizeValueOf(d));
         // a CATEGORICAL BUBBLE: flat's look (flatBubbleLook) in screen px,
         // its stroke centered on the radius as flat's SVG circle
@@ -14727,6 +14798,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         getPosition: d => d.geometry.coordinates,
         getIcon: d => {
           if (!singleSymbol(d)) return this._buildBubbleIcon(d.properties.counts, this.categoryColorsRgb, this._groupIsolation(d), Array.isArray(this.style.symbols) ? this.style.symbols : null, flatLook && flatLook(d));
+          const symbolUrl = this._resolveSymbolUrl(d.properties);
+          if (symbolUrl) return this._urlSymbolIcon(symbolUrl);
           if (flatLook) return singleIcon(d);
           const shape = shapeOf(d.properties), rgb = outlineRgb(d);
           if (!symbolOutline || !rgb) return this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, shape, rgb, rgb ? singleBorderWidthPx : 0);
@@ -15016,60 +15089,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // it itself (its ImageBitmap loader falls back to <img>, which
       // rasterizes SVG) — NOT tinted: these files carry their own colors,
       // and flat doesn't recolor an <image> either
-      const urlSymbolOf = i => {
-        const s = symbols && (symbols[i] || symbols[0]);
-        return typeof s === 'string' && /\.(svg|png|jpe?g)([?#]|$)/i.test(s.trim()) ? s.trim() : null;
-      };
-      if (!this._urlIconCache) this._urlIconCache = new Map();
-      const urlIcon = u => {
-        if (!this._urlIconCache.has(u)) {
-          // the placeholder is a transparent 1x1 PNG, NOT the raw symbol
-          // URL: deck.gl would immediately try to load that itself, and an
-          // SVG without natural dimensions (a viewBox only, the bus
-          // pictogram of the City-moving page) makes Chrome's
-          // createImageBitmap throw — a console error and a part that
-          // never renders. The real raster replaces it below
-          const entry = { url: TRANSPARENT_1PX_PNG, width: 256, height: 256, anchorX: 128, anchorY: 128, mask: false, id: 'seq-sym-pending:' + u };
-          this._urlIconCache.set(u, entry);
-          // fetch the symbol ONCE and rasterize it into the descriptor's
-          // own 256px cell here: deck then always sees exactly the declared
-          // dimensions, and dimension-less SVGs work like any other. The
-          // redraw lets the next getIcon see the patched descriptor
-          fetch(u).then(r => r.ok ? r.text() : null).then(text => new Promise((resolve, reject) => {
-            if (typeof text !== 'string' || !/<svg[\s>]/i.test(text)) { reject(new Error('not svg')); return; }
-            if (!/\swidth\s*=/i.test(text) || !/\sheight\s*=/i.test(text)) {
-              const vb = text.match(/viewBox\s*=\s*["']([^"']*)["']/i);
-              const p = vb && vb[1].trim().split(/[\s,]+/).map(Number);
-              if (p && p.length === 4 && isFinite(p[2]) && p[2] > 0 && isFinite(p[3]) && p[3] > 0) {
-                text = text.replace(/<svg/i, '<svg width="' + p[2] + '" height="' + p[3] + '"');
-              }
-            }
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error('svg decode failed'));
-            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text);
-          })).then(img => {
-            const size = entry.width;
-            const canvas = document.createElement('canvas');
-            canvas.width = size; canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            const s = Math.min(size / (img.naturalWidth || size), size / (img.naturalHeight || size));
-            const dw = (img.naturalWidth || size) * s, dh = (img.naturalHeight || size) * s;
-            ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
-            entry.url = canvas.toDataURL('image/png');
-            entry.id = 'seq-sym-raster:' + u;
-            if (this._triggerRedraw) this._triggerRedraw();
-          }).catch(() => {
-            // not an SVG (a PNG/JPEG symbol): deck's own URL loading takes
-            // it from here — and a pre-sized SVG that failed to rasterize
-            // gets that same second chance
-            entry.url = u;
-            entry.id = 'seq-sym-natural:' + u;
-            if (this._triggerRedraw) this._triggerRedraw();
-          });
-        }
-        return this._urlIconCache.get(u);
-      };
+      const urlSymbolOf = i => this._urlSymbolOf(symbols && (symbols[i] || symbols[0]));
+      const urlIcon = u => this._urlSymbolIcon(u);
       const shapeOf = i => { const sh = symbols && (symbols[i] || symbols[0]); return normalizeSymbolShape(sh); };
       const colorOf = i => this.classRgb(i);
       const allParts = [], allGlows = [];
