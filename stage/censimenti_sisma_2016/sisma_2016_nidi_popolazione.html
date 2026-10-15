@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sisma 2016 - Nidi e popolazione 0-4 anni</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
+    #map_div { width: 100%; height: 100%; }
+    #panel {
+      position: absolute; right: 12px; top: 12px; z-index: 1000; width: 300px; max-height: calc(100% - 24px); overflow-y: auto;
+      background: rgba(255,255,255,0.96); border-radius: 8px; padding: 10px 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.25); font-size: 13px; color: #222;
+    }
+    #panel h3 { margin: 0 0 6px; font-size: 14px; }
+    #panel select { width: 100%; font-size: 13px; padding: 4px; margin: 4px 0 8px; }
+    #panel .scope label { display: block; margin: 2px 0; cursor: pointer; }
+    #panel th { font-weight: 600; font-size: 11px; color: #555; text-align: right; padding: 2px 4px; }
+    #panel table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    #panel td { padding: 2px 4px; }
+    #panel td.n { text-align: right; font-variant-numeric: tabular-nums; }
+    #panel .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -3px; margin-right: 5px; opacity: .8; }
+    #panel .note { margin-top: 8px; font-size: 11px; color: #666; line-height: 1.35; }
+    #app-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #fafafa; z-index: 2000; font-size: 14px; color: #555; }
+    </style>
+</head>
+<body>
+  <div id="map_div"></div>
+  <div id="app-loading">caricamento dati ...</div>
+  <div id="panel" style="display:none">
+    <h3>Nidi e popolazione 0-4 anni</h3>
+    <label for="measure">Nidi per comune (ISTAT 2024):</label>
+    <select id="measure">
+      <option value="nidi_posti" selected>Posti autorizzati (n.)</option>
+      <option value="nidi_100">Posti per 100 bambini 0-2</option>
+    </select>
+    <div>Popolazione 2023:</div>
+    <div class="scope" id="age">
+      <label><input type="radio" name="age" value="pop2023"> Tutti</label>
+      <label><input type="radio" name="age" value="pop_0_4" checked> 0-4 anni</label>
+      <label><input type="radio" name="age" value="pop_70p"> 70 anni e oltre</label>
+      <label><input type="radio" name="age" value="share_0_4"> 0-4 anni, quota sulla popolazione</label>
+      <label><input type="radio" name="age" value="share_70p"> 70 anni e oltre, quota sulla popolazione</label>
+    </div>
+    <div>Punti (OpenStreetMap):</div>
+    <div class="scope">
+      <label><input type="checkbox" id="show-nidi"> Asili nido</label>
+      <label><input type="checkbox" id="show-infanzia"> Scuole dell'infanzia</label>
+    </div>
+    <div class="note" id="method"></div>
+  </div>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="../../ixmaps-gl.js"></script>
+  <!-- 2023 resident population per comune (global SISMA_POP2023) and OSM nidi / scuole dell'infanzia (SISMA_NIDI, SISMA_INFANZIA);
+       plain scripts, so the page works from file:// as well -->
+  <script type="text/javascript" src="./data/sisma_popolazione_2023.js"></script>
+  <script type="text/javascript" src="./data/sisma_nidi_osm.js"></script>
+
+  <script type="text/javascript" charset="utf-8">
+    // boundaries and the ISTAT per-comune table: github.com/gjrichter/ixmaps-data, pinned commit
+    // (raw.githubusercontent.com sends CORS headers, so this also works from file://)
+    var RAW = "https://raw.githubusercontent.com/gjrichter/ixmaps-data/9f794a1/by-project/sisma-2016-cratere/";
+    var SRC = RAW + "official-sources/";
+
+    var MEASURES = {
+      nidi_100:   { label: "ISTAT - Nidi: posti per 100 bambini 0-2, 2024", units: "", dec: 1 },
+      nidi_posti: { label: "ISTAT - Nidi: posti autorizzati 2024 (n.)", units: "", dec: 0 }
+    };
+    var ISTAT_PTS = null;   // one point per crater comune (town hall) + joined ISTAT nidi fields
+
+    function parseCSV(text) {
+      var rows = [], row = [], cur = "", q = false;
+      for (var i = 0; i < text.length; i++) {
+        var c = text[i];
+        if (q) { if (c === '"') { if (text[i+1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+        else if (c === '"') q = true;
+        else if (c === ",") { row.push(cur); cur = ""; }
+        else if (c === "\n") { row.push(cur); rows.push(row); row = []; cur = ""; }
+        else if (c !== "\r") cur += c;
+      }
+      if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+      var h = rows.shift();
+      return rows.filter(function (r) { return r.length === h.length; }).map(function (r) {
+        var o = {}; h.forEach(function (k, i) { o[k] = r[i]; }); return o;
+      });
+    }
+
+    function nf(x) { return x.toLocaleString("it-IT"); }
+
+    // ISTAT nidi per comune as a sized pictogram at the comune centre (area proportional to the measure);
+    // comuni without nidi (0) draw nothing
+    function themeNidiIstat(key) {
+      var m = MEASURES[key];
+      var max = Math.max.apply(null, ISTAT_PTS.features.map(function (f) { return f.properties[key]; }));
+      return ixmaps.layer("nidi_istat", layer => layer
+        .data({ obj: ISTAT_PTS, type: "geojson" })
+        .binding({ geo: "geometry", value: "cat", title: "name", size: key })
+        .type("CHART|SYMBOL|SIZE|CATEGORICAL")
+        .style({
+          colorscheme: ["#c2185b"], symbols: [SYM_NIDO], fillopacity: "1", align: "left", alignmargin: "0",
+          sizefield: key, normalsizevalue: String(Math.round(max * 2.7 * 100) / 100), sizepow: "2", scale: "0.5", minvaluesize: "0",
+          values: ["Nidi ISTAT"], label: ["Comuni con nidi"], valuedecimals: String(m.dec), name: "nidi_istat"
+        })
+        .meta({
+          name: "nidi_istat",
+          title: m.label,
+          snippet: "comuni con nidi; dimensione proporzionale (ISTAT)",
+          tooltip: "<b>{{name}}</b> ({{prov}}, {{region}})<br>" +
+                   "Nidi: {{nidi_posti}} posti autorizzati &middot; {{nidi_100}} ogni 100 bambini 0-2"
+        })
+      );
+    }
+    function themeComuniBordi() { return ixmaps.layer("cratere_sisma_2016", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#9aa0a6", linewidth: "0.6", name: "cratere_sisma_2016" })
+    ); }
+
+    function themeOutline() { return ixmaps.layer("cratere_sisma_2016_outline", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016_outline.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
+    ); }
+    function themeSalaria() { return ixmaps.layer("salaria_ss4", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016_salaria.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#1f6fe5", linewidth: "3", name: "salaria_ss4" })
+    ); }
+    function themeRegioni() { return ixmaps.layer("regioni_sisma", layer => layer
+      .data({ url: RAW + "cratere_sisma_2016_regions.geojson", type: "geojson" })
+      .type("FEATURE|SILENT|NOLEGEND")
+      .style({ colorscheme: ["none"], linecolor: "#555555", linewidth: "2.5", name: "regioni_sisma" })
+    ); }
+
+    // population circles: age selector, colours and sizes as on the isochrone page
+    // align as flat reads it (maptheme.js 24511): "right" puts the chart LEFT of the comune centre (its right border on it),
+    // "left" puts it RIGHT of it (left border on it) - so the circles (align right) and the ISTAT nidi symbols (align left)
+    // sit on either side of the centre; alignmargin 0 (gl style key, flat keeps 5 units) makes them touch each other there
+    // age classes of the 2023 census (P14 = under 5, P28 + P29 = 70 and over); each one is scaled to its own
+        // maximum, so the biggest circle keeps its size (normalsizevalue = class max x 190000 / 51630, the total's)
+        var nf0 = "Residenti";
+        var AGE = {
+          pop2023: { field: "pop2023", color: "#222222", normal: "190000", title: "Popolazione residente 2023", label: "Popolazione 2023" },
+          pop_0_4: { field: "pop_0_4", color: "#0097c7", normal: "5877",   title: "Residenti 0-4 anni, 2023", label: "Residenti 0-4 anni" },
+          pop_70p: { field: "pop_70p", color: "#6a1b9a", normal: "38046",  title: "Residenti 70 anni e oltre, 2023", label: "Residenti 70+ anni" },
+          // shares (% of the comune's residents, circle area proportional to the share; max 4.9 % / 45.1 %)
+          share_0_4: { field: "share_0_4", color: "#0097c7", normal: "18",  scale: "0.3", decimals: "1", unit: "%", txt: "share_0_4_txt", count: "pop_0_4", title: "Quota residenti 0-4 anni, 2023", label: "Quota 0-4 anni" },
+          share_70p: { field: "share_70p", color: "#6a1b9a", normal: "166", scale: "0.3", unit: "%", txt: "share_70p_txt", count: "pop_70p", title: "Quota residenti 70 anni e oltre, 2023", label: "Quota 70+ anni" }
+        };
+        function themePopolazione(cls) { cls = cls || AGE.pop2023; return ixmaps.layer("popolazione_2023", layer => layer
+          .data({ obj: window.SISMA_POP2023, type: "geojson" })
+          .binding({ geo: "geometry", value: "cat", title: "name", size: cls.field })
+          .type("CHART|BUBBLE|SIZE|CATEGORICAL|VALUES|SIMPLELEGEND")
+          .style({
+            colorscheme: ["#ffffff"], fillopacity: "0.55", align: "right", alignmargin: "0", sizefield: cls.field, normalsizevalue: cls.normal, sizepow: "2", scale: cls.scale || "0.8",
+            values: ["Popolazione 2023"], label: [cls.title],
+            linecolor: cls.color, linewidth: "1.2", valuedecimals: cls.decimals || "0", units: cls.unit || "", valuecolor: cls.color, name: "popolazione_2023"
+          })
+          .meta({
+            name: "popolazione_2023",
+            title: cls.title,
+            snippet: "138 comuni (ISTAT, censimento permanente" + (cls === AGE.pop2023 ? ")" : cls.txt ? "; area proporzionale alla quota)" : "; dimensione relativa alla classe)"),
+            tooltip: "<b>{{name}}</b> ({{prov}})<br>" + cls.label + ": <b>{{" + (cls.txt || cls.field) + "}}</b>"
+              + (cls.count ? "<br>" + nf0 + ": {{" + cls.count + "}}" : "")
+          })
+        ); }
+
+    // OSM points: asili nido (strong) and scuole dell'infanzia (light), a fixed-size SVG pictogram each
+    var SYM_NIDO = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2230%22 fill=%22%23c2185b%22 stroke=%22%23fff%22 stroke-width=%223%22/%3E%3Cpath fill=%22%23fff%22 d=%22M32 15 51 31h-6v17H19V31h-6z%22/%3E%3Crect x=%2228%22 y=%2236%22 width=%228%22 height=%2212%22 fill=%22%23c2185b%22/%3E%3C/svg%3E";
+    var SYM_INFANZIA = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2230%22 fill=%22%23f48fb1%22 stroke=%22%23fff%22 stroke-width=%223%22/%3E%3Cpath fill=%22%23fff%22 d=%22M32 15 51 31h-6v17H19V31h-6z%22/%3E%3Crect x=%2228%22 y=%2236%22 width=%228%22 height=%2212%22 fill=%22%23f48fb1%22/%3E%3C/svg%3E";
+    function themePunti(id, data, symbol, title, snippet, scale) {
+      return ixmaps.layer(id, layer => layer
+        .data({ obj: data, type: "geojson" })
+        .binding({ geo: "geometry", value: "cat", title: "name" })
+        .type("CHART|SYMBOL|NOSIZE|CATEGORICAL")
+        .style({ colorscheme: ["#c2185b"], symbols: [symbol], scale: scale, fillopacity: "1", values: [data.features.length ? data.features[0].properties.cat : ""], label: [title], name: id })
+        .meta({
+          name: id, title: title, snippet: snippet,
+          tooltip: "<b>{{name}}</b><br>{{tipo}} &middot; {{comune}} ({{prov}})"
+        })
+      );
+    }
+
+    function start() {
+      var sel = document.getElementById("measure");
+      sel.onchange = function () { ixmaps.map().replace("nidi_istat", themeNidiIstat(sel.value), "silent"); };
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="age"]'), function (r) {
+        r.onchange = function () { ixmaps.map().replace("popolazione_2023", themePopolazione(AGE[r.value]), "silent"); };
+      });
+      document.getElementById("show-nidi").onchange = function () { try { ixmaps.map().setThemeVisible("nidi_osm", this.checked); } catch (e) {} };
+      document.getElementById("show-infanzia").onchange = function () { try { ixmaps.map().setThemeVisible("infanzia_osm", this.checked); } catch (e) {} };
+
+      document.getElementById("method").innerHTML =
+        "Simbolo asilo nido: nidi autorizzati per comune (ISTAT, 2024; dimensione proporzionale, nessun simbolo = nessun nido). Cerchi: popolazione residente 2023 (ISTAT, censimento permanente; classi di " +
+        "et&agrave; in 5 anni: 0-4 = P14, 70+ = P28+P29), ciascuna classe in scala propria. Punti: asili nido (" + SISMA_NIDI.features.length +
+        ") e scuole dell'infanzia (" + SISMA_INFANZIA.features.length + ") mappati su OpenStreetMap: la copertura OSM &egrave; parziale, " +
+        "il quadro completo dei nidi &egrave; quello ISTAT per comune.";
+
+      var m = ixmaps.Map("map_div", {
+          mapService: "leaflet_vt",
+          mapType: "VT_DATAVIZ_LIGHT",
+          mode: "info",
+          legend: "closed",
+          align: "left",
+          tools: "true",
+          search: "Italy",
+          about: "test"
+        },
+        map => map
+          .view({ center: { lat: "42.8", lng: "13.2" }, zoom: "8" })
+          .options({ featurescaling: "dynamic", flushChartDraw: "1000000", flushPaintShape: "1000000", basemapopacity: "1" })
+          .attribution("&copy; OpenStreetMap contributors, ISTAT (nidi 2024; popolazione: censimento permanente 2023), Commissario sisma 2016")
+          .layer(themeComuniBordi())
+          .layer(themeOutline())
+          .layer(themeSalaria())
+          .layer(themeRegioni())
+          .layer(themePopolazione(AGE.pop_0_4))
+          .layer(themeNidiIstat("nidi_posti"))
+          .layer(themePunti("infanzia_osm", SISMA_INFANZIA, SYM_INFANZIA, "Scuole dell'infanzia (OSM)", SISMA_INFANZIA.features.length + " punti, 3-6 anni", "0.1"))
+          .layer(themePunti("nidi_osm", SISMA_NIDI, SYM_NIDO, "Asili nido (OSM)", SISMA_NIDI.features.length + " punti, 0-2 anni", "0.15"))
+      );
+      // the OSM points start switched off (their checkboxes turn them on): hide as soon as the themes exist
+      var tries = 0;
+      (function hideWhenReady() {
+        var ready = false;
+        try { ready = ixmaps.getThemes().some(function (t) { return (t.szId || t.name) === "nidi_osm"; }); } catch (e) {}
+        if (ready) { setTimeout(function () {
+          ["nidi_osm", "infanzia_osm"].forEach(function (id) { try { ixmaps.map().setThemeVisible(id, false); } catch (e) {} });
+        }, 500); }
+        else if (tries++ < 240) { setTimeout(hideWhenReady, 500); }
+      })();
+      document.getElementById("app-loading").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+    }
+
+    Promise.all([
+      fetch(RAW + "cratere_sisma_2016.geojson").then(function (r) { return r.json(); }),
+      fetch(SRC + "sisma_infrastrutture_per_comune.csv").then(function (r) { return r.text(); })
+    ]).then(function (res) {
+      var geo = res[0], sum = {};
+      parseCSV(res[1]).forEach(function (r) { sum[r.istat] = r; });
+      geo.features.forEach(function (f) {
+        var s = sum[f.properties.istat] || {}, p = f.properties;
+        p.nidi_posti = +s.istat_nidi_posti_autorizzati_2024 || 0;
+        p.nidi_100 = Math.round((+s.istat_nidi_posti_per_100_bambini_2024 || 0) * 10) / 10;
+      });
+      var centre = {};
+      SISMA_POP2023.features.forEach(function (f) { centre[f.properties.istat] = f.geometry; });
+      ISTAT_PTS = { type: "FeatureCollection", features: geo.features.map(function (f) {
+        var p = f.properties;
+        return { type: "Feature", geometry: centre[p.istat],
+          properties: { name: p.name, prov: p.prov, region: p.region, istat: p.istat, nidi_posti: p.nidi_posti, nidi_100: p.nidi_100, cat: "Nidi ISTAT" } };
+      }) };
+      start();
+    }).catch(function (e) {
+      document.getElementById("app-loading").textContent = "errore nel caricamento dei dati: " + e;
+    });
+  </script>
+</body>
+</html>
