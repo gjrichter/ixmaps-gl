@@ -7431,7 +7431,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       : 1;
   }
 
-  function valueRadius(value, zoom, style, mapOptions, flags, maxSizeValue) {
+  function valueRadius(value, zoom, style, mapOptions, flags, maxSizeValue, sizeBound) {
     const zoomFactor = objectZoomFactor(zoom, mapOptions);
     // FIXSIZE (a symbol chart; PLOT / GRIDSIZE size their markers
     // themselves): one radius for every item, whatever its value — the
@@ -7474,7 +7474,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (flags && flags.has('SYMBOL') && !flags.has('BUBBLE') && !flags.has('USER')
       && !flags.has('FIXSIZE') && !flags.has('PLOT') && !flags.has('GRIDSIZE')
       && flags.has('CATEGORICAL') && !flags.has('AGGREGATE') && !flatFlag(flags, 'GROUP')
-      && !style.sizefield) {
+      && !style.sizefield && !sizeBound) {
       const fixed = NORMAL_RADIUS_PX * (styleNum(style.scale) || 1);
       return Math.max(VALUE_RADIUS_MIN, Math.min(VALUE_RADIUS_MAX, fixed * zoomFactor));
     }
@@ -12184,6 +12184,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return this._urlIconCache.get(u);
     }
 
+    // a size field is bound (flat's szSizeField): .binding({size}) or style.sizefield, live —
+    // setSizeField() rebinds at runtime. '$item$' is not a field
+    _sizeBound() { return !!(this.binding.size && this.binding.size !== '$item$'); }
+
     // the symbol file of a plain (non-SEQUENCE) item, or null: the same class→symbol /
     // symbolfield mapping as _resolveSymbolShape, before it folds unknown names to 'circle'
     _resolveSymbolUrl(props) {
@@ -13774,7 +13778,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // the item's class (range classes set it for groups too — a negative
         // group total would make dominant() pick the wrong class)
         const cat = d.properties.cat != null ? d.properties.cat : (d.properties.counts ? dominant(d.properties.counts) : 0);
-        const radiusPx = valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+        const radiusPx = valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue, this._sizeBound());
         const size = radiusPx / pxPerUnit;
         const chart = this._userChartSvg(draw, name, theme, flag, d, value, cat, size, sizeValueOf(d));
         if (!chart) continue;
@@ -14414,7 +14418,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // GRIDSIZE: every chart the size of its grid cell, whatever its value
       // (_gridChartRadiusPx); otherwise valueRadius
       const gridR = this._gridChartRadiusPx(zoom, liveZoom);
-      const vRadius = v => (gridR != null ? gridR : valueRadius(v, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue));
+      const vRadius = v => (gridR != null ? gridR : valueRadius(v, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue, this._sizeBound()));
       // AGGREGATE sums without a normalsizevalue: flat's default is the
       // largest aggregated value (defaultNormalSizeValue leaves it unset, the
       // sizes depend on the aggregation)
@@ -15120,7 +15124,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const sizeFactor = itemSizeFactor(d);
         const partRadius = multi
           ? v => Math.max(VALUE_RADIUS_MIN, normalR * Math.pow(Math.abs(v) / seqMax, 1 / sizePow) * sizeFactor)
-          : v => valueRadius(v, liveZoom, st, this.mapOptions, this.flags, seqMax);
+          : v => valueRadius(v, liveZoom, st, this.mapOptions, this.flags, seqMax, this._sizeBound());
         let layout = rings ? ringsLayout(counts, partRadius)
           : sequenceLayout(counts, this.flags, partRadius, { maxRadius: normalR, maxValue: seqMax, nParts: nCats, rangeScale: styleNum(st.rangescale) || 0 });
         if (!layout.length) continue;
@@ -16867,7 +16871,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const textOnly = this.flags.has('TEXTONLY');
       const showValues = this.flags.has('VALUES') && !valuesHiddenByScale(this.style, zoom);
       if (textOnly && !showValues) return [];
-      const radiusOf = d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue);
+      const radiusOf = d => valueRadius(sizeValueOf(d), liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue, this._sizeBound());
       const alignOf = this._chartAlignFn(liveZoom, radiusOf, textOnly);
       const valueScale = styleNum(this.style.valuescale) || 1;
       const textOverride = this.style.valuecolor || this.style.textcolor;

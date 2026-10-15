@@ -281,6 +281,28 @@ test('SYMBOL without a size field: a fixed normal radius only in flat\'s "symbol
   near(r(25, 'LINEAR'), 3.75, 'LINEAR: proportional');
 });
 
+test('SYMBOL|CATEGORICAL with a bound size field is sized by the value, not the fixed normal radius (.binding({size}))', () => {
+  const opts = { objectscaling: 'fixed' };
+  const f = flags('CHART', 'SYMBOL', 'SIZE', 'CATEGORICAL');
+  const r = (v, bound) => G.valueRadius(v, 10, { scale: 1, normalsizevalue: 100, sizepow: 1 }, opts, f, 100, bound);
+  near(r(25, false), 15, 'no size field: the fixed normal radius');
+  near(r(25, true), 3.75, 'a bound size field: value-scaled (25/100 · 15)');
+  near(r(100, true), 15, 'normalsizevalue maps to the normal radius');
+  assert.ok(r(25, true) < r(100, true), 'bigger value, bigger symbol');
+});
+
+test('_sizeBound: .binding({size}) counts, "$item$" and none do not, and setSizeField rebinds it live', () => {
+  const rt = size => new G.LayerRuntime(G.normalizeTheme({ layer: 'L', binding: { position: 'a|b', value: 'v', size },
+    style: { type: 'CHART|SYMBOL|SIZE|CATEGORICAL' } }),
+  { type: 'FeatureCollection', features: [1, 2].map(v => pt({ v, s: v * 10 }, 11 + v / 10, 45)) }, {});
+  assert.equal(rt('s')._sizeBound(), true);
+  assert.equal(rt(undefined)._sizeBound(), false);
+  assert.equal(rt('$item$')._sizeBound(), false);
+  const live = rt('s');
+  live.setSizeField(null);
+  assert.equal(live._sizeBound(), false, 'unbinding at runtime falls back to the fixed radius');
+});
+
 test('GRIDSIZE: a classed symbol chart sized to its grid cell, a plain one-color grid stays a mesh', () => {
   const rt = (type, colorscheme) => new G.LayerRuntime(G.normalizeTheme({ layer: 'L', binding: { position: 'a|b', value: 'v' },
     style: { type, colorscheme, aggregationscale: ['1:1', '5px'] } }),
