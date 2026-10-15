@@ -8,11 +8,19 @@
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
     #map_div { width: 100%; height: 100%; }
     #iso-panel {
-      position: absolute; left: 50px; top: 12px; z-index: 1000; width: 300px;
+      position: absolute; left: 50px; top: 12px; z-index: 1000; width: 300px; max-height: calc(100% - 24px); overflow-y: auto;
       background: rgba(255,255,255,0.96); border-radius: 8px; padding: 10px 12px;
       box-shadow: 0 1px 6px rgba(0,0,0,0.25); font-size: 13px; color: #222;
     }
-    #iso-panel h3 { margin: 0 0 6px; font-size: 14px; }
+    #iso-panel h3 { margin: 0; font-size: 14px; }
+    #iso-panel .ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+    #panel-toggle { flex: none; width: 26px; height: 26px; padding: 0; border: 1px solid #d6d4cc; border-radius: 6px; background: #fff; color: #555; font-size: 13px; line-height: 1; cursor: pointer; }
+    #iso-panel.collapsed .ph { margin-bottom: 0; }
+    #iso-panel.collapsed #panel-body { display: none; }
+    @media (max-width: 700px) {
+      /* at the bottom, above the attribution: the map legend keeps the top */
+      #iso-panel { left: 8px; right: 8px; top: auto; bottom: 52px; width: auto; max-height: 55%; }
+    }
     #iso-panel select { width: 100%; font-size: 13px; padding: 4px; margin: 4px 0 8px; }
     #iso-panel .scope label { display: block; margin: 2px 0; cursor: pointer; }
     #iso-panel th { font-weight: 600; font-size: 11px; color: #555; text-align: right; padding: 2px 4px; }
@@ -29,7 +37,8 @@
   <div id="map_div"></div>
   <div id="app-loading">caricamento dati ...</div>
   <div id="iso-panel" style="display:none">
-    <h3>Tempo di guida dagli ospedali del cratere</h3>
+    <div class="ph" id="panel-head"><h3>Tempo di guida dagli ospedali del cratere</h3><button id="panel-toggle" type="button" aria-label="Apri/chiudi pannello" aria-expanded="true" title="Apri/chiudi">&#9662;</button></div>
+    <div id="panel-body">
     <div class="scope">
       <label><input type="radio" name="scope" value="in" checked> Solo i 13 ospedali dentro il cratere</label>
       <label><input type="radio" name="scope" value="all"> + 17 ospedali vicini fuori cratere</label>
@@ -46,8 +55,18 @@
     <select id="hosp"></select>
     <table id="stats"></table>
     <div class="note" id="method"></div>
+    </div>
   </div>
 
+  <script>
+    // the panel opens and closes by its caret (right = closed, down = open); on a narrow (mobile) screen it starts closed so the map is free
+    (function () {
+      var panel = document.getElementById("iso-panel"), btn = document.getElementById("panel-toggle");
+      function set(collapsed) { panel.classList.toggle("collapsed", collapsed); btn.setAttribute("aria-expanded", String(!collapsed)); btn.innerHTML = collapsed ? "&#9656;" : "&#9662;"; }
+      document.getElementById("panel-head").addEventListener("click", function () { set(!panel.classList.contains("collapsed")); });
+      if (window.matchMedia("(max-width: 700px)").matches) set(true);
+    })();
+  </script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <script type="text/javascript" src="../../ixmaps-gl.js"></script>
   <!-- generated isochrone data (global SISMA_ISO); a plain script works from file:// as well -->
@@ -254,7 +273,7 @@
           mapService: "leaflet_vt",
           mapType: "VT_DATAVIZ_LIGHT",
           mode: "info",
-          legend: "true",
+          legend: "closed",
           tools: "true",
           search: "Italy",
           about: "test"

@@ -8,12 +8,21 @@
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: system-ui, sans-serif; }
     #map_div { width: 100%; height: 100%; }
     #measure-panel {
-      position: absolute; left: 50px; top: 12px; z-index: 1000; max-width: 280px;
+      position: absolute; left: 50px; top: 12px; z-index: 1000; width: 300px; max-height: calc(100% - 24px); overflow-y: auto;
       background: rgba(255,255,255,0.95); border-radius: 8px; padding: 10px 12px;
       box-shadow: 0 1px 6px rgba(0,0,0,0.25); font-size: 13px; color: #222;
     }
-    #measure-panel h3 { margin: 0 0 6px; font-size: 14px; }
+    #measure-panel h3 { margin: 0; font-size: 14px; }
+    #measure-panel .ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+    #panel-toggle { flex: none; width: 26px; height: 26px; padding: 0; border: 1px solid #d6d4cc; border-radius: 6px; background: #fff; color: #555; font-size: 13px; line-height: 1; cursor: pointer; }
+    #measure-panel.collapsed .ph { margin-bottom: 0; }
+    #measure-panel.collapsed #panel-body { display: none; }
+    @media (max-width: 700px) {
+      /* at the bottom, above the attribution: the map legend keeps the top */
+      #measure-panel { left: 8px; right: 8px; top: auto; bottom: 52px; width: auto; max-height: 55%; }
+    }
     #measure-panel select { width: 100%; font-size: 13px; padding: 4px; }
+    #measure-panel .pts { display: block; margin: 2px 0 8px; cursor: pointer; }
     #measure-panel .note { margin-top: 6px; font-size: 11px; color: #666; line-height: 1.35; }
     #app-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       background: #fafafa; z-index: 2000; font-size: 14px; color: #555; }
@@ -23,16 +32,28 @@
   <div id="map_div"></div>
   <div id="app-loading">caricamento dati ...</div>
   <div id="measure-panel" style="display:none">
-    <h3>Fonti ufficiali nel cratere</h3>
+    <div class="ph" id="panel-head"><h3>Fonti ufficiali nel cratere</h3><button id="panel-toggle" type="button" aria-label="Apri/chiudi pannello" aria-expanded="true" title="Apri/chiudi">&#9662;</button></div>
+    <div id="panel-body">
     <label for="measure">Colora i comuni per:</label>
     <select id="measure"></select>
+    <label class="pts"><input type="checkbox" id="show-farmacie"> Mostra le farmacie attive (punti)</label>
     <div class="note">
       MIM (scuole, edifici scolastici), Ministero della Salute (farmacie, posti letto, consultori),
       Commissario sisma 2016 (opere pubbliche, aprile 2023), ISTAT (nidi, servizi sociali, musei, posti letto).
       Punti: farmacie attive con coordinate.
     </div>
+    </div>
   </div>
 
+  <script>
+    // the panel opens and closes by its caret (right = closed, down = open); on a narrow (mobile) screen it starts closed so the map is free
+    (function () {
+      var panel = document.getElementById("measure-panel"), btn = document.getElementById("panel-toggle");
+      function set(collapsed) { panel.classList.toggle("collapsed", collapsed); btn.setAttribute("aria-expanded", String(!collapsed)); btn.innerHTML = collapsed ? "&#9656;" : "&#9662;"; }
+      document.getElementById("panel-head").addEventListener("click", function () { set(!panel.classList.contains("collapsed")); });
+      if (window.matchMedia("(max-width: 700px)").matches) set(true);
+    })();
+  </script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <script type="text/javascript" src="../../ixmaps-gl.js"></script>
 
@@ -84,10 +105,10 @@
       return ixmaps.layer("comuni_fonti", layer => layer
         .data({ obj: COMUNI, type: "geojson" })
         .binding({ geo: "geometry", value: key, title: "name" })
-        .type("CHOROPLETH|" + (m.cls || "QUANTILE") + "|ZEROISVALUE")
+        .type("CHOROPLETH|" + (m.cls || "QUANTILE") + "|ZEROISVALUE|DOPACITYMAX")
         .style({
           colorscheme: ["6", "#fff7bc", "#c2410c"],
-          linecolor: "#ffffff", linewidth: "0.6", fillopacity: "0.85",
+          linecolor: "#ffffff", linewidth: "0.6", fillopacity: "0.85", dopacitypow: "3",
           units: m.units, valuedecimals: String(m.dec),
           showdata: true, name: "comuni_fonti"
         })
@@ -104,9 +125,30 @@
       );
     }
 
+    // the values as labels: a white tag at the centre of each comune, shown when zoomed in
+    // (the choropleth itself draws no value text)
+    function themeValues(key) {
+      var m = MEASURES[key];
+      // no tag for a comune whose value is 0
+      var nonZero = { type: "FeatureCollection", features: COMUNI.features.filter(function (f) { return +f.properties[key] > 0; }) };
+      return ixmaps.layer("comuni_fonti_values", layer => layer
+        .data({ obj: nonZero, type: "geojson" })
+        .binding({ geo: "geometry", value: key, title: "name" })
+        .type("CHART|SYMBOL|VALUES|TEXTONLY|FIXSIZE|NOLEGEND")
+        .style({
+          colorscheme: ["#ffffff"], fillopacity: "0.3", linecolor: "none", linewidth: "0",
+          symbols: ["label"], textscale: "1", textcolor: "#222222",
+          valuedecimals: String(m.dec), units: m.units, scale: "0.3", chartupper: "1:800000",
+          name: "comuni_fonti_values"
+        })
+        .meta({ name: "comuni_fonti_values", title: m.label + " (valori)" })
+      );
+    }
+
     function setMeasure(key) {
       CURRENT = key;
       ixmaps.map().add(themeComuni(key), "replace|silent");
+      ixmaps.map().add(themeValues(key), "replace|silent");
     }
 
     Promise.all([
@@ -158,6 +200,11 @@
         .type("FEATURE|SILENT|NOLEGEND")
         .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
       );
+      var salaria = ixmaps.layer("salaria_ss4", layer => layer
+        .data({ url: RAW + "cratere_sisma_2016_salaria.geojson", type: "geojson" })
+        .type("FEATURE|SILENT|NOLEGEND")
+        .style({ colorscheme: ["none"], linecolor: "#1f6fe5", linewidth: "3", name: "salaria_ss4" })
+      );
       var farmacie = ixmaps.layer("farmacie_attive", layer => layer
         .data({ obj: PHARMA, type: "geojson" })
         .binding({ geo: "geometry", value: "cat", title: "nome" })
@@ -178,7 +225,7 @@
           mapService: "leaflet_vt",
           mapType: "CartoDB - Positron",
           mode: "info",
-          legend: "true",
+          legend: "closed",
           tools: "true",
           search: "Italy",
           about: "test"
@@ -195,8 +242,15 @@
           .layer(themeComuni(CURRENT))
           .layer(regioni)
           .layer(outline)
-          .layer(farmacie)
+          .layer(salaria)
+          .layer(themeValues(CURRENT))
       );
+      // the pharmacies start switched off: added on the first switch-on, then shown / hidden
+      var pharmaOnMap = false;
+      document.getElementById("show-farmacie").onchange = function () {
+        if (this.checked && !pharmaOnMap) { ixmaps.map().add(farmacie, "silent"); pharmaOnMap = true; }
+        else if (pharmaOnMap) { ixmaps.map().setThemeVisible("farmacie_attive", this.checked); }
+      };
       document.getElementById("app-loading").style.display = "none";
       document.getElementById("measure-panel").style.display = "block";
     }
