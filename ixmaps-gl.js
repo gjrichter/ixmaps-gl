@@ -5586,18 +5586,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         add: (layerBuilder, flag) => {
           layerBuilder = unwrapLayer(layerBuilder);
           _chainedLayers = _chainedLayers.then(() => {
+            let slot = null;
             if (/replace/i.test(flag || '')) {
               const def = layerBuilder.definition();
               const id = (def.style && def.style.name) || (def.meta && def.meta.name);
-              if (id) removeThemeById(id);
+              if (id) { slot = captureSlot(id); removeThemeById(id); }
             }
-            return engineApi.defineLayer(layerBuilder);
+            return engineApi.defineLayer(layerBuilder, slot);
           }).catch(err => console.error('[ixmaps-gl] map.add():', err));
           return engineApi;
         },
         replace: (id, layerBuilder, flag) => {
           layerBuilder = unwrapLayer(layerBuilder);
-          _chainedLayers = _chainedLayers.then(() => { removeThemeById(id); return engineApi.defineLayer(layerBuilder); })
+          _chainedLayers = _chainedLayers.then(() => { const slot = captureSlot(id); removeThemeById(id); return engineApi.defineLayer(layerBuilder, slot); })
             .catch(err => console.error('[ixmaps-gl] map.replace():', err));
           return engineApi;
         },
@@ -5612,11 +5613,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           layerBuilder = unwrapLayer(layerBuilder);
           const f = String(flag || '');
           _chainedLayers = _chainedLayers.then(() => {
+            let slot = null;
             if (!/force/i.test(f)) {
               if (/replace/i.test(f)) {
                 const def = layerBuilder.definition();
                 const id = (def.style && def.style.name) || (def.meta && def.meta.name);
-                if (id) removeThemeById(id);
+                if (id) { slot = captureSlot(id); removeThemeById(id); }
               } else if (/clearcharts|clear|clearall/i.test(f)) {
                 const charts = /clearcharts/i.test(f);
                 const doomed = runtimes.filter(rt => !flatFlag(rt.flags, 'LOCKED') && (!charts || rt.flags.has('CHART')));
@@ -5625,7 +5627,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
                 byName.forEach((list, name) => removeRuntimes(name, list));
               }
             }
-            return engineApi.defineLayer(layerBuilder);
+            return engineApi.defineLayer(layerBuilder, slot);
           }).catch(err => console.error('[ixmaps-gl] map.newTheme():', err));
           return engineApi;
         },
@@ -5857,7 +5859,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // exactly how this engine's own facet-filter/style setters below
         // already push responsibility for "what should happen" to the
         // caller rather than guessing.
-        defineLayer: (layerBuilder) => defineFromDefinition(unwrapLayer(layerBuilder).definition()),
+        defineLayer: (layerBuilder, slot) => defineFromDefinition(unwrapLayer(layerBuilder).definition(), slot),
         // GL-PORT COMPAT: real ixmaps-flat's map handle, as a page gets it
         // from `myMap.then(map => map.view(...).options(...).layer(a)
         // .layer(b))` — the common multi-layer idiom — is chainable on the
@@ -6017,6 +6019,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (removed) { refresh(); notifyRedraw(); }
         return removed;
       }
+      // where the theme(s) removeThemeById(id) would remove stand in the stack: the first remaining
+      // theme after them (null = they were on top). Taken BEFORE the removal, handed to defineLayer.
+      function captureSlot(id) {
+        const named = runtimes.filter(r => (r.style && r.style.name === id) || (r.meta && r.meta.name === id));
+        const doomed = named.length ? named : runtimes.filter(r => r.name === id);
+        if (!doomed.length) return null;
+        const last = Math.max(...doomed.map(r => runtimes.indexOf(r)));
+        const anchor = runtimes.slice(last + 1).find(r => !doomed.includes(r) && !doomed.some(d => d._subTheme === r)) || null;
+        return { anchor };
+      }
+
       // flat addresses a theme by its id — style.name / meta.name (several
       // themes may share one layer), else the layer name
       function removeThemeById(id) {
@@ -6187,11 +6200,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // flat itself does ("defining a theme with the same name replaces it
       // in place"; a page's live-refresh loop relies on it, e.g. the NYC
       // status page re-defining its two themes every 10s).
-      async function defineFromDefinition(def) {
+      // `slot` (from captureSlot) is where a replaced theme stood in the stack: the replace paths
+      // remove the old theme first and pass it on, so the new one is not appended on top
+      async function defineFromDefinition(def, slot) {
         if (validation) validation.definition(def);
         const pdef = projectThemeToDefinition(def);
         const replacedId = (pdef.meta && pdef.meta.name) || (pdef.style && pdef.style.name);
-        if (replacedId) removeThemeById(replacedId);
+        if (replacedId) {
+          if (!slot) slot = captureSlot(replacedId);
+          removeThemeById(replacedId);
+        }
         let spec = normalizeTheme(pdef);
         let raw;
         const deferred = deferredFeatureLoad(spec, map.getZoom());
@@ -6218,7 +6236,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         rt._zoomToPending = wantsZoomToExtent(spec.flags);
         rt._dataSourceKey = named ? 'name:' + spec.data.name
           : sourceKey || JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
-        runtimes.push(rt);
+        // a replacement keeps the stacking position (draw order, legend order) of the theme it replaces:
+        // it goes in front of the theme that followed the old one, still on the map after the await above
+        const slotAt = slot && slot.anchor ? runtimes.indexOf(slot.anchor) : -1;
+        if (slotAt >= 0) runtimes.splice(slotAt, 0, rt); else runtimes.push(rt);
         if (fc._sphere) applySphereBackdrop(map, rt.style);
         _globalThemeRegistry.set(rt.name, rt);
         if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
@@ -6268,10 +6289,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           for (let i = 0; i < themes.length; i++) {
             const t = themes[i] || {};
             const name = (t.style && t.style.name) || (t.meta && t.meta.name);
-            if (/replace/i.test(f) && name) removeThemesNamed(name);
+            let slot = null;
+            if (/replace/i.test(f) && name) { slot = captureSlot(name); removeThemesNamed(name); }
             else if (i === 0 && !/add/i.test(f)) [...new Set(runtimes.map(r => r.name))].forEach(n => engineApi.removeTheme(n));
             try {
-              report.themes.push(await defineFromDefinition(withoutProjectCode(t, report)));
+              report.themes.push(await defineFromDefinition(withoutProjectCode(t, report), slot));
             } catch (e) {
               report.skipped.push({ layer: t.layer, reason: e.message });
             }
