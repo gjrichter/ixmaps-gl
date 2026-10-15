@@ -195,7 +195,7 @@ $Log:index_only_map_embed.html,v $
                 </details>
 
                 <!-- foreground theme: what the arrows / charts show -->
-                <details class="card" id="card-foreground">
+                <details class="card" id="card-foreground" open>
                     <summary><span>Tema in primo piano</span><span class="card-value" id="fg-value" title="Variazione % della popolazione">Variazione % della popolazione</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
                     <div class="card-body">
                         <div class="field">
@@ -236,12 +236,12 @@ $Log:index_only_map_embed.html,v $
 
                 <!-- background theme: comune polygons zoomed out, census sections zoomed in -->
                 <details class="card" id="fondo-poligoni">
-                    <summary><span>Fondo</span><span class="card-value" id="bg-value" title="Densità della popolazione">Densità della popolazione</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+                    <summary><span>Fondo</span><span class="card-value" id="bg-value" title="Spento">Spento</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
                     <div class="card-body">
                         <div class="field">
                             <label class="switch-row" for="bg-switch">
                                 <span>Mostra il fondo</span>
-                                <input type="checkbox" id="bg-switch" class="switch" checked onchange="__bgToggle(this)">
+                                <input type="checkbox" id="bg-switch" class="switch" onchange="__bgToggle(this)">
                             </label>
                         </div>
                         <div class="field">
@@ -347,7 +347,8 @@ $Log:index_only_map_embed.html,v $
          ** show / hide a group of themes (switch in the card). The themes are replaced when the
          ** variable changes, which shows them again: a group that is off is hidden again afterwards.
          **/
-        var __groupOff = { fg: false, bg: false };
+        var __groupOff = { fg: false, bg: true };   // the background starts switched off
+        var __fondoDefined = false;                 // its themes are defined on first use
         var __groupIds = {
             fg: ["chart_procom_all", "chart_procom_pop", "chart"],
             bg: ["choropleth_comuni", "choropleth"]
@@ -370,7 +371,11 @@ $Log:index_only_map_embed.html,v $
             [300, 1500, 4000].forEach(function (ms) { setTimeout(function () { __groupApply(key); }, ms); });
         };
         var __fgToggle = function (cb) { __groupSet("fg", cb.checked); };
-        var __bgToggle = function (cb) { __groupSet("bg", cb.checked); };
+        var __bgToggle = function (cb) {
+            var __v = document.getElementById("bg-select").value;
+            if (cb.checked && !__fondoDefined && __v !== "none") { __setFondo(__v); }
+            __groupSet("bg", cb.checked);
+        };
         var __fgChange = function (sel) {
             setForegroundTheme(sel.value);
             var v = document.getElementById("fg-value"); v.textContent = v.title = __groupOff.fg ? "Spento" : __selectedText(sel);
@@ -564,6 +569,7 @@ $Log:index_only_map_embed.html,v $
          ** both are added together, each one scale-gated by its own chartlower/chartupper
          **/
         var __setFondo = function (szKind) {
+            __fondoDefined = true;
             var themes = {
                 pop: [__comuni2023_pop_choropleth, __sez2023_pop_choropleth],
                 eta: [__comuni2023_eta_choropleth, __sez2023_eta_choropleth],
@@ -818,9 +824,7 @@ $Log:index_only_map_embed.html,v $
             .layer(__georef())
             .layer(__georef_sez2021_fgb())
             .layer(__georef_sez2023_fgb())
-            .layer(__sez2023_pop_choropleth())
             .layer(__georef_comuni_poly())
-            .layer(__comuni2023_pop_choropleth())
             .layer(__pop_procom_circle())
             .layer(__procom_2021_2023_arrow_user_relative())
             .layer(__sez_2021_2023_pop_arrow_user_relative())
