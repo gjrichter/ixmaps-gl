@@ -7869,6 +7869,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return out;
   }
 
+  // the outline colour of a flat bubble icon: none for NOLINES / linecolor "none", else linecolor, else the
+  // class colour's darker derivate — and none when there is neither (an unfilled "none" class has no colour
+  // to derive from; with a linecolor its outline must still draw)
+  function bubbleStrokeRgb(look, rgb) {
+    return look.noStroke ? null : (look.stroke || (rgb ? flatDerivateRgb(rgb, 0.7) : null));
+  }
+
   // ChartColors.textColor (colorscheme.js 104-116): darker on light colors
   function flatChartTextRgb(rgb) {
     return flatDerivateRgb(rgb, rgb[0] + rgb[1] + rgb[2] > 450 ? 0.6 : 3);
@@ -14770,7 +14777,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (!flatLook) return this._buildSingleIcon(rgb, fillOpacity, shapeOf(d.properties), singleBorderColorRgb, singleBorderWidthPx);
         const look = flatLook(d);
         return this._buildSingleIcon(rgb, look.fillOpacity, shapeOf(d.properties),
-          look.noStroke || !rgb ? null : (look.stroke || flatDerivateRgb(rgb, 0.7)), look.width, look.strokeOpacity);
+          bubbleStrokeRgb(look, rgb), look.width, look.strokeOpacity);
       };
       // flat's symbol outline (maptheme.js 21595-21610 and 21950-21997,
       // drawn 21625-21634 / 21995-22035): every SYMBOL shape is stroked,
@@ -18017,7 +18024,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
-    drawSymbolPath, normalizeSymbolShape,
+    drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,
     dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn, applySphereBackdrop,
   };

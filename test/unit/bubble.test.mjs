@@ -15,7 +15,7 @@ const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location:
   document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
 win.window = win; win.globalThis = win;
 vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
-const { flatBubbleLook, bubbleIconLook } = win.__ixmapsGlInternals;
+const { flatBubbleLook, bubbleIconLook, bubbleStrokeRgb } = win.__ixmapsGlInternals;
 const plain = v => JSON.parse(JSON.stringify(v));
 const flags = (...f) => new Set(['CHART', 'BUBBLE', 'CATEGORICAL', ...f]);
 const near = (a, b, eps, msg) => assert.ok(Math.abs(a - b) <= eps, `${msg}: ${a} vs ${b}`);
@@ -91,4 +91,12 @@ test('chart LABEL: "1.234,5" and "12 500" are read as 1234.5 and 12500, as flat'
   assert.equal(label('12 500'), label('12500'), 'blanks group thousands');
   assert.notEqual(label('12 500'), label('12'));
   assert.equal(label('Roma'), 'Roma', 'not a number: the text');
+});
+
+test('bubbleStrokeRgb: an unfilled class (no colour) still draws its linecolor outline', () => {
+  const look = (style) => bubbleIconLook(10, 1, style, new Set(['CHART', 'BUBBLE', 'CATEGORICAL']), 64);
+  assert.deepEqual(Array.from(bubbleStrokeRgb(look({ linecolor: '#336699' }), undefined)), [51, 102, 153], 'linecolor, no class colour');
+  assert.equal(bubbleStrokeRgb(look({ linecolor: 'none' }), [200, 0, 0]), null, 'linecolor none: no outline');
+  assert.equal(bubbleStrokeRgb(look({}), undefined), null, 'neither linecolor nor class colour: none');
+  assert.ok(bubbleStrokeRgb(look({}), [200, 0, 0]), 'no linecolor: the class colour derivate');
 });
