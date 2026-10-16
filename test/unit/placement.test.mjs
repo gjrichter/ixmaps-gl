@@ -558,3 +558,14 @@ test('aggregation: RELOCATE|MAX / MIN places the item at the record holding the 
   near(lngOf('CHART|BUBBLE|AGGREGATE|MIN|RELOCATE'), 9, 'MIN: at the v=1 record', 1e-7);
   near(lngOf('CHART|BUBBLE|AGGREGATE|SUM|RELOCATE'), (9 + 9.0001 + 9.001) / 3, 'SUM: at the mean', 1e-6);
 });
+
+test('alignmargin: flat keeps 5 units between the position and a left/right chart; alignmargin 0 makes the edge touch it', () => {
+  const rt = style => Object.assign(Object.create(G.LayerRuntime.prototype), {
+    style, flags: flags('CHART', 'BUBBLE', 'CATEGORICAL'), mapOptions: { objectscaling: 'fixed' } });
+  const off = (style, r = 20) => Array.from(rt(style)._chartAlignFn(10, () => r)({}));
+  assert.deepEqual(off({ align: 'left', scale: 1 }), [25, 0], 'default: flat r + 5 units (the chart is right of the position)');
+  assert.deepEqual(off({ align: 'right', scale: 1 }), [-25, 0]);
+  assert.deepEqual(off({ align: 'left', scale: 1, alignmargin: 0 }), [20, 0], 'margin 0: the left border touches the position');
+  assert.deepEqual(off({ align: 'right', scale: 1, alignmargin: 0 }), [-20, 0], 'margin 0: the right border touches the position');
+  assert.deepEqual(off({ align: 'left', scale: 2, alignmargin: 3 }), [26, 0], 'margin in units: 20 + 3 · unit 2');
+});

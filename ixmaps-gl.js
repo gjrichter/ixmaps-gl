@@ -3122,7 +3122,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
     'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale', 'rangecentervalue',
     'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety', 'gridx', 'boxmargin', 'borderwidth',
-    'borderradius', 'maxcharts', 'archeight'];
+    'borderradius', 'maxcharts', 'archeight', 'alignmargin'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -16710,7 +16710,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // flat's chart position for this build (flatChartAlignOffset): a
     // function item → pixel offset, the same for every part of one chart
     // (symbol, glow, shadow, box, title, value text). unit is flat's
-    // normalX(1) on screen, the object zoom × style.scale.
+    // normalX(1) on screen, the object zoom × style.scale. flat keeps a margin of 5 units between the
+    // position and the chart's facing edge for left/right/top/bottom; the gl-only style.alignmargin
+    // changes it (0: the edge touches the position, so a left and a right chart touch each other)
     _chartAlignFn(liveZoom, radiusOf, textOnly = false) {
       const st = this.style;
       const none = () => [0, 0];
@@ -16719,12 +16721,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
       const symbol = flatChartBranch(this.flags) === 'symbol';
       const normalR = NORMAL_RADIUS_PX * unit; // flat's normalX(chart size / 2)
+      const margin = Number.isFinite(styleNum(st.alignmargin)) ? styleNum(st.alignmargin) : 5;
       const cache = new Map();
       const fn = d => {
         let v = cache.get(d);
         if (v) return v;
         const r = radiusOf(d);
-        v = flatChartAlignOffset(st, { unit, symbolScale: symbol ? r / (2 * normalR) : 1, half: symbol ? normalR : r, orig: r + (textOnly ? 0 : 5 * unit) });
+        v = flatChartAlignOffset(st, { unit, symbolScale: symbol ? r / (2 * normalR) : 1, half: symbol ? normalR : r, orig: r + (textOnly ? 0 : margin * unit) });
         cache.set(d, v);
         return v;
       };
