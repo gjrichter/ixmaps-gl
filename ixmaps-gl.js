@@ -1212,6 +1212,26 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     }
     return rows;
   }
+  // .data({process}) on topojson/geojson, as flat: its data.js hands the
+  // process function the features' properties as a Table (column(...).map,
+  // addColumn, ...); the result goes back onto the same features, by row
+  function processFeatureCollection(fc, dataConfig) {
+    if (!dataConfig.process || !fc || !Array.isArray(fc.features) || !fc.features.length) return fc;
+    requireDataJs('process');
+    const headers = [];
+    const seen = new Set();
+    for (const f of fc.features) {
+      for (const k of Object.keys(f.properties || {})) if (!seen.has(k)) { seen.add(k); headers.push(k); }
+    }
+    const table = new global.Data.Table().setArray([headers, ...fc.features.map(f => headers.map(h => (f.properties || {})[h]))]);
+    const rows = dataTableRows(runDataProcess(table, dataConfig));
+    if (rows.length !== fc.features.length) {
+      console.warn(`[ixmaps-gl] .data({process}) changed the row count of ${dataConfig.type} features (${fc.features.length} → ${rows.length}); process result ignored`);
+      return fc;
+    }
+    fc.features.forEach((f, i) => { f.properties = rows[i]; });
+    return fc;
+  }
   // parse CSV text with data.js (as flat) → a Table
   function dataJsCsvTable(text) {
     return new Promise((resolve, reject) => {
@@ -1533,8 +1553,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // genuinely CSV-shaped .obj with a missing binding.position would
     // throw, even though this .obj was never row data in the first place.
     if (dataConfig.obj) {
-      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(dataConfig.obj, dataConfig.object);
-      if (dataConfig.type === 'geojson') return sanitizeGeoJSON(dataConfig.obj);
+      if (dataConfig.type === 'topojson') return processFeatureCollection(topojsonToFeatureCollection(dataConfig.obj, dataConfig.object), dataConfig);
+      if (dataConfig.type === 'geojson') return processFeatureCollection(sanitizeGeoJSON(dataConfig.obj), dataConfig);
       let obj = dataConfig.obj;
       if (dataConfig.process) {
         requireDataJs('process');
@@ -1626,8 +1646,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // them into a table with a geometry column, and back)
       const resp = await fetch(dataConfig.url);
       if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${dataConfig.url}: ${resp.status}`);
-      if (dataConfig.type === 'topojson') return topojsonToFeatureCollection(await resp.json(), dataConfig.object);
-      return sanitizeGeoJSON(await resp.json());
+      if (dataConfig.type === 'topojson') return processFeatureCollection(topojsonToFeatureCollection(await resp.json(), dataConfig.object), dataConfig);
+      return processFeatureCollection(sanitizeGeoJSON(await resp.json()), dataConfig);
     }
     // every other format (json, jsonstat, ndjson, rss, kml, gml, geobuf,
     // flatgeobuf, geopackage, parquet, ...) through data.js, as flat
