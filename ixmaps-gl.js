@@ -1201,7 +1201,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (!table || !Array.isArray(table.records) || !Array.isArray(table.fields)) {
       return table && typeof table.json === 'function' ? table.json() : [];
     }
-    const names = table.fields.map(f => f.id);
+    // a header cell that spans lines ("Sezione (*)\nSektion", bilingual
+    // exports) reads as one line, as in flat: "Sezione (*) Sektion"
+    const names = table.fields.map(f => String(f.id).replace(/[\r\n]+/g, ' '));
     const rows = new Array(table.records.length);
     for (let i = 0; i < table.records.length; i++) {
       const rec = table.records[i], o = {};
