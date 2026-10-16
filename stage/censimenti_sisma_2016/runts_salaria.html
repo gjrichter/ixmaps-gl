@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="ixmaps-gl port of 'RUNTS lungo la Salaria' (ixmaps-flat original: index_embed_salaria_runts_categorie.html)">
+<title>RUNTS lungo la Salaria</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+<script src="../../ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F7F6EF; }
+  #map_div { position: absolute; top: 0; bottom: 0; left: 0; width: 66%; }
+  #sidebar {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 34%;
+    box-sizing: border-box; padding: 0.5em 1em 1em 1.2em; overflow: auto;
+    background: #F7F6EF; border-left: 1px solid #ddd; text-align: left;
+  }
+  #sidebar h1 { margin: 0; font-size: 1.6em; }
+  #sidebar p { margin-top: 0.4em; }
+  #sidebar a { color: #0088dd; }
+  #filter-div { display: none; align-items: center; gap: 0.5em; margin: 0.8em 2em 0 0; font-size: 0.9em; padding: 0.2em; background: #F7F6EF; }
+  #onmap-buttons { position: absolute; bottom: 3em; right: 36%; z-index: 10; background: rgba(255,255,255,0.8); padding: 0.2em 0.6em; border-radius: 4px; font-size: 0.8em; }
+  #onmap-buttons input { width: 100%; }
+  #sidebarnav { position: absolute; left: 0; bottom: 20px; width: 100%; text-align: center; display: none; z-index: 20; }
+  #sidebarnav span { padding: 8px 16px; border: 1px solid #ddd; border-radius: 2px; background: #fff; }
+  #info-overlay { position: absolute; bottom: 20%; right: 5%; width: 90%; max-height: 70%; display: none; z-index: 9999; }
+  #info-overlay > div { background: #F7F6EF; border: 1px solid #444; border-radius: 0.5em; max-width: 720px; margin: auto; padding: 1em; text-align: left; position: relative; }
+  #info-overlay .close { position: absolute; top: 0.4em; right: 0.8em; font-size: 22px; cursor: pointer; text-decoration: none; }
+  @media (max-width: 600px) {
+    #map_div { width: 100%; }
+    #sidebar { display: none; width: 100%; }
+    #onmap-buttons { display: none; }
+    #sidebarnav { display: block; }
+  }
+  /* facets — overrides ixmaps.data.showFacets' own injected DARK default
+     stylesheet (.ix-facet-* classes, see ixmaps-gl.js's ensureFacetStyles)
+     with this page's original light theme. Works because that default
+     stylesheet is inserted as <head>'s FIRST child specifically so a
+     page's own same-specificity rules (declared normally, later in
+     source order) win — see its own comment. */
+  #show-facets-div { margin-top: 0.5em; }
+  .ix-facet { margin-bottom: 0.9em; }
+  .ix-facet-header {
+    font-size: 1em; padding: 0.45em 0.6em; border-radius: 5px; background: #888;
+    color: #fff; margin-bottom: 0.4em;
+  }
+  .ix-facet-active .ix-facet-header { background: #884444; cursor: pointer; }
+  .ix-facet-active .ix-facet-header::after { content: " \00d7"; float: right; }
+  .ix-facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
+  .ix-facet-search input {
+    flex: 1; font-size: 0.85em; border: 1px solid #ddd; border-radius: 3px;
+    padding: 0.25em 0.5em; background: #fff;
+  }
+  .ix-facet-search button {
+    border: 1px solid #ddd; background: #fff; border-radius: 3px; cursor: pointer; font-size: 0.85em;
+  }
+  .ix-facet-bar {
+    cursor: pointer; padding: 0.3em 0.1em; border-bottom: 1px solid rgba(128,128,128,0.15);
+  }
+  .ix-facet-bar:hover { background: rgba(0,136,221,0.06); }
+  .ix-facet-bar-selected { background: rgba(136,68,68,0.08); }
+  .ix-facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; font-size: 0.95em; }
+  .ix-facet-label { color: #333; }
+  .ix-facet-count { flex: none; color: #333; font-weight: 600; white-space: nowrap; }
+  .ix-facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #ccc; }
+  .ix-facet-more {
+    margin: 0.2em 0 0.4em 0; font-size: 0.8em; padding: 0.2em 0.6em;
+    border: 1px solid #ccc; background: #fff; border-radius: 3px; cursor: pointer;
+  }
+
+</style>
+</head>
+<body>
+
+<div id="map_div"></div>
+
+<div id="sidebar">
+  <h1>RUNTS lungo la Salaria</h1>
+  <p>Enti del Terzo Settore iscritti al RUNTS nei comuni lungo la Via Salaria (province di Roma, Rieti e Ascoli Piceno) e nei 138 comuni del cratere sismico 2016. I grafici mostrano la distribuzione per Sezione.</p>
+  <p style="font-size:0.85em">Dati: <a href="https://www.runts.it" target="_blank">RUNTS &mdash; Registro Unico Nazionale del Terzo Settore</a>, elenco iscritti del 16/10/2026.</p>
+  <div id="filter-div"><span id="filter-text"></span><button id="clear-filter-btn" style="font-size:0.8em">x</button></div>
+  <p style="font-size:0.9em">Info sulla mappa <a href="javascript:void(0)" onclick="document.getElementById('info-overlay').style.display='block'">qui</a>.</p>
+  <div id="show-facets-div" style="margin-right:0.5em"></div>
+</div>
+
+<div id="onmap-buttons">
+  grandezza grafici<br>
+  <input type="range" id="slSize" min="0.1" max="2" step="0.01" value="1">
+</div>
+
+<div id="sidebarnav">
+  <span>
+    <a href="javascript:void(0)" onclick="showMap()">Mappa</a> &nbsp;|&nbsp;
+    <a href="javascript:void(0)" onclick="showSidebar()">Elenco enti</a>
+  </span>
+</div>
+
+<div id="info-overlay">
+  <div>
+    <a class="close" href="javascript:void(0)" onclick="document.getElementById('info-overlay').style.display='none'">&times;</a>
+    <h3 style="margin-top:0">RUNTS lungo la Via Salaria</h3>
+    <p>Questa mappa mostra gli enti del Terzo Settore iscritti al RUNTS nei comuni delle province di <strong>Roma</strong>, <strong>Rieti</strong> e <strong>Ascoli Piceno</strong> lungo il corridoio della Via Salaria (escluso il comune di Roma) e nei <strong>138 comuni del cratere sismico 2016</strong> (Abruzzo, Lazio, Marche, Umbria).</p>
+    <p>Ogni grafico rappresenta un comune: i segmenti mostrano quanti enti appartengono a ciascuna <strong>Sezione</strong> (categoria giuridica: Organizzazioni di Volontariato, Associazioni di Promozione Sociale, Enti Filantropici, ecc.).</p>
+    <p>Il pannello a destra mostra un riepilogo dinamico che si aggiorna ad ogni zoom o spostamento sulla mappa.</p>
+    <p><strong>Fonte dati:</strong> RUNTS &mdash; Registro Unico Nazionale del Terzo Settore<br>
+    File: <code>runts_iscritti_salaria_cratere_20261016.csv</code> (estratto da <code>20261016_iscritti_v1.1</code>: province RM, RI, AP e i 138 comuni del cratere), <a href="https://github.com/gjrichter/ixmaps-data/tree/main/by-project/runts-salaria" target="_blank">ixmaps-data</a></p>
+  </div>
+</div>
+
+<script>
+  var THEME_ID = "chart";
+  var FACET_FIELDS = [
+    "Sezione (*) Sektion",
+    "Provincia Sede legale Provinz Rechtssitz",
+    "Comune Sede legale Gemeinsame Rechtssitz",
+    "Rete  Netzwerk",
+    " 5x 1000",
+    "Data Iscrizione Anmeldedatum",
+    "Denominazione  Bezeichnung",
+    "Codice fiscale Steuernummer",
+    "Repertorio Repertoire"
+  ];
+
+  // ---------------------------------------------------
+  // URL params (shareable state)
+  // ---------------------------------------------------
+  const params = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+  });
+  var __lat = 42.471866553461176, __lon = 13.519933218589442, __zoom = 9.596807653071448;
+  var __scale_chart = params.scale || 1;
+  if (params.view) {
+    var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+    __lat = latlonA[0]; __lon = latlonA[1]; __zoom = parseInt(params.view.split(',')[2]);
+  }
+
+  // comuni topojson: upper-case the name so it joins the CSV's COMUNE column
+  var process_comune = function (data) {
+    data.column("COMUNE").map(function (value) {
+      return String(value).toLocaleUpperCase();
+    });
+  };
+
+  // ---------------------------------------------------
+  // layers
+  // ---------------------------------------------------
+  var __nuts2 = ixmaps.layer("nuts2", layer => layer
+    .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2021_4326_LEVL_2.geojson", type: "geojson" })
+    .binding({ geo: "geometry", id: "NUTS_NAME" })
+    .filter("WHERE CNTR_CODE = IT")
+    .type("FEATURE|SILENT|NOLEGEND")
+    .style({
+      colorscheme: ["white"], fillopacity: 1, linecolor: "#E7E6DF", linewidth: 2,
+      shadow: true, showdata: "true", featurelower: "1:1000000", titlefield: "NUTS_NAME"
+    })
+  );
+
+  // province borders: Ascoli Piceno, Rieti, Roma
+  var __nuts3 = ixmaps.layer("nuts3", layer => layer
+    .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_01M_2021_4326_LEVL_3.geojson", type: "geojson" })
+    .binding({ geo: "geometry", id: "NUTS_NAME" })
+    .filter('WHERE NUTS_NAME like "Ascoli Piceno|Rieti|Roma"')
+    .type("FEATURE|SILENT|NOLEGEND")
+    .style({
+      colorscheme: ["none"], fillopacity: 1, linecolor: "#666666", linewidth: 0.5,
+      showdata: "true", titlefield: "NUTS_NAME"
+    })
+  );
+
+  // 2016 earthquake crater: the 138 comuni and their outline
+  // (geodata: github.com/gjrichter/ixmaps-data, by-project/sisma-2016-cratere, pinned commit)
+  var CRATERE = "https://raw.githubusercontent.com/gjrichter/ixmaps-data/0154fb8/by-project/sisma-2016-cratere/";
+
+  var __cratere = ixmaps.layer("cratere_sisma_2016", layer => layer
+    .data({ url: CRATERE + "cratere_sisma_2016.geojson", type: "geojson" })
+    .binding({ id: "istat", title: "name" })
+    .type("FEATURE|NOLEGEND")
+    .style({ colorscheme: ["#e6550d"], fillopacity: "0.08", linecolor: "#e6550d", linewidth: "1", name: "cratere_sisma_2016" })
+  );
+
+  var __cratere_outline = ixmaps.layer("cratere_sisma_2016_outline", layer => layer
+    .data({ url: CRATERE + "cratere_sisma_2016_outline.geojson", type: "geojson" })
+    .type("FEATURE|SILENT|NOLEGEND")
+    .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
+  );
+
+  var __salaria = ixmaps.layer("salaria", layer => layer
+    .data({ url: "https://raw.githubusercontent.com/gjrichter/ixmaps-data/578706e/by-project/runts-salaria/salaria_trace.geojson", type: "geojson" })
+    .binding({ geo: "geometry", id: "$item$" })
+    .type("FEATURE|SILENT|NOLEGEND")
+    .style({ colorscheme: ["red"], linewidth: 5, showdata: "true" })
+  );
+
+  // comuni 2022: geometry reference for chart positioning
+  var __comuni = ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+    .data({
+      url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/comuni_2022/Com01012022_s_WGS84.topojson.gz",
+      type: "topojson",
+      process: process_comune.toString()
+    })
+    .binding({ id: "COMUNE", position: "geometry" })
+    .type("FEATURE|NOLEGEND")
+    .style({ colorscheme: ["none"], linecolor: "none", linewidth: 0.3, sizefield: "Shape_Area", showdata: "true" })
+  );
+
+  // RUNTS: star chart by Sezione, aggregated per comune
+  var __runts = ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+    .data({ url: "https://raw.githubusercontent.com/gjrichter/ixmaps-data/578706e/by-project/runts-salaria/runts_iscritti_salaria_cratere_20261016.csv", type: "csv", name: "all_data", cache: "true" })
+    .filter('WHERE "Comune Sede legale Gemeinsame Rechtssitz" not "ROMA"')
+    .type("CHART|SYMBOL|SEQUENCE|SIZE|STAR|SORT|DOWN|CATEGORICAL|AGGREGATE|SUM|VALUES")
+    .binding({
+      value:    "Sezione (*) Sektion",
+      position: "Comune Sede legale Gemeinsame Rechtssitz"
+    })
+    .style({
+      colorscheme: ["8", "tableau10"],
+      fillopacity: 1,
+      units: "",
+      sizepow: 2,
+      scale: String(__scale_chart),
+      valuedecimals: 0,
+      showdata: "true"
+    })
+    .meta({
+      name: "chart",
+      title: "Enti del Terzo Settore",
+      tooltip: "{{theme.title}}: {{theme.item.value}}{{theme.item.chart}}{{theme.item.data}}"
+    })
+  );
+
+  // ---------------------------------------------------
+  // map
+  // ---------------------------------------------------
+  var _mapPromise = ixmaps.Map("map_div", {
+      mapService: "leaflet_vt",
+      mapType: "VT_TONER_LITE",
+      mode: "pan",
+      legend: "true",
+      tools: "true"
+    },
+    map => map
+      .view({ center: { lat: __lat, lng: __lon }, zoom: __zoom })
+      .options({
+        featurescaling: "true",
+        objectscaling: "dynamic",
+        normalSizeScale: "1000000",
+        dynamicScalePow: "1.7",
+        flushChartDraw: "1000000",
+        flushPaintShape: "1000000",
+        basemapopacity: "0.7"
+      })
+      .attribution("RUNTS, ISTAT, Commissario sisma 2016, Eurostat GISCO, &copy; OpenStreetMap contributors")
+      .layer(__nuts2)
+      .layer(__nuts3)
+      .layer(__cratere)
+      .layer(__cratere_outline)
+      .layer(__salaria)
+      .layer(__comuni)
+      .layer(__runts)
+  );
+
+  // ---------------------------------------------------
+  // facets sidebar
+  // ---------------------------------------------------
+  function renderFilterDisplay(api) {
+    var active = api.getActiveFacetFilters(THEME_ID);
+    var parts = Object.entries(active).map(function (e) {
+      var field = e[0], clause = e[1];
+      if (clause && typeof clause === 'object' && 'like' in clause) return '"' + field + '" LIKE "' + clause.like + '"';
+      return '"' + field + '" = "' + clause + '"';
+    });
+    var div = document.getElementById('filter-div');
+    if (parts.length) {
+      document.getElementById('filter-text').textContent = 'WHERE ' + parts.join(' AND ');
+      div.style.display = 'flex';
+    } else {
+      div.style.display = 'none';
+    }
+  }
+
+  function renderFacets(api) {
+    var facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
+    ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
+    renderFilterDisplay(api);
+  }
+
+  _mapPromise.then(function (api) {
+    renderFacets(api);
+    api.onRedraw(function () { renderFacets(api); });
+    document.getElementById('clear-filter-btn').addEventListener('click', function () {
+      api.clearAllFacetFilters(THEME_ID);
+    });
+    document.getElementById('slSize').addEventListener('input', function (e) {
+      api.setThemeStyle(THEME_ID, { scale: e.target.value });
+    });
+  }).catch(function (err) { console.error(err); });
+
+  // small-screen map/sidebar switch
+  function showSidebar() { document.getElementById('sidebar').style.display = 'block'; document.getElementById('map_div').style.display = 'none'; }
+  function showMap() { document.getElementById('sidebar').style.display = ''; document.getElementById('map_div').style.display = ''; }
+</script>
+</body>
+</html>
