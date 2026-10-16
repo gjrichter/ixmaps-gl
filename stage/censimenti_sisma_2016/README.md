@@ -99,6 +99,12 @@ The crater, outline, SS4 Salaria and region geodata, the official-source tables 
 <sub>ISTAT risk indicators for all comuni (seismic, landslide and flood exposure, social vulnerability, population) as a theme explorer with a filterable indicator list; the earthquake crater and the SS4 Salaria are drawn on top. Port of the ixmaps-flat original.</sub><br>
 <a href="https://gl.ixmaps.com/stage/censimenti_sisma_2016/sisma_2016_rischi_comuni_sidebar.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/censimenti_sisma_2016/sisma_2016_rischi_comuni_sidebar.html">see code →</a>
 </div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/censimenti_sisma_2016/runts_salaria.html"><img src="screenshots/runts_salaria.png" width="100%"></a><br>
+<b>RUNTS along the Salaria</b><br>
+<sub>Third-sector organisations registered in the RUNTS in the comuni along the Via Salaria (Roma, Rieti, Ascoli Piceno) and in the 138 crater comuni, as charts per section; a facet list on the side filters the map.</sub><br>
+<a href="https://gl.ixmaps.com/stage/censimenti_sisma_2016/runts_salaria.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/censimenti_sisma_2016/runts_salaria.html">see code →</a>
+</div>
 </div>
 
 ---
