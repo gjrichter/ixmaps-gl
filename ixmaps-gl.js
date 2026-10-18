@@ -18016,6 +18016,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function compatRemoveTheme(...a) {
     return _mapHandle.remove(a.length >= 2 ? a[1] : a[0]);
   }
+  // flat's ixmaps.toggleTheme(szMap, szTheme) (htmlgui.js): show / hide a theme by its id, e.g. a page's on / off buttons
+  function compatToggleTheme(...a) {
+    new themeApi(null, a.length >= 2 ? a[1] : a[0]).toggle();
+  }
   function compatSetBasemapOpacity(...a) {
     if (a.length >= 3) {
       const api = (a[0] && _mapApis[a[0]]) || _lastMapApi;
@@ -18051,6 +18055,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     htmlgui_getAttributionString: () => (_lastMapApi && _lastMapApi.getAttribution ? _lastMapApi.getAttribution() : ''),
     changeThemeStyle: compatChangeThemeStyle,
     removeTheme: compatRemoveTheme,
+    toggleTheme: compatToggleTheme,
     // flat's ixmaps.setLocalString(orig, local) (htmlgui.js 3814 →
     // Api.setLocalString → Dictionary.replace): a page-wide translation,
     // e.g. the migration page's ISO code → country name; usable before
