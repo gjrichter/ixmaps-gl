@@ -224,10 +224,23 @@ but unused. It never mutates the page's own objects. Unit tests: `cd test && npm
 
 ### World copies
 
-At an extreme zoom-out MapLibre repeats the world side by side, and the themes are repeated on
-every copy (flat repeats only its basemap tiles). `.options({worldcopies: false})` draws the
-world once, but MapLibre then also stops the zoom-out where the world gets narrower than the
-window.
+At an extreme zoom-out MapLibre repeats the world side by side. The themes are drawn once, as in
+flat (which repeats only its basemap tiles): the map pans freely past the world's edge, with empty
+space beside it. `.options({themecopies: true})` (also at runtime) repeats the themes on every world
+copy. `.options({worldcopies: false})` draws the world once for the map itself, but MapLibre then
+also stops the zoom-out where the world gets narrower than the window.
+
+### Click to action
+
+flat's click-to-action (`ui/js/tools/tooltip_to_action.js`, e.g. a click on a country filters every
+theme of the page to it) works as on flat: on a click on an item the engine calls the page's
+`ixmaps.onItemAction(szId, item, themeObj)`, `item.szSelectionId` being the value of the theme's
+selection field, and `ixmaps.onItemAction(null, null)` on a click on the map background. The
+selection field, `getThemeObj(id).szSelectionField`, is the `id` binding, else the position (or
+lookup) field; an aggregated item gives its first record's value. The flat script's own
+`htmlgui_onItemClick`, which reads flat's SVG, is not called — the page only needs
+`.require(".../tooltip_to_action.js")` (or its own `ixmaps.onItemAction`). The click still pins the
+tooltip. See [`ports/index_embed_migration - Zeit online data - 2015-2020 - click2filter.html`](./ports/index_embed_migration%20-%20Zeit%20online%20data%20-%202015-2020%20-%20click2filter.html).
 
 ### Data formats and data.js
 

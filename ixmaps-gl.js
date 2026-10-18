@@ -3617,6 +3617,17 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   const SPHERE_BACKDROP_LAYER_ID = '__ixmaps_gl_sphere_backdrop';
   function applySphereBackdrop(map, style) {
     const cs = style && style.colorscheme;
+  // the themes are drawn once, as in flat, even where the map repeats its world (the themecopies map option:
+  // true repeats them on every world copy)
+  function applyThemeCopies(map, value) {
+    if (value !== true && value !== 'true') {
+      if (!map.__ixOrigGetRenderWorldCopies) map.__ixOrigGetRenderWorldCopies = map.getRenderWorldCopies;
+      map.getRenderWorldCopies = () => false;
+    } else if (map.__ixOrigGetRenderWorldCopies) {
+      map.getRenderWorldCopies = map.__ixOrigGetRenderWorldCopies;
+      delete map.__ixOrigGetRenderWorldCopies;
+    }
+  }
     const color = Array.isArray(cs) ? cs[0] : cs;
     if (!color || color === 'none') return;
     const opacity = Number.isFinite(styleNum(style.fillopacity)) ? styleNum(style.fillopacity) : 1;
@@ -3962,11 +3973,29 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     function clickFor(picked) {
         const info = picked && Object.assign({}, picked, { object: pickedFeature(picked.object) });
         if (info && info.object && info.layer) {
+    // flat's click-to-action hook (ui/js/tools/tooltip_to_action.js): ixmaps.onItemAction(szId, item, themeObj) on a
+    // click on an item — item.szSelectionId is the value of the theme's selection field — and onItemAction(null, null)
+    // on a click on the map background
+    function callItemAction(rt, object) {
+      const hook = pageIxmaps() && pageIxmaps().onItemAction;
+      if (typeof hook !== 'function') return;
+      try {
+        if (!rt) { hook.call(global.ixmaps, null, null); return; }
+        const field = selectionFieldOf(rt);
+        const props = object.properties || {};
+        // a single record, or an aggregated item's first one
+        const raw = props.raw || props.firstRaw || props.titleRaw || (props.raws && props.raws[0]) || props;
+        const value = field && raw ? raw[field] : null;
+        if (value == null) return;
+        hook.call(global.ixmaps, themeIdOf(rt) + '::' + value, { szSelectionId: String(value) }, getThemeObj(themeIdOf(rt)));
+      } catch (err) { console.error('[ixmaps-gl] onItemAction failed:', err); }
+    }
           const rt = findRuntimeForLayerId(info.layer.id);
           if (rt) {
             // Only a Point geometry's own coordinates ARE an
             // [lng,lat] pair (every point/bubble/dot/chart-cluster
             // layer) — a CHOROPLETH polygon's geometry.coordinates is
+            callItemAction(rt, info.object);
             // a nested array of RINGS, which map.project() below
             // can't accept (confirmed live: threw MapLibre's own
             // "LngLatLike argument must be..." error). The `||
@@ -3997,6 +4026,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         pinned = null;
         pinnedTooltipEl.style.display = 'none';
         return false;
+        callItemAction(null, null);
     }
     // An exception thrown from these callbacks runs inside deck.gl's
     // own render frame / event dispatch and leaves its frame and
@@ -5335,7 +5365,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // world map can't open fully zoomed out. The deck.gl overlay takes
         // its `repeat` from map.getRenderWorldCopies(), so the themes are
         // drawn on every world copy too (flat draws them once; only its
-        // basemap tiles wrap). .options({worldcopies: false}) draws the
+        // basemap tiles wrap) — unless themecopies is off, which is the default
+        // (see applyThemeCopies). .options({worldcopies: false}) draws the
         // world once, at the cost of that zoom limit.
         renderWorldCopies: this._engineOptions.worldcopies !== false
       });
@@ -5343,6 +5374,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       sphereBackdrops.forEach(style => applySphereBackdrop(map, style));
       // the live-SVG pane USER charts render into (see chartHostFor) —
       // registered here, keyed by this map's options object, so every
+      // themecopies (default: off): the map keeps its world copies (free panning past the world's edge, empty
+      // space beside it) but the deck.gl overlay, which asks map.getRenderWorldCopies() for its `repeat`, draws the
+      // themes once, as flat does. .options({themecopies: true}) repeats them. MapLibre's own transform does not
+      // use this method.
+      applyThemeCopies(map, this._engineOptions.themecopies);
       // runtime (including later loadProject/map.layer ones) finds it
       chartHostFor(this._engineOptions, map, el);
       // ixmaps.Map(id, {mapProjection}): flat's orthographic map is MapLibre's
@@ -5906,6 +5942,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             if ('worldcopies' in o) map.setRenderWorldCopies(o.worldcopies !== false && o.worldcopies !== 'false');
             refresh();
           }
+            if ('themecopies' in o) { applyThemeCopies(map, o.themecopies); map.triggerRepaint(); }
           return engineApi;
         },
         // the `legend` map option at runtime (see setLegendOption)
@@ -17494,6 +17531,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // szLabelA / szValuesA the style's label / values lists
       colorScheme: (rt.categoryColorsRgb || []).map(rgbHex),
       nStringToValueA: rt.categoryLabels ? Object.fromEntries(rt.categoryLabels.map((v, i) => [v, i + 1])) : {},
+      // flat's szSelectionField: the field a click on an item selects by (the id binding, else the field the
+      // item is positioned by)
+      szSelectionField: selectionFieldOf(rt),
       szLabelA: Array.isArray(rt.style.label) ? rt.style.label.map(String) : (rt.categoryDisplayLabels || null),
       szValuesA: Array.isArray(rt.style.values) ? rt.style.values.map(String) : null,
       partsA: rt.partsA || [],
@@ -17530,6 +17570,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return rt._dbTable;
   }
   // the records on the map now: none for a hidden / out of scale theme,
+  // the field whose value identifies an item on a click (flat's szSelectionField): binding.id, else the position field
+  // (which a join to a geometry layer turns into binding.lookup)
+  function selectionFieldOf(rt) {
+    const b = rt.binding || {};
+    const f = b.id || b.position || b.lookup;
+    return typeof f === 'string' && f && f !== 'geometry' && !/^geometry$/i.test(f) ? f : null;
+  }
   // else the (facet-filtered) records within the view
   function themeItemsOnMap(rt) {
     themeDbTable(rt);
