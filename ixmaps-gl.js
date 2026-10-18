@@ -3664,6 +3664,23 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // basemap credit, bottom right — same line, same pill: white, 12px
   // radius, 12px/20px Helvetica Neue, links rgba(0,0,0,0.75)).
   // ---------------------------------------------------------------
+  // On a dark map (the effective darkness, as the legend and the tooltip use it) the MapLibre control buttons
+  // (zoom, compass) and the page's attribution are dark too: the class ixgl-dark on the map element switches them
+  let _controlLookCss = false;
+  function applyControlLook(el, dark) {
+    if (!_controlLookCss && typeof document !== 'undefined') {
+      _controlLookCss = true;
+      const css = document.createElement('style');
+      css.textContent = '.ixgl-dark .maplibregl-ctrl-group{background:#222!important;box-shadow:0 0 0 1px rgba(255,255,255,.15)!important}'
+        + '.ixgl-dark .maplibregl-ctrl-group button+button{border-top:1px solid #444!important}'
+        + '.ixgl-dark .maplibregl-ctrl-group button:not(:disabled):hover{background-color:#3a3a3a!important}'
+        + '.ixgl-dark .maplibregl-ctrl-group .maplibregl-ctrl-icon{filter:invert(1)}'
+        + '.ixgl-dark .ixmaps-gl-attribution{background:#222!important;color:#aaa!important}'
+        + '.ixgl-dark .ixmaps-gl-attribution a{color:#ddd!important}';
+      document.head.appendChild(css);
+    }
+    if (el && el.classList) el.classList.toggle('ixgl-dark', !!dark);
+  }
   let _attributionCss = false;
   function createAttribution(map) {
     if (!_attributionCss && typeof document !== 'undefined') {
@@ -5504,6 +5521,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // the page's attribution (.attribution(), Map option attribution)
       const attributionBox = createAttribution(map);
       attributionBox.set(this._attributionText != null ? this._attributionText : this.mapOptions.attribution);
+      // dark controls on a dark map; re-read when a style (basemap) loads and when basemapopacity is set
+      const refreshControlLook = () => {
+        const o = parseFloat(this._engineOptions.basemapopacity);
+        const legendBackground = this.mapOptions.legendBackground || this.mapOptions.legendbackground;
+        applyControlLook(el, typeof this.__effectiveDark === 'function'
+          ? this.__effectiveDark(isNaN(o) ? 1 : o, this.mapOptions.mapType, legendBackground) : false);
+      };
+      this._refreshControlLook = refreshControlLook;
+      refreshControlLook();
+      map.on('style.load', refreshControlLook);
       this._setAttribution = text => attributionBox.set(text);
 
       if (this._legendHtml) {
@@ -5939,6 +5966,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           if (o && typeof o === 'object') {
             Object.assign(builder._engineOptions, o);
             // read only when the MapLibre map is created — switched here at runtime
+            if ('basemapopacity' in o && builder._refreshControlLook) builder._refreshControlLook();
             if ('themecopies' in o) { applyThemeCopies(map, o.themecopies); map.triggerRepaint(); }
             if ('worldcopies' in o) map.setRenderWorldCopies(o.worldcopies !== false && o.worldcopies !== 'false');
             refresh();
