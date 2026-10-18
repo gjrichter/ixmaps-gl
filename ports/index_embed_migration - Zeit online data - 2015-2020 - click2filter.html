@@ -276,12 +276,12 @@ $Log:ion_only_map_embed.html,v $
 				<td>
 					<button
 						style="background:black;color:#dddddd;border-radius:0em;border:rgb(206, 222, 239) solid 0px;padding:0.4em 0.8em;cursor:pointer"
-						onclick="ixmaps.toggleTheme(null,'vectors');">vectors</button>
+						onclick="ixmaps.map().theme('vectors').toggle();">vectors</button>
 				</td>
 				<td>
 					<button
 						style="background:black;color:#dddddd;border-radius:0em;border:rgb(206, 222, 239) solid 0px;padding:0.4em 0.8em;cursor:pointer"
-						onclick="ixmaps.toggleTheme(null,'arrivals');ixmaps.toggleTheme(null,'departures');">numbers</button>
+						onclick="ixmaps.map().theme('arrivals').toggle();ixmaps.map().theme('departures').toggle();">numbers</button>
 				</td>
 			</tr>
 		</table>
