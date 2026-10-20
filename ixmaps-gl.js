@@ -135,6 +135,11 @@
     // supplied by MapLibre GL JS itself, nothing this engine manages).
     deck: 'https://unpkg.com/deck.gl@9.4.0/dist.min.js',
     mustache: 'https://unpkg.com/mustache@4.2.0/mustache.min.js',
+    // .type("KDE") draws its bands with d3-contour; loaded on the first KDE theme only, and evaluated
+    // privately (ensureD3Contour) — never as a script tag: d3-array would overwrite the functions of
+    // a d3 v3 the page may already have (flat's user charts load d3.v3)
+    d3Array: 'https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js',
+    d3Contour: 'https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js',
     // loaded by default, as flat does (its resource list loads
     // ../data.js/data.js — from its CDN build, this URL); every data format
     // except GeoJSON/TopoJSON is read by it, see fetchLayerData
@@ -217,7 +222,7 @@
   // byte-grep of the shipped file (deck.gl's own @deck.gl/maplibre
   // overview page claims ES-modules-only, which the actual UMD bundle
   // contradicts).
-  let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension;
+  let IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension, HeatmapLayer;
   // PieSliceLayer (see makePieSliceLayer) and BarShapeLayer
   // (makeBarShapeLayer) are derived from ScatterplotLayer once deck.gl is there
   let PieSliceLayer, BarShapeLayer, FlowPathLayer;
@@ -608,7 +613,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         global.Mustache ? Promise.resolve() : loadScript(LIB_URLS.mustache),
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
       ]).then(() => {
-        ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension } = global.deck);
+        ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension, HeatmapLayer } = global.deck);
         PieSliceLayer = makePieSliceLayer(ScatterplotLayer);
         BarShapeLayer = makeBarShapeLayer(ScatterplotLayer);
         FlowPathLayer = makeFlowPathLayer(PathLayer);
@@ -1942,7 +1947,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function flatShapeAreaKm2(featureRt, f) {
     const sizeField = featureRt.binding && featureRt.binding.size;
     if (sizeField) {
-      const v = parseFloat(f.properties && f.properties[sizeField]);
+      const v = scanValue(f.properties && f.properties[sizeField]);
       return isFinite(v) ? v / 1000000 : NaN;
     }
     return geodesicPolygonAreaKm2(f.geometry);
@@ -2001,6 +2006,415 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return isFinite(o) ? Math.max(0, Math.min(1, o)) : 0;
   }
 
+  // flat's CHART|SYMBOL DOPACITY (maptheme.js 22142-22145): (v-min)^(1/pow) /
+  // (max-min)^(1/pow) · fillopacity(|| 1) · dopacityscale, clamped to 0..1 —
+  // min/max are the theme-wide extremes of the cell values, one pair for all
+  // cells (not the CHOROPLETH|DOPACITY median ramp, not a per-class max)
+  function symbolDopacityAlpha(style, v, min, max, fillopacity) {
+    const pow = 1 / (styleNum(style.dopacitypow) || 1);
+    const scale = styleNum(style.dopacityscale) || 1;
+    const fo = fillopacity || 1;
+    const o = Math.pow(v - min, pow) / Math.pow(max - min, pow) * fo * scale;
+    return isFinite(o) ? Math.max(0, Math.min(1, o)) : fo;
+  }
+
+  // .type("KDE") — kernel density estimate as stacked bands (the fire pages' KDE, done in the
+  // engine). The pure parts: bandwidth by zoom, the points, the density grid, the bands.
+  //
+  // The value of a grid cell is what the pages computed by brute force — the sum over the points
+  // of weight · exp(−d² / 2h²), d the distance in km, h the bandwidth — but here by BINNING each
+  // weight into its four nearest cells (bilinear) and blurring the grid with a separable Gaussian
+  // (σ = h in cells): O(points + cells · kernel) instead of O(cells · points). Thresholds are
+  // fractions of the maximum, so only the shape of the density matters, not its absolute scale.
+
+  // flat zoom → bandwidth (km) and the cell budget of the grid, as the fire pages chose them
+  const KDE_ZOOM_TABLE = [   // [from flat zoom, bandwidth km, max cells]
+    [16, 0.04, 1000000], [15, 0.08, 800000], [14, 0.12, 600000], [13, 0.30, 300000],
+    [12, 0.80, 100000], [11, 2.00, 40000], [10, 5.00, 25000], [9, 10.0, 20000]
+  ];
+  const KDE_FAR_ZOOM = [24.0, 15000];
+  const KDE_DEFAULT_LEVELS = [0.15, 0.30, 0.50, 0.70];
+  const KDE_MIN_POINTS = 5;       // fewer points have no density to speak of (the pages' rule)
+  const KDE_MARGIN_SIGMAS = 3;    // the grid reaches 3 bandwidths beyond the outermost points
+  const KDE_KM_PER_DEG = 111.3;   // the pages' constant
+
+  function kdeZoomRow(flatZoom) {
+    const z = Number(flatZoom);
+    const row = KDE_ZOOM_TABLE.find(r => z >= r[0]);
+    return row ? [row[1], row[2]] : KDE_FAR_ZOOM;
+  }
+  function kdeBandwidthKm(flatZoom) { return kdeZoomRow(flatZoom)[0]; }
+  function kdeMaxCells(flatZoom) { return kdeZoomRow(flatZoom)[1]; }
+
+  // style.kdelevels: the threshold fractions of the maximum, as an array or "0.2,0.5" — numbers in
+  // (0, 1], ascending, each once; anything unusable gives the default
+  function kdeLevels(style) {
+    let v = style && style.kdelevels;
+    if (typeof v === 'string') v = v.split(/[,\s|]+/).filter(Boolean);
+    if (!Array.isArray(v)) return KDE_DEFAULT_LEVELS.slice();
+    const out = [...new Set(v.map(Number).filter(x => isFinite(x) && x > 0 && x <= 1))].sort((a, b) => a - b);
+    return out.length ? out : KDE_DEFAULT_LEVELS.slice();
+  }
+
+  // the records' positions and weights as one Float64Array [lng, lat, weight, …] (cheap to hand to
+  // a worker); `bbox` [west, south, east, north] keeps only what lies inside it
+  function kdePoints(features, binding, bbox) {
+    const out = [];
+    for (const f of features) {
+      const c = f.geometry && f.geometry.coordinates;
+      if (!c || typeof c[0] !== 'number' || !isFinite(c[0]) || !isFinite(c[1])) continue;
+      if (bbox && (c[0] < bbox[0] || c[0] > bbox[2] || c[1] < bbox[1] || c[1] > bbox[3])) continue;
+      const w = heatmapWeight(binding, f.properties || {});
+      if (w > 0) out.push(c[0], c[1], w);
+    }
+    return Float64Array.from(out);
+  }
+
+  // The density grid of `points` ([lng, lat, w, …]) at bandwidth `bwKm`, on about `maxCells` cells
+  // that are square in km. Returns { values (row-major, row j at latitude s + (j + 0.5)·stepLat),
+  // nx, ny, w0, s, stepLng, stepLat, max }, or null for fewer than KDE_MIN_POINTS points. Cells
+  // coarser than the bandwidth still conserve the weights (binning, not sampling).
+  // SELF-CONTAINED on purpose: its source is handed to a Web Worker (Function.prototype.toString),
+  // so it uses nothing from this file.
+  function kdeGrid(points, bwKm, maxCells) {
+    const n = points.length / 3;
+    if (n < 5 || !(bwKm > 0)) return null;
+    const KM = 111.3;
+    let w0 = Infinity, e = -Infinity, s = Infinity, nn = -Infinity;
+    for (let i = 0; i < points.length; i += 3) {
+      const lng = points[i], lat = points[i + 1];
+      if (lng < w0) w0 = lng; if (lng > e) e = lng;
+      if (lat < s) s = lat; if (lat > nn) nn = lat;
+    }
+    const kmLng = Math.max(KM * Math.cos(((s + nn) / 2) * Math.PI / 180), 0.001);
+    const margin = 3 * bwKm;
+    s -= margin / KM; nn += margin / KM; w0 -= margin / kmLng; e += margin / kmLng;
+    const wKm = (e - w0) * kmLng, hKm = (nn - s) * KM;
+    const cell = Math.sqrt(wKm * hKm / Math.max(maxCells, 25));
+    const nx = Math.max(5, Math.ceil(wKm / cell)), ny = Math.max(5, Math.ceil(hKm / cell));
+    const stepLng = (e - w0) / nx, stepLat = (nn - s) / ny;
+
+    // bin: each weight into its four nearest cell centers (cell i is centered at (i + 0.5) · step)
+    let a = new Float32Array(nx * ny);
+    const put = (ix, iy, v) => {
+      if (ix < 0) ix = 0; else if (ix > nx - 1) ix = nx - 1;
+      if (iy < 0) iy = 0; else if (iy > ny - 1) iy = ny - 1;
+      a[iy * nx + ix] += v;
+    };
+    for (let i = 0; i < points.length; i += 3) {
+      const cx = (points[i] - w0) / stepLng - 0.5, cy = (points[i + 1] - s) / stepLat - 0.5;
+      const ix = Math.floor(cx), iy = Math.floor(cy), fx = cx - ix, fy = cy - iy, w = points[i + 2];
+      put(ix, iy, w * (1 - fx) * (1 - fy)); put(ix + 1, iy, w * fx * (1 - fy));
+      put(ix, iy + 1, w * (1 - fx) * fy);   put(ix + 1, iy + 1, w * fx * fy);
+    }
+
+    // separable Gaussian, peak 1 (σ in cells per axis, kernel to 3σ; no blur when σ is below a third of a cell)
+    const kernel = sigma => {
+      const r = sigma < 0.33 ? 0 : Math.ceil(3 * sigma);
+      const k = new Float32Array(2 * r + 1);
+      for (let d = -r; d <= r; d++) k[d + r] = Math.exp(-(d * d) / (2 * sigma * sigma));
+      return { k, r };
+    };
+    const kx = kernel(bwKm / (stepLng * kmLng)), ky = kernel(bwKm / (stepLat * KM));
+    let b = new Float32Array(nx * ny);
+    for (let j = 0; j < ny; j++) {
+      const row = j * nx;
+      for (let i = 0; i < nx; i++) {
+        let v = 0;
+        const lo = Math.max(0, i - kx.r), hi = Math.min(nx - 1, i + kx.r);
+        for (let t = lo; t <= hi; t++) v += a[row + t] * kx.k[t - i + kx.r];
+        b[row + i] = v;
+      }
+    }
+    a = new Float32Array(nx * ny);
+    let max = 0;
+    for (let j = 0; j < ny; j++) {
+      const lo = Math.max(0, j - ky.r), hi = Math.min(ny - 1, j + ky.r);
+      for (let i = 0; i < nx; i++) {
+        let v = 0;
+        for (let t = lo; t <= hi; t++) v += b[t * nx + i] * ky.k[t - j + ky.r];
+        a[j * nx + i] = v;
+        if (v > max) max = v;
+      }
+    }
+    return { values: a, nx, ny, w0, s, stepLng, stepLat, max };
+  }
+
+  // The bands of a kdeGrid: one MultiPolygon feature per threshold (fraction · max), each the area
+  // at or above it — so the bands stack, the highest on top — in lng/lat. `makeContours` is
+  // d3.contours (d3-contour), handed in so this stays pure. d3 puts the value of cell (i, j) at
+  // (i + 0.5, j + 0.5), the same convention as the grid, hence the plain scaling by the steps.
+  function kdeBands(grid, fractions, makeContours) {
+    const empty = { type: 'FeatureCollection', features: [] };
+    if (!grid || !(grid.max > 0) || !fractions.length) return empty;
+    const thresholds = fractions.map(f => f * grid.max);
+    const bands = makeContours().size([grid.nx, grid.ny]).thresholds(thresholds)(grid.values);
+    const features = [];
+    bands.forEach((mp, k) => {
+      if (!mp.coordinates || !mp.coordinates.length) return;
+      features.push({
+        type: 'Feature',
+        properties: { level: k, fraction: fractions[k], value: mp.value },
+        geometry: {
+          type: 'MultiPolygon',
+          coordinates: mp.coordinates.map(poly => poly.map(ring => ring.map(p => [grid.w0 + p[0] * grid.stepLng, grid.s + p[1] * grid.stepLat])))
+        }
+      });
+    });
+    return { type: 'FeatureCollection', features };
+  }
+
+  // The worker's whole source: kdeGrid alone (it uses nothing else of this file), answering
+  // {id, points, bwKm, maxCells} with {id, grid}, the grid's values handed back by transfer.
+  function kdeWorkerSource() {
+    return `const kdeGrid = ${kdeGrid.toString()};
+self.onmessage = e => {
+  const { id, points, bwKm, maxCells } = e.data;
+  const grid = kdeGrid(points, bwKm, maxCells);
+  self.postMessage({ id, grid }, grid ? [grid.values.buffer] : []);
+};`;
+  }
+
+  // kdeGrid off the main thread: one shared Web Worker, built from kdeWorkerSource. Without a Worker
+  // (a page that forbids blob workers, a test) or when it fails, the same function runs inline.
+  let _kdeWorker = null, _kdeSeq = 0;
+  const _kdePending = new Map();
+  // tests: forget the worker and the loaded d3-contour
+  function kdeReset() { if (_kdeWorker && _kdeWorker.terminate) _kdeWorker.terminate(); _kdeWorker = null; _kdePending.clear(); _d3ContourPromise = null; }
+  // tests: the deck.gl layer classes a runtime builds with, without loading deck.gl
+  function setDeckLayerClassesForTests(classes) { if (classes.GeoJsonLayer) GeoJsonLayer = classes.GeoJsonLayer; }
+  function kdeCompute(points, bwKm, maxCells) {
+    return new Promise(resolve => {
+      try {
+        if (_kdeWorker === null && typeof global.Worker === 'function' && typeof global.Blob === 'function' && global.URL && global.URL.createObjectURL) {
+          const w = new global.Worker(global.URL.createObjectURL(new global.Blob([kdeWorkerSource()], { type: 'text/javascript' })));
+          w.onmessage = e => { const p = _kdePending.get(e.data.id); if (p) { _kdePending.delete(e.data.id); p.resolve(e.data.grid); } };
+          w.onerror = () => {
+            _kdeWorker = false;   // no worker from now on: whatever is waiting is computed here
+            const waiting = [..._kdePending.values()]; _kdePending.clear();
+            waiting.forEach(p => p.resolve(kdeGrid(...p.args)));
+          };
+          _kdeWorker = w;
+        }
+      } catch (err) { _kdeWorker = false; }
+      if (!_kdeWorker) { resolve(kdeGrid(points, bwKm, maxCells)); return; }
+      const id = ++_kdeSeq;
+      _kdePending.set(id, { resolve, args: [points, bwKm, maxCells] });
+      _kdeWorker.postMessage({ id, points, bwKm, maxCells });
+    });
+  }
+
+  // d3.contours of d3-contour 4 (+ d3-array 3), fetched once and evaluated PRIVATELY with a
+  // CommonJS `require`: nothing is added to a window.d3 the page may have (d3-array would overwrite
+  // the same-named functions of a d3 v3). Resolves to the `contours` function.
+  let _d3ContourPromise = null;
+  function ensureD3Contour() {
+    if (!_d3ContourPromise) {
+      const get = url => global.fetch(url).then(r => { if (!r.ok) throw new Error(`[ixmaps-gl] failed to load ${url}`); return r.text(); });
+      const run = (src, req) => { const module = { exports: {} }; new Function('module', 'exports', 'require', src)(module, module.exports, req); return module.exports; };
+      _d3ContourPromise = Promise.all([get(LIB_URLS.d3Array), get(LIB_URLS.d3Contour)]).then(([arraySrc, contourSrc]) => {
+        const d3Array = run(arraySrc, () => { throw new Error('[ixmaps-gl] d3-array has no dependencies'); });
+        const d3Contour = run(contourSrc, name => { if (name === 'd3-array') return d3Array; throw new Error(`[ixmaps-gl] d3-contour requires ${name}`); });
+        if (typeof d3Contour.contours !== 'function') throw new Error('[ixmaps-gl] d3-contour: no contours()');
+        return d3Contour.contours;
+      }).catch(err => { _d3ContourPromise = null; throw err; });
+    }
+    return _d3ContourPromise;
+  }
+
+  // A color ramp of `steps` RGB colors from a colorscheme, low → high: a generated scheme
+  // (["5","white","blue"]) is flat's own sweep, a list of colors is taken as given (interpolated),
+  // ONE color is a ramp of itself; `fallback` when nothing in it can be read. Shared by HEATMAP
+  // (colorRange) and KDE (one color per band).
+  function colorRampRgb(colorscheme, steps, fallback) {
+    let rgb;
+    if (isGeneratedColorScheme(colorscheme)) {
+      rgb = flatColorSweep(colorscheme[1], colorscheme[2], Number(colorscheme[0]) || steps, colorscheme[3], colorscheme[4]) || [];
+    } else {
+      const list = Array.isArray(colorscheme) ? colorscheme : colorscheme ? [colorscheme] : [];
+      rgb = list.map(c => parseCssColor(String(c))).filter(Boolean);
+    }
+    if (!rgb.length) rgb = [fallback];
+    return Array.from({ length: steps }, (_, i) => {
+      const t = steps > 1 ? i / (steps - 1) : 1;
+      const x = t * (rgb.length - 1), k = Math.min(rgb.length - 2, Math.floor(x));
+      const c = rgb.length === 1 ? rgb[0] : rgb[k].map((v, j) => Math.round(v + (rgb[k + 1][j] - v) * (x - k)));
+      return [c[0], c[1], c[2]];
+    });
+  }
+
+  // .type("HEATMAP") — deck.gl HeatmapLayer's colorRange (low → high density, RGBA): the ramp of
+  // `steps` colors with an alpha that rises from 0 over the first part of it, so the tails of a
+  // kernel fade out instead of ending in a hard edge.
+  function heatmapColorRange(colorscheme, steps = 6) {
+    return colorRampRgb(colorscheme, steps, [229, 57, 53]).map((c, i) => {
+      const t = steps > 1 ? i / (steps - 1) : 1;
+      return [c[0], c[1], c[2], Math.round(255 * Math.min(1, t * 2.5))];
+    });
+  }
+
+  // .type("KDE") — the color of each band, lowest threshold first (the fire pages' #dd0088 when the
+  // colorscheme says nothing usable)
+  function kdeBandColors(colorscheme, count) { return colorRampRgb(colorscheme, count, [221, 0, 136]); }
+
+  // .type("HEATMAP") — the weight of one record: its size field if bound, else its value field
+  // (a text value field just counts the record), 1 for "$item$"; below 0 or not a number → 0
+  function heatmapWeight(binding, props) {
+    const b = binding || {};
+    const fromSize = !!b.size && b.size !== '$item$';
+    const field = fromSize ? b.size
+      : (b.size === '$item$' || !b.value || b.value === '$item$' || String(b.value).includes('|')) ? null : b.value;
+    if (!field) return 1;
+    const w = scanValue(props[field]);
+    if (isFinite(w)) return w > 0 ? w : 0;
+    return fromSize ? 0 : 1;
+  }
+
+  // ── .type("MLHEATMAP") — MapLibre's NATIVE heatmap layer (type "heatmap"). The pure parts: the
+  // points, the weight that counts 1, the radius by zoom, the paint. Unlike HEATMAP (deck.gl's
+  // HeatmapLayer, which aggregates the whole dataset into one 2048² texture whenever the view
+  // changes and scales the density to the maximum in view), MapLibre keeps the points in tile
+  // buffers, evaluates radius and intensity from the zoom on the GPU at draw time and reads the
+  // density ABSOLUTELY through the color ramp (clamped at 1): zooming costs nothing and a cell means
+  // the same at every zoom. The weight is `w`, the density 1 is reached by a point of weight
+  // weightmax (and more by overlapping points).
+  const MLHEATMAP_MIN_RADIUS_PX = 0.5;
+  const MLHEATMAP_MAX_RADIUS_PX = 400;
+
+  // the records as GeoJSON points {w: weight}, for the native layer's source (weights ≤ 0 and
+  // records without a position are left out)
+  function mlHeatmapPoints(features, binding) {
+    const out = [];
+    for (const f of features) {
+      const c = f.geometry && f.geometry.coordinates;
+      if (!c || typeof c[0] !== 'number' || !isFinite(c[0]) || !isFinite(c[1])) continue;
+      const w = heatmapWeight(binding, f.properties || {});
+      if (w > 0) out.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [c[0], c[1]] }, properties: { w } });
+    }
+    return { type: 'FeatureCollection', features: out };
+  }
+
+  // the weight that counts 1: style.weightmax, else the largest weight of the records (1 for none)
+  function mlHeatmapWeightMax(features, binding, style) {
+    const given = styleNum(style && style.weightmax);
+    if (given > 0) return given;
+    let max = 0;
+    for (const f of features) {
+      const c = f.geometry && f.geometry.coordinates;
+      if (!c || typeof c[0] !== 'number' || !isFinite(c[0]) || !isFinite(c[1])) continue;
+      const w = heatmapWeight(binding, f.properties || {});
+      if (w > max) max = w;
+    }
+    return max > 0 ? max : 1;
+  }
+
+  // heatmap-radius: `radiusPx` at the reference zoom `zoomRef`, growing with the map like every object
+  // (objectZoomFactor: radiusPx · 2^((zoom − zoomRef) / pow)), kept between 0.5 and 400 px. An
+  // exponential interpolation of base 2^(1/pow) between the two zooms where the limits are reached is
+  // exactly that curve, so MapLibre evaluates it from the zoom without any rebuild. A number when the
+  // radius does not follow the zoom (objectscaling not dynamic) or is already at a limit everywhere.
+  function mlHeatmapRadius(radiusPx, zoomRef, pow, dynamic) {
+    const r0 = radiusPx > 0 ? radiusPx : 30;
+    const clamp = r => Math.max(MLHEATMAP_MIN_RADIUS_PX, Math.min(MLHEATMAP_MAX_RADIUS_PX, r));
+    if (!dynamic) return clamp(r0);
+    const p = pow > 0 ? pow : 1;
+    const zoomOf = r => zoomRef + p * Math.log2(r / r0);          // the zoom at which the radius is r
+    const radiusAt = z => r0 * Math.pow(2, (z - zoomRef) / p);
+    const zLow = Math.max(0, zoomOf(MLHEATMAP_MIN_RADIUS_PX));
+    const zCap = Math.min(24, zoomOf(MLHEATMAP_MAX_RADIUS_PX));
+    if (!(zCap > zLow + 1e-6)) return clamp(radiusAt(zLow));
+    return ['interpolate', ['exponential', Math.pow(2, 1 / p)], ['zoom'], zLow, clamp(radiusAt(zLow)), zCap, clamp(radiusAt(zCap))];
+  }
+
+  // the paint of the native heatmap layer. Colors: the colorscheme as a ramp over the densities
+  // 0.2 … 1 (transparent at 0, like MapLibre's own example, so the tails fade out); a scheme of one
+  // color fades in by alpha instead. style: intensity (default 1), fillopacity (default 1).
+  function mlHeatmapPaint(style, weightMax, radius) {
+    const st = style || {};
+    const ramp = colorRampRgb(st.colorscheme, 5, [229, 57, 53]);
+    const single = ramp.every(c => c.join() === ramp[0].join());
+    const color = ['interpolate', ['linear'], ['heatmap-density'], 0, `rgba(${ramp[0].join(',')},0)`];
+    ramp.forEach((c, i) => {
+      const d = (i + 1) / 5;
+      color.push(d, single ? `rgba(${c.join(',')},${d})` : `rgb(${c.join(',')})`);
+    });
+    const intensity = styleNum(st.intensity), opacity = styleNum(st.fillopacity);
+    return {
+      'heatmap-weight': ['interpolate', ['linear'], ['get', 'w'], 0, 0, weightMax > 0 ? weightMax : 1, 1],
+      'heatmap-intensity': intensity > 0 ? intensity : 1,
+      'heatmap-color': color,
+      'heatmap-radius': radius,
+      'heatmap-opacity': opacity > 0 ? Math.min(opacity, 1) : 1
+    };
+  }
+
+  // The native heatmap layers of the MLHEATMAP themes, kept in step with the runtimes (as the WMS
+  // raster layers are): per theme one GeoJSON source of weighted points and one `heatmap` layer, put
+  // BEFORE the first deck.gl layer (those are MapLibre custom layers) so the symbols stay on top.
+  // Recomputed only when something changed — the records (filter, reload), the binding, the weight
+  // max — and the paint only when its values changed; a new style (setMapType) drops sources and
+  // layers, so a missing one is simply added again from the cached points. `owned` holds the layer ids
+  // this function added, so those of removed themes can be taken away.
+  // (MapLibre's basemap-opacity pass, applyBasemapOpacity, only knows fill/line/raster/circle/symbol
+  // types: a heatmap layer is not faded with the basemap.)
+  const _mlSourceIds = new WeakMap();
+  let _mlSourceSeq = 0;
+  const mlHeatLayerId = name => 'ixmaps-mlheat:' + String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
+  function mlFirstCustomLayerId(map) {
+    const order = typeof map.getLayersOrder === 'function' ? map.getLayersOrder() : (map.getStyle().layers || []).map(l => l.id);
+    return order.find(id => { const l = map.getLayer(id); return l && l.type === 'custom'; });
+  }
+  function syncNativeHeatmaps(map, runtimes, owned) {
+    if (!map || typeof map.getLayer !== 'function') return;
+    const desired = runtimes.filter(rt => rt.flags && rt.flags.has('MLHEATMAP'));
+    if (!desired.length && !owned.size) return;
+    const wanted = new Set(desired.map(rt => mlHeatLayerId(rt.name)));
+    [...owned].forEach(id => {
+      if (wanted.has(id)) return;
+      owned.delete(id);
+      try { if (map.getLayer(id)) map.removeLayer(id); } catch (e) { /* already gone */ }
+      try { if (map.getSource(id)) map.removeSource(id); } catch (e) { /* already gone */ }
+    });
+    desired.forEach(rt => {
+      const id = mlHeatLayerId(rt.name);
+      const st = rt._mlHeat || (rt._mlHeat = {});
+      try {
+        const records = rt._activeFeatures || rt.features || [];
+        if (!_mlSourceIds.has(records)) _mlSourceIds.set(records, ++_mlSourceSeq);
+        const style = rt.style || {};
+        const dataKey = JSON.stringify([rt._dataGen, _mlSourceIds.get(records), rt.binding]);
+        const weightKey = JSON.stringify([dataKey, style.weightmax]);
+        if (st.weightKey !== weightKey) { st.weightMax = mlHeatmapWeightMax(records, rt.binding, style); st.weightKey = weightKey; }
+        if (st.dataKey !== dataKey || !st.fc) {
+          st.fc = mlHeatmapPoints(records, rt.binding);
+          st.dataKey = dataKey;
+          const src = map.getSource(id);
+          if (src && typeof src.setData === 'function') src.setData(st.fc);
+        }
+        if (!map.getSource(id)) map.addSource(id, { type: 'geojson', data: st.fc });
+        owned.add(id);
+        // the radius follows the zoom like every object (objectscaling), from `radiuspx` at the reference zoom
+        const mo = rt.mapOptions || {};
+        const radius = mlHeatmapRadius((styleNum(style.radiuspx) || 30) * (styleNum(style.scale) || 1),
+          resolveZoomReference(mo), resolveDynamicScalePow(mo), String(mo.objectscaling || 'dynamic') === 'dynamic');
+        const paint = mlHeatmapPaint(style, st.weightMax, radius);
+        const paintKey = JSON.stringify(paint);
+        if (!map.getLayer(id)) {
+          map.addLayer({ id, type: 'heatmap', source: id, paint }, mlFirstCustomLayerId(map));
+          st.paintKey = paintKey;
+        } else if (st.paintKey !== paintKey) {
+          Object.keys(paint).forEach(k => map.setPaintProperty(id, k, paint[k]));
+          st.paintKey = paintKey;
+        }
+        const visibility = rt._hidden ? 'none' : 'visible';
+        if ((map.getLayoutProperty(id, 'visibility') || 'visible') !== visibility) map.setLayoutProperty(id, 'visibility', visibility);
+        st.failed = false;
+      } catch (err) {
+        if (!st.failed) { st.failed = true; console.warn(`[ixmaps-gl] layer "${rt.name}": MLHEATMAP not drawn:`, err && err.message ? err.message : err); }
+      }
+    });
+  }
+
   // a choropleth shape's outline color: a LINE shape strokes with its value
   // color; any other shape keeps the theme's outline, hidden while a class
   // is isolated and the shape is not in it
@@ -2033,6 +2447,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // specific FEATURE runtime as a donor, not just sharing its name
     // coincidentally.
     geomRt._isChoroplethGeometryDonor = true;
+    // the donor's own style (outline) — the layer registry is keyed by name,
+    // so the same-named CHOROPLETH replaces the donor there and can't find it
+    Object.defineProperty(spec, '_donorStyle', { value: geomRt.style, configurable: true });
     const idField = geomRt.binding.id;
     const lookupField = spec.binding.lookup;
     if (!idField || !lookupField) {
@@ -3122,7 +3539,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
     'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale', 'rangecentervalue',
     'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety', 'gridx', 'boxmargin', 'borderwidth',
-    'borderradius', 'maxcharts', 'archeight', 'alignmargin'];
+    'borderradius', 'maxcharts', 'archeight', 'alignmargin',
+    // HEATMAP / MLHEATMAP / KDE (a project JSON writes them as strings)
+    'radiuspx', 'intensity', 'threshold', 'weightmax', 'bandwidth'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -3197,6 +3616,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     delete style.title;
 
     const flags = new Set(typeStr ? typeStr.split('|') : []);
+    // flat's theme configurator appends "CENTER|DOMINANT" to a categorical type without a
+    // separator ("...|CATEGORICALCENTER|DOMINANT"); flat's substring tests read that as
+    // CATEGORICAL + CENTER, so split a glued CATEGORICAL prefix back into its flags
+    [...flags].forEach(f => {
+      if (f.length > 11 && f.startsWith('CATEGORICAL')) { flags.add('CATEGORICAL'); flags.add(f.slice(11)); }
+    });
     if (flags.has('BUBBLE')) flags.add('SYMBOL');
     // flat tests its base type as a substring (szFlag.match(/CHOROPLETH/)),
     // so "CHOROPLETHE" is a choropleth there too
@@ -4318,7 +4743,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // category rows: its panel is the text legend (title / snippet / description)
       const countOnlyLegend = rt => !rt.categoryLabels && rt.flags.has('CATEGORICAL') && !rt.binding.value;
       const legendApplies = rt => (countOnlyLegend(rt) || (rt.categoryLabels && rt.categoryLabels.length))
-        && (!(rt.flags.has('FEATURE') || rt.flags.has('FEATURES')) || rt.flags.has('CATEGORICAL')) && !rt.flags.has('NOLEGEND');
+        && (!(rt.flags.has('FEATURE') || rt.flags.has('FEATURES')) || rt.flags.has('CATEGORICAL')) && !rt.flags.has('NOLEGEND')
+        // KDE and HEATMAP draw a density, not classes of the value: the range legend that a numeric
+        // value would get is meaningless for them (no legend for these, as the fire pages)
+        && !rt.flags.has('KDE') && !rt.flags.has('HEATMAP') && !rt.flags.has('MLHEATMAP');
       // One theme's panel — at build time for every theme, and again for a
       // theme defined later (map.layer(...) in a myMap.then(...) chain,
       // defineLayer, loadProject); removeTheme removes it with the theme.
@@ -4419,7 +4847,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           // no SUM) falls back to a per-category record COUNT.
           // a VECTOR / BEZIER flow legend sums its size field (flat's rows
           // show the flows' summed sizes, measured on the twin page)
-          const useSum = flatFlag(rt.flags, 'SUM') && (rt.style.valuefield || ((rt._isVectorChart() || rt._isAggregatedPie()) && rt.binding.size));
+          // a categorical symbol/bubble sized by a column: SUM sums that column per category (flat:
+          // partsA[i].nSum accumulates each item's nSize, maptheme.js 16649; legend.js 677); a size
+          // of "$item$" is the count anyway
+          const useSum = flatFlag(rt.flags, 'SUM') && (rt.style.valuefield
+            || ((rt._isVectorChart() || rt._isAggregatedPie()) && rt.binding.size)
+            || (rt.flags.has('CATEGORICAL') && rt.binding.size && rt.binding.size !== '$item$'));
           const valueField = rt.style.valuefield || rt.binding.size;
           // legendunits wins over the theme's general-purpose units
           // (used elsewhere for tooltips, e.g. _renderItemChartHtml) —
@@ -4502,7 +4935,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
                 if (!c || typeof c[0] !== 'number') return;
                 const [lng, lat] = c;
                 if (!inViewport(lng, lat, bbox, globeCenter)) return;
-                rt._multiFields.forEach((k, i) => { totals[i] += parseFloat(f.properties[k]) || 0; });
+                rt._multiFields.forEach((k, i) => { totals[i] += scanValue(f.properties[k]) || 0; });
               });
               maxTotal = Math.max(0, ...totals);
               order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
@@ -4515,7 +4948,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             // with whatever the country filter is currently narrowing
             // the map down to, not just with the viewport/hemisphere.
             (rt._activeFeatures || rt.features).forEach(f => {
-              const idx = rt.categoryIndexByLabel ? rt.categoryIndexByLabel.get(f.properties[rt.binding.value]) : null;
+              const idx = rt.categoryIndexByLabel ? rt._resolveClassIndex(f.properties[rt.binding.value]) : null;
               if (idx == null) return;
               // a polygon (FEATURE|CATEGORICAL) is counted at its first vertex
               let pt = f.geometry && f.geometry.coordinates;
@@ -4523,7 +4956,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
               if (!Array.isArray(pt)) return;
               const [lng, lat] = pt;
               if (!inViewport(lng, lat, bbox, globeCenter)) return;
-              totals[idx] += useSum ? (parseFloat(f.properties[valueField]) || 0) : 1;
+              totals[idx] += useSum ? (scanValue(f.properties[valueField]) || 0) : 1;
             });
             maxTotal = Math.max(0, ...totals);
             order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
@@ -6544,7 +6977,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // charts in their own group above them: whatever the theme order
         // (a choropleth swapped in with add(..., 'replace') comes last), the
         // shapes lie under the charts — in theme order among themselves
-        const isShape = l => /^ix-(features|choropleth|shadow)-/.test(l.id);
+        const isShape = l => /^ix-(features|choropleth|shadow|kde)-/.test(l.id);
         layers = layers.filter(isShape).concat(layers.filter(l => !isShape(l)));
         // every deck.gl layer id once: two themes of one layer name and type
         // (the page's comune points and comune polygons, both FEATURES on
@@ -6588,6 +7021,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // flat's WMS themes render as native raster layers, not deck.gl —
         // reconcile them with the current runtimes on every rebuild
         syncWmsLayers();
+        syncNativeHeatmaps(map, runtimes, mlHeatLayerIds);
       }
 
       // flat's WMS theme type (szFlag /\bWMS|IMAGE\b/, maptheme.js 8207-8247):
@@ -6604,6 +7038,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // map.getStyle() (a deep copy of the whole style) on every rebuild
       // of a page that has no WMS theme
       const wmsLayerIds = new Set();
+      const mlHeatLayerIds = new Set();   // the MLHEATMAP layers added to the map (syncNativeHeatmaps)
       function syncWmsLayers() {
         if (!map || !map.getLayer) return;
         const idOf = name => 'ixmaps-wms:' + String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -6649,7 +7084,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       }
       // a style swap (setMapType) drops every native layer — rebuild the
       // WMS ones once the new style stands
-      map.on('style.load', () => syncWmsLayers());
+      map.on('style.load', () => { syncWmsLayers(); syncNativeHeatmaps(map, runtimes, mlHeatLayerIds); });
 
       // isZooming flips true/false on every 'zoomstart'/'zoomend' pair —
       // and a scroll-wheel or trackpad zoom fires MANY such pairs per
@@ -7772,7 +8207,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // "$item$": every record counts 1
     if (field === '$item$') return features.length ? 1 : 0;
     return features.reduce((max, f) => {
-      const v = parseFloat(f.properties[field]);
+      const v = scanValue(f.properties[field]);
       return isNaN(v) ? max : Math.max(max, v);
     }, 0);
   }
@@ -8045,6 +8480,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (!upper && !lower) return false;
     const scale = scaleDenominatorAt(zoom);
     return !!((upper && scale > upper) || (lower && scale < lower));
+  }
+  // GLOW follows the theme's overall `opacity` (a number or numeric string; unset or 0 = 1, flat treats a falsy opacity as unset): the
+  // halo is a fixed soft gradient texture (_getGlowIcon), so its strength is this alpha factor, as a bubble's is fillopacity
+  function glowOpacityOf(style) {
+    const v = Array.isArray(style.opacity) ? style.opacity[0] : style.opacity;
+    const o = v == null || String(v).trim() === '' ? NaN : Number(v);
+    return o > 0 && o < 1 ? o : 1;
   }
   function themeHiddenByScale(flags, style, zoom) {
     return (flags.has('FEATURE') || flags.has('FEATURES')) ? featuresHiddenByScale(style, zoom) : chartHiddenByScale(style, zoom);
@@ -9376,7 +9818,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     }
     const parts = [], zeroNot = [];
     for (let k = 0; k < o.fields.length; k++) {
-      let v = parseFloat(raw[o.fields[k]]);
+      let v = scanValue(raw[o.fields[k]]);
       // flat's weights multiply every record's per-field value as it is
       // accumulated (maptheme.js 10506-10508) — the SIZE (nValueSize)
       // stays raw, exactly as there
@@ -10039,14 +10481,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     let maxAlpha = -Infinity, minAlpha = Infinity;
     features.forEach(f => {
       // flat: an alpha that is no number is 0 (maptheme.js 9853-9857)
-      let v = parseFloat(f.properties[binding.alpha]);
+      let v = scanValue(f.properties[binding.alpha]);
       if (isNaN(v)) v = 0;
       if (isDensity) {
         const areaKm2 = featureAreaKm2(f);
         if (!areaKm2) return;
         v = v / areaKm2;
       } else if (alpha100) {
-        const v100 = parseFloat(f.properties[alpha100]);
+        const v100 = scanValue(f.properties[alpha100]);
         if (!isNaN(v100) && v100) v = 100 / v100 * v;
       }
       out._alphaByFeature.set(f, v);
@@ -10123,10 +10565,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     features.forEach(f => {
       if (!f.properties || !Object.keys(f.properties).length) return; // unjoined polygon
       nItems++;
-      const v100 = f100 ? parseFloat(f.properties[f100]) : NaN;
+      const v100 = f100 ? scanValue(f.properties[f100]) : NaN;
       if (f100 && isFinite(v100)) sum100 += v100;
       fields.forEach((field, i) => {
-        const v = parseFloat(f.properties[field]);
+        const v = scanValue(f.properties[field]);
         if (!isFinite(v)) return;
         sums[i] += v;
         if (f100 && isFinite(v100)) pooled[i] += v * v100;
@@ -10187,7 +10629,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const useDeviation = ctx.flags.has('DEVIATION');
     let bestIndex = -1, bestRelevance = 0, bestValue = null;
     for (let i = 0; i < fields.length; i++) {
-      const v = parseFloat(props[fields[i]]);
+      const v = scanValue(props[fields[i]]);
       if (!(v > (ctx._dominantMins[i] || 0))) continue;
       const relevance = useDeviation ? (v - ctx._dominantMeans[i]) / ctx._dominantStdDevs[i]
         : usePercentOfMean ? 100 * v / ctx._dominantMeans[i]
@@ -10215,7 +10657,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const fields = out._multiFields;
     let nMax = 0;
     features.forEach(f => fields.forEach(field => {
-      const v = parseFloat(f.properties[field]);
+      const v = scanValue(f.properties[field]);
       if (v > nMax) nMax = v;
     }));
     out._composeColorMax = nMax;
@@ -10255,7 +10697,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const subtractive = ctx.flags.has('SUBTRACTIVE');
     let rr = 0, gg = 0, bb = 0;
     for (let i = 0; i < fields.length; i++) {
-      const v = parseFloat(props[fields[i]]) || 0;
+      const v = scanValue(props[fields[i]]) || 0;
       const weight = v / nMax;
       const [r, g, b] = rgbs[i];
       if (subtractive) { rr += (255 - r) * weight; gg += (255 - g) * weight; bb += (255 - b) * weight; }
@@ -10328,14 +10770,20 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // flat's reading of a value field (maptheme.js 9776-9800, defaults
   // 7740-7801): a value that is no number counts as 0 — unless
   // UNDEFINEDISNOTVALUE —, and 0 is a value — unless ZEROISNOTVALUE
+  // flat's __scanValue (maptheme.js 9266): a value with a comma is EUROPEAN format (dots are thousands separators, the comma
+  // the decimal: "1.234,5" -> 1234.5, "0,0637" -> 0.0637); a value without one is parsed plain, blanks stripped. Used wherever a
+  // theme reads a value / size / alpha / value100 field from a record — the same strings plain parseFloat would cut at the comma
+  function scanValue(v) {
+    const s = String(v);
+    return s.includes(',') ? parseFloat(s.replace(/\./g, '').replace(/,/g, '.')) : parseFloat(s.replace(/ /g, ''));
+  }
   function flatNumber(v, flags) {
     // flat's own value scan (maptheme.js __scanValue 9265-9272): a
     // value with a comma is EUROPEAN format — dots stripped as
     // thousands separators, the comma is the decimal ("78,8" -> 78.8);
     // a value without one is parsed plain, blanks stripped. Applied
     // to every theme value in flat, so also here
-    const s = String(v);
-    let n = s.includes(',') ? parseFloat(s.replace(/\./g, '').replace(/,/g, '.')) : parseFloat(s.replace(/ /g, ''));
+    let n = scanValue(v);
     if (isNaN(n)) n = flags && flags.has('UNDEFINEDISNOTVALUE') ? NaN : 0;
     if (n === 0 && flags && flags.has('ZEROISNOTVALUE')) return NaN;
     return n;
@@ -10464,14 +10912,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       if (!p) { out.push(f); continue; }
       let clear = [];
       if (size) {
-        const v = parseFloat(p[size]);
+        const v = scanValue(p[size]);
         if (!(isFinite(v) && v > 0)) {
           if (!keepShapes) continue;
           clear.push(size);
         }
       }
       if (negativeIsNot) {
-        const negative = checked.filter(k => parseFloat(p[k]) < 0);
+        const negative = checked.filter(k => scanValue(p[k]) < 0);
         if (negative.length && aggregate && !keepShapes) continue;
         clear = clear.concat(negative);
       }
@@ -10618,7 +11066,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // without AGGREGATE applyField100 already differenced every record
       // (flat's nValuesA, popped): the first field IS the value
       ? (!flags.has('AGGREGATE') ? p => flatNumber(p[fields[0]], flags)
-        : p => cellAggregatedValues({ sums: fields.map(k => parseFloat(p[k]) || 0), counts: fields.map(() => 1) }, flags, style)[0])
+        : p => cellAggregatedValues({ sums: fields.map(k => scanValue(p[k]) || 0), counts: fields.map(() => 1) }, flags, style)[0])
       // "$item$" is flat's record count: 1 per record
       : binding.value === '$item$' ? () => 1
       : p => (p && Object.keys(p).length ? flatNumber(p[binding.value], flags) : NaN);
@@ -10769,9 +11217,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // theme's text 0.08 px high).
   function resolveAggregateValue(binding, flags, props) {
     if (binding.size === '$item$') return 1;
-    if (binding.size) return parseFloat(props[binding.size]) || 0;
+    if (binding.size) return scanValue(props[binding.size]) || 0;
     if (flags.has('CATEGORICAL') || binding.value == null || binding.value === '$item$') return 1;
-    return parseFloat(props[binding.value]) || 0;
+    return scanValue(props[binding.value]) || 0;
   }
 
   // Whether a range-classed AGGREGATE cell's class value (flat: the sum
@@ -11075,7 +11523,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const add = (cat, v) => { if (cat == null || cat < 0 || cat >= n) return; count[cat]++; sum[cat] += Number.isFinite(v) ? v : 0; };
     if (rt.flags.has('CHOROPLETH')) {
       (rt._activeFeatures || rt.features).forEach(f => {
-        const v = parseFloat(f.properties[rt.binding.value]);
+        const v = scanValue(f.properties[rt.binding.value]);
         add(rt._resolvePartsClass(v), v);
       });
     } else if (rt._legendItems) {
@@ -11086,7 +11534,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (!c || typeof c[0] !== 'number') return;
         const [lng, lat] = c;
         if (!inViewport(lng, lat, bbox, globeCenter)) return;
-        const v = parseFloat(f.properties[rt.binding.value]);
+        const v = scanValue(f.properties[rt.binding.value]);
         add(rt._resolvePartsClass(v), v);
       });
     }
@@ -11128,6 +11576,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       this.name = spec.name;
       this.binding = spec.binding;
       this.style = spec.style;
+      this._donorStyle = spec._donorStyle;
       this.flags = symbolsFlagCompat(spec.flags, spec.style);
       this.meta = spec.meta;
       // see LAYER_DATA_GENERATION above — unique per runtime, see _dataLayerId
@@ -11233,7 +11682,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // a bar chart's parts are a pie's (its value fields or categories)
       if ((this._isPieChart() || this._isBarChart()) && this.binding.value) {
         this._preparePie();
-      } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this)) {
+      } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this) && !this._isDominantGrid()) {
         // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
         // (binding.value is a pipe-joined field list, e.g. one CSV column
         // per age band for the same year/sex — same pipe convention
@@ -11270,7 +11719,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         } else {
           const seen = new Map();
           this.features.forEach(f => {
-            const v = f.properties[this.binding.value];
+            let v = f.properties[this.binding.value];
+            if (typeof v === 'string') v = v.trim();   // flat: getStringValueIndex strips trailing blanks
             if (v != null && !seen.has(v)) seen.set(v, seen.size);
           });
           this.categoryLabels = Array.from(seen.keys());
@@ -11313,7 +11763,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         const scheme = Array.isArray(this.style.colorscheme) ? this.style.colorscheme : [];
         this._partNoFill = new Set(this._multiFields.map((f, i) => i).filter(i => String(scheme[i]).trim().toLowerCase() === 'none'));
         let max = 0;
-        for (const f of this.features) for (const field of this._multiFields) { const v = Math.abs(parseFloat(f.properties[field])); if (v > max) max = v; }
+        for (const f of this.features) for (const field of this._multiFields) { const v = Math.abs(scanValue(f.properties[field])); if (v > max) max = v; }
         this._multiFieldPartMax = max || 1;
         // AUTO100's scale, measured on these features by _buildSequenceChartLayers
         this._seqAuto100Max = null;
@@ -11470,12 +11920,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         : this.flags.has('PERMILLE') ? 1000 : 100;
       let sum = 0;
       fields.forEach((field, i) => {
-        const part = parseFloat(props[field]);
+        const part = scanValue(props[field]);
         if (isNaN(part)) return;
-        const v100 = f100A ? parseFloat(props[f100A[Math.min(i, f100A.length - 1)]]) : NaN;
+        const v100 = f100A ? scanValue(props[f100A[Math.min(i, f100A.length - 1)]]) : NaN;
         sum += isNaN(v100) ? part : (part * v100) / multiplier;
       });
-      const v100_0 = f100A ? parseFloat(props[f100A[0]]) : NaN;
+      const v100_0 = f100A ? scanValue(props[f100A[0]]) : NaN;
       const nMyValue = sum / ((v100_0 / 100) || 1);
       return composedDopacityAlpha(this.style, this.flags, nMyValue, this._composeColorMax || 1);
     }
@@ -11494,8 +11944,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // (_buildPartsA, numeric bucket), or neither (a single implicit
     // bucket, today's behavior for any other theme).
     _resolveClassIndex(rawValue) {
-      if (this.categoryIndexByLabel) return this.categoryIndexByLabel.get(rawValue);
-      if (this.partsA) return this._resolvePartsClass(parseFloat(rawValue));
+      if (this.categoryIndexByLabel) {
+        const i = this.categoryIndexByLabel.get(rawValue);
+        return i === undefined && typeof rawValue === 'string' ? this.categoryIndexByLabel.get(rawValue.trim()) : i;
+      }
+      if (this.partsA) return this._resolvePartsClass(scanValue(rawValue));
       return 0;
     }
 
@@ -11565,8 +12018,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // as flat's chart node value (NYC status: value="63" = e-bikes)
         const sizeField = this.binding.size && this.binding.size !== '$item$' ? this.binding.size : null;
         this._featuresByCategory = [sourceFeatures.map(f => {
-          const parts = this._multiFields.map(k => parseFloat(f.properties[k]) || 0);
-          const size = sizeField ? Math.abs(parseFloat(f.properties[sizeField]) || 0) : undefined;
+          const parts = this._multiFields.map(k => scanValue(f.properties[k]) || 0);
+          const size = sizeField ? Math.abs(scanValue(f.properties[sizeField]) || 0) : undefined;
           return { type: 'Feature', geometry: f.geometry,
             properties: { value: parts[0], parts, series: parts, ...(size !== undefined ? { size } : {}), raw: f.properties } };
         })];
@@ -11592,9 +12045,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // values, the difference is taken on the cell sums (see post)
         const seriesFields = String(this.binding.value || '').split('|');
         this._seriesDifference = this.flags.has('DIFFERENCE') && seriesFields.length > 1 && !this._aggregateField100;
-        const seriesOf = props => seriesFields.map(k => parseFloat(props[k]) || 0);
+        const seriesOf = props => seriesFields.map(k => scanValue(props[k]) || 0);
         // without AGGREGATE the records are already differenced (applyField100)
-        const seriesValue = !this.flags.has('AGGREGATE') ? props => parseFloat(props[seriesFields[0]]) || 0 : props => cellAggregatedValues({ sums: seriesOf(props), counts: seriesFields.map(() => 1) }, this.flags, this.style)[0];
+        const seriesValue = !this.flags.has('AGGREGATE') ? props => scanValue(props[seriesFields[0]]) || 0 : props => cellAggregatedValues({ sums: seriesOf(props), counts: seriesFields.map(() => 1) }, this.flags, this.style)[0];
         this._featuresByCategory = [sourceFeatures.map(f => ({
           type: 'Feature',
           geometry: f.geometry,
@@ -11602,8 +12055,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             value: this._seriesDifference ? seriesValue(f.properties) : this._resolveAggregateValue(f.properties),
             ...(this._seriesDifference ? { series: seriesOf(f.properties) } : {}),
             // "$item$": flat's record count, 1 per record
-            ...(this._classSeparate ? { classValue: this.binding.value === '$item$' ? 1 : parseFloat(f.properties[this.binding.value]) || 0 } : {}),
-            ...(this._aggregateField100 ? { value100: parseFloat(f.properties[f100]) || 0 } : {}),
+            ...(this._classSeparate ? { classValue: this.binding.value === '$item$' ? 1 : scanValue(f.properties[this.binding.value]) || 0 } : {}),
+            ...(this._aggregateField100 ? { value100: scanValue(f.properties[f100]) || 0 } : {}),
             raw: f.properties
           }
         }))];
@@ -11892,7 +12345,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const countsByField = new Map(fields.map(f => [f, new Map()]));
 
       scoped.forEach(f => {
-        const weight = sizeField ? (parseFloat(f.properties[sizeField]) || 0) : 1;
+        const weight = sizeField ? (scanValue(f.properties[sizeField]) || 0) : 1;
         for (const field of fields) {
           const v = f.properties[field];
           if (v == null || v === '') continue;
@@ -12541,13 +12994,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const fields = String(this.binding.value || '').split('|');
       if (this._multiFieldMax === undefined) {
         let max = 0;
-        for (const f of this.features) for (const field of fields) { const v = Math.abs(parseFloat(f.properties[field])); if (v > max) max = v; }
+        for (const f of this.features) for (const field of fields) { const v = Math.abs(scanValue(f.properties[field])); if (v > max) max = v; }
         this._multiFieldMax = max;
       }
       const labels = Array.isArray(this.style.label) && this.style.label.length === fields.length ? this.style.label.map(String)
         : (this.categoryDisplayLabels || this.categoryLabels || fields);
       const unit = this.style.units ? ' ' + this.style.units : '';
-      let rows = fields.map((field, i) => ({ i, v: parseFloat(raw[field]) })).filter(r => Number.isFinite(r.v));
+      let rows = fields.map((field, i) => ({ i, v: scanValue(raw[field]) })).filter(r => Number.isFinite(r.v));
       if (!rows.length) return '';
       if (this.flags.has('SORT')) rows.sort((a, b) => (this.flags.has('UP') ? a.v - b.v : b.v - a.v));
       const color = i => { const c = this.classRgb(i); return `rgb(${c.slice(0, 3).join(',')})`; };
@@ -12702,6 +13155,23 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // drawChart/modifier machinery entirely — a layer flagged DOT never
       // reaches CHART|SYMBOL's clustering/GLOW/VALUES pipeline, even if
       // those flags are also present in the type string).
+      // MLHEATMAP: MapLibre's native heatmap layer (syncNativeHeatmaps) — nothing for deck.gl to draw
+      if (this.flags.has('MLHEATMAP')) return [];
+      // KDE: the density bands of the visible records (_buildKdeLayers)
+      if (this.flags.has('KDE')) return this._buildKdeLayers(zoom, bbox, globeCenter);
+      // HEATMAP: one GPU density surface over the visible records (_buildHeatmapLayers)
+      if (this.flags.has('HEATMAP')) {
+        // deck.gl's HeatmapLayer aggregates in screen space on a Web-Mercator viewport: under the
+        // globe it draws nothing (measured, deck.gl 9.4.0 / MapLibre globe) — say so once
+        if (globeCenter) {
+          if (!this._warnedHeatmapGlobe) {
+            this._warnedHeatmapGlobe = true;
+            console.warn(`[ixmaps-gl] layer "${this.name}": HEATMAP is not drawn under the globe projection (deck.gl HeatmapLayer needs a Mercator view) — use mapProjection mercator, or another type`);
+          }
+          return [];
+        }
+        return this._buildHeatmapLayers(liveZoom);
+      }
       if (this.flags.has('DOT')) return this._buildDotLayers();
       // GRIDSIZE (spatial grid binning) is checked before the generic
       // CHART|SYMBOL bubble pipeline, same "more specific base type wins"
@@ -12801,7 +13271,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         // layer keeps its one fill color
         && this.binding.value && this.binding.value !== '$item$' && !String(this.binding.value).includes('|');
       const classColorOf = f => {
-        const cls = this._resolvePartsClass(parseFloat(f.properties && f.properties[this.binding.value]));
+        const cls = this._resolvePartsClass(scanValue(f.properties && f.properties[this.binding.value]));
         return this.classRgb(cls);
       };
       const catAlpha = Math.round(255 * (styleNum(this.style.fillopacity) || 1));
@@ -13024,7 +13494,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // linecolor "none": no outline; a class color "none" (an explicit
       // colorscheme list) leaves its polygons unpainted, an rgba() class
       // color keeps its alpha — as flat's SVG fill does
-      const lineColorRaw = this.style.linecolor ? styleLineColor(this.style.linecolor) : null;
+      // flat re-styles the SAME shape nodes the FEATURE base drew, so an
+      // outline the choropleth doesn't define itself stays the base's own
+      const donorStyle = this._donorStyle;
+      const lineColorSrc = this.style.linecolor || (donorStyle && donorStyle.linecolor);
+      const lineColorRaw = lineColorSrc ? styleLineColor(lineColorSrc) : null;
       const lineRgb = lineColorRaw ? withAlpha(hexOrNamedToRgb(lineColorRaw), cssColorAlpha(lineColorRaw)) : [255, 255, 255];
       const cs = this.style.colorscheme;
       const classAlpha = Array.isArray(cs) && cs.length && !/^\d+$/.test(String(cs[0])) ? cs.map(cssColorAlpha) : null;
@@ -13056,11 +13530,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // flat re-styles the SAME shape nodes the FEATURE base drew, so a line
       // choropleth keeps the base's own line width — the donor's linewidth
       // is the fallback when the choropleth has none of its own
-      const donorRt = [..._globalThemeRegistry.values()].find(r => r.name === this.name && r._isChoroplethGeometryDonor);
       const anyLine = collection.features.some(isLineGeometry);
       const isolating = !!(this._markedClasses.size && !this._onMarksChanged && evidenceMode === 'isolate');
       const lineW = styleNum(this.style.linewidth)
-        || (anyLine && donorRt && styleNum(donorRt.style.linewidth)) || 1;
+        || (donorStyle && styleNum(donorStyle.linewidth)) || 1;
       return [new GeoJsonLayer({
         id: this._dataLayerId(`ix-choropleth-${this.name}`),
         data: collection,
@@ -13142,8 +13615,15 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // GRIDSIZE without PLOT drawn as one uniform square per cell: only a
     // plain grid — a single color, no VALUES, no GLOW
     _isPlainGridMesh() {
-      return !this.flags.has('PLOT') && (this.categoryColorsRgb || []).length <= 1
-        && !this.flags.has('VALUES') && !this.flags.has('GLOW');
+      // categorical CENTER|DOMINANT cells are drawn by the same mesh path, per-cell colored
+      return this._isDominantGrid() || (!this.flags.has('PLOT') && (this.categoryColorsRgb || []).length <= 1
+        && !this.flags.has('VALUES') && !this.flags.has('GLOW'));
+    }
+    // flat's categorical HexBin (GRIDSIZE|AGGREGATE|CATEGORICAL|DOMINANT): each grid cell takes
+    // the color of its dominant category, with dynamic opacity from that category's part
+    _isDominantGrid() {
+      return this.flags.has('GRIDSIZE') && !this.flags.has('PLOT') && this.flags.has('CATEGORICAL')
+        && this.flags.has('DOMINANT');
     }
     // GRIDSIZE (no PLOT) symbol chart radius, px: flat's nGridSize / 2
     // (maptheme.js 21843), nGridSize the aggregation cell pitch / nAutoSize
@@ -13159,6 +13639,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const gap = flatFlag(this.flags, 'GAP');
       const autoSize = rect ? (gap ? 1.15 : 1.0) : (gap ? 0.8 : 0.75);
       return cellPx / autoSize * (styleNum(this.style.scale) || 1) / 2;
+    }
+
+    // flat's AUTOSIZE (maptheme.js 21831-21843): the biggest aggregated item is the size of its
+    // grid cell — the radius GRIDSIZE gives every item (hexagon cell/1.5, RECT cell/2; GAP 1.6 /
+    // 2.3) — and the others follow (value/max)^(1/sizepow). This is the biggest item's radius;
+    // null without AUTOSIZE, without a grid, or on a GRIDSIZE/PLOT theme (those size themselves)
+    _autoSizeMaxRadiusPx(zoom, liveZoom) {
+      if (!this.flags.has('AUTOSIZE') || this.flags.has('GRIDSIZE') || this.flags.has('PLOT') || !this._clusterRadiusPx) return null;
+      const fromZoom = this._clusterUsesFixedZoom ? GRIDWIDTH_METERS_REFERENCE_ZOOM : zoom;
+      const cellPx = this._clusterRadiusPx * Math.pow(2, liveZoom - fromZoom);
+      const rect = flatFlag(this.flags, 'RECT');
+      const gap = flatFlag(this.flags, 'GAP');
+      return cellPx / (rect ? (gap ? 2.3 : 2.0) : (gap ? 1.6 : 1.5)) * (styleNum(this.style.scale) || 1);
     }
     _isItemPlot() {
       return this.flags.has('PLOT') && !this.flags.has('GRIDSIZE') && String(this.binding.value || '').includes('|');
@@ -13310,7 +13803,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       for (const f of this.features) {
         const pos = itemAnchor(f.geometry);
         if (!pos) continue;
-        const values = fields.map(k => parseFloat(f.properties[k]));
+        const values = fields.map(k => scanValue(f.properties[k]));
         for (const v of values) if (!isNaN(v)) { dMin = Math.min(dMin, v); dMax = Math.max(dMax, v); }
         if (!active || active.has(f)) items.push({ geometry: { type: 'Point', coordinates: pos }, properties: { values, raw: f.properties } });
       }
@@ -13427,9 +13920,11 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         : Array.isArray(this.style.xaxis) ? this.style.xaxis : null;
       if (explicit) {
         if (!this._explicitCatIndex) this._explicitCatIndex = new Map(explicit.map((v, i) => [String(v), i]));
-        return this._explicitCatIndex.get(String(rawValue));
+        const i = this._explicitCatIndex.get(String(rawValue));
+        return i === undefined ? this._explicitCatIndex.get(String(rawValue).trim()) : i;
       }
-      return this._resolveClassIndex(rawValue);
+      // "$item$" is no field: every record counts 1 (resolveAggregateValue), so its class is the 1
+      return this._resolveClassIndex(this.binding.value === '$item$' ? 1 : rawValue);
     }
 
     // pure: cellAggregatedValues → see the pure-function sections above the class
@@ -13770,15 +14265,93 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // style.colorscheme fill.
     _buildGridMeshLayers(zoom) {
       this._ensureGridIndex(zoom);
-      const data = this._gridIndex.map(cell => {
-        const center = worldPixelToLngLat(cell.px, cell.py, zoom);
-        return { geometry: { type: 'Point', coordinates: [center.lng, center.lat] } };
-      });
-
       const fillColor = (resolveColorScheme(this.style.colorscheme, ['']) || ['rgba(255,255,255,0.3)'])[0] || 'rgba(255,255,255,0.3)';
       const borderColor = styleLineColor(this.style.linecolor);
       const borderWidth = styleNum(this.style.linewidth);
       const cellPx = this._gridCellPx;
+
+      // flat's "Hexbin - dynamic opacity" (CHART|SYMBOL|GRIDSIZE|AGGREGATE|SUM|DOPACITY,
+      // symbols:["hexagon"]): hexagon cells, each cell's fill OPACITY ramped from its
+      // aggregated value (resolveDopacityAlpha, the CHOROPLETH|DOPACITY formulas). The plain
+      // one-color mesh (neither flag) stays the uniform square below.
+      const hexCells = Array.isArray(this.style.symbols) && this.style.symbols[0] === 'hexagon';
+      const dopacity = this.flags.has('DOPACITY') || this.flags.has('DOPACITYMIN')
+        || this.flags.has('DOPACITYMAX') || this.flags.has('DOPACITYMINMAX');
+      if (hexCells || dopacity) {
+        const cells = this._gridIndex;
+        const baseOpacity = styleNum(this.style.fillopacity);
+        const base = isNaN(baseOpacity) ? 0.9 : baseOpacity;
+        // CATEGORICAL|DOMINANT: dominant category per cell (the biggest part above 0, the
+        // first of equal ones — aggregatedCategoricalClass), opacity from that part against
+        // the biggest dominant part of the same class over all cells (dominantDopacityAlpha)
+        if (this._isDominantGrid()) {
+          const labels = this._plotCategories();
+          const rgb = resolveClassColors(this.style.colorscheme, labels, undefined) || [];
+          const dom = cells.map(c => {
+            let i = -1;
+            c.sums.forEach((v, k) => { if (v > 0 && (i < 0 || v > c.sums[i])) i = k; });
+            return i < 0 ? null : { i, v: c.sums[i] };
+          });
+          // flat's nMin/nMax: extremes of the cell TOTAL over all categories
+          const totals = cells.map(c => c.sums.reduce((s, x) => s + x, 0));
+          const tMin = Math.min(...totals), tMax = Math.max(...totals);
+          const data = [];
+          // legend click (ixmaps.markThemeClass): flat's evidence "isolate" shows only the cells
+          // whose dominant category is marked; "isolate_gray" keeps the others, dimmed
+          const marking = this._markedClasses.size && !this._onMarksChanged;
+          const gray = String(this.style.evidence || 'isolate') === 'isolate_gray';
+          cells.forEach((cell, n) => {
+            const d = dom[n];
+            if (!d) return;
+            if (marking && !this._markedClasses.has(d.i) && !gray) return;
+            const center = worldPixelToLngLat(cell.px, cell.py, zoom);
+            let a = dopacity ? symbolDopacityAlpha(this.style, d.v, tMin, tMax, baseOpacity) : base;
+            if (marking && !this._markedClasses.has(d.i)) a = DIMMED_ICON_ALPHA / 255;
+            const c = rgb[d.i] || [130, 130, 130];
+            data.push({ geometry: { type: 'Point', coordinates: [center.lng, center.lat] }, rgb: c, alpha: a });
+          });
+          // white hexagon, tinted per cell by getColor (rgb + alpha)
+          const r = cellPx / 1.5;
+          // mask icon: deck tints only mask icons with getColor's rgb (non-mask: alpha only)
+          const icon = Object.assign({}, this._buildGridHexIcon('#ffffff', 'none', 0, r), { mask: true });
+          return [new IconLayer({
+            id: `ix-grid-${this.name}-g${this._iconGeneration}`,
+            data, pickable: false,
+            getPosition: d => d.geometry.coordinates,
+            getIcon: () => icon,
+            getColor: d => [d.rgb[0], d.rgb[1], d.rgb[2], Math.round(255 * d.alpha)],
+            getSize: 2 * r,
+            sizeUnits: 'pixels'
+          })];
+        }
+        // cell-level value stats (the grid IS the dataset for DOPACITY here)
+        const vals = cells.map(c => c.sums[0]).filter(v => v != null && !isNaN(v)).sort((a, b) => a - b);
+        const vMin = vals[0], vMax = vals[vals.length - 1];
+        const data = cells.map(cell => {
+          const center = worldPixelToLngLat(cell.px, cell.py, zoom);
+          const a = dopacity ? symbolDopacityAlpha(this.style, cell.sums[0], vMin, vMax, baseOpacity) : base;
+          return { geometry: { type: 'Point', coordinates: [center.lng, center.lat] }, alpha: a == null ? base : a };
+        });
+        // hexagon tiling (snapToAggregationGrid): column pitch cellPx = 1.5 r, so r = cellPx / 1.5
+        const r = cellPx / 1.5;
+        const icon = hexCells
+          ? this._buildGridHexIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, r)
+          : this._buildGridSquareIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx);
+        return [new IconLayer({
+          id: `ix-grid-${this.name}-g${this._iconGeneration}`,
+          data, pickable: false,
+          getPosition: d => d.geometry.coordinates,
+          getIcon: () => icon,
+          getColor: d => [255, 255, 255, Math.round(255 * d.alpha)],
+          getSize: hexCells ? 2 * r : cellPx,
+          sizeUnits: 'pixels'
+        })];
+      }
+
+      const data = this._gridIndex.map(cell => {
+        const center = worldPixelToLngLat(cell.px, cell.py, zoom);
+        return { geometry: { type: 'Point', coordinates: [center.lng, center.lat] } };
+      });
       const icon = this._buildGridSquareIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx);
 
       return [new IconLayer({
@@ -14222,6 +14795,30 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return this._cacheIcon(key, icon);
     }
 
+    // one flat-top hexagon of circumradius r (px) filling a square raster — the GRIDSIZE
+    // "hexagon" cell (see _buildGridMeshLayers); drawSymbolPath's own hexagon outline
+    _buildGridHexIcon(fillColor, borderColor, borderWidth, r) {
+      const key = `gridhex|${fillColor}|${borderColor}|${borderWidth}|${r}`;
+      if (this._iconCache.has(key)) return this._iconCache.get(key);
+      const size = Math.max(32, Math.min(256, Math.round(2 * r) || 32));
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const rr = size / 2 - 1; // 1px margin so the stroke isn't clipped
+      ctx.beginPath();
+      drawSymbolPath(ctx, 'hexagon', size / 2, size / 2, rr);
+      ctx.closePath();
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      if (borderColor && borderColor !== 'none' && borderWidth > 0) {
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = borderWidth * (size / (2 * r || size));
+        ctx.stroke();
+      }
+      const icon = { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key };
+      return this._cacheIcon(key, icon);
+    }
+
     _buildGridSquareIcon(fillColor, borderColor, borderWidth, cellPx) {
       const key = `grid|${fillColor}|${borderColor}|${borderWidth}|${cellPx}`;
       if (this._iconCache.has(key)) return this._iconCache.get(key);
@@ -14250,6 +14847,114 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       return this._cacheIcon(key, icon);
     }
 
+    // .type("KDE"): the kernel density of the VISIBLE records as stacked bands (the fire pages' KDE).
+    // The records inside the view (plus 3 bandwidths around it, which still add density to it) go
+    // to kdeGrid in a worker, d3-contour cuts the bands at fractions of the maximum (style.kdelevels,
+    // default 0.15 / 0.30 / 0.50 / 0.70), each band the area at or above its threshold, so they
+    // stack, colored from style.colorscheme, drawn with style.fillopacity. The bandwidth is
+    // style.bandwidth (km) or, without it, follows the zoom (kdeBandwidthKm).
+    // The result belongs to a view: while the map moves the last bands stay, and once it stands still
+    // (and the view, the records, the binding or the bandwidth changed) the new ones are computed
+    // after a short pause and drawn by a redraw — never more than one computation wanted at a time.
+    // Weights as HEATMAP: the size field, else the numeric value field, else 1 each ($item$).
+    _buildKdeLayers(zoom, bbox, globeCenter) {
+      // the bands are lng/lat polygons of a flat view: under the globe there is no such view — say so once
+      if (globeCenter) {
+        if (!this._warnedKdeGlobe) {
+          this._warnedKdeGlobe = true;
+          console.warn(`[ixmaps-gl] layer "${this.name}": KDE is not drawn under the globe projection (its bands are computed for a flat view) — use mapProjection mercator`);
+        }
+        return [];
+      }
+      const source = this._activeFeatures || this.features;
+      if (this._kdeSource !== source) { this._kdeSource = source; this._kdeSourceId = (this._kdeSourceId || 0) + 1; }
+      const flatZoom = mapLibreToFlatZoom(zoom);
+      const bwKm = styleNum(this.style.bandwidth) > 0 ? styleNum(this.style.bandwidth) : kdeBandwidthKm(flatZoom);
+      const maxCells = kdeMaxCells(flatZoom);
+      const levels = kdeLevels(this.style);
+      const key = JSON.stringify([this._dataGen, this._kdeSourceId, this.binding, bwKm, maxCells, levels, bbox.map(v => Math.round(v * 1e4) / 1e4)]);
+      if (key !== this._kdeKeyDone && key !== this._kdeKeyWanted && !this._viewMoving) {
+        this._kdeKeyWanted = key;
+        clearTimeout(this._kdeTimer);
+        this._kdeTimer = setTimeout(() => {
+          const margin = 3 * bwKm;
+          const mLat = margin / 111.3;
+          const mLng = margin / (111.3 * Math.max(0.05, Math.cos((bbox[1] + bbox[3]) / 2 * Math.PI / 180)));
+          const points = kdePoints(source, this.binding, [bbox[0] - mLng, bbox[1] - mLat, bbox[2] + mLng, bbox[3] + mLat]);
+          Promise.all([ensureD3Contour(), kdeCompute(points, bwKm, maxCells)]).then(([contours, grid]) => {
+            if (this._kdeKeyWanted !== key) return;        // the view moved on: a newer computation is wanted
+            this._kdeBands = kdeBands(grid, levels, () => contours());
+            this._kdeBandsGen = (this._kdeBandsGen || 0) + 1;   // every set of bands is a new layer for deck.gl
+            this._kdeLevelCount = levels.length;
+            this._kdeKeyDone = key;
+            if (this._triggerRedraw) this._triggerRedraw();
+          }).catch(err => {
+            console.error(`[ixmaps-gl] layer "${this.name}": KDE not computed:`, err);
+            if (this._kdeKeyWanted === key) this._kdeKeyDone = key;   // not retried until the view changes
+          });
+        }, 150);
+      }
+      const bands = this._kdeBands;
+      if (!bands || !bands.features.length) return [];
+      const colors = kdeBandColors(this.style.colorscheme, this._kdeLevelCount || levels.length);
+      return [new GeoJsonLayer({
+        // a new id for each set of bands: deck.gl keeps a layer's buffers by id, and bands whose polygon
+        // structure changed (holes, counts) under the SAME id drew long triangles between polygons
+        id: this._dataLayerId(`ix-kde-${this.name}-b${this._kdeBandsGen || 0}`),
+        data: bands, pickable: false, stroked: false, filled: true,
+        getFillColor: f => colors[f.properties.level] || colors[colors.length - 1],
+        updateTriggers: { getFillColor: [JSON.stringify(this.style.colorscheme), colors.length] },
+        opacity: styleNum(this.style.fillopacity) || 0.25
+      })];
+    }
+
+    // .type("HEATMAP"): a kernel-density surface (deck.gl HeatmapLayer) of the records' positions,
+    // weighted by heatmapWeight. style.radiuspx (default 30) is the kernel radius in screen pixels
+    // at the reference zoom; it follows the map's object scaling like every symbol
+    // (objectZoomFactor), i.e. it grows and shrinks with the zoom like a real-world distance.
+    // style: scale (radius multiplier), intensity, threshold, colorscheme, fillopacity.
+    //
+    // PERFORMANCE: the layer is rebuilt on every frame of a zoom gesture. A new data array, a new
+    // colorRange or a new radius makes deck redo its GPU work (weight map, color texture) — measured
+    // 90 ms a frame with them rebuilt each time, 15 ms with the same array/colors and a radius that
+    // moves in steps of 2^(1/6) (~12%). So the data and the colors are kept until the records, the
+    // binding or the colorscheme change, and the radius is quantized.
+    _buildHeatmapLayers(liveZoom) {
+      const source = this._activeFeatures || this.features;
+      const bindingKey = JSON.stringify(this.binding);
+      if (!this._heatmapData || this._heatmapSource !== source || this._heatmapBinding !== bindingKey) {
+        const data = [];
+        for (const f of source) {
+          const c = f.geometry && f.geometry.coordinates;
+          if (!c || typeof c[0] !== 'number' || !isFinite(c[0]) || !isFinite(c[1])) continue;
+          const w = heatmapWeight(this.binding, f.properties || {});
+          if (w > 0) data.push({ position: [c[0], c[1]], weight: w });
+        }
+        this._heatmapData = data;
+        this._heatmapSource = source;
+        this._heatmapBinding = bindingKey;
+      }
+      const colorKey = JSON.stringify(this.style.colorscheme);
+      if (!this._heatmapColors || this._heatmapColorKey !== colorKey) {
+        this._heatmapColors = heatmapColorRange(this.style.colorscheme);
+        this._heatmapColorKey = colorKey;
+      }
+      const radiusPx = (styleNum(this.style.radiuspx) || 30) * (styleNum(this.style.scale) || 1)
+        * objectZoomFactor(liveZoom, this.mapOptions);
+      const stepped = Math.pow(2, Math.round(Math.log2(Math.max(1, radiusPx)) * 6) / 6);
+      return [new HeatmapLayer({
+        id: `ix-heatmap-${this.name}`,
+        data: this._heatmapData, pickable: false,
+        getPosition: d => d.position,
+        getWeight: d => d.weight,
+        radiusPixels: Math.max(1, Math.min(400, stepped)),
+        intensity: styleNum(this.style.intensity) || 1,
+        threshold: styleNum(this.style.threshold) || 0.05,
+        colorRange: this._heatmapColors,
+        opacity: styleNum(this.style.fillopacity) || 1
+      })];
+    }
+
     // .type("DOT") — one point per record, always (no clustering, matching
     // the real engine bypassing AGGREGATE for this type). Color comes from
     // a bound value's class — CATEGORICAL (exact match) or numeric
@@ -14265,7 +14970,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const data = source.map(f => ({
         geometry: f.geometry,
         properties: {
-          value: this.binding.size ? parseFloat(f.properties[this.binding.size]) : undefined,
+          value: this.binding.size ? scanValue(f.properties[this.binding.size]) : undefined,
           raw: f.properties,
           cat: hasClasses ? this._resolveClassIndex(f.properties[this.binding.value]) : null
         }
@@ -14522,7 +15227,13 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // GRIDSIZE: every chart the size of its grid cell, whatever its value
       // (_gridChartRadiusPx); otherwise valueRadius
       const gridR = this._gridChartRadiusPx(zoom, liveZoom);
-      const vRadius = v => (gridR != null ? gridR : valueRadius(v, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue, this._sizeBound()));
+      // AUTOSIZE: the biggest aggregated item is the size of the cell, the others by value
+      const autoR = this._autoSizeMaxRadiusPx(zoom, liveZoom);
+      const autoMax = autoR != null ? (this._ensureAggregateStats(zoom).sizeMax || 1) : 1;
+      const autoPow = autoR != null ? resolveSizePow(this.style, this.flags) : 1;
+      const vRadius = v => (gridR != null ? gridR
+        : autoR != null ? Math.max(VALUE_RADIUS_MIN, autoR * Math.pow(Math.abs(v || 0) / autoMax, 1 / autoPow))
+        : valueRadius(v, liveZoom, this.style, this.mapOptions, this.flags, this._maxSizeValue, this._sizeBound()));
       // AGGREGATE sums without a normalsizevalue: flat's default is the
       // largest aggregated value (defaultNormalSizeValue leaves it unset, the
       // sizes depend on the aggregation)
@@ -14738,7 +15449,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           getPosition: d => d.geometry.coordinates,
           getIcon: d => this._getGlowIcon((this.categoryColorsRgb || [])[d.properties.counts ? dominant(this._groupIsolation(d) ? d.properties.counts.map((c, i) => (this._markedClasses.has(i) ? c : 0)) : d.properties.counts) : d.properties.cat]),
           getSize: d => vRadius(sizeValueOf(d)) * (d.properties.counts ? 9 : 11),
-          getColor: d => [255, 255, 255, this._iconAlpha(d)],
+          getColor: d => [255, 255, 255, Math.round(this._iconAlpha(d) * glowOpacityOf(this.style))],
           ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
           sizeUnits: 'pixels',
           billboard: true,
@@ -15150,7 +15861,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       if (multi && auto100 && !this._seqAuto100Max) {
         let m = 0;
         for (const f of this.features) {
-          const parts = this._multiFields.map(k => parseFloat(f.properties && f.properties[k]) || 0);
+          const parts = this._multiFields.map(k => scanValue(f.properties && f.properties[k]) || 0);
           const sum = parts.reduce((a, v) => a + v, 0);
           if (sum > 0) for (const v of parts) { const nv = v / (sum / 100); if (nv > m) m = nv; }
         }
@@ -15171,12 +15882,12 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const sizeField = multi && this.binding.size && this.binding.size !== '$item$' ? this.binding.size : null;
       let sizeMax = 0;
       if (sizeField) {
-        for (const f of this.features) { const v = Math.abs(parseFloat(f.properties && f.properties[sizeField]) || 0); if (v > sizeMax) sizeMax = v; }
+        for (const f of this.features) { const v = Math.abs(scanValue(f.properties && f.properties[sizeField]) || 0); if (v > sizeMax) sizeMax = v; }
       }
       const itemSizeFactor = d => {
         if (!sizeField) return 1;
         const sz = typeof d.properties.size === 'number' ? d.properties.size
-          : Math.abs(parseFloat((d.properties.raw || {})[sizeField]) || 0);
+          : Math.abs(scanValue((d.properties.raw || {})[sizeField]) || 0);
         return sizeMax > 0 ? Math.pow(sz / sizeMax, 1 / sizePow) : 0;
       };
       const rings = flatFlag(this.flags, 'RINGS');
@@ -15359,7 +16070,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
             getIcon: d => this._getGlowIcon(colorOf(d.part.i)),
             getSize: d => d.part.r * 11,
             getPixelOffset: offsetOf,
-            getColor: d => [255, 255, 255, alphaOf(d)],
+            getColor: d => [255, 255, 255, Math.round(alphaOf(d) * glowOpacityOf(st))],
             sizeUnits: 'pixels', billboard: true,
             parameters: ICON_LAYER_GLOBE_PARAMETERS
           }));
@@ -15714,7 +16425,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         if (!layout) continue;
         const sum = values.reduce((a, v) => a + v, 0);
         if (star) for (const v of values) if (v > starMaxPart) starMaxPart = v;
-        const size = this.binding.size ? parseFloat(raw[this.binding.size]) : undefined;
+        const size = this.binding.size ? scanValue(raw[this.binding.size]) : undefined;
         const r = nSizeOf(sum, size) * unit;
         if (!(r > 0) || !isFinite(r)) continue;
         // flat's draw-order key (maptheme.js 16812-16860): the size value,
@@ -16162,7 +16873,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           return { values: parts, size };
         }
         const raw = f.properties || {};
-        return { values: fields.map(k => flatNumber(raw[k], this.flags)), size: sizeField ? parseFloat(raw[this.binding.size]) : undefined };
+        return { values: fields.map(k => flatNumber(raw[k], this.flags)), size: sizeField ? scanValue(raw[this.binding.size]) : undefined };
       };
       const all = agg ? this._pieAggregatedItems(zoom, [-180, -90, 180, 90]) : (this._activeFeatures || this.features);
       // flat's per-part mean, median (getMeanMedianQuantile) and standard
@@ -16887,7 +17598,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
           let lo = Infinity, hi = -Infinity;
           const field = this.binding.value;
           for (const f of this.features || []) {
-            const v = field === '$item$' ? 1 : parseFloat(f.properties && f.properties[field]);
+            const v = field === '$item$' ? 1 : scanValue(f.properties && f.properties[field]);
             if (isNaN(v)) continue;
             if (v < lo) lo = v;
             if (v > hi) hi = v;
@@ -18104,7 +18815,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
     fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
-    drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb,
+    drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb, heatmapColorRange, heatmapWeight,
+    mlHeatmapPoints, mlHeatmapWeightMax, mlHeatmapRadius, mlHeatmapPaint, syncNativeHeatmaps, mlHeatLayerId,
+    kdeBandwidthKm, kdeMaxCells, kdeLevels, kdePoints, kdeGrid, kdeBands, kdeBandColors, kdeWorkerSource, kdeCompute, kdeReset, setDeckLayerClassesForTests, ensureD3Contour, colorRampRgb,
     flatFormatValue, themeStyleArgs, flatChangedStyleValue, explicitValueDecimals, legendDecimals,
     dataCacheKey, dataCacheDisabled, cachedLayerData, featuresBounds, wantsZoomToExtent, legendIsOn, applySphereBackdrop,
   };
