@@ -3989,7 +3989,7 @@ var CODE_LIBS = {
   // for the read-only "Mappa (HTML)" view
   html: ['xml/xml', 'css/css', 'htmlmixed/htmlmixed'].map(function(m) { return 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/' + m + '.min.js'; })
 };
-var GRAMMAR_VALIDATOR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.22/dist/validate.mjs';
+var GRAMMAR_VALIDATOR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.30/dist/validate.mjs';
 var CODE_EDITOR = { ed: null, timer: null, validator: null, validatorFailed: false, objKeys: {}, drawnNames: [], drawChain: Promise.resolve() };
 
 // recorded calls → editable definitions. Layers whose data was the in-memory table get
@@ -5058,12 +5058,13 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
     if (kdeBw > 0) style.bandwidth = kdeBw;
 
   } else if (viz === 'hexbin') {
-    // theme configurator "HexBin": CHART|SYMBOL|GRIDSIZE|FAST|AGGREGATE|SUM|DOPACITY, symbols
+    // theme configurator "HexBin": CHART|SYMBOL|GRIDSIZE|AGGREGATE|SUM|DOPACITY (its FAST is left out: flat takes
+    // the aggregate-at-load path for any AGGREGATE theme anyway, gl does not know the flag), symbols
     // ["hexagon"], dopacitypow/dopacityscale 2 — one hexagon per grid cell, fill OPACITY ramped
     // from the cell's summed value ($item$: the item count); a text value adds
     // CENTER|DOMINANT (cell colored by its dominant category). Cell pitch via gridwidthpx —
     // style.gridwidth is meters in GL.
-    typeStr = "CHART|SYMBOL|GRIDSIZE|FAST|AGGREGATE|SUM|DOPACITY" + (isCat ? "|CATEGORICAL|CENTER|DOMINANT" : "") + "|SHOW";
+    typeStr = "CHART|SYMBOL|GRIDSIZE|AGGREGATE|SUM|DOPACITY" + (isCat ? "|CATEGORICAL|CENTER|DOMINANT" : "") + "|SHOW";
     binding = { position: geoBinding, value: valueField, size: sizeSel };
     style = {
       colorscheme:   [colorscheme[colorscheme.length - 1]],
@@ -5081,12 +5082,12 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
     }
 
   } else if (viz === 'hexbin_sized') {
-    // theme configurator "HexBin sized": CHART|BUBBLE|SIZE|FAST|AGGREGATE|AUTOSIZE|RELOCATE|SUM —
+    // theme configurator "HexBin sized": CHART|BUBBLE|SIZE|AGGREGATE|AUTOSIZE|RELOCATE|SUM (FAST left out, see HexBin) —
     // bubbles relocated onto an aggregation grid, sized by the size field aggregated per cell
     // (a column's sum, or $item$: the record count); a text value colors them by category.
     // AUTOSIZE: the biggest bubble is the size of the grid cell at scale 1, the others by value
     // (no normalsizevalue — the grid decides)
-    typeStr = "CHART|BUBBLE|SIZE|FAST|AGGREGATE|AUTOSIZE|RELOCATE|SUM" + (isCat ? "|CATEGORICAL" : "");
+    typeStr = "CHART|BUBBLE|SIZE|AGGREGATE|AUTOSIZE|RELOCATE|SUM" + (isCat ? "|CATEGORICAL" : "");
     binding = { position: geoBinding, value: valueField, size: sizeSel };
     STATE.baseScale = 1;
     style = {
