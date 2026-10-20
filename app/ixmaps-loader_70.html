@@ -3838,7 +3838,7 @@ async function generateMapCode(options) {
     '</head>',
     '<body>',
     '<div id="map"></div>',
-    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.30/ixmaps-gl.js"><\/script>',
+    '<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.31/ixmaps-gl.js"><\/script>',
     '<script>',
     STATE.localFile ? '// data: the local file "' + STATE.localFile.name.replace(/[\r\n"]/g, '') + '" — put it next to this page (or replace the url with where it is published)' : null,
     'ixmaps.Map("map", ' + codeLiteral(cfg.map || {}, '') + ', map => {',
