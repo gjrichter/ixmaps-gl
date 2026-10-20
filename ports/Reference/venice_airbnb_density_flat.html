@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirBnB Venezia - densità</title>
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+  #map { width: 100%; height: 100%; }
+</style>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ixmaps.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<script>
+var DATA_URL = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/InsideAirbnb/venice_listings.csv";
+
+var myMap = ixmaps.Map("map", {
+        mapType: "VT_TONER_LITE",
+        mode:    "info",
+        legend:  "closed",
+        tools:   true
+    })
+    .view({ center: { lat: 45.4376, lng: 12.3380 }, zoom: 15 })
+    .options({
+        objectscaling:   "dynamic",
+        normalSizeScale: "250000",
+        basemapopacity:  0.6,
+        flushChartDraw:  1000000
+    });
+
+// 1. density grid: square cells, opacity proportional to listing count
+myMap.layer("density")
+    .data({ url: DATA_URL, type: "csv" })
+    .binding({ geo: "latitude|longitude", value: "id", title: "neighbourhood" })
+    .type("CHART|SYMBOL|GRIDSIZE|AGGREGATE|RECT|COUNT|DOPACITY|NOLEGEND")
+    .style({
+        symbols:      ["square"],
+        colorscheme:  ["#b5284b"],
+        fillopacity:  0.5,
+        gridwidthpx:  "40",
+        linecolor:    "none",
+        showdata:     "true"
+    })
+    .meta({ name: "airbnb-grid", tooltip: "{{theme.item.data}}" })
+    .title("AirBnB Venezia - densità")
+    .define();
+
+// 2. single listings on top
+myMap.layer("listings")
+    .data({ url: DATA_URL, type: "csv" })
+    .binding({ geo: "latitude|longitude", value: "id", title: "name" })
+    .type("CHART|BUBBLE|NOSIZE|RAW|NOLEGEND")
+    .style({
+        colorscheme: ["#b5284b"],
+        fillopacity: 0.3,
+        scale:       0.15,
+        showdata:    "true"
+    })
+    .meta({ name: "airbnb-points", tooltip: "<b>{{name}}</b><br>{{room_type}} - {{price}} €<br>host: {{host_name}}" })
+    .define();
+
+myMap.then(function () {
+    try { ixmaps.setMapTool("info"); } catch (e) {}
+});
+</script>
+</body>
+</html>
