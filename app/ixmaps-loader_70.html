@@ -587,6 +587,9 @@
   .style-toggle:hover { color: var(--text); border-color: var(--muted); }
   .style-toggle.active { color: var(--text); border-color: var(--accent); background: rgba(var(--accent-rgb), 0.14); }
   #map-card .card-body > .field-group { margin-bottom: 10px; }
+  /* the map settings card: a soft tint of the accent (follows the dark / light theme variables) */
+  #map-card { background: color-mix(in srgb, var(--accent) 7%, var(--bg)); }
+  #map-card .card-header { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
   .mapcfg-val { font-family: var(--mono); color: var(--text); }
   .tweak-chip {
     display: inline-flex; align-items: center; gap: 4px;
@@ -644,6 +647,53 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   }
   #color-palette-popup.open, #color-edit-popup.open { display: block; }
+
+  /* ── visualization type picker (icons) — drives the hidden #viz-type <select> ── */
+  #viz-picker { position: relative; }
+  #viz-picker-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; cursor: pointer; text-align: left;
+    padding: 5px 8px;
+  }
+  :root[data-theme="light"] #viz-picker-btn,
+  :root[data-theme="light"] .viz-card { background: #ffffff; }
+  #viz-picker-btn svg { width: 38px; height: 26px; flex-shrink: 0; }
+  #viz-picker-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #viz-picker-btn .chev { color: var(--muted); font-size: 10px; }
+  /* in the flow (not absolute): the config panel scrolls, an absolute popup would be clipped by it */
+  #viz-picker-popup {
+    display: none; margin-top: 6px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 8px; z-index: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  #viz-picker-popup.open { display: block; }
+  .viz-group-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin: 2px 2px 6px;
+  }
+  .viz-group-label:not(:first-child) { margin-top: 10px; }
+  .viz-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .viz-card {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px 4px 5px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+    color: var(--text); font-family: var(--mono); font-size: 10px; line-height: 1.2; text-align: center;
+  }
+  .viz-card svg { width: 100%; max-width: 64px; height: 42px; }
+  .viz-card:hover { border-color: var(--muted); }
+  .viz-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.25); }
+  .viz-card:focus-visible, #viz-picker-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .info-btn {
+    width: 15px; height: 15px; margin-left: 6px; padding: 0; border-radius: 50%; cursor: pointer;
+    border: 1px solid var(--muted); background: transparent; color: var(--muted);
+    font: italic 700 10px/1 serif; vertical-align: middle; text-transform: none;
+  }
+  .info-btn:hover, .info-btn[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+  .info-box {
+    margin: 0 0 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; font-size: 11px; line-height: 1.45; color: var(--text); text-transform: none;
+    letter-spacing: normal; font-family: inherit;
+  }
+  .info-box ul { margin: 4px 0; padding-left: 16px; }
 
   .colorlist { list-style: none; margin: 0; padding: 0; }
   .colorlistitem a {
@@ -1058,10 +1108,10 @@
 
   #data-table {
     border-collapse: collapse;
-    width: 100%;
+    min-width: 100%;
     font-size: 12px;
     font-family: var(--mono);
-    table-layout: auto;
+    table-layout: fixed;   /* the column widths come from <colgroup> (renderTableHead) — draggable */
   }
   #data-table th {
     position: sticky;
@@ -1072,7 +1122,14 @@
     border-bottom: 1px solid var(--border);
     z-index: 10;
     vertical-align: top;
+    overflow: hidden;
   }
+  /* drag handle on the right edge of a header cell: resizes the column (double click: default width) */
+  .col-resizer {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 7px; cursor: col-resize; touch-action: none;
+    border-right: 2px solid transparent;
+  }
+  .col-resizer:hover, .col-resizer.dragging { border-right-color: var(--accent); }
   .th-label {
     display: block;
     color: var(--muted);
@@ -1113,7 +1170,6 @@
     border-bottom: 1px solid var(--border);
     color: var(--text);
     white-space: nowrap;
-    max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -1396,15 +1452,24 @@
 
             <div class="field-group">
               <div class="field-label">Tipo visualizzazione</div>
-              <select id="viz-type" class="field-select" onchange="onVizChange()">
-                <option value="bubble">Bolle proporzionali</option>
-                <option value="bivariate">Bolle: colore + dimensione</option>
-                <option value="choropleth">Choropleth (aree colorate)</option>
-                <option value="dot">Punti semplici</option>
+              <!-- the picker below (icons) drives this select: it stays the single source of the value -->
+              <div id="viz-picker">
+                <button type="button" id="viz-picker-btn" class="field-select" onclick="toggleVizPicker()"
+                        aria-haspopup="listbox" aria-expanded="false">
+                  <span id="viz-picker-icon"></span><span id="viz-picker-label"></span><span class="chev">▾</span>
+                </button>
+                <div id="viz-picker-popup" role="listbox"></div>
+                <div id="viz-picker-hint" class="info-box" style="display:none;margin:6px 0 0"></div>
+              </div>
+              <select id="viz-type" class="field-select" style="display:none" onchange="onVizChange()">
+                <option value="dot">Dots</option>
+                <option value="bubble">Sized Bubbles</option>
+                <option value="hexbin">HexBin</option>
+                <option value="hexbin_sized">HexBin sized</option>
                 <option value="heatmap">Heatmap di densità</option>
-                <option value="categorical">Categorie colorate</option>
-                <option value="hexbin" disabled>HexBin (griglia esagonale) — non supportato dal motore GL</option>
-                <option value="hexbin_sized">HexBin proporzionale</option>
+                <option value="kde">KDE (densità a fasce)</option>
+                <option value="mlheatmap">Heatmap MapLibre</option>
+                <option value="choropleth">Choropleth (aree colorate)</option>
                 <option value="waffle" disabled>Waffle (griglia quadrata) — non supportato dal motore GL</option>
                 <option value="feature">Feature (linee / poligoni)</option>
                 <option value="feature_categorical">Feature per categoria</option>
@@ -1429,6 +1494,11 @@
             <div class="field-group" id="title-row">
               <div class="field-label">Campo etichetta (tooltip)</div>
               <select id="title-field" class="field-select"></select>
+            </div>
+
+            <div class="field-group" id="join-row" style="display:none">
+              <div class="field-label">Campo join (forme ↔ colori)</div>
+              <select id="join-field" class="field-select" title="chiave che collega i confini (FEATURE) ai dati colorati (CHOROPLETH): un valore univoco per forma"></select>
             </div>
 
             <div class="field-group" id="lookup-row" style="display:none">
@@ -1473,7 +1543,20 @@
             </div>
 
             <div class="field-group" id="size-ramp-row">
-              <div class="field-label">Rampa dimensione</div>
+              <div class="field-label">Rampa dimensione
+                <button type="button" class="info-btn" aria-expanded="false" aria-controls="size-ramp-info" title="Che cos'è la rampa dimensione?"
+                  onclick="var b=document.getElementById('size-ramp-info');var o=b.style.display==='none';b.style.display=o?'':'none';this.setAttribute('aria-expanded',o)">i</button>
+              </div>
+              <div id="size-ramp-info" class="info-box" style="display:none">
+                La rampa decide <b>come la dimensione di un simbolo cresce con il valore</b>:
+                raggio ∝ valore<sup>1/rampa</sup>.
+                <ul>
+                  <li><b>1</b> – il raggio è proporzionale al valore: le differenze sono molto marcate, i valori grandi dominano.</li>
+                  <li><b>2</b> (predefinita) – l'<i>area</i> del cerchio è proporzionale al valore: lettura più fedele.</li>
+                  <li><b>3</b> – il raggio cresce lentamente: i simboli sono più simili fra loro, i valori piccoli restano visibili.</li>
+                </ul>
+                Vale per le bolle dimensionate e per HexBin sized; il valore è quello del campo dimensione (somma per cella o categoria).
+              </div>
               <!-- maps directly to ixMaps' `sizepow` — radius ∝ value^(1/sizepow): 1 = linear/most
                    dramatic size differences, 3 = noticeably flatter/more compressed; 2 (default,
                    mid-range) = area-proportional -->
@@ -1483,7 +1566,35 @@
 
             <div class="field-group" id="grid-width-row" style="display:none">
               <div class="field-label">Larghezza griglia</div>
-              <input id="grid-width" type="text" class="field-input" value="10px" placeholder="10px">
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="grid-width-slider" type="range" min="4" max="100" step="1" value="10" style="flex:1;min-width:0;accent-color:var(--accent)">
+                <input id="grid-width" type="number" min="1" step="1" value="10" class="field-input" style="width:64px;flex:none">
+              </div>
+            </div>
+
+            <div class="field-group" id="kde-bw-row" style="display:none">
+              <div class="field-label">Banda KDE (km)</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="kde-bandwidth-slider" type="range" min="0" max="100" step="0.5" value="50" style="flex:1;min-width:0;accent-color:var(--accent)" title="scala logaritmica, 0,04 – 50 km">
+                <input id="kde-bandwidth" type="number" min="0" step="any" class="field-input" placeholder="auto" title="vuoto: automatica (segue lo zoom)" style="width:64px;flex:none">
+              </div>
+            </div>
+
+            <div class="field-group" id="mlheat-row" style="display:none">
+              <div class="field-label">Raggio (px)</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="mlheat-radius-slider" type="range" min="1" max="60" step="0.5" value="5" style="flex:1;min-width:0;accent-color:var(--accent)">
+                <input id="mlheat-radius" type="number" min="0.5" step="0.5" value="5" class="field-input" style="width:64px;flex:none" title="raggio in pixel alla scala di riferimento: cresce con lo zoom come ogni oggetto">
+              </div>
+              <div class="field-label" style="margin-top:8px">Intensità</div>
+              <input id="mlheat-intensity" type="number" min="0.1" step="0.1" value="1" class="field-input" title="intensità (moltiplica il peso)">
+            </div>
+
+            <div class="field-group" id="density-points-row" style="display:none">
+              <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
+                <input id="density-points" type="checkbox"style="accent-color:var(--accent)">
+                <span class="field-label" style="margin:0">Mostra punti</span>
+              </label>
             </div>
 
             <div class="field-group" id="line-width-row" style="display:none">
@@ -1527,6 +1638,11 @@
                 <option value="VT_TONER_LITE">Chiaro — VT_TONER_LITE</option>
                 <option value="VT_DATAVIZ_DARK">Scuro — VT_DATAVIZ_DARK</option>
               </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="proiezione a globo (mapProjection: globe); HEATMAP e KDE non si disegnano sul globo">
+                <input id="mapcfg-globe" type="checkbox"> Globo (mapProjection)
+              </label>
             </div>
             <div class="field-group">
               <div class="field-label">Opacità basemap <span id="mapcfg-basemapopacity-val" class="mapcfg-val"></span></div>
@@ -1595,6 +1711,7 @@
         </div>
         <div id="table-scroll">
           <table id="data-table">
+            <colgroup id="table-cols"></colgroup>
             <thead id="table-head"></thead>
             <tbody id="table-body"></tbody>
           </table>
@@ -1695,7 +1812,7 @@
 
 <!-- iXmaps GL — deck.gl + MapLibre reimplementation, not the real ixmaps-flat/SVG engine.
      ixmaps-gl.js lazy-loads MapLibre/deck.gl/Supercluster/Mustache itself. -->
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.30/ixmaps-gl.js"></script>
+<script src="../ixmaps-gl.js"></script>
 <!-- data.js — needed outside ixmaps callbacks for pre-loading and schema analysis -->
 <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
 
@@ -2192,6 +2309,17 @@ function analyzeSchema(rows, type) {
   suggestVisualization(fields, type);
 }
 
+// the lat/lon pair found by NAME — null for geographic formats that carry their own geometry: such a
+// pair must not override it (the ISTAT road-accident file has COORD_X/COORD_Y in projected metres
+// for 6% of its rows, while its geometry column is WGS84 throughout)
+function nameLatLon() {
+  var geoFile = ['geojson', 'topojson', 'parquet', 'geoparquet', 'flatgeobuf'].indexOf(STATE.fileType) !== -1;
+  if (geoFile && STATE.fields.some(function(f) { return f.type === 'geo'; })) return null;
+  var latF = STATE.fields.find(function(f) { return f.type === 'lat'; });
+  var lonF = STATE.fields.find(function(f) { return f.type === 'lon'; });
+  return latF && lonF ? { lat: latF, lon: lonF } : null;
+}
+
 function inferType(name, vals) {
   if (GEO_NAMES.test(name))  return 'geo';
   if (LAT_NAMES.test(name))  return 'lat';
@@ -2475,7 +2603,25 @@ function renderStats(nRows, nCols, type) {
 //  SUGGESTION — heuristic (immediate) + Mistral AI (async)
 // ═══════════════════════════════════════════════════════
 
-var VIZ_LABELS = { bubble:'Bolle proporzionali', bivariate:'Bolle: colore + dimensione', choropleth:'Choropleth', dot:'Punti semplici', categorical:'Categorie colorate', heatmap:'Heatmap', hexbin:'HexBin', hexbin_sized:'HexBin proporzionale', waffle:'Waffle', feature:'Feature (linee/poligoni)', feature_categorical:'Feature per categoria' };
+var VIZ_LABELS = { bubble:'Sized Bubbles', bivariate:'Sized Bubbles', choropleth:'Choropleth', dot:'Dots', categorical:'Dots', heatmap:'Heatmap', kde:'KDE', mlheatmap:'Heatmap MapLibre', hexbin:'HexBin', hexbin_sized:'HexBin sized', waffle:'Waffle', feature:'Feature (linee/poligoni)', feature_categorical:'Feature per categoria' };
+
+// ── point themes: ONE shape axis (dot / bubble / hexbin / hexbin_sized, + heatmap) and ONE data
+// axis decided by the fields — never by the shape. The value field decides categorical (a text
+// field) vs gradient (a number) vs plain count ($item$); the size field is a column (its values,
+// or its sum when aggregated) or $item$ (the item count). Switching the shape never touches them.
+function valueIsCategorical(v) {
+  return !!v && v !== '$item$' && v !== '__NONE__' && !fieldIsNumeric(v);
+}
+// numeric value → sized by itself; text value or $item$ → sized by the item count
+function defaultSizeField(v) {
+  return (!v || v === '$item$' || valueIsCategorical(v)) ? '$item$' : v;
+}
+// the old suggestion names (AI answers, heuristic, saved configs) fold into the shapes above
+function normalizeViz(s) {
+  if (s && s.vizType === 'categorical') return Object.assign({}, s, { vizType: 'dot' });
+  if (s && s.vizType === 'bivariate')   return Object.assign({}, s, { vizType: 'bubble' });
+  return s;
+}
 
 // GL-PORT NOTE: real ixmaps-flat recognizes "100,tableau" (or ["100","tableau"]) as a NAMED
 // auto-palette keyword, resolved internally by its own colorscheme.js — ixmaps-gl.js's
@@ -2496,6 +2642,8 @@ var COLOR_BY_VIZ = {
   choropleth:          '#ffffcc,#fd8d3c,#800026',
   dot:                 '#0066cc',
   heatmap:             '#ffffcc,#fd8d3c,#800026',
+  kde:                 '#ffffcc,#fd8d3c,#800026',
+  mlheatmap:           '#67a9cf,#d1e5f0,#fddbc7,#ef8a62,#b2182b',   // MapLibre's own heatmap example ramp
   categorical:         TABLEAU_PALETTE_STR,
   feature:             '#0066cc',
   feature_categorical: TABLEAU_PALETTE_STR
@@ -2517,7 +2665,7 @@ function uniqueCount(fieldName) {
 function bestColorScheme(viz, valueField) {
   if (viz === 'categorical' || viz === 'feature_categorical') return TABLEAU_PALETTE_STR;
   // bubble / heatmap use size encoding — gradient is more natural
-  if (viz === 'bubble' || viz === 'heatmap') return COLOR_BY_VIZ[viz] || '#0066cc';
+  if (viz === 'bubble' || viz === 'heatmap' || viz === 'kde' || viz === 'mlheatmap') return COLOR_BY_VIZ[viz] || '#0066cc';
   // choropleth, dot, feature: switch to categorical palette if few distinct values
   if (valueField && valueField !== '$item$') {
     var n = uniqueCount(valueField);
@@ -2887,6 +3035,7 @@ function buildCategoryColorEditSwatches(vals) {
 }
 
 function applySuggestion(s, source, autoDrawEuristica) {
+  s = normalizeViz(s);
   // geometry-type override: AI cannot know iXmaps — force FEATURE for lines/polygons
   var geomType = STATE.geomType;
   if ((geomType === 'line' || geomType === 'polygon') &&
@@ -2920,10 +3069,9 @@ function applySuggestion(s, source, autoDrawEuristica) {
   // decision is final (not from the immediate heuristic pass, which never calls AI at all).
   // No separate confirm here — the user already opted into the full AI workflow up front. ──
   if (source !== 'euristica') {
-    var isCatColorViz = s.vizType === 'categorical' || s.vizType === 'feature_categorical' ||
-      (s.vizType === 'bivariate' && STATE.fields.some(function(f){ return f.name === s.valueField && f.type === 'str'; }));
-    var isGradientViz = s.vizType === 'bubble' || s.vizType === 'choropleth' || s.vizType === 'heatmap' || s.vizType === 'dot' ||
-      (s.vizType === 'bivariate' && !isCatColorViz);
+    var isPointShape  = ['dot', 'bubble', 'hexbin', 'hexbin_sized', 'heatmap'].indexOf(s.vizType) !== -1;
+    var isCatColorViz = s.vizType === 'feature_categorical' || (isPointShape && valueIsCategorical(s.valueField));
+    var isGradientViz = s.vizType === 'choropleth' || (isPointShape && !isCatColorViz);
 
     var firedColorRequest = false;
     if (isCatColorViz) {
@@ -2963,48 +3111,52 @@ function populateConfigFields(fields) {
     if (catField && (!valueFieldPref || isFloatColumn(valueFieldPref))) {
       valueFieldPref = catField.name;
     }
-  } else if (viz === 'bubble') {
-    // use AI/heuristic suggestion if it's a valid bubble field
-    // only replace if the suggested field is invalid
-    if (valueFieldPref && computeBubbleInfo(valueFieldPref).valid) {
-      // suggestion is good — keep it
-    } else {
-      // find first valid bubble field in schema order
-      var numFields = fields.filter(function(f){ return f.type === 'num'; });
-      for (var ni = 0; ni < numFields.length; ni++) {
-        if (computeBubbleInfo(numFields[ni].name).valid) {
-          valueFieldPref = numFields[ni].name;
-          break;
-        }
-      }
+  } else if (viz === 'bubble' && !valueFieldPref) {
+    // no suggestion at all: the first usable numeric field, else count the items
+    var numFields = fields.filter(function(f){ return f.type === 'num'; });
+    valueFieldPref = '$item$';
+    for (var ni = 0; ni < numFields.length; ni++) {
+      if (computeBubbleInfo(numFields[ni].name).valid) { valueFieldPref = numFields[ni].name; break; }
     }
   }
 
-  // bivariate: size field must be distinct from the color (value) field and a valid bubble field
+  // size field: the suggested one (a usable numeric column, may differ from the value field),
+  // else the rule — numeric value → itself, text value or $item$ → the item count
   var sizeFieldPref = s.sizeField;
-  if (viz === 'bivariate') {
-    var sizeOk = sizeFieldPref && sizeFieldPref !== valueFieldPref && computeBubbleInfo(sizeFieldPref).valid;
-    if (!sizeOk) {
-      var numFieldsBiv = fields.filter(function(f){ return f.type === 'num' && f.name !== valueFieldPref; });
-      for (var nbi = 0; nbi < numFieldsBiv.length; nbi++) {
-        if (computeBubbleInfo(numFieldsBiv[nbi].name).valid) { sizeFieldPref = numFieldsBiv[nbi].name; break; }
-      }
-    }
+  if (!(sizeFieldPref && fields.some(function(f){ return f.name === sizeFieldPref && f.type === 'num'; }))) {
+    sizeFieldPref = defaultSizeField(valueFieldPref);
   }
+  STATE.sizeTouched = false;
 
   var geoFieldPref = s.geoField;
   // if data has lat/lon fields, always prefer the lat|lon combo regardless of AI suggestion
-  var latF = STATE.fields.find(function(f){ return f.type === 'lat'; });
-  var lonF = STATE.fields.find(function(f){ return f.type === 'lon'; });
-  if (latF && lonF) {
-    geoFieldPref = latF.name + '|' + lonF.name;
+  // (not for a geographic format with its own geometry — see nameLatLon)
+  var ll = nameLatLon();
+  if (ll) {
+    geoFieldPref = ll.lat.name + '|' + ll.lon.name;
   }
 
   populateSelect('geo-field',    fields, geoFieldPref);
-  populateSelect('value-field',  fields, valueFieldPref, viz === 'dot');
-  populateSelect('size-field',   fields, sizeFieldPref, true);
+  populateSelect('value-field',  fields, valueFieldPref, true);   // $item$ is always selectable
+  populateSelect('size-field',   fields, sizeFieldPref, true);    // $item$ + the columns
   populateSelect('title-field',  fields, s.titleField);
   populateSelect('lookup-field', fields, s.geoField);
+  populateSelect('join-field',   fields, guessJoinField(fields, s.titleField));
+}
+
+// the key joining a FEATURE layer to its CHOROPLETH overlay: an identifier-looking column
+// (istat / pro_com / cod_* / id / code / geoid / fips / iso) — the one with the MOST distinct values
+// (a join key must be unique per shape: cod_rip has 4, pro_com has one per municipality), else the
+// label field
+function guessJoinField(fields, fallback) {
+  var best = null, bestN = -1;
+  (fields || []).forEach(function(x) {
+    if (x.type === 'geo' || !/^(pro_com|istat|cod|id$|id_|code|geoid|fips|iso|adm\d)/i.test(x.name)) return;
+    var n = 0;
+    try { n = STATE.dataTable.column(x.name).uniqueValues().length; } catch(e) {}
+    if (n > bestN) { best = x.name; bestN = n; }
+  });
+  return best || fallback;
 }
 
 function populateSelect(id, fields, preferred, addItemPseudo) {
@@ -3059,16 +3211,198 @@ function populateSelect(id, fields, preferred, addItemPseudo) {
   }
 }
 
+// ── visualization type picker: icon cards over the hidden #viz-type <select> ──
+// The select stays the single source of the value (drawMap, applySuggestion, saved configs all
+// read/write it); the picker only mirrors it (syncVizPicker, called from onVizChange) and writes
+// it through a 'change' event, so every existing listener runs exactly as for a native select.
+var VIZ_PICKER_GROUPS = [
+  { label: 'Punti', items: ['dot', 'bubble', 'hexbin', 'hexbin_sized', 'heatmap', 'mlheatmap', 'kde'] },
+  { label: 'Aree',  items: ['choropleth', 'feature', 'feature_categorical'] }
+];
+var VIZ_PICKER_LABELS = { dot: 'Dots', bubble: 'Sized Bubbles', hexbin: 'HexBin', hexbin_sized: 'HexBin sized',
+  heatmap: 'Heatmap', mlheatmap: 'Heatmap MapLibre', kde: 'KDE', choropleth: 'Choropleth', feature: 'Feature', feature_categorical: 'Feature per categoria' };
+
+// what the three density shapes do, in one short text each (the card tooltip and the line under the picker)
+var VIZ_PICKER_HINTS = {
+  heatmap: 'Heatmap deck.gl: ogni punto è un kernel gaussiano del raggio scelto; le densità si sommano su una texture GPU e '
+    + 'sono normalizzate sul massimo visibile. Si ricalcola a ogni cambio di vista: con molti punti è più lenta. Non si disegna sul globo.',
+  mlheatmap: 'Heatmap MapLibre (nativa): i punti restano nei tile e il kernel gaussiano si somma sulla GPU; la densità è assoluta '
+    + '(non normalizzata sul massimo in vista), raggio e intensità seguono lo zoom. Molto veloce, funziona anche sul globo.',
+  kde: 'KDE (kernel density estimate): i punti visibili si accumulano su una griglia, sfocata con un filtro gaussiano della banda '
+    + 'scelta (km, automatica secondo lo zoom); le curve di livello al 15/30/50/70% del massimo diventano fasce poligonali. '
+    + 'Si ricalcola a mappa ferma. Non si disegna sul globo.'
+};
+
+function vizIconSvg(v) {
+  var A = 'var(--accent)', M = 'var(--muted)';
+  function hex(cx, cy, r) {
+    var p = [];
+    for (var i = 0; i < 6; i++) { var a = Math.PI / 3 * i; p.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); }
+    return p.join(' ');
+  }
+  // 4 columns × 3 rows of flat-top hexagons (column pitch 1.5 r, row pitch √3 r, odd columns shifted)
+  function hexGrid(fn) {
+    var r = 7.2, out = '';
+    for (var c = 0; c < 5; c++) for (var k = 0; k < 3; k++) {
+      var cx = 8 + c * 1.5 * r, cy = 9 + k * Math.sqrt(3) * r + (c % 2 ? Math.sqrt(3) / 2 * r : 0);
+      if (cy > 36) continue;
+      out += fn(cx, cy, r, c, k);
+    }
+    return out;
+  }
+  var body = '';
+  if (v === 'dot') {
+    [[10,12],[22,8],[34,15],[48,10],[16,26],[28,30],[40,27],[54,25],[8,36],[47,37]].forEach(function(p) {
+      body += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.6" fill="' + A + '"/>';
+    });
+  } else if (v === 'bubble') {
+    [[14,28,6],[27,15,10],[44,29,8],[52,12,4.5],[34,35,3.5],[8,10,3]].forEach(function(p) {
+      body += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + p[2] + '" fill="' + A + '" fill-opacity="0.45" stroke="' + A + '" stroke-width="1.2"/>';
+    });
+  } else if (v === 'hexbin') {
+    var ops = [0.15, 0.3, 0.55, 0.85, 0.4, 0.2, 0.7, 1, 0.6, 0.25, 0.35, 0.9, 0.5, 0.2, 0.1];
+    var n = 0;
+    body = hexGrid(function(cx, cy, r) {
+      return '<polygon points="' + hex(cx, cy, r - 0.8) + '" fill="' + A + '" fill-opacity="' + ops[(n++) % ops.length] + '"/>';
+    });
+  } else if (v === 'hexbin_sized') {
+    var rs = [1.5, 3, 5, 6.2, 3.6, 2, 5.2, 6.4, 4.4, 2.2, 3, 5.8, 3.8, 1.8, 1.2];
+    var m = 0;
+    body = hexGrid(function(cx, cy, r) {
+      return '<polygon points="' + hex(cx, cy, r - 0.8) + '" fill="none" stroke="' + M + '" stroke-opacity="0.45" stroke-width="0.8"/>'
+        + '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + rs[(m++) % rs.length] + '" fill="' + A + '" fill-opacity="0.7"/>';
+    });
+  } else if (v === 'heatmap') {
+    [[22, 24], [44, 18]].forEach(function(c, i) {
+      [16, 12, 8, 4].forEach(function(r) {
+        body += '<circle cx="' + c[0] + '" cy="' + (c[1] + i * 2) + '" r="' + r + '" fill="' + A + '" fill-opacity="0.16"/>';
+      });
+    });
+  } else if (v === 'mlheatmap') {
+    // soft blue halos with orange and dark red cores: the ramp of MapLibre's own heatmap
+    [[20, 26, 15], [44, 17, 12], [48, 31, 9]].forEach(function(c) {
+      body += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="#2166ac" fill-opacity="0.16"/>'
+        + '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (c[2] * 0.66).toFixed(1) + '" fill="#67a9cf" fill-opacity="0.45"/>'
+        + '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (c[2] * 0.4).toFixed(1) + '" fill="#ef8a62" fill-opacity="0.85"/>'
+        + '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (c[2] * 0.2).toFixed(1) + '" fill="#b2182b"/>';
+    });
+  } else if (v === 'kde') {
+    // four nested bands, each the area above a higher density: they stack, the core the densest
+    for (var b = 0; b < 4; b++) {
+      var sc = [1, 0.76, 0.52, 0.28][b];
+      body += '<path transform="translate(32 21) scale(' + sc + ') translate(-32 -21)" fill="' + A + '" fill-opacity="0.2" stroke="' + A + '" stroke-opacity="0.55" stroke-width="' + (0.9 / sc).toFixed(2) + '" '
+        + 'd="M9,22 C8,11 24,5 37,9 C51,13 58,24 50,32 C42,40 25,39 17,34 C11,30 9,27 9,22 Z"/>';
+    }
+  } else {
+    // areas: four polygons sharing edges; choropleth shades, feature outlines, feature_categorical colors
+    var polys = ['6,8 30,5 34,20 14,26', '30,5 58,10 54,24 34,20', '14,26 34,20 54,24 50,38 20,37', '6,8 14,26 20,37 8,34'];
+    var fills = {
+      choropleth: [0.2, 0.55, 0.9, 0.35],
+      feature: [0.06, 0.06, 0.06, 0.06]
+    };
+    var cat = ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2'];
+    polys.forEach(function(p, i) {
+      if (v === 'feature_categorical') body += '<polygon points="' + p + '" fill="' + cat[i] + '" fill-opacity="0.75" stroke="var(--bg)" stroke-width="1"/>';
+      else if (v === 'choropleth') body += '<polygon points="' + p + '" fill="' + A + '" fill-opacity="' + fills.choropleth[i] + '" stroke="' + A + '" stroke-width="0.9"/>';
+      else body += '<polygon points="' + p + '" fill="' + A + '" fill-opacity="0.06" stroke="' + A + '" stroke-width="1.4" stroke-linejoin="round"/>';
+    });
+  }
+  return '<svg viewBox="0 0 64 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + body + '</svg>';
+}
+
+function buildVizPicker() {
+  var sel = document.getElementById('viz-type');
+  var popup = document.getElementById('viz-picker-popup');
+  if (!sel || !popup) return;
+  var enabled = {};
+  Array.from(sel.options).forEach(function(o) { if (!o.disabled) enabled[o.value] = true; });
+  popup.innerHTML = '';
+  VIZ_PICKER_GROUPS.forEach(function(g) {
+    var items = g.items.filter(function(v) { return enabled[v]; });
+    if (!items.length) return;
+    var label = document.createElement('div');
+    label.className = 'viz-group-label';
+    label.textContent = g.label;
+    popup.appendChild(label);
+    var grid = document.createElement('div');
+    grid.className = 'viz-grid';
+    items.forEach(function(v) {
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'viz-card';
+      card.setAttribute('role', 'option');
+      card.setAttribute('data-viz', v);
+      card.title = (VIZ_PICKER_LABELS[v] || v) + (VIZ_PICKER_HINTS[v] ? ' — ' + VIZ_PICKER_HINTS[v] : '');
+      card.innerHTML = vizIconSvg(v) + '<span>' + (VIZ_PICKER_LABELS[v] || v) + '</span>';
+      card.addEventListener('click', function() {
+        toggleVizPicker(false);
+        if (sel.value !== v) { sel.value = v; sel.dispatchEvent(new Event('change')); }
+      });
+      grid.appendChild(card);
+    });
+    popup.appendChild(grid);
+  });
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('viz-picker').contains(e.target)) toggleVizPicker(false);
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') toggleVizPicker(false); });
+  syncVizPicker();
+}
+
+function toggleVizPicker(force) {
+  var popup = document.getElementById('viz-picker-popup');
+  var open = force == null ? !popup.classList.contains('open') : !!force;
+  popup.classList.toggle('open', open);
+  document.getElementById('viz-picker-btn').setAttribute('aria-expanded', open ? 'true' : 'false');
+  // the panel scrolls: bring the whole popup (the "Aree" group is at its end) into view
+  if (open) popup.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+// mirror the select into the button (icon + label) and mark the selected card
+function syncVizPicker() {
+  var sel = document.getElementById('viz-type');
+  var btn = document.getElementById('viz-picker-btn');
+  if (!sel || !btn) return;
+  var v = sel.value;
+  document.getElementById('viz-picker-icon').innerHTML = vizIconSvg(v);
+  document.getElementById('viz-picker-label').textContent = VIZ_PICKER_LABELS[v] || v;
+  var hint = document.getElementById('viz-picker-hint');
+  hint.textContent = VIZ_PICKER_HINTS[v] || '';
+  hint.style.display = VIZ_PICKER_HINTS[v] ? '' : 'none';
+  document.querySelectorAll('#viz-picker-popup .viz-card').forEach(function(c) {
+    var on = c.getAttribute('data-viz') === v;
+    c.classList.toggle('selected', on);
+    c.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+
 function onVizChange() {
+  syncVizPicker();
   var viz       = document.getElementById('viz-type').value;
   var isGeoFile = STATE.fileType === 'geojson' || STATE.fileType === 'topojson';
+
+  // join row: the key shared by the FEATURE shapes and the colored overlay
+  document.getElementById('join-row').style.display =
+    ((viz === 'choropleth' && isGeoFile) || viz === 'feature' || viz === 'feature_categorical') ? '' : 'none';
 
   // lookup row: only for choropleth from non-geo files
   document.getElementById('lookup-row').style.display =
     (viz === 'choropleth' && !isGeoFile) ? '' : 'none';
 
-  // size row: only for bivariate (color field + independent size field)
-  document.getElementById('size-row').style.display = (viz === 'bivariate') ? '' : 'none';
+  // the value selected before this call mutates anything below (restored at the end)
+  var prevValue = document.getElementById('value-field').value;
+
+  // size row: the "sized" shapes — a column, or $item$ (the item count)
+  document.getElementById('size-row').style.display = (viz === 'bubble' || viz === 'hexbin' || viz === 'hexbin_sized' || viz === 'heatmap' || viz === 'kde' || viz === 'mlheatmap') ? '' : 'none';
+  // the KDE bandwidth (empty: automatic, by zoom)
+  document.getElementById('kde-bw-row').style.display = viz === 'kde' ? '' : 'none';
+  // radius and intensity of the native heatmap
+  document.getElementById('mlheat-row').style.display = viz === 'mlheatmap' ? '' : 'none';
+  // the density shapes can carry the data points as a second layer
+  document.getElementById('density-points-row').style.display = (viz === 'heatmap' || viz === 'kde' || viz === 'mlheatmap') ? '' : 'none';
+  // the aggregation-grid width is the kernel radius of a heatmap
+  var gridLabel = document.querySelector('#grid-width-row .field-label');
+  if (gridLabel) gridLabel.textContent = viz === 'heatmap' ? 'Raggio (px)' : 'Larghezza griglia';
 
   // grid width: only for the AGGREGATE-based types (heatmap/hexbin/hexbin_sized/waffle)
   var isAggregateViz = (viz === 'heatmap' || viz === 'hexbin' || viz === 'hexbin_sized' || viz === 'waffle');
@@ -3079,7 +3413,7 @@ function onVizChange() {
   document.getElementById('line-width-row').style.display = isFeatureViz ? '' : 'none';
   // GLOW / AURA / SHADOW / VALUES are chart-symbol effects (layer1, see applyLayerTweaks)
   document.getElementById('style-buttons-row').style.display =
-    ['bubble', 'bivariate', 'dot', 'categorical', 'heatmap', 'hexbin_sized'].indexOf(viz) !== -1 ? '' : 'none';
+    ['bubble', 'dot', 'heatmap', 'hexbin_sized'].indexOf(viz) !== -1 ? '' : 'none';
 
   // value-field label and visibility per viz type
   var valueRow    = document.getElementById('value-row');
@@ -3090,7 +3424,9 @@ function onVizChange() {
   // normalsizevalue) — feature/feature_categorical are pure line/polygon geometry, no chart
   var chartScaleRow = document.getElementById('chart-scale-row');
   var sizeRampRow   = document.getElementById('size-ramp-row');
-  var showSizeControls = (viz !== 'feature' && viz !== 'feature_categorical');
+  // (nor for a KDE: its bands have no symbol size)
+  // (nor for a HexBin: the cell is the grid cell, only its opacity varies)
+  var showSizeControls = (viz !== 'feature' && viz !== 'feature_categorical' && viz !== 'kde' && viz !== 'mlheatmap' && viz !== 'hexbin');
   chartScaleRow.style.display = showSizeControls ? '' : 'none';
   sizeRampRow.style.display   = showSizeControls ? '' : 'none';
 
@@ -3100,12 +3436,7 @@ function onVizChange() {
     if (o.value === '__NONE__') o.remove();
   });
 
-  if (viz === 'bivariate') {
-    valueRow.style.display   = '';
-    colorRow.style.display   = '';
-    opacityRow.style.display = '';
-    if (valueLabel) valueLabel.textContent = 'Campo colore';
-  } else if (viz === 'feature') {
+  if (viz === 'feature') {
     // features may have colors too — value field is optional: '__NONE__' (default, first time
     // entering this viz) keeps the old flat single-linecolor look; a real field colors the
     // shapes via a CHOROPLETH overlay (see buildLayer) — CATEGORICAL or QUANTILE depending on
@@ -3125,29 +3456,22 @@ function onVizChange() {
     colorRow.style.display  = 'none';
     opacityRow.style.display = 'none';
     if (valueLabel) valueLabel.textContent = 'Campo categoria (colore)';
-  } else if (viz === 'dot') {
-    valueRow.style.display  = '';
-    colorRow.style.display  = '';
-    opacityRow.style.display = '';
-    if (valueLabel) valueLabel.textContent = 'Campo valore';
-    // ensure $item$ is present in value-field select
-    var valSel = document.getElementById('value-field');
-    if (!Array.from(valSel.options).some(function(o){ return o.value === '$item$'; })) {
-      var pseudoOpt = document.createElement('option');
-      pseudoOpt.value = '$item$';
-      pseudoOpt.textContent = '$item$ (conteggio)';
-      valSel.insertBefore(pseudoOpt, valSel.firstChild);
-    }
   } else {
+    // every point shape takes every field — $item$ included — and keeps the user's selection
     valueRow.style.display  = '';
     colorRow.style.display  = '';
     opacityRow.style.display = '';
     if (valueLabel) valueLabel.textContent = 'Campo valore';
-    // remove $item$ if present (not valid for bubble/choropleth)
-    Array.from(document.getElementById('value-field').options).forEach(function(o) {
-      if (o.value === '$item$') o.remove();
-    });
   }
+
+  // changing the shape never touches the fields: put back what was selected before this call
+  // (leaving 'feature' drops its '__NONE__' option — then the last real point value comes back)
+  var valSelNow = document.getElementById('value-field');
+  if (viz !== 'feature') {
+    var wanted = prevValue === '__NONE__' ? STATE.lastPointValue : prevValue;
+    if (wanted && Array.from(valSelNow.options).some(function(o){ return o.value === wanted; })) valSelNow.value = wanted;
+  }
+  if (valSelNow.value && valSelNow.value !== '__NONE__') STATE.lastPointValue = valSelNow.value;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3187,11 +3511,10 @@ function computeDataBbox(rowsArg) {
   }
 
   var rows = rowsArg || STATE.rawData || [];
-  var latF = STATE.fields.find(function(f){ return f.type === 'lat'; });
-  var lonF = STATE.fields.find(function(f){ return f.type === 'lon'; });
+  var ll = nameLatLon();
 
-  if (latF && lonF) {
-    rows.forEach(function(r) { upd(parseFloat(r[lonF.name]), parseFloat(r[latF.name])); });
+  if (ll) {
+    rows.forEach(function(r) { upd(parseFloat(r[ll.lon.name]), parseFloat(r[ll.lat.name])); });
   } else {
     // walk geometries — cap at 500 rows to stay fast. Must be an evenly-strided sample, not
     // just the first 500: many real-world datasets (e.g. an ISTAT comuni file) are pre-sorted
@@ -3341,6 +3664,7 @@ function drawMap() {
   var geoField   = document.getElementById('geo-field').value;
   var valueField = document.getElementById('value-field').value;
   var titleField = document.getElementById('title-field').value;
+  var joinField  = document.getElementById('join-field').value || titleField;
   var colorRaw   = document.getElementById('color-scheme').value;
   var opacity    = parseFloat(document.getElementById('fill-opacity').value);
   var chartScale = parseFloat(document.getElementById('chart-scale').value);
@@ -3360,14 +3684,14 @@ function drawMap() {
   // has ever used must be removed explicitly before drawing the new one, or switching viz types
   // stacks the old theme underneath the new one instead of replacing it.
   ensureMap(function(map) {
-    ['neutral', 'layer1', 'feature', 'feature_val', 'feature_cat', 'choropleth'].forEach(function(name) {
+    ['neutral', 'layer1', 'points', 'feature', 'feature_val', 'feature_cat', 'choropleth'].forEach(function(name) {
       try { map.removeTheme(name); } catch(e) {}
     });
     STATE.neutralThemeActive = false;
     var recorded = [];
     LAYER_RECORD = recorded;
     LAYER_DROP_SHOW = true;
-    buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opacity, chartScale, sizePow, gridWidth, lineWidth).then(function() {
+    buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opacity, chartScale, sizePow, gridWidth, lineWidth, joinField).then(function() {
       STATE.hasDrawnMap = true;
       STATE.codeLayers = recorded; // what generateMapCode() turns into ixmaps code
       if (STATE.afterPanelDraw) { var after = STATE.afterPanelDraw; STATE.afterPanelDraw = null; after(); }
@@ -3557,6 +3881,7 @@ function currentView() {
 }
 
 // from: 'card' | 'editor' | 'picker' — that editor isn't re-rendered from the result
+function isGlobeProjection(v) { return /^(orth?ographic|globe)$/i.test(String(v || '').trim()); }
 function applyMapConfig(next, from) {
   var prev = STATE.mapConfig || { map: {}, options: {} };
   next = cloneMapConfig(next);
@@ -3570,6 +3895,7 @@ function applyMapConfig(next, from) {
   if (STATE.myMap) STATE.myMap.then(function(m) {
     if (!m) return;
     if (nm.mapType && !sameValue(nm.mapType, pm.mapType) && m.setMapType) m.setMapType(nm.mapType);
+    if (!sameValue(nm.mapProjection, pm.mapProjection) && m.setProjection) m.setProjection(isGlobeProjection(nm.mapProjection) ? 'globe' : 'mercator');
     if (!sameValue(nm.legend, pm.legend) && m.setLegend) m.setLegend(nm.legend);
     if (!sameValue(no.basemapopacity, po.basemapopacity) && no.basemapopacity != null && m.setBasemapOpacity) m.setBasemapOpacity(no.basemapopacity);
     var eng = {};
@@ -3598,6 +3924,7 @@ function renderMapCard() {
   document.getElementById('mapcfg-objectscaling').value = c.options.objectscaling === 'dynamic' ? 'dynamic' : '';
   document.getElementById('mapcfg-normalsizescale').value = c.options.normalSizeScale != null ? c.options.normalSizeScale : '';
   document.getElementById('mapcfg-dynamicscalepow').value = c.options.dynamicScalePow != null ? c.options.dynamicScalePow : '';
+  document.getElementById('mapcfg-globe').checked = isGlobeProjection(c.map.mapProjection);
   var lg = c.map.legend;
   document.getElementById('mapcfg-legend').value = lg === 'closed' ? 'closed' : (lg === undefined || lg === null || lg === false || lg === 'false' || lg === '' ? '' : 'true');
   document.getElementById('mapcfg-worldcopies').checked = c.options.worldcopies !== false && c.options.worldcopies !== 'false';
@@ -3612,6 +3939,7 @@ function mapConfigFromCard() {
   var pow = document.getElementById('mapcfg-dynamicscalepow').value.trim();
   setOrDrop(next.options, 'dynamicScalePow', pow === '' ? '' : parseFloat(pow));
   setOrDrop(next.map, 'legend', document.getElementById('mapcfg-legend').value);
+  setOrDrop(next.map, 'mapProjection', document.getElementById('mapcfg-globe').checked ? 'globe' : '');
   if (document.getElementById('mapcfg-worldcopies').checked) delete next.options.worldcopies;
   else next.options.worldcopies = false;
   return next;
@@ -3622,7 +3950,7 @@ function mapConfigFromCard() {
     clearTimeout(timer);
     timer = setTimeout(function() { if (STATE.mapConfig) applyMapConfig(mapConfigFromCard(), 'card'); }, ms || 0);
   };
-  ['mapcfg-maptype', 'mapcfg-objectscaling', 'mapcfg-legend', 'mapcfg-worldcopies'].forEach(function(id) {
+  ['mapcfg-maptype', 'mapcfg-objectscaling', 'mapcfg-legend', 'mapcfg-worldcopies', 'mapcfg-globe'].forEach(function(id) {
     document.getElementById(id).addEventListener('change', function() { fromCard(0); });
   });
   document.getElementById('mapcfg-basemapopacity').addEventListener('input', function() {
@@ -4252,7 +4580,7 @@ function tryPanelSync(edited) {
   }
   // the edit is expressible — set the panel (snapshot first: a failed check restores it)
   var snap = {
-    controls: ['fill-opacity', 'chart-scale', 'size-ramp', 'line-width', 'grid-width', 'color-scheme'].map(function(id) { return [id, document.getElementById(id).value]; }),
+    controls: ['fill-opacity', 'chart-scale', 'size-ramp', 'line-width', 'grid-width', 'kde-bandwidth', 'mlheat-radius', 'mlheat-intensity', 'color-scheme'].map(function(id) { return [id, document.getElementById(id).value]; }),
     typeModifiers: (STATE.typeModifiers || []).slice(),
     styleOverrides: Object.assign({}, STATE.styleOverrides || {}),
     aiCategoryColors: STATE.aiCategoryColors ? Object.assign({}, STATE.aiCategoryColors) : null
@@ -4268,7 +4596,10 @@ function tryPanelSync(edited) {
       STATE.aiCategoryColors = Object.assign({}, STATE.aiCategoryColors || {}, map);
     } else applyColorScheme(plan.colors.join(','));
   }
-  if (plan.grid != null) document.getElementById('grid-width').value = plan.grid;
+  if (plan.grid != null && parseFloat(plan.grid) > 0) {
+    document.getElementById('grid-width').value = parseFloat(plan.grid);
+    document.getElementById('grid-width-slider').value = parseFloat(plan.grid);
+  }
   var mods = (STATE.typeModifiers || []).filter(function(m) { return plan.modsDel.indexOf(m) === -1; });
   plan.modsAdd.forEach(function(m) { if (mods.indexOf(m) === -1) mods.push(m); });
   STATE.typeModifiers = mods;
@@ -4415,9 +4746,8 @@ function drawNeutralMap() {
 
 // best-guess geo binding before any suggestion (heuristic or AI) has run
 function computeDefaultGeoBinding() {
-  var latF = STATE.fields.find(function(f){ return f.type === 'lat'; });
-  var lonF = STATE.fields.find(function(f){ return f.type === 'lon'; });
-  if (latF && lonF) return latF.name + '|' + lonF.name;
+  var ll = nameLatLon();
+  if (ll) return ll.lat.name + '|' + ll.lon.name;
   if (STATE.fileType === 'geojson' || STATE.fileType === 'topojson') return 'geometry';
   var geoF = STATE.fields.find(function(f){ return f.type === 'geo'; });
   return geoF ? geoF.name : 'geometry';
@@ -4519,6 +4849,31 @@ function getFeatureDataSource() {
   return { url: STATE.dataUrl, type: STATE.fileType, cache: "true" };
 }
 
+// HEATMAP and KDE read the colorscheme as a RAMP, low → high density. The categorical palette (the
+// "Tavolozza automatica", the default once a text value was chosen) is no ramp: a gradient
+// takes its place until another scheme is picked.
+function rampColorscheme(colorscheme, viz) {
+  return colorscheme.join(',') === TABLEAU_PALETTE_STR ? COLOR_BY_VIZ[viz].split(',') : colorscheme;
+}
+
+// the distinct values of a (text) field as strings — all of them, whatever the viz type. Trimmed and
+// de-duplicated as flat does (getStringValueIndex strips trailing blanks): "Roverella" and
+// "Roverella " are ONE category, and an empty value is none
+function categoryValues(field) {
+  var raw = [];
+  try {
+    raw = STATE.dataTable.column(field).uniqueValues().map(String);
+  } catch(e) {
+    (STATE.rawData || []).forEach(function(r) { raw.push(String(r[field] || '')); });
+  }
+  var seen = {}, vals = [];
+  raw.forEach(function(v) {
+    v = v.trim();
+    if (v !== '' && !seen.hasOwnProperty(v)) { seen[v] = true; vals.push(v); }
+  });
+  return vals;
+}
+
 // GL-PORT NOTE (read before touching anything below): three systematic translations vs. the
 // real-engine type strings/bindings this function's original body used, all confirmed by reading
 // ixmaps-gl.js's actual dispatch/binding code, not assumed from naming similarity:
@@ -4542,7 +4897,8 @@ function getFeatureDataSource() {
 // square icon) and 'waffle' (WAFFLE isn't a recognized flag at all). Both are also disabled in the
 // viz-type <select> — this fallback only matters if reached some other way (e.g. an old exported
 // page's saved viz value).
-function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opacity, chartScale, sizePow, gridWidth, lineWidth) {
+function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opacity, chartScale, sizePow, gridWidth, lineWidth, joinField) {
+  joinField  = joinField  || titleField; // FEATURE ↔ CHOROPLETH join key
   chartScale = chartScale || 1;  // "Dimensione chart" slider — multiplies each branch's own base `scale`
   sizePow    = sizePow    || 2;  // "Rampa dimensione" slider — sizepow exponent (radius ∝ value^(1/sizepow))
   gridWidth  = gridWidth  || "10px"; // aggregation cell size, screen pixels — heatmap/hexbin_sized only.
@@ -4558,7 +4914,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
   // editor lists exactly these, one row per category; null for gradient (numeric) schemes
   STATE.lastCategoryValues = null;
 
-  if (viz === 'hexbin' || viz === 'waffle') {
+  if (viz === 'waffle') {
     showToast((VIZ_LABELS[viz] || viz) + ' non ancora supportato dal motore GL — uso bolle proporzionali.', 'error');
     viz = 'bubble';
   }
@@ -4590,134 +4946,174 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
     }
   }
 
-  if (viz === 'bubble') {
-    // user/AI explicitly chose bubble+field — respect that choice
-    // compute normalsizevalue from sample median (don't downgrade)
-    var normVal = computeNormValue(valueField);
-    typeStr = "CHART|SYMBOL|SIZE|AGGREGATE|SHOW";
-    binding = { position: geoBinding, value: valueField, size: valueField };
-    STATE.baseScale = 0.4;
-    style = {
-      colorscheme:     colorscheme,
-      fillopacity:     opacity,
-      normalsizevalue: String(normVal),
-      scale:           0.4 * chartScale,
-      sizepow:         sizePow,
-    };
+  // legacy names (saved projects, old callers) fold into the shapes
+  if (viz === 'categorical') viz = 'dot';
+  if (viz === 'bivariate')   viz = 'bubble';
 
-  } else if (viz === 'categorical') {
-    // use Data.Table column API to get unique values reliably
-    var vals = [];
-    try {
-      vals = table.column(valueField).uniqueValues().slice(0, 12).map(String);
-    } catch(e) {
-      STATE.rawData.forEach(function(r) {
-        var v = String(r[valueField] || '');
-        if (vals.indexOf(v) === -1) vals.push(v);
-      });
-      vals = vals.slice(0, 12);
+  // the data axis, decided by the FIELDS and never by the shape (see valueIsCategorical):
+  // value = text → CATEGORICAL, number → gradient, $item$ → count; size = column or $item$
+  var isCat   = valueIsCategorical(valueField);
+  var sizeSel = (document.getElementById('size-field') || {}).value || defaultSizeField(valueField);
+
+  if (viz === 'bubble') {
+    // sized Bubbles: color by the value field, size by the size field (default: the value itself
+    // when numeric, the item count otherwise)
+    binding = { position: geoBinding, value: valueField, size: sizeSel };
+    STATE.baseScale = 0.4;
+    // a size column aggregates by SUM (the legend then shows the column's sum per category, as
+    // flat); a size of $item$ is the item count. A chat-chosen MEAN replaces it (applyLayerTweaks)
+    var sumFlag = sizeSel !== '$item$' ? "|SUM" : "";
+    if (isCat) {
+      var bubVals = categoryValues(valueField);
+      STATE.lastCategoryValues = bubVals;
+      typeStr = "CHART|SYMBOL|CATEGORICAL|AGGREGATE" + sumFlag + "|SHOW";
+      style = {
+        colorscheme: categoricalColorscheme(bubVals),
+        values:      bubVals,
+        scale:       0.4 * chartScale,
+        sizepow:     sizePow,
+        fillopacity: opacity,
+      };
+    } else {
+      typeStr = "CHART|SYMBOL" + (sizeSel === valueField ? "|SIZE" : "") + "|AGGREGATE" + sumFlag + "|SHOW";
+      style = {
+        colorscheme: colorscheme,
+        scale:       0.4 * chartScale,
+        sizepow:     sizePow,
+        fillopacity: opacity,
+      };
     }
-    typeStr = "CHART|SYMBOL|CATEGORICAL|AGGREGATE|SHOW";
-    binding = { position: geoBinding, value: valueField };
-    // uniform-size categorical dots (no binding.size) — the flat scale multiplier still applies;
-    // see this function's GL-PORT NOTE re: AGGREGATE for why a clustered point can still grow by
-    // count even without a size binding
-    STATE.baseScale = 0.5;
-    STATE.lastCategoryValues = vals;
-    style = {
-      colorscheme:     categoricalColorscheme(vals),
-      values:          vals,
-      normalsizevalue: "1",
-      scale:           0.5 * chartScale,
-      fillopacity:     opacity,
-    };
+    if (sizeSel !== '$item$') style.normalsizevalue = String(computeNormValue(sizeSel));
+    if (sizeSel !== valueField && sizeSel !== '$item$') {
+      tooltip = '{{' + titleField + '}}: {{' + valueField + '}} / {{' + sizeSel + '}}';
+    }
 
   } else if (viz === 'dot') {
-    typeStr = "CHART|DOT|SHOW";
+    // Dots: uniform size; a text value colors them by category, otherwise one gradient/color
     binding = { position: geoBinding, value: valueField };
-    STATE.baseScale = 0.3;
-    style = {
-      colorscheme: colorscheme,
-      scale:       0.3 * chartScale,
-      fillopacity: opacity,
-    };
-
-  } else if (viz === 'bivariate') {
-    // color from `value` (categorical or continuous), size independently from `size` binding
-    var sizeFieldSel = document.getElementById('size-field').value;
-    var normValBiv    = computeNormValue(sizeFieldSel);
-    var isCategoricalColor = STATE.fields.some(function(f){ return f.name === valueField && f.type === 'str'; });
-
-    if (isCategoricalColor) {
-      var catValsBiv = [];
-      try {
-        catValsBiv = table.column(valueField).uniqueValues().map(String);
-      } catch(e) {
-        STATE.rawData.forEach(function(r) {
-          var v = String(r[valueField] || '');
-          if (catValsBiv.indexOf(v) === -1) catValsBiv.push(v);
-        });
-      }
+    if (isCat) {
+      var dotVals = categoryValues(valueField);
+      STATE.lastCategoryValues = dotVals;
       typeStr = "CHART|SYMBOL|CATEGORICAL|AGGREGATE|SHOW";
-      binding = { position: geoBinding, value: valueField, size: sizeFieldSel };
-      STATE.baseScale = 0.4;
-      STATE.lastCategoryValues = catValsBiv;
+      STATE.baseScale = 0.5;
       style = {
-        colorscheme:     categoricalColorscheme(catValsBiv),
-        values:          catValsBiv,
-        normalsizevalue: String(normValBiv),
-        scale:           0.4 * chartScale,
-        sizepow:         sizePow,
+        colorscheme:     categoricalColorscheme(dotVals),
+        values:          dotVals,
+        normalsizevalue: "1",
+        scale:           0.5 * chartScale,
         fillopacity:     opacity,
       };
     } else {
-      typeStr = "CHART|SYMBOL|AGGREGATE|SHOW";
-      binding = { position: geoBinding, value: valueField, size: sizeFieldSel };
-      STATE.baseScale = 0.4;
+      typeStr = "CHART|DOT|SHOW";
+      STATE.baseScale = 0.3;
       style = {
-        colorscheme:     colorscheme,
-        normalsizevalue: String(normValBiv),
-        scale:           0.4 * chartScale,
-        sizepow:         sizePow,
-        fillopacity:     opacity,
+        colorscheme: colorscheme,
+        scale:       0.3 * chartScale,
+        fillopacity: opacity,
       };
     }
-    tooltip = '{{' + titleField + '}}: {{' + valueField + '}} / {{' + sizeFieldSel + '}}';
 
   } else if (viz === 'heatmap') {
-    typeStr = "CHART|SYMBOL|SIZE|AGGREGATE|SHOW" + (fieldIsNumeric(valueField) ? "" : "|CATEGORICAL");
-    binding = { position: geoBinding, value: valueField, size: valueField };
+    // a real GL heatmap: a kernel-density surface (deck.gl HeatmapLayer), weighted by the size
+    // field ($item$: one per record). The "grid width" field is its kernel radius, in pixels at the
+    // reference zoom — the radius grows and shrinks with the zoom (the engine's object scaling).
+    typeStr = "HEATMAP|SHOW";
+    binding = { position: geoBinding, value: valueField, size: sizeSel };
     style = {
-      colorscheme:  colorscheme,
-      aggregation:  ["1:1", gridWidth],
+      colorscheme:  rampColorscheme(colorscheme, viz),
+      radiuspx:     (parseFloat(gridWidth) || 10) * 3,
+      scale:        chartScale,
       fillopacity:  opacity,
     };
 
+  } else if (viz === 'mlheatmap') {
+    // MapLibre's NATIVE heatmap layer (engine type MLHEATMAP): the points stay in tile buffers, radius and
+    // intensity are evaluated on the GPU from the zoom, the density is read absolutely through the color
+    // ramp — as fast as MapLibre's own example, and it works on the globe. Weight: the size field
+    // ($item$: one per record); the weight that counts 1 is the largest one. Radius: pixels at the
+    // reference zoom, growing with the zoom like every object.
+    var mlRadius = parseFloat(document.getElementById('mlheat-radius').value);
+    var mlIntensity = parseFloat(document.getElementById('mlheat-intensity').value);
+    typeStr = "MLHEATMAP|SHOW";
+    binding = { position: geoBinding, value: valueField, size: sizeSel };
+    style = {
+      colorscheme:  rampColorscheme(colorscheme, viz),
+      radiuspx:     mlRadius > 0 ? mlRadius : 5,
+      intensity:    mlIntensity > 0 ? mlIntensity : 1,
+      fillopacity:  opacity,
+    };
+
+  } else if (viz === 'kde') {
+    // the kernel density of the records IN VIEW as stacked bands (engine type KDE: worker + d3-contour,
+    // recomputed when the map stands still), weighted by the size field ($item$: one per record).
+    // The bandwidth follows the zoom unless "Banda KDE" gives it in km. Four bands stack, so each one
+    // carries a share of the opacity slider (the fire pages drew them at 0.15).
+    var kdeBw = parseFloat(document.getElementById('kde-bandwidth').value);
+    typeStr = "KDE|SHOW";
+    binding = { position: geoBinding, value: valueField, size: sizeSel };
+    style = {
+      colorscheme:  rampColorscheme(colorscheme, viz),
+      fillopacity:  opacity * 0.4,
+    };
+    if (kdeBw > 0) style.bandwidth = kdeBw;
+
+  } else if (viz === 'hexbin') {
+    // theme configurator "HexBin": CHART|SYMBOL|GRIDSIZE|FAST|AGGREGATE|SUM|DOPACITY, symbols
+    // ["hexagon"], dopacitypow/dopacityscale 2 — one hexagon per grid cell, fill OPACITY ramped
+    // from the cell's summed value ($item$: the item count); a text value adds
+    // CENTER|DOMINANT (cell colored by its dominant category). Cell pitch via gridwidthpx —
+    // style.gridwidth is meters in GL.
+    typeStr = "CHART|SYMBOL|GRIDSIZE|FAST|AGGREGATE|SUM|DOPACITY" + (isCat ? "|CATEGORICAL|CENTER|DOMINANT" : "") + "|SHOW";
+    binding = { position: geoBinding, value: valueField, size: sizeSel };
+    style = {
+      colorscheme:   [colorscheme[colorscheme.length - 1]],
+      symbols:       ["hexagon"],
+      gridwidthpx:   parseFloat(gridWidth) || 15,
+      fillopacity:   opacity,
+      dopacitypow:   "2",
+      dopacityscale: "2",
+    };
+    if (isCat) {
+      var hexVals = categoryValues(valueField);
+      STATE.lastCategoryValues = hexVals;
+      style.colorscheme = categoricalColorscheme(hexVals);
+      style.values = hexVals;
+    }
+
   } else if (viz === 'hexbin_sized') {
-    var normValHex = computeNormValue(valueField);
-    typeStr = "CHART|SYMBOL|SIZE|AGGREGATE|RELOCATE|SUM" + (fieldIsNumeric(valueField) ? "" : "|CATEGORICAL");
-    binding = { position: geoBinding, value: valueField, size: valueField };
-    STATE.baseScale = 0.4;
+    // theme configurator "HexBin sized": CHART|BUBBLE|SIZE|FAST|AGGREGATE|AUTOSIZE|RELOCATE|SUM —
+    // bubbles relocated onto an aggregation grid, sized by the size field aggregated per cell
+    // (a column's sum, or $item$: the record count); a text value colors them by category.
+    // AUTOSIZE: the biggest bubble is the size of the grid cell at scale 1, the others by value
+    // (no normalsizevalue — the grid decides)
+    typeStr = "CHART|BUBBLE|SIZE|FAST|AGGREGATE|AUTOSIZE|RELOCATE|SUM" + (isCat ? "|CATEGORICAL" : "");
+    binding = { position: geoBinding, value: valueField, size: sizeSel };
+    STATE.baseScale = 1;
     style = {
       colorscheme:     colorscheme,
-      aggregation:     ["1:1", gridWidth],
-      normalsizevalue: String(normValHex),
-      scale:           0.4 * chartScale,
+      gridwidthpx:     parseFloat(gridWidth) || 15,
+      scale:           chartScale,
       sizepow:         sizePow,
       fillopacity:     opacity,
     };
+    if (isCat) {
+      var hsVals = categoryValues(valueField);
+      STATE.lastCategoryValues = hsVals;
+      style.colorscheme = categoricalColorscheme(hsVals);
+      style.values = hsVals;
+    }
 
   } else if (viz === 'choropleth') {
     if (fileType === 'geojson' || fileType === 'topojson') {
       return map.defineLayer(ixmaps.layer('choropleth', function(l) { l
         .data(getFeatureDataSource())
-        .binding({ position: 'geometry', id: titleField })
+        .binding({ position: 'geometry', id: joinField })
         .type("FEATURE|SHOW")
         .style({ colorscheme: ["#888"], fillopacity: 0.15, linecolor: "#555", linewidth: hasLineWidth ? lineWidth : 0.5 });
       })).then(function() {
         return map.defineLayer(ixmaps.layer('choropleth', function(l) { l
           .data({ obj: table, type: "jsondb" })
-          .binding({ lookup: titleField, value: valueField })
+          .binding({ lookup: joinField, value: valueField })
           .filter(whereClause)
           .type("CHOROPLETH|QUANTILE")
           .style({ colorscheme: colorscheme, fillopacity: opacity })
@@ -4788,13 +5184,13 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
 
     return map.defineLayer(ixmaps.layer('feature_val', function(l) { l
       .data(getFeatureDataSource())
-      .binding({ position: 'geometry', id: titleField })
+      .binding({ position: 'geometry', id: joinField })
       .type("FEATURE|SHOW")
       .style({ colorscheme: ['#888888'], fillopacity: fillop, linecolor: '#888888', linewidth: linewidth });
     })).then(function() {
       return map.defineLayer(ixmaps.layer('feature_val', function(l) { l
         .data({ obj: table, type: "jsondb" })
-        .binding({ lookup: titleField, value: valueField })
+        .binding({ lookup: joinField, value: valueField })
         .filter(whereClause)
         .type("CHOROPLETH" + (isNumFeat ? "|QUANTILE" : "|CATEGORICAL"))
         .style(isNumFeat ? {
@@ -4861,7 +5257,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
     // layer 1: base FEATURE geometry (neutral color, provides the shapes)
     return map.defineLayer(ixmaps.layer('feature_cat', function(l) { l
       .data(getFeatureDataSource())
-      .binding({ position: 'geometry', id: titleField })
+      .binding({ position: 'geometry', id: joinField })
       .type("FEATURE|SHOW")
       .style({
         colorscheme: ['#888888'],
@@ -4873,7 +5269,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
       // layer 2: CHOROPLETH|CATEGORICAL overlay from Data.Table (colors + tooltips)
       return map.defineLayer(ixmaps.layer('feature_cat', function(l) { l
         .data({ obj: table, type: "jsondb" })
-        .binding({ lookup: titleField, value: valueField })
+        .binding({ lookup: joinField, value: valueField })
         .filter(whereClause)
         .type("CHOROPLETH|CATEGORICAL")
         .style({
@@ -4897,7 +5293,20 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
     .style(style)
     .meta({ tooltip: tooltip })
     .title(valueField);
-  })).then(function() { STATE.currentThemeName = "layer1"; });
+  })).then(function() {
+    STATE.currentThemeName = "layer1";
+    if (viz !== 'heatmap' && viz !== 'mlheatmap' && viz !== 'kde') return;
+    if (!document.getElementById('density-points').checked) return;
+    // the same data as small points above the density surface
+    return map.defineLayer(ixmaps.layer('points', function(l) { l
+      .data({ obj: table, type: "jsondb" })
+      .binding({ position: geoBinding })
+      .filter(whereClause)
+      .type("CHART|SYMBOL|AGGREGATE|SHOW")
+      .style({ colorscheme: ["#444444"], normalsizevalue: "1", scale: 0.08, fillopacity: 0.8 })
+      .meta({ tooltip: tooltip });
+    }));
+  });
 }
 
 // ── chat-driven type modifiers / style overrides for the point-chart layer (layer1 only —
@@ -5515,11 +5924,10 @@ function askAI(fields, type) {
       // fill missing fields with schema fallbacks
       var numFields = STATE.fields.filter(function(f){ return f.type === 'num'; });
       var strFields = STATE.fields.filter(function(f){ return f.type === 'str'; });
-      var latField  = STATE.fields.find(function(f){ return f.type === 'lat'; });
-      var lonField  = STATE.fields.find(function(f){ return f.type === 'lon'; });
+      var llAi = nameLatLon();
       if (!geoField) {
-        geoField = (latField && lonField)
-          ? latField.name + '|' + lonField.name
+        geoField = llAi
+          ? llAi.lat.name + '|' + llAi.lon.name
           : 'geometry';
       }
       if (!valueField) valueField = numFields.length ? numFields[0].name : (STATE.fields[0] || {}).name || '';
@@ -5849,7 +6257,8 @@ var TABLE = {
   sortCol:      null,
   sortDir:      'asc',
   searchTerm:   '',
-  fieldFilters: {}      // { fieldName: lowercase term } — per-column filter, ANDed with searchTerm
+  fieldFilters: {},     // { fieldName: lowercase term } — per-column filter, ANDed with searchTerm
+  colWidths:    {}      // { fieldName: px } — dragged column widths, kept across redraws and sorts
 };
 
 // getFilteredRows() below does a full-array .filter()/.sort() over the whole dataset (every
@@ -6013,10 +6422,50 @@ function renderTable() {
   renderTableBody();
 }
 
+// the width a column starts with: its header text or its longest value among the first rows, 90–260 px
+// (cached per dataset by renderTableHead)
+function defaultColWidth(name) {
+  var cache = TABLE.defaultWidths || (TABLE.defaultWidths = {});
+  if (cache[name] != null) return cache[name];
+  var longest = String(name).length * 9 + 34;
+  (STATE.rawData || []).slice(0, 100).forEach(function(r) {
+    var v = r[name]; if (v == null) return;
+    longest = Math.max(longest, String(v).length * 7.2 + 26);
+  });
+  return (cache[name] = Math.min(260, Math.max(90, Math.round(longest))));
+}
+function colWidth(name) { return TABLE.colWidths[name] || defaultColWidth(name); }
+// <colgroup> widths + the table's total width (fixed layout: the columns decide, the table scrolls sideways)
+function applyColWidths() {
+  var cols = document.querySelectorAll('#table-cols col'), total = 0;
+  cols.forEach(function(c) { var w = colWidth(c.getAttribute('data-col')); c.style.width = w + 'px'; total += w; });
+  document.getElementById('data-table').style.width = total + 'px';
+}
+// one pointer drag on a header's handle resizes that column (min 50 px); double click resets it
+document.getElementById('table-head').addEventListener('pointerdown', function(e) {
+  var h = e.target.closest ? e.target.closest('.col-resizer') : null;
+  if (!h) return;
+  e.preventDefault(); e.stopPropagation();
+  var th = h.parentNode, name = th.getAttribute('data-col'), startX = e.clientX, startW = th.getBoundingClientRect().width;
+  h.setPointerCapture(e.pointerId); h.classList.add('dragging');
+  var move = function(ev) { TABLE.colWidths[name] = Math.max(50, Math.round(startW + ev.clientX - startX)); applyColWidths(); };
+  var up = function() { h.classList.remove('dragging'); h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); };
+  h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+});
+document.getElementById('table-head').addEventListener('dblclick', function(e) {
+  var h = e.target.closest ? e.target.closest('.col-resizer') : null;
+  if (!h) return;
+  delete TABLE.colWidths[h.parentNode.getAttribute('data-col')]; applyColWidths();
+});
+
 function renderTableHead() {
   var fields = STATE.fields || [];
   var head   = document.getElementById('table-head');
   var cols   = fields.filter(function(f) { return f.name !== '_geometry'; });
+  TABLE.defaultWidths = null;
+  document.getElementById('table-cols').innerHTML = cols.map(function(f) {
+    return '<col data-col="' + escHtml(f.name) + '">';
+  }).join('');
   head.innerHTML = '<tr>' + cols.map(function(f) {
     var esc      = escHtml(f.name);
     var jsName   = esc.replace(/'/g, "\\'");
@@ -6029,8 +6478,10 @@ function renderTableHead() {
       '<input class="th-filter" type="text" placeholder="' + placeholder + '" title="Filtro: testo, *wildcard*, /regex/, ' +
       (isNumericCol ? '>N  <N  >=N  <=N  =N  <>N' : '') + '" value="' + escHtml(filterVal) +
       '" oninput="tableFieldFilter(\'' + jsName + '\', this.value)">' +
+      '<span class="col-resizer" title="trascina per ridimensionare, doppio clic: larghezza iniziale"></span>' +
       '</th>';
   }).join('') + '</tr>';
+  applyColWidths();
 }
 
 function renderTableBody() {
@@ -6313,13 +6764,26 @@ document.getElementById('url-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') loadData();
 });
 
+// the value field decides categorical vs gradient vs count (see valueIsCategorical); unless the
+// user picked a size column themselves, the size follows the same rule (numeric → itself, text
+// value or $item$ → the item count). Registered BEFORE the auto-redraw listeners below so the
+// size is already right when the debounced redraw reads it.
+buildVizPicker();
+document.getElementById('size-field').addEventListener('change', function() { STATE.sizeTouched = true; });
+document.getElementById('value-field').addEventListener('change', function() {
+  if (STATE.sizeTouched) return;
+  var sizeSel = document.getElementById('size-field');
+  var want = defaultSizeField(this.value);
+  if (Array.from(sizeSel.options).some(function(o){ return o.value === want; })) sizeSel.value = want;
+});
+
 // Auto-redraw when config selects change — through scheduleLiveRedraw (debounced, ignored in
 // code mode and for data without geography). The sliders and the grid-width text field are NOT
 // here: they redraw live on 'input' (applyLiveThemeStyle / the grid-width listener below), so a
 // 'change' on release/blur would only draw the same map a second time.
 (function() {
   var configIds = ['viz-type', 'geo-field', 'value-field', 'size-field', 'title-field',
-                   'lookup-field', 'color-scheme'];
+                   'lookup-field', 'join-field', 'color-scheme'];
   configIds.forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -6347,11 +6811,75 @@ document.getElementById('line-width').addEventListener('input', function() {
 // resolveAggregationPx) — and it is also what the field holds halfway through typing "30px"
 // ("3" = 3 m cells, expensive). So px values apply after 500 ms, bare numbers only after a
 // longer pause; anything else (incomplete, e.g. "30p") waits for the next keystroke.
-document.getElementById('grid-width').addEventListener('input', function() {
-  var v = this.value.trim();
-  if (/^\d+(\.\d+)?\s*px$/i.test(v)) scheduleLiveRedraw(500);
-  else if (/^\d+(\.\d+)?$/.test(v)) scheduleLiveRedraw(1200);
-  else clearTimeout(LIVE_STYLE_TIMER);
+// number field and slider are one value (both in px now): either one moves the other, then a redraw
+function linkNumSlider(numId, sliderId, ms) {
+  var n = document.getElementById(numId), s = document.getElementById(sliderId);
+  s.addEventListener('input', function() { n.value = s.value; scheduleLiveRedraw(ms); });
+  n.addEventListener('input', function() {
+    if (!(parseFloat(n.value) > 0)) { clearTimeout(LIVE_STYLE_TIMER); return; } // empty / mid-typing
+    s.value = n.value;
+    scheduleLiveRedraw(ms);
+  });
+}
+linkNumSlider('grid-width', 'grid-width-slider', 250);
+
+// every plain slider gets a number field beside it (the sliders above that were built with their own
+// field — ids ending "-slider" — are left alone). The field follows programmatic .value changes too
+// (chat, AI, saved config), and a value typed beyond the slider's range is clamped on blur.
+(function() {
+  var nativeValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  var typing = false;
+  document.querySelectorAll('input[type="range"]').forEach(function(s) {
+    if (/-slider$/.test(s.id)) return;
+    var n = document.createElement('input');
+    n.type = 'number'; n.className = 'field-input';
+    n.min = s.min; n.max = s.max; n.step = s.step;
+    n.style.cssText = 'width:64px;flex:none';
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;gap:8px;align-items:center';
+    s.parentNode.insertBefore(wrap, s);
+    wrap.appendChild(s); wrap.appendChild(n);
+    s.style.width = ''; s.style.flex = '1'; s.style.minWidth = '0';
+    n.value = nativeValue.get.call(s);
+    Object.defineProperty(s, 'value', {
+      configurable: true,
+      get: function() { return nativeValue.get.call(s); },
+      set: function(v) { nativeValue.set.call(s, v); if (!typing) n.value = nativeValue.get.call(s); }
+    });
+    s.addEventListener('input', function() { if (!typing) n.value = nativeValue.get.call(s); });
+    n.addEventListener('input', function() {
+      var v = parseFloat(n.value);
+      if (isNaN(v)) return;
+      typing = true;
+      nativeValue.set.call(s, v);                       // the slider clamps to its range
+      s.dispatchEvent(new Event('input', { bubbles: true }));
+      typing = false;
+    });
+    n.addEventListener('change', function() { n.value = nativeValue.get.call(s); });
+  });
+})();
+
+document.getElementById('density-points').addEventListener('change', function() { scheduleLiveRedraw(100); });
+
+// the KDE bandwidth (km): a recomputation per change, so wait for a pause in the typing
+// the slider is logarithmic (0.04 km … 50 km); an empty number field is the automatic, zoom-driven bandwidth
+(function() {
+  var n = document.getElementById('kde-bandwidth'), s = document.getElementById('kde-bandwidth-slider');
+  var MIN = 0.04, RATIO = 50 / 0.04;
+  s.addEventListener('input', function() {
+    n.value = String(+(MIN * Math.pow(RATIO, s.value / 100)).toPrecision(2));
+    scheduleLiveRedraw(300);
+  });
+  n.addEventListener('input', function() {
+    var v = parseFloat(n.value);
+    if (v > 0) s.value = Math.max(0, Math.min(100, 100 * Math.log(v / MIN) / Math.log(RATIO)));
+    scheduleLiveRedraw(700);
+  });
+})();
+// the native heatmap's radius and intensity: a repaint of one layer, no waiting needed beyond the typing
+linkNumSlider('mlheat-radius', 'mlheat-radius-slider', 250);
+['mlheat-intensity'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', function() { scheduleLiveRedraw(500); });
 });
 
 // Sample URLs helper — right click on load button
