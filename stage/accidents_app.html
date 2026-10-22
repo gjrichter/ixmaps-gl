@@ -107,6 +107,25 @@
 
   <label><input type="checkbox" id="sizeFieldCheckBox" checked> visualizza numero di feriti</label>
   <label><input type="checkbox" id="curvesCheckBox"> incidenti/feriti per anno</label>
+  <label><input type="checkbox" id="heatmapCheckBox"> mappa di calore</label>
+  <div id="heatmap-radius-row" style="display:none;align-items:center;gap:0.5em;margin:0.3em 0 0.6em 1.6em;">
+    <input type="range" min="0" max="100" step="0.5" value="74" id="slHeatRadius" style="width:120px;cursor:pointer;accent-color:#0088dd">
+    <span style="opacity:0.65;font-size:0.85em">raggio mappa di calore</span>
+  </div>
+  <label><input type="checkbox" id="mlHeatmapCheckBox"> mappa di calore nativa (MapLibre)</label>
+  <div id="mlheatmap-radius-row" style="display:none;flex-wrap:wrap;align-items:center;gap:0.3em 0.5em;margin:0.3em 0 0.6em 1.6em;">
+    <input type="range" min="0" max="100" step="0.5" value="74" id="slMlHeatRadius" style="width:120px;cursor:pointer;accent-color:#0088dd">
+    <span style="opacity:0.65;font-size:0.85em;white-space:nowrap">raggio nativa</span>
+    <input type="range" min="0.05" max="1" step="0.05" value="0.8" id="slMlHeatOpacity" style="width:90px;flex:none;cursor:pointer;accent-color:#0088dd">
+    <span style="opacity:0.65;font-size:0.85em;white-space:nowrap">opacità</span>
+  </div>
+  <label><input type="checkbox" id="kdeCheckBox"> densità (KDE)</label>
+  <div id="kde-bandwidth-row" style="display:none;flex-wrap:wrap;align-items:center;gap:0.3em 0.5em;margin:0.3em 0 0.6em 1.6em;">
+    <input type="range" min="0.05" max="4" step="0.05" value="1" id="slKdeBandwidth" style="width:120px;cursor:pointer;accent-color:#0088dd">
+    <span style="opacity:0.65;font-size:0.85em;white-space:nowrap;min-width:9.5em">raggio KDE <span id="kdeBwLabel">×1</span></span>
+    <input type="range" min="0.01" max="0.5" step="0.01" value="0.06" id="slKdeOpacity" style="width:90px;flex:none;cursor:pointer;accent-color:#0088dd">
+    <span style="opacity:0.65;font-size:0.85em;white-space:nowrap">opacità</span>
+  </div>
 
   <div id="grid-size-row" style="display:none;align-items:center;gap:0.5em;margin:0.3em 0 0.6em 1.6em;">
     <input type="range" min="40" max="200" step="5" value="100" id="slGridSize" style="width:120px;cursor:pointer;accent-color:#0088dd">
@@ -266,6 +285,37 @@
       .meta({ title: "Incidenti Bergamo 2002-2024", splash: "scaricando dati ..." })
     );
 
+  // "mappa di calore" and "densità (KDE)" — opt-in density overlays of the
+  // incident points (weighted by FERITI like the symbols; see sizeFieldCheckBox), hidden at
+  // start like the curves. Layered below the symbols (see .layer() order).
+  var __incidenti_heatmap =
+    ixmaps.layer("AREU", layer => layer
+      .data({ name: "themeDataObj", url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz", type: "topojson", cache: "true" })
+      .binding({ position: "geometry", value: "NATURA_INC", size: "FERITI" })
+      .type("HEATMAP")
+      .style({ name: "heatmap_incidenti", colorscheme: ["#ffffb2", "#fd8d3c", "#e31a1c", "#800026"], fillopacity: 0.8, radiuspx: 30 })
+      .meta({ title: "Mappa di calore degli incidenti" })
+    );
+
+  // MapLibre's NATIVE heatmap layer, same data/ramp/radius as HEATMAP above, for side-by-side comparison
+  var __incidenti_mlheatmap =
+    ixmaps.layer("AREU", layer => layer
+      .data({ name: "themeDataObj", url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz", type: "topojson", cache: "true" })
+      .binding({ position: "geometry", value: "NATURA_INC", size: "FERITI" })
+      .type("MLHEATMAP")
+      .style({ name: "mlheatmap_incidenti", colorscheme: ["#ffffb2", "#fd8d3c", "#e31a1c", "#800026"], fillopacity: 0.8, radiuspx: 30 })
+      .meta({ title: "Mappa di calore nativa (MapLibre)" })
+    );
+
+  var __incidenti_kde =
+    ixmaps.layer("AREU", layer => layer
+      .data({ name: "themeDataObj", url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz", type: "topojson", cache: "true" })
+      .binding({ position: "geometry", value: "NATURA_INC", size: "FERITI" })
+      .type("KDE")
+      .style({ name: "kde_incidenti", colorscheme: ["#dd0088"], fillopacity: 0.06, bandwidth: 0.16, bandwidthzoomref: 12, bandwidthzoompow: 0.5 })
+      .meta({ title: "Densità degli incidenti (KDE)" })
+    );
+
   var __lat = 45.48583653917475, __lon = 9.201889135059465, __zoom = 11.6;
 
   var _mapPromise = ixmaps.Map("map_div", {
@@ -295,6 +345,9 @@
     .attribution("ISTAT / GEOMIS Regione Lombardia via AREU")
     //.legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>ISTAT - Microdati Incidenti 2019 - 2021</div>")
     .layer(__georef_reg)
+    .layer(__incidenti_heatmap)
+    .layer(__incidenti_mlheatmap)
+    .layer(__incidenti_kde)
     .layer(__incidenti_natura)
     .layer(__incidenti_curves_grid)
     .layer(__incidenti_curves_years)
@@ -361,6 +414,9 @@
 
       document.getElementById('sizeFieldCheckBox').addEventListener('change', e => {
         api.setSizeField(THEME_ID, e.target.checked ? "FERITI" : null);
+        // the density overlays weigh by the same field: injuries when checked, else one per incident
+        ['heatmap_incidenti', 'mlheatmap_incidenti', 'kde_incidenti'].forEach(id =>
+          api.setSizeField(id, e.target.checked ? "FERITI" : null));
       });
 
       document.getElementById('clear-filter-btn').addEventListener('click', () => {
@@ -381,6 +437,43 @@
         api.setThemeVisible('curves_incidenti', e.target.checked);
         api.setThemeVisible('grid', e.target.checked);
         document.getElementById('grid-size-row').style.display = e.target.checked ? 'flex' : 'none';
+      });
+
+      // heatmap radius sliders are logarithmic (0..100 -> 1..100 px; 74 = 30 px) to give small radii more travel
+      const logRadius = v => Math.pow(100, Number(v) / 100).toFixed(2);
+      api.setThemeVisible('heatmap_incidenti', false);
+      api.setThemeVisible('kde_incidenti', false);
+      api.setThemeVisible('mlheatmap_incidenti', false);
+      document.getElementById('mlHeatmapCheckBox').addEventListener('change', e => {
+        api.setThemeVisible('mlheatmap_incidenti', e.target.checked);
+        document.getElementById('mlheatmap-radius-row').style.display = e.target.checked ? 'flex' : 'none';
+      });
+      document.getElementById('slMlHeatOpacity').addEventListener('input', e => {
+        api.setThemeStyle('mlheatmap_incidenti', { fillopacity: e.target.value });
+      });
+      document.getElementById('slMlHeatRadius').addEventListener('input', e => {
+        api.setThemeStyle('mlheatmap_incidenti', { radiuspx: logRadius(e.target.value) });
+      });
+      document.getElementById('heatmapCheckBox').addEventListener('change', e => {
+        api.setThemeVisible('heatmap_incidenti', e.target.checked);
+        document.getElementById('heatmap-radius-row').style.display = e.target.checked ? 'flex' : 'none';
+      });
+      document.getElementById('slHeatRadius').addEventListener('input', e => {
+        api.setThemeStyle('heatmap_incidenti', { radiuspx: logRadius(e.target.value) });
+      });
+      document.getElementById('kdeCheckBox').addEventListener('change', e => {
+        api.setThemeVisible('kde_incidenti', e.target.checked);
+        document.getElementById('kde-bandwidth-row').style.display = e.target.checked ? 'flex' : 'none';
+      });
+      document.getElementById('slKdeOpacity').addEventListener('input', e => {
+        api.setThemeStyle('kde_incidenti', { fillopacity: e.target.value });
+      });
+
+      // KDE radius: a factor on the engine's own zoom-dependent bandwidth
+      // (style.bandwidthscale), so it follows the zoom with no extra redraw.
+      document.getElementById('slKdeBandwidth').addEventListener('input', e => {
+        document.getElementById('kdeBwLabel').textContent = '×' + e.target.value;
+        api.setThemeStyle('kde_incidenti', { bandwidthscale: e.target.value });
       });
 
       document.getElementById('slGridSize').addEventListener('input', e => {
