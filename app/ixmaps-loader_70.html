@@ -406,6 +406,9 @@
     overflow-x: hidden;
     border-radius: 0 0 var(--radius) var(--radius);
   }
+  /* data without positions: nothing but the column list is left in the panel — it takes the full height */
+  #panel-inner.no-position #schema-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #panel-inner.no-position #schema-card .card-body { max-height: none; flex: 1; min-height: 0; }
   #schema-card .card-body::-webkit-scrollbar { width: 3px; }
   #schema-card .card-body::-webkit-scrollbar-track { background: transparent; }
   #schema-card .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -427,7 +430,10 @@
     cursor: pointer;
     transition: background 0.1s;
   }
+  #schema-list li { cursor: pointer; }
   #schema-list li:hover { background: var(--border); }
+  @keyframes col-flash { from { background: #00e5ff55; } to { background: transparent; } }
+  th.col-flash, .facet-row.col-flash { animation: col-flash 1.6s ease-out; }
   #schema-list li.selected { background: #00e5ff15; outline: 1px solid #00e5ff40; }
   #schema-list li .fname { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #schema-list li .ftype {
@@ -1772,24 +1778,14 @@
           <span class="sample-source">INGV Centro Nazionale Terremoti · cc-by-4.0</span>
         </div>
 
-        <div class="sample-item" onclick="loadSampleUrl('https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2024_12_v8/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v8.csv.gz')">
-          PNRR — progetti localizzati con ritardi
-          <span class="sample-source">PNRR · cc-by-4.0</span>
-        </div>
-
         <div class="sample-item" onclick="loadSampleUrl('https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PFAS/pdh_data_it.csv.gz')">
           PFAS Italia
           <span class="sample-source">Interventi di difesa idraulica · cc-by-4.0</span>
         </div>
 
-        <div class="sample-item" onclick="loadSampleUrl('https://docs.google.com/spreadsheets/d/e/2PACX-1vRNXJQI8bZQYG3DzeI5QOPnc7l89gCO-gtHVZQmb7oiLfeUGYSE1bNBobBeSyL3iEdVt6TEkynarfrF/pub?gid=1425152245&single=true&output=csv')">
-          Google Sheet (esempio)
-          <span class="sample-source">Interventi di difesa idraulica · cc-by-4.0</span>
-        </div>
-
-        <div class="sample-item" onclick="loadSampleUrl('https://hrbrmstr.github.io/large-parquet-test/sample.parquet')">
-          Parquet di grandi dimensioni (2.000.000 righe)
-          <span class="sample-source">testfile by boB Rudis · ObservableHQ</span>
+        <div class="sample-item" onclick="loadSampleUrl('https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/PNRR_2024_12_v8/PNRR_Localizzazione_esteso_pop_cig_fintot_iter_v8.csv.gz')">
+          PNRR — progetti localizzati con ritardi
+          <span class="sample-source">PNRR · cc-by-4.0</span>
         </div>
 
         <h4>Dati geografici di riferimento</h4>
@@ -2301,6 +2297,23 @@ function analyzeSchema(rows, type) {
   show('facets-btn');
   show('chat-btn');
   show('code-menu-btn');
+
+  // no position at all (no lat/lon pair, no geometry column, no geometry in the records): there is
+  // nothing to map — neither the heuristic nor the AI is asked, no map is drawn; the table opens instead
+  var hasPosition = !!STATE.geomType || type === 'geojson' || type === 'topojson' ||
+    fields.some(function(f) { return f.type === 'geo'; }) ||
+    (fields.some(function(f) { return f.type === 'lat'; }) && fields.some(function(f) { return f.type === 'lon'; }));
+  if (!hasPosition) {
+    STATE.noPosition = true;
+    document.getElementById('panel-inner').classList.add('no-position');
+    hide('config-card'); hide('map-card');
+    setStatus('ok', rows.length.toLocaleString() + ' record · ' + type.toUpperCase() + ' · senza posizione');
+    showToast('Nessuna colonna di posizione (lat/lon o geometria): i dati non si possono mappare — ecco la tabella', 'ok');
+    if (!document.getElementById('table-overlay').classList.contains('active')) toggleTable();
+    else { renderTable(); }
+    return;
+  }
+  if (STATE.noPosition) { STATE.noPosition = false; document.getElementById('panel-inner').classList.remove('no-position'); closeTableOverlay(); }
   // data for this URL is already loaded — re-enabled once the user edits the URL (see the
   // url-input 'input' listener below), so loading a different dataset still works
   document.getElementById('load-btn').disabled = true;
@@ -2580,12 +2593,34 @@ function computeBubbleInfo(fieldName) {
   return { valid: true, normValue: normValue };
 }
 
+// a click on a column of COLONNE RILEVATE: whichever of table / facets is open scrolls to it and flashes it
+function focusSchemaColumn(name, li) {
+  Array.from(document.querySelectorAll('#schema-list li.selected')).forEach(function(e) { e.classList.remove('selected'); });
+  if (li) li.classList.add('selected');
+  var flash = function(el) {
+    el.classList.remove('col-flash'); void el.offsetWidth; el.classList.add('col-flash');
+    el.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  };
+  if (document.getElementById('facets-overlay').classList.contains('active')) {
+    // the field may be filtered out by the facets' search box: clear it first
+    if (FACETS.searchTerm) { FACETS.searchTerm = ''; document.getElementById('facets-search').value = ''; renderFacets(); }
+    var row = Array.from(document.querySelectorAll('#facets-scroll .facet-row')).find(function(r) {
+      var n = r.querySelector('.facet-name'); return n && n.textContent === name;
+    });
+    if (row) flash(row);
+  } else if (document.getElementById('table-overlay').classList.contains('active')) {
+    var th = Array.from(document.querySelectorAll('#table-head th')).find(function(t) { return t.getAttribute('data-col') === name || t.dataset.col === name; });
+    if (th) flash(th);
+  }
+}
+
 function renderSchema(fields) {
   var ul = document.getElementById('schema-list');
   ul.innerHTML = '';
   fields.forEach(function(f) {
     var li = document.createElement('li');
-    li.title = 'Esempio: ' + f.sample;
+    li.title = 'Esempio: ' + f.sample + ' — clic: mostra la colonna nella tabella / nei facets';
+    li.onclick = function() { focusSchemaColumn(f.name, li); };
     li.innerHTML = '<span class="fname">' + escHtml(f.name) + '</span>'
       + '<span class="ftype type-' + f.type + '">' + f.type + '</span>';
     ul.appendChild(li);
@@ -2675,7 +2710,7 @@ function bestColorScheme(viz, valueField) {
 }
 
 function colorSwatch(scheme) {
-  var colors = String(scheme || '').split(',').filter(function(c){ return /^#/.test(c.trim()); });
+  var colors = schemeSwatchColors(scheme, 7);
   if (!colors.length) return '<em style="color:var(--muted)">auto</em>';
   return colors.map(function(c) {
     return '<span style="display:inline-block;width:12px;height:12px;background:' + c.trim() +
@@ -2690,11 +2725,38 @@ function categoricalColorscheme(vals) {
   if (STATE.aiCategoryColors && vals.length && vals.every(function(v) { return !!STATE.aiCategoryColors[v]; })) {
     return vals.map(function(v) { return STATE.aiCategoryColors[v]; });
   }
+  // a palette picked with the 🎨 button (or the dropdown): one color per category from ITS stops —
+  // qualitative palettes cycle, sequential/diverging ones are interpolated across the categories
+  var picked = pickedCategoryPalette(vals.length);
+  if (picked) return picked;
   // GL-PORT NOTE: was ["100", "tableau"] — real ixmaps-flat's own named-auto-palette keyword,
   // not recognized by ixmaps-gl.js (see TABLEAU_PALETTE's own note) — cycle a real hex palette
   // instead, one color per distinct value (matches the shape resolveColorScheme expects: an
   // array it indexes by class, not a 2-token keyword pair).
   return vals.map(function(v, i) { return TABLEAU_PALETTE[i % TABLEAU_PALETTE.length]; });
+}
+
+// the colors of the palette currently chosen in #color-scheme, one per category — null while it is
+// the automatic one (or not a hex list), so the Tableau default applies
+function pickedCategoryPalette(n) {
+  var sel = document.getElementById('color-scheme');
+  var raw = sel ? sel.value : '';
+  if (!raw || raw === TABLEAU_PALETTE_STR) return null;
+  if (isFlatGradient(raw)) return colorRawToScheme(raw); // the engine generates one color per category
+  if (!/^#[0-9a-fA-F]{3,6}(,\s*#[0-9a-fA-F]{3,6})*$/.test(raw)) return null;
+  var stops = raw.split(',').map(function(c) { return c.trim(); });
+  var qualitative = LOCAL_COLOR_SCHEMES.some(function(e) { return e[1] === raw && /qualitativ/.test(e[0]); });
+  if (qualitative || stops.length === 1) return Array.from({ length: n }, function(_, i) { return stops[i % stops.length]; });
+  var rgb = stops.map(function(c) {
+    if (c.length === 4) c = '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3];
+    return [1, 3, 5].map(function(k) { return parseInt(c.substr(k, 2), 16); });
+  });
+  return Array.from({ length: n }, function(_, i) {
+    var t = n === 1 ? 0 : i / (n - 1) * (rgb.length - 1), a = Math.min(Math.floor(t), rgb.length - 2), f = t - a;
+    return '#' + [0, 1, 2].map(function(k) {
+      return ('0' + Math.round(rgb[a][k] + (rgb[a + 1][k] - rgb[a][k]) * f).toString(16)).slice(-2);
+    }).join('');
+  });
 }
 
 // entry point after data loads: render a neutral map immediately, then either ask once
@@ -2901,27 +2963,189 @@ var LOCAL_COLOR_SCHEMES = [
   ['Grigio neutro',        '#888888']
 ];
 
+
+// ── ixmaps-flat's own colorschemes (ui/js/tools/colorselect.js colorSchemesA), the same names and
+// strings: gradient DEFINITIONS "colorA,colorB,mode,colorC[,…]" ('|' separated when RGB() is used) or
+// a named palette ("tableau,,,"), which the engine generates per class/category. Entries the engine
+// cannot generate are left out of the picker (see flatSchemeSupported).
+var FLAT_COLOR_SCHEMES = [
+  ["red", "#ffeeee,#dd0000,dynamic,cold"],
+  ["green", "#eeffee,#00cc00,dynamic,cold"],
+  ["blue", "#eeeeff,#0000cc,dynamic,cold"],
+  ["gray", "#eeeeee,#444444,dynamic,cold"],
+  ["warmgray", "#FaF8F8,#888876,dynamic,warm"],
+  ["greengray", "#FEFDDF,#888A56,dynamic,warm"],
+  ["darkred", "#FEF0DF,#bb2233,dynamic,warm"],
+  ["petrol", "#FEFDDF,#008A56,dynamic,warm"],
+  ["darkblue", "#FEFDDF,#00308F,dynamic,warm"],
+  ["petrol2", "#CEDDF6,#2C516A,dynamic,cold"],
+  ["inkblue", "#D2E3F4,#104482,3colors,#4A90E1"],
+  ["density1", "#FFFDD8,#B5284B,3colors,#FCBA6C"],
+  ["density2", "#FFFFFF,#BC0225,3colors,#FC8C3D"],
+  ["density3", "#FFEDA0,#800026,3colors,#FC5E2A"],
+  ["density4", "#FEE5D9,#A50F15,3colors,#FB6A4A"],
+  ["density5", "#D1EC6E,#F7C025,null,null"],
+  ["heatmap", "blue,#ffcc77,3low,red"],
+  ["heatmap0", "#eeffaa,#9944B5,3colors,#ff8800"],
+  ["heatmap01", "#6E4AF6,#F9FA84,3colors,#F52926"],
+  ["heatmap1", "#ddff66,#AA7FB5,3low,#DB706D"],
+  ["viridis-b", "#440154,#FDE725,3colors,#238A8D"],
+  ["viridis-a", "#FDE725,#440154,3colors,#238A8D"],
+  ["magma-b", "#100050,#F2F226,3colors,#CC4878"],
+  ["magma-a", "#F2F226,#100050,3colors,#CC4878"],
+  ["heatmap2", "#000523,#446CFF,3colors,#2239FC"],
+  ["heatmap3", "#000523,#ffffFF,3colors,#2239FC"],
+  ["heatmap31", "#334455,#88eeFF,dynamic,cold"],
+  ["heatmap4", "RGB(74,74,255)|RGB(245,41,38)|dynamic"],
+  ["heatmap5", "RGB(245,41,38)|RGB(74,74,255)|dynamic"],
+  ["blue-red9", "#36A6B1|#794073|3colors|#DDA729"],
+  ["red-blue9", "#794073|#36A6B1|3colors|#DDA729"],
+  ["green-red9", "#56A651|#794073|3colors|#DDA729"],
+  ["red-green9", "#794073|#56A651|3colors|#DDA729"],
+  ["blue-green-red", "#5EB6BA,#DD8356,3colors,#95B526"],
+  ["red-green-blue", "#DD8356,#5EB6BA,3colors,#95B526"],
+  ["green-blue-red1", "#95B526,#DD8356,3colors,#5EB6BA"],
+  ["red-blue-green1", "#DD8356,#95B526,3colors,#5EB6BA"],
+  ["green-red", "green,red,,warm"],
+  ["red-green", "red,green,,warm"],
+  ["green-red2", "#7CB832,#FF4800,auto,#F7FA7A"],
+  ["red-green2", "#FF4800,#7CB832,auto,#F7FA7A"],
+  ["green-red3", "#41826C,#EF5D52,3colors,#E1D495"],
+  ["red-green3", "#EF5D52,#41826C,3colors,#E1D495"],
+  ["blue-red", "blue,red,,warm"],
+  ["red-blue", "red,blue,,warm"],
+  ["blue-red2", "#00308F,#FF4800,,warm"],
+  ["red-blue2", "#FF4800,#00308F,,warm"],
+  ["blue-red3", "#C1DAE7,#D95461,3colors,#FBE9CA"],
+  ["red-blue3", "#D95461,#C1DAE7,3colors,#FBE9CA"],
+  ["blue-red4", "#3288BD,#D53E4F,3colors,#F7F7F7"],
+  ["red-blue4", "#D53E4F,#3288BD,3colors,#F7F7F7"],
+  ["blue-red5", "#3288BD,#D53E4F,3colors,#d4d898"],
+  ["red-blue5", "#D53E4F,#3288BD,3colors,#d4d898"],
+  ["blue-red6", "RGB(1,175,221)|RGB(253,88,7)|3colors|RGB(230,230,136)"],
+  ["red-blue6", "RGB(253,88,7)|RGB(1,175,221)|3colors|RGB(230,230,136)"],
+  ["blue-red7", "#62D2EA|#FF6801|3colors|#E0E4CB"],
+  ["red-blue7", "#FF6801|#62D2EA|3colors|#E0E4CB"],
+  ["blue-red8", "#80AF9B|#FF3D62|3colors|#FBCDAB"],
+  ["red-blue8", "#FF3D62|#80AF9B|3colors|#FBCDAB"],
+  ["blue-redA", "#276E83|#AA0321|3colors|#FBF7B6"],
+  ["red-blueA", "#AA0321|#276E83|3colors|#FBF7B6"],
+  ["green-brown", "#828A4D,#CF926D,3colors,#FFFFFF"],
+  ["brown-green", "#CF926D,#828A4D,3colors,#FFFFFF"],
+  ["blue-orange", "#88A6B7,#FD9807,3colors,#FFFFFF"],
+  ["orange-blue", "#FD9807,#88A6B7,3colors,#FFFFFF"],
+  ["blue-orange2", "#04A3F4,#F5A506,3colors,#F4E4C0"],
+  ["orange-blue2", "#F5A506,#04A3F4,3colors,#F4E4C0"],
+  ["green-blue-red2", "RGB(207,255,51)|RGB(221,0,0)|3colors|RGB(148,204,200)"],
+  ["red-blue-green2", "RGB(221,0,0)|RGB(207,255,51)|3colors|RGB(148,204,200)"],
+  ["green-dark", "#CFFF33,#000523,3colors,#94CCC8"],
+  ["dark-green", "#000523,#CFFF33,3colors,#94CCC8"],
+  ["green-blue2", "#CFFF33,#2239FC,3colors,#f8f8f8"],
+  ["blue-green2", "#2239FC,#CFFF33,3colors,#f8f8f8"],
+  ["blue-green3", "#88A6B7,#97AB5E,3colors,#FFFFFF"],
+  ["green-blue3", "#97AB5E,#88A6B7,3colors,#FFFFFF"],
+  ["green-viola", "#CFFF33,#9A5195,3colors,#94CCC8"],
+  ["viola-green", "#9A5195,#CFFF33,3colors,#94CCC8"],
+  ["brown-viola", "#DB9151,#8B79B9,3colors,#F9F9DF"],
+  ["viola-brown", "#8B79B9,#DB9151,3colors,#F9F9DF"],
+  ["brown-blue4", "#CC8400,#3F3FFF,3colors,#FFE8BF"],
+  ["blue4-brown", "#3F3FFF,#CC8400,3colors,#FFE8BF"],
+  ["brown-blue5", "#ffaa88,#0044dd,dynamic"],
+  ["blue5-brown", "#0044dd,#ffaa88,dynamic"],
+  ["spectral", "spectrum,default,200,0"],
+  ["rev-spec.", "spectrum,default,0,200"],
+  ["office", "office,,,"],
+  ["mineral", "mineral,,"],
+  ["pastel", "pastel,,"],
+  ["harvest", "harvest,,,"],
+  ["fruit", "fruit,,,"],
+  ["kmeans", "kmeans,,,"],
+  ["kmeansp", "kmeansp,,,"],
+  ["pimp", "pimp,,,"],
+  ["intense", "intense,,,"],
+  ["fluo", "fluo,,,"],
+  ["tableau", "tableau,,,"],
+  ["tableau10", "tableau10,,,"],
+  ["tableau20", "tableau20,,,"],
+  ["viridis", "viridis,,,"],
+  ["plasma", "plasma,,,"],
+  ["magma", "magma,,,"]
+];
+
+var FLAT_SCHEME_KEYWORDS = /^(dynamic|auto|linear|warm|cold|shift|null|[23](colors|wide|narrow|low|high))$/i;
+var FLAT_NAMED_PALETTES = /^(office|mineral|minaral|pastel|harvest|fruit|kmeansp?|pimp|intense|fluo|tableau(10|20)?|viridis|plasma|magma)$/i;
+
+// the tokens of a colorscheme string: '|' separated when it has a '|', else ','
+function colorRawTokens(raw) {
+  raw = String(raw || '');
+  return (raw.indexOf('|') !== -1 ? raw.split('|') : raw.split(',')).map(function(t) { return t.trim(); });
+}
+
+// a flat gradient definition / named palette (generated by the engine) — not a literal color list
+function isFlatGradient(raw) {
+  var t = colorRawTokens(raw);
+  return t.length > 1 && (FLAT_NAMED_PALETTES.test(t[0]) || t.some(function(x, i) { return i > 0 && (x === '' || FLAT_SCHEME_KEYWORDS.test(x)); }));
+}
+
+// what .style({colorscheme}) takes: a literal color list stays a list; a flat definition becomes the
+// engine's generated form [classes, colorA, colorB, param1, param2] (the class count is the engine's own)
+function colorRawToScheme(raw) {
+  var t = colorRawTokens(raw);
+  return isFlatGradient(raw) ? ['7'].concat(t) : t;
+}
+
+// the colors of a scheme as hex, for swatches: the sweep the engine generates for a flat definition
+function schemeSwatchColors(raw, n) {
+  var t = colorRawTokens(raw);
+  if (!isFlatGradient(raw)) return t.filter(function(c) { return /^#|^rgb/i.test(c); });
+  var gl = window.__ixmapsGlInternals;
+  if (gl && gl.flatColorSweep) {
+    try {
+      var rgb = gl.flatColorSweep(t[0], t[1], n || 7, t[2], t[3]);
+      if (rgb) return rgb.map(function(c) { return typeof c === 'string' ? c : 'rgb(' + c.join(',') + ')'; });
+    } catch (e) { /* no swatches */ }
+  }
+  return [];
+}
+
+function flatSchemeSupported(raw) { return schemeSwatchColors(raw, 7).length > 0; }
+
+// the last (strongest) color of a scheme, literal or generated
+function lastSchemeColor(colorscheme) {
+  var raw = colorscheme.join(colorscheme.some(function(c) { return /rgb/i.test(c); }) ? '|' : ',');
+  var cols = colorscheme.length && !isNaN(Number(colorscheme[0])) ? schemeSwatchColors(colorscheme.slice(1).join(','), 7) : colorscheme;
+  return cols[cols.length - 1] || colorscheme[colorscheme.length - 1];
+}
+
 // GL-PORT NOTE: real ixmaps' engine-supplied getColors() picker links called
 // ixmaps.setColorScheme(scheme) directly from generated markup — this local replacement keeps
 // that exact same contract (still installs it on the global ixmaps object), so nothing else about
 // the picker's wiring needs to change.
 ixmaps.setColorScheme = function(schemeStr) {
+  STATE.aiCategoryColors = null; // an explicit pick replaces the AI-assigned per-category colors
   applyColorScheme(schemeStr);
   applyLiveThemeStyle('colorscheme', schemeStr);
   toggleColorPalette(false);
 };
 
-function getLocalColorSwatchesHtml() {
-  return LOCAL_COLOR_SCHEMES.map(function(entry) {
-    var label = entry[0], scheme = entry[1];
-    var swatches = scheme.split(',').map(function(c) {
-      return '<span style="display:inline-block;width:16px;height:16px;background:' + c + ';margin-right:2px;border-radius:2px"></span>';
-    }).join('');
-    return '<a href="javascript:void(0)" onclick="ixmaps.setColorScheme(' + JSON.stringify(scheme) + ')" ' +
-      'style="display:flex;align-items:center;gap:8px;padding:4px 8px;text-decoration:none;color:inherit;border-radius:4px" ' +
-      'onmouseover="this.style.background=\'rgba(128,128,128,0.15)\'" onmouseout="this.style.background=\'\'">' +
-      '<span>' + swatches + '</span><span style="font-size:12px">' + escHtml(label) + '</span></a>';
+function colorPickerRowHtml(label, scheme) {
+  var swatches = schemeSwatchColors(scheme, 9).map(function(c) {
+    return '<span style="display:inline-block;width:16px;height:16px;background:' + c + ';margin-right:2px;border-radius:2px"></span>';
   }).join('');
+  return '<a href="javascript:void(0)" onclick="ixmaps.setColorScheme(\'' + scheme + '\')" title="' + escHtml(label) + '" ' +
+    'style="display:flex;align-items:center;gap:8px;padding:4px 8px;text-decoration:none;color:inherit;border-radius:4px" ' +
+    'onmouseover="this.style.background=\'rgba(128,128,128,0.15)\'" onmouseout="this.style.background=\'\'">' +
+    '<span style="white-space:nowrap">' + swatches + '</span><span style="font-size:12px">' + escHtml(label) + '</span></a>';
+}
+
+function getLocalColorSwatchesHtml() {
+  var html = LOCAL_COLOR_SCHEMES.map(function(e) { return colorPickerRowHtml(e[0], e[1]); }).join('');
+  var flat = FLAT_COLOR_SCHEMES.filter(function(e) { return flatSchemeSupported(e[1]); });
+  if (flat.length) {
+    html += '<div style="font-size:11px;color:var(--muted);padding:8px 8px 2px;border-top:1px solid var(--border);margin-top:6px">Schemi ixmaps-flat</div>' +
+      flat.map(function(e) { return colorPickerRowHtml(e[0], e[1]); }).join('');
+  }
+  return html;
 }
 
 function toggleColorPalette(force) {
@@ -3006,9 +3230,23 @@ function buildColorEditSwatches() {
 // per-category rows: color = what the map really draws, label = the category value. Edits go
 // into STATE.aiCategoryColors (value → hex), which categoricalColorscheme() only honours when
 // EVERY value has an entry — so the first edit seeds it with all current colors.
+// one hex color per category as drawn: the engine generates a flat definition ([classes, A, B, …], e.g.
+// harvest) per category — the same sweep is expanded here so the editor has real colors to show and edit
+function categoryHexColors(vals) {
+  var cs = categoricalColorscheme(vals);
+  if (!cs.length || isNaN(Number(cs[0])) || String(cs[0]).trim() === '') return cs;
+  var gl = window.__ixmapsGlInternals, rgb = null;
+  try { rgb = gl && gl.flatColorSweep ? gl.flatColorSweep(cs[1], cs[2], vals.length, cs[3], cs[4]) : null; } catch (e) { rgb = null; }
+  if (!rgb) return vals.map(function(v, i) { return TABLEAU_PALETTE[i % TABLEAU_PALETTE.length]; });
+  return vals.map(function(v, i) {
+    var c = rgb[i % rgb.length];
+    return typeof c === 'string' ? c : '#' + c.map(function(x) { return ('0' + Math.round(x).toString(16)).slice(-2); }).join('');
+  });
+}
+
 function buildCategoryColorEditSwatches(vals) {
   var list = document.getElementById('color-edit-list');
-  var colors = categoricalColorscheme(vals);
+  var colors = categoryHexColors(vals);
   list.innerHTML = '';
   vals.forEach(function(val, i) {
     var row = document.createElement('div');
@@ -3023,6 +3261,11 @@ function buildCategoryColorEditSwatches(vals) {
       vals.forEach(function(v, j) { map[v] = colors[j]; });
       map[val] = colors[i] = input.value;
       STATE.aiCategoryColors = Object.assign({}, STATE.aiCategoryColors || {}, map);
+      // the colors are now this dedicated list, no longer the generated scheme: the dropdown says so
+      var sel = document.getElementById('color-scheme');
+      Array.from(sel.options).forEach(function(o) { if (o.dataset.dedicated) o.remove(); });
+      applyColorScheme(colors.join(','));
+      if (sel.selectedOptions[0]) sel.selectedOptions[0].dataset.dedicated = '1';
       applyLiveThemeStyle('colorscheme', colors.join(','));
     });
     var label = document.createElement('span');
@@ -3453,7 +3696,7 @@ function onVizChange() {
     valSelFeat.value = '__NONE__';
   } else if (viz === 'feature_categorical') {
     valueRow.style.display  = '';
-    colorRow.style.display  = 'none';
+    colorRow.style.display  = '';   // the 🎨 / ✏️ pickers color the categories (categoricalColorscheme)
     opacityRow.style.display = 'none';
     if (valueLabel) valueLabel.textContent = 'Campo categoria (colore)';
   } else {
@@ -3671,7 +3914,7 @@ function drawMap() {
   var sizePow    = parseFloat(document.getElementById('size-ramp').value);
   var gridWidth  = document.getElementById('grid-width').value;
   var lineWidth  = parseFloat(document.getElementById('line-width').value);
-  var colorscheme = colorRaw.split(',').map(function(c){ return c.trim(); });
+  var colorscheme = colorRawToScheme(colorRaw);
   var isFirstDraw = !STATE.hasDrawnMap; // NOT "!STATE.myMap" — that's pre-created at page load
                                           // (see initMapEarly()) and always truthy by this point
 
@@ -5067,7 +5310,7 @@ function buildLayer(map, viz, geoField, valueField, titleField, colorscheme, opa
     typeStr = "CHART|SYMBOL|GRIDSIZE|AGGREGATE|SUM|DOPACITY" + (isCat ? "|CATEGORICAL|CENTER|DOMINANT" : "") + "|SHOW";
     binding = { position: geoBinding, value: valueField, size: sizeSel };
     style = {
-      colorscheme:   [colorscheme[colorscheme.length - 1]],
+      colorscheme:   [lastSchemeColor(colorscheme)],
       symbols:       ["hexagon"],
       gridwidthpx:   parseFloat(gridWidth) || 15,
       fillopacity:   opacity,
