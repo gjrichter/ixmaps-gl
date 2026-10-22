@@ -1,0 +1,401 @@
+const madrid = {
+	"$schema": "https://gjrichter.github.io/ixmaps/schema/ixmaps/v1.json",
+	"metadata": {
+		"title": "",
+		"snippet": "",
+		"description": "",
+		"thumbnail": "",
+		"about": "",
+		"created": "Wed Dec 30 2020 22:10:25 GMT+0100 (Ora standard dell’Europa centrale)"
+		},
+	"map": {
+		"attribution": "iXMaps",
+		"basemap": "white",
+		"legend": "<h1>Madrid trees</h1> - how much green where people live<br><br> - the bigger is the <span style='color:green'>tree icon</span>, the more <span style='color:green'>trees</span> there are for that barrio<br> - the <span style='color:red'>red circle</span> size giving the the reference	for	the population",
+		"item": "",
+		"search":"Madrid",
+		"scaleParam": {
+			"normalSizeScale": "13516"
+			},
+		"options": {
+			"featurescaling": "dynamic",
+			"objectscaling": "dynamic",
+			"clipmap": "true",
+			"clipmapdynamic": "true",
+			"dynamiclabel": "NOSIZE",
+			"labelspace": "1.0",
+			"checklabeloverlap": "NOSQUEEZE",
+			"dynamiclayer": "true",
+			"dynamictiles": "true",
+			"discardtiles": "false",
+			"loadmultitiles": "true",
+			"loadsilent": "false",
+			"loadexternaldata": "true",
+			"buttonsize": "15",
+			"fastpan": "false",
+			"panborder": "0",
+			"northarrow": "false",
+			"sidebarbuttons": "false",
+			"tooltipdelay": "250",
+			"popupdelay": "250",
+			"popupgridstyle": "firstright|firstitalic|firstbold|firstgray|firstsmall|background|alternate|full",
+			"popupalignment": "BOTTOM|LEFT",
+			"transparentbackground": "true",
+			"labelscaling": "dynamic",
+			"flushChartDraw": "50000",
+			"mapopacity": "1",
+			"basemapopacity": "0.7",
+			"panhidden":"false"
+			},
+		"center": {
+			"lat": "40.416894177003456",
+			"lng": "-3.6996459960937504"
+			},
+		"zoom": "12"
+		},
+	"themes": [{
+			"layer": "tree_canopy",
+			"field": "$ITEM$",
+			"field100": "",
+			"style": {
+				"type": "IMAGE|WMS",
+				"server":"https://image.discomap.eea.europa.eu/arcgis/rest/services/UrbanAtlas/UA_StreetTreeLayer_2018/MapServer/export",
+				"opacity":"0.2",
+				"chartlower": "1:10000",
+				"title":"Copernicus Canopy (street level) - WMS Image"
+				}
+			},{
+			"layer": "barrios",
+			"field": "$item$",
+			"field100": "",
+			"style": {
+				"type": "FEATURES|NOLEGEND|LOCKED",
+				"colorscheme": [
+					"none"],
+				"fillopacity": "1",
+				"autoopacity": "true",
+				"shadow": "false",
+				"dbtable": "barrios",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/Barrios.geojson.gz",
+				"dbtableType": "geojson",
+				"datacache": "false",
+				"itemfield": "CODBAR",
+				"lookupfield": "geometry",
+				"units": "",
+				"refreshtimeout": "0",
+				"scale": "1",
+				"linecolor": [
+					"white"],
+				"linewidth": "3",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"title": "Barrios"
+				}
+			},{
+			"layer": "distrito",
+			"field": "$item$",
+			"field100": "",
+			"style": {
+				"type": "FEATURES|NOLEGEND|LOCKED",
+				"colorscheme": [
+					"none"],
+				"fillopacity": "1",
+				"autoopacity": "true",
+				"shadow": "false",
+				"dbtable": "distrito",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/Distrito.geojson.gz",
+				"dbtableType": "geojson",
+				"datacache": "false",
+				"itemfield": "CODDISTRIT",
+				"lookupfield": "geometry",
+				"units": "",
+				"refreshtimeout": "0",
+				"scale": "1",
+				"linecolor": [
+					"#dd8888"],
+				"linewidth": "3",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"title": "Distritos"
+				}
+			},{
+			"layer": "Seccionado_2019",
+			"field": "totale",
+			"field100": "",
+			"style": {
+				"type": "CHOROPLETHE|QUANTILE|DENSITY|ZEROISVALUE|NOLEGEND",
+				"colorscheme": [
+					"7",
+					"#fff8f8",
+					"#dd0000",
+					"dynamic",
+					"cold"],
+				"fillopacity": "AUTO",
+				"shadow": "false",
+				"dbtable": "Seccionado_2019_habitants",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/Popolation_Seccion_202011.csv.gz",
+				"dbtableType": "csv",
+				"datacache": "true",
+				"lookupfield": "COD_DIST_SECCION",
+				"units": "",
+				"refreshtimeout": "0",
+				"scale": "1",
+				"chartupper": "1:10000",
+				"chartlower": "1:1000",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"title": "Population by Seccionado 2011"
+				}
+			},{
+			"layer": "Seccionado_2019",
+			"field": "totale",
+			"field100": "",
+			"style": {
+				"name":"Seccionado_2019_habitants_home",
+				"type": "CHART|SYMBOL|VALUES|AUTOSIZE|FAST|AGGREGATE|RECT|SUM|DOPACITY|USERLEGEND",
+				"colorscheme": [
+					"7",
+					"#fff8f8",
+					"#dd0000",
+					"dynamic",
+					"cold"],
+				"shadow": "false",
+				"symbols":[
+					"label"
+				],
+				"dbtable": "Seccionado_2019_habitants",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/Popolation_Seccion_202011.csv.gz",
+				"dbtableType": "csv",
+				"datacache": "true",
+				"lookupfield": "COD_DIST_SECCION",
+				"units": "",
+				"refreshtimeout": "0",
+				"scale": "2",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"textcolor":"#aa0000",
+				"linecolor":"none",
+				"fillopacity":"0.01",
+				"textfont":"Arial",
+				"chartupper":"1:5000",
+				"title": "Population by Seccionado 2011"
+				}
+			},{
+			"layer": "barrios",
+			"field": "Población densidad (hab./Ha.)",
+			"field100": "",
+			"style": {
+				"type": "CHOROPLETH|QUANTILE|NOLEGEND|LOCKED",
+				"colorscheme": [
+					"7",
+					"#ffeeee",
+					"#dd0000",
+					"dynamic",
+					"cold"],
+				"fillopacity": "0.2",
+				"shadow": "false",
+				"dbtable": "MADRID_BARRIOS_ALL",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/panel_indicadores_distritos_barrios_pivot.csv.gz",
+				"dbtableType": "csv",
+				"datacache": "false",
+				"lookupfield": "cod_barrio",
+				"lookupdigits": "3",
+				"units": "",
+				"refreshtimeout": "0",
+				"normalsizevalue": "10000",
+				"scale": "1",
+				"chartupper": "1:350000",
+				"chartlower": "1:10000",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"name": "population_density_barrios",
+				"title": "Población densidad (hab./Ha.)"
+				}
+			},{
+			"layer": "barrios",
+			"field": "Número Habitantes",
+			"field100": "",
+			"style": {
+				"type": "CHART|BUBBLE|INLINETEXT|SUM|FORCE|USERLEGEND|VALUEBACKGROUND|BOX|LONGTITLE",
+				"colorscheme": [
+					"7",
+					"#ffeeee",
+					"#dd0000",
+					"dynamic",
+					"cold"],
+				"fillopacity": "0.1",
+				"shadow": "false",
+				"dbtable": "MADRID_BARRIOS_ALL",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/panel_indicadores_distritos_barrios_pivot.csv.gz",
+				"dbtableType": "csv",
+				"datacache": "false",
+				"lookupfield": "cod_barrio",
+				"lookupdigits": "3",
+				"symbols": [
+					"circle"],
+				"units": "hab.",
+				"refreshtimeout": "0",
+				"normalsizevalue": "10000",
+				"scale": "1",
+				"linecolor": [
+					"#FF0000"],
+				"linewidth": "2",
+				"boxcolor":"none",
+				"boxupper":"1:10000",
+				"textcolor":"#880000",
+				"textscale":"4",
+				"titlefield":"barrio",
+				"chartlower": "1:10000",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"name": "population_barrios",
+				"title": "Población barrio"
+				}
+			},{
+			"layer": "barrios",
+			"field": "Número Habitantes",
+			"field100": "",
+			"style": {
+				"type": "CHART|SYMBOL|VALUES|SUM|FORCE|NOLEGEND|VALUEBACKGROUND",
+				"colorscheme": [
+					"1",
+					"#ffeeee",
+					"#dd4444",
+					"dynamic",
+					"cold"],
+				"fillopacity": "0.5",
+				"shadow": "false",
+				"dbtable": "MADRID_BARRIOS_ALL",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/panel_indicadores_distritos_barrios_pivot.csv.gz",
+				"dbtableType": "csv",
+				"datacache": "false",
+				"lookupfield": "cod_barrio",
+				"lookupdigits": "3",
+				"symbols": [
+					"label"],
+				"units": "ab.",
+				"align": "below",
+				"refreshtimeout": "0",
+				"normalsizevalue": "10000",
+				"scale": "2",
+				"linecolor": [
+					"none"],
+				"linewidth": "3",
+				"textcolor":"#ffffff",
+				"chartlower": "1:10000",
+				"chartupper":"1:20000",
+				"valuescale": "1.2",
+				"valuedecimals": "0",
+				"title": "Población densidad (hab./Ha.)"
+				}
+			},{
+			"layer": "barrios",
+			"field": "$item$",
+			"field100": "",
+			"style": {
+				"type": "CHART|SYMBOL|AUTOSIZE|SUM|FORCE|USERLEGEND|VALUES|DTEXT",
+				"colorscheme": [
+					"1",
+					"RGB(254,253,223)",
+					"RGB(0,138,86)",
+					"dynamic",
+					"warm"],
+				"opacity": "0.8",
+				"shadow": "false",
+				"dbtable": "MADRID_TREES_CLEAN_ENRICHED_BARRIOS",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/trees_madrid_barrio.csv",
+				"dbtableType": "csv",
+				"datacache": "true",
+				"lookupfield": "MINTBARRIO",
+				"symbols": [
+					"data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE5LjAuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgdmlld0JveD0iMCAwIDQ5NSA0OTUiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDQ5NSA0OTU7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4NCjxnPg0KCTxwYXRoIHN0eWxlPSJmaWxsOiNCMzlBN0M7IiBkPSJNMjI3LjUsMzQyLjE2MlY0OTVoNDBWMzQyLjE2MmMtNi41NjMsMC43NjUtMTMuMjM1LDEuMTcyLTIwLDEuMTcyUzIzNC4wNjMsMzQyLjkyNywyMjcuNSwzNDIuMTYyeiINCgkJLz4NCgk8cGF0aCBzdHlsZT0iZmlsbDojOTFEQzVBOyIgZD0iTTI0Ny41LDBDMTUyLjg0MywwLDc1LjgzMyw3Ny4wMDksNzUuODMzLDE3MS42NjdjMCw4Ny44OTIsNjYuMzk4LDE2MC41NTYsMTUxLjY2NywxNzAuNDk1DQoJCWM2LjU2MywwLjc2NSwxMy4yMzUsMS4xNzIsMjAsMS4xNzJWMHoiLz4NCgk8cGF0aCBzdHlsZT0iZmlsbDojNkRDODJBOyIgZD0iTTQxOS4xNjcsMTcxLjY2N0M0MTkuMTY3LDc3LjAwOSwzNDIuMTU3LDAsMjQ3LjUsMHYzNDMuMzMzYzYuNzY1LDAsMTMuNDM3LTAuNDA2LDIwLTEuMTcyDQoJCUMzNTIuNzY4LDMzMi4yMjIsNDE5LjE2NywyNTkuNTU5LDQxOS4xNjcsMTcxLjY2N3oiLz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjwvc3ZnPg0K"],
+				"units": "kg",
+				"weights": "0.001",
+				"offsety": "9",
+				"refreshtimeout": "0",
+				"scale": "2",
+				"valuescale": "0.1",
+				"valuefield": "weight (estimated)",
+				"sizefield": "weight (estimated)",
+				"valuescale": "2",
+				"valuedecimals": "2",
+				"chartlower": "1:10000",
+				"aggregationlower": "1:10000",
+				"valuesupper":"1:2000",
+				"name": "home_theme",
+				"title": "Trees"
+				}
+			},{
+			"layer": "World Mercator",
+			"field": "CO2/year (estimated)",
+			"field100": "",
+			"style": {
+				"type": "CHART|SYMBOL|SIZE|AGGREGATE|RECT|SUM|COUNT|USERLEGEND",
+				"colorscheme": [
+					"1",
+					"RGB(254,253,223)",
+					"RGB(80,138,86)",
+					"dynamic",
+					"warm"],
+				"fillopacity": "0.7",
+				"shadow": "false",
+				"dbtable": "MADRID_TREES_CLEAN_ENRICHED_BOUNDED",
+				"dbtableType": "ext",
+				"dbtableExt": "../../projects/Madrid_final_dyn/dataProvider_trees.js",
+				"datacache": "false",
+				"lookupfield": "y|x",
+				"symbols": [
+					"circle"],
+				"units": "kg",
+				"legendunits": "kg/year",
+				"showdata":"true",
+				"refreshtimeout": "0",
+				"scale": "0.5",
+				"textcolor": "RGB(0,138,86)",
+				"linecolor": [
+					"RGB(255,255,255)"],
+				"linewidth": "1",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"aggregationscale": [
+					"1:1",
+					"1px",
+					"1:5000",
+					"5px"],
+				"name": "trees",
+				"chartupper":"1:10000",
+				"title": "CO2 sequestration / year"
+				}
+			},{
+			"layer": "idrografia",
+			"field": "$item$",
+			"field100": "",
+			"style": {
+				"type": "FEATURES|NOLEGEND|LOCKED",
+				"colorscheme": [
+					"RGB(64, 164, 199)"],
+				"fillopacity": "0.2",
+				"shadow": "false",
+				"dbtable": "idrografia",
+				"dbtableUrl": "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Madrid/idrografia.geojson.gz",
+				"dbtableType": "geojson",
+				"datacache": "false",
+				"itemfield": "CDID",
+				"lookupfield": "geometry",
+				"units": "",
+				"refreshtimeout": "0",
+				"scale": "1",
+				"linecolor": [
+					"RGB(64, 164, 199)"],
+				"linewidth": "5",
+				"valuescale": "1",
+				"valuedecimals": "0",
+				"title": "Idrografia"
+				}
+			}],
+	"layerMask": {
+		"Seccionado_2019": {
+			"display": "none"
+			}
+		}
+	}
