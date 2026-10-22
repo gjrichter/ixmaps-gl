@@ -5979,20 +5979,29 @@ self.onmessage = e => {
       map.on('style.load', refreshControlLook);
       this._setAttribution = text => attributionBox.set(text);
 
-      if (this._legendHtml) {
+      // the page legend (map.legend(html)), or the legend a loaded project
+      // carries in its map part (applyProjectMap) — flat shows the project's
+      // legend in the same pane, so the project's replaces the page's
+      let pageLegendEl = null;
+      const showPageLegend = html => {
+        if (pageLegendEl) { pageLegendEl.remove(); pageLegendEl = null; }
+        this._legendHtml = html;
+        if (!html) return;
         const legendEl = document.createElement('div');
         // a page legend (map.legend(html)) is positioned by the map's
         // own align option — the same rule that places the native stack
         legendEl.style.cssText = 'position:absolute;' + legendAlignCssFor(this.mapOptions) + 'z-index:5;pointer-events:none';
         // flat's legend takes the pane's html OR a URL to it (htmlgui):
         // a value without a tag is fetched, its html shown
-        if (/<[a-z!]/i.test(this._legendHtml)) legendEl.innerHTML = this._legendHtml;
-        else fetch(this._legendHtml).then(r => r.ok ? r.text() : '').then(t => { legendEl.innerHTML = t; }).catch(() => {});
+        if (/<[a-z!]/i.test(html)) legendEl.innerHTML = html;
+        else fetch(html).then(r => r.ok ? r.text() : '').then(t => { legendEl.innerHTML = t; }).catch(() => {});
         // inside the map container, never the page's body (see the pinned
         // tooltip mount) — styling body breaks page-positioned elements
         anchorInside(el);
         el.appendChild(legendEl);
-      }
+        pageLegendEl = legendEl;
+      };
+      if (this._legendHtml) showPageLegend(this._legendHtml);
 
       // themes are addressed by either the layer()'s own name (e.g. "AREU")
       // or style.name (e.g. "chart") — the real engine's changeThemeStyle
@@ -6878,6 +6887,12 @@ self.onmessage = e => {
           Object.assign(builder._engineOptions, o);
         }
         if (m.scaleParam && m.scaleParam.normalSizeScale != null) builder._engineOptions.normalSizeScale = m.scaleParam.normalSizeScale;
+        // the project's own legend (map.legend: html or a URL to it) replaces the page's, as in flat;
+        // like a page legend it takes the place of the theme-generated legend panels
+        if (typeof m.legend === 'string' && m.legend.trim()) {
+          showPageLegend(m.legend);
+          setLegendOption(builder.mapOptions.legend);
+        }
         if (m.basemap) report.notes.push(`basemap "${m.basemap}" not switched (ixmaps-gl keeps the map's own basemap)`);
       }
 
