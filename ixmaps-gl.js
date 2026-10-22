@@ -3964,9 +3964,23 @@ self.onmessage = e => {
       if (t === entry.name || (entry.aliases || []).includes(t)) return entry;
     }
   }
+  // keyless vector styles by NAME (exact match, before the dark/light rule): flat's own VT_VOYAGER names
+  // resolve to the CARTO Voyager style they are made from; the rest are further keyless MapLibre styles
+  const KEYLESS_VECTOR_BASEMAPS = [
+    { name: 'CARTO - Voyager', aliases: ['VT_VOYAGER'], url: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json' },
+    { name: 'CARTO - Voyager (no labels)', aliases: ['VT_VOYAGER_LIGHT'], url: 'https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json' },
+    { name: 'CARTO - Positron (no labels)', url: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json' },
+    { name: 'CARTO - Dark Matter (no labels)', url: 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json' },
+    { name: 'OpenFreeMap - Liberty', url: 'https://tiles.openfreemap.org/styles/liberty' },
+    { name: 'OpenFreeMap - Bright', url: 'https://tiles.openfreemap.org/styles/bright' },
+    { name: 'OpenFreeMap - Positron', url: 'https://tiles.openfreemap.org/styles/positron' },
+  ];
   function resolveBasemapStyleUrl(mapType) {
     const raster = flatRasterBasemap(mapType);
     if (raster) return buildRasterBasemapStyle(raster);
+    const typeName = typeof mapType === 'string' ? mapType.trim() : '';
+    const vector = KEYLESS_VECTOR_BASEMAPS.find(e => e.name === typeName || (e.aliases || []).includes(typeName));
+    if (vector) return vector.url;
     return typeof mapType === 'string' && /dark|black|night|matter/i.test(mapType) ? BASEMAP_STYLE_URLS.dark : BASEMAP_STYLE_URLS.light;
   }
   // Real ixmaps-flat's legend look (tools/legend.js 3773-3845, via
