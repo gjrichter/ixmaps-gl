@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<script id="tinyhippos-injected">
+		if (window.top.ripple) {
+			window.top.ripple("bootstrap").inject(window, document);
+		}
+
+	</script>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+	<title>iXMaps</title>
+	<!-- Bootstrap core CSS -->
+	<link rel="stylesheet" type="text/css" href="https://gjrichter.github.io/pages/assets/css/bootstrap.min.css">
+	<!-- Custom styles for this template -->
+	<link rel="stylesheet" type="text/css" href="https://gjrichter.github.io/pages/assets/css/pricing.css">
+	<!-- CSS App -->
+	<link rel="stylesheet" type="text/css" href="https://gjrichter.github.io/pages/assets/css/dashboard/style.css">
+	<link rel="stylesheet" type="text/css" href="https://gjrichter.github.io/pages/assets/css/dashboard/themes/flat-blue.css">
+	<link rel="stylesheet" type="text/css" href="https://gjrichter.github.io/pages/assets/lib/css/font-awesome.min.css">
+	<style>
+		.active {
+			border: 2px solid #AFCDEA;
+			border-radius: 0.2em;
+		}
+
+	</style>
+</head>
+
+<body data-gr-c-s-loaded="true">
+
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+	<!--                                                                 -->
+	<!-- P A G E   H E A D E R											 -->
+	<!--                                                                 -->
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+
+	<div class="d-flex flex-column flex-md-row align-items-center p-2 px-md-4 mb-3 bg-white ">
+		<!-- TITLE -->
+		<h5 class="my-0 mr-md-auto font-weight-lighter">iXMaps :: elezioni</h5>
+		<!-- PAGE NAVIGATION -->
+		<nav class="my-2 my-md-0 mr-md-3">
+			<a class="p-1 text-dark font-weight-lighter" style="font-size:18px" href="#footer">Fonti & Attributioni</a>
+		</nav>
+		<!-- EXTERNAL LINK -->
+		<a class="btn btn-outline-primary" href="./index.html">up &rarr;</a>
+	</div>
+
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+	<!--                                                                 -->
+	<!-- Top Text Area 													 -->
+	<!--                                                                 -->
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+
+	<div class="container" style="margin-top:-2em">
+		<div class=" mb-3 text-center">
+			<h1 class="display-4">Elezioni Europee 2024</h1>
+			<div class="mb-4">
+				<div class="">
+					<h4 class="my-0 font-weight-normal"><b>Risultati Liste - Comune per Comune</b></h4>
+					<p><big>il <b>colore</b> indica la <b>lista vincente</b> per ogni comune - <b>l'intensità</b> valuta la <b>density dei votanti</b></big></p>
+				</div>
+				<div class="">
+					<h1 class="pricing-card-title"><small class="text-muted">elaborazione dati: <a href='https://github.com/ondata/elezioni-politiche-2022' target='_blank'>OnData</a>
+							<- fonte dati: <a href='https://dait.interno.gov.it/elezioni/trasparenza/elezioni-politiche-2022 target=' _blank'>Ministero dell'Interno</a>
+						</small></h1>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+	<!--                                                                 -->
+	<!-- Maps 													    	 -->
+	<!--                                                                 -->
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+
+	<div id="map_div_1" style="margin-top:-16px;padding:10px;" background="#f8f8f8" onclick="event.stopPropagation();return false;">
+	</div>
+
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+	<!--                                                                 -->
+	<!-- F O O T E R          		               					 	 -->
+	<!--                                                                 -->
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+dati: <a href='https://github.com/ondata/elezioni_europee_2024' target='_blank'>onData</a>, comuni: <a href='https://confini-amministrativi.it/' target='_blank'>confini-amministrativi.it</a>
+	<footer id="footer" class="container" style="margin-top:2em;padding:1em 1.5em;background:#f8f8f8">
+		<div class="row">
+			<div class="col-4">
+				<h5>Fonti</h5>
+				<ul class="list-unstyled text-small">
+					<li>
+						dati elaborati: <a href='https://github.com/ondata/elezioni_europee_2024' target='_blank'>OnData</a><br>
+						Licenza: <a href='https://creativecommons.org/licenses/by/4.0/' target='_blank'>CC-BY 4.0</a>
+					</li>
+					<li>&nbsp;</li>
+					<li>
+						 scrutini pubblicati:<br><a href='https://dait.interno.gov.it/elezioni/trasparenza/elezioni-politiche-2022 target=' _blank'>Ministero dell'Interno</a>
+					</li>
+					<li>&nbsp;</li>
+					<li>
+						confini comunali:<br><a href="confini-amministrativi.it">confini-amministrativi.it</a></li>
+				</ul>
+			</div>
+			<div class="col-4">
+				<h5>Attribuzioni</h5>
+				<ul class="list-unstyled text-small">
+					<li> Papa Parse - <span style="color:#888888">.csv parser integtegrato in data.js, usato per caricare e manipolare i dati dai siti ufficiali, licenza: <a href="https://opensource.org/licenses/MIT" target="_blank">MIT</a></span><br>
+						Flat Admin Bootstrap Templates - <span style="color:#888888">HTML5 Bootstrap template alola base di questo dasboard, licenza: <a href="https://opensource.org/licenses/MIT" target="_blank">MIT</a></span><br>
+					</li>
+				</ul>
+			</div>
+			<div class="col-4">
+				<h5>About</h5>
+				<ul class="list-unstyled text-small">
+					<li><a class="text-muted" href="https://ixmaps.com">powered by iXMaps</a></li>
+				</ul>
+			</div>
+		</div>
+	</footer>
+
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+	<!--                                                                 -->
+	<!-- C O D E	          		               					 	 -->
+	<!--                                                                 -->
+	<!-- --------------------------------------------------------------- -->
+	<!-- --------------------------------------------------------------- -->
+
+	<script type="text/javascript" src="https://gjrichter.github.io/pages/assets/lib/js/jquery.min.js"></script>
+	<script type="text/javascript" src="https://gjrichter.github.io/pages/assets/lib/js/bootstrap.bundle.min.js"></script>
+
+	<script type="text/javascript" src="../ixmaps-gl.js"></script>
+	<!-- user chart "pinnacleChart" (userdraw): draws with d3 v3 and lives in flat's usercharts -->
+	<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/usercharts/d3/chart.js"></script>
+	<script type="text/javascript" src="https://gjrichter.github.io/data.js/data.js"></script>
+
+	<!-- Javascript -->
+	<script>
+		// ---------------------------------------------------------------------------------------
+		// infuse HTML snippets
+		// ---------------------------------------------------------------------------------------
+
+		infuseHTML = function(szElement, szUrl, szDiv) {
+
+			szStoryRoot = "";
+
+			if (typeof($("#" + szElement)[0]) == "undefined") {
+				return;
+			}
+			$("#" + szElement).load(szUrl + ' #' + szDiv, function(response, status, xhr) {
+				if (status == "error") {
+					var msg = "Sorry but there was an error: ";
+					$("#story").html(msg + xhr.status + "<br><br> '" + szStoryRoot + szUrl + "'<br><br> " + xhr.statusText);
+				}
+			});
+		};
+
+		infuseHTML("menu", "./menu.html", "menu");
+
+		// ---------------------------------------------------------------------------------------
+		// make dynamic page content
+		// ---------------------------------------------------------------------------------------
+
+		$(document).ready(function() {
+			
+			footer = 	
+				"<div><button onclick=\"ixmaps.changeThemeStyle(null,null,'dopacityscale:0.9','factor')\">-</button>"+
+				"<span style=\"font-size:0.8em\"> &nbsp; intensità &nbsp;</span>"+
+				"<button onclick=\"ixmaps.changeThemeStyle(null,null,'dopacityscale:1.1','factor')\">+</button>"+
+				"&nbsp;&nbsp;&nbsp;&nbsp;"+
+				"<button onclick=\"ixmaps.changeThemeStyle(null,null,'dopacitypow:1.1','factor')\">-</button>"+
+				"<span style=\"font-size:0.8em\"> &nbsp; contrasto &nbsp;</span>"+
+				"<button onclick=\"ixmaps.changeThemeStyle(null,null,'dopacitypow:0.9','factor')\">+</button></div>";
+
+			// defining the data query and process function
+			//
+			query_data = function(theme, options) {
+				var broker = new Data.Broker()
+
+					.addSource("https://raw.githubusercontent.com/ondata/elezioni_europee_2024/main/data/liste.csv", "csv")
+					.addSource("https://raw.githubusercontent.com/ondata/elezioni_europee_2024/main/data/insieme.csv", "csv")
+
+					.realize(function(dataA) {
+
+						var data = dataA[0];
+						var nameLookupA = dataA[1].lookupArray({
+							key: "CODICE ISTAT",
+							value: "DESCRIZIONE COMUNE"
+						});
+
+						dataA[0].addColumn({
+							source: "CODICE ISTAT",
+							destination: "DESCRIZIONE COMUNE"
+						}, function(value) {
+							return (nameLookupA[value]);
+						});
+
+						pivot = data.pivot({
+							lead: "CODICE ISTAT",
+							keep: "DESCRIZIONE COMUNE",
+							columns: "desc_lis",
+							value: "voti"
+						});
+
+						options.type = "jsonDB", ixmaps.setExternalData(pivot, options);
+					});
+			};
+		process = function(data){
+			data.column("pro_com_t").map(function(value) {
+				// Quero Vas -> Setteville
+				if (value == "025070") {
+					return "025075";
+				}
+				// Alano di Piave -> Setteville
+				if (value == "025002") {
+					return "025075";
+				}
+				// Sovizzo -> Sovizzo
+				if (value == "024044") {
+					return "024128";
+				}
+				// Gambugliano -> Sovizzo
+				if (value == "024103") {
+					return "024128";
+				}
+				// Carceri -> Sovizzo
+				if (value == "028022") {
+					return "024128";
+				}
+				// Vighizzolo -> Sovizzo
+				if (value == "028098") {
+					return "028108";
+				}
+				return value;
+			});
+		};
+
+			// defining the georeference layer for the CHOROPLETH thematic map
+			//
+			var geo =
+				ixmaps.layer("ITALIA_Comuni_2022")
+						.data({
+							url:							"https://raw.githubusercontent.com/gjrichter/data/master/TopoJSON/IT/ondata_confini_amministrativi_api_v2_it_20240101_comuni.s.topo.json",
+							type: "topojson",
+							process: process.toString()
+						})
+				.binding({
+					id: "pro_com_T",
+					size: "shape_area"
+				})
+				.style({
+					colorscheme: ["none"],
+					fillopacity: "0.5",
+					linecolor: "white",
+					linewidth: "0.02"
+				})
+				.title("Comuni")
+				.define();
+
+			// defining the visualization
+			// uses the georeference layer "ITALIA_Comuni_2022"
+			// defines a CHOROPLETH theme with zoom dependent value display 
+			//
+			var theme =
+				ixmaps.layer("ITALIA_Comuni_2022")
+				.data({
+					query: query_data.toString()
+				})
+				.binding({
+					geo: "CODICE ISTAT",
+					title: "DESCRIZIONE COMUNE",
+					alpha: "Total",
+					alpha100: "$density$",
+					values: [
+						"PARTITO DEMOCRATICO",
+						"LEGA SALVINI PREMIER",
+						"MOVIMENTO 5 STELLE",
+						"FORZA ITALIA - NOI MODERATI - PPE",
+						"FRATELLI D'ITALIA",
+						"STATI UNITI D'EUROPA",
+						"AZIONE - SIAMO EUROPEI",
+						"ALLEANZA VERDI E SINISTRA",
+						"PACE TERRA DIGNITA'",
+						"LIBERTA'",
+						"ALTERNATIVA POPOLARE",
+						"SÜDTIROLER VOLKSPARTEI (SVP)"
+					],
+					value100: "Total"
+				})
+				.style({
+					type: "CHOROPLETH|COMPOSECOLOR|SUBTRACTIVE|DOPACITYMAX|HORZ|SORT|SIMPLELEGEND",
+					colorscheme: [
+						"RGB(203,28,36)",
+						"#048467",
+						"RGB(238,217,36)",
+						"RGB(5,177,240)",
+						"#0B3B6A",
+						"RGB(117,28,236)",
+						"orange",
+						"#88DD19",
+						"magenta",
+						"RGB(136,68,0)",
+						"RGB(136,68,0)",
+						"RGB(68,68,68)"
+					],
+					label: [
+						"PARTITO DEMOCRATICO",
+						"LEGA SALVINI PREMIER",
+						"MOVIMENTO 5 STELLE",
+						"FORZA ITALIA - PPE",
+						"FRATELLI D'ITALIA",
+						"STATI UNITI D'EUROPA",
+						"AZIONE - SIAMO EUROPEI",
+						"ALLEANZA VERDI E SINISTRA",
+						"PACE TERRA DIGNITA'",
+						"LIBERTA'",
+						"ALTERNATIVA POPOLARE",
+						"SVP"
+					],
+					units: "%",
+					dopacitypow: "3",
+					dopacityscale: "1.5",
+					fillopacity: "auto",
+					textcolor: "black",
+					valuedecimals: "1"
+				})
+				.meta({
+					title: "Europee 2024 - Partito vincente<hr>",
+					description: "<p>dati: <a href='https://github.com/ondata/elezioni_europee_2024' target='_blank'>onData</a>, comuni: <a href='https://confini-amministrativi.it/' target='_blank'>confini-amministrativi.it</a>"+footer.toString(),
+					tooltip: "<h2 style='margin:0'>{{DESCRIZIONE COMUNE}}</h2>{{Total}} Voti totale<hr><br>{{theme.item.chart}}"
+				})
+				.define();
+
+			var theme_peaks =
+					ixmaps.layer("ITALIA_Comuni_2022")
+					.data({
+						query: query_data.toString()
+					})
+					.binding({
+						geo: "CODICE ISTAT",
+						values: [
+							"PARTITO DEMOCRATICO",
+							"LEGA SALVINI PREMIER",
+							"MOVIMENTO 5 STELLE",
+							"FORZA ITALIA - NOI MODERATI - PPE",
+							"FRATELLI D'ITALIA",
+							"STATI UNITI D'EUROPA",
+							"AZIONE - SIAMO EUROPEI",
+							"ALLEANZA VERDI E SINISTRA",
+							"PACE TERRA DIGNITA'",
+							"LIBERTA'",
+							"ALTERNATIVA POPOLARE",
+							"SÜDTIROLER VOLKSPARTEI (SVP)"],
+						value100: "Total",
+						size: "Total"
+					})
+                    .type("CHART|USER|SIZE|3D|SHADOW|VALUES|COMPOSECOLOR|SUBTRACTIVE|SIMPLELEGEND")
+					.style({
+                        userdraw:"pinnacleChart",
+						colorscheme: [
+							"RGB(203,28,36)",
+							"#04c467",
+							"RGB(238,217,36)",
+							"RGB(5,177,240)",
+							"#0B3B6A",
+							"RGB(237,28,36)",
+							"#FFA619",
+							"red",
+							"red",
+							"RGB(136,68,0)",
+							"RGB(136,68,0)",
+							"RGB(68,68,68)"],
+						label: [
+							"PARTITO DEMOCRATICO",
+							"LEGA SALVINI PREMIER",
+							"MOVIMENTO 5 STELLE",
+							"FORZA ITALIA - PPE",
+							"FRATELLI D'ITALIA",
+							"STATI UNITI D'EUROPA",
+							"AZIONE - SIAMO EUROPEI",
+							"ALLEANZA VERDI E SINISTRA",
+							"PACE TERRA DIGNITA'",
+							"LIBERTA'",
+							"ALTERNATIVA POPOLARE",
+							"SVP"],
+						fillopacity: "auto",
+                        sizepow: 1.3,
+                        shadow: "false",
+						units: "%",
+                        normalsizevalue: "500000",
+                        scale: "2",
+						valuesupper: "1:1000000",
+						valuedecimals: "1",
+                        minvaluesize: "14",
+						maxcharts: "1000",
+						aggregationfield: "CODICE ISTAT",
+						titlefield: "DESCRIZIONE COMUNE"
+					})
+					.meta({
+						title: "Europee 2024<h3>Partito vincente</h3><hr>",
+						description: "*) il colore indica il partito il risultato più alto,<br>l'intensità del colore è proporzionale alla densità del totale dei voti.<p>fonte: <a href='https://github.com/ondata/elezioni_europee_2024' target='_blank'>onData</a></p>",
+						tooltip: "<h2 style='margin:0'>{{DESCRIZIONE COMUNE}}</h2><hr><br>{{theme.item.chart}}"
+					})
+					.define()
+            
+			// defining common map options for both maps
+			//
+			var options = {
+				autoSwitchInfo: true,
+				panHidden: false,
+				syncMap: false,
+				mode: "info",
+				basemapopacity: "0.3",
+				normalSizeScale: "100000",
+				flushChartDraw: "50000",
+				flushPaintShape: "50000"
+			};
+			
+			// --------------------------------------------------------------------------
+			// creating two maps
+			// 1. uppper part of Italy
+			// 2. lower part of Italy
+			// the same thematic map with different views
+			// --------------------------------------------------------------------------
+
+			// 1. uppper part of Italy
+			//
+			ixmaps.Map("map_div_1", {
+					mapService: "ll",
+					mapType: "Stamen - toner-lite",
+					width: "100%",
+					height: "2000px",
+					legend: true,
+					silent: true,
+					footer: true,
+					//align: "right",
+					scrollsafe: true,
+					search: false,
+					mode: "info",
+					name: "map1"
+				},
+				map => {
+					map
+						.options(options)
+						.setView([41.43181858864192, 12.321655273437502], 7.3)
+						.layer(geo)
+						.layer(theme)
+						.layer(theme_peaks)
+				}
+			);
+
+
+		});
+
+	</script>
+</body>
+
+</html>
