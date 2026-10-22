@@ -20,7 +20,7 @@
      "count": 69597,
      "constants": {
       "getRadius": 3,
-      "opacity": 0.85,
+      "opacity": 0.699394,
       "pickable": true,
       "radiusUnits": "pixels",
       "stroked": false
@@ -370,7 +370,7 @@
      "count": 69597,
      "constants": {
       "getRadius": 3,
-      "opacity": 0.85,
+      "opacity": 0.699394,
       "pickable": true,
       "radiusUnits": "pixels",
       "stroked": false
@@ -720,7 +720,7 @@
      "count": 69597,
      "constants": {
       "getRadius": 3,
-      "opacity": 0.85,
+      "opacity": 0.699394,
       "pickable": true,
       "radiusUnits": "pixels",
       "stroked": false

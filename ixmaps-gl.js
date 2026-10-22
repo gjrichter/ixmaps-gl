@@ -614,6 +614,19 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
         [...document.styleSheets].some(s => s.href === LIB_URLS.maplibreCss) ? Promise.resolve() : loadStylesheet(LIB_URLS.maplibreCss)
       ]).then(() => {
         ({ IconLayer, ScatterplotLayer, GeoJsonLayer, MapLibreOverlay, TextLayer, PathLayer, PathStyleExtension, HeatmapLayer } = global.deck);
+        // deck.gl 9 gamma-encodes the layer-level `opacity` prop in its `layer` shader module
+        // (Math.pow(opacity, 1/2.2); deck 8 and flat's SVG fill-opacity are linear), so a declared
+        // fillopacity 0.2 would draw as 0.48. Hand deck opacity ** 2.2: it draws exactly the declared alpha.
+        // Alpha inside a color array (getFillColor [r,g,b,a]) is linear and stays as it is.
+        const linearOpacity = Cls => new Proxy(Cls, {
+          construct(target, args, newTarget) {
+            const fixed = args.map(p => (p && typeof p === 'object' && typeof p.opacity === 'number' && p.opacity >= 0 && p.opacity < 1)
+              ? Object.assign({}, p, { opacity: Math.pow(p.opacity, 2.2) }) : p);
+            return Reflect.construct(target, fixed, newTarget);
+          }
+        });
+        [IconLayer, ScatterplotLayer, GeoJsonLayer, TextLayer, PathLayer, HeatmapLayer] =
+          [IconLayer, ScatterplotLayer, GeoJsonLayer, TextLayer, PathLayer, HeatmapLayer].map(linearOpacity);
         PieSliceLayer = makePieSliceLayer(ScatterplotLayer);
         BarShapeLayer = makeBarShapeLayer(ScatterplotLayer);
         FlowPathLayer = makeFlowPathLayer(PathLayer);
