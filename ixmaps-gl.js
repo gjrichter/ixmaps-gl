@@ -1874,12 +1874,31 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     })(g && g.coordinates);
     return minX <= maxX ? [(minX + maxX) / 2, (minY + maxY) / 2] : null;
   }
+  // flat finds a geometry id field whatever its letter case (the comuni topojson has "pro_com_t", the page
+  // binds id "pro_com_T"): the property name of a FEATURE runtime's shapes that matches the binding, else
+  // the binding as written. Cached per runtime and name
+  function geometryIdField(rt, name) {
+    if (!name || !rt) return name;
+    const cache = rt._idFieldCache || (rt._idFieldCache = {});
+    if (cache[name] !== undefined) return cache[name];
+    const feats = rt.features || [];
+    let found = name;
+    const has = f => f.properties && Object.prototype.hasOwnProperty.call(f.properties, name);
+    if (!feats.slice(0, 50).some(has)) {
+      const low = String(name).toLowerCase();
+      for (const f of feats.slice(0, 50)) {
+        const k = f.properties && Object.keys(f.properties).find(key => key.toLowerCase() === low);
+        if (k) { found = k; break; }
+      }
+    }
+    return (cache[name] = found);
+  }
   // id → position of one FEATURE runtime's shapes (flat's getNodePosition,
   // maptheme.js 24702-24784): its shape (flatShapeWins) at flat's shape
   // center (flatShapeCenter)
   function featurePositionIndex(rt) {
     if (rt._positionIndex && rt._positionIndexOf === rt.features) return rt._positionIndex;
-    const idField = rt.binding && rt.binding.id;
+    const idField = geometryIdField(rt, rt.binding && rt.binding.id);
     const best = new Map();
     if (idField) {
       for (const f of rt.features) {
@@ -2463,7 +2482,7 @@ self.onmessage = e => {
     // the donor's own style (outline) — the layer registry is keyed by name,
     // so the same-named CHOROPLETH replaces the donor there and can't find it
     Object.defineProperty(spec, '_donorStyle', { value: geomRt.style, configurable: true });
-    const idField = geomRt.binding.id;
+    const idField = geometryIdField(geomRt, geomRt.binding.id);
     const lookupField = spec.binding.lookup;
     if (!idField || !lookupField) {
       throw new Error(`[ixmaps-gl] CHOROPLETH layer "${spec.name}" needs .binding({lookup}), and its FEATURE base needs .binding({id})`);
@@ -3187,6 +3206,13 @@ self.onmessage = e => {
       if (this._filterExpr != null) style.filter = this._filterExpr;
       if (this._titleField != null) style.title = this._titleField;
       if (this._lookupfield != null) style.lookupfield = this._lookupfield;
+      // flat's .data() (htmlgui_flat.js ~1827): a geojson/topojson layer with no type of its own is
+      // a FEATURES base layer ("FEATURES|NOLEGEND", lookup on its geometry) — the base a CHOROPLETH
+      // of the same name needs. Only when neither .type() nor style.type says otherwise
+      if (!style.type && this._data && /geojson|topojson/i.test(String(this._data.type || ''))) {
+        style.type = 'FEATURES|NOLEGEND';
+        if (style.lookupfield == null) style.lookupfield = 'geometry';
+      }
       let data = this._data;
       if (this._query != null || this._process != null) {
         data = Object.assign({}, this._data);
