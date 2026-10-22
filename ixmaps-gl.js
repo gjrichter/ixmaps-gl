@@ -11967,7 +11967,19 @@ self.onmessage = e => {
     // flat's nValueSum is the RAW weighted sum, whatever the flags.
     // (RELATIVE/INVERT subtract after the multiply — not reconstructable
     // from the parts; flat's own composed branch never pairs them.)
-    _composedDopacityAlpha(props) {
+    // With binding.alpha the opacity follows the alpha field instead of the value sum — flat's
+    // `if (this.szAlphaField)` branch of the same DOPACITY block (maptheme.js 13476-13482):
+    // dopacityscale / nAlphaMax^(1/pow) · nAlpha^(1/pow), nAlpha as _prepareAlphaField made it
+    // (alpha100 "$density$": alpha / the shape's area, the FEATURE base's size field when it binds one);
+    // a shape with no alpha is 0. Not capped at 0.9 and not times fillopacity, as flat
+    _composedDopacityAlpha(props, feature) {
+      if (this.binding && this.binding.alpha) {
+        const nAlpha = this._alphaByFeature && feature ? this._alphaByFeature.get(feature) : undefined;
+        if (nAlpha == null) return 0;
+        const pow = 1 / (styleNum(this.style.dopacitypow) || 1);
+        const o = (styleNum(this.style.dopacityscale) || 1) / Math.pow(this._alphaMax || 1, pow) * Math.pow(nAlpha, pow);
+        return isFinite(o) ? Math.max(0, Math.min(1, o)) : 0;
+      }
       const fields = this._multiFields || [];
       const f100A = this.binding && this.binding.field100 ? String(this.binding.field100).split('|') : null;
       const multiplier = this.flags.has('FRACTION') ? (styleNum(this.style.fractionscale) || 1)
@@ -13505,7 +13517,7 @@ self.onmessage = e => {
                 // sum over (field100/100), against the same nMax the color
                 // blend normalizes by. The raw weighted sum is reconstructed
                 // from the fractioned part values (raw = part × its field100)
-                dopacityAlpha: dopacityActive ? this._composedDopacityAlpha(f.properties) : null
+                dopacityAlpha: dopacityActive ? this._composedDopacityAlpha(f.properties, f) : null
               }
             };
           }
