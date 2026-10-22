@@ -213,8 +213,9 @@
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    overflow: hidden;          /* clips width during collapse transition */
-    transition: width 0.3s;
+    overflow: hidden;          /* clips the content when collapsed */
+    /* no width transition: sliding resizes the map container on every frame (MapLibre's ResizeObserver,
+       the engine's theme refresh) — the toggle is one step, one resize */
   }
   #panel.collapsed { width: 0; min-width: 0; border-right: none; }
 
@@ -561,6 +562,7 @@
     font-size: 10px;
     font-weight: 700;
   }
+  .ai-confirm-timer { margin-left: auto; align-self: center; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
   #ai-confirm-actions {
     display: flex;
     gap: 8px;
@@ -799,8 +801,30 @@
     padding: 10px 12px;
     display: flex; flex-direction: column; gap: 8px;
   }
-  .chat-msg { font-size: 12.5px; line-height: 1.4; padding: 8px 10px; border-radius: 10px; max-width: 88%; }
+  .chat-msg { font-size: var(--chat-fs, 13.5px); line-height: 1.55; padding: 10px 13px; border-radius: 12px; max-width: 92%; overflow-wrap: anywhere; }
+  /* an AI answer is rich text (formatAnswer): paragraphs, real lists, bold / italic / code */
+  .chat-msg p { margin: 0 0 0.65em; }
+  .chat-msg ul, .chat-msg ol { margin: 0.25em 0 0.65em; padding-left: 1.25em; }
+  .chat-msg li { margin: 0.28em 0; padding-left: 0.1em; }
+  .chat-msg > :last-child { margin-bottom: 0; }
+  .chat-msg strong { font-weight: 650; }
+  .chat-msg code { font-family: var(--mono); font-size: 0.92em; background: var(--bg); border: 1px solid var(--border); padding: 0 5px; border-radius: 4px; }
   .chat-msg-user { align-self: flex-end; background: var(--accent); color: #000; }
+  /* light mode: black on the teal accent is hard to read — every accent-filled element gets white on a
+     darker teal (contrast ≈ 5.4): primary buttons (Sì, Applica), the viz-type badge, the chat's questions and send button */
+  :root[data-theme="light"] .btn-primary,
+  :root[data-theme="light"] .viz-type,
+  :root[data-theme="light"] .chat-msg-user,
+  :root[data-theme="light"] .chat-panel-input-row button { background: #0e7490; border-color: #0e7490; color: #fff; }
+  :root[data-theme="light"] .btn-primary:hover { background: #155e75; border-color: #155e75; }
+  /* text size of the chat (A− / A+ in the header, remembered by ixmaps-loader-chat.js) */
+  .chat-font-btns { display: flex; gap: 2px; margin-left: auto; margin-right: 6px; }
+  .chat-font-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer;
+    border-radius: 5px; padding: 1px 7px; font-size: 12px; font-weight: 600; line-height: 1.4;
+  }
+  .chat-font-btn:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+  .chat-font-btn:disabled { opacity: 0.35; cursor: default; }
   .chat-msg-assistant { align-self: flex-start; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }
   /* query results / local statistics tables inside an assistant bubble */
   .chat-msg-table { max-width: 100%; padding: 6px 8px; }
@@ -970,23 +994,13 @@
   #table-btn.active { color: var(--accent); border-color: var(--accent); }
   #facets-btn.active { color: var(--accent); border-color: var(--accent); }
 
-  #ai-dropdown {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    width: 220px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px;
-    z-index: 500;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    display: none;
-    flex-direction: column;
-    gap: 8px;
-  }
-  #ai-dropdown.open { display: flex; }
+  /* AI settings, inside the chat panel (a section built by ixmaps-loader-chat.js around #ai-config-box, shown by the ⚙ button in the chat title) */
+  .chat-ai-config { border-bottom: 1px solid var(--border); padding: 10px 12px 0; flex: 0 0 auto; }
+  .chat-font-btn.active { color: var(--accent); border-color: var(--accent); }
+  /* the provider hint on top of the greeting (live: provider / model / key) */
+  .chat-ai-hint { margin-bottom: 0.7em; padding-bottom: 0.6em; border-bottom: 1px dashed var(--border); }
+  #ai-config-box { display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; }
+  #ai-key-row { flex-direction: column; gap: 8px; }
 
   /* ── basemap dropdown — same popup convention as #ai-dropdown ── */
   #basemap-btn { gap: 4px; font-size: 12px; }
@@ -1045,7 +1059,7 @@
   #ai-provider option { background: var(--surface); }
   #ai-provider:focus { border-color: var(--accent); }
 
-  #ai-key-input {
+  #ai-model-input, #ai-key-input {
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
@@ -1056,7 +1070,7 @@
     color: var(--text);
     outline: none;
   }
-  #ai-key-input:focus { border-color: var(--accent); }
+  #ai-model-input:focus, #ai-key-input:focus { border-color: var(--accent); }
   #ai-key-hint { font-size: 10px; color: var(--muted); line-height: 1.4; }
   /* ── Table overlay ── */
   #table-overlay {
@@ -1331,11 +1345,8 @@
   <div id="header">
     <div class="logo">iXmaps <span>· smart loader</span></div>
     <div id="url-row">
-      <input id="url-input" type="text" placeholder="https://…  CSV · JSON · GeoJSON · TopoJSON · KML · GML · Parquet · FlatGeobuf · JSONL"
+      <input id="url-input" type="text" placeholder="https://…  CSV · JSON · GeoJSON · TopoJSON · KML · GML · Parquet · FlatGeobuf · JSONL — Invio per caricare"
         value="">
-      <button class="btn btn-primary" id="load-btn" onclick="loadData()">
-        ⬇ Carica
-      </button>
       <button class="btn btn-ghost" id="local-file-btn" onclick="openLocalFilePicker()" title="Apri un file locale (o trascinalo sulla pagina): CSV, JSON, GeoJSON, TopoJSON, KML, JSON-stat, (Geo)Parquet, GeoPackage, FlatGeobuf, Geobuf — anche .gz">
         📂 File
       </button>
@@ -1349,9 +1360,6 @@
       </button>
       <button class="btn btn-ghost" id="facets-btn" onclick="toggleFacets()" title="Facets" style="display:none">
         ◫ Facets
-      </button>
-      <button class="btn btn-ghost" id="chat-btn" onclick="openLoaderChat()" title="Chat AI sulla mappa" style="display:none">
-        💬 Chat
       </button>
       <button class="btn btn-ghost" id="code-menu-btn" onclick="toggleCodeEditor()" title="Codice della mappa: tema (JSON, modificabile) e pagina (HTML, da salvare)" style="display:none">
         &lt;/&gt; Codice
@@ -1373,34 +1381,37 @@
       <button class="btn btn-ghost" id="theme-toggle-btn" onclick="toggleTheme()" title="Tema chiaro/scuro">
         🌙
       </button>
-      <!-- AI config dropdown trigger -->
-      <div id="ai-config-wrap" style="position:relative">
-        <button class="btn btn-ghost" id="ai-config-btn" onclick="toggleAiDropdown()" title="Configura AI provider">
-          ✦ AI
-        </button>
-        <div id="ai-dropdown">
-          <div class="ai-dd-label">AI Provider</div>
-          <select id="ai-provider" onchange="onProviderChange()">
-            <option value="none">— nessuno (solo euristica) —</option>
-            <option value="mistral">Mistral</option>
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic (Claude)</option>
-          </select>
-          <div id="ai-key-row" style="display:none">
-            <div class="ai-dd-label" id="ai-key-label">API Key</div>
-            <input id="ai-key-input" type="password" placeholder="sk-…" autocomplete="off">
-            <div class="ai-dd-hint" id="ai-key-hint"></div>
-          </div>
-        </div>
-      </div>
+      <!-- the one AI button: opens the chat; provider, model and key are in the chat panel (ai-config-box) -->
+      <button class="btn btn-ghost" id="ai-config-btn" onclick="openLoaderChat()" title="AI: chat, comandi e configurazione (provider, modello, chiave)">
+        ✦ AI
+      </button>
+    </div>
+  </div>
+
+  <!-- AI settings: the chat panel (ixmaps-loader-chat.js) moves this box into itself when it is built; until then it
+       stays hidden but in the DOM, so the saved provider / key / model are readable from the start -->
+  <div id="ai-config-box" style="display:none">
+    <div class="ai-dd-label">Provider</div>
+    <select id="ai-provider" onchange="onProviderChange()">
+      <option value="none">— nessuno (solo euristica) —</option>
+      <option value="mistral">Mistral</option>
+      <option value="openai">OpenAI</option>
+      <option value="anthropic">Anthropic (Claude)</option>
+    </select>
+    <div id="ai-key-row" style="display:none">
+      <div class="ai-dd-label">Modello</div>
+      <input id="ai-model-input" type="text" placeholder="" autocomplete="off" spellcheck="false" title="vuoto: il modello predefinito del provider">
+      <div class="ai-dd-label" id="ai-key-label">API Key</div>
+      <input id="ai-key-input" type="password" placeholder="sk-…" autocomplete="off">
+      <div class="ai-dd-hint" id="ai-key-hint"></div>
     </div>
   </div>
 
   <!-- BODY -->
   <div id="body">
 
-    <!-- SIDE PANEL -->
-    <div id="panel">
+    <!-- SIDE PANEL — collapsed on the start screen (no data yet), opened by the first load; ☰ toggles it -->
+    <div id="panel" class="collapsed">
       <div id="panel-inner">
 
         <!-- Status -->
@@ -1427,6 +1438,7 @@
           <div id="ai-confirm-actions">
             <button class="btn btn-primary" id="ai-confirm-yes">Sì</button>
             <button class="btn btn-ghost" id="ai-confirm-no">No</button>
+            <span id="ai-confirm-timer" class="ai-confirm-timer"></span>
           </div>
         </div>
 
@@ -1641,8 +1653,32 @@
             <div class="field-group">
               <div class="field-label">Basemap (mapType)</div>
               <select id="mapcfg-maptype" class="field-select">
-                <option value="VT_TONER_LITE">Chiaro — VT_TONER_LITE</option>
-                <option value="VT_DATAVIZ_DARK">Scuro — VT_DATAVIZ_DARK</option>
+                <!-- every basemap ixmaps-gl knows: two CARTO vector styles (any name with dark/black/night/matter
+                     is the dark one), flat's four ArcGIS raster names, and plain background colors (no tiles) -->
+                <optgroup label="Vettoriali (CARTO)">
+                  <option value="VT_TONER_LITE">Chiaro — VT_TONER_LITE (Positron)</option>
+                  <option value="VT_DATAVIZ_DARK">Scuro — VT_DATAVIZ_DARK (Dark Matter)</option>
+                  <option value="CARTO - Voyager">CARTO - Voyager</option>
+                  <option value="CARTO - Voyager (no labels)">CARTO - Voyager (senza etichette)</option>
+                  <option value="CARTO - Positron (no labels)">CARTO - Positron (senza etichette)</option>
+                  <option value="CARTO - Dark Matter (no labels)">CARTO - Dark Matter (senza etichette)</option>
+                </optgroup>
+                <optgroup label="Vettoriali (OpenFreeMap)">
+                  <option value="OpenFreeMap - Liberty">OpenFreeMap - Liberty</option>
+                  <option value="OpenFreeMap - Bright">OpenFreeMap - Bright</option>
+                  <option value="OpenFreeMap - Positron">OpenFreeMap - Positron</option>
+                </optgroup>
+                <optgroup label="Raster (ArcGIS)">
+                  <option value="ArcGIS - Topo">ArcGIS - Topo</option>
+                  <option value="ArcGIS - Light Gray Base">ArcGIS - Light Gray Base</option>
+                  <option value="ArcGIS - Ocean Basemap">ArcGIS - Ocean Basemap</option>
+                  <option value="ArcGIS - Hillshade">ArcGIS - Hillshade</option>
+                </optgroup>
+                <optgroup label="Solo colore di sfondo (senza tile)">
+                  <option value="white">Bianco — white</option>
+                  <option value="dark">Grigio scuro — dark (#1a1a1a)</option>
+                  <option value="black">Nero — black</option>
+                </optgroup>
               </select>
             </div>
             <div class="field-group">
@@ -1698,7 +1734,7 @@
 
       <div id="empty-state">
         <div class="icon">⬆</div>
-        <p>Incolla un URL nella barra in alto e premi <strong style="color:var(--accent)">Carica</strong></p>
+        <p>Incolla un URL nella barra in alto e premi <strong style="color:var(--accent)">Invio</strong></p>
         <small>CSV · JSON · GeoJSON · TopoJSON · KML · Parquet · FlatGeobuf…</small>
         <p><a onclick="toggleSamplesModal(true)">oppure scegli un dataset di esempio…</a></p>
       </div>
@@ -1938,7 +1974,7 @@ function toggleSamplesModal(show) {
 
 function loadSampleUrl(url) {
   document.getElementById('url-input').value = url;
-  document.getElementById('url-input').dispatchEvent(new Event('input')); // re-enable Carica, glow, etc.
+  document.getElementById('url-input').dispatchEvent(new Event('input')); // glow, etc.
   toggleSamplesModal(false);
   loadData();
 }
@@ -1994,6 +2030,8 @@ function loadData() {
 // a loaded Data.Table — from a URL (loadData) or a local file (loadLocalFile): reset the
 // previous dataset's state, then analyse the new one
 function onTableLoaded(table, type) {
+        // the start screen has no side panel: the first dataset opens it (later loads leave it as the user set it)
+        if (!STATE.panelOpenedOnce) { STATE.panelOpenedOnce = true; document.getElementById('panel').classList.remove('collapsed'); }
         STATE.dataTable = table;
         STATE.rawData   = table.json();
         // the map itself is created once at page load (see initMapEarly()) and persists across
@@ -2295,7 +2333,6 @@ function analyzeSchema(rows, type) {
   show('stats-row');
   show('table-btn');
   show('facets-btn');
-  show('chat-btn');
   show('code-menu-btn');
 
   // no position at all (no lat/lon pair, no geometry column, no geometry in the records): there is
@@ -2314,9 +2351,6 @@ function analyzeSchema(rows, type) {
     return;
   }
   if (STATE.noPosition) { STATE.noPosition = false; document.getElementById('panel-inner').classList.remove('no-position'); closeTableOverlay(); }
-  // data for this URL is already loaded — re-enabled once the user edits the URL (see the
-  // url-input 'input' listener below), so loading a different dataset still works
-  document.getElementById('load-btn').disabled = true;
 
   // CONFIGURAZIONE stays hidden until the AI-or-not decision is made (see suggestVisualization)
   suggestVisualization(fields, type);
@@ -2454,63 +2488,50 @@ var NONCATEGORICAL_NAMES = /(note|flag|comment|remark|method|quality|source)/i;
 
 function findCategoricalField(strFields) {
   var best = null, bestScore = Infinity;
+  var rows = STATE.rawData || [];
+  var totalRows = rows.length || 1;
 
   // candidate pool: string fields (excluding annotation/provenance columns) + integer-like num fields
   var candidates = strFields.filter(function(f) { return !NONCATEGORICAL_NAMES.test(f.name); });
   (STATE.fields || []).forEach(function(f) {
-    if (f.type === 'num') {
-      // collect unique raw values (use Data.Table if available, else sample)
-      var uvals = [];
-      try {
-        uvals = STATE.dataTable.column(f.name).uniqueValues();
-      } catch(e) {
-        var seen = {};
-        (STATE.rawData || []).slice(0, 500).forEach(function(r) {
-          var v = r[f.name];
-          if (v !== '' && v != null && !seen[v]) { seen[v] = true; uvals.push(v); }
-        });
-      }
-      // normalize: replace comma decimal separator before parsing
-      var allInt = uvals.length > 0 && uvals.every(function(v) {
-        var n = parseFloat(String(v).replace(',', '.'));
-        return isFinite(n) && Math.floor(n) === n;
-      });
-      if (allInt) candidates.push(f);
+    if (f.type !== 'num') return;
+    // integer-like: every distinct raw value is an integer (comma decimal separator normalized). One pass
+    // over the rows, stopping at the first non-integer — Data.Table's uniqueValues() builds and sorts the
+    // whole distinct list per column, seconds on tens of thousands of rows
+    var seenNum = new Set(), allInt = true;
+    for (var i = 0; i < rows.length; i++) {
+      var v = rows[i][f.name];
+      if (v === '' || v == null || seenNum.has(v)) continue;
+      seenNum.add(v);
+      var n = parseFloat(String(v).replace(',', '.'));
+      if (!(isFinite(n) && Math.floor(n) === n)) { allInt = false; break; }
     }
+    if (allInt && seenNum.size) candidates.push(f);
   });
 
   // require reasonable fill-rate — a mostly-blank optional field (e.g. a secondary/tertiary
   // fuel type filled in for <1% of rows) can look deceptively low-cardinality among just
   // its few non-empty values, and would otherwise beat a fully-populated field with a few more categories
-  var totalRows = (STATE.rawData || []).length || 1;
-
   candidates.forEach(function(f) {
-    var counts = {}, nonEmpty = 0;
-    (STATE.rawData || []).forEach(function(r) {
-      var v = r[f.name];
-      if (v === undefined || v === null || v === '') return;
+    var counts = new Map(), nonEmpty = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var v = rows[i][f.name];
+      if (v === undefined || v === null || v === '') continue;
       nonEmpty++;
-      counts[v] = (counts[v] || 0) + 1;
-    });
+      counts.set(v, (counts.get(v) || 0) + 1);
+    }
     if (nonEmpty / totalRows < 0.5) return;
 
     // skip near-degenerate splits (e.g. a "capoluogo" flag that's 1 for <2% of rows) —
     // one dominant value overwhelming the rest isn't a meaningful default color category
-    var maxCount = Object.keys(counts).reduce(function(m, k) { return Math.max(m, counts[k]); }, 0);
+    var maxCount = 0;
+    counts.forEach(function(c) { if (c > maxCount) maxCount = c; });
     if (maxCount / nonEmpty > 0.9) return;
 
-    try {
-      var uv = STATE.dataTable.column(f.name).uniqueValues();
-      var n  = uv.length;
-      if (n >= 2 && n <= 20 && n < bestScore) { best = f; bestScore = n; }
-    } catch(e) {
-      var seen = {}, count = 0;
-      (STATE.rawData || []).slice(0, 200).forEach(function(r) {
-        var v = String(r[f.name] || '');
-        if (!seen[v]) { seen[v] = true; count++; }
-      });
-      if (count >= 2 && count <= 20 && count < bestScore) { best = f; bestScore = count; }
-    }
+    // distinct values, as Data.Table's uniqueValues() counts them — an empty cell is one more value —
+    // taken from the pass above instead of a second full scan
+    var n = counts.size + (nonEmpty < rows.length ? 1 : 0);
+    if (n >= 2 && n <= 20 && n < bestScore) { best = f; bestScore = n; }
   });
   return best;
 }
@@ -3277,6 +3298,17 @@ function buildCategoryColorEditSwatches(vals) {
   });
 }
 
+// a theme the AI started (RICHIESTA AI → Sì) opens the map legend: the AI chose colors and classes, the legend is
+// where they are explained. Goes through the Mappa card's own path (applyMapConfig), so the card follows.
+function openLegendForAI() {
+  if (!STATE.mapConfig) return;
+  var cur = STATE.mapConfig.map.legend;
+  if (cur === 'true' || cur === true) return;
+  var next = cloneMapConfig(STATE.mapConfig);
+  next.map.legend = 'true';
+  applyMapConfig(next, 'ai');
+}
+
 function applySuggestion(s, source, autoDrawEuristica) {
   s = normalizeViz(s);
   // geometry-type override: AI cannot know iXmaps — force FEATURE for lines/polygons
@@ -3337,6 +3369,7 @@ function applySuggestion(s, source, autoDrawEuristica) {
   // ── auto-draw ── geographic data always gets its map (there is no "Crea mappa" button);
   // autoDrawEuristica is kept for callers but no longer holds a map back
   if (hasGeoData(s)) setTimeout(drawMap, 0);
+  if (source !== 'euristica') openLegendForAI();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -5652,26 +5685,11 @@ var AI_MODELS = {
   openai:    'gpt-4o-mini',
   anthropic: 'claude-haiku-4-5-20251001'
 };
-
-function toggleAiDropdown() {
-  var dd = document.getElementById('ai-dropdown');
-  var btn = document.getElementById('ai-config-btn');
-  var open = dd.classList.toggle('open');
-  btn.classList.toggle('active', open);
-  if (open) {
-    // close on outside click
-    setTimeout(function() {
-      document.addEventListener('click', closeAiDropdown);
-    }, 10);
-  }
-}
-function closeAiDropdown(e) {
-  var wrap = document.getElementById('ai-config-wrap');
-  if (!wrap.contains(e.target)) {
-    document.getElementById('ai-dropdown').classList.remove('open');
-    document.getElementById('ai-config-btn').classList.remove('active');
-    document.removeEventListener('click', closeAiDropdown);
-  }
+// the model of a provider: the one typed in the AI settings (saved per provider), else the default above
+function aiModel(provider) {
+  var typed = '';
+  try { typed = (localStorage.getItem('ai_model_' + provider) || '').trim(); } catch (e) {}
+  return typed || AI_MODELS[provider];
 }
 
 // ── basemap picker — VT_TONER_LITE/VT_TONER/VT_DATAVIZ_DARK are all MapTiler vector-tile
@@ -5758,11 +5776,14 @@ function onProviderChange() {
 
   localStorage.setItem('ai_provider', provider);
 
+  var modelInput = document.getElementById('ai-model-input');
   if (provider === 'none') {
     keyRow.style.display = 'none';
     document.getElementById('ai-config-btn').style.color = '';
   } else {
-    keyRow.style.display = '';
+    keyRow.style.display = 'flex';
+    modelInput.placeholder = AI_MODELS[provider] || '';
+    modelInput.value = localStorage.getItem('ai_model_' + provider) || '';
     label.textContent = provider.charAt(0).toUpperCase() + provider.slice(1) + ' API Key';
     hint.textContent  = AI_HINTS[provider] || '';
     // restore saved key for this provider
@@ -5778,6 +5799,13 @@ function onProviderChange() {
   document.getElementById('ai-provider').value = provider;
   onProviderChange();
 })();
+
+document.getElementById('ai-model-input').addEventListener('input', function() {
+  var provider = document.getElementById('ai-provider').value;
+  var v = this.value.trim();
+  if (v) localStorage.setItem('ai_model_' + provider, v);
+  else   localStorage.removeItem('ai_model_' + provider);
+});
 
 document.getElementById('ai-key-input').addEventListener('input', function() {
   var provider = document.getElementById('ai-provider').value;
@@ -5804,6 +5832,36 @@ function askAIConfirm(message, onYes, onNo) {
   processAIConfirmQueue();
 }
 
+// the request banner does not wait for ever: after AI_CONFIRM_TIMEOUT_S seconds it counts as "No" (nothing is sent
+// without a Sì), and it also closes when the AI chat is opened (ixmapsChatOpen → cancelAIConfirms)
+var AI_CONFIRM_TIMEOUT_S = 20;
+var AI_CONFIRM_CURRENT = null;   // { item, timer, tick } of the banner on screen
+
+function clearAIConfirmTimer() {
+  if (AI_CONFIRM_CURRENT) { clearTimeout(AI_CONFIRM_CURRENT.timer); clearInterval(AI_CONFIRM_CURRENT.tick); }
+  var t = document.getElementById('ai-confirm-timer');
+  if (t) t.textContent = '';
+}
+
+// what the No button does, for the banner on screen: close it, tell onNo, go on with the queue
+function declineAIConfirm(message) {
+  if (!AI_CONFIRM_ACTIVE || !AI_CONFIRM_CURRENT) return false;
+  var cur = AI_CONFIRM_CURRENT;
+  clearAIConfirmTimer();
+  AI_CONFIRM_CURRENT = null;
+  document.getElementById('ai-confirm-box').classList.remove('visible');
+  AI_CONFIRM_ACTIVE = false;
+  setTimeout(function() { showToast(message || 'Richiesta annullata', 'ok'); if (cur.item.onNo) cur.item.onNo(); }, 0);
+  processAIConfirmQueue();
+  return true;
+}
+
+// the chat is the place for AI now: decline the banner on screen and everything waiting behind it
+function cancelAIConfirms() {
+  AI_CONFIRM_QUEUE.splice(0).forEach(function(q) { if (q.onNo) q.onNo(); });
+  declineAIConfirm('Richiesta AI annullata');
+}
+
 function processAIConfirmQueue() {
   if (AI_CONFIRM_ACTIVE || !AI_CONFIRM_QUEUE.length) return;
   AI_CONFIRM_ACTIVE = true;
@@ -5817,32 +5875,34 @@ function processAIConfirmQueue() {
   noBtn.disabled  = false;
   box.classList.add('visible');
 
-  // the banner itself closes INSTANTLY on click — no lingering ack text, no delay. But closing
+  // timeout with a visible countdown
+  var left = AI_CONFIRM_TIMEOUT_S;
+  var timerEl = document.getElementById('ai-confirm-timer');
+  AI_CONFIRM_CURRENT = { item: item };
+  timerEl.textContent = 'scade tra ' + left + ' s';
+  AI_CONFIRM_CURRENT.tick = setInterval(function() { left--; if (left > 0) timerEl.textContent = 'scade tra ' + left + ' s'; }, 1000);
+  AI_CONFIRM_CURRENT.timer = setTimeout(function() { declineAIConfirm('Richiesta AI scaduta'); }, AI_CONFIRM_TIMEOUT_S * 1000);
+
+  // (No / timeout / chat opened: declineAIConfirm.) The banner closes INSTANTLY on click — no lingering ack text, no delay. But closing
   // it and then immediately running heavy synchronous work (heuristicSuggestion()'s field scans,
   // askAI()'s prompt-building) in the SAME tick means the browser never gets a paint in between —
   // the DOM mutation is queued but the thread stays busy, so the "instant" close isn't actually
   // visible until the heavy work finishes anyway. Deferring the callback with setTimeout(fn, 0)
   // forces a macrotask boundary, giving the browser a chance to paint the closed banner first.
-  function closeNow() {
-    box.classList.remove('visible');
-    AI_CONFIRM_ACTIVE = false;
-    processAIConfirmQueue();
-  }
   yesBtn.onclick = function() {
     // transition confirm → "starting" status in the SAME synchronous tick — never actually
     // hide the banner in between. The old closeNow()+setTimeout(onYes) pattern closed the
     // banner THIS tick but didn't reopen it (via askAI()'s own showAIStatus() call) until the
     // NEXT tick — a real gap where nothing was shown at all. showAIStatus() here keeps the
     // banner's 'visible' class continuously set; askAI() then just updates its text/label.
+    clearAIConfirmTimer();
+    AI_CONFIRM_CURRENT = null;
     showAIStatus('Avvio analisi AI…', 'AI IN CORSO');
     AI_CONFIRM_ACTIVE = false;
     processAIConfirmQueue();
     setTimeout(item.onYes, 0);
   };
-  noBtn.onclick  = function() {
-    closeNow();
-    setTimeout(function() { showToast('Richiesta annullata', 'ok'); if (item.onNo) item.onNo(); }, 0);
-  };
+  noBtn.onclick  = function() { declineAIConfirm(); };
 }
 
 // Persistent status banner — reuses the confirm banner's slot (no buttons, just a message),
@@ -6092,7 +6152,7 @@ function askAI(fields, type) {
     url = 'https://api.mistral.ai/v1/chat/completions';
     headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
     body = {
-      model: AI_MODELS.mistral,
+      model: aiModel('mistral'),
       temperature: 0,
       max_tokens: aiMaxTokens,
       response_format: { type: 'json_schema', json_schema: { name: 'ixmaps_suggestion', schema: responseSchema, strict: true } },
@@ -6118,7 +6178,7 @@ function askAI(fields, type) {
     url = 'https://api.openai.com/v1/chat/completions';
     headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
     body = {
-      model: AI_MODELS.openai,
+      model: aiModel('openai'),
       temperature: 0,
       max_tokens: aiMaxTokens,
       response_format: { type: 'json_schema', json_schema: { name: 'ixmaps_suggestion', schema: responseSchemaOai, strict: true } },
@@ -6128,7 +6188,7 @@ function askAI(fields, type) {
     url = 'https://api.anthropic.com/v1/messages';
     headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey,
                 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
-    body = { model: AI_MODELS.anthropic, max_tokens: aiMaxTokens, temperature: 0,
+    body = { model: aiModel('anthropic'), max_tokens: aiMaxTokens, temperature: 0,
              system: systemMsg, messages: [{ role: 'user', content: prompt }] };
   }
 
@@ -6311,18 +6371,18 @@ function callAIText(prompt, systemMsg, maxTokens) {
   if (provider === 'mistral') {
     url = 'https://api.mistral.ai/v1/chat/completions';
     headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
-    body = { model: AI_MODELS.mistral, temperature: 0.7, max_tokens: maxTokens,
+    body = { model: aiModel('mistral'), temperature: 0.7, max_tokens: maxTokens,
              messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }] };
   } else if (provider === 'openai') {
     url = 'https://api.openai.com/v1/chat/completions';
     headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
-    body = { model: AI_MODELS.openai, temperature: 0.7, max_tokens: maxTokens,
+    body = { model: aiModel('openai'), temperature: 0.7, max_tokens: maxTokens,
              messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }] };
   } else if (provider === 'anthropic') {
     url = 'https://api.anthropic.com/v1/messages';
     headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey,
                 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
-    body = { model: AI_MODELS.anthropic, max_tokens: maxTokens, temperature: 0.7,
+    body = { model: aiModel('anthropic'), max_tokens: maxTokens, temperature: 0.7,
              system: systemMsg, messages: [{ role: 'user', content: prompt }] };
   } else {
     return Promise.resolve(null);
@@ -6820,7 +6880,7 @@ function toggleFacets() {
 var CHAT_JS_LOADED = false;
 // afterOpen (optional): run once the panel is open — and then always open, never toggle closed
 function openLoaderChat(afterOpen) {
-  if (!STATE.rawData) { showToast('Carica prima i dati', 'error'); return; }
+  // no data needed to open it: the AI settings (provider, model, key) live in the chat panel; commands wait for data
   if (CHAT_JS_LOADED) {
     // the 💬 Chat button toggles the docked panel
     if (afterOpen) { window.ixmapsChatOpen(); afterOpen(); return; }
@@ -6996,14 +7056,12 @@ function renderHistogram(f) {
     '</svg>';
 }
 
-// url-input: remove accent glow once user has typed a value; editing the URL means the
-// currently-loaded data no longer matches it, so re-enable Carica (see analyzeSchema())
+// url-input: remove accent glow once user has typed a value
 document.getElementById('url-input').addEventListener('input', function() {
   this.classList.toggle('has-value', this.value.trim().length > 0);
-  document.getElementById('load-btn').disabled = false;
 });
 
-// Enter key on URL input
+// there is no load button: Enter on the URL input loads it
 document.getElementById('url-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') loadData();
 });
@@ -7126,16 +7184,6 @@ linkNumSlider('mlheat-radius', 'mlheat-radius-slider', 250);
   document.getElementById(id).addEventListener('input', function() { scheduleLiveRedraw(500); });
 });
 
-// Sample URLs helper — right click on load button
-document.getElementById('load-btn').addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-  var samples = [
-    'https://raw.githubusercontent.com/gjrichter/data/master/geo/italy/comuni/italy_comuni_centroidi.csv',
-    'https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json'
-  ];
-  var url = prompt('URL di esempio:\n\n' + samples.join('\n\n') + '\n\nIncolla o scegli:', samples[0]);
-  if (url) { document.getElementById('url-input').value = url; loadData(); }
-});
 </script>
 </body>
 </html>

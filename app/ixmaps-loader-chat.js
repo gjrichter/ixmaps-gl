@@ -51,6 +51,11 @@
     root.innerHTML =
       '<div class="chat-panel-header">' +
         '<span>💬 Chat</span>' +
+        '<span class="chat-font-btns">' +
+          '<button type="button" class="chat-font-btn" id="chat-config-btn" title="Configurazione AI: provider, modello, chiave" aria-label="Configurazione AI" aria-expanded="false">⚙</button>' +
+          '<button type="button" class="chat-font-btn" id="chat-font-down" title="Testo più piccolo" aria-label="Testo più piccolo">A−</button>' +
+          '<button type="button" class="chat-font-btn" id="chat-font-up" title="Testo più grande" aria-label="Testo più grande">A+</button>' +
+        '</span>' +
         '<button type="button" class="chat-panel-close" onclick="ixmapsChatClose()" title="Chiudi">✕</button>' +
       '</div>' +
       '<div class="chat-panel-messages" id="chat-panel-messages"></div>' +
@@ -61,6 +66,43 @@
     // docked as the last #body flex column, right of #map-wrap (see #chat-panel CSS)
     document.getElementById('body').appendChild(root);
 
+    // the AI settings (provider, model, key) live here: the loader keeps them in a hidden #ai-config-box
+    // (so the saved values are readable before the chat exists); the panel takes the box over, in a
+    // section the ⚙ button in the header shows/hides (open at the start while no provider is set)
+    var box = document.getElementById('ai-config-box');
+    if (box) {
+      var cfg = document.createElement('div');
+      cfg.className = 'chat-ai-config';
+      box.style.display = '';
+      cfg.appendChild(box);
+      root.insertBefore(cfg, document.getElementById('chat-panel-messages'));
+      var cfgBtn = document.getElementById('chat-config-btn');
+      var setConfigOpen = function (open) {
+        cfg.style.display = open ? '' : 'none';
+        cfgBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        cfgBtn.classList.toggle('active', open);
+      };
+      cfgBtn.addEventListener('click', function () { setConfigOpen(cfg.style.display === 'none'); });
+      setConfigOpen(document.getElementById('ai-provider').value === 'none'); // open while no provider is set
+    } else {
+      document.getElementById('chat-config-btn').style.display = 'none';
+    }
+
+    // text size: A− / A+ in the header, 11–20 px, remembered per browser
+    var FS_KEY = 'ixmaps-loader-chat-fontsize', FS_MIN = 11, FS_MAX = 20, FS_DEFAULT = 13.5;
+    var fs = FS_DEFAULT;
+    try { var saved = parseFloat(localStorage.getItem(FS_KEY)); if (saved >= FS_MIN && saved <= FS_MAX) fs = saved; } catch (e) {}
+    function applyFontSize(next) {
+      fs = Math.max(FS_MIN, Math.min(FS_MAX, next));
+      root.style.setProperty('--chat-fs', fs + 'px');
+      document.getElementById('chat-font-down').disabled = fs <= FS_MIN;
+      document.getElementById('chat-font-up').disabled = fs >= FS_MAX;
+      try { localStorage.setItem(FS_KEY, String(fs)); } catch (e) {}
+    }
+    document.getElementById('chat-font-down').addEventListener('click', function () { applyFontSize(fs - 1); });
+    document.getElementById('chat-font-up').addEventListener('click', function () { applyFontSize(fs + 1); });
+    applyFontSize(fs);
+
     document.getElementById('chat-panel-input').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); window.ixmapsChatSend(); }
       else if (e.key === 'ArrowUp')   { e.preventDefault(); recallHistory(this, -1); }
@@ -68,6 +110,7 @@
     });
 
     appendMessage('assistant',
+      '<div id="chat-ai-hint" class="chat-ai-hint"></div>' +
       'Ciao! Posso <strong>abbinare i colori</strong> ai valori attuali, cambiare la visualizzazione ' +
       '(es. <em>"colora per popolazione"</em>, <em>"cambia tipo in choropleth"</em>, <em>"dimensiona per superficie"</em>, ' +
       '<em>"tooltip nome"</em>), impostare l\'<strong>aggregazione spaziale</strong> (es. <em>"cambia tipo in hexbin"</em>, ' +
@@ -77,6 +120,28 @@
       '(con una chiave AI configurata), anche <strong>analizzare i dati</strong> (es. <em>"analizza i dati"</em>, <em>"quale paese ha più capacità solare?"</em>; ' +
       'il <strong>codice</strong> della mappa nell\'editor (anche dal menu <strong>&lt;/&gt; Codice</strong>): <em>"mostra codice"</em> (pagina HTML), <em>"modifica codice"</em> (tema JSON); senza AI: <em>"statistiche"</em>, <em>"statistiche di capacity"</em>, <em>"quanti Solar in primary_fuel"</em>). ' +
       '<span style="color:var(--muted)">Per le analisi l\'AI riceve statistiche aggregate e risultati di query sui dati (mai le righe complete). ↑/↓ richiama i comandi precedenti.</span>');
+    // the provider hint on top of the greeting follows the AI settings
+    function updateAiHint() {
+      var el = document.getElementById('chat-ai-hint');
+      if (!el) return;
+      var provider = document.getElementById('ai-provider').value;
+      if (provider === 'none') {
+        el.innerHTML = '<strong>AI non configurata.</strong> Per richieste libere e analisi scegli un provider (Mistral, OpenAI o Anthropic) ' +
+          'con <strong>⚙</strong> nel titolo e inserisci la chiave API; i comandi diretti qui sotto funzionano anche senza.';
+        return;
+      }
+      var name = { mistral: 'Mistral', openai: 'OpenAI', anthropic: 'Anthropic (Claude)' }[provider] || provider;
+      var hasKey = !!(document.getElementById('ai-key-input').value || '').trim();
+      var keyHelp = window.AI_HINTS && AI_HINTS[provider] ? ' (' + escHtml(AI_HINTS[provider]) + ')' : '';
+      el.innerHTML = hasKey
+        ? '<strong>AI attiva:</strong> ' + escHtml(name) + ' · modello <code>' + escHtml(typeof aiModel === 'function' ? aiModel(provider) : '') +
+          '</code> — cambia con <strong>⚙</strong>.'
+        : '<strong>' + escHtml(name) + '</strong> scelto, ma manca la <strong>chiave API</strong>: inseriscila con <strong>⚙</strong>' + keyHelp + '.';
+    }
+    updateAiHint();
+    document.getElementById('ai-provider').addEventListener('change', updateAiHint);
+    document.getElementById('ai-model-input').addEventListener('input', updateAiHint);
+    document.getElementById('ai-key-input').addEventListener('input', updateAiHint);
   }
 
   function appendMessage(role, html) {
@@ -107,10 +172,10 @@
     'choropleth': 'choropleth', 'coropletica': 'choropleth', 'aree colorate': 'choropleth',
     'punti': 'dot', 'punti semplici': 'dot',
     'heatmap': 'heatmap', 'calore': 'heatmap', 'densità': 'heatmap',
-    // 'hexbin'/'waffle' are disabled in #viz-type (not supported by the GL engine) — the hexagon
-    // words go to the supported, aggregating 'hexbin_sized' instead
-    'esagoni': 'hexbin_sized', 'hexbin': 'hexbin_sized',
-    'categorie': 'categorical', 'categorico': 'categorical', 'categorical': 'categorical',
+    // the shapes of #viz-type: dot, bubble, hexbin, hexbin_sized, heatmap, mlheatmap, kde, choropleth, feature…
+    // (a categorical dot map is 'dot' with a text value field — there is no separate 'categorical' shape)
+    'esagoni': 'hexbin', 'hexbin': 'hexbin', 'esagoni dimensionati': 'hexbin_sized',
+    'categorie': 'dot', 'categorico': 'dot', 'categorical': 'dot',
     'feature': 'feature', 'poligoni': 'feature', 'linee': 'feature'
   };
   // viz keys the #viz-type <select> actually offers (disabled options excluded)
@@ -168,31 +233,23 @@
     return true;
   }
 
-  // 'bubble' uses a single field for both color and size (see onVizChange()'s size-row, only
-  // shown for 'bivariate'); a bare "size by X" from 'bubble' switches to 'bivariate' instead of
-  // overwriting the color field, so the current color choice survives
+  // the field axes are independent of the shape (onVizChange keeps the fields when the shape changes): "size by X"
+  // sets the SIZE field. A shape without a size field (dots, hexbin, feature, choropleth, …) becomes sized bubbles
+  // first; the value (color) field stays as it is
+  var SIZED_VIZ = ['bubble', 'hexbin_sized', 'heatmap', 'kde', 'mlheatmap'];
   function sizeByCommand(fieldText) {
     var f = findFieldByFuzzyName(fieldText);
     if (!f) return false;
-    var viz = document.getElementById('viz-type').value;
-    var valueField = document.getElementById('value-field').value;
-
-    if (viz !== 'bivariate') {
-      if (viz === 'bubble' && valueField && valueField !== f.name) {
-        document.getElementById('viz-type').value = 'bivariate';
-      } else if (viz !== 'bubble') {
-        document.getElementById('viz-type').value =
-          (valueField && valueField !== '__NONE__' && valueField !== f.name) ? 'bivariate' : 'bubble';
-      }
+    var sizeSel = document.getElementById('size-field');
+    if (!Array.prototype.some.call(sizeSel.options, function (o) { return o.value === f.name; })) return false;
+    if (SIZED_VIZ.indexOf(document.getElementById('viz-type').value) === -1) {
+      document.getElementById('viz-type').value = 'bubble';
       if (typeof onVizChange === 'function') onVizChange();
-      viz = document.getElementById('viz-type').value;
     }
-
-    if (viz === 'bivariate') document.getElementById('size-field').value = f.name;
-    else document.getElementById('value-field').value = f.name; // plain bubble: one field drives both
-
+    sizeSel.value = f.name;
+    if (window.STATE) STATE.sizeTouched = true; // the size no longer follows the value field
     if (typeof drawMap === 'function') drawMap();
-    appendMessage('assistant', 'Fatto — dimensiono le bolle in base a <strong>' + escHtml(f.name) + '</strong>.');
+    appendMessage('assistant', 'Fatto — dimensiono per <strong>' + escHtml(f.name) + '</strong>.');
     return true;
   }
 
@@ -206,9 +263,9 @@
     if (!m) return false;
     var value = m[1] + (m[2] || 'px');
     var viz = document.getElementById('viz-type').value;
-    // the cell size only applies to these two (buildLayer's style.aggregation); 'hexbin' and
-    // 'waffle' are disabled in the GL loader, so the aggregating fallback is 'hexbin_sized'
-    var isAggregateViz = (viz === 'heatmap' || viz === 'hexbin_sized');
+    // the cell size / radius applies to these grid shapes (#grid-width); any other shape falls back to
+    // 'hexbin_sized'
+    var isAggregateViz = (viz === 'heatmap' || viz === 'hexbin' || viz === 'hexbin_sized');
     if (!isAggregateViz) {
       document.getElementById('viz-type').value = 'hexbin_sized';
       if (typeof onVizChange === 'function') onVizChange();
@@ -223,7 +280,7 @@
   // STATE.styleOverrides (or an existing slider), which buildLayer's applyLayerTweaks() reads on
   // every redraw; the allowed vocabularies (LAYER_MODIFIERS, STYLE_OVERRIDE_KEYS,
   // AGGREGATION_METHODS) live in the main file, next to applyLayerTweaks ──
-  var POINT_VIZ = ['bubble', 'bivariate', 'dot', 'categorical', 'heatmap', 'hexbin_sized'];
+  var POINT_VIZ = ['bubble', 'dot', 'hexbin', 'hexbin_sized', 'heatmap', 'mlheatmap', 'kde'];
   function requirePointLayer() {
     if (POINT_VIZ.indexOf(document.getElementById('viz-type').value) !== -1) return true;
     appendMessage('assistant', 'Modificatori e stili si applicano solo ai layer a punti (bolle, punti, categorie, heatmap, hexbin) — non a feature/choropleth.');
@@ -596,12 +653,38 @@
       (q.groupBy ? ' (top ' + Math.max(1, Math.min(20, parseInt(q.limit, 10) || 10)) + ')' : '');
   }
 
-  // escaped first, then a tiny markdown subset: **bold**, "- " list lines, line breaks
+  // escaped first, then a small markdown subset: paragraphs (blank line), "- " / "• " lists, "1." lists,
+  // "#" headings (bold line), **bold**, *italic*, `code`, a single line break inside a paragraph
   function formatAnswer(text) {
-    return escHtml(text || '')
-      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/^\s*[-•]\s+(.*)$/gm, '• $1')
-      .replace(/\n/g, '<br>');
+    function inline(s) {
+      return escHtml(s)
+        .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[^*\w])\*([^*\n]+)\*(?![*\w])/g, '$1<em>$2</em>')
+        .replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    }
+    var out = [], list = null, para = [];
+    function flushPara() { if (para.length) { out.push('<p>' + para.map(inline).join('<br>') + '</p>'); para = []; } }
+    function flushList() {
+      if (list) { out.push('<' + list.tag + '>' + list.items.map(function (it) { return '<li>' + inline(it) + '</li>'; }).join('') + '</' + list.tag + '>'); list = null; }
+    }
+    String(text || '').split('\n').forEach(function (line) {
+      var ul = line.match(/^\s*[-•]\s+(.*)$/), ol = line.match(/^\s*\d+[.)]\s+(.*)$/), h = line.match(/^\s*#{1,4}\s+(.*)$/);
+      if (ul || ol) {
+        flushPara();
+        var tag = ul ? 'ul' : 'ol';
+        if (list && list.tag !== tag) flushList();
+        list = list || { tag: tag, items: [] };
+        list.items.push((ul || ol)[1]);
+      } else if (h) {
+        flushPara(); flushList(); out.push('<p><strong>' + inline(h[1]) + '</strong></p>');
+      } else if (!line.trim()) {
+        flushPara(); flushList();
+      } else {
+        flushList(); para.push(line);
+      }
+    });
+    flushPara(); flushList();
+    return out.join('');
   }
 
   var MAX_QUERIES = 3;
@@ -610,9 +693,13 @@
   // the model sometimes wraps its JSON in prose — take the outermost {...}
   function parseActionJson(reply) {
     if (!reply) return null;
-    try { return JSON.parse(reply); } catch (e) {}
-    var a = reply.indexOf('{'), b = reply.lastIndexOf('}');
-    if (a !== -1 && b > a) { try { return JSON.parse(reply.slice(a, b + 1)); } catch (e) {} }
+    var tries = [reply], a = reply.indexOf('{'), b = reply.lastIndexOf('}');
+    if (a !== -1 && b > a) tries.push(reply.slice(a, b + 1));
+    for (var i = 0; i < tries.length; i++) {
+      try { return JSON.parse(tries[i]); } catch (e) {}
+      // models escape markdown (\*, \_, \#) inside the JSON string: those are no JSON escapes — drop the backslash
+      try { return JSON.parse(tries[i].replace(/\\([^"\\\/bfnrtu])/g, '$1')); } catch (e) {}
+    }
     return null;
   }
 
@@ -654,7 +741,7 @@
       'user message is a REQUEST TO CHANGE the map visualization, or something else (a question, ',
       'small talk, an unsupported request). Respond with ONLY a single JSON object, no extra text:',
       '{"action":"set_value_field","field":"<exact field name>"} — color/value the map by a field',
-      '{"action":"set_size_field","field":"<exact field name>"} — size bubbles by a field (bivariate)',
+      '{"action":"set_size_field","field":"<exact field name>"} — size the symbols by a field (the size field; a shape without one becomes sized bubbles)',
       '{"action":"set_title_field","field":"<exact field name>"} — set the tooltip field',
       '{"action":"set_viz_type","vizType":"<exact viz key>"} — change the visualization type',
       '{"action":"set_grid_width","value":"<e.g. \\"20px\\">"} — spatial aggregation cell size, for heatmap/hexbin_sized (switches to hexbin_sized first if the current vizType is not one of those)',
@@ -735,7 +822,7 @@
       if (typeof drawMap === 'function') drawMap();
       msgEl.innerHTML = 'Fatto — coloro per <strong>' + escHtml(field.name) + '</strong>.';
     } else if (action.action === 'set_size_field' && field) {
-      sizeByCommand(field.name); // reuse the bubble/bivariate switching logic above
+      sizeByCommand(field.name); // reuse the size-field logic above
       msgEl.parentNode.removeChild(msgEl); // sizeByCommand appends its own confirmation message
     } else if (action.action === 'set_title_field' && field) {
       document.getElementById('title-field').value = field.name;
@@ -841,6 +928,8 @@
   }
 
   window.ixmapsChatOpen = function () {
+    // opening the chat closes a pending "RICHIESTA AI" banner (declined): the chat is the place for AI requests
+    if (typeof cancelAIConfirms === 'function') cancelAIConfirms();
     buildPanel();
     document.getElementById('chat-panel').classList.add('active');
     document.getElementById('chat-panel-input').focus();
@@ -947,6 +1036,10 @@
     input.value = '';
     pushHistory(text);
     appendMessage('user', escHtml(text));
+    if (!window.STATE || !STATE.rawData) {
+      appendMessage('assistant', 'Carica prima i dati (URL o file): poi posso rispondere. Le impostazioni AI sono nella sezione <strong>⚙ Configurazione AI</strong> qui sopra.');
+      return;
+    }
     handleCommand(text);
   };
 })();
