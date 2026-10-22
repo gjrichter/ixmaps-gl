@@ -179,6 +179,14 @@
   "sha256": "583873402c3190a1991709809320a80de3df002aabf25373590a23e31fb2452b",
   "bytes": 6497
  },
+ "https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js": {
+  "sha256": "80aa70d0cd17dabddf6d056494ea17926a45a69da8b7850220aace331bad671d",
+  "bytes": 17204
+ },
+ "https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/dist/d3-contour.min.js": {
+  "sha256": "78e1d80350c0721a7c4e99f82c0f88aeddfa71301d0a96ebd403edbc2f718caa",
+  "bytes": 5729
+ },
  "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js": {
   "sha256": "fbae778a6211805c0d45698b903d25dc7c3b95e8f315ee9e54e62c2db818b61b",
   "bytes": 14568
