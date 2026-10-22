@@ -12998,7 +12998,10 @@ self.onmessage = e => {
         const labels = this.categoryDisplayLabels || this.categoryLabels || [];
         return tooltipTable(props.parts.map((v, i) => (v > 0 ? { rgb: this.categoryColorsRgb[i], label: labels[i] || '(n/d)', value: this._formatTooltipValue(v) + unitOf } : null)).filter(Boolean));
       }
-      if (this.flags.has('CHOROPLETH') && (this.flags.has('DOMINANT') || this.flags.has('COMPOSECOLOR')) && props.raw) {
+      // (a USER chart over several value fields — the pinnacle peaks of a COMPOSECOLOR theme — lists its fields
+      // the same way: its single item row would show the first class with the size total)
+      const multiFieldUser = this.flags.has('USER') && String(this.binding.value || '').includes('|');
+      if ((this.flags.has('CHOROPLETH') || multiFieldUser) && (this.flags.has('DOMINANT') || this.flags.has('COMPOSECOLOR')) && props.raw) {
         return this._renderMultiFieldBarsHtml(props.raw);
       }
       const unit = unitOf;
@@ -14534,8 +14537,9 @@ self.onmessage = e => {
           // drawn now (fresh), else a cached chart's: the previous drawing's copy
           const def = this._userChartGroup.querySelector('#' + CSS.escape(id)) || this._userChartGroup.ownerDocument.getElementById(id);
           if (def) paneDefs.appendChild(def.cloneNode(true));
+          else if (chart.defsById && chart.defsById[id]) paneDefs.insertAdjacentHTML('beforeend', chart.defsById[id]);
         }
-        items.push({ d, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit,
+        items.push({ d, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit, pick: chart.pick,
           r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2,
           // the chart's measured box (flat's getBox of the chart group) in px
           // around the map position: the pane draws a chart point at
@@ -14578,14 +14582,31 @@ self.onmessage = e => {
         positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
         ids: { circle: `ix-user-box-${this.name}`, icon: `ix-user-box-${this.name}`, polygons: `ix-user-box-polygons-${this.name}`, titles: `ix-user-titles-${this.name}` }
       }) : { box: [], titles: [] };
-      this._userChartLastLayers = [...boxLayers.box, new ScatterplotLayer({
+      // each chart answers to its own outline: the polygons sampled from its drawing (else its box), in px
+      // around the map position, here as lng/lat at this zoom (a px is 360/(512·2^z) degrees across,
+      // times cos(lat) up); a few px of transparent stroke keep a thin peak easy to hit
+      const degPerPx = 360 / (512 * Math.pow(2, liveZoom));
+      const pickFeatures = items.map(it => {
+        const [lng, lat] = it.coords;
+        const kx = it.s * degPerPx, ky = it.s * degPerPx * Math.cos(lat * Math.PI / 180);
+        const rings = it.pick && it.pick.length ? it.pick
+          : [[[it.ext[0] / it.s, it.ext[1] / it.s], [it.ext[2] / it.s, it.ext[1] / it.s], [it.ext[2] / it.s, it.ext[3] / it.s], [it.ext[0] / it.s, it.ext[3] / it.s]]];
+        const polys = rings.map(r => {
+          const ring = r.map(([x, y]) => [lng + x * kx, lat - y * ky]);
+          ring.push(ring[0]);
+          return [ring];
+        });
+        // icon + d: what pickedFeature unwraps to the item
+        return { type: 'Feature', geometry: { type: 'MultiPolygon', coordinates: polys }, properties: {}, icon: true, d: it.d };
+      });
+      this._userChartLastLayers = [...boxLayers.box, new GeoJsonLayer({
         id: `ix-bubbles-${this.name}`,
-        data: items.map(it => ({ d: it.d, icon: true, r: it.r })),
+        data: { type: 'FeatureCollection', features: pickFeatures },
         pickable: true,
-        getPosition: e => e.d.geometry.coordinates,
-        getRadius: e => Math.max(2, e.r),
-        radiusUnits: 'pixels', radiusMinPixels: 1,
-        stroked: false, filled: true, getFillColor: [0, 0, 0, 0],
+        filled: true, stroked: true,
+        // alpha 1/255: invisible, but never a fully transparent fragment a renderer might skip
+        getFillColor: [0, 0, 0, 1], getLineColor: [0, 0, 0, 1],
+        lineWidthUnits: 'pixels', getLineWidth: 4,
         parameters: ICON_LAYER_GLOBE_PARAMETERS
       }), ...boxLayers.titles];
       return this._userChartLastLayers;
@@ -14598,11 +14619,40 @@ self.onmessage = e => {
       const raw = d.properties.raw || d.properties;
       const titleField = this.style.titlefield || this.binding.title;
       const title = titleField && raw && raw[titleField] != null ? String(raw[titleField]) : undefined;
-      const base = `user|${name}|${cat}|${Math.round(value * 100) / 100}|${Math.round(size * 2) / 2}|${flag}|${title || ''}`;
+      // flat hands the chart the item's value fields: values = every field of binding.value (after the
+      // field100 arithmetic — the record already carries it) and value = the first of them
+      // (maptheme.js 19667, nValuesA[0]); a theme with one value field keeps the item's value
+      let values = [value];
+      const fieldNames = this.binding.value && !d.properties.counts ? String(this.binding.value).split('|') : [];
+      if (fieldNames.length > 1) {
+        const parts = fieldNames.map(f => scanValue(raw && raw[f[0] === '!' ? f.slice(1) : f]));
+        if (parts.some(v => !isNaN(v))) {
+          values = parts.map(v => (isNaN(v) ? 0 : v));
+          // COMPOSECOLOR blends all the fields into one colour, so the chart's value is the one that wins it —
+          // the highest field (flat itself would hand over the first field here: a deliberate departure,
+          // so a "party with the highest result" map prints that party's share)
+          value = this.flags.has('COMPOSECOLOR') ? Math.max(...values) : values[0];
+        }
+      }
+      // DOMINANT: the chart is the dominant field's — its class colour and its value (flat's USER branch,
+      // maptheme.js ~19700-19770: nClass = the dominant index, nValue = nValuesA[nIndex]); the relevance
+      // (plain value, PERCENTOFMEAN, DEVIATION) is the one the DOMINANT choropleth uses
+      if (this.flags.has('DOMINANT') && !this.flags.has('COMPOSECOLOR') && this._multiFields && this._dominantMins && raw && fieldNames.length > 1) {
+        const dominant = this._resolveDominantClass(raw);
+        if (dominant) { value = dominant.value; cat = dominant.index; }
+      }
+      // COMPOSECOLOR: the chart takes the item's blended colour (flat's itemA[a].szColor, the same
+      // blend the choropleth uses) instead of one class colour
+      let composed;
+      if (this.flags.has('COMPOSECOLOR') && this._multiFields && raw) {
+        const c = this._resolveComposedColor(raw);
+        composed = `rgb(${c[0]},${c[1]},${c[2]})`;
+      }
+      const base = `user|${name}|${cat}|${Math.round(value * 100) / 100}|${values.length > 1 ? values.join(',') : ''}|${composed || ''}|${Math.round(size * 2) / 2}|${flag}|${title || ''}`;
       if (!this._userChartSvgs) this._userChartSvgs = new Map();
       let chart = this._userChartSvgs.get(base);
       if (chart === undefined) {
-        chart = this._drawUserChartSvg(draw, name, theme, flag, d, value, cat, size, nSize);
+        chart = this._drawUserChartSvg(draw, name, theme, flag, d, value, cat, size, nSize, values, composed);
         if (chart === undefined) return null;
         if (this._userChartSvgs.size >= ICON_CACHE_MAX) this._userChartSvgs.delete(this._userChartSvgs.keys().next().value);
         this._userChartSvgs.set(base, chart);
@@ -14612,10 +14662,10 @@ self.onmessage = e => {
     // the page's chart function draws one chart into the hidden SVG: its
     // markup and box (chart units), null when it draws nothing, undefined
     // when it fails
-    _drawUserChartSvg(draw, name, theme, flag, d, value, cat, size, nSize) {
+    _drawUserChartSvg(draw, name, theme, flag, d, value, cat, size, nSize, values, composedColor) {
       const g = document.createElementNS(SVG_NS, 'g');
       this._userChartGroup.appendChild(g);
-      const color = this._userChartColor(cat);
+      const color = composedColor || this._userChartColor(cat);
       const raw = d.properties.raw || d.properties;
       const label = this.binding.title && raw && raw[this.binding.title] != null ? String(raw[this.binding.title]) : undefined;
       // flat's chart title (style.titlefield, maptheme's item.szTitle) —
@@ -14625,7 +14675,7 @@ self.onmessage = e => {
       let chart = null;
       try {
         const ret = draw.call(global.ixmaps, document, {
-          target: g, theme, value, values: [value], size, maxSize: USER_CHART_MAX_SIZE, color, class: cat, flag,
+          target: g, theme, value, values: values || [value], size, maxSize: USER_CHART_MAX_SIZE, color, class: cat, flag,
           // flat hands the chart the item's color CLASS object (maptheme's
           // ColorScheme entry) — pinnacleChart reads ccolor.lowColor for its
           // VALUES label fill (usercharts/d3/chart.js 199)
@@ -14636,13 +14686,51 @@ self.onmessage = e => {
         if (bb && bb.width > 0 && bb.height > 0) {
           const markup = new XMLSerializer().serializeToString(g);
           const ids = new Set([...markup.matchAll(/url\(#([^)"']+)\)/g)].map(m => m[1]));
-          const defs = [...ids].map(id => { const el = this._userChartGroup.ownerDocument.getElementById(id); return el ? new XMLSerializer().serializeToString(el) : ''; }).join('');
+          // the gradients the chart uses, kept WITH the chart: a cached chart that was not on the screen in the
+          // last drawing finds no copy of them in the document any more (they are one per colour, and only the
+          // theme's own colours are defined again by _init), and would lose its fill
+          const defsById = {};
+          for (const id of ids) {
+            const el = this._userChartGroup.ownerDocument.getElementById(id);
+            if (el) defsById[id] = new XMLSerializer().serializeToString(el);
+          }
+          const defs = Object.values(defsById).join('');
           // strokes and text halos reach past the geometric box
           const pad = Math.max(bb.width, bb.height) * 0.06 + 10;
           const vx = bb.x - pad, vy = bb.y - pad, vw = bb.width + 2 * pad, vh = bb.height + 2 * pad;
           // the chart's origin (0,0 — or the point flat moves it to, ret) sits at the map position
           const ox = (ret && ret.x) || 0, oy = (ret && ret.y) || 0;
-          chart = { vx, vy, vw, vh, ox, oy, markup, ids: [...ids], bb: { x: bb.x, y: bb.y, width: bb.width, height: bb.height },
+          // the chart's own outline for hover and click: its shapes (the peak's triangle, a pie's circle ...)
+          // sampled into polygons, in chart units around the origin — not the box around them (a tall peak
+          // would otherwise answer to a rectangle, or a circle, far wider than the peak itself)
+          const pick = [];
+          try {
+            const inv = g.getCTM().inverse();
+            const at = (el, x, y) => { const p = new DOMPoint(x, y).matrixTransform(inv.multiply(el.getCTM())); return [p.x - ox, p.y - oy]; };
+            g.querySelectorAll('path,rect,circle,ellipse,polygon').forEach(el => {
+              if (el.closest('defs,clipPath,mask')) return;
+              let ring = null;
+              if (el.tagName === 'path') {
+                const len = el.getTotalLength();
+                if (!(len > 0)) return;
+                const n = Math.max(8, Math.min(40, Math.ceil(len / 50)));
+                ring = [];
+                for (let i = 0; i <= n; i++) { const q = el.getPointAtLength(len * i / n); ring.push(at(el, q.x, q.y)); }
+              } else if (el.tagName === 'rect') {
+                const x = el.x.baseVal.value, y = el.y.baseVal.value, w = el.width.baseVal.value, h = el.height.baseVal.value;
+                ring = [at(el, x, y), at(el, x + w, y), at(el, x + w, y + h), at(el, x, y + h)];
+              } else if (el.tagName === 'polygon') {
+                ring = [...el.points].map(q => at(el, q.x, q.y));
+              } else {
+                const cx = el.cx.baseVal.value, cy = el.cy.baseVal.value;
+                const rx = el.tagName === 'circle' ? el.r.baseVal.value : el.rx.baseVal.value, ry = el.tagName === 'circle' ? rx : el.ry.baseVal.value;
+                ring = [];
+                for (let i = 0; i < 12; i++) ring.push(at(el, cx + rx * Math.cos(i * Math.PI / 6), cy + ry * Math.sin(i * Math.PI / 6)));
+              }
+              if (ring && ring.length >= 3 && ring.every(q => isFinite(q[0]) && isFinite(q[1]))) pick.push(ring);
+            });
+          } catch (e) { /* the box below stands in */ }
+          chart = { vx, vy, vw, vh, ox, oy, markup, ids: [...ids], defsById, pick, bb: { x: bb.x, y: bb.y, width: bb.width, height: bb.height },
             svg: `<svg xmlns="${SVG_NS}" width="__W__" height="__H__" viewBox="${vx} ${vy} ${vw} ${vh}"><defs>${defs}</defs>${markup}</svg>` };
         }
       } catch (e) {
