@@ -3580,7 +3580,7 @@ self.onmessage = e => {
     'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety', 'gridx', 'boxmargin', 'borderwidth',
     'borderradius', 'maxcharts', 'archeight', 'alignmargin',
     // HEATMAP / MLHEATMAP / KDE (a project JSON writes them as strings)
-    'radiuspx', 'intensity', 'threshold', 'weightmax', 'bandwidth'];
+    'radiuspx', 'intensity', 'threshold', 'weightmax', 'bandwidth', 'bandwidthscale', 'bandwidthzoompow', 'bandwidthzoomref'];
   function toNumberIfNumeric(v) {
     if (typeof v !== 'string' || !v.trim()) return v;
     const n = Number(v);
@@ -13217,7 +13217,7 @@ self.onmessage = e => {
       // early return here must also unmount its groups, or the pane keeps
       // showing the last drawing after the theme went out of scale (or was
       // hidden via setThemeVisible)
-      if (this._hidden) { this._clearUserChartPane(); return []; }
+      if (this._hidden) { this._kdeShowGate = true; this._clearUserChartPane(); return []; }
       if (!this.flags.has('FEATURE') && !this.flags.has('FEATURES') && chartHiddenByScale(this.style, liveZoom)) { this._clearUserChartPane(); return []; }
       // DOT is checked FIRST, matching the real engine's own precedence
       // (its DOT branch is a loop-level fast-path that bypasses the whole
@@ -15006,7 +15006,8 @@ self.onmessage = e => {
     // to kdeGrid in a worker, d3-contour cuts the bands at fractions of the maximum (style.kdelevels,
     // default 0.15 / 0.30 / 0.50 / 0.70), each band the area at or above its threshold, so they
     // stack, colored from style.colorscheme, drawn with style.fillopacity. The bandwidth is
-    // style.bandwidth (km) or, without it, follows the zoom (kdeBandwidthKm).
+    // style.bandwidth (km) or, without it, follows the zoom (kdeBandwidthKm); style.bandwidthscale
+    // (default 1) multiplies either, style.bandwidthzoompow (default 1) flattens the zoom dependence, so a radius control can stay zoom-aware without lagging a redraw.
     // The result belongs to a view: while the map moves the last bands stay, and once it stands still
     // (and the view, the records, the binding or the bandwidth changed) the new ones are computed
     // after a short pause and drawn by a redraw — never more than one computation wanted at a time.
@@ -15023,7 +15024,18 @@ self.onmessage = e => {
       const source = this._activeFeatures || this.features;
       if (this._kdeSource !== source) { this._kdeSource = source; this._kdeSourceId = (this._kdeSourceId || 0) + 1; }
       const flatZoom = mapLibreToFlatZoom(zoom);
-      const bwKm = styleNum(this.style.bandwidth) > 0 ? styleNum(this.style.bandwidth) : kdeBandwidthKm(flatZoom);
+      const bwScale = styleNum(this.style.bandwidthscale) > 0 ? styleNum(this.style.bandwidthscale) : 1;
+      // style.bandwidthzoompow (0..1) flattens the zoom dependence: the radius is the table's ratio to its
+      // value at the reference flat zoom (style.bandwidthzoomref, default 12), raised to this power
+      // (0 = constant). Without style.bandwidth the radius is the table's, default power 1 (as the fire
+      // pages); WITH style.bandwidth (km) that is the radius AT the reference zoom, default power 0 (fixed).
+      const explicitKm = styleNum(this.style.bandwidth) > 0 ? styleNum(this.style.bandwidth) : 0;
+      const powStyle = styleNum(this.style.bandwidthzoompow);
+      const zoomPow = powStyle >= 0 ? Math.min(1, powStyle) : (explicitKm ? 0 : 1);
+      const refZoom = styleNum(this.style.bandwidthzoomref) > 0 ? styleNum(this.style.bandwidthzoomref) : 12;
+      const tableKm = kdeBandwidthKm(flatZoom), refKm = kdeBandwidthKm(refZoom);
+      const zoomRatio = zoomPow === 1 ? tableKm / refKm : Math.pow(tableKm / refKm, zoomPow);
+      const bwKm = (explicitKm ? explicitKm * zoomRatio : (zoomPow === 1 ? tableKm : refKm * zoomRatio)) * bwScale;
       const maxCells = kdeMaxCells(flatZoom);
       const levels = kdeLevels(this.style);
       const key = JSON.stringify([this._dataGen, this._kdeSourceId, this.binding, bwKm, maxCells, levels, bbox.map(v => Math.round(v * 1e4) / 1e4)]);
@@ -15040,6 +15052,7 @@ self.onmessage = e => {
             this._kdeBands = kdeBands(grid, levels, () => contours());
             this._kdeBandsGen = (this._kdeBandsGen || 0) + 1;   // every set of bands is a new layer for deck.gl
             this._kdeLevelCount = levels.length;
+            this._kdeBandsBw = bwKm;                        // the radius these bands were computed for
             this._kdeKeyDone = key;
             if (this._triggerRedraw) this._triggerRedraw();
           }).catch(err => {
@@ -15050,6 +15063,14 @@ self.onmessage = e => {
       }
       const bands = this._kdeBands;
       if (!bands || !bands.features.length) return [];
+      // bands kept from before the layer was switched off belong to another view and radius: they are not
+      // shown on switching on until the right ones are computed (a wrong-radius density flashing first
+      // reads as flicker). Once the right ones are there the gate opens, and while the map zooms the
+      // last bands stay as before — a gap on every zoom step would be worse.
+      if (this._kdeShowGate) {
+        if (this._kdeBandsBw !== bwKm) return [];
+        this._kdeShowGate = false;
+      }
       const colors = kdeBandColors(this.style.colorscheme, this._kdeLevelCount || levels.length);
       return [new GeoJsonLayer({
         // a new id for each set of bands: deck.gl keeps a layer's buffers by id, and bands whose polygon
