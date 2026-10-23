@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>ISTAT - Microdati Incidenti 2019-2021</title>
-<script src="https://unpkg.com/ixmaps-gl@0.2.24/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
 <style>
   html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F5F5F4; }
 
@@ -196,7 +196,7 @@
         url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz",
         type: "topojson"
       })
-      .type("CHART|SYMBOL|GLOW|SEQUENCE|STAR|SORT|DOWN|CATEGORICAL|AGGREGATE|COUNT|RELOCATE|VALUES|COMPACTLEGEND|RECT|CLIPTOGEOBOUNDS")
+      .type("CHART|SYMBOL|GLOW|SEQUENCE|STAR|SORT|DOWN|CATEGORICAL|AGGREGATE|SUM|RELOCATE|VALUES|COMPACTLEGEND|RECT|CLIPTOGEOBOUNDS")
       .binding({
         position: "geometry",
         value: "NATURA_INC",
@@ -336,7 +336,7 @@
       featurescaling: "true",
       objectscaling: "dynamic",
       normalSizeScale: "259302",
-      dynamicScalePow: "3",
+      dynamicScalePow: "2",
       flushChartDraw: "100000",
       basemapopacity: "0.8",
       panhidden: "false"

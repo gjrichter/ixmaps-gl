@@ -17,7 +17,7 @@
         Data source: s3.eu-west-1.amazonaws.com/data.ixmaps.com/Parler/RiotGeo.csv
         Videos:      d2hxwnssq7ss7g.cloudfront.net/{videoId}_cvt.mp4
     -->
-    <script src="../../ixmaps-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
     <style>
         html, body { width:100%; height:100%; margin:0; padding:0; overflow:hidden; background:#111; }
         #map { width:100%; height:100%; }
@@ -293,7 +293,7 @@ function togglePlay() {
 var myMap = ixmaps.Map("map", {
     mapType: "VT_DATAVIZ_DARK",  // try "NOKIA - satellite" for satellite imagery
     legend:  "closed",
-    mode:    "pan"
+    mode:    "info"     // hover tooltips + click-to-pin (pan mode suppresses hover)
 })
 .view({ center: { lat: 38.8899, lng: -77.0088 }, zoom: 17 })
 .options({

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>ISTAT incidenti — ixmaps-gl demo</title>
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
 <style>
   html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; }
   #map_div { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
@@ -135,7 +135,7 @@
     })
     .local("loading data ...", "...")
     .attribution("ISTAT / GEOMIS Regione Lombardia via AREU")
-    .legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>ISTAT - Microdati Incidenti 2019 - 2021</div>")
+    //.legend("<div style='margin-top:0.5em;padding:0.2em 1em 0.2em 1em;border-radius:0.5em;background:RGBA(255,255,255,0.5)'><h2>ISTAT - Microdati Incidenti 2019 - 2021</div>")
     .layer(__georef_reg)
     .layer(__incidenti_natura)
   );
