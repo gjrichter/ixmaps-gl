@@ -116,6 +116,19 @@ Interactive map examples built with [ixmaps-gl](https://github.com/gjrichter/ixm
 
 ---
 
+## GHS/
+
+<div class="gallery">
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/GHS/ghs2024_sidebar.html"><img src="screenshots/GHS--ghs2024_sidebar.png" width="100%"></a><br>
+<b>GHS Urban Centres 2024 — thematic explorer</b><br>
+<sub>11,422 urban centres of the world (GHS Urban Centre Database R2024A): air quality, climate and hazards, and urban settlement themes in one page, with a flat map / globe switch and a light / dark mode.</sub><br>
+<a href="https://gl.ixmaps.com/stage/GHS/ghs2024_sidebar.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/GHS/ghs2024_sidebar.html">see code →</a>
+</div>
+</div>
+
+---
+
 ## live/
 
 Maps fed by live data sources, refreshed on every load.
