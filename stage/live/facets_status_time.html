@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC 311 complaints by status — time scope</title>
+<!-- gl port of the ixmaps legacy project
+     iframes/ixmaps/projects/NYC_311/ixmaps_project_NYC_311_last_10000_by_status_symbols.json
+     (same theme as by_status_symbols.html) with a selectable time scope (24 hours / 7 days / 1 month,
+     measured back from the newest call in the dataset, which lags real time) and with a facet sidebar on ixmaps' standard facet API
+     (ixmaps.data.getFacets / showFacets, same pattern as stage/roma_incidenti_pericolosita_sidebar_gl.html).
+     Facets are viewport-scoped: they count the calls currently visible and refresh on every redraw;
+     clicking a facet value filters the map. -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F5F5F4; }
+  #map_div { position: absolute; top: 0; bottom: 0; left: 0; width: 66%; }
+  #sidebar {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 34%;
+    box-sizing: border-box; padding: 1em 1em 1em 1.2em; overflow: auto;
+    background: #F5F5F4; border-left: 1px solid #ddd; text-align: left;
+  }
+  #status {
+    position: absolute; top: 1em; left: 1em; z-index: 10;
+    background: rgba(255,255,255,0.9); padding: 0.4em 0.8em; border-radius: 4px; font-size: 0.85em;
+    display: flex; align-items: center; gap: 0.6em;
+  }
+  #status .spinner {
+    width: 14px; height: 14px; flex: none;
+    border: 2px solid rgba(0,0,0,0.15); border-top-color: #0088dd;
+    border-radius: 50%; animation: status-spin 0.8s linear infinite;
+  }
+  @keyframes status-spin { to { transform: rotate(360deg); } }
+  h1 { font-size: 1.5em; margin: 0 0 0.3em 0; color: #222; font-weight: 600; }
+  #sidebar p { font-size: 0.95em; color: #333; margin: 0.5em 0; }
+  #sidebar a { color: #0088dd; }
+  #stats-line { font-size: 0.95em; color: #333; margin: 0.6em 0; }
+  #filter-div {
+    margin: 0.6em 0; padding: 0.35em 0.6em; font-size: 0.85em;
+    background: #F7F6EF; border: 1px solid #ddd; border-radius: 4px;
+    display: none; align-items: flex-start; justify-content: space-between; gap: 0.5em;
+  }
+  #filter-div span { word-break: break-word; }
+  #filter-div button {
+    flex: none; border: 1px solid #ccc; background: #fff; border-radius: 3px;
+    cursor: pointer; font-size: 0.85em; padding: 0 0.5em;
+  }
+  #scope-row { display: flex; gap: 0.4em; margin: 0.8em 0 0.3em; }
+  #scope-row button {
+    flex: 1; padding: 0.45em 0.2em; font: inherit; font-size: 0.9em; cursor: pointer;
+    border: 1px solid #ccc; background: #fff; border-radius: 5px; color: #333;
+  }
+  #scope-row button.active { background: #333; border-color: #333; color: #fff; font-weight: 600; }
+  #scope-row button:disabled { opacity: 0.6; cursor: wait; }
+  #scope-range { font-size: 0.8em; color: #777; margin-bottom: 0.4em; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 1em 0; }
+  footer { font-size: 0.8em; color: #888; margin-top: 1.5em; }
+
+  /* overrides ixmaps.data.showFacets' own injected dark default
+     (.ix-facet-* classes) with this page's light theme — see
+     ixmaps-gl.js's ensureFacetStyles comment for why a page's own
+     same-specificity rule reliably wins here. */
+  #show-facets-div { margin-top: 0.5em; }
+  .ix-facet { margin-bottom: 0.9em; }
+  .ix-facet-header {
+    font-size: 1em; padding: 0.45em 0.6em; border-radius: 5px; background: #888;
+    color: #fff; margin-bottom: 0.4em;
+  }
+  .ix-facet-active .ix-facet-header { background: #884444; cursor: pointer; }
+  .ix-facet-active .ix-facet-header::after { content: " \00d7"; float: right; }
+  .ix-facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
+  .ix-facet-search input {
+    flex: 1; font-size: 0.85em; border: 1px solid #ddd; border-radius: 3px;
+    padding: 0.25em 0.5em; background: #fff;
+  }
+  .ix-facet-search button {
+    border: 1px solid #ddd; background: #fff; border-radius: 3px; cursor: pointer; font-size: 0.85em;
+  }
+  .ix-facet-bar {
+    cursor: pointer; padding: 0.3em 0.1em; border-bottom: 1px solid rgba(128,128,128,0.15);
+  }
+  .ix-facet-bar:hover { background: rgba(0,136,221,0.06); }
+  .ix-facet-bar-selected { background: rgba(136,68,68,0.08); }
+  .ix-facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; font-size: 0.95em; }
+  .ix-facet-label { color: #333; }
+  .ix-facet-count { flex: none; color: #333; font-weight: 600; white-space: nowrap; }
+  .ix-facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #ccc; }
+  .ix-facet-more {
+    margin: 0.2em 0 0.4em 0; font-size: 0.8em; padding: 0.2em 0.6em;
+    border: 1px solid #ccc; background: #fff; border-radius: 3px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="map_div"></div>
+<div id="status"><span class="spinner"></span>loading calls ...</div>
+
+<div id="sidebar">
+  <h1>NYC 311 complaints</h1>
+  <p>Service requests to New York City's 311 line, by <b>status</b>. Choose a time scope; pan and zoom: the facets count the complaints in view. Click a value to filter the map.</p>
+
+  <div id="scope-row">
+    <button data-scope="24h">24 hours</button>
+    <button data-scope="7d">7 days</button>
+    <button data-scope="1m">1 month</button>
+  </div>
+  <div id="scope-range">—</div>
+
+  <div id="stats-line"><b id="no_calls">—</b> complaints in view</div>
+
+  <div id="filter-div">
+    <span id="filter-text"></span>
+    <button id="clear-filter-btn">&times;</button>
+  </div>
+
+  <hr>
+  <div id="show-facets-div"></div>
+  <hr>
+
+  <p>Data: <a href="https://data.cityofnewyork.us/resource/erm2-nwe9" target="_blank">NYC Open Data — 311 Service Requests</a></p>
+  <footer>ixmaps-gl port of the legacy NYC_311 project.</footer>
+</div>
+
+<script>
+  var THEME_ID = "311_status";
+  var FACET_FIELDS = ["status", "complaint_type", "borough", "agency_name"];
+  var SODA = "https://data.cityofnewyork.us/resource/erm2-nwe9";
+  var SCOPES = { "24h": { hours: 24 }, "7d": { hours: 24 * 7 }, "1m": { hours: 24 * 30 } };
+  var latestCall = null;   // newest created_date in the dataset (it lags real time)
+  var currentScope = null;
+
+  var myMap = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "true", tools: "true" })
+    .view([40.74361546275168, -73.87275695800783], 12)
+    .options({ objectscaling: "dynamic", normalSizeScale: "108133" });
+
+  function fmt(n) { return (n || 0).toLocaleString("en-US"); }
+  function iso(d) { return d.toISOString().slice(0, 19); }
+
+  function scopeUrl(scope) {
+    var from = new Date(new Date(latestCall + "Z").getTime() - SCOPES[scope].hours * 3600 * 1000);
+    var where = "created_date > '" + iso(from) + "' AND latitude IS NOT NULL";
+    return SODA + ".csv?$select=" + FACET_FIELDS.concat(["latitude", "longitude"]).join(",") +
+      "&$where=" + encodeURIComponent(where) + "&$order=created_date%20DESC&$limit=400000";
+  }
+
+  function defineLayer(scope) {
+    myMap.layer("311_status")
+      .data({ url: scopeUrl(scope), type: "csv", name: "nyc311_status_" + scope, cache: "true" })
+      .binding({ lookupfield: "latitude|longitude", value: "status" })
+      .type("CHART|SYMBOL|SEQUENCE|STAR|GLOW|SIZE|AGGREGATE|FAST|RECT|CATEGORICAL|SUM")
+      .style({
+        colorscheme: ["#FF0015", "#2080ff", "#2BBA00", "#F4FC00", "#FFB01C", "#FF1C42"],
+        fillopacity: "1",
+        shadow: "false",
+        symbols: ["circle"],
+        values: ["Open", "In Progress", "Closed", "Assigned", "Started", "Pending"],
+        label: ["Open", "In Progress", "Closed", "Assigned", "Started", "Pending"],
+        scale: "0.5",
+        valuescale: "1",
+        valuedecimals: "0",
+        gridwidthpx: "1"
+      })
+      .meta({
+        name: THEME_ID,
+        title: "311 complaints status",
+        snippet: SCOPE_LABEL[scope],
+        tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}"
+      })
+      .title("311 complaints status")
+      .define();
+  }
+  var SCOPE_LABEL = { "24h": "last 24 hours of data", "7d": "last 7 days of data", "1m": "last month of data" };
+
+  function renderFilterDisplay(api) {
+    var active = api.getActiveFacetFilters(THEME_ID);
+    var parts = Object.entries(active).map(function (e) {
+      var clause = e[1];
+      if (clause && typeof clause === "object" && "like" in clause) return '"' + e[0] + '" LIKE "' + clause.like + '"';
+      return '"' + e[0] + '" = "' + clause + '"';
+    });
+    var div = document.getElementById("filter-div");
+    if (parts.length) {
+      document.getElementById("filter-text").textContent = "WHERE " + parts.join(" AND ");
+      div.style.display = "flex";
+    } else {
+      div.style.display = "none";
+    }
+  }
+
+  function renderFacets(api) {
+    var facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
+    ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
+    document.getElementById("no_calls").textContent = fmt(facetsA && facetsA[0] ? facetsA[0].nCount : 0);
+    renderFilterDisplay(api);
+  }
+
+  function setScope(api, scope) {
+    if (scope === currentScope) return;
+    currentScope = scope;
+    var buttons = document.querySelectorAll("#scope-row button");
+    buttons.forEach(function (b) { b.classList.toggle("active", b.dataset.scope === scope); });
+    var from = new Date(new Date(latestCall + "Z").getTime() - SCOPES[scope].hours * 3600 * 1000);
+    document.getElementById("scope-range").textContent = iso(from).replace("T", " ").slice(0, 16) + " → " + latestCall.replace("T", " ").slice(0, 16) + " (newest call in the data)";
+    try { api.clearAllFacetFilters(THEME_ID); } catch (e) {}
+    defineLayer(scope);
+  }
+
+  fetch(SODA + ".json?$select=max(created_date)")
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      latestCall = j[0].max_created_date.slice(0, 19);
+      return myMap.then ? myMap : Promise.resolve(myMap);
+    })
+    .then(function (api) {
+      var s = document.getElementById("status"); if (s) s.remove();
+      document.querySelectorAll("#scope-row button").forEach(function (b) {
+        b.addEventListener("click", function () { setScope(api, b.dataset.scope); });
+      });
+      document.getElementById("clear-filter-btn").addEventListener("click", function () {
+        api.clearAllFacetFilters(THEME_ID);
+      });
+      api.onRedraw(function () { if (currentScope) renderFacets(api); });
+      setScope(api, "24h");
+    })
+    .catch(function (err) { var s = document.getElementById("status"); if (s) s.textContent = "error: " + err.message; console.error(err); });
+</script>
+
+</body>
+</html>

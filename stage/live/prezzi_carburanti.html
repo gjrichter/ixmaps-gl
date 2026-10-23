@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mappa interattiva dei prezzi dei carburanti in Italia (GPL, Benzina, Diesel, Metano) — dati del Ministero delle Imprese e del Made in Italy (MISE)">
+    <meta name="author" content="Data Viz Italia">
+    <meta name="keywords" content="carburanti, prezzi, benzina, diesel, GPL, metano, MISE, Italia, distributori, mappa interattiva">
+
+    <title>Data Viz Italia - Prezzi Carburanti</title>
+
+    <!-- Preconnect per performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://raw.githubusercontent.com">
+
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+    <!-- CSS Site -->
+    <link rel="stylesheet" href="./css/site_wbgt.css">
+
+    <style>
+        /* Info Button — inline next to sidebar title */
+        .info-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            color: #666;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid #bbb;
+            font-family: Georgia, serif;
+            transition: color 0.15s, border-color 0.15s;
+            user-select: none;
+            vertical-align: middle;
+            margin-left: 7px;
+            position: relative;
+            top: -2px;
+            flex-shrink: 0;
+        }
+
+        .info-button:hover {
+            color: #111;
+            border-color: #888;
+        }
+
+        /* Overlay backdrop */
+        .info-popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 10000;
+        }
+
+        .info-popup-overlay.active {
+            display: block;
+        }
+
+        /* Panel */
+        .info-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 34px rgba(0, 0, 0, 0.12);
+            z-index: 100001;
+            width: min(620px, 94vw);
+            max-height: 88vh;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .info-popup.active {
+            display: flex;
+        }
+
+        /* Header */
+        .info-popup-header {
+            padding: 16px 20px 14px;
+            border-bottom: 1px solid #eef0f2;
+            position: sticky;
+            top: 0;
+            background: #f7f8f9;
+            z-index: 10;
+        }
+
+        .info-popup-header h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #222;
+            letter-spacing: 0.01em;
+        }
+
+        .info-popup-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: color 0.15s;
+        }
+
+        .info-popup-close:hover {
+            color: #222;
+        }
+
+        /* Scrollable body */
+        .info-popup-content {
+            padding: 18px 20px;
+            color: #333;
+            font-size: 13.5px;
+            line-height: 1.65;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .info-popup-content h3 {
+            color: #0b0d0f;
+            margin: 22px 0 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            border-bottom: 1px solid #e9ebef;
+            padding-bottom: 5px;
+        }
+
+        .info-popup-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .info-popup-content p {
+            margin: 6px 0;
+        }
+
+        .info-popup-content ul,
+        .info-popup-content ol {
+            margin: 6px 0;
+            padding-left: 22px;
+        }
+
+        .info-popup-content li {
+            margin: 5px 0;
+        }
+
+        .info-popup-content strong {
+            color: #0b0d0f;
+            font-weight: 600;
+        }
+
+        .info-popup-content code {
+            background: #e8f1fb;
+            padding: 1px 6px;
+            border-radius: 5px;
+            font-family: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.86em;
+            color: #0f4c81;
+        }
+
+        .info-section {
+            background: #f4f8fd;
+            padding: 11px 14px;
+            border-radius: 9px;
+            margin: 10px 0;
+            border-left: 3px solid #3182bd;
+        }
+
+        /* Colour scale */
+        .temp-scale {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+
+        .temp-scale-item {
+            display: inline-block;
+            width: 26px;
+            height: 14px;
+            border: 1px solid #ddd;
+        }
+
+        .temp-scale span {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Footer */
+        .info-popup-footer {
+            padding: 11px 20px;
+            background: #f6f7f9;
+            border-top: 1px solid #e9ebef;
+            font-size: 12px;
+            color: #5b6470;
+        }
+
+        .info-popup-footer a {
+            color: #08519c;
+            text-decoration: none;
+        }
+
+        .info-popup-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Mode tag */
+        .mode-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            background: #efefef;
+            border-radius: 3px;
+            padding: 1px 6px;
+            margin-right: 3px;
+        }
+
+        /* Mobile bars */
+        .mobile-top-bar,
+        .mobile-bottom-bar {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+
+            /* Shrink map to fit between top (36px) and bottom (46px) bars */
+            #map_div {
+                margin-top: 36px;
+                height: calc(100vh - 36px - 46px) !important;
+            }
+
+            /* Top bar — title + observation time */
+            .mobile-top-bar {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 36px;
+                background: rgba(255, 255, 255, 0.97);
+                border-bottom: 1px solid #d4d4d4;
+                z-index: 99999;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 0 12px;
+                font-size: 12.5px;
+            }
+
+            .mtb-title {
+                font-weight: 600;
+                color: #222;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mtb-sep {
+                color: #ccc;
+            }
+
+            .mtb-period {
+                color: #777;
+                white-space: nowrap;
+                font-variant-numeric: tabular-nums;
+            }
+
+            /* Keep logo above the mobile bottom bar */
+            .logo {
+                bottom: 56px;
+            }
+
+            .mobile-bottom-bar {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 46px;
+                background: rgba(255, 255, 255, 0.97);
+                border-top: 1px solid #d4d4d4;
+                z-index: 99999;
+                align-items: stretch;
+            }
+
+            .mbb-btn {
+                flex: 1;
+                background: none;
+                border: none;
+                border-right: 1px solid #e2e2e2;
+                font-size: 12.5px;
+                color: #555;
+                cursor: pointer;
+                font-family: inherit;
+                padding: 0 6px;
+                transition: background 0.12s, color 0.12s;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .mbb-btn:last-child {
+                border-right: none;
+            }
+
+            .mbb-btn.active {
+                background: #e4f1fb;
+                color: #15598a;
+                font-weight: 600;
+            }
+
+            .mbb-btn:active {
+                background: #e6e6e6;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Info Popup Overlay -->
+    <div class="info-popup-overlay" id="infoOverlay" onclick="toggleInfoPopup()"></div>
+
+    <!-- Info Popup -->
+    <div class="info-popup" id="infoPopup">
+        <div class="info-popup-header">
+            <h2>Prezzi Carburanti — Italia</h2>
+            <button class="info-popup-close" onclick="toggleInfoPopup()" aria-label="Chiudi">&times;</button>
+        </div>
+        <div class="info-popup-content">
+
+            <h3>Descrizione</h3>
+            <p>
+                Mappa dei <strong>prezzi dei carburanti praticati</strong> dagli impianti di distribuzione
+                distribuiti sul territorio italiano, aggiornata quotidianamente alle ore 8. I dati provengono
+                dal portale open data del <strong>Ministero delle Imprese e del Made in Italy (MISE)</strong>,
+                incrociando l'anagrafica degli impianti con i prezzi comunicati dai gestori.
+            </p>
+
+            <h3>Carburanti</h3>
+            <ul>
+                <li><span class="mode-tag">GPL</span> Gas di petrolio liquefatto</li>
+                <li><span class="mode-tag">Benzina</span> Benzina verde/senza piombo</li>
+                <li><span class="mode-tag">Diesel</span> Gasolio</li>
+                <li><span class="mode-tag">Metano</span> Metano per autotrazione</li>
+            </ul>
+
+            <h3>Modalità di visualizzazione</h3>
+            <ul>
+                <li><strong>Etichette</strong> — punti con il prezzo scritto accanto</li>
+                <li><strong>Pallini</strong> — cerchi colorati per fascia di prezzo</li>
+                <li><strong>A grappolo</strong> — aggregazione con effetto glow, i punti si raggruppano allo zoom out</li>
+                <li><strong>Con griglia</strong> — celle quadrate colorate, media dei prezzi nella cella</li>
+            </ul>
+
+            <h3>Scala cromatica</h3>
+            <p style="font-size:0.92em;color:#555">
+                Dal <strong style="color:#56A651">verde</strong> (prezzo più basso) al
+                <strong style="color:#794073">viola</strong> e all'<strong style="color:#DDA729">oro</strong>
+                (prezzo più alto), su 9 classi.
+            </p>
+
+            <h3>Note sull'interazione</h3>
+            <ul>
+                <li>Rotellina o pinch per lo zoom · trascina per spostarti</li>
+                <li>Hover/tap su un punto per il tooltip con impianto, bandiera e prezzo esatto</li>
+                <li>Il pannello laterale mostra le statistiche (minimo, medio, massimo) calcolate
+                    solo sui punti visibili nella vista corrente</li>
+            </ul>
+
+        </div>
+        <div class="info-popup-footer">
+            Dati: <a href="https://www.mise.gov.it/index.php/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti"
+                target="_blank" rel="noopener">MISE — Carburanti, prezzi praticati e anagrafica degli impianti</a>
+            &nbsp;·&nbsp; Licenza CC-BY &nbsp;·&nbsp;
+            Visualizzazione: <a href="https://ixmaps.com" target="_blank" rel="noopener">iXMaps</a> / Data Viz Italia
+            &nbsp;·&nbsp; Sviluppato con <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a>
+        </div>
+    </div>
+
+    <!-- Logo -->
+    <div class="logo" onclick="toggleCodeView()" role="button" tabindex="0" aria-label="Mostra codice HTML">
+        <div class="logo-text">
+            Data<br>
+            <span style="padding-left: 2px;">Viz</span>
+            <em style="font-style: italic;"> i</em>
+        </div>
+    </div>
+
+    <!-- Contenitore principale -->
+    <main>
+        <!-- Mappa -->
+        <div id="map_div" role="application" aria-label="Mappa interattiva dei prezzi dei carburanti in Italia">
+            <div style="position:absolute;top:45%;left:35%">connecting to Internet ...</div>
+        </div>
+
+        <!-- Sidebar toggle (mobile) -->
+        <div class="sidebar" id="sidebar_toggle" style="background: none; box-shadow: none;">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Apri menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Sidebar principale -->
+        <aside class="sidebar" id="main_sidebar">
+            <div class="sidebar-content" style="width:100%;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;z-index:99999">
+                <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Chiudi menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm8.5 9.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z" />
+                    </svg>
+                </button>
+
+                <header>
+                    <h1>Prezzi Carburanti<span class="info-button" onclick="toggleInfoPopup()"
+                            title="Informazioni sulla mappa" aria-label="Informazioni" role="button"
+                            tabindex="0">i</span></h1>
+                    <p style="margin: 0; font-size: 0.9em; color: var(--secondary-color);">
+                        Fonte dati: <a href="https://www.mise.gov.it/index.php/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti"
+                            target="_blank" rel="noopener" class="source-link">MISE</a> — Ministero Imprese e Made in Italy
+                    </p>
+                </header>
+
+                <nav class="seg" role="tablist" aria-label="Menu carburante">
+                    <button class="seg-btn" role="tab" data-fuel="GPL" onclick="__setCarburante('GPL')">GPL</button>
+                    <button class="seg-btn active" role="tab" data-fuel="Benzina"
+                        onclick="__setCarburante('Benzina')">Benzina</button>
+                    <button class="seg-btn" role="tab" data-fuel="Diesel|Gasolio"
+                        onclick="__setCarburante('Diesel|Gasolio')">Diesel</button>
+                    <button class="seg-btn" role="tab" data-fuel="Metano"
+                        onclick="__setCarburante('Metano')">Metano</button>
+                </nav>
+
+                <div class="controls">
+                    <label class="control-label">Visualizzazione</label>
+                    <nav class="seg" role="tablist" aria-label="Menu stile">
+                        <button class="seg-btn" role="tab" data-style="tema_prezzo_grid_label"
+                            onclick="__setStyle('tema_prezzo_grid_label')">Etichette</button>
+                        <button class="seg-btn" role="tab" data-style="tema_prezzo_grid_circle"
+                            onclick="__setStyle('tema_prezzo_grid_circle')">Pallini</button>
+                        <button class="seg-btn active" role="tab" data-style="tema_prezzo_grid_circle_glow"
+                            onclick="__setStyle('tema_prezzo_grid_circle_glow')">A grappolo</button>
+                        <button class="seg-btn" role="tab" data-style="tema_prezzo_grid_square"
+                            onclick="__setStyle('tema_prezzo_grid_square')">Griglia</button>
+                    </nav>
+                    <label id="grid_overlay_control" for="grid_overlay_checkbox"
+                        style="display:flex;align-items:center;gap:7px;margin-top:12px;font-size:12.5px;color:var(--ink-2);cursor:pointer;">
+                        <input type="checkbox" id="grid_overlay_checkbox"
+                            onchange="toggleGridOverlay(this.checked)">
+                        Griglia prezzi aggregati
+                    </label>
+                </div>
+
+                <nav class="seg" role="tablist" aria-label="Ambito statistiche" style="margin:14px 0 0">
+                    <button class="seg-btn active" role="tab" data-scope="visible"
+                        onclick="setStatsScope('visible')">Visibili</button>
+                    <button class="seg-btn" role="tab" data-scope="all"
+                        onclick="setStatsScope('all')">Tutta Italia</button>
+                </nav>
+                <div class="statistics" id="statistics" aria-live="polite" style="margin-top:8px">
+                    <div class="loading"></div>
+                    <span class="sr-only">Caricamento statistiche...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Overlay codice -->
+        <div class="code-overlay" id="code_overlay" style="display:none">
+            <div class="code-container">
+                <div class="code-header">
+                    <h2 style="margin: 0;">Codice HTML della Mappa</h2>
+                    <div class="code-actions">
+                        <a href="#" onclick="copyToClipboard()" title="Copia negli appunti">
+                            <i class="bi bi-clipboard"></i> Copia
+                        </a>
+                        <a href="#" onclick="saveAsFile()" title="Salva come file">
+                            <i class="bi bi-download"></i> Salva
+                        </a>
+                        <a href="#" onclick="closeCodeView()" title="Chiudi">
+                            <i class="bi bi-x-circle"></i> Chiudi
+                        </a>
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre id="code_display" class="hljs"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile top bar -->
+        <div class="mobile-top-bar" id="mobile_top_bar">
+            <span class="mtb-title" id="mtb_title">Benzina</span>
+            <span class="mtb-sep">·</span>
+            <span class="mtb-period" id="mtb_period">prezzi ore 8</span>
+        </div>
+
+        <!-- Mobile bottom bar -->
+        <nav class="mobile-bottom-bar" aria-label="Selezione carburante">
+            <button class="mbb-btn" data-fuel="GPL" onclick="__setCarburante('GPL')">GPL</button>
+            <button class="mbb-btn active" data-fuel="Benzina" onclick="__setCarburante('Benzina')">Benzina</button>
+            <button class="mbb-btn" data-fuel="Diesel|Gasolio" onclick="__setCarburante('Diesel|Gasolio')">Diesel</button>
+            <button class="mbb-btn" data-fuel="Metano" onclick="__setCarburante('Metano')">Metano</button>
+        </nav>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/facet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/json_config.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/json_config_html.js"></script>
+
+    <script>
+
+        // ===================================
+        // Fornitori dati MISE — anagrafica impianti + prezzi,
+        // uniti su idImpianto. Inline (era pages/MISE/databroker.js).
+        // ===================================
+        (function () {
+            function decodeHTMLEntities(text) {
+                var textArea = document.createElement('textarea');
+                textArea.innerHTML = text;
+                return textArea.value;
+            }
+
+            ixmaps.prezzi_tipo_latlon = function (theme, options) {
+                var szUrl = "https://raw.githubusercontent.com/gjrichter/data/master/MISE/anagrafica_impianti_attivi.csv";
+                $.get(szUrl, function (data) {
+                    ixmaps.setTitleBox("<span style='font-family:open sans,arial;vertical-align:-1px'>" + data.substr(0, 25) + "</span>");
+                    data = decodeHTMLEntities(data);
+                    data = data.replace(/\"/g, "");
+                    Data.object({ source: data, type: "csv", parser: { comments: "Estrazione" } }).import(function (impianti) {
+                        Data.feed({ source: "https://raw.githubusercontent.com/gjrichter/data/master/MISE/prezzo_alle_8.csv", type: "csv", parser: { comments: "Estrazione" } }).load(function (prezzi) {
+                            var merger = new Data.Merger();
+                            merger.addSource(prezzi, { lookup: "idImpianto", columns: ["descCarburante", "prezzo", "isSelf", "dtComu"] });
+                            merger.addSource(impianti, { lookup: "idImpianto", columns: ["Bandiera", "Latitudine", "Longitudine"] });
+                            var newData = merger.realize();
+
+                            // dot-free aliases for the tooltip — Mustache treats "." as a path
+                            // separator, so the merger's "prezzo.1"-style field ids can't be
+                            // referenced directly in a {{...}} template
+                            newData.addColumn({ source: "prezzo.1", destination: "prezzo" }, function (v) { return v; });
+                            newData.addColumn({ source: "Bandiera.2", destination: "bandiera" }, function (v) { return v; });
+                            newData.addColumn({ source: "descCarburante.1", destination: "carburante" }, function (v) { return v; });
+                            newData.addColumn({ source: "isSelf.1", destination: "servizio" }, function (v) {
+                                return (v === "1" || v === 1) ? "Self-service" : "Servito";
+                            });
+                            newData.addColumn({ source: "dtComu.1", destination: "dtComu" }, function (v) {
+                                return String(v || "").split(" ")[0];
+                            });
+
+                            ixmaps.setExternalData(newData, { type: "dbtable", name: options.name });
+                        });
+                    });
+                });
+            };
+        })();
+
+        // suppress the redundant "Estrazione del ..." title overlay
+        // (the date is shown in the statistics panel instead); capture
+        // its value as the databroker emits it
+        (function hookTitleBox() {
+            if (ixmaps && typeof ixmaps.setTitleBox === "function") {
+                var orig = ixmaps.setTitleBox;
+                ixmaps.setTitleBox = function (szTitle, szColor) {
+                    var m = String(szTitle || "").match(/Estrazione del[^<]*/);
+                    if (m) {
+                        ixmaps._estrazione = m[0].trim();
+                        return;
+                    }
+                    return orig.apply(this, arguments);
+                };
+            } else {
+                setTimeout(hookTitleBox, 100);
+            }
+        })();
+
+        // --------------------------------------------
+        // Persistenza stato in URL (view, selezioni) — history.replaceState,
+        // nessun reload, nessuna nuova voce di history.
+        // --------------------------------------------
+        function updateURLParams(paramsObj) {
+            var url = new URL(window.location.href);
+            Object.keys(paramsObj).forEach(function (k) {
+                url.searchParams.set(k, paramsObj[k]);
+            });
+            window.history.replaceState({}, '', url);
+        }
+
+        var __viewPersistTimer = null;
+        function persistView() {
+            clearTimeout(__viewPersistTimer);
+            __viewPersistTimer = setTimeout(function () {
+                try {
+                    var c = ixmaps.getCenter();
+                    var z = ixmaps.getZoom();
+                    updateURLParams({ view: '[' + c.lat.toFixed(6) + ',' + c.lng.toFixed(6) + ',' + z.toFixed(6) + ']' });
+                } catch (e) { /* mappa non ancora pronta */ }
+            }, 500);
+        }
+
+        function persistSelection() {
+            updateURLParams({
+                fuel: ixmaps.carburante,
+                style: ixmaps.style,
+                grid: showGridOverlay ? "1" : "0",
+                scope: statsScope
+            });
+        }
+
+        var _fuelLabels = {
+            "GPL": "GPL",
+            "Benzina": "Benzina",
+            "Diesel|Gasolio": "Diesel",
+            "Metano": "Metano"
+        };
+        var _validStyles = [
+            "tema_prezzo_grid_label",
+            "tema_prezzo_grid_circle",
+            "tema_prezzo_grid_circle_glow",
+            "tema_prezzo_grid_square"
+        ];
+        var _validScopes = ["visible", "all"];
+
+        const __params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+
+        // view (center + zoom), read once, applied to the initial .view() call below
+        var __urlLat = null, __urlLon = null, __urlZoom = null;
+        if (__params.view) {
+            try {
+                var latlonA = __params.view.split('[')[1].split(']')[0].split(',');
+                __urlLat = parseFloat(latlonA[0]);
+                __urlLon = parseFloat(latlonA[1]);
+                __urlZoom = parseFloat(__params.view.split(',')[2]);
+            } catch (e) { /* malformed view param, ignore */ }
+        }
+
+        // selections — validated against the known option sets, default otherwise
+        ixmaps.carburante = (__params.fuel && _fuelLabels.hasOwnProperty(__params.fuel)) ? __params.fuel : "Benzina";
+        ixmaps.style = (__params.style && _validStyles.indexOf(__params.style) !== -1) ? __params.style : "tema_prezzo_grid_circle_glow";
+        var showGridOverlay = __params.grid ? (__params.grid === "1") : false;
+        var statsScope = (__params.scope && _validScopes.indexOf(__params.scope) !== -1) ? __params.scope : "visible";
+
+        function syncSegUI() {
+            document.querySelectorAll('[data-fuel]').forEach(function (el) {
+                el.classList.toggle('active', el.dataset.fuel === ixmaps.carburante);
+            });
+            document.querySelectorAll('[data-style]').forEach(function (el) {
+                el.classList.toggle('active', el.dataset.style === ixmaps.style);
+            });
+            document.querySelectorAll('[data-scope]').forEach(function (el) {
+                el.classList.toggle('active', el.dataset.scope === statsScope);
+            });
+            var mtbTitle = document.getElementById('mtb_title');
+            if (mtbTitle) mtbTitle.textContent = _fuelLabels[ixmaps.carburante] || ixmaps.carburante;
+            var gridCtrl = document.getElementById('grid_overlay_control');
+            if (gridCtrl) gridCtrl.style.display = (ixmaps.style == "tema_prezzo_grid_circle_glow") ? "flex" : "none";
+            var gridCb = document.getElementById('grid_overlay_checkbox');
+            if (gridCb) gridCb.checked = showGridOverlay;
+        }
+        syncSegUI();
+
+        function setStatsScope(scope) {
+            statsScope = scope;
+            syncSegUI();
+            persistSelection();
+            if (ixmaps.fuelStats) ixmaps.fuelStats.schedule();
+        }
+
+        __getTheme = function () {
+            return eval(ixmaps.style + "('" + ixmaps.carburante + "')");
+        };
+        __setCarburante = function (carburante) {
+            ixmaps.carburante = carburante;
+            __setStyle(ixmaps.style);
+        };
+        __setStyle = function (style) {
+            if (style == "tema_prezzo_grid_square") {
+                ixmaps.style = "tema_prezzo_grid_circle_raw";
+                ixmaps.map().newTheme("title", __getTheme(), "clear");
+                ixmaps.style = style;
+                ixmaps.map().newTheme("title", __getTheme());
+                ixmaps.style = "tema_prezzo_grid_square_text";
+                ixmaps.style = style;
+            } else if (style == "tema_prezzo_grid_circle_glow") {
+                ixmaps.style = style;
+                ixmaps.map().newTheme("title", __getTheme(), "clear");
+                if (showGridOverlay) {
+                    ixmaps.style = "tema_prezzo_grid_square_text";
+                    ixmaps.map().newTheme("title", __getTheme());
+                }
+                ixmaps.style = style;
+            } else {
+                ixmaps.style = style;
+                ixmaps.map().newTheme("title", __getTheme(), "clear");
+            }
+            syncSegUI();
+            persistSelection();
+        };
+        // "a grappolo" also draws an aggregated price-grid overlay; the sidebar
+        // checkbox toggles it by fully re-running __setStyle (clear + redraw),
+        // which is the same safe path style/fuel switching already uses.
+        toggleGridOverlay = function (checked) {
+            showGridOverlay = checked;
+            if (ixmaps.style == "tema_prezzo_grid_circle_glow") {
+                __setStyle("tema_prezzo_grid_circle_glow");
+            }
+        };
+
+        // --------------------------------------------
+        // Temi
+        // --------------------------------------------
+
+        // Shared tooltip — dot-free field aliases from the "prezzi_tipo_latlon"
+        // databroker's addColumn() calls (bandiera, prezzo, carburante, servizio, dtComu)
+        var TEMA_PREZZO_TOOLTIP =
+            "<div style='min-width:180px'>" +
+            "<div style='font-size:1.05em;font-weight:600;color:#222;margin-bottom:2px'>{{bandiera}}</div>" +
+            "<div style='font-size:1.7em;font-weight:700;color:#08519c;line-height:1.1'>{{prezzo}} €</div>" +
+            "<div style='font-size:0.85em;color:#666;margin:2px 0 6px'>{{carburante}} · {{servizio}}</div>" +
+            "<div style='font-size:0.78em;color:#999;border-top:1px solid #eee;padding-top:5px'>" +
+            "aggiornato {{dtComu}}<br>" +
+            "distributori in questo punto: {{theme.item.count}}" +
+            "</div>" +
+            "</div>";
+
+        var tema_prezzo_grid_circle_glow = function (carburante) {
+            return ixmaps.layer("World_countries_shp", layer => layer
+                .data({ name: "prezzi_tipo_latlon", type: "ext", cache: "true" })
+                .binding({ item: "Latitudine.2|Longitudine.2", geo: "Latitudine.2|Longitudine.2", value: "prezzo.1", title: "bandiera" })
+                .filter("WHERE descCarburante.1 like " + carburante)
+                .type("GLOW|CHART|SYMBOL|SIZE|NOOUTLIER|ZEROISNOTVALUE|VALUES|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE|GAP|TOOLTIPNOCHART|CIRCULARBOX|BOTTOMTITLE")
+                .style({
+                    colorscheme: ["9", "#56A651", "#794073", "3colors", "#DDA729"],
+                    shadow: "true",
+                    shadowupper: "1:10000",
+                    showdata: "true",
+                    symbols: ["circle"],
+                    valueupper: "1:500000",
+                    valuedecimals: "3",
+                    gridwidthpx: "6.014928378493109",
+                    aggregationscale: ["1:1", "30px", "1:150000", "10px", "1:1000000", "5px"],
+                    boxupper: "1:100000",
+                    glowlower: "1:150000",
+                    legendunits: "€",
+                    scale: "1",
+                    valuecolor: "white",
+                    textcolor: "black",
+                    textscale: "0.3",
+                    linecolor: "none",
+                    dominantfilter: "mean",
+                    dominantdfilter: "0"
+                })
+                .meta({
+                    name: "prezzo_grappolo",
+                    title: "Prezzo alle ore 8 del giorno",
+                    tooltip: TEMA_PREZZO_TOOLTIP
+                })
+            );
+        };
+
+        var tema_prezzo_grid_circle = function (carburante) {
+            return ixmaps.layer("World_countries_shp", layer => layer
+                .data({ name: "prezzi_tipo_latlon", type: "ext", cache: "true" })
+                .binding({ item: "Latitudine.2|Longitudine.2", geo: "Latitudine.2|Longitudine.2", value: "prezzo.1" })
+                .filter("WHERE descCarburante.1 like " + carburante)
+                .type("CHART|SYMBOL|SIZE|NOOUTLIER|DTEXT|VALUES|VALUEBACKGROUND|QUANTILE|RECT|AGGREGATE|MEAN|GRIDSIZE|GAP|TOOLTIPNOCHART")
+                .style({
+                    colorscheme: ["9", "#56A651", "#794073", "3colors", "#DDA729"],
+                    fillopacity: "0.7",
+                    shadow: "false",
+                    showdata: "true",
+                    symbols: ["circle"],
+                    legendunits: "€",
+                    scale: "1",
+                    textcolor: "white",
+                    linecolor: "none",
+                    valuedecimals: "3",
+                    gridwidthpx: "33",
+                    dominantfilter: "mean",
+                    dominantdfilter: "0"
+                })
+                .meta({
+                    name: "prezzo_pallini",
+                    title: "Prezzo alle ore 8 del giorno per " + carburante,
+                    tooltip: TEMA_PREZZO_TOOLTIP
+                })
+            );
+        };
+
+        var tema_prezzo_grid_label = function (carburante) {
+            return ixmaps.layer("World_countries_shp", layer => layer
+                .data({ name: "prezzi_tipo_latlon", type: "ext", cache: "true" })
+                .binding({ item: "Latitudine.2|Longitudine.2", geo: "Latitudine.2|Longitudine.2", value: "prezzo.1" })
+                .filter("WHERE descCarburante.1 like " + carburante)
+                .type("GAP|CHART|LABEL|SIZE|NOOUTLIER|DTEXT|VALUES|VALUEBACKGROUND|QUANTILE|RECT|AGGREGATE|MEAN|GRIDSIZE|TOOLTIPNOCHART")
+                .style({
+                    colorscheme: ["9", "#56A651", "#794073", "3colors", "#DDA729"],
+                    shadow: "true",
+                    showdata: "true",
+                    symbols: ["circle"],
+                    legendunits: "€",
+                    scale: "1",
+                    textcolor: "white",
+                    linecolor: "white",
+                    linewidth: "1",
+                    valuescale: "0.5",
+                    valuedecimals: "3",
+                    gridwidthpx: "33",
+                    dominantfilter: "mean",
+                    dominantdfilter: "0"
+                })
+                .meta({
+                    name: "prezzo_etichette",
+                    title: "Prezzo alle ore 8 del giorno per " + carburante,
+                    tooltip: TEMA_PREZZO_TOOLTIP
+                })
+            );
+        };
+
+        var tema_prezzo_grid_square = function (carburante) {
+            return ixmaps.layer("World_countries_shp", layer => layer
+                .data({ name: "prezzi_tipo_latlon", type: "ext", cache: "true" })
+                .binding({ geo: "Latitudine.2|Longitudine.2", value: "prezzo.1" })
+                .filter("WHERE descCarburante.1 like " + carburante)
+                .type("CHART|SYMBOL|SIZE|NOOUTLIER|ZEROISNOTVALUE|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE|VALUES|TOOLTIPNOCHART")
+                .style({
+                    colorscheme: ["9", "#56A651", "#794073", "3colors", "#DDA729"],
+                    fillopacity: "0.3",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    symbols: ["square"],
+                    units: "€",
+                    legendunits: "       €",
+                    refreshtimeout: "0",
+                    scale: "1",
+                    textcolor: "#000000",
+                    linecolor: ["black"],
+                    linewidth: ["0.2"],
+                    valuescale: "1",
+                    valuedecimals: "3",
+                    aggregationscale: ["1:1", "100px", "1:100000", "80px", "1:1000000", "50px"],
+                    minaggregation: "auto"
+                })
+                .meta({
+                    name: "prezzo_griglia",
+                    title: "Prezzo alle ore 8 del giorno",
+                    tooltip: TEMA_PREZZO_TOOLTIP
+                })
+            );
+        };
+
+        var tema_prezzo_grid_square_text = function (carburante) {
+            return ixmaps.layer("World_countries_shp", layer => layer
+                .data({ name: "prezzi_tipo_latlon", type: "ext", cache: "true" })
+                .binding({ geo: "Latitudine.2|Longitudine.2", value: "prezzo.1" })
+                .filter("WHERE descCarburante.1 like " + carburante)
+                .type("CHART|SYMBOL|SIZE|NOOUTLIER|ZEROISNOTVALUE|VALUES|TEXTONLY|QUANTILE|AGGREGATE|RECT|RELOCATE|MEAN|GRIDSIZE|TOOLTIPNOCHART")
+                .style({
+                    colorscheme: ["white"],
+                    fillopacity: "1",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    symbols: ["label"],
+                    units: "€",
+                    legendunits: "       €",
+                    refreshtimeout: "0",
+                    scale: "0.33",
+                    textcolor: "black",
+                    linecolor: ["white"],
+                    linewidth: ["0.2"],
+                    valuescale: "0.3",
+                    valuedecimals: "3",
+                    aggregationscale: ["1:1", "100px", "1:100000", "100px", "1:1000000", "100px"],
+                    minaggregation: "auto",
+                    chartlower: "1:500000"
+                })
+                .meta({
+                    name: "prezzo_griglia_testo",
+                    title: "Prezzo alle ore 8 del giorno",
+                    tooltip: TEMA_PREZZO_TOOLTIP
+                })
+            );
+        };
+
+        var tema_prezzo_grid_circle_raw = function (carburante) {
+            return ixmaps.layer("World_countries_shp", layer => layer
+                .data({ name: "prezzi_tipo_latlon", type: "ext", cache: "true" })
+                .binding({ geo: "Latitudine.2|Longitudine.2", value: "prezzo.1" })
+                .filter("WHERE descCarburante.1 like " + carburante)
+                .type("CHART|SYMBOL|SIZE|NOOUTLIER|ZEROISNOTVALUE|VALUES|QUANTILE|AGGREGATE|RECT|MEAN|GRIDSIZE|GAP|TOOLTIPNOCHART")
+                .style({
+                    colorscheme: ["9", "#56A651", "#794073", "3colors", "#DDA729"],
+                    opacity: "0.5",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    symbols: ["circle"],
+                    units: "",
+                    legendunits: "                  €",
+                    refreshtimeout: "0",
+                    scale: "10",
+                    textcolor: "white",
+                    linecolor: ["none"],
+                    valueupper: "1:200000",
+                    shadowupper: "1:10000",
+                    valuescale: "1",
+                    valuedecimals: "3",
+                    aggregationscale: ["1:1", "3px", "1:100000", "1px", "1:1000000", "0.4px"]
+                })
+                .meta({
+                    name: "prezzo_raw",
+                    title: "Prezzo alle ore 8 del giorno",
+                    tooltip: TEMA_PREZZO_TOOLTIP
+                })
+            );
+        };
+
+        // Italian region outlines — silent background layer (no legend, no tooltip theme)
+        const nuts2 =
+            ixmaps.layer("nuts2", layer => layer
+                .type("FEATURES|SILENT|LOCKED|NOLEGEND")
+                .data({
+                    url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2021_4326_LEVL_2.geojson",
+                    type: "geojson"
+                })
+                .binding({
+                    id: "NUTS_ID"
+                })
+                .filter("WHERE CNTR_CODE = IT")
+                .style({
+                    colorscheme: ["white"],
+                    fillopacity: "1",
+                    linecolor: "#999999",
+                    linewidth: "2",
+                    shadow: true,
+                    showdata: true,
+                    featurelower: "1:3000000",
+                    titlefield: "NUTS_NAME",
+                    name: "nuts2"
+                })
+            );
+
+        // Basemap fades in on zoom-in so the price points stay readable when zoomed out
+        ixmaps.htmlgui_onZoomAndPan = function () {
+            var nOpacity = (ixmaps.getZoom() - 7) / 2;
+            ixmaps.map().setBasemapOpacity(nOpacity, "absolute");
+            persistView();
+        };
+
+        attribution =
+            "powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a> |&nbsp; <a href=\"javascript:toggleCodeView()\" > html</a>";
+
+        /**
+         **
+         ** create the interactive map an append it to the document
+         **
+         **/
+        ixmaps.Map("map_div", {
+            mapService: "leaflet_vt",
+            mapType: "ArcGIS - Topo",
+            map: "../../maps/svg/maps/generic/mercator.svg",
+            legend: true,
+            mapLegend: true,
+            mapSilent: true,
+            xxalign: "left",
+            mode: "pan",
+            search: "Italy",
+        },
+            map => map
+                .view([__urlLat || 42.936066401555564, __urlLon || 13.81805419921875], __urlZoom || 7)
+                .options({
+                    flushChartDraw: "5000",
+                    objectscaling: "dynamic",
+                    normalSizeScale: 10000000,
+                    dynamiclabel: "NOREMOVE|CHECKOVERLAP",
+                    basemapopacity: "0.5",
+                })
+                .local("painting map", "")
+                .local("... processing ...", "")
+                .local("... creating theme ...", "...")
+                .attribution(attribution)
+                .layer(nuts2)
+                .layer(__getTheme(), "clear")
+        );
+
+        // --------------------------------------------
+        // Statistics — view-dependent, from map facets
+        // (plugins/facet.js → ixmaps.data.getFacets, scope "map")
+        // --------------------------------------------
+        ixmaps.fuelStats = (function () {
+            var timer = null;
+
+            function isNum(v) {
+                return typeof v === "number" && isFinite(v);
+            }
+
+            // the databroker writes "Estrazione del <date>" into the map
+            // title overlay; capture it once for the panel footer
+            var estrazione = null;
+            function getEstrazione() {
+                if (estrazione) return estrazione;
+                if (ixmaps._estrazione) {
+                    estrazione = ixmaps._estrazione;
+                    return estrazione;
+                }
+                var spans = document.querySelectorAll("span");
+                for (var i = 0; i < spans.length; i++) {
+                    var t = spans[i].textContent || "";
+                    if (spans[i].children.length === 0 && /Estrazione del/.test(t)) {
+                        estrazione = t.trim();
+                        break;
+                    }
+                }
+                return estrazione;
+            }
+
+            // primary (first) theme carries the price data points;
+            // text-label overlays are added after it
+            function primaryThemeId() {
+                var ts = ixmaps.getThemes();
+                if (ts) {
+                    for (var k in ts) {
+                        // skip the silent "nuts2" region-outline background layer
+                        if (ts[k] && ts[k].szId && ts[k].szId !== "nuts2") return ts[k].szId;
+                    }
+                }
+                return null;
+            }
+
+            function eur(v) {
+                return isNum(v) ? v.toFixed(3) + " €" : "—";
+            }
+
+            // "visible" scope — only records currently rendered on the map
+            // (plugins/facet.js reads theme.indexA/itemA, which the engine
+            // limits to what's drawn in the current viewport)
+            function statsFromVisible(ot, themeId) {
+                if (!ixmaps.data || !ixmaps.data.getFacets) return null;
+                var facets;
+                try {
+                    facets = ixmaps.data.getFacets(
+                        ot.szFilter || "",
+                        "",
+                        ["prezzo.1", "isSelf.1", "Bandiera.2"],
+                        themeId,
+                        "map",
+                        ""
+                    );
+                } catch (e) {
+                    console.warn("fuelStats:", e);
+                    return null;
+                }
+                if (!facets || !facets.length) return { count: 0 };
+
+                var price = null, self = null, brand = null;
+                facets.forEach(function (f) {
+                    if (f.id === "prezzo.1") price = f;
+                    else if (f.id === "isSelf.1") self = f;
+                    else if (f.id === "Bandiera.2") brand = f;
+                });
+
+                var pv = price && price.values ? price.values.filter(isNum) : [];
+                if (!pv.length) return { count: 0 };
+                var sv = self && self.values ? self.values.filter(isNum) : [];
+                var topBrand = brand && brand.values && brand.values.length ? brand.values[0] : null;
+                var topCount = topBrand ? ((brand.valuesCount && brand.valuesCount[topBrand]) || 0) : 0;
+
+                return {
+                    count: pv.length,
+                    mean: price.sum / pv.length,
+                    min: price.min,
+                    max: price.max,
+                    selfPct: sv.length ? (self.sum / sv.length) * 100 : null,
+                    topBrand: topBrand,
+                    topCount: topCount
+                };
+            }
+
+            // "all" scope — the whole filtered dataset (dbRecords holds every fuel
+            // type merged together; re-apply the theme's own fuel filter directly,
+            // bypassing the viewport-only indexA/itemA facets go through)
+            function statsFromAll(ot) {
+                if (typeof Data === "undefined" || !Data.Table) return null;
+                var fields = ot.objTheme.dbFields;
+                var idx = {};
+                fields.forEach(function (f, i) { idx[f.id] = i; });
+
+                var dt = new Data.Table(null);
+                dt.fields = fields;
+                dt.records = ot.objTheme.dbRecords;
+                var filtered = ot.szFilter ? dt.select(ot.szFilter) : dt;
+                var recs = (filtered && filtered.records) || [];
+
+                var sum = 0, min = Infinity, max = -Infinity, count = 0;
+                var selfSum = 0, selfCount = 0;
+                var brandCounts = {};
+                for (var i = 0; i < recs.length; i++) {
+                    var r = recs[i];
+                    var p = parseFloat(r[idx["prezzo.1"]]);
+                    if (isNum(p)) {
+                        sum += p; count++;
+                        if (p < min) min = p;
+                        if (p > max) max = p;
+                    }
+                    var s = parseFloat(r[idx["isSelf.1"]]);
+                    if (isNum(s)) { selfSum += s; selfCount++; }
+                    var b = r[idx["Bandiera.2"]];
+                    if (b) brandCounts[b] = (brandCounts[b] || 0) + 1;
+                }
+                if (!count) return { count: 0 };
+
+                var topBrand = null, topCount = 0;
+                for (var k in brandCounts) {
+                    if (brandCounts[k] > topCount) { topCount = brandCounts[k]; topBrand = k; }
+                }
+
+                return {
+                    count: count,
+                    mean: sum / count,
+                    min: min,
+                    max: max,
+                    selfPct: selfCount ? (selfSum / selfCount) * 100 : null,
+                    topBrand: topBrand,
+                    topCount: topCount
+                };
+            }
+
+            function render(stats) {
+                var body = document.getElementById("statistics");
+                if (!stats || !stats.count) {
+                    body.innerHTML = '<span>' + (statsScope === "all" ? "nessun dato" : "nessun dato nella vista") + '</span>';
+                    return;
+                }
+                var countLabel = statsScope === "all" ? "Punti totali" : "Punti visibili";
+                var html =
+                    '<div class="stat-row"><span>Prezzo medio</span><span class="v big">' + eur(stats.mean) + '</span></div>' +
+                    '<div class="stat-row"><span>Min / Max</span><span class="v">' + eur(stats.min) + ' / ' + eur(stats.max) + '</span></div>' +
+                    '<div class="stat-row"><span>' + countLabel + '</span><span class="v">' + stats.count.toLocaleString("it-IT") + '</span></div>' +
+                    '<div class="stat-row"><span>Self-service</span><span class="v">' + (stats.selfPct == null ? "—" : stats.selfPct.toFixed(0) + " %") + '</span></div>' +
+                    '<div class="stat-row"><span>Marca prevalente</span><span class="v">' + (stats.topBrand ? stats.topBrand + " (" + stats.topCount + ")" : "—") + '</span></div>';
+
+                var est = getEstrazione();
+                if (est) {
+                    html += '<div class="times"><span class="th">' + est + '</span></div>';
+                }
+                body.innerHTML = html;
+            }
+
+            function update() {
+                var themeId = primaryThemeId();
+                if (!themeId) return;
+                var ot = ixmaps.getThemeObj(themeId);
+                if (!ot || !ot.objTheme || !ot.objTheme.dbTable) return;
+
+                var stats = (statsScope === "all") ? statsFromAll(ot) : statsFromVisible(ot, themeId);
+                render(stats);
+            }
+
+            function schedule() {
+                clearTimeout(timer);
+                timer = setTimeout(update, 250);
+            }
+            return { schedule: schedule, update: update };
+        })();
+
+        ixmaps.htmlgui_onDrawTheme = function (szId) {
+            ixmaps.fuelStats.schedule();
+        };
+
+        // ----------------------------
+        // R E S P O N S I V E   S H E L L
+        // ----------------------------
+
+        let sidebarOpen = window.innerWidth > 768;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initializePage();
+        });
+
+        function initializePage() {
+            if (window.innerWidth <= 768) {
+                document.getElementById('main_sidebar').style.display = 'none';
+                setTimeout(function () {
+                    if (typeof ixmaps !== 'undefined') ixmaps.map().resize();
+                }, 300);
+            }
+            window.addEventListener('resize', debounce(handleResize, 250));
+        }
+
+        function handleResize() {
+            const sidebar = document.getElementById('main_sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.style.display = 'none';
+                sidebarOpen = false;
+            } else {
+                sidebar.style.display = 'block';
+                sidebarOpen = true;
+            }
+            if (typeof ixmaps !== 'undefined') ixmaps.map().resize();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('main_sidebar');
+            sidebarOpen = !sidebarOpen;
+            sidebar.style.display = sidebarOpen ? 'block' : 'none';
+            setTimeout(function () {
+                if (typeof ixmaps !== 'undefined') ixmaps.map().resize();
+            }, 300);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function toggleInfoPopup() {
+            const popup = document.getElementById('infoPopup');
+            const overlay = document.getElementById('infoOverlay');
+            if (popup.classList.contains('active')) {
+                popup.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                popup.classList.add('active');
+                overlay.classList.add('active');
+            }
+        }
+
+        function toggleCodeView() {
+            const overlay = document.getElementById('code_overlay');
+            overlay.style.display = (overlay.style.display === 'none' ? 'block' : 'none');
+            if (overlay.style.display === 'block') {
+                generateHtmlCode();
+            }
+        }
+
+        function closeCodeView() {
+            document.getElementById('code_overlay').style.display = 'none';
+            document.getElementById('code_display').textContent = "";
+        }
+
+        function generateHtmlCode() {
+            const codeDisplay = document.getElementById('code_display');
+            const projectCode = ixmaps.map().getProjectString();
+            const htmlCode = new Config(projectCode).getProjectHTML();
+            codeDisplay.textContent = htmlCode;
+            delete codeDisplay.dataset.highlighted;
+            hljs.highlightElement(codeDisplay);
+        }
+
+        function copyToClipboard() {
+            const codeText = document.getElementById('code_display').textContent;
+            navigator.clipboard.writeText(codeText).then(() => {
+                alert('Codice HTML copiato negli appunti!');
+            }).catch(err => {
+                console.error('Errore nella copia:', err);
+            });
+        }
+
+        function saveAsFile() {
+            const codeText = document.getElementById('code_display').textContent;
+            const blob = new Blob([codeText], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mappa_prezzi_carburanti.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Unified keyboard handler
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeCodeView();
+                const popup = document.getElementById('infoPopup');
+                const overlay = document.getElementById('infoOverlay');
+                if (popup.classList.contains('active')) {
+                    popup.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            }
+        });
+
+    </script>
+</body>
+
+</html>

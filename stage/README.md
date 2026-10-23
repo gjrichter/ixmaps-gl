@@ -116,6 +116,45 @@ Interactive map examples built with [ixmaps-gl](https://github.com/gjrichter/ixm
 
 ---
 
+## live/
+
+Maps fed by live data sources, refreshed on every load.
+
+<div class="gallery">
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/live/index_embed_terremoti_ultima_settimana.html"><img src="screenshots/live--index_embed_terremoti_ultima_settimana.png" width="100%"></a><br>
+<b>Earthquakes of the last week</b><br>
+<sub>Live INGV earthquake catalogue (magnitude ≥ 1, last 7 days) over the DISS seismogenic sources; circle size by magnitude or by energy, with a size-exponent slider.</sub><br>
+<a href="https://gl.ixmaps.com/stage/live/index_embed_terremoti_ultima_settimana.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/live/index_embed_terremoti_ultima_settimana.html">see code →</a>
+</div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/live/incendi_attivi_effis_kde_regioni.html"><img src="screenshots/live--incendi_attivi_effis_kde_regioni.png" width="100%"></a><br>
+<b>Active fires in Italy — EFFIS</b><br>
+<sub>NASA FIRMS / EFFIS active-fire hotspots with known industrial heat sources excluded, optional KDE density surface and regional filter.</sub><br>
+<a href="https://gl.ixmaps.com/stage/live/incendi_attivi_effis_kde_regioni.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/live/incendi_attivi_effis_kde_regioni.html">see code →</a>
+</div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/live/prezzi_carburanti.html"><img src="screenshots/live--prezzi_carburanti.png" width="100%"></a><br>
+<b>Fuel prices in Italy</b><br>
+<sub>MISE fuel prices (LPG, petrol, diesel, methane) as labels, dots, clusters or an aggregated grid, for the visible area or all of Italy.</sub><br>
+<a href="https://gl.ixmaps.com/stage/live/prezzi_carburanti.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/live/prezzi_carburanti.html">see code →</a>
+</div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/live/temperature_attuali_wbgt_kde.html"><img src="screenshots/live--temperature_attuali_wbgt_kde.png" width="100%"></a><br>
+<b>Temperature and heat stress (WBGT)</b><br>
+<sub>Real-time MeteoHub station data: measured and apparent temperature, humidity and WBGT, with a KDE surface of the ISO 7243 risk zones.</sub><br>
+<a href="https://gl.ixmaps.com/stage/live/temperature_attuali_wbgt_kde.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/live/temperature_attuali_wbgt_kde.html">see code →</a>
+</div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/live/facets_status_time.html"><img src="screenshots/live--facets_status_time.png" width="100%"></a><br>
+<b>NYC 311 complaints by status</b><br>
+<sub>Service requests to New York City's 311 line over a selectable time scope (24 hours, 7 days, 1 month), with facets that count the complaints in view.</sub><br>
+<a href="https://gl.ixmaps.com/stage/live/facets_status_time.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/live/facets_status_time.html">see code →</a>
+</div>
+</div>
+
+---
+
 ## video/
 
 <div class="gallery">
