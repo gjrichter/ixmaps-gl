@@ -116,6 +116,25 @@ Interactive map examples built with [ixmaps-gl](https://github.com/gjrichter/ixm
 
 ---
 
+## video/
+
+<div class="gallery">
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/video/parler_dc_riot_timeline.html"><img src="screenshots/video--parler_dc_riot_timeline.png" width="100%"></a><br>
+<b>Jan 6, 2021 — Parler video geolocations</b><br>
+<sub>Over a thousand geolocated Parler videos from the US Capitol riot, sized by duration, with a time slider and play button to replay the day.</sub><br>
+<a href="https://gl.ixmaps.com/stage/video/parler_dc_riot_timeline.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/video/parler_dc_riot_timeline.html">see code →</a>
+</div>
+<div class="card">
+<a href="https://gl.ixmaps.com/stage/video/Palestine_video.html"><img src="screenshots/video--Palestine_video.png" width="100%"></a><br>
+<b>Gaza, West Bank and East Jerusalem — located videos</b><br>
+<sub>B'Tselem and Peace Now boundary layers (Areas A/B/C, settlements, barrier, Green Line) with B'Tselem's located videos.</sub><br>
+<a href="https://gl.ixmaps.com/stage/video/Palestine_video.html">OPEN →</a> &nbsp;·&nbsp; <a href="https://gjrichter.github.io/MapCodeViewer/?url=https://gl.ixmaps.com/stage/video/Palestine_video.html">see code →</a>
+</div>
+</div>
+
+---
+
 ## Tools
 
 Standalone tools (not map demos).
