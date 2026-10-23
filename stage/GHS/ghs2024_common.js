@@ -31,7 +31,14 @@ window.GHS = (function () {
   // one layer on a 2024 table ("emissions" | "exposure" | "ghsl"): only `columns` are read.
   // binding = { value, size, ... } (position: the urban centre geometry), type + style + meta per theme
   var seq = 0;
+  // the urban centre's name, shown as the first line of every tooltip (not on AGGREGATE cells, which hold many centres)
+  var NAME_COLUMN = "GC_UCN_MAI_2025";
   function centres(name, table, columns, binding, type, style, meta) {
+    var aggregated = /(^|\|)AGGREGATE(\||$)/.test(type);
+    if (!aggregated) {
+      if (columns.indexOf(NAME_COLUMN) < 0) { columns = columns.concat([NAME_COLUMN]); }
+      binding = Object.assign({ title: NAME_COLUMN }, binding);
+    }
     binding = Object.assign({ position: "geometry" }, binding);
     var dataName = "ghs24_" + table + "_" + (++seq);
     // the query runs inside ixmaps-gl as source text: constants are embedded
@@ -44,7 +51,7 @@ window.GHS = (function () {
         .binding(binding)
         .type(type)
         .style(Object.assign({ shadow: "false" }, legendTheme ? { legendtheme: legendTheme } : {}, style))
-        .meta(Object.assign({ name: name, description: SOURCE, tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}" }, meta));
+        .meta(Object.assign({ name: name, description: SOURCE, tooltip: aggregated ? "<b>{{theme.title}}</b><br>{{theme.item.chart}}" : "<b>{{theme.item.title}}</b><br>{{theme.title}}<br>{{theme.item.chart}}" }, meta));
     });
   }
 

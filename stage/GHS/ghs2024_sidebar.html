@@ -190,11 +190,11 @@
     return ixmaps.layer(name, function (layer) {
       return layer
         .data({ obj: UCDB2015, type: "jsondb" })
-        .binding(Object.assign({ lookupfield: "GCPNT_LAT|GCPNT_LON" }, binding))
+        .binding(Object.assign({ lookupfield: "GCPNT_LAT|GCPNT_LON", title: "UC_NM_MN" }, binding))
         .type(type)
         .style(Object.assign({ shadow: "false", scale: "1", valuescale: "1" }, style))
         .meta(Object.assign({ name: name, description: "data: <a href='https://ghsl.jrc.ec.europa.eu/ucdb2018Overview.php' target='_blank'>GHS Urban Centre Database 2015</a>",
-          tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}" }, meta));
+          tooltip: "<b>{{theme.item.title}}</b><br>{{theme.title}}<br>{{theme.item.chart}}" }, meta));
     });
   }
 
@@ -292,8 +292,9 @@
           { value: "GH_BUS_TOT_2025", value100: "GH_BUS_TOT_1975", title: "GC_UCN_MAI_2025" },
           "CHART|LOG|DIFFERENCE|RELATIVE|BUBBLE|GLOW",
           { colorscheme: pick(["5", "RGB(207,255,51)", "RGB(221,0,0)", "3colors", "RGB(148,204,200)"], ["5", "RGB(110,170,0)", "RGB(221,0,0)", "3colors", "RGB(120,170,170)"]), opacity: "0.9",
-            normalsizevalue: "100000", scale: "1", valuescale: "1", valuedecimals: "1" },
-          { title: "Urban expansion", snippet: "Growth of the built-up surface 1975 - 2025" })];
+            normalsizevalue: "100000", scale: "1", valuescale: "1", valuedecimals: "1", units: "%" },
+          { title: "Urban expansion", snippet: "Growth of the built-up surface 1975 - 2025 (% of the 1975 surface)",
+            tooltip: "<b>{{theme.item.title}}</b><br>Built-up surface growth 1975 - 2025<br>{{theme.item.chart}}" })];
       } },
     { key: "where-people-live", group: "group-urban", label: "Where people live (2025)", names: ["where_people_live"],
       build: function () {
