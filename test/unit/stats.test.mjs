@@ -289,6 +289,28 @@ test('aggregateField100: flat\'s post-aggregation field100 on the cell sums (map
   assert.equal(G.aggregateField100(30, 20, f('DIFFERENCE', 'RELATIVE'), {}), 50, 'DIFFERENCE|RELATIVE → the percent branch');
 });
 
+test('several value fields with several field100 fields: each value in % of its own field100 sum, then the DIFFERENCE (flat maptheme.js 10537-11104)', () => {
+  const fl = (...x) => flags('AGGREGATE', 'DIFFERENCE', ...x);
+  // graduates 2011 / 2021 over the population 2011 / 2021: 20 % → 30 %, +10 percentage points —
+  // not the single-value v − v100 (graduates 2011 − population 2011)
+  assert.equal(G.cellFieldSeriesValue([20, 60], [100, 200], fl(), {}), 10);
+  // RELATIVE is applied in BOTH of flat's steps (−100 on each percent, then in % of the first): −80 → −70, and a first value not above field100min gives 0
+  assert.equal(G.cellFieldSeriesValue([20, 60], [100, 200], fl('RELATIVE'), {}), 0);
+  assert.equal(G.cellFieldSeriesValue([20, 60], [0, 200], fl(), {}), 30, 'a field100 sum of 0 gives 0 for that value (flat)');
+  assert.equal(G.cellFieldSeriesValue([20, 60], [100, 200], fl(), { field100min: 150 }), 30, 'field100min applies to each sum: the first (100) gives 0, the second 30 %');
+});
+
+test('aggregation cell with series + series100: the percents of the SUMS, differenced (the census education arrow)', () => {
+  const rec = (lng, s, s100) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, 45] }, properties: { value: 0, series: s, series100: s100, raw: { REG: 'A' } } });
+  const fl = flags('AGGREGATE', 'DIFFERENCE', 'SUM');
+  const post = (v, v100, series, series100) => (series ? G.cellFieldSeriesValue(series, series100, fl, {}) : v);
+  const cells = G.aggregateOnGrid([rec(9, [10, 40], [100, 100]), rec(11, [10, 20], [100, 300])], 6, null, fl, post, 'REG');
+  assert.equal(cells.length, 1);
+  assert.deepEqual(Array.from(cells[0].properties.series100), [200, 400]);
+  // Σ: 20 of 200 = 10 % in 2011, 60 of 400 = 15 % in 2021 → +5 (a mean of the record percents would give 12.5)
+  near(cells[0].properties.value, 5);
+});
+
 test('aggregateOnGrid with post: the cell\'s value is converted from the SUMS, single-record cells too', () => {
   const r = (lng, lat, value, value100) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { value, value100, raw: {} } });
   const post = (v, v100) => G.aggregateField100(v, v100, flags('AGGREGATE'), {});

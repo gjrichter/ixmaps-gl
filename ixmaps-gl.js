@@ -11460,6 +11460,21 @@ self.onmessage = e => {
     return out;
   }
 
+  // Several value fields WITH several field100 fields on an AGGREGATE theme
+  // ("P47.1|P90.2" over "P1.1|P1.2", DIFFERENCE): flat reads one field100 per
+  // value field (the last one repeated, maptheme.js 10537-10556), sums both
+  // per cell (10901), turns each value into its own percent of its own
+  // field100 sum (11000-11050 — the plain v − v100 of DIFFERENCE applies to a
+  // SINGLE value field only) and then takes the DIFFERENCE of the percents
+  // (11088-11104), e.g. the change of the share of graduates between two
+  // censuses in percentage points. series / series100: the cell's sums.
+  function cellFieldSeriesValue(series, series100, flags, style) {
+    const percentFlags = new Set(flags);
+    percentFlags.delete('DIFFERENCE');
+    const values = series.map((s, i) => aggregateField100(s, series100[i] || 0, percentFlags, style));
+    return cellAggregatedValues({ sums: values, counts: values.map(() => 1) }, flags, style)[0];
+  }
+
   // post(value, value100) — optional: converts a cell's value-field sum
   // (classValue when the cell carries one, else value) once aggregated,
   // for single-record cells too (flat converts every item)
@@ -11508,6 +11523,12 @@ self.onmessage = e => {
         if (!cell.series) cell.series = new Array(series.length).fill(0);
         for (let i = 0; i < series.length; i++) cell.series[i] = combine(cell.series[i], series[i], first);
       }
+      // one field100 per value field (see cellFieldSeriesValue), summed like the values
+      const series100 = f.properties.series100;
+      if (series100) {
+        if (!cell.series100) cell.series100 = new Array(series100.length).fill(0);
+        for (let i = 0; i < series100.length; i++) cell.series100[i] = combine(cell.series100[i], series100[i], first);
+      }
       // a multi-field SEQUENCE record's size-field value (flat's
       // nValueSize): MAX/MIN/summed into the item's nSize, as flat does
       if (f.properties.size !== undefined) cell.size = combine(typeof cell.size === 'number' ? cell.size : 0, f.properties.size, first);
@@ -11542,6 +11563,7 @@ self.onmessage = e => {
             ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}) }
         : cell.first.properties;
       if (cell.series && cell.n > 1) props = Object.assign({}, props, { series: cell.series });
+      if (cell.series100 && cell.n > 1) props = Object.assign({}, props, { series100: cell.series100 });
       if (cell.pie) props = Object.assign({}, props, { pie: cell.pie });
       if (typeof cell.size === 'number' && cell.n > 1) props = Object.assign({}, props, { size: cell.size });
       // a field aggregation's cell key (the field value): the categories of
@@ -11549,8 +11571,8 @@ self.onmessage = e => {
       if (field) props = Object.assign({}, props, { aggKey: cell.key });
       if (post) {
         props = Object.assign({}, props);
-        if (hasClass) props.classValue = post(cell.n > 1 ? cell.classValue : props.classValue, cell.value100, props.series);
-        else props.value = post(cell.n > 1 ? cell.value : props.value, cell.value100, props.series);
+        if (hasClass) props.classValue = post(cell.n > 1 ? cell.classValue : props.classValue, cell.value100, props.series, props.series100);
+        else props.value = post(cell.n > 1 ? cell.value : props.value, cell.value100, props.series, props.series100);
       }
       out.push({ type: 'Feature', geometry, properties: props });
     }
@@ -12213,16 +12235,24 @@ self.onmessage = e => {
         // DIFFERENCE over several value fields: each record keeps its field
         // values, the difference is taken on the cell sums (see post)
         const seriesFields = String(this.binding.value || '').split('|');
-        this._seriesDifference = this.flags.has('DIFFERENCE') && seriesFields.length > 1 && !this._aggregateField100;
+        // several value fields AND several field100 fields: each value gets its own field100 (the last
+        // repeated) and the percents are differenced (cellFieldSeriesValue)
+        const f100List = this.binding.field100 ? String(this.binding.field100).split('|') : [];
+        this._series100 = this._aggregateField100 && this.flags.has('DIFFERENCE') && seriesFields.length > 1 && f100List.length > 1 && f100List[0] !== '$item$';
+        this._seriesDifference = this.flags.has('DIFFERENCE') && seriesFields.length > 1 && (!this._aggregateField100 || this._series100);
         const seriesOf = props => seriesFields.map(k => scanValue(props[k]) || 0);
+        const series100Of = props => seriesFields.map((_, i) => scanValue(props[f100List[Math.min(i, f100List.length - 1)]]) || 0);
         // without AGGREGATE the records are already differenced (applyField100)
-        const seriesValue = !this.flags.has('AGGREGATE') ? props => scanValue(props[seriesFields[0]]) || 0 : props => cellAggregatedValues({ sums: seriesOf(props), counts: seriesFields.map(() => 1) }, this.flags, this.style)[0];
+        const seriesValue = !this.flags.has('AGGREGATE') ? props => scanValue(props[seriesFields[0]]) || 0
+          : this._series100 ? props => cellFieldSeriesValue(seriesOf(props), series100Of(props), this.flags, this.style)
+          : props => cellAggregatedValues({ sums: seriesOf(props), counts: seriesFields.map(() => 1) }, this.flags, this.style)[0];
         this._featuresByCategory = [sourceFeatures.map(f => ({
           type: 'Feature',
           geometry: f.geometry,
           properties: {
             value: this._seriesDifference ? seriesValue(f.properties) : this._resolveAggregateValue(f.properties),
             ...(this._seriesDifference ? { series: seriesOf(f.properties) } : {}),
+            ...(this._series100 ? { series100: series100Of(f.properties) } : {}),
             // "$item$": flat's record count, 1 per record
             ...(this._classSeparate ? { classValue: this.binding.value === '$item$' ? 1 : scanValue(f.properties[this.binding.value]) || 0 } : {}),
             ...(this._aggregateField100 ? { value100: scanValue(f.properties[f100]) || 0 } : {}),
@@ -12656,7 +12686,9 @@ self.onmessage = e => {
       // AGGREGATE theme, or the DIFFERENCE of its value fields (flat,
       // maptheme.js 11084-11097: v2 − v1, RELATIVE: in % of v1)
       const post = this._seriesDifference
-        ? (v, v100, series) => (series ? cellAggregatedValues({ sums: series, counts: series.map(() => 1) }, this.flags, this.style)[0] : v)
+        ? (v, v100, series, series100) => (series
+          ? (this._series100 && series100 ? cellFieldSeriesValue(series, series100, this.flags, this.style) : cellAggregatedValues({ sums: series, counts: series.map(() => 1) }, this.flags, this.style)[0])
+          : v)
         : this._aggregateField100 ? (v, v100) => aggregateField100(v, v100, this.flags, this.style) : undefined;
       // flat's weights multiply every record's value fields as they are
       // accumulated (maptheme.js 10506-10508), before the sums' field100
@@ -19119,7 +19151,7 @@ self.onmessage = e => {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb, heatmapColorRange, heatmapWeight,
     mlHeatmapPoints, mlHeatmapWeightMax, mlHeatmapRadius, mlHeatmapPaint, syncNativeHeatmaps, mlHeatLayerId,
