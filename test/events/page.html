@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>map events</title>
+<script src="../../ixmaps-gl.js"></script>
+<style>html, body { margin: 0; height: 100%; } #map_div { position: absolute; inset: 0; }</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  // three points bound by geometry only (no id/lookup field): the item click must still fire
+  var features = [[9.18, 45.46], [9.20, 45.47], [9.22, 45.45]].map(function (c, i) {
+    return { type: "Feature", properties: { name: "p" + i, cat: i ? "b" : "a" }, geometry: { type: "Point", coordinates: c } };
+  });
+  var layer = ixmaps.layer("pts", function (l) {
+    return l.data({ obj: { type: "FeatureCollection", features: features }, type: "geojson" })
+      .binding({ geo: "geometry", value: "cat" })
+      .type("CHART|DOT|CATEGORICAL|NOLEGEND")
+      .style({ colorscheme: ["#d9534f", "#428bca"], values: ["a", "b"], scale: 3 })
+      .meta({ name: "pts", tooltip: "{{name}}" });
+  });
+  window._features = features;
+  ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", name: "evmap" },
+    function (map) { map.view([45.46, 9.2], 12).layer(layer); });
+</script>
+</body>
+</html>

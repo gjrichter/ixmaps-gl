@@ -19,6 +19,7 @@ const G = win.__ixmapsGlInternals;
 test('splitMapEvents: space-separated names, lower-cased, flat aliases resolved', () => {
   assert.deepEqual(Array.from(G.splitMapEvents('zoomend  moveend')), ['zoomend', 'moveend']);
   assert.deepEqual(Array.from(G.splitMapEvents('ZoomPan itemclick MapReady drawtheme')), ['viewchange', 'click', 'ready', 'layerdraw']);
+  assert.deepEqual(Array.from(G.splitMapEvents('itemover itemout newtheme removetheme')), ['mouseover', 'mouseout', 'layeradd', 'layerremove']);
   assert.deepEqual(Array.from(G.splitMapEvents('')), []);
   assert.deepEqual(Array.from(G.splitMapEvents(undefined)), []);
 });
@@ -33,6 +34,16 @@ test('builder.on: wired events are stored per name without a warning; an unwired
   assert.match(warnings[0], /"mouseover" is not implemented/);
 });
 
+test('builder.off: removes the given handler for the given events only', () => {
+  const b = new G.MapBuilder('map_div');
+  const a = () => {}, c = () => {};
+  b.on('click moveend', a).on('click', c);
+  b.off('click', a);
+  assert.deepEqual(Array.from(b._pendingEvents, e => [e[0], e[1] === a ? 'a' : 'c']), [['moveend', 'a'], ['click', 'c']]);
+  b.off('itemclick', c);          // an alias removes the same handler
+  assert.deepEqual(Array.from(b._pendingEvents, e => e[0]), ['moveend']);
+});
+
 test('getBounds: null before a map exists; flat order [swLat, swLng, neLat, neLng] is the getBoundingBox box', () => {
   assert.equal(G.getBounds(), null);
   assert.equal(win.ixmaps.getBounds(), null);
@@ -41,7 +52,7 @@ test('getBounds: null before a map exists; flat order [swLat, swLng, neLat, neLn
 
 test('map handle: on, getBounds, getMapLibre exist; getMapLibre is undefined before the map is built', () => {
   const h = win.ixmaps.map('events_map');
-  for (const m of ['on', 'getBounds', 'getMapLibre']) assert.equal(typeof h[m], 'function', m);
+  for (const m of ['on', 'off', 'getBounds', 'getMapLibre']) assert.equal(typeof h[m], 'function', m);
   assert.equal(h.getMapLibre(), undefined);
   assert.equal(h.getBounds(), null);
 });

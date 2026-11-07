@@ -4484,10 +4484,17 @@ self.onmessage = e => {
         // a single record, or an aggregated item's first one
         const raw = props.raw || props.firstRaw || props.titleRaw || (props.raws && props.raws[0]) || props;
         const value = field && raw ? raw[field] : null;
-        if (value == null) return;
-        // the map's "click" event (flat: { szId, id, theme }, plus the click position)
-        if (builder.__emitItemClick) builder.__emitItemClick(Object.assign({ szId: themeIdOf(rt) + '::' + value, id: String(value), theme: themeIdOf(rt) }, pos));
-        if (typeof hook !== 'function') return;
+        // the map's "click" event, for EVERY item as in flat (szId = theme::itemKey): the key is the selection
+        // field's value, else the feature's id, else its position "lng,lat" — a theme bound by geometry only
+        // (no id/lookup field) has no selection value. gl adds the record and the click position.
+        if (builder.__emitItemClick) {
+          const g = object.geometry, a = anchorCoordOf(g) || (g && Array.isArray(g.coordinates) && g.coordinates[0]);
+          const key = value != null ? String(value)
+            : (object.id != null ? String(object.id) : (a && typeof a[0] === 'number' ? a[0] + ',' + a[1] : ''));
+          builder.__emitItemClick(Object.assign({ szId: themeIdOf(rt) + '::' + key, id: key, theme: themeIdOf(rt), record: raw }, pos));
+        }
+        // flat's onItemAction needs the theme's selection value
+        if (value == null || typeof hook !== 'function') return;
         hook.call(global.ixmaps, themeIdOf(rt) + '::' + value, { szSelectionId: String(value) }, getThemeObj(themeIdOf(rt)));
       } catch (err) { console.error('[ixmaps-gl] onItemAction failed:', err); }
     }
@@ -5538,7 +5545,8 @@ self.onmessage = e => {
   //  viewchange (every view change end), zoomend / moveend ({ nZoom, zoomChanged, panChanged }, as flat),
   //  ready (the map has loaded), click (an item: { szId, id, theme } + lngLat/point), layerdraw ({ id }) and,
   //  as a gl addition, mapclick (every click on the map, background included: { lngLat, point })
-  const MAP_EVENT_ALIAS = { zoompan: 'viewchange', itemclick: 'click', mapready: 'ready', drawtheme: 'layerdraw' };
+  const MAP_EVENT_ALIAS = { zoompan: 'viewchange', itemover: 'mouseover', itemclick: 'click', itemout: 'mouseout', mapready: 'ready',
+    drawtheme: 'layerdraw', newtheme: 'layeradd', removetheme: 'layerremove' };
   const MAP_EVENTS_WIRED = new Set(['viewchange', 'zoomend', 'moveend', 'ready', 'click', 'mapclick', 'layerdraw']);
   function splitMapEvents(events) {
     return String(events == null ? '' : events).trim().toLowerCase().split(/\s+/).filter(Boolean).map(e => MAP_EVENT_ALIAS[e] || e);
@@ -5623,6 +5631,12 @@ self.onmessage = e => {
         warnUnwiredMapEvent(ev);
         this._pendingEvents.push([ev, cb]);
       }
+      return this;
+    }
+    // flat's mapApi.off(events, cb), before the map is built (after it: the handle's off)
+    off(event, cb) {
+      const names = new Set(splitMapEvents(event));
+      this._pendingEvents = (this._pendingEvents || []).filter(([ev, f]) => !(names.has(ev) && f === cb));
       return this;
     }
 
@@ -7303,9 +7317,11 @@ self.onmessage = e => {
 
       // map events (flat's mapApi.on): see MAP_EVENTS_WIRED. "layerdraw" is approximated below.
       const mapListeners = Object.create(null);
+      const drawHooks = new Map();      // layerdraw handler -> its onRedraw unsubscribe functions
+      const mapName = (this.mapOptions && this.mapOptions.name) || null;   // flat's szMap
       let mapReady = false;
       const emitMapEvent = (type, detail) => (mapListeners[type] || []).slice().forEach(cb => {
-        try { cb(Object.assign({ type }, detail)); } catch (err) { console.error(`[ixmaps-gl] "${type}" callback failed:`, err); }
+        try { cb(Object.assign({ type, szMap: mapName }, detail)); } catch (err) { console.error(`[ixmaps-gl] "${type}" callback failed:`, err); }
       });
       engineApi.on = (events, cb) => {
         if (typeof cb !== 'function') return engineApi;
@@ -7313,15 +7329,27 @@ self.onmessage = e => {
           warnUnwiredMapEvent(ev);
           if (ev === 'layerdraw') {
             // flat fires "layerdraw" once per theme as it finishes drawing; here onRedraw fires once per refresh of
-            // the whole map, so the callback is called once per current theme ({ id: rt.name }) every time — a page
-            // that re-reads that theme's state (getThemeObj/getFacets) gets fresh numbers after every redraw
-            engineApi.onRedraw(() => runtimes.forEach(rt => {
-              try { cb({ id: rt.name }); } catch (err) { console.error('[ixmaps-gl] "layerdraw" callback failed:', err); }
+            // the whole map, so the callback is called once per current theme every time — a page that re-reads
+            // that theme's state (getThemeObj/getFacets) gets fresh numbers after every redraw
+            const off = engineApi.onRedraw(() => runtimes.forEach(rt => {
+              const id = themeIdOf(rt);
+              try { cb({ type: 'layerdraw', szId: id, id, szMap: mapName }); } catch (err) { console.error('[ixmaps-gl] "layerdraw" callback failed:', err); }
             }));
+            drawHooks.set(cb, (drawHooks.get(cb) || []).concat(off));
           } else {
             (mapListeners[ev] = mapListeners[ev] || []).push(cb);
-            if (ev === 'ready' && mapReady) setTimeout(() => { try { cb({ type: 'ready' }); } catch (err) { console.error('[ixmaps-gl] "ready" callback failed:', err); } }, 0);
+            if (ev === 'ready' && mapReady) setTimeout(() => { try { cb({ type: 'ready', szMap: mapName }); } catch (err) { console.error('[ixmaps-gl] "ready" callback failed:', err); } }, 0);
           }
+        }
+        return engineApi;
+      };
+      // flat's mapApi.off(events, cb): removes the handler(s) given to on()
+      engineApi.off = (events, cb) => {
+        if (typeof cb !== 'function') return engineApi;
+        for (const ev of splitMapEvents(events)) {
+          if (ev === 'layerdraw') { (drawHooks.get(cb) || []).forEach(off => off()); drawHooks.delete(cb); continue; }
+          const list = mapListeners[ev];
+          if (list) mapListeners[ev] = list.filter(f => f !== cb);
         }
         return engineApi;
       };
@@ -7592,6 +7620,7 @@ self.onmessage = e => {
       promise.local = (...args) => { builder.local(...args); return promise; };
       promise.require = (url) => { if (resolvedApi) resolvedApi.require(url); else builder.require(url); return promise; };
       promise.on = (...args) => { if (resolvedApi) resolvedApi.on(...args); else builder.on(...args); return promise; };
+      promise.off = (...args) => { if (resolvedApi) resolvedApi.off(...args); else builder.off(...args); return promise; };
       promise.getBounds = () => getBounds();
       promise.getMapLibre = () => (resolvedApi ? resolvedApi.map : undefined);
       promise.layer = (nameOrBuilder) => {
@@ -18319,7 +18348,7 @@ self.onmessage = e => {
   // last built map; called while the map is still building, they run once
   // it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'newTheme', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'switchLayer', 'setThemeTimeFrame', 'attribution', 'on'];
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'switchLayer', 'setThemeTimeFrame', 'attribution', 'on', 'off'];
   const _mapHandles = Object.create(null);
   function makeMapHandle(szMap) {
     const h = {};

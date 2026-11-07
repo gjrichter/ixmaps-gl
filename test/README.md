@@ -13,6 +13,7 @@ npm run snapshot                 # re-write baselines/ after an INTENDED output 
 node run.mjs --page choropleth   # only pages whose path contains "choropleth"
 node run.mjs --engine ../x.js    # run the pages against another ixmaps-gl.js build
 node run.mjs --jobs 4            # pages in parallel (default 2); a full run takes ~3 min
+npm run events                   # live check of map.on/off events (headless Chromium, needs network)
 ```
 
 The first run needs network access: it records remote data into `.cache/` (see below).

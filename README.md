@@ -237,16 +237,26 @@ also stops the zoom-out where the world gets narrower than the window.
 
 | event | when | handler receives |
 |---|---|---|
-| `ready` | the map has loaded (called at once if it already has) | `{type}` |
-| `viewchange` (`zoompan`) | after every pan or zoom | `{nZoom, zoomChanged, panChanged}` |
+| `ready` | the map has loaded (called at once if it already has) | `{type, szMap}` |
+| `viewchange` (`zoompan`) | after every pan or zoom | `{type, szMap, nZoom, zoomChanged, panChanged}` |
 | `zoomend` / `moveend` | the zoom changed / the centre moved without a zoom change | as `viewchange` |
-| `click` (`itemclick`) | an item was clicked | `{szId, id, theme, lngLat, point}` |
-| `mapclick` | any click on the map, background included (gl addition) | `{lngLat: {lng, lat}, point: {x, y}}` |
-| `layerdraw` | after every redraw, once per theme | `{id}` |
+| `click` (`itemclick`) | an item was clicked — every item, also of a theme bound by geometry only | `{type, szMap, szId, id, theme, record, lngLat, point}` |
+| `mapclick` | any click on the map, background included (gl addition) | `{type, szMap, lngLat: {lng, lat}, point: {x, y}}` |
+| `layerdraw` (`drawtheme`) | after every redraw, once per theme | `{type, szMap, szId, id}` |
 
-Other flat event names (`mouseover`, `mouseout`, `resize`, `layeradd`, `layerremove`) are accepted but
-never fire; the console says so once. `ixmaps.onItemAction(null, null, {lngLat, point})` gets the click
-position on a background click as a third argument.
+`szId` is `theme::key` and `id` the key: the theme's selection field value (the `id`, position or lookup
+field), else the feature's `id`, else its position `"lng,lat"`; `record` is the item's data record (gl
+addition). `szMap` is the map's `name` option, or `null`. flat's `frozenDynamic` is not provided.
+`map.off("click", fn)` removes a handler, as in flat; several event names may be given, separated by
+spaces, and the names in brackets are flat's aliases.
+
+Differences from flat: `layerdraw` fires for every theme on every redraw, panning included (flat: once per
+theme as it is drawn); `ready` means the MapLibre map has loaded, themes may still be loading; view events
+fire when a movement ends, not during it. The other flat event names (`mouseover`/`itemover`,
+`mouseout`/`itemout`, `resize`, `layeradd`/`newtheme`, `layerremove`/`removetheme`) are accepted but never
+fire; the console says so once. `ixmaps.onItemAction(null, null, {lngLat, point})` gets the click position on
+a background click as a third argument; it is still called for items only when the theme has a selection
+field.
 
 `ixmaps.map().getBounds()` returns flat's `[swLat, swLng, neLat, neLng]` (`ixmaps.getBoundingBox()`
 the same box as `[{lat, lng} SW, {lat, lng} NE]`); `ixmaps.map().getMapLibre()` returns the MapLibre
