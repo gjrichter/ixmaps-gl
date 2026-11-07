@@ -402,6 +402,38 @@ unknown flat name such as `VT_TONER_LITE` draws CARTO Positron:
 the theme id, `style.name` or `meta.name`. Give the theme a `name` in `.meta()`: the name passed to
 `ixmaps.layer("name", …)` is not the id, and without one `"replace"` cannot find the old theme and adds a second. `ixmaps.map().remove(id)` removes it.
 
+### Runtime filtering
+
+A theme's records can be filtered in place, without redefining it, with flat's `changeThemeStyle`:
+
+```js
+ixmaps.changeThemeStyle("mytheme", 'filter:WHERE "type" = "school"', "set");
+ixmaps.changeThemeStyle("mytheme", "filter", "remove");
+```
+
+The same through the handles, `ixmaps.map().changeThemeStyle(id, style, flag)` and
+`ixmaps.map().theme(id).changeStyle(style, flag)`; with `null` as the id every theme but the FEATURE ones is
+changed. The expression is flat's filter grammar: `WHERE field op value` clauses joined by `AND` with `=`, `!=`,
+`<>`, `<`, `>`, `<=`, `>=`, `BETWEEN … AND …`, `IN (…)`, `LIKE` and `NOT` (see `test/unit/filter.test.mjs`).
+(`npm run runtime` in `test/` checks these calls in a browser.)
+
+### Porting a flat page
+
+How the calls of a flat page map to gl; "tested" means `test/runtime.mjs` runs it in a browser.
+
+| flat | gl |
+|---|---|
+| `ixmaps.Map(div, opts, function (map) { … })` | the same; the callback gets the map builder (`view`, `options`, `layer`, `on`, …) |
+| `var myMap = ixmaps.Map(div, opts).view(…)`, `myMap.then(map => …)` | the same, `myMap` is the builder and a thenable |
+| `myMap.layer("name").data(…)…define()` | the same, before and after the map is built (tested) |
+| `myMap.layer(theme)`, `myMap.layer(theme, "direct")` after the map is built | the same (tested); up to v0.2.33 these silently added nothing |
+| `ixmaps.map().layer(theme)`, `ixmaps.map().add(theme, "replace")` | the same (tested) |
+| `ixmaps.changeThemeStyle(id, 'filter:…', "set")` | the same (tested), see Runtime filtering |
+| `map.getBounds()` | `ixmaps.map().getBounds()`, from v0.2.33 |
+| `map.on(event, fn)` | `map.on` / `map.off`, see Map events |
+| `ixmaps.hideTheme(id)` / `ixmaps.showTheme(id)` | not provided: `ixmaps.map().theme(id).hide()` / `.show()` or `ixmaps.map().setThemeVisible(id, bool)` |
+| `ixmaps.flyTo(…)` | not provided: `ixmaps.map().view([lat, lng], zoom)` |
+
 ### `CHART|USER` draw function
 
 `style.userdraw` names a function (`ixmaps[name]`, or a dotted path on `window`). It is called as

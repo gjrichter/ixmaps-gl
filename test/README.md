@@ -14,6 +14,7 @@ node run.mjs --page choropleth   # only pages whose path contains "choropleth"
 node run.mjs --engine ../x.js    # run the pages against another ixmaps-gl.js build
 node run.mjs --jobs 4            # pages in parallel (default 2); a full run takes ~3 min
 npm run events                   # live check of map.on/off events (headless Chromium, needs network)
+npm run runtime                  # live check of adding themes to a built map and of runtime filtering
 ```
 
 The first run needs network access: it records remote data into `.cache/` (see below).

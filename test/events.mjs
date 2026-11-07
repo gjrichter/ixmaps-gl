@@ -2,30 +2,12 @@
 // geometry only, mapclick, onItemAction's position on a background click, layerdraw / ready payloads,
 // viewchange/zoomend flags, off(), and that a drag is not a click.
 // Needs network (MapLibre / deck.gl from unpkg, basemap tiles). Run: node events.mjs [--engine ../x.js]
-import http from 'node:http';
-import fs from 'node:fs';
-import path from 'node:path';
 import assert from 'node:assert/strict';
-import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { serve, launch, reporter } from './live.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const engineArg = process.argv.indexOf('--engine');
-const engine = engineArg > 0 ? path.resolve(process.argv[engineArg + 1]) : path.join(root, 'ixmaps-gl.js');
-const server = http.createServer((req, res) => {
-  const url = decodeURIComponent(req.url.split('?')[0]);
-  const file = url === '/ixmaps-gl.js' ? engine : path.join(root, url);
-  if (!file.startsWith(root) && file !== engine) { res.writeHead(403).end(); return; }
-  fs.readFile(file, (err, buf) => {
-    if (err) { res.writeHead(404).end(); return; }
-    res.writeHead(200, { 'Content-Type': file.endsWith('.html') ? 'text/html' : 'text/javascript' }).end(buf);
-  });
-}).listen(0);
-const port = server.address().port;
-
-const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-let failed = 0;
-const check = (name, fn) => { try { fn(); console.log('PASS ', name); } catch (e) { failed++; console.log('FAIL ', name, '—', e.message); } };
+const { server, port } = serve();
+const browser = await launch();
+const { check, done } = reporter();
 try {
   const page = await browser.newPage({ viewport: { width: 900, height: 650 } });
   const errors = [];
@@ -115,5 +97,4 @@ try {
 } finally {
   await browser.close(); server.close();
 }
-console.log(failed ? `${failed} check(s) failed` : 'all checks passed');
-process.exit(failed ? 1 : 0);
+done();

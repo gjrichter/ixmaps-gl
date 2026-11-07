@@ -7628,7 +7628,12 @@ self.onmessage = e => {
           // object form (a pre-built LayerBuilder, e.g. from the global
           // ixmaps.layer(name, cb) factory): existing semantics, chain
           // back on the MAP for further .layer(a).layer(b) calls.
-          builder.layer(nameOrBuilder);
+          // Once the map is built build() has consumed its queue, so queuing
+          // here would add nothing, silently: define the theme on the live
+          // map instead (flat's runtime overlay: myMap.layer(theme, "direct"),
+          // the second argument is accepted and not needed)
+          if (resolvedApi) resolvedApi.layer(nameOrBuilder);
+          else builder.layer(nameOrBuilder);
           return promise;
         }
         const lb = new LayerBuilder(nameOrBuilder);
