@@ -10,7 +10,9 @@ const { check, done } = reporter();
 try {
   const page = await browser.newPage({ viewport: { width: 900, height: 650 } });
   const errors = [];
+  const warnings = [];
   page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'warning') warnings.push(m.text()); });
   await page.goto(`http://localhost:${port}/test/runtime/page.html`);
   await page.waitForFunction(() => window.ixmaps && ixmaps.map('rt').getMapLibre && ixmaps.map('rt').getMapLibre(), null, { timeout: 90000 });
   await page.waitForTimeout(5000);
@@ -64,6 +66,17 @@ try {
   check('filter: through the theme handle', () => assert.equal(f5, 'p1,p2'));
   const f6 = await run(() => ixmaps.changeThemeStyle(null, 'filter', 'remove'));
   check('filter: id null removes it from every theme', () => assert.equal(f6, 'p0,p1,p2'));
+  // ---- text on a label: a text field as the value warns, style.valuefield does not
+  warnings.length = 0;
+  await page.evaluate(() => ixmaps.map('rt').add(mkLabel('lab_text_value', 9.1, 'icon')));
+  await page.evaluate(() => ixmaps.map('rt').add(mkLabel('lab_valuefield', 9.3, 'n', 'icon')));
+  await settle();
+  const labelWarnings = warnings.filter(w => /LABEL value field/.test(w));
+  check('label: a text field bound as the value warns once, naming style.valuefield', () => {
+    assert.equal(labelWarnings.length, 1);
+    assert.match(labelWarnings[0], /lab_text_value.*"icon" holds text.*style\.valuefield/);
+  });
+  check('label: style.valuefield with a numeric value does not warn', () => assert.ok(!labelWarnings.some(w => /lab_valuefield/.test(w))));
   check('no page errors', () => assert.deepEqual(errors, []));
 } finally {
   await browser.close(); server.close();

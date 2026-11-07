@@ -402,6 +402,23 @@ unknown flat name such as `VT_TONER_LITE` draws CARTO Positron:
 the theme id, `style.name` or `meta.name`. Give the theme a `name` in `.meta()`: the name passed to
 `ixmaps.layer("name", …)` is not the id, and without one `"replace"` cannot find the old theme and adds a second. `ixmaps.map().remove(id)` removes it.
 
+### Text on labels
+
+`CHART|LABEL` (with `TEXTONLY` for the text alone) writes the item's value. A text field bound as the *value*
+reads as 0, as in flat, and shows nothing visible; the console says so once. To show a text, as in flat, keep a
+numeric `value` (or `size`) binding and name the text field in `style.valuefield`, or `"$title$"` for the
+`title` binding:
+
+```js
+.binding({ geo: "geometry", value: "count" })
+.type("CHART|LABEL|TEXTONLY|VALUES")
+.style({ valuefield: "name" })
+```
+
+With `CATEGORICAL` the value field holds the categories and `valuefield` names the text. The text is drawn as a
+single-color glyph with a halo, so an emoji comes out as a monochrome silhouette (seen in a headless Chromium
+test): use image symbols (see Symbols) for colored icons.
+
 ### Runtime filtering
 
 A theme's records can be filtered in place, without redefining it, with flat's `changeThemeStyle`:

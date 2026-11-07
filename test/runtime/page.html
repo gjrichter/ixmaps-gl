@@ -17,6 +17,14 @@
         .style({ colorscheme: ["#d9534f", "#428bca"], values: ["a", "b"], scale: 3 }).meta({ name: name, tooltip: "{{name}}" });
     });
   };
+  // text on a label: the text field as the value (invisible in flat too) or as style.valuefield (flat's way)
+  window.mkLabel = function (name, lng, bindValue, valuefield) {
+    return ixmaps.layer(name, function (l) {
+      return l.data({ obj: { type: "FeatureCollection", features: [{ type: "Feature", properties: { n: 3, icon: "x" }, geometry: { type: "Point", coordinates: [lng, 45.47] } }] }, type: "geojson" })
+        .binding({ geo: "geometry", value: bindValue }).type("CHART|LABEL|TEXTONLY|VALUES|NOLEGEND")
+        .style(valuefield ? { valuefield: valuefield, scale: 1 } : { scale: 1 }).meta({ name: name });
+    });
+  };
   // the chained form (no callback): myMap is the map builder, also a thenable
   window.myMap = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", name: "rt" }).view([45.46, 9.2], 12);
   // a base theme with one point per category, for the filter checks

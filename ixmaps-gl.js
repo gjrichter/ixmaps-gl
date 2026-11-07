@@ -17963,6 +17963,24 @@ self.onmessage = e => {
     //    the item color (stroke font/7, opacity 0.5).
     // Both moved by the chart position (flatChartAlignOffset). The text is
     // the hover target of TEXTONLY, the box of LABEL.
+    // A text field bound as the LABEL's value scans to 0 (flat's __scanValue), so the labels are drawn at the smallest size
+    // with the text "0" — as flat skips such items, nothing visible, and no message. Say how to show a text: flat's
+    // style.valuefield (or "$title$"), with a numeric value or size binding. CATEGORICAL values are categories, not numbers.
+    _warnTextValue(combined) {
+      // looked at once per theme (this runs on every redraw): the first record with a value
+      if (this._checkedTextValue || this.style.valuefield || this.flags.has('CATEGORICAL') || !this.binding.value) return;
+      let sample;
+      for (const d of combined) {
+        const v = d.properties.raw && d.properties.raw[this.binding.value];
+        if (v != null && String(v).trim() !== '') { sample = v; break; }
+      }
+      if (sample === undefined) return;
+      this._checkedTextValue = true;
+      if (!isNaN(scanValue(sample))) return;
+      console.warn(`[ixmaps-gl] theme "${this.name}": LABEL value field "${this.binding.value}" holds text ("${String(sample).slice(0, 20)}"), ` +
+        'which reads as 0 — as in flat the labels are not visible. To show a text keep a numeric value (or size) binding ' +
+        'and name the text field in style.valuefield (or "$title$" for the title).');
+    }
     _buildLabelChartLayers(combined, zoom, liveZoom, sizeValueOf) {
       const textOnly = this.flags.has('TEXTONLY');
       const showValues = this.flags.has('VALUES') && !valuesHiddenByScale(this.style, zoom);
@@ -17977,6 +17995,7 @@ self.onmessage = e => {
       const textOf = props => flatValueText(props.counts ? this._categoryValueRecord(dominant(props.counts)) : props.raw,
         this.binding.title && props.raw ? props.raw[this.binding.title] : undefined, valueOf(props), this.style, this.flags, opts);
 
+      this._warnTextValue(combined);
       if (textOnly) {
         const textRgb = textOverride ? hexOrNamedToRgb(textOverride) : [0, 0, 0];
         const labels = [];
@@ -17985,12 +18004,6 @@ self.onmessage = e => {
           const fontSize = r * 0.8 * valueScale;
           if (!(fontSize > 0)) continue;
           labels.push({ ...d, text: textOf(d.properties), fontSize, halo: itemRgb(d.properties), pixelOffset: alignOf(d) });
-        }
-        // a text field read as the value/size scans to 0 (flat's __scanValue), so every label has size 0 and nothing is drawn
-        if (!labels.length && combined.length && !this._warnedNoLabels) {
-          this._warnedNoLabels = true;
-          console.warn(`[ixmaps-gl] theme "${this.name}": LABEL|TEXTONLY drew no labels — the size of all ${combined.length} items is 0. ` +
-            'A non-numeric (text) field bound as value/size reads as 0; bind a numeric size field.');
         }
         // TextLayer's outlineColor is one per layer: a layer per halo color
         const byHalo = new Map();
