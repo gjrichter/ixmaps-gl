@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>SEQUENCE · UP · GLOW</title>
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.0/ixmaps-gl.js"></script>
+<title>SEQUENCE · DOWN · GLOW</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.32/ixmaps-gl.js"></script>
 <style>
   html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
   #map_div { position: absolute; inset: 0; }
@@ -20,8 +20,8 @@
 <body>
 <div id="map_div"></div>
 <div id="caption">
-  <b>SEQUENCE · UP · GLOW</b>
-  <span>A categorical SEQUENCE|STAR|SORT|UP|EXPAND chart with GLOW at four sites: a chart spreads into its star only when its categories are 0..k without a gap (flat's rule) — red; red+green (spread); green only; red+blue (a gap: stays on its position) — and every chart glows, on its biggest part.</span><br>
+  <b>SEQUENCE · DOWN · GLOW</b>
+  <span>A categorical SEQUENCE|STAR|SORT|DOWN|EXPAND chart with GLOW at four sites: red; red+green; green only; red+blue. The biggest category is the star centre and the others sit around it, so any mix spreads. (With SORT|UP a chart spreads only when every category is non-zero, and in an aggregated categorical cell every absent category is a zero part, so use DOWN for categorical cells.) Every chart glows, on its biggest part.</span><br>
   <a id="back" href="index.html">&larr; all examples</a>
 </div>
 <script>
@@ -39,7 +39,7 @@
   var layer = ixmaps.layer("seq", layer => layer
     .data({ obj: { type: "FeatureCollection", features: features }, type: "geojson" })
     .binding({ geo: "geometry", value: "cat" })
-    .type("CHART|GLOW|SYMBOL|SIZEP3|SEQUENCE|STAR|SORT|UP|EXPAND|AGGREGATE|RELOCATE|CATEGORICAL|COUNT")
+    .type("CHART|GLOW|SYMBOL|SIZEP3|SEQUENCE|STAR|SORT|DOWN|EXPAND|AGGREGATE|RELOCATE|CATEGORICAL|COUNT")
     .style({ colorscheme: ["#d9534f", "#5cb85c", "#428bca"], values: ["red", "green", "blue"], normalsizevalue: "30", gridwidthpx: "3", scale: "0.4" })
     .meta({ title: "seq", tooltip: "{{cat}}" })
   );

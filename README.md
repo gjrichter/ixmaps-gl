@@ -114,10 +114,10 @@ page. It currently implements:
   `window.__setFacetFilter`) for building filterable sidebars
 - Globe (orthographic) projection alongside flat Mercator
 
-Not yet implemented: plain (non-AGGREGATE) `CATEGORICAL` choropleths, and the `QUAD`/
-`WAFFLE` base types, and SYMBOL shape variants beyond
-circle/square/diamond/triangle. See the top-of-file comment in
-[`ixmaps-gl.js`](./ixmaps-gl.js) for the exact, currently-accurate scope note.
+Not yet implemented: the `QUAD`/`WAFFLE` base types. Custom SYMBOL shapes are supported
+as image-URL symbols (`symbols: [...]`), not as built-in shape variants.
+The top-of-file comment in [`ixmaps-gl.js`](./ixmaps-gl.js) is the single source of truth
+for scope; this list only summarises it.
 
 ### Page scripts, named data and the runtime API
 
