@@ -56,6 +56,22 @@ $Comment: PNRR layers (stars per comune, single projects) for the sisma 2016
         );
     };
 
+    /* comuni born after 2011 are missing in the 2011 centroid file above: Valfornace (043058, 2017) holds
+       13 of the 5,044 projects and would be dropped by the position join. Its town hall (sede comunale,
+       ISTAT 2024 centre table) goes in as a second position layer of the same name — joined like the first */
+    P.extraCentroids = { "043058": [13.0845, 43.0622] };
+    P.georefExtra = function () {
+        var features = Object.keys(P.extraCentroids).map(function (code) {
+            return { type: "Feature", geometry: { type: "Point", coordinates: P.extraCentroids[code] }, properties: { PRO_COM_T: code } };
+        });
+        return ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+            .data({ obj: { type: "FeatureCollection", features: features }, type: "geojson" })
+            .binding({ id: "PRO_COM_T", position: "geometry" })
+            .type("FEATURES|NOLEGEND")
+            .style({ colorscheme: ["none"], linecolor: "none", linewidth: "1", scale: "0.0001" })
+        );
+    };
+
     /* stars: the amount per mission, aggregated per comune */
     P.chart = function () {
         return ixmaps.layer("ITALIA_Comuni_2022", layer => layer
@@ -195,6 +211,7 @@ $Comment: PNRR layers (stars per comune, single projects) for the sisma 2016
                 // no "replace": the position layer and both themes share the layer name
                 // "ITALIA_Comuni_2022" (the join key), replace would swap the position layer out
                 map.add(P.georef(), "silent");
+                map.add(P.georefExtra(), "silent");
                 // the themes join their positions to the centroids once these are loaded
                 setTimeout(function () {
                     map.add(P.chart(), "silent");
