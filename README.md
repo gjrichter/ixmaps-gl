@@ -114,8 +114,8 @@ page. It currently implements:
   `window.__setFacetFilter`) for building filterable sidebars
 - Globe (orthographic) projection alongside flat Mercator
 
-Not yet implemented: the `QUAD`/`WAFFLE` base types. Custom SYMBOL shapes are supported
-as image-URL symbols (`symbols: [...]`), not as built-in shape variants.
+Not yet implemented: the `QUAD`/`WAFFLE` base types. SYMBOL shapes: the built-in ones and image-URL
+symbols are described under [Symbols](#symbols).
 The top-of-file comment in [`ixmaps-gl.js`](./ixmaps-gl.js) is the single source of truth
 for scope; this list only summarises it.
 
@@ -328,6 +328,97 @@ so zoom-dependent page state (e.g. a basemap opacity ramp) changes in step with 
 (`featurelower`, `chartupper`, …) instead of after the gesture has ended. Scripts that reach further into flat's internals (`ixmaps.parentApi`, other `htmlgui_*`
 hooks) aren't supported. `test/project-report.mjs` shows which themes
 of your own project files gl can render.
+
+### Symbols
+
+`CHART|SYMBOL` draws one symbol per item (per category with `CATEGORICAL`, per part with `SEQUENCE`).
+`style.symbols` names them, by color class: class `i` (the `i`-th entry of `values`, else the range
+class) takes `symbols[i]`, and the last entry repeats when the array is shorter than the classes.
+
+- **Built-in shapes:** `circle` (default), `square`, `diamond` (= `carot`), `triangle`, `roundrect`,
+  `hexagon`, `cross`, `label`, `empty`. An unknown name draws a circle.
+- **Image symbols:** a URL ending in `.svg`, `.png`, `.jpg` or `.jpeg` (a query or `#` may follow), or a
+  `data:image/svg+xml|png|jpeg` URI. The image is drawn as is, not tinted by the class color. An SVG is
+  fetched and rasterized once per URL (a `viewBox` is enough, it needs no width/height); a PNG/JPEG is
+  loaded by deck.gl. A page opened from `file://` cannot fetch symbol files: serve it over http(s) or use
+  `data:` URIs.
+- **By record field:** `symbolfield: "type"` with `symbolvalues: ["a", "b"]` maps the value of that field
+  to `symbols[i]` by position, independent of the color class (for individual items, not aggregated cells).
+
+```js
+.type("CHART|SYMBOL|CATEGORICAL")
+.style({ values: ["school", "shop"], colorscheme: ["#d9534f", "#428bca"],
+         symbols: ["icons/school.svg", "icons/shop.svg"] })
+```
+
+### Zoom gates: `chartupper` and `chartlower`
+
+`style.chartupper` / `style.chartlower` (`layerupper` / `layerlower` when unset) take a scale `"1:N"`. The
+theme is **hidden when zoomed out beyond `chartupper`** (the scale denominator is above N) and **hidden when
+zoomed in to `chartlower` or closer** (the scale denominator is at or below N). So `chartlower: "1:20000"`
+shows the layer only while the view is zoomed out past 1:20000, and `chartupper: "1:20000"` only from there on
+in. The scale is flat's, about `442913385 / 2^z` for the zoom `z` you give `.view()` on a Mercator map:
+
+| zoom | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 |
+|---|---|---|---|---|---|---|---|---|
+| scale 1: | 432533 | 216266 | 108133 | 54067 | 27033 | 13517 | 6758 | 3379 |
+
+`featureupper`/`featurelower` gate FEATURE themes the same way, `glowupper`/`glowlower` the glow halo.
+
+### Aggregation grid and symbol size
+
+`AGGREGATE` groups items into grid cells. The cell size is read, first match wins, from:
+
+1. `aggregation` (flat's alias `aggregationscale`): scale/width pairs, e.g. `["1:1", "3px", "1:500000", "1px"]`,
+   the width of the last pair for which the view is zoomed out past `1:N` (the example gives 3 px, and 1 px once
+   the view is zoomed out past 1:500000); `"Npx"` is screen pixels, a bare number meters
+2. `gridwidthpx`: screen pixels, constant over zoom (the recommended spelling for a fixed cell)
+3. `gridwidth: "Npx"`: the same, as a string
+4. `gridwidth: N` (a bare number): meters, the same cells at every zoom
+5. none of them: no grid, items stay at their positions
+
+With `CATEGORICAL|COUNT` and no size field the size of a symbol follows the number of records in its cell:
+radius = `15 px × scale × (count / normalsizevalue)^(1/sizepow)`, scaled with the zoom (`objectscaling`) and
+clamped to a minimum and maximum radius.
+`normalsizevalue` is the count drawn at normal size, the dataset's maximum when unset. A `normalsizevalue` of
+`30` therefore draws a single-record cell at 1/30 of the normal radius: pick it near the biggest cell you expect.
+
+### Basemaps (`mapType`)
+
+`mapType` is resolved in this order; a name that matches nothing falls back to the last two rules, so an
+unknown flat name such as `VT_TONER_LITE` draws CARTO Positron:
+
+| `mapType` | style |
+|---|---|
+| `ArcGIS - Topo` (`terrain`), `ArcGIS - Light Gray Base`, `ArcGIS - Ocean Basemap`, `ArcGIS - Hillshade` | Esri raster tiles |
+| `CARTO - Voyager` (`VT_VOYAGER`), `CARTO - Voyager (no labels)` (`VT_VOYAGER_LIGHT`), `CARTO - Positron (no labels)`, `CARTO - Dark Matter (no labels)` | CARTO vector styles |
+| `OpenFreeMap - Liberty`, `OpenFreeMap - Bright`, `OpenFreeMap - Positron` | OpenFreeMap vector styles |
+| any name containing `dark`, `black`, `night` or `matter` | CARTO Dark Matter |
+| everything else | CARTO Positron |
+
+### Adding and replacing themes at runtime
+
+`ixmaps.map().add(theme, "replace")` adds the theme the first time and swaps it on later calls, matched by
+the theme id, `style.name` or `meta.name`. Give the theme a `name` in `.meta()`: the name passed to
+`ixmaps.layer("name", …)` is not the id, and without one `"replace"` cannot find the old theme and adds a second. `ixmaps.map().remove(id)` removes it.
+
+### `CHART|USER` draw function
+
+`style.userdraw` names a function (`ixmaps[name]`, or a dotted path on `window`). It is called as
+`fn(document, opt)` for each chart, after an optional `name_init(document, {target, theme})` once per draw.
+`opt` holds `target` (the SVG group to draw into), `theme`, `value`, `values`, `size`, `maxSize`, `color`,
+`class`, `flag`, `ccolor`, `item` (`{szColor, szLabel, szTitle, nCount, nSize}`) and `dbRecord` (the item's data
+record, also the place to read the category). `size` is in flat's chart units, `maxSize` (300) being the
+normal radius: one unit is `15 px × scale × zoom factor / 300`. The chart is drawn around 0,0.
+
+### Headless, CI and offline
+
+A headless Chromium has no GPU: start it with `--use-gl=swiftshader --enable-unsafe-swiftshader
+--ignore-gpu-blocklist`. deck.gl then logs "GPU stall due to ReadPixels", which is harmless. The engine loads
+`maplibre-gl@6.11.2` (module and css) and `deck.gl@9.4.0` and `mustache@4.2.0` from unpkg, `data.js` from
+jsDelivr (`gh/gjrichter/data.js`), and on demand `d3-array@3.2.4` and `d3-contour@4.0.2` (jsDelivr) and the
+`ixmaps-grammar` validator; mirror these to run offline. Page-level script and data URLs are not
+configurable yet.
 
 ## Quick start
 
