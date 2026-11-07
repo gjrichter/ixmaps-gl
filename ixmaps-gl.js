@@ -4467,18 +4467,27 @@ self.onmessage = e => {
     }
     // flat's click-to-action hook (ui/js/tools/tooltip_to_action.js): ixmaps.onItemAction(szId, item, themeObj) on a
     // click on an item — item.szSelectionId is the value of the theme's selection field — and onItemAction(null, null)
-    // on a click on the map background
-    function callItemAction(rt, object) {
+    // on a click on the map background — gl adds the click position as third argument there:
+    // onItemAction(null, null, { lngLat: {lng, lat}, point: {x, y} }) (flat passes none)
+    function clickPosition(info) {
+      const c = info && info.coordinate;
+      if (!c || !isFinite(c[0]) || !isFinite(c[1])) return undefined;
+      return { lngLat: { lng: c[0], lat: c[1] }, point: { x: info.x, y: info.y } };
+    }
+    function callItemAction(rt, object, info) {
       const hook = pageIxmaps() && pageIxmaps().onItemAction;
-      if (typeof hook !== 'function') return;
       try {
-        if (!rt) { hook.call(global.ixmaps, null, null); return; }
+        const pos = clickPosition(info);
+        if (!rt) { if (typeof hook === 'function') hook.call(global.ixmaps, null, null, pos); return; }
         const field = selectionFieldOf(rt);
         const props = object.properties || {};
         // a single record, or an aggregated item's first one
         const raw = props.raw || props.firstRaw || props.titleRaw || (props.raws && props.raws[0]) || props;
         const value = field && raw ? raw[field] : null;
         if (value == null) return;
+        // the map's "click" event (flat: { szId, id, theme }, plus the click position)
+        if (builder.__emitItemClick) builder.__emitItemClick(Object.assign({ szId: themeIdOf(rt) + '::' + value, id: String(value), theme: themeIdOf(rt) }, pos));
+        if (typeof hook !== 'function') return;
         hook.call(global.ixmaps, themeIdOf(rt) + '::' + value, { szSelectionId: String(value) }, getThemeObj(themeIdOf(rt)));
       } catch (err) { console.error('[ixmaps-gl] onItemAction failed:', err); }
     }
@@ -4487,7 +4496,7 @@ self.onmessage = e => {
         if (info && info.object && info.layer) {
           const rt = findRuntimeForLayerId(info.layer.id);
           if (rt) {
-            callItemAction(rt, info.object);
+            callItemAction(rt, info.object, info);
             // Only a Point geometry's own coordinates ARE an
             // [lng,lat] pair (every point/bubble/dot/chart-cluster
             // layer) — a CHOROPLETH polygon's geometry.coordinates is
@@ -4518,7 +4527,7 @@ self.onmessage = e => {
           }
         }
         // clicked empty map space (or a non-tooltippable layer) -> unpin
-        callItemAction(null, null);
+        callItemAction(null, null, picked);
         pinned = null;
         pinnedTooltipEl.style.display = 'none';
         return false;
@@ -5525,6 +5534,22 @@ self.onmessage = e => {
     return { addLegendPanel, setLegendOption, updateSubTheme, layoutLegends };
   }
 
+  // flat's map event names (htmlgui_flat.js mapApi.on, with its aliases) and the ones this engine fires:
+  //  viewchange (every view change end), zoomend / moveend ({ nZoom, zoomChanged, panChanged }, as flat),
+  //  ready (the map has loaded), click (an item: { szId, id, theme } + lngLat/point), layerdraw ({ id }) and,
+  //  as a gl addition, mapclick (every click on the map, background included: { lngLat, point })
+  const MAP_EVENT_ALIAS = { zoompan: 'viewchange', itemclick: 'click', mapready: 'ready', drawtheme: 'layerdraw' };
+  const MAP_EVENTS_WIRED = new Set(['viewchange', 'zoomend', 'moveend', 'ready', 'click', 'mapclick', 'layerdraw']);
+  function splitMapEvents(events) {
+    return String(events == null ? '' : events).trim().toLowerCase().split(/\s+/).filter(Boolean).map(e => MAP_EVENT_ALIAS[e] || e);
+  }
+  const _warnedMapEvents = new Set();
+  function warnUnwiredMapEvent(ev) {
+    if (MAP_EVENTS_WIRED.has(ev) || _warnedMapEvents.has(ev)) return;
+    _warnedMapEvents.add(ev);
+    console.warn(`[ixmaps-gl] map event "${ev}" is not implemented — the handler is accepted but never fires (supported: ${[...MAP_EVENTS_WIRED].join(', ')})`);
+  }
+
   class MapBuilder {
     constructor(containerId, options) {
       this.containerId = containerId;
@@ -5589,15 +5614,15 @@ self.onmessage = e => {
     }
     // .Layer() — alias of .layer()
     Layer(nameOrBuilder) { return this.layer(nameOrBuilder); }
-    // GL-PORT COMPAT: real ixmaps-flat's map.on("layerdraw", cb) — only
-    // "layerdraw" is actually wired up (see build()'s own note on how
-    // it's translated into onRedraw + a synthetic per-runtime event); any
-    // OTHER event name is accepted and stored but never fired —
-    // recognized rather than throwing, the same "known but inert" pattern
-    // KNOWN_INERT_FLAGS already uses for unimplemented type flags.
+    // flat's mapApi.on(events, cb) (htmlgui_flat.js 1631), "a b" for several names; see MAP_EVENTS for the
+    // ones wired here. Any other name is accepted (never throws) but never fires, and says so once on the console.
+    // Registered before the map is built, they are attached by build().
     on(event, cb) {
       this._pendingEvents = this._pendingEvents || [];
-      this._pendingEvents.push([event, cb]);
+      for (const ev of splitMapEvents(event)) {
+        warnUnwiredMapEvent(ev);
+        this._pendingEvents.push([ev, cb]);
+      }
       return this;
     }
 
@@ -7276,8 +7301,47 @@ self.onmessage = e => {
       }
       map.on('moveend', loadDeferredThemes);
 
+      // map events (flat's mapApi.on): see MAP_EVENTS_WIRED. "layerdraw" is approximated below.
+      const mapListeners = Object.create(null);
+      let mapReady = false;
+      const emitMapEvent = (type, detail) => (mapListeners[type] || []).slice().forEach(cb => {
+        try { cb(Object.assign({ type }, detail)); } catch (err) { console.error(`[ixmaps-gl] "${type}" callback failed:`, err); }
+      });
+      engineApi.on = (events, cb) => {
+        if (typeof cb !== 'function') return engineApi;
+        for (const ev of splitMapEvents(events)) {
+          warnUnwiredMapEvent(ev);
+          if (ev === 'layerdraw') {
+            // flat fires "layerdraw" once per theme as it finishes drawing; here onRedraw fires once per refresh of
+            // the whole map, so the callback is called once per current theme ({ id: rt.name }) every time — a page
+            // that re-reads that theme's state (getThemeObj/getFacets) gets fresh numbers after every redraw
+            engineApi.onRedraw(() => runtimes.forEach(rt => {
+              try { cb({ id: rt.name }); } catch (err) { console.error('[ixmaps-gl] "layerdraw" callback failed:', err); }
+            }));
+          } else {
+            (mapListeners[ev] = mapListeners[ev] || []).push(cb);
+            if (ev === 'ready' && mapReady) setTimeout(() => { try { cb({ type: 'ready' }); } catch (err) { console.error('[ixmaps-gl] "ready" callback failed:', err); } }, 0);
+          }
+        }
+        return engineApi;
+      };
+      let lastViewZoom = map.getZoom(), lastViewCenter = map.getCenter();
+      map.on('moveend', () => {
+        const z = map.getZoom(), c = map.getCenter();
+        const zoomChanged = z !== lastViewZoom, panChanged = c.lng !== lastViewCenter.lng || c.lat !== lastViewCenter.lat;
+        lastViewZoom = z; lastViewCenter = c;
+        const detail = { nZoom: flatViewZoomOf(map), zoomChanged, panChanged };
+        emitMapEvent('viewchange', detail);
+        if (zoomChanged) emitMapEvent('zoomend', detail);
+        if (panChanged && !zoomChanged) emitMapEvent('moveend', detail);
+      });
+      map.on('click', e => emitMapEvent('mapclick', { lngLat: { lng: e.lngLat.lng, lat: e.lngLat.lat }, point: { x: e.point.x, y: e.point.y } }));
+      this.__emitItemClick = detail => emitMapEvent('click', detail);
+
       map.on('load', () => {
         mapHasLoaded = true;
+        mapReady = true;
+        emitMapEvent('ready');
         loadDeferredThemes();
         refresh();
         runtimes.forEach(maybeZoomToTheme);
@@ -7343,18 +7407,7 @@ self.onmessage = e => {
       // gets the same practical effect: fresh numbers after every redraw,
       // for every theme, without needing the page rewritten around a
       // finer-grained event this engine doesn't produce.
-      const layerdrawCbs = (this._pendingEvents || [])
-        .filter(([event]) => event === 'layerdraw')
-        .map(([, cb]) => cb);
-      if (layerdrawCbs.length) {
-        engineApi.onRedraw(() => {
-          runtimes.forEach(rt => {
-            layerdrawCbs.forEach(cb => {
-              try { cb({ id: rt.name }); } catch (err) { console.error('[ixmaps-gl] "layerdraw" callback failed:', err); }
-            });
-          });
-        });
-      }
+      (this._pendingEvents || []).forEach(([event, cb]) => engineApi.on(event, cb));
 
       // the native legend: createLegend (its four hooks are what the rest
       // of the map calls — panels, the legend option, sub-themes, layout)
@@ -7538,7 +7591,9 @@ self.onmessage = e => {
       promise.legend = (...args) => { builder.legend(...args); return promise; };
       promise.local = (...args) => { builder.local(...args); return promise; };
       promise.require = (url) => { if (resolvedApi) resolvedApi.require(url); else builder.require(url); return promise; };
-      promise.on = (...args) => { builder.on(...args); return promise; };
+      promise.on = (...args) => { if (resolvedApi) resolvedApi.on(...args); else builder.on(...args); return promise; };
+      promise.getBounds = () => getBounds();
+      promise.getMapLibre = () => (resolvedApi ? resolvedApi.map : undefined);
       promise.layer = (nameOrBuilder) => {
         if (typeof nameOrBuilder !== 'string') {
           // object form (a pre-built LayerBuilder, e.g. from the global
@@ -17897,6 +17952,12 @@ self.onmessage = e => {
           if (!(fontSize > 0)) continue;
           labels.push({ ...d, text: textOf(d.properties), fontSize, halo: itemRgb(d.properties), pixelOffset: alignOf(d) });
         }
+        // a text field read as the value/size scans to 0 (flat's __scanValue), so every label has size 0 and nothing is drawn
+        if (!labels.length && combined.length && !this._warnedNoLabels) {
+          this._warnedNoLabels = true;
+          console.warn(`[ixmaps-gl] theme "${this.name}": LABEL|TEXTONLY drew no labels — the size of all ${combined.length} items is 0. ` +
+            'A non-numeric (text) field bound as value/size reads as 0; bind a numeric size field.');
+        }
         // TextLayer's outlineColor is one per layer: a layer per halo color
         const byHalo = new Map();
         for (const l of labels) {
@@ -18258,7 +18319,7 @@ self.onmessage = e => {
   // last built map; called while the map is still building, they run once
   // it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'newTheme', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'switchLayer', 'setThemeTimeFrame', 'attribution'];
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'switchLayer', 'setThemeTimeFrame', 'attribution', 'on'];
   const _mapHandles = Object.create(null);
   function makeMapHandle(szMap) {
     const h = {};
@@ -18276,6 +18337,9 @@ self.onmessage = e => {
       };
     }
     h.getZoom = () => { const a = api(); return a ? a.getZoom() : undefined; };
+    h.getBounds = () => getBounds();
+    // the MapLibre map itself (undefined until the map is built)
+    h.getMapLibre = () => { const a = api(); return a ? a.map : undefined; };
     h.getThemeObj = id => getThemeObj(id);
     // flat's mapApi.message(szText) (htmlgui_flat.js 1381): a short status
     // line over the map — the same accepted no-op as the global
@@ -18385,6 +18449,12 @@ self.onmessage = e => {
     const b = _boundsSource ? _boundsSource() : null;
     if (!b) return null;
     return [{ lat: Math.max(b[0].lat, -85.05), lng: b[0].lng }, { lat: Math.min(b[1].lat, 85.05), lng: b[1].lng }];
+  }
+
+  // flat's mapApi.getBounds() (htmlgui_flat.js): [swLat, swLng, neLat, neLng] — the same box as getBoundingBox
+  function getBounds() {
+    const b = getBoundingBox();
+    return b ? [b[0].lat, b[0].lng, b[1].lat, b[1].lng] : null;
   }
 
   // flat's ixmaps.setTitle(html) / setTitleBox(text, color) (htmlgui.js
@@ -18932,7 +19002,7 @@ self.onmessage = e => {
   global.ixmaps = {
     layer, Layer: layer, Map: createMap, setExternalData: setExternalDataBridge, getThemeObj, data: ixmapsData,
     szResourceBase: ixmapsSzResourceBase, getProjectString, setProjectJSON, loadProject,
-    markThemeClass, unmarkThemeClass, getBoundingBox, setTitle, setTitleBox, refreshTheme, formatValue: flatFormatValue,
+    markThemeClass, unmarkThemeClass, getBoundingBox, getBounds, setTitle, setTitleBox, refreshTheme, formatValue: flatFormatValue,
     // flat's ixmaps.__formatValue (ui/js/tools/legend.js 451-553) — pages call
     // it for statistics/legend values; legend's own variant differs from
     // format.js's only in the SPACE flag, which flatFormatValue covers too
@@ -18995,7 +19065,7 @@ self.onmessage = e => {
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
-    chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
+    splitMapEvents, getBounds, chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,

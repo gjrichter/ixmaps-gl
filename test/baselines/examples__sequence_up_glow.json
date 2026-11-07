@@ -30,12 +30,12 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "8bfa4f2de41a6eac",
-     "setDigest": "fc77fda7344b27f2",
+     "digest": "e0b1ee65be2379f4",
+     "setDigest": "397c962f6095e268",
      "columnDigests": {
       "getColor": "cf59682237868850",
       "getIcon": "bd5fd5076be5b01f",
-      "getPixelOffset": "ae18e454d40be9e7",
+      "getPixelOffset": "e1623d83a968cc92",
       "getPosition": "dcd8290bf5f8fbce",
       "getSize": "c14dcc0784da4a13"
      },
@@ -46,7 +46,7 @@
       ],
       "getPixelOffset": [
        0,
-       34.723168
+       0
       ],
       "getPosition": [
        9,
@@ -74,8 +74,8 @@
         "width": 64
        },
        [
-        34.723168,
-        22.578683
+        0,
+        0
        ],
        [
         9,
@@ -124,8 +124,8 @@
         "width": 64
        },
        [
-        0.790037,
-        53.465267
+        0,
+        0
        ],
        [
         9.25,
@@ -176,14 +176,14 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "803195582ec8d4a8",
-     "setDigest": "20cd6fd47cc946b6",
+     "digest": "b3347a4ff2824f80",
+     "setDigest": "fc38474c2f9a6d33",
      "columnDigests": {
       "getColor": "587f5d75dc721e2c",
-      "getIcon": "5c4af3517e748cd3",
-      "getPixelOffset": "72af208f27ca3f61",
+      "getIcon": "8f81055c4ecf1638",
+      "getPixelOffset": "e0e1bd038adf645d",
       "getPosition": "1db3cc87b9cbf960",
-      "getSize": "c539d62a7b24bee5"
+      "getSize": "3a99ba45509313a6"
      },
      "stats": {
       "getColor": [
@@ -192,7 +192,7 @@
       ],
       "getPixelOffset": [
        0,
-       46.867087
+       60.293203
       ],
       "getPosition": [
        9,
@@ -220,8 +220,8 @@
         "width": 48
        },
        [
-        34.723168,
-        22.578683
+        0,
+        0
        ],
        [
         9,
@@ -265,13 +265,38 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        60.293203,
+        31.02386
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       41.365146
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
         "id": "single-circle-92,184,92-0.85-none-0",
         "url": "#73e5e0f7:1754",
         "width": 48
        },
        [
-        0.790037,
-        53.465267
+        0,
+        0
        ],
        [
         9.25,
@@ -295,11 +320,11 @@
         "width": 48
        },
        [
-        46.867087,
-        25.741699
+        60.293203,
+        31.02386
        ],
        [
-        9.25,
+        9.75,
         45.5
        ],
        41.365146
@@ -328,31 +353,6 @@
         45.5
        ],
        49.043804
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-217,83,79-0.85-none-0",
-        "url": "#f679ed05:1766",
-        "width": 48
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.75,
-        45.5
-       ],
-       41.365146
       ]
      ]
     }
@@ -365,6 +365,7 @@
       "CATEGORICAL",
       "CHART",
       "COUNT",
+      "DOWN",
       "EXPAND",
       "GLOW",
       "RELOCATE",
@@ -372,8 +373,7 @@
       "SIZEP3",
       "SORT",
       "STAR",
-      "SYMBOL",
-      "UP"
+      "SYMBOL"
      ],
      "features": 22,
      "active": null,
@@ -443,12 +443,12 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "5bc248d7ddf4d0a5",
-     "setDigest": "2b1ca954a604116c",
+     "digest": "f56c7152e8aec6fa",
+     "setDigest": "07244debd876e361",
      "columnDigests": {
       "getColor": "4bdd37889df299db",
       "getIcon": "368a014ffe39f90d",
-      "getPixelOffset": "6e417461de26707e",
+      "getPixelOffset": "e0ffd1920c9cc044",
       "getPosition": "94ac4b4056b3c7f5",
       "getSize": "e29e72d5eb11925b"
      },
@@ -459,7 +459,7 @@
       ],
       "getPixelOffset": [
        0,
-       0.995384
+       0
       ],
       "getPosition": [
        9.25,
@@ -512,8 +512,8 @@
         "width": 64
        },
        [
-        0.995384,
-        67.362015
+        0,
+        0
        ],
        [
         9.25,
@@ -564,14 +564,14 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "822d73c0b42f3d67",
-     "setDigest": "065e57fee7be55ee",
+     "digest": "cf481c899574da41",
+     "setDigest": "5266f099f90dda92",
      "columnDigests": {
       "getColor": "dc44885067785037",
-      "getIcon": "1036a3a39aeac0a3",
-      "getPixelOffset": "6bc1d26e1930189e",
+      "getIcon": "61abc1a6251e6704",
+      "getPixelOffset": "f50bce53eca662ac",
       "getPosition": "5de06bb07616af70",
-      "getSize": "ff55991a6f5de92e"
+      "getSize": "f0016725cfbaa96b"
      },
      "stats": {
       "getColor": [
@@ -580,7 +580,7 @@
       ],
       "getPixelOffset": [
        0,
-       59.048829
+       75.964676
       ],
       "getPosition": [
        9.25,
@@ -628,13 +628,38 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        75.964676,
+        39.087614
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       52.116818
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
         "id": "single-circle-92,184,92-0.85-none-0",
         "url": "#73e5e0f7:1754",
         "width": 48
        },
        [
-        0.995384,
-        67.362015
+        0,
+        0
        ],
        [
         9.25,
@@ -658,11 +683,11 @@
         "width": 48
        },
        [
-        59.048829,
-        32.432508
+        75.964676,
+        39.087614
        ],
        [
-        9.25,
+        9.75,
         45.5
        ],
        52.116818
@@ -691,31 +716,6 @@
         45.5
        ],
        61.791321
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-217,83,79-0.85-none-0",
-        "url": "#f679ed05:1766",
-        "width": 48
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.75,
-        45.5
-       ],
-       52.116818
       ]
      ]
     }
@@ -728,6 +728,7 @@
       "CATEGORICAL",
       "CHART",
       "COUNT",
+      "DOWN",
       "EXPAND",
       "GLOW",
       "RELOCATE",
@@ -735,8 +736,7 @@
       "SIZEP3",
       "SORT",
       "STAR",
-      "SYMBOL",
-      "UP"
+      "SYMBOL"
      ],
      "features": 22,
      "active": null,
@@ -806,12 +806,12 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "22e06ca043bb481f",
-     "setDigest": "bb692bc272d35e63",
+     "digest": "484b3ccf314b48bf",
+     "setDigest": "5efd41af671931c4",
      "columnDigests": {
       "getColor": "cf59682237868850",
       "getIcon": "bd5fd5076be5b01f",
-      "getPixelOffset": "31dd41b0c9033697",
+      "getPixelOffset": "e1623d83a968cc92",
       "getPosition": "dcd8290bf5f8fbce",
       "getSize": "2e8699696fbf05e8"
      },
@@ -822,7 +822,7 @@
       ],
       "getPixelOffset": [
        0,
-       27.559797
+       0
       ],
       "getPosition": [
        9,
@@ -850,8 +850,8 @@
         "width": 64
        },
        [
-        27.559797,
-        17.920713
+        0,
+        0
        ],
        [
         9,
@@ -900,8 +900,8 @@
         "width": 64
        },
        [
-        0.627053,
-        42.43541
+        0,
+        0
        ],
        [
         9.25,
@@ -952,14 +952,14 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "621057a66c10808f",
-     "setDigest": "b4b610b22a6faa60",
+     "digest": "ee66f22457a4acb7",
+     "setDigest": "c649bade0e7c7082",
      "columnDigests": {
       "getColor": "587f5d75dc721e2c",
-      "getIcon": "5c4af3517e748cd3",
-      "getPixelOffset": "0ba1fc464cb168e5",
+      "getIcon": "8f81055c4ecf1638",
+      "getPixelOffset": "419f3707e8ef5ae8",
       "getPosition": "1db3cc87b9cbf960",
-      "getSize": "3752903e7f62f6fb"
+      "getSize": "a67fe266020c695c"
      },
      "stats": {
       "getColor": [
@@ -968,7 +968,7 @@
       ],
       "getPixelOffset": [
        0,
-       37.198432
+       47.854747
       ],
       "getPosition": [
        9,
@@ -996,8 +996,8 @@
         "width": 48
        },
        [
-        27.559797,
-        17.920713
+        0,
+        0
        ],
        [
         9,
@@ -1041,13 +1041,38 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
+        "id": "single-circle-217,83,79-0.85-none-0",
+        "url": "#f679ed05:1766",
+        "width": 48
+       },
+       [
+        47.854747,
+        24.623654
+       ],
+       [
+        9.25,
+        45.5
+       ],
+       32.831538
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
         "id": "single-circle-92,184,92-0.85-none-0",
         "url": "#73e5e0f7:1754",
         "width": 48
        },
        [
-        0.627053,
-        42.43541
+        0,
+        0
        ],
        [
         9.25,
@@ -1071,11 +1096,11 @@
         "width": 48
        },
        [
-        37.198432,
-        20.4312
+        47.854747,
+        24.623654
        ],
        [
-        9.25,
+        9.75,
         45.5
        ],
        32.831538
@@ -1104,31 +1129,6 @@
         45.5
        ],
        38.926093
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 24,
-        "anchorY": 24,
-        "height": 48,
-        "id": "single-circle-217,83,79-0.85-none-0",
-        "url": "#f679ed05:1766",
-        "width": 48
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.75,
-        45.5
-       ],
-       32.831538
       ]
      ]
     }
@@ -1141,6 +1141,7 @@
       "CATEGORICAL",
       "CHART",
       "COUNT",
+      "DOWN",
       "EXPAND",
       "GLOW",
       "RELOCATE",
@@ -1148,8 +1149,7 @@
       "SIZEP3",
       "SORT",
       "STAR",
-      "SYMBOL",
-      "UP"
+      "SYMBOL"
      ],
      "features": 22,
      "active": null,

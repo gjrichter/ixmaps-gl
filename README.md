@@ -230,6 +230,28 @@ space beside it. `.options({themecopies: true})` (also at runtime) repeats the t
 copy. `.options({worldcopies: false})` draws the world once for the map itself, but MapLibre then
 also stops the zoom-out where the world gets narrower than the window.
 
+### Map events, bounds and the MapLibre map
+
+`map.on("zoomend moveend", fn)` (flat's `mapApi.on`; on the builder chain, the callback object or
+`ixmaps.map()`) fires:
+
+| event | when | handler receives |
+|---|---|---|
+| `ready` | the map has loaded (called at once if it already has) | `{type}` |
+| `viewchange` (`zoompan`) | after every pan or zoom | `{nZoom, zoomChanged, panChanged}` |
+| `zoomend` / `moveend` | the zoom changed / the centre moved without a zoom change | as `viewchange` |
+| `click` (`itemclick`) | an item was clicked | `{szId, id, theme, lngLat, point}` |
+| `mapclick` | any click on the map, background included (gl addition) | `{lngLat: {lng, lat}, point: {x, y}}` |
+| `layerdraw` | after every redraw, once per theme | `{id}` |
+
+Other flat event names (`mouseover`, `mouseout`, `resize`, `layeradd`, `layerremove`) are accepted but
+never fire; the console says so once. `ixmaps.onItemAction(null, null, {lngLat, point})` gets the click
+position on a background click as a third argument.
+
+`ixmaps.map().getBounds()` returns flat's `[swLat, swLng, neLat, neLng]` (`ixmaps.getBoundingBox()`
+the same box as `[{lat, lng} SW, {lat, lng} NE]`); `ixmaps.map().getMapLibre()` returns the MapLibre
+map itself, or `undefined` until it is built.
+
 ### Click to action
 
 flat's click-to-action (`ui/js/tools/tooltip_to_action.js`, e.g. a click on a country filters every
