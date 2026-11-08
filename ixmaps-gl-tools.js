@@ -46,7 +46,7 @@
   const ACE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.44.0/ace.js';
   // the theme grammar the configurator lists every key and flag from
   // (ixmaps.themeTools.grammarUrl overrides it)
-  const GRAMMAR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.30/dist/grammar.runtime.json';
+  const GRAMMAR_URL = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.31/dist/grammar.runtime.json';
   const ixmaps = global.ixmaps;
   if (!ixmaps || typeof ixmaps.Map !== 'function') {
     console.warn('[ixmaps-gl-tools] ixmaps-gl.js must be loaded first — the theme tools are off');
