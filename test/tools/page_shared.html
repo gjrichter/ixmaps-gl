@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>theme tools: themes sharing one id</title>
+<script src="../../ixmaps-gl.js"></script>
+<script src="../../ixmaps-gl-tools.js"></script>
+<style>html, body { margin: 0; height: 100%; } #map_div { position: absolute; inset: 0; }</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  // three themes on ONE layer with no style.name / meta.name: all three have the layer name "pts" as id;
+  // two titles hold HTML (as stage/index_data_ondata_github_composecolor_divercolors_big.html)
+  var features = [];
+  for (var i = 0; i < 120; i++) {
+    features.push({ type: "Feature", properties: { v: 1 + (i % 10), cat: i % 3 ? "a" : "b" },
+      geometry: { type: "Point", coordinates: [9.14 + (i % 12) * 0.009, 45.43 + Math.floor(i / 12) * 0.006] } });
+  }
+  var fc = { type: "FeatureCollection", features: features };
+  window.myMap = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "#f4f4f4", name: "shared" }, function (map) {
+    return map.view([45.46, 9.19], 12)
+      .layer(ixmaps.layer("pts", function (l) {
+        return l.data({ obj: fc, type: "geojson" }).binding({ geo: "geometry", value: "cat" })
+          .type("CHART|DOT|CATEGORICAL|NOLEGEND").style({ colorscheme: ["#d9534f", "#428bca"], values: ["a", "b"], scale: 0.5 })
+          .meta({ title: "Dots" });
+      }))
+      .layer(ixmaps.layer("pts", function (l) {
+        return l.data({ obj: fc, type: "geojson" }).binding({ geo: "geometry", value: "v" })
+          .type("CHART|SYMBOL|AGGREGATE|SUM|NOLEGEND").style({ colorscheme: ["#fecc5c", "#bd0026"], gridwidth: "40px", normalsizevalue: "30" })
+          .meta({ title: "Bubbles - sum<hr>" });
+      }))
+      .layer(ixmaps.layer("pts", function (l) {
+        return l.data({ obj: fc, type: "geojson" }).binding({ geo: "geometry", value: "v" })
+          .type("CHART|DOT|NOLEGEND").style({ colorscheme: ["#2b8cbe"], scale: 0.3 })
+          .meta({ title: "Small<h3>dots</h3><hr>" });
+      }));
+  });
+</script>
+</body>
+</html>

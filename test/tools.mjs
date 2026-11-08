@@ -346,6 +346,39 @@ try {
   const off = await optionPage('?tools=false');
   check('themetools: false — no tool bar, nothing loaded', () => { assert.deepEqual(off.after, []); assert.equal(off.menu, ''); assert.equal(off.version, undefined); });
   check('option pages: no page errors', () => assert.deepEqual([...byDefault.errors, ...withTrue.errors, ...withUrl.errors, ...off.errors], []));
+
+  // themes sharing one id (one layer, no style.name / meta.name): each can be picked, a rebuild takes only that one
+  {
+    const p = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+    const errs = [];
+    p.on('pageerror', e => errs.push(e.message));
+    await p.goto(`http://localhost:${port}/test/tools/page_shared.html`);
+    await p.waitForFunction(async () => window.myMap && (await window.myMap).runtimes.length === 3, null, { timeout: 60000, polling: 300 });
+    await p.waitForTimeout(1000);
+    await p.evaluate(() => ixmaps.themeTools.tune());
+    const picker = () => p.evaluate(() => { const s = document.querySelector('.ixgt-dialog select'); return { value: s.value, options: [...s.options].map(o => o.textContent + '=' + o.value) }; });
+    const opened = await picker();
+    check('shared id: the picker lists the three themes, titles as text, each with its own key', () => assert.deepEqual(opened.options, ['Dots=pts#0', 'Bubbles - sum=pts#1', 'Small dots=pts#2']));
+    await p.selectOption('.ixgt-dialog select', 'pts#1');
+    const second = await picker();
+    await p.selectOption('.ixgt-dialog select', 'pts#2');
+    const third = await picker();
+    check('shared id: the second and third theme can be picked', () => { assert.equal(second.value, 'pts#1'); assert.equal(third.value, 'pts#2'); });
+    const before = await p.evaluate(async () => { const api = await window.myMap; window.__rts = api.runtimes.slice(); return api.runtimes.map(r => [...r.flags].sort().join('|')); });
+    const flag = await p.evaluate(() => { const i = document.querySelector('.ixgt-dialog input[data-flag]'); i.click(); return i.dataset.flag; });
+    await p.waitForFunction(async () => { const api = await window.myMap; return api.runtimes.length === 3 && api.runtimes[2] !== window.__rts[2]; }, null, { timeout: 15000, polling: 200 }).catch(() => {});
+    await p.waitForTimeout(500);
+    const after = await p.evaluate(async () => { const api = await window.myMap; return { n: api.runtimes.length, kept: api.runtimes.slice(0, 2).every((r, i) => r === window.__rts[i]), flags: api.runtimes.map(r => [...r.flags].sort().join('|')) }; });
+    const nowPicked = await picker();
+    check(`shared id: a flag change (${flag}) rebuilds only the third theme — the other two stay`, () => {
+      assert.equal(after.n, 3); assert.ok(after.kept);
+      assert.deepEqual(after.flags.slice(0, 2), before.slice(0, 2));
+      assert.notEqual(after.flags[2], before[2]);
+    });
+    check('shared id: tune stays on the rebuilt theme', () => assert.equal(nowPicked.value, 'pts#2'));
+    check('shared id: no page errors', () => assert.deepEqual(errs, []));
+    await p.close();
+  }
 } finally {
   await browser.close();
   server.close();

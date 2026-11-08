@@ -614,13 +614,21 @@
 
   const themeIdOf = rt => (rt.style && rt.style.name) || (rt.meta && rt.meta.name) || rt.name;
   // a blank title (" " hides the legend heading) is no label: fall back to the layer name, then the theme id
-  const titleOf = rt => String((rt.meta && rt.meta.title) || '').trim() || rt.name || themeIdOf(rt);
+  // the picker's label: the title as text (a title may hold HTML, "<h3>…</h3><hr>"), blank → the layer name, then the id
+  const titleOf = rt => String((rt.meta && rt.meta.title) || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || rt.name || themeIdOf(rt);
 
   // the themes a user can pick: not a theme's own sub theme
   function themesOf(api) {
     const rts = (api && api.runtimes) || [];
     const subs = new Set(rts.map(r => r._subTheme).filter(Boolean));
     return rts.filter(r => !subs.has(r));
+  }
+  // the tools' key for a theme: its id, with "#n" when several themes share it
+  // (themes on one layer with no style.name / meta.name all have the layer name as id)
+  function keyOf(api, rt) {
+    const id = themeIdOf(rt);
+    const same = themesOf(api).filter(r => themeIdOf(r) === id);
+    return same.length > 1 ? id + '#' + same.indexOf(rt) : id;
   }
   // default: the topmost chart / choropleth theme, else the topmost theme
   function defaultTheme(api) {
@@ -934,9 +942,9 @@
       menu.appendChild(b);
       return b;
     };
-    const first = btn('tune', 'tune', true, 'Tune the theme style', () => openTune(state, rt ? themeIdOf(rt) : null, x, y));
-    btn('edit', 'edit', true, 'Edit the theme definition', () => openEdit(state, rt ? themeIdOf(rt) : null, x, y));
-    btn('config', 'config', true, 'Configure the theme: type, style, binding, data, meta', () => openConfig(state, rt ? themeIdOf(rt) : null, x, y));
+    const first = btn('tune', 'tune', true, 'Tune the theme style', () => openTune(state, rt ? keyOf(state.api, rt) : null, x, y));
+    btn('edit', 'edit', true, 'Edit the theme definition', () => openEdit(state, rt ? keyOf(state.api, rt) : null, x, y));
+    btn('config', 'config', true, 'Configure the theme: type, style, binding, data, meta', () => openConfig(state, rt ? keyOf(state.api, rt) : null, x, y));
     btn('save', 'save', true, 'Save the map as an HTML page', () => openSave(state, x, y));
     document.body.appendChild(menu);
     placeAt(menu, x - 10, y - 10);
@@ -955,11 +963,11 @@
 
   function findTheme(state, id) {
     const list = themesOf(state.api);
-    return (id != null && list.find(r => themeIdOf(r) === id)) || null;
+    return (id != null && list.find(r => keyOf(state.api, r) === id)) || null;
   }
 
   function originOf(state, rt) {
-    const id = themeIdOf(rt);
+    const id = keyOf(state.api, rt);
     if (!state.origin.has(id)) {
       state.origin.set(id, {
         def: rt._definition ? Object.assign({}, rt._definition, { style: Object.assign({}, rt._definition.style) }) : null,
@@ -981,13 +989,16 @@
   // dialog follows the new runtime once it is there
   // newId: the rebuilt theme's id, when the definition renames it
   function rebuild(state, rt, def, newId, onTimeout) {
-    const id = themeIdOf(rt);
+    const id = keyOf(state.api, rt);
     const target = newId || id;
-    state.api.replace(id, { definition: () => def });
+    // a theme whose id other themes share is replaced by its runtime: replace(id) would take them all
+    state.api.replace(id === themeIdOf(rt) ? id : rt, { definition: () => def });
+    // only a theme that was not there before is the rebuilt one (until it is, "#n" may point at another)
+    const before = new Set(themesOf(state.api));
     const t0 = Date.now();
     const wait = () => {
       const now = findTheme(state, target);
-      if (now && now !== rt) {
+      if (now && !before.has(now)) {
         if (state.themeId === id) { state.themeId = target; renderTune(state); }
         const cf = state.config;
         if (cf && cf.themeId === id) {
@@ -1020,7 +1031,7 @@
     injectCss();
     const rt = findTheme(state, themeId) || defaultTheme(state.api);
     if (!rt) { console.warn('[ixmaps-gl-tools] the map has no theme to tune'); return; }
-    state.themeId = themeIdOf(rt);
+    state.themeId = keyOf(state.api, rt);
     if (!state.dialog) {
       state.dialog = makeDialog('Tune', '', () => { state.dialog = null; });
       renderTune(state);
@@ -1048,7 +1059,7 @@
     if (list.length <= 1) return el('div', 'ixgt-sub', esc(rt ? titleOf(rt) : ''));
     const sel = el('select');
     sel.setAttribute('aria-label', 'Theme');
-    list.forEach(r => { const o = el('option', null, esc(titleOf(r))); o.value = themeIdOf(r); sel.appendChild(o); });
+    list.forEach(r => { const o = el('option', null, esc(titleOf(r))); o.value = keyOf(state.api, r); sel.appendChild(o); });
     sel.value = currentId;
     sel.addEventListener('change', () => onPick(sel.value));
     return sel;
@@ -1130,12 +1141,12 @@
     const rt = findTheme(state, themeId) || defaultTheme(state.api);
     if (!rt) { console.warn('[ixmaps-gl-tools] the map has no theme to edit'); return; }
     if (!state.edit) {
-      const e = state.edit = { dialog: null, themeId: themeIdOf(rt), editor: null, kept: null, shown: null, drafts: new Map(), first: new Map(), applying: false };
+      const e = state.edit = { dialog: null, themeId: keyOf(state.api, rt), editor: null, kept: null, shown: null, drafts: new Map(), first: new Map(), applying: false };
       e.dialog = makeDialog('Edit theme', 'ixgt-edit', () => { if (e.editor) e.editor.destroy(); state.edit = null; });
       renderEdit(state, true);
       placeAt(e.dialog, x != null ? x + 12 : 16, y != null ? y - 20 : 16);
     } else {
-      switchEdit(state, themeIdOf(rt));
+      switchEdit(state, keyOf(state.api, rt));
     }
   }
 
@@ -1160,7 +1171,7 @@
     body.innerHTML = '';
     foot.innerHTML = '';
     if (!rt) { body.textContent = 'No theme on the map.'; return; }
-    e.themeId = themeIdOf(rt);
+    e.themeId = keyOf(state.api, rt);
     originOf(state, rt); // tune's Reset still goes back to the theme as first seen
     if (fresh) e.drafts.delete(e.themeId);
     body.appendChild(themePicker(state, e.themeId, id => switchEdit(state, id)));
@@ -1284,7 +1295,7 @@
     const rt = findTheme(state, themeId) || defaultTheme(state.api);
     if (!rt) { console.warn('[ixmaps-gl-tools] the map has no theme to configure'); return; }
     if (!state.config) {
-      const c = state.config = { dialog: null, themeId: themeIdOf(rt), tab: 'visual', models: new Map(), dirty: new Set(), first: new Map(),
+      const c = state.config = { dialog: null, themeId: keyOf(state.api, rt), tab: 'visual', models: new Map(), dirty: new Set(), first: new Map(),
         added: new Map(), invalid: new Set(), applying: false };
       c.dialog = makeDialog('Configure theme', 'ixgt-config', () => { state.config = null; });
       renderConfig(state, false);
@@ -1293,8 +1304,8 @@
         console.warn('[ixmaps-gl-tools] the grammar registry did not load — the configurator shows the common keys only:', err.message);
         if (state.config === c) { c.noGrammar = true; renderConfig(state, false); }
       });
-    } else if (state.config.themeId !== themeIdOf(rt)) {
-      state.config.themeId = themeIdOf(rt);
+    } else if (state.config.themeId !== keyOf(state.api, rt)) {
+      state.config.themeId = keyOf(state.api, rt);
       renderConfig(state, false);
     }
   }
@@ -1311,7 +1322,7 @@
     body.innerHTML = '';
     foot.innerHTML = '';
     if (!rt) { body.textContent = 'No theme on the map.'; return; }
-    c.themeId = themeIdOf(rt);
+    c.themeId = keyOf(state.api, rt);
     originOf(state, rt);
     body.appendChild(themePicker(state, c.themeId, id => { c.themeId = id; renderConfig(state, false); }));
     if (!rt._definition) { body.appendChild(el('div', 'ixgt-note', 'This theme has no definition to configure.')); return; }
@@ -1824,7 +1835,7 @@
     body.innerHTML = '';
     foot.innerHTML = '';
     if (!rt) { body.textContent = 'No theme on the map.'; return; }
-    state.themeId = themeIdOf(rt);
+    state.themeId = keyOf(state.api, rt);
     const origin = originOf(state, rt);
     const words = typeWordsOf(rt.flags);
 
@@ -2081,6 +2092,6 @@
     _internals: { controlsFor, aggregationPatch, patchedDefinition, scaleWidth, currentValue, themeKind, typeWordsOf, toEditable, fromEditable,
       typeParts, joinType, guessKind, parseValue, formatValue, fieldNamesOf, registryKeys, configModel,
       readVisual, writeVisual, withPalette, paletteColors, paletteScheme, isFlatGradient, fieldInfoOf, categoriesOf, normValueOf, schemeColorsOf, PALETTES,
-      jsLiteral, themeCode, pageHtml, htmlFileName, titleOf }
+      jsLiteral, themeCode, pageHtml, htmlFileName, titleOf, keyOf }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

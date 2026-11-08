@@ -405,3 +405,18 @@ test('titleOf: a blank title falls back to the layer name, then the theme id', (
   assert.equal(T.titleOf({ name: 'Canoni', meta: { title: 'Canoni 2025' } }), 'Canoni 2025');
   assert.equal(T.titleOf({ meta: { title: '' }, style: { name: 'text' } }), 'text');
 });
+
+test('titleOf: a title holding HTML is shown as text', () => {
+  assert.equal(T.titleOf({ name: 'L', meta: { title: 'Europee 2024<h3>Partito vincente</h3><hr>' } }), 'Europee 2024 Partito vincente');
+  assert.equal(T.titleOf({ name: 'L', meta: { title: '<hr>' } }), 'L');
+});
+
+test('keyOf: the id, with "#n" when several themes share it', () => {
+  const a = { name: 'L' }, b = { name: 'L' }, c = { name: 'L', style: { name: 'own' } }, sub = { name: 'L' };
+  a._subTheme = sub;
+  const api = { runtimes: [a, sub, b, c] };
+  assert.equal(T.keyOf(api, a), 'L#0');
+  assert.equal(T.keyOf(api, b), 'L#1');
+  assert.equal(T.keyOf(api, c), 'own');
+  assert.equal(T.keyOf({ runtimes: [a] }, a), 'L');
+});

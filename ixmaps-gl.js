@@ -6254,7 +6254,8 @@ self.onmessage = e => {
         require: (url) => { loadRequiredScripts([url]); return engineApi; },
         // flat's theme-level calls by theme id (style.name / meta.name, else
         // the layer name): add(theme, flag) — "replace" swaps a theme of the
-        // same id —, replace(id, theme, flag), remove(id)
+        // same id —, replace(id, theme, flag), remove(id); replace() also takes a theme's
+        // runtime object (api.runtimes) for the id, to replace that one theme of several sharing an id
         add: (layerBuilder, flag) => {
           layerBuilder = unwrapLayer(layerBuilder);
           _chainedLayers = _chainedLayers.then(() => {
@@ -6698,17 +6699,23 @@ self.onmessage = e => {
       // where the theme(s) removeThemeById(id) would remove stand in the stack: the first remaining
       // theme after them (null = they were on top). Taken BEFORE the removal, handed to defineLayer.
       function captureSlot(id) {
-        const named = runtimes.filter(r => (r.style && r.style.name === id) || (r.meta && r.meta.name === id));
-        const doomed = named.length ? named : runtimes.filter(r => r.name === id);
+        const named = isRuntimeRef(id) ? [] : runtimes.filter(r => (r.style && r.style.name === id) || (r.meta && r.meta.name === id));
+        const doomed = isRuntimeRef(id) ? [id] : named.length ? named : runtimes.filter(r => r.name === id);
         if (!doomed.length) return null;
         const last = Math.max(...doomed.map(r => runtimes.indexOf(r)));
         const anchor = runtimes.slice(last + 1).find(r => !doomed.includes(r) && !doomed.some(d => d._subTheme === r)) || null;
         return { anchor };
       }
 
+      // replace() may get a theme's runtime object instead of an id: it then
+      // addresses that one theme — the tools add-on, when several themes
+      // share an id (themes on one layer with no style.name / meta.name)
+      function isRuntimeRef(id) { return id != null && typeof id === 'object' && runtimes.includes(id); }
+
       // flat addresses a theme by its id — style.name / meta.name (several
       // themes may share one layer), else the layer name
       function removeThemeById(id) {
+        if (isRuntimeRef(id)) return removeRuntimes(id.name, [id]);
         const named = runtimes.filter(r => (r.style && r.style.name === id) || (r.meta && r.meta.name === id));
         if (named.length) return removeRuntimes(named[0].name, named);
         return engineApi.removeTheme(id);
