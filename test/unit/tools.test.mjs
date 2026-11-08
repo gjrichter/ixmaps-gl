@@ -371,11 +371,11 @@ test('themeCode: functions and data processing are kept, with a warning', () => 
 test('pageHtml: the engine from the CDN, the map options, the view, the themes in order, globe and bearing', () => {
   const themes = [T.themeCode({ layer: 'one', style: { type: 'FEATURE' } }, ''), { skipped: 'too big', label: 'Two', warnings: [] },
     T.themeCode({ layer: 'three', style: { type: 'CHART|DOT' } }, '')];
-  const html = T.pageHtml({ title: 'A & B', engineUrl: 'https://cdn.jsdelivr.net/npm/ixmaps-gl@0.2.36/ixmaps-gl.js',
+  const html = T.pageHtml({ title: 'A & B', engineUrl: 'https://cdn.jsdelivr.net/npm/ixmaps-gl@0.2.37/ixmaps-gl.js',
     map: { mapType: 'VT_TONER_LITE', legend: 'closed' }, options: { basemapopacity: 0.5 }, center: { lat: 45.1234567, lng: 9.7654321 },
     zoom: 8.12345, bearing: 30, pitch: 0, globe: true, attribution: 'Data: X', themes, notes: ['a note'], saved: '2026-11-08' });
   assert.ok(html.includes('<title>A &amp; B</title>'));
-  assert.ok(html.includes('<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0.2.36/ixmaps-gl.js"></script>'));
+  assert.ok(html.includes('<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0.2.37/ixmaps-gl.js"></script>'));
   assert.ok(html.includes('ixmaps.Map("map", { mapType: "VT_TONER_LITE", legend: "closed" }, map => map'));
   assert.ok(html.includes('.view([45.123457, 9.765432], 8.123)'));
   assert.ok(html.includes('.options({ basemapopacity: 0.5 })'));
