@@ -62,6 +62,19 @@ try {
   await page.waitForTimeout(600);
   const unpinned = !(await pinnedShown());
   check('a left-click on empty map unpins it', () => assert.equal(unpinned, true));
+  // macOS Control+click: the left button with Control, which opens the context menu — the same as a right-click
+  await page.keyboard.down('Control'); await page.mouse.click(onBubble.x, onBubble.y); await page.keyboard.up('Control');
+  await page.waitForTimeout(600);
+  const cMenu = await page.locator('.ixgt-menu').count(); const cPinned = await pinnedShown();
+  check('a Control+click (macOS context click) on a bubble opens the tool bar', () => assert.equal(cMenu, 1));
+  check('a Control+click on a bubble pins no tooltip', () => assert.equal(cPinned, false));
+  await page.keyboard.press('Escape');
+  await page.mouse.click(onBubble.x, onBubble.y);
+  await page.waitForTimeout(600);
+  const afterCtrl = await pinnedShown();
+  check('the next left-click still pins', () => assert.equal(afterCtrl, true));
+  await page.mouse.click(box.x + 8, box.y + box.height - 8);
+  await page.waitForTimeout(600);
 
   // ---- the tune dialog, opened on empty map: the topmost chart theme
   await page.mouse.click(box.x + 40, box.y + 40, { button: 'right' });

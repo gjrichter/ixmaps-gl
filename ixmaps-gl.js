@@ -4596,15 +4596,20 @@ self.onmessage = e => {
         return null;
       }
     }
+    // a click that opened the context menu — the right button, or Control+click on macOS (the left button
+    // with Control: deck.gl still reports a tap) — is not an item click; set by contextmenu, reset by pointerdown
+    let contextClick = false;
     function onClick(info, event) {
-      // the right button opens the theme tools menu (and right-drag rotates): it neither pins nor unpins, nor is an item click
-      if (event && (event.rightButton || (event.srcEvent && event.srcEvent.button > 0))) return false;
+      // the context click opens the theme tools menu (and right-drag rotates): it neither pins nor unpins, nor is an item click
+      if (contextClick || (event && (event.rightButton || (event.srcEvent && event.srcEvent.button > 0)))) return false;
       try { return clickFor(info); } catch (err) {
         console.error('[ixmaps-gl] click failed:', err);
         return false;
       }
     }
     function mount() {
+      el.addEventListener('pointerdown', () => { contextClick = false; }, true);
+      el.addEventListener('contextmenu', () => { contextClick = true; }, true);
       map.on('move', updatePinnedTooltipPosition);
       watchHoverTooltip();
       // anchor inside the map container: map.project() gives container-
