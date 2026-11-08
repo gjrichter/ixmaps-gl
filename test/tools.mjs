@@ -39,6 +39,30 @@ try {
   const afterEsc = await page.locator('.ixgt-menu').count();
   check('Escape closes the tool bar', () => assert.equal(afterEsc, 0));
 
+  // ---- a right-click on an item opens the menu only: it pins no tooltip (a left-click does)
+  const onBubble = await page.evaluate(async () => { const a = await window.myMap; const r = a.map.getContainer().getBoundingClientRect();
+    for (let y = 100; y < 600; y += 10) for (let x = 100; x < 900; x += 10) { const i = a.overlay.pickObject({ x, y, radius: 0 }); if (i && i.layer && /ix-bubbles-bubbles/.test(i.layer.id)) return { x: r.left + x, y: r.top + y }; } return null; });
+  const pinnedShown = () => page.evaluate(() => [...document.querySelectorAll('#map_div div')].some(d => d.style.zIndex === '6' && d.style.display === 'block'));
+  await page.mouse.click(onBubble.x, onBubble.y, { button: 'right' });
+  await page.waitForTimeout(600);
+  const rMenu = await page.locator('.ixgt-menu').count(); const rPinned = await pinnedShown();
+  check('a right-click on a bubble opens the tool bar', () => assert.equal(rMenu, 1));
+  check('a right-click on a bubble pins no tooltip', () => assert.equal(rPinned, false));
+  await page.keyboard.press('Escape');
+  await page.mouse.click(onBubble.x, onBubble.y);
+  await page.waitForTimeout(600);
+  const lPinned = await pinnedShown();
+  check('a left-click on a bubble still pins its tooltip', () => assert.equal(lPinned, true));
+  await page.mouse.click(box.x + 8, box.y + box.height - 8, { button: 'right' });
+  await page.waitForTimeout(600);
+  const rKeeps = await pinnedShown();
+  check('a right-click on empty map does not unpin the pinned tooltip', () => assert.equal(rKeeps, true));
+  await page.keyboard.press('Escape');
+  await page.mouse.click(box.x + 8, box.y + box.height - 8);
+  await page.waitForTimeout(600);
+  const unpinned = !(await pinnedShown());
+  check('a left-click on empty map unpins it', () => assert.equal(unpinned, true));
+
   // ---- the tune dialog, opened on empty map: the topmost chart theme
   await page.mouse.click(box.x + 40, box.y + 40, { button: 'right' });
   await page.click('.ixgt-menu button:first-child');

@@ -4596,7 +4596,9 @@ self.onmessage = e => {
         return null;
       }
     }
-    function onClick(info) {
+    function onClick(info, event) {
+      // the right button opens the theme tools menu (and right-drag rotates): it neither pins nor unpins, nor is an item click
+      if (event && (event.rightButton || (event.srcEvent && event.srcEvent.button > 0))) return false;
       try { return clickFor(info); } catch (err) {
         console.error('[ixmaps-gl] click failed:', err);
         return false;
