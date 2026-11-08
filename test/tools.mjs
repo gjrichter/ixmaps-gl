@@ -221,6 +221,10 @@ try {
 
   // ---- save map: the map as a standalone HTML page, loaded again (with this engine instead of the CDN's)
   await page.evaluate(async () => { ixmaps.themeTools.close(); (await window.myMap).map.jumpTo({ bearing: 20 }); });
+  // a live tune change (no rebuild) must be saved too
+  await page.evaluate(() => ixmaps.themeTools.tune('bubbles'));
+  await setRange('scale', 1.5); await settle();
+  await page.evaluate(() => ixmaps.themeTools.close());
   await page.waitForTimeout(500);
   await page.mouse.click(box.x + 40, box.y + 40, { button: 'right' });
   await page.click('.ixgt-menu button:nth-child(4)');
@@ -233,10 +237,11 @@ try {
   check('download saves theme_tools.html', () => assert.equal(download.suggestedFilename(), 'theme_tools.html'));
   check('the saved page loads ixmaps-gl from the CDN at this version', () => assert.match(savedHtml, /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/ixmaps-gl@\d+\.\d+\.\d+\/ixmaps-gl\.js"><\/script>/));
   check('the saved page embeds the inline data', () => assert.ok(savedHtml.includes('"p119"'), 'the last point'));
+  check('the saved page has the size tuned live (no rebuild)', () => assert.match(savedHtml, /ixmaps\.layer\("bubbles"[\s\S]*?\.style\([^\n]*scale: 1\.5/));
   check('the saved page turns the map as it was turned', () => assert.ok(savedHtml.includes('api.map.jumpTo({ bearing: 20, pitch: 0 });')));
   // the same view of both pages, through the engine's flat globals: themes in stack order with their flags and style
   const viewOf = p => p.evaluate(() => ({
-    themes: ixmaps.getThemes().map(t => t.szId + ':' + t.szFlag.split('|').sort().join('|') + ':' + JSON.stringify(ixmaps.getThemeDefinitionObj(t.szId).colorscheme)),
+    themes: ixmaps.getThemes().map(t => t.szId + ':' + t.szFlag.split('|').sort().join('|') + ':' + JSON.stringify(ixmaps.getThemeDefinitionObj(t.szId).style.colorscheme) + ':' + ixmaps.getThemeDefinitionObj(t.szId).style.scale),
     center: ixmaps.getCenter(), zoom: ixmaps.getZoom() }));
   const orig = await viewOf(page);
   fs.mkdirSync('out', { recursive: true });
@@ -248,7 +253,7 @@ try {
   await sp.waitForFunction(() => window.ixmaps && ixmaps.getThemes && ixmaps.getThemes().length === 2, null, { timeout: 90000, polling: 500 });
   await sp.waitForTimeout(2000);
   const saved = await viewOf(sp);
-  check('the saved page has the same themes, in the same order, with the same flags and colors', () => assert.deepEqual(saved.themes, orig.themes));
+  check('the saved page has the same themes, in the same order, with the same flags, colors and size', () => { assert.ok(orig.themes[1].endsWith(':1.5'), orig.themes[1]); assert.deepEqual(saved.themes, orig.themes); });
   check('the saved page shows the same view', () => {
     assert.ok(Math.abs(saved.center.lat - orig.center.lat) < 1e-4 && Math.abs(saved.center.lng - orig.center.lng) < 1e-4, JSON.stringify([saved.center, orig.center]));
     assert.ok(Math.abs(saved.zoom - orig.zoom) < 0.01, JSON.stringify([saved.zoom, orig.zoom]));

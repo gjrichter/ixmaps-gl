@@ -1898,7 +1898,8 @@
     const mapOpts = got ? got.map : { mapType: api.getMapTypeId ? api.getMapTypeId() : undefined };
     if (!got) notes.push('this engine has no getMapOptions(): the basemap is saved, the other map options are not');
     const base = document.baseURI || (global.location && global.location.href) || '';
-    const themes = themesOf(api).map(rt => rt._definition ? themeCode(rt._definition, base)
+    // the definition with the values tuned live since (tune's sliders change the style without a rebuild)
+    const themes = themesOf(api).map(rt => rt._definition ? themeCode(patchedDefinition(rt._definition, rt._styleSet, null, typeWordsOf(rt.flags)), base)
       : { skipped: 'the engine holds no definition for it', label: titleOf(rt), warnings: [] });
     themes.forEach(t => t.warnings.forEach(w => notes.push(w)));
     const c = map.getCenter();
