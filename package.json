@@ -8,6 +8,7 @@
   "jsdelivr": "ixmaps-gl.js",
   "files": [
     "ixmaps-gl.js",
+    "ixmaps-gl-tools.js",
     "README.md",
     "LICENSE.txt"
   ],

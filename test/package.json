@@ -8,7 +8,8 @@
     "snapshot": "node run.mjs --update",
     "test": "node --test 'unit/*.test.mjs' && node run.mjs",
     "events": "node events.mjs",
-    "runtime": "node runtime.mjs"
+    "runtime": "node runtime.mjs",
+    "tools": "node tools.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

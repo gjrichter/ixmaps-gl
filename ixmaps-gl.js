@@ -3032,6 +3032,52 @@ self.onmessage = e => {
     }
   }
 
+  // ---- the theme tools add-on: ixmaps.Map(id, {themetools: false | url}) ----
+  // As flat's context menu, every map has a right-click tool bar (tune / edit
+  // / config). Its code is a separate file, ixmaps-gl-tools.js, loaded from
+  // next to this one (or the URL given) only on the first right-click — not
+  // with the map. themetools: false: no tool bar (MapLibre keeps the browser's
+  // own menu off the map either way, for right-drag rotation). Pages that
+  // load the add-on themselves are attached by it, and this does nothing.
+  const ENGINE_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
+  const _themeToolsScripts = new Map();
+  function themeToolsUrl(opt) {
+    if (opt === false || /^(false|0|off|no)$/i.test(String(opt == null ? '' : opt).trim())) return null;
+    if (typeof opt === 'string' && opt.trim() && !/^(true|1|on|yes)$/i.test(opt.trim())) return opt.trim();
+    return ENGINE_SRC ? ENGINE_SRC.replace(/[^/?#]*([?#].*)?$/, 'ixmaps-gl-tools.js') : null;
+  }
+  function armThemeTools(opt, api) {
+    const url = themeToolsUrl(opt);
+    if (!url || !api || !api.map) return;
+    const box = api.map.getContainer();
+    let down = null;
+    box.addEventListener('mousedown', e => { if (e.button === 2) down = { x: e.clientX, y: e.clientY }; }, true);
+    const onMenu = e => {
+      const tools = global.ixmaps.themeTools;
+      if (api.__ixgtAttached) { box.removeEventListener('contextmenu', onMenu); return; } // the add-on has it
+      e.preventDefault();
+      // a right-DRAG rotates the map: no menu then
+      const moved = down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4;
+      down = null;
+      if (moved) return;
+      const x = e.clientX, y = e.clientY;
+      const open = () => { const t = global.ixmaps.themeTools; if (t && t.menu) t.menu(api, x, y); };
+      if (tools) { open(); return; }
+      if (!_themeToolsScripts.has(url)) {
+        _themeToolsScripts.set(url, new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = url;
+          s.onload = resolve;
+          s.onerror = () => reject(new Error('could not load ' + url));
+          document.head.appendChild(s);
+        }));
+        _themeToolsScripts.get(url).catch(err => console.warn('[ixmaps-gl] theme tools:', err.message));
+      }
+      _themeToolsScripts.get(url).then(open, () => {});
+    };
+    box.addEventListener('contextmenu', onMenu);
+  }
+
   // ---- USER charts: a page's own chart function (style.userdraw) ----
   // flat calls ixmaps.<userdraw>_init(SVGDocument, {target, theme}) once
   // per realize (maptheme.js 17000-17050) and ixmaps.<userdraw>(SVGDocument,
@@ -7561,6 +7607,7 @@ self.onmessage = e => {
       if (splash) hideSplash(splash);
       throw err;
     });
+    promise.then(api => armThemeTools(options && options.themetools, api), () => {});
 
     // GL-PORT COMPAT: real ixmaps-flat's ixmaps.Map(id, options) — no
     // third mapFn argument — returns a SYNCHRONOUSLY CHAINABLE object:

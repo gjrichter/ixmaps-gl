@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>theme tools by map option</title>
+<!-- only the engine: it loads ixmaps-gl-tools.js on the first right-click; ?tools=false|url sets the ixmaps.Map option themetools -->
+<script src="../../ixmaps-gl.js"></script>
+<style>html, body { margin: 0; height: 100%; } #map_div { position: absolute; inset: 0; }</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  var features = [];
+  for (var i = 0; i < 60; i++) {
+    features.push({ type: "Feature", properties: { v: 1 + (i % 10) },
+      geometry: { type: "Point", coordinates: [9.14 + (i % 10) * 0.01, 45.43 + Math.floor(i / 10) * 0.008] } });
+  }
+  var tools = new URLSearchParams(location.search).get("tools");
+  var opts = { mapService: "leaflet_vt", mapType: "#f4f4f4" };
+  if (tools != null) opts.themetools = tools;
+  window.myMap = ixmaps.Map("map_div", opts, function (map) {
+    return map.view([45.46, 9.19], 12)
+      .layer(ixmaps.layer("bubbles", function (l) {
+        return l.data({ obj: { type: "FeatureCollection", features: features }, type: "geojson" }).binding({ geo: "geometry", value: "v" })
+          .type("CHART|BUBBLE|SIZE|NOLEGEND").style({ colorscheme: ["#bd0026"], normalsizevalue: "10" })
+          .meta({ name: "bubbles", title: "Bubbles" });
+      }));
+  });
+</script>
+</body>
+</html>

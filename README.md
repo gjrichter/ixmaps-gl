@@ -402,6 +402,79 @@ unknown flat name such as `VT_TONER_LITE` draws CARTO Positron:
 the theme id, `style.name` or `meta.name`. Give the theme a `name` in `.meta()`: the name passed to
 `ixmaps.layer("name", …)` is not the id, and without one `"replace"` cannot find the old theme and adds a second. `ixmaps.map().remove(id)` removes it.
 
+### Theme tools add-on (right-click menu)
+
+As in ixmaps-flat, every map has a context menu. Its code is a separate file,
+[`ixmaps-gl-tools.js`](./ixmaps-gl-tools.js), which the engine loads from the same folder as `ixmaps-gl.js` (so
+the CDN copy of the same version when the engine comes from the CDN) on the first right-click on a map, not
+with the map; Ace and the grammar registry load only when edit or config first opens. The map option
+`themetools` changes this:
+
+```js
+ixmaps.Map("map_div", { mapService: "leaflet_vt", themetools: false }, map => …) // no tool bar
+ixmaps.Map("map_div", { themetools: "https://example.org/ixmaps-gl-tools.js" }, …) // the add-on from there
+```
+
+(MapLibre keeps the browser's own menu off the map either way, for right-drag rotation.) A page can also load
+the add-on itself, after the engine and before its own map script; the engine then loads nothing:
+
+```html
+<script src="ixmaps-gl.js"></script>
+<script src="ixmaps-gl-tools.js"></script>
+```
+
+A right-click without dragging opens a tool bar;
+right-drag still rotates the map. **tune** opens a dialog for the theme under the cursor (otherwise the
+topmost chart or choropleth theme, with a picker when the map has several):
+
+- sliders that change the style live: size (`scale`), opacity (`fillopacity`), `linewidth`, value label size
+  (`valuescale`, VALUES themes), glow strength (`opacity`, GLOW themes) and the aggregation width (AGGREGATE
+  themes: a factor of the original `aggregation` brackets, `gridwidthpx` or `gridwidth`), plus `shadow`
+- switches for the GLOW, VALUES and AGGREGATE flags; they rebuild the theme, keeping the tuned style and its
+  place in the stack
+- Reset rebuilds the theme as it was when first tuned
+
+CHOROPLETH and FEATURE themes get opacity and line width.
+
+**edit** shows the theme's definition (`layer`, `data`, `binding`, `style` with its `type`, `meta`, including
+the values tuned since) as JSON in a code editor. The editor is [Ace](https://ace.c9.io), loaded from cdnjs
+the first time edit opens; until then, or offline, it is a plain text box. Inline data (`data.obj` and other
+large values under `data`) and functions show as `"<kept: data.obj — 120 features>"` strings and are put
+back on Apply. Apply (or Ctrl/Cmd+Enter) rebuilds the theme in its place in the stack; a JSON syntax error is
+shown with the cursor at it, and nothing is applied. Revert rebuilds the theme as the editor first showed it.
+Set `ixmaps.themeTools.aceUrl` before the first edit to load Ace from elsewhere.
+
+**config** is the complete theme configurator, in six tabs; Apply rebuilds the theme, Revert goes back to it as
+first shown:
+
+- **visual** (the first): the [Smart Data Loader](./app/ixmaps-loader_70.html)'s way of setting a theme, read
+  from the theme on the map. A picker with the loader's visualizations and icons — dots, sized bubbles,
+  hexbin, hexbin sized, heatmap, MapLibre heatmap, KDE — writes the loader's type, flags and style for the
+  chosen one and keeps the theme's other flags, data and position (a theme's `aggregation` brackets wait while
+  it is a hexbin, which takes its own grid). The value and size (or weight) fields are lists of the data's
+  fields; a text value makes the theme `CATEGORICAL`, with its values and one color per value. The theme's
+  colors are editable one by one, and about 110 palettes (the loader's and ixmaps-flat's, with swatches)
+  apply with the theme's class count. Sliders for the chosen visualization (opacity, size, size ramp, grid
+  width, heatmap radius and intensity, KDE bandwidth, line width; opacity, size and line width live) and
+  switches for glow, aura, values and shadow. Choropleth and feature themes keep their kind (a choropleth's
+  field switches it between `CATEGORICAL` and classed); other chart types (pie, bar, …) show as custom
+- **type**: the kind (`CHART|BUBBLE`, `CHART|PIE`, `CHOROPLETH`, `HEATMAP`, …) and the flags, the common ones
+  as switches by group (classification, aggregation, size, look, legend), any other one added from a list
+- **style**, **binding**, **data**, **meta**: the common keys by group, with color pickers (one per color of a
+  `colorscheme`), opacity sliders, the data's field names offered for binding fields and the data types for
+  `data.type`; the theme's other keys below them, and any key added from a list. A value that does not parse
+  (a number field with text in it) is marked and blocks Apply; an empty field removes the key
+
+The lists of every key and flag come from the [ixmaps-grammar](https://github.com/gjrichter/ixmaps-grammar)
+registry (`grammar.runtime.json`, loaded from jsDelivr the first time config opens; `ixmaps.themeTools.grammarUrl`
+overrides it). Keys and flags the registry says ixmaps-gl ignores show in grey italics. Without the registry the
+dialog shows the common keys only. Inline data and functions show as kept, not editable.
+
+The add-on also defines flat's `ixmaps.popupTools()`, `ixmaps.popupThemeEditor(themeId)` and
+`ixmaps.popupThemeConfigurator(themeId)` unless the page has its own, and `ixmaps.themeTools.tune(themeId)` /
+`.edit(themeId)` / `.config(themeId)` / `.close()`. Demo:
+[`examples/theme_tools.html`](./examples/theme_tools.html).
+
 ### Text on labels
 
 `CHART|LABEL` (with `TEXTONLY` for the text alone) writes the item's value. A text field bound as the *value*
@@ -555,6 +628,7 @@ For checking page files before they run, use the static checker in ixmaps-gramma
 | [`roma_incidenti_pericolosita_sidebar_gl.html`](./stage/roma_incidenti_pericolosita_sidebar_gl.html) | AGGREGATE on a gridwidth grid, facets sidebar |
 | [`roma_incidenti_pericolosita_sidebar.html`](./stage/roma_incidenti_pericolosita_sidebar.html) | The same page on the **real** ixmaps-flat engine, kept for side-by-side reference |
 | [`uk_collisions_2023.html`](./stage/uk_collisions_2023.html), [`app/ixmaps-loader_70.html`](./app/ixmaps-loader_70.html) | Additional real-page compatibility tests |
+| [`theme_tools.html`](./examples/theme_tools.html) | Theme tools add-on: right-click tool bar, live tune dialog, JSON theme editor, theme configurator |
 | [`examples/`](./examples) | Smaller feature-by-feature test pages (choropleth classing modes, bubble ranges, etc.) |
 
 Serve any of these with a static file server (they fetch remote data over HTTPS, so

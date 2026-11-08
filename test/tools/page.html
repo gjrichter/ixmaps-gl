@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>theme tools</title>
+<script src="../../ixmaps-gl.js"></script>
+<script src="../../ixmaps-gl-tools.js"></script>
+<style>html, body { margin: 0; height: 100%; } #map_div { position: absolute; inset: 0; }</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  // 120 points on a 12 x 10 lattice around Milan, values 1..10, categories a/b
+  var features = [];
+  for (var i = 0; i < 120; i++) {
+    features.push({ type: "Feature", properties: { v: 1 + (i % 10), cat: i % 3 ? "a" : "b", name: "p" + i },
+      geometry: { type: "Point", coordinates: [9.14 + (i % 12) * 0.009, 45.43 + Math.floor(i / 12) * 0.006] } });
+  }
+  var fc = { type: "FeatureCollection", features: features };
+  window.myMap = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "#f4f4f4", name: "tools" }, function (map) {
+    return map.view([45.46, 9.19], 12)
+      .layer(ixmaps.layer("dots", function (l) {
+        return l.data({ obj: fc, type: "geojson" }).binding({ geo: "geometry", value: "cat" })
+          .type("CHART|DOT|CATEGORICAL|NOLEGEND").style({ colorscheme: ["#d9534f", "#428bca"], values: ["a", "b"], scale: 0.5 })
+          .meta({ name: "dots", title: "Dots" });
+      }))
+      .layer(ixmaps.layer("bubbles", function (l) {
+        return l.data({ obj: fc, type: "geojson" }).binding({ geo: "geometry", value: "v" })
+          .type("CHART|SYMBOL|GLOW|AGGREGATE|SUM|VALUES|NOLEGEND")
+          .style({ colorscheme: ["#fecc5c", "#bd0026"], gridwidth: "40px", normalsizevalue: "30" })
+          .meta({ name: "bubbles", title: "Bubbles" });
+      }));
+  });
+</script>
+</body>
+</html>
