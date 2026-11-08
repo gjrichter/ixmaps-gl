@@ -613,7 +613,8 @@
   // ------------------------------------------------------------------ themes
 
   const themeIdOf = rt => (rt.style && rt.style.name) || (rt.meta && rt.meta.name) || rt.name;
-  const titleOf = rt => (rt.meta && rt.meta.title) || themeIdOf(rt);
+  // a blank title (" " hides the legend heading) is no label: fall back to the layer name, then the theme id
+  const titleOf = rt => String((rt.meta && rt.meta.title) || '').trim() || rt.name || themeIdOf(rt);
 
   // the themes a user can pick: not a theme's own sub theme
   function themesOf(api) {
@@ -2080,6 +2081,6 @@
     _internals: { controlsFor, aggregationPatch, patchedDefinition, scaleWidth, currentValue, themeKind, typeWordsOf, toEditable, fromEditable,
       typeParts, joinType, guessKind, parseValue, formatValue, fieldNamesOf, registryKeys, configModel,
       readVisual, writeVisual, withPalette, paletteColors, paletteScheme, isFlatGradient, fieldInfoOf, categoriesOf, normValueOf, schemeColorsOf, PALETTES,
-      jsLiteral, themeCode, pageHtml, htmlFileName }
+      jsLiteral, themeCode, pageHtml, htmlFileName, titleOf }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

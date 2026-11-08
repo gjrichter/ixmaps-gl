@@ -399,3 +399,9 @@ test('htmlFileName: a file name from the title', () => {
   assert.equal(T.htmlFileName('Città più'), 'citta_piu.html');
   assert.equal(T.htmlFileName(''), 'map.html');
 });
+
+test('titleOf: a blank title falls back to the layer name, then the theme id', () => {
+  assert.equal(T.titleOf({ name: 'Canoni', meta: { title: ' ' }, style: { name: 'text' } }), 'Canoni');
+  assert.equal(T.titleOf({ name: 'Canoni', meta: { title: 'Canoni 2025' } }), 'Canoni 2025');
+  assert.equal(T.titleOf({ meta: { title: '' }, style: { name: 'text' } }), 'text');
+});
