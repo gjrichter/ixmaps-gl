@@ -41,7 +41,7 @@
 (function (global) {
   'use strict';
 
-  const VERSION = '0.5.0';
+  const VERSION = '0.5.1';
   // the code editor, loaded on first use (ixmaps.themeTools.aceUrl overrides it)
   const ACE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.44.0/ace.js';
   // the theme grammar the configurator lists every key and flag from
