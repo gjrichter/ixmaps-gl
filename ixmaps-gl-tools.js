@@ -41,7 +41,7 @@
 (function (global) {
   'use strict';
 
-  const VERSION = '0.4.0';
+  const VERSION = '0.5.0';
   // the code editor, loaded on first use (ixmaps.themeTools.aceUrl overrides it)
   const ACE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.44.0/ace.js';
   // the theme grammar the configurator lists every key and flag from
@@ -637,6 +637,129 @@
     } catch (e) { return null; }
   }
 
+  // ---- save map: the map as a standalone HTML page
+
+  const INLINE_DATA_CHARS = 2000000; // a theme with more inline data than this is left out of a saved page
+  const SAVE_ENGINE_CDN = 'https://cdn.jsdelivr.net/npm/ixmaps-gl';
+
+  // a value as JavaScript source: plain objects and arrays, with functions as
+  // their source text; pretty: indented, short parts on one line.
+  // { src } or { error } (a cycle, a class instance, a symbol)
+  function jsLiteral(v, pretty, pad) {
+    const fns = [];
+    const stack = new Set();
+    let error = null;
+    const key = k => /^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k);
+    const pr = (x, p) => {
+      if (error) return '';
+      if (typeof x === 'function') { fns.push(x); return String(x); }
+      if (x === undefined) return 'undefined';
+      if (typeof x === 'number') return String(x); // Infinity / NaN are JavaScript too
+      if (typeof x === 'symbol' || typeof x === 'bigint') { error = 'a ' + typeof x + ' value'; return ''; }
+      if (x === null || typeof x !== 'object') return JSON.stringify(x);
+      if (!isPlain(x)) { error = 'a ' + ((x.constructor && x.constructor.name) || 'non-plain') + ' object'; return ''; }
+      if (stack.has(x)) { error = 'a cyclic object'; return ''; }
+      stack.add(x);
+      const arr = Array.isArray(x);
+      const ks = arr ? null : Object.keys(x).filter(k => x[k] !== undefined);
+      const n = arr ? x.length : ks.length;
+      let out;
+      if (!n) out = arr ? '[]' : '{}';
+      else {
+        const parts = q => arr ? x.map(e => pr(e, q)) : ks.map(k => key(k) + (pretty ? ': ' : ':') + pr(x[k], q));
+        const flat = parts(p);
+        const one = arr ? '[' + flat.join(pretty ? ', ' : ',') + ']' : (pretty ? '{ ' + flat.join(', ') + ' }' : '{' + flat.join(',') + '}');
+        if (!pretty || (one.length + p.length <= 100 && !one.includes('\n'))) out = one;
+        else {
+          const q = p + '  ';
+          out = (arr ? '[' : '{') + '\n' + parts(q).map(s => q + s).join(',\n') + '\n' + p + (arr ? ']' : '}');
+        }
+      }
+      stack.delete(x);
+      return out;
+    };
+    const src = pr(v, pad || '');
+    return error ? { error } : { src, functions: fns.length };
+  }
+
+  // one theme's ixmaps.layer(...) source for a saved page, from its definition
+  // ({ layer, data, binding, style: { type, ... }, meta, field, field100 });
+  // base: the page address relative data urls resolve against.
+  // { code, label, warnings } or { skipped: reason, label, warnings }
+  function themeCode(def, base) {
+    const warnings = [];
+    const style = Object.assign({}, def.style);
+    const meta = def.meta || {};
+    const label = String(meta.title || style.name || meta.name || def.layer || 'theme');
+    const type = style.type;
+    delete style.type;
+    let data = def.data;
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      data = Object.assign({}, data);
+      if (typeof data.url === 'string' && data.url && base) {
+        try { data.url = new URL(data.url, base).href; } catch (e) { /* not a url: kept as it is */ }
+      }
+      if (data.process) warnings.push('"' + label + '" processes its data with a function: it may need code of the original page');
+    }
+    const dataSrc = jsLiteral(data, false);
+    if (dataSrc.error) return { skipped: 'its data is ' + dataSrc.error + ', not something a page can hold', label, warnings };
+    if (dataSrc.src.length > INLINE_DATA_CHARS) return { skipped: 'its inline data is ' + Math.round(dataSrc.src.length / 1e6) + ' MB, more than a page should hold', label, warnings };
+    const pad = '      ';
+    const lines = [];
+    let fns = dataSrc.functions;
+    const part = (method, v) => {
+      if (v == null || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) return null;
+      const s = jsLiteral(v, true, pad);
+      if (s.error) return s.error;
+      fns += s.functions;
+      lines.push(pad + '.' + method + '(' + s.src + ')');
+      return null;
+    };
+    if (data != null) lines.push(pad + '.data(' + (dataSrc.src.length <= 300 ? jsLiteral(data, true, pad).src : dataSrc.src) + ')');
+    const bad = part('binding', def.binding) || part('type', type) || part('style', style) || part('meta', def.meta)
+      || part('field', def.field) || part('field100', def.field100);
+    if (bad) return { skipped: 'its definition holds ' + bad, label, warnings };
+    if (fns) warnings.push('"' + label + '" holds functions: they may need code of the original page');
+    return { code: 'ixmaps.layer(' + JSON.stringify(String(def.layer == null ? label : def.layer)) + ', l => l\n' + lines.join('\n') + ')', label, warnings };
+  }
+
+  // the HTML page of a saved map. m: { title, engineUrl, map (the Map()
+  // options), options (.options()), center: {lat, lng}, zoom, bearing, pitch,
+  // globe, attribution, themes (themeCode results), notes, source, saved }
+  function pageHtml(m) {
+    const r = (v, d) => Math.round(Number(v) * 10 ** d) / 10 ** d;
+    const lit = (v, p) => { const s = jsLiteral(v || {}, true, p); return s.error ? '{}' : s.src; };
+    let js = '  // saved with ixmaps-gl-tools ' + VERSION + (m.saved ? ' on ' + m.saved : '') + (m.source ? ' from ' + m.source : '') + '\n';
+    (m.notes || []).forEach(n => { js += '  // ' + String(n).replace(/\s+/g, ' ') + '\n'; });
+    js += '  ixmaps.Map("map", ' + lit(m.map, '  ') + ', map => map\n';
+    js += '    .view([' + r(m.center.lat, 6) + ', ' + r(m.center.lng, 6) + '], ' + r(m.zoom, 3) + ')\n';
+    if (m.options && Object.keys(m.options).length) js += '    .options(' + lit(m.options, '    ') + ')\n';
+    if (m.attribution) js += '    .attribution(' + JSON.stringify(String(m.attribution)) + ')\n';
+    m.themes.forEach(t => {
+      if (t.skipped) js += '    // left out: "' + t.label.replace(/\s+/g, ' ') + '" — ' + t.skipped + '\n';
+      else js += '    .layer(' + t.code + ')\n';
+    });
+    js += '  )';
+    const after = [];
+    if (m.globe) after.push('    api.setProjection("globe");');
+    if (r(m.bearing, 1) || r(m.pitch, 1)) after.push('    api.map.jumpTo({ bearing: ' + r(m.bearing, 1) + ', pitch: ' + r(m.pitch, 1) + ' });');
+    if (after.length) js += '.then(api => {\n' + after.join('\n') + '\n  })';
+    js += ';\n';
+    // nothing in the script may end it or open an HTML comment
+    js = js.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
+    return '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<title>' + esc(m.title || 'map') + '</title>\n'
+      + '<script src="' + esc(m.engineUrl) + '"></script>\n'
+      + '<style>html, body { margin: 0; height: 100%; } #map { position: absolute; inset: 0; }</style>\n'
+      + '</head>\n<body>\n<div id="map"></div>\n<script>\n' + js + '</script>\n</body>\n</html>\n';
+  }
+
+  // a file name from a title: "Injured (AREU)" → "injured_areu.html"
+  function htmlFileName(title) {
+    const s = String(title || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60);
+    return (s || 'map') + '.html';
+  }
+
   // ------------------------------------------------------------------ UI
 
   const CSS = `
@@ -725,11 +848,17 @@
 .ixgt-pal-sw i { display: inline-block; width: 13px; height: 13px; border-radius: 2px; }
 .ixgt-num { width: 46px; flex: none !important; text-align: right; }
 .ixgt-config .ixgt-input input[type=range] { flex: 1; width: auto; min-width: 60px; }
+.ixgt-dialog.ixgt-save { width: 300px; }
+.ixgt-save .ixgt-field { grid-template-columns: 36px 1fr; margin: 4px 0; }
+.ixgt-save p { margin: 0 0 8px; color: #555; }
+.ixgt-warn { margin: 8px 0 4px; padding-left: 16px; color: #8a5300; font-size: 11px; }
+.ixgt-warn li { margin: 2px 0; }
 `;
   const ICONS = {
     tune: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg>',
-    config: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>'
+    config: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+    save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'
   };
 
   function injectCss() {
@@ -767,6 +896,7 @@
       themeId: null,
       edit: null, // the edit dialog: { dialog, themeId, editor, kept, shown, drafts }
       config: null, // the config dialog: { dialog, themeId, tab, models, dirty, first, added, invalid }
+      save: null, // the save dialog
       // per theme id: the definition and style as first seen (for the
       // factor sliders and Reset), and the tuned values
       origin: new Map(),
@@ -806,6 +936,7 @@
     const first = btn('tune', 'tune', true, 'Tune the theme style', () => openTune(state, rt ? themeIdOf(rt) : null, x, y));
     btn('edit', 'edit', true, 'Edit the theme definition', () => openEdit(state, rt ? themeIdOf(rt) : null, x, y));
     btn('config', 'config', true, 'Configure the theme: type, style, binding, data, meta', () => openConfig(state, rt ? themeIdOf(rt) : null, x, y));
+    btn('save', 'save', true, 'Save the map as an HTML page', () => openSave(state, x, y));
     document.body.appendChild(menu);
     placeAt(menu, x - 10, y - 10);
     openMenu = menu;
@@ -1756,6 +1887,120 @@
     foot.appendChild(reset);
   }
 
+  // ------------------------------------------------------------------ save
+
+  // the saved page's model, from the live map: the view now, every theme as defined now
+  function savedModel(state, title) {
+    const api = state.api;
+    const map = api.map;
+    const notes = [];
+    const got = typeof api.getMapOptions === 'function' ? api.getMapOptions() : null;
+    const mapOpts = got ? got.map : { mapType: api.getMapTypeId ? api.getMapTypeId() : undefined };
+    if (!got) notes.push('this engine has no getMapOptions(): the basemap is saved, the other map options are not');
+    const base = document.baseURI || (global.location && global.location.href) || '';
+    const themes = themesOf(api).map(rt => rt._definition ? themeCode(rt._definition, base)
+      : { skipped: 'the engine holds no definition for it', label: titleOf(rt), warnings: [] });
+    themes.forEach(t => t.warnings.forEach(w => notes.push(w)));
+    const c = map.getCenter();
+    const proj = typeof map.getProjection === 'function' ? map.getProjection() : null;
+    const ver = global.__ixmapsGlInternals && global.__ixmapsGlInternals.IXMAPS_GL_VERSION;
+    const attribution = api.getAttribution ? api.getAttribution() : '';
+    return {
+      title,
+      engineUrl: SAVE_ENGINE_CDN + (ver ? '@' + ver : '') + '/ixmaps-gl.js',
+      map: mapOpts,
+      options: got ? got.options : {},
+      center: { lat: c.lat, lng: c.lng },
+      zoom: api.getZoom ? api.getZoom() : map.getZoom(),
+      bearing: map.getBearing ? map.getBearing() : 0,
+      pitch: map.getPitch ? map.getPitch() : 0,
+      globe: !!(proj && proj.type === 'globe'),
+      attribution: attribution && attribution !== mapOpts.attribution ? attribution : '',
+      themes,
+      notes,
+      source: global.location && /^https?:/.test(global.location.protocol) ? global.location.href : '',
+      saved: new Date().toISOString().slice(0, 10)
+    };
+  }
+
+  function downloadText(text, fileName, type) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = el('a');
+    a.href = url;
+    a.download = fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  function copyText(text) {
+    if (global.navigator && navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise((resolve, reject) => {
+      const ta = el('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand && document.execCommand('copy');
+      ta.remove();
+      if (ok) resolve(); else reject(new Error('the browser did not copy'));
+    });
+  }
+
+  function openSave(state, x, y) {
+    injectCss();
+    if (state.save) { state.save.remove(); state.save = null; }
+    const d = state.save = makeDialog('Save map', 'ixgt-save', () => { state.save = null; });
+    const body = d.querySelector('.ixgt-body');
+    const foot = d.querySelector('.ixgt-foot');
+    const title0 = String(document.title || '').trim() || 'map';
+    body.appendChild(el('p', 'ixgt-note', 'An HTML page with the basemap, the view and every theme as it is now. The page\'s own code (panels, buttons, scripts) is not part of it.'));
+    const field = (label, value) => {
+      const row = el('div', 'ixgt-field');
+      const id = 'ixgt-save-' + label;
+      row.innerHTML = '<label for="' + id + '">' + label + '</label><div class="ixgt-input"><input type="text" id="' + id + '"></div>';
+      const input = row.querySelector('input');
+      input.value = value;
+      body.appendChild(row);
+      return input;
+    };
+    const title = field('title', title0);
+    const file = field('file', htmlFileName(title0));
+    let fileEdited = false;
+    file.addEventListener('input', () => { fileEdited = true; });
+    title.addEventListener('input', () => { if (!fileEdited) file.value = htmlFileName(title.value); });
+    const first = savedModel(state, title0);
+    const warn = first.notes.concat(first.themes.filter(t => t.skipped).map(t => '"' + t.label + '" is left out: ' + t.skipped));
+    if (warn.length) {
+      const ul = el('ul', 'ixgt-warn');
+      warn.forEach(w => ul.appendChild(el('li', null, esc(w))));
+      body.appendChild(ul);
+    }
+    const note = el('span', 'ixgt-note', esc(first.themes.filter(t => !t.skipped).length + ' of ' + first.themes.length + ' themes'));
+    const btns = el('span', 'ixgt-btns');
+    const html = () => pageHtml(savedModel(state, title.value.trim() || 'map'));
+    const copy = el('button', null, 'copy HTML');
+    copy.type = 'button';
+    copy.addEventListener('click', () => copyText(html()).then(() => { note.textContent = 'copied'; }, err => { note.textContent = 'not copied: ' + err.message; }));
+    const save = el('button', null, 'download');
+    save.type = 'button';
+    save.addEventListener('click', () => {
+      let name = file.value.trim() || htmlFileName(title.value);
+      if (!/\.html?$/i.test(name)) name += '.html';
+      downloadText(html(), name, 'text/html');
+      note.textContent = 'saved ' + name;
+    });
+    btns.appendChild(copy);
+    btns.appendChild(save);
+    foot.appendChild(note);
+    foot.appendChild(btns);
+    placeAt(d, x != null ? x + 12 : 16, y != null ? y - 20 : 16);
+    save.focus();
+  }
+
   // ------------------------------------------------------------------ hook
 
   const origMap = ixmaps.Map;
@@ -1813,12 +2058,17 @@
     edit: (themeId) => { const s = lastState(); if (s) openEdit(s, themeId == null ? null : themeId); },
     // opens the config dialog of the last built map, for a theme id (default: the topmost theme)
     config: (themeId) => { const s = lastState(); if (s) openConfig(s, themeId == null ? null : themeId); },
+    // opens the save dialog of the last built map
+    save: () => { const s = lastState(); if (s) openSave(s); },
+    // the last built map as a standalone HTML page (the text the save dialog downloads)
+    mapHtml: (title) => { const s = lastState(); return s ? pageHtml(savedModel(s, title || String(document.title || '').trim() || 'map')) : null; },
     close: () => {
       closeMenu();
       maps.forEach(s => {
         if (s.dialog) { s.dialog.remove(); s.dialog = null; }
         if (s.edit) { if (s.edit.editor) s.edit.editor.destroy(); s.edit.dialog.remove(); s.edit = null; }
         if (s.config) { s.config.dialog.remove(); s.config = null; }
+        if (s.save) { s.save.remove(); s.save = null; }
       });
     },
     // the code editor's script (Ace); set before the first edit to use another copy
@@ -1828,6 +2078,7 @@
     // pure helpers, for the unit tests
     _internals: { controlsFor, aggregationPatch, patchedDefinition, scaleWidth, currentValue, themeKind, typeWordsOf, toEditable, fromEditable,
       typeParts, joinType, guessKind, parseValue, formatValue, fieldNamesOf, registryKeys, configModel,
-      readVisual, writeVisual, withPalette, paletteColors, paletteScheme, isFlatGradient, fieldInfoOf, categoriesOf, normValueOf, schemeColorsOf, PALETTES }
+      readVisual, writeVisual, withPalette, paletteColors, paletteScheme, isFlatGradient, fieldInfoOf, categoriesOf, normValueOf, schemeColorsOf, PALETTES,
+      jsLiteral, themeCode, pageHtml, htmlFileName }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

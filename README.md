@@ -470,9 +470,20 @@ registry (`grammar.runtime.json`, loaded from jsDelivr the first time config ope
 overrides it). Keys and flags the registry says ixmaps-gl ignores show in grey italics. Without the registry the
 dialog shows the common keys only. Inline data and functions show as kept, not editable.
 
+**save** downloads the map as a standalone HTML page (or copies its HTML): `ixmaps-gl` from jsDelivr at the
+running version, `ixmaps.Map()` with the map's options (`getMapOptions()`: the `Map()` options with the current
+`mapType`, and those set with `.options()`), the current view (center, zoom; bearing, pitch and the globe
+projection after load) and one `ixmaps.layer(name, l => l.data().binding().type().style().meta())` per theme,
+in stack order, as defined now — tune, edit and config changes included. Relative data URLs are made absolute
+against the page; inline data is embedded up to about 2 MB, and a theme with more (or with data a page cannot
+hold, e.g. a class instance) is left out with a comment. Functions are saved as their source, with a warning:
+they may need code of the original page. The page's own code (panels, buttons, scripts) is not part of the
+saved page. The file name comes from the title (`Injured (AREU)` → `injured_areu.html`).
+
 The add-on also defines flat's `ixmaps.popupTools()`, `ixmaps.popupThemeEditor(themeId)` and
 `ixmaps.popupThemeConfigurator(themeId)` unless the page has its own, and `ixmaps.themeTools.tune(themeId)` /
-`.edit(themeId)` / `.config(themeId)` / `.close()`. Demo:
+`.edit(themeId)` / `.config(themeId)` / `.save()` / `.close()`; `ixmaps.themeTools.mapHtml(title)` returns the
+saved page's HTML of the last built map. Demo:
 [`examples/theme_tools.html`](./examples/theme_tools.html).
 
 ### Text on labels
@@ -628,7 +639,7 @@ For checking page files before they run, use the static checker in ixmaps-gramma
 | [`roma_incidenti_pericolosita_sidebar_gl.html`](./stage/roma_incidenti_pericolosita_sidebar_gl.html) | AGGREGATE on a gridwidth grid, facets sidebar |
 | [`roma_incidenti_pericolosita_sidebar.html`](./stage/roma_incidenti_pericolosita_sidebar.html) | The same page on the **real** ixmaps-flat engine, kept for side-by-side reference |
 | [`uk_collisions_2023.html`](./stage/uk_collisions_2023.html), [`app/ixmaps-loader_70.html`](./app/ixmaps-loader_70.html) | Additional real-page compatibility tests |
-| [`theme_tools.html`](./examples/theme_tools.html) | Theme tools add-on: right-click tool bar, live tune dialog, JSON theme editor, theme configurator |
+| [`theme_tools.html`](./examples/theme_tools.html) | Theme tools add-on: right-click tool bar, live tune dialog, JSON theme editor, theme configurator, save as HTML page |
 | [`examples/`](./examples) | Smaller feature-by-feature test pages (choropleth classing modes, bubble ranges, etc.) |
 
 Serve any of these with a static file server (they fetch remote data over HTTPS, so

@@ -5,6 +5,7 @@
 // engine loading the add-on itself on the first right-click (ixmaps.Map option themetools: false | url).
 // Needs network (MapLibre / deck.gl from unpkg, Ace from cdnjs, the grammar from jsDelivr). Run: node tools.mjs [--engine ../x.js]
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { serve, launch, reporter } from './live.mjs';
 
 const { server, port } = serve();
@@ -33,7 +34,7 @@ try {
   check('a right-drag opens no menu', () => assert.equal(afterDrag, 0));
   await page.mouse.click(box.x + 40, box.y + 40, { button: 'right' });
   const menu = await page.evaluate(() => [...document.querySelectorAll('.ixgt-menu button')].map(b => b.textContent.trim() + (b.disabled ? ':off' : ':on')).join(','));
-  check('a right-click opens the tool bar: tune, edit, config', () => assert.equal(menu, 'tune:on,edit:on,config:on'));
+  check('a right-click opens the tool bar: tune, edit, config, save', () => assert.equal(menu, 'tune:on,edit:on,config:on,save:on'));
   await page.keyboard.press('Escape');
   const afterEsc = await page.locator('.ixgt-menu').count();
   check('Escape closes the tool bar', () => assert.equal(afterEsc, 0));
@@ -217,6 +218,45 @@ try {
   await page.evaluate(() => ixmaps.popupThemeConfigurator('dots'));
   const dotsKind = await page.evaluate(() => ({ theme: document.querySelector('.ixgt-config select').value, viz: document.querySelector('.ixgt-viz-btn').dataset.viz }));
   check('ixmaps.popupThemeConfigurator(id) opens the config dialog on that theme', () => { assert.equal(dotsKind.theme, 'dots'); assert.equal(dotsKind.viz, 'dot'); });
+
+  // ---- save map: the map as a standalone HTML page, loaded again (with this engine instead of the CDN's)
+  await page.evaluate(async () => { ixmaps.themeTools.close(); (await window.myMap).map.jumpTo({ bearing: 20 }); });
+  await page.waitForTimeout(500);
+  await page.mouse.click(box.x + 40, box.y + 40, { button: 'right' });
+  await page.click('.ixgt-menu button:nth-child(4)');
+  const saveDlg = await page.evaluate(() => { const d = document.querySelector('.ixgt-save'); return d && { title: d.querySelector('#ixgt-save-title').value, file: d.querySelector('#ixgt-save-file').value, warn: d.querySelectorAll('.ixgt-warn li').length, note: d.querySelector('.ixgt-foot .ixgt-note').textContent }; });
+  check('save opens the save dialog: the page title, a file name from it', () => { assert.equal(saveDlg.title, 'theme tools'); assert.equal(saveDlg.file, 'theme_tools.html'); });
+  check('save: both themes go in, nothing to warn about', () => { assert.equal(saveDlg.note, '2 of 2 themes'); assert.equal(saveDlg.warn, 0); });
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('.ixgt-save .ixgt-btns button:last-child')]);
+  const savedPath = await download.path();
+  const savedHtml = fs.readFileSync(savedPath, 'utf8');
+  check('download saves theme_tools.html', () => assert.equal(download.suggestedFilename(), 'theme_tools.html'));
+  check('the saved page loads ixmaps-gl from the CDN at this version', () => assert.match(savedHtml, /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/ixmaps-gl@\d+\.\d+\.\d+\/ixmaps-gl\.js"><\/script>/));
+  check('the saved page embeds the inline data', () => assert.ok(savedHtml.includes('"p119"'), 'the last point'));
+  check('the saved page turns the map as it was turned', () => assert.ok(savedHtml.includes('api.map.jumpTo({ bearing: 20, pitch: 0 });')));
+  // the same view of both pages, through the engine's flat globals: themes in stack order with their flags and style
+  const viewOf = p => p.evaluate(() => ({
+    themes: ixmaps.getThemes().map(t => t.szId + ':' + t.szFlag.split('|').sort().join('|') + ':' + JSON.stringify(ixmaps.getThemeDefinitionObj(t.szId).colorscheme)),
+    center: ixmaps.getCenter(), zoom: ixmaps.getZoom() }));
+  const orig = await viewOf(page);
+  fs.mkdirSync('out', { recursive: true });
+  fs.writeFileSync('out/saved_map.html', savedHtml.replace(/<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/ixmaps-gl@[^"]+"><\/script>/, '<script src="/ixmaps-gl.js"></script>'));
+  const sp = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+  const savedErrors = [];
+  sp.on('pageerror', e => savedErrors.push(e.message));
+  await sp.goto(`http://localhost:${port}/test/out/saved_map.html`);
+  await sp.waitForFunction(() => window.ixmaps && ixmaps.getThemes && ixmaps.getThemes().length === 2, null, { timeout: 90000, polling: 500 });
+  await sp.waitForTimeout(2000);
+  const saved = await viewOf(sp);
+  check('the saved page has the same themes, in the same order, with the same flags and colors', () => assert.deepEqual(saved.themes, orig.themes));
+  check('the saved page shows the same view', () => {
+    assert.ok(Math.abs(saved.center.lat - orig.center.lat) < 1e-4 && Math.abs(saved.center.lng - orig.center.lng) < 1e-4, JSON.stringify([saved.center, orig.center]));
+    assert.ok(Math.abs(saved.zoom - orig.zoom) < 0.01, JSON.stringify([saved.zoom, orig.zoom]));
+  });
+  await sp.screenshot({ path: 'out/saved_map.png' });
+  check('the saved page: no page errors', () => assert.deepEqual(savedErrors, []));
+  await sp.close();
+
   await page.screenshot({ path: 'out/tools.png' });
   check('no page errors', () => assert.deepEqual(errors, []));
 
@@ -254,13 +294,13 @@ try {
   const byDefault = await optionPage('');
   check('default: nothing of the add-on is loaded with the map', () => assert.deepEqual(byDefault.before, []));
   check('default: the first right-click loads ixmaps-gl-tools.js from next to ixmaps-gl.js', () => assert.deepEqual(byDefault.after, ['/ixmaps-gl-tools.js']));
-  check('default: that right-click opens the tool bar', () => assert.equal(byDefault.menu, 'tune,edit,config'));
+  check('default: that right-click opens the tool bar', () => assert.equal(byDefault.menu, 'tune,edit,config,save'));
   check('default: tune opens on the map\'s theme', () => assert.equal(byDefault.tune, 'Bubbles'));
   check('default: later right-clicks open the menu, the script is not loaded again', () => { assert.equal(byDefault.again, 1); assert.deepEqual(byDefault.afterAgain, ['/ixmaps-gl-tools.js']); });
   const withTrue = await optionPage('?tools=true');
-  check('themetools: true — the same as the default', () => { assert.deepEqual(withTrue.before, []); assert.equal(withTrue.menu, 'tune,edit,config'); });
+  check('themetools: true — the same as the default', () => { assert.deepEqual(withTrue.before, []); assert.equal(withTrue.menu, 'tune,edit,config,save'); });
   const withUrl = await optionPage('?tools=' + encodeURIComponent('/ixmaps-gl-tools.js?from=option'));
-  check('themetools: "<url>" — the add-on comes from that URL', () => { assert.deepEqual(withUrl.after, ['/ixmaps-gl-tools.js?from=option']); assert.equal(withUrl.menu, 'tune,edit,config'); });
+  check('themetools: "<url>" — the add-on comes from that URL', () => { assert.deepEqual(withUrl.after, ['/ixmaps-gl-tools.js?from=option']); assert.equal(withUrl.menu, 'tune,edit,config,save'); });
   const off = await optionPage('?tools=false');
   check('themetools: false — no tool bar, nothing loaded', () => { assert.deepEqual(off.after, []); assert.equal(off.menu, ''); assert.equal(off.version, undefined); });
   check('option pages: no page errors', () => assert.deepEqual([...byDefault.errors, ...withTrue.errors, ...withUrl.errors, ...off.errors], []));

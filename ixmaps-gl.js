@@ -6341,6 +6341,8 @@ self.onmessage = e => {
         },
         // flat's getMapTypeId(): the basemap type name in use
         getMapTypeId: () => String(builder.mapOptions.mapType || ''),
+        // the Map() options and the .options() set so far, as copies (the tools add-on saves the map with them)
+        getMapOptions: () => ({ map: Object.assign({}, builder.mapOptions), options: Object.assign({}, builder._engineOptions) }),
         // flat's attribution (htmlgui.js htmlgui_set/getAttributionString)
         setAttribution: (text) => { builder.attribution(text); return engineApi; },
         // flat's map handle ixmaps.map().attribution(text) (htmlgui_flat.js 1381)

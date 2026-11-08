@@ -9,7 +9,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location: { search: '' },
+const win = { console: { info() {}, warn() {}, log() {}, error() {} }, location: { search: '' }, URL,
   document: { styleSheets: [], createElement: () => ({}), head: { appendChild() {} } } };
 win.window = win; win.globalThis = win;
 vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'ixmaps-gl.js'), 'utf8'), win, { filename: 'ixmaps-gl.js' });
@@ -319,4 +319,83 @@ test('writeVisual: a density surface with fewer than three colors gets the loade
   assert.equal(ml.style.colorscheme.length, 5);
   const kde = T.writeVisual({ binding: { value: 'v' }, style: { type: 'CHART|SYMBOL', colorscheme: ['#111111', '#222222', '#333333'] } }, { viz: 'kde' }, vdata);
   assert.deepEqual(plain(kde.style.colorscheme), ['#111111', '#222222', '#333333'], 'a ramp of its own stays');
+});
+
+// ---- save map
+
+test('jsLiteral: plain values as JavaScript, functions as their source, short parts on one line', () => {
+  assert.equal(T.jsLiteral({ a: 1, 'b-c': 'x', d: [1, 2] }, true).src, '{ a: 1, "b-c": "x", d: [1, 2] }');
+  assert.equal(T.jsLiteral({ a: undefined, b: null }, false).src, '{b:null}');
+  const f = T.jsLiteral({ process: function (d) { return d; } }, false);
+  assert.equal(f.functions, 1);
+  assert.ok(f.src.includes('function (d) { return d; }'));
+  const long = T.jsLiteral({ colorscheme: Array.from({ length: 12 }, (_, i) => '#00000' + (i % 10)) }, true, '');
+  assert.ok(long.src.includes('\n  colorscheme: '), 'a part longer than a line is indented');
+});
+
+test('jsLiteral: a cycle or a class instance is an error, not a broken page', () => {
+  const o = {}; o.self = o;
+  assert.match(T.jsLiteral(o, false).error, /cyclic/);
+  assert.match(T.jsLiteral({ m: new Map() }, false).error, /Map/);
+});
+
+test('themeCode: the theme as ixmaps.layer(name, l => l.data().binding().type().style().meta())', () => {
+  const t = T.themeCode({ layer: 'pts', data: { url: 'data/p.csv', type: 'csv' }, binding: { geo: 'lat|lon', value: 'v' },
+    style: { type: 'CHART|BUBBLE|SIZE', colorscheme: ['#f00'], name: 'b' }, meta: { title: 'Points' } }, 'https://ex.org/maps/page.html');
+  assert.equal(t.skipped, undefined);
+  assert.ok(t.code.startsWith('ixmaps.layer("pts", l => l\n'));
+  assert.ok(t.code.includes('.data({ url: "https://ex.org/maps/data/p.csv", type: "csv" })'), 'a relative url is made absolute');
+  assert.ok(t.code.includes('.type("CHART|BUBBLE|SIZE")'));
+  assert.ok(t.code.includes('.style({ colorscheme: ["#f00"], name: "b" })'), 'the type is not repeated in style');
+  const order = ['.data(', '.binding(', '.type(', '.style(', '.meta('].map(s => t.code.indexOf(s));
+  assert.deepEqual(order, [...order].sort((a, b) => a - b));
+  assert.deepEqual([...t.warnings], []);
+});
+
+test('themeCode: inline data is embedded up to the limit; larger or unserializable data leaves the theme out', () => {
+  const fc = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { v: 1 }, geometry: { type: 'Point', coordinates: [9, 45] } }] };
+  const ok = T.themeCode({ layer: 'a', data: { obj: fc, type: 'geojson' }, style: { type: 'CHART|DOT' } }, '');
+  assert.ok(ok.code.includes('"Feature"'));
+  const big = { type: 'FeatureCollection', features: [{ properties: { s: 'x'.repeat(2100000) } }] };
+  assert.match(T.themeCode({ layer: 'b', data: { obj: big }, style: { type: 'CHART|DOT' } }, '').skipped, /MB/);
+  assert.match(T.themeCode({ layer: 'c', data: { obj: new Map() }, style: { type: 'CHART|DOT' } }, '').skipped, /Map/);
+});
+
+test('themeCode: functions and data processing are kept, with a warning', () => {
+  const t = T.themeCode({ layer: 'a', data: { url: 'https://x/a.csv', process: 'function(d){return d}' },
+    style: { type: 'CHART|DOT' }, meta: { onclick: function () {} } }, '');
+  assert.equal(t.warnings.length, 2);
+  assert.ok(t.code.includes('onclick: function () {}'));
+});
+
+test('pageHtml: the engine from the CDN, the map options, the view, the themes in order, globe and bearing', () => {
+  const themes = [T.themeCode({ layer: 'one', style: { type: 'FEATURE' } }, ''), { skipped: 'too big', label: 'Two', warnings: [] },
+    T.themeCode({ layer: 'three', style: { type: 'CHART|DOT' } }, '')];
+  const html = T.pageHtml({ title: 'A & B', engineUrl: 'https://cdn.jsdelivr.net/npm/ixmaps-gl@0.2.36/ixmaps-gl.js',
+    map: { mapType: 'VT_TONER_LITE', legend: 'closed' }, options: { basemapopacity: 0.5 }, center: { lat: 45.1234567, lng: 9.7654321 },
+    zoom: 8.12345, bearing: 30, pitch: 0, globe: true, attribution: 'Data: X', themes, notes: ['a note'], saved: '2026-11-08' });
+  assert.ok(html.includes('<title>A &amp; B</title>'));
+  assert.ok(html.includes('<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0.2.36/ixmaps-gl.js"></script>'));
+  assert.ok(html.includes('ixmaps.Map("map", { mapType: "VT_TONER_LITE", legend: "closed" }, map => map'));
+  assert.ok(html.includes('.view([45.123457, 9.765432], 8.123)'));
+  assert.ok(html.includes('.options({ basemapopacity: 0.5 })'));
+  assert.ok(html.includes('.attribution("Data: X")'));
+  assert.ok(html.indexOf('"one"') < html.indexOf('left out: "Two"') && html.indexOf('left out: "Two"') < html.indexOf('"three"'));
+  assert.ok(html.includes('api.setProjection("globe");'));
+  assert.ok(html.includes('api.map.jumpTo({ bearing: 30, pitch: 0 });'));
+  assert.ok(html.includes('// a note'));
+});
+
+test('pageHtml: nothing in a theme can end the page\'s script', () => {
+  const themes = [T.themeCode({ layer: 'x', style: { type: 'CHART|DOT' }, meta: { tooltip: '</script><script>alert(1)</script><!--' } }, '')];
+  const html = T.pageHtml({ title: 't', engineUrl: 'e.js', map: {}, options: {}, center: { lat: 0, lng: 0 }, zoom: 2, bearing: 0, pitch: 0, themes });
+  assert.equal((html.match(/<\/script>/gi) || []).length, 2, 'the engine tag and the page script only');
+  assert.ok(!html.includes('<!--'));
+  assert.ok(!html.includes('.then('), 'no projection or bearing: no then()');
+});
+
+test('htmlFileName: a file name from the title', () => {
+  assert.equal(T.htmlFileName('Injured (AREU 2019–2023)'), 'injured_areu_2019_2023.html');
+  assert.equal(T.htmlFileName('Città più'), 'citta_piu.html');
+  assert.equal(T.htmlFileName(''), 'map.html');
 });
