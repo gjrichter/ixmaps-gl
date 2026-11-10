@@ -9856,18 +9856,23 @@ self.onmessage = e => {
       else if (cp === 'min') ci = iMin;
       else if (cp === 'max') ci = iMax;
       else if (Number(cp)) ci = Number(cp);
-      center = { i: ci, value: parts[ci], size: parts[ci] / cSum * 200 };
+      // a part index outside the parts (or not a whole number) names no
+      // part: no center, a plain pie (flat's size and hole became NaN);
+      // parts that sum to 0 give a center of size 0
+      center = Number.isInteger(ci) && ci >= 0 && ci < n && isFinite(parts[ci])
+        ? { i: ci, value: parts[ci], size: cSum > 0 ? parts[ci] / cSum * 200 : 0 }
+        : null;
     }
     const slices = [];
     for (let p = 0; p < n; p++) {
       const i = at(p);
-      if (centerFlag && !donut && i === center.i) continue;
+      if (center && !donut && i === center.i) continue;
       const v = parts[i];
       if (v > 0 || (v === 0 && !has(/ZEROISNOTVALUE/))) slices.push({ i, value: v, percent: v });
     }
     let inner = 0;
     if (donut) inner = has(/3D/) ? 0.5 : has(/XTHIN/) ? 0.95 : has(/THIN/) ? 0.66 : has(/THICK/) ? 0.25 : 0.42;
-    else if (centerFlag) inner = Math.sqrt(center.size / 100);
+    else if (center) inner = Math.sqrt(center.size / 100);
     // GR 09.11.2019 "donut with count or size == 1 --> bubble": only for an
     // aggregated item of 1 record (opts.itemCount) — flat's per-record
     // items have no nCount, so their 1-part donuts keep the hole

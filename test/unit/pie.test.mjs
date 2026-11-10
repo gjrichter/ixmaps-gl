@@ -185,3 +185,19 @@ test('CATEGORICAL pie without AGGREGATE: the records of one position are one pie
   const items = rt._pieAggregatedItems(3, [-180, -90, 180, 90]).map(f => rt._pieItemValues(f.properties.pie).parts);
   assert.deepEqual(plain(items.sort((a, b) => b.length - a.length || b[0] - a[0])), [[2, 1], [0, 1]], 'counts per category (no size field); the 2nd item ends at its last category');
 });
+
+test('pieSliceLayout CENTER: a centerpart outside the parts gives a plain pie, not a NaN hole', () => {
+  for (const centerPart of [5, -1, 1.5]) {
+    const l = pieSliceLayout([1, 2, 3], 'CHART|PIE|CENTER', { centerPart });
+    assert.equal(l.center, null, String(centerPart));
+    assert.equal(l.inner, 0, String(centerPart));
+    assert.equal(l.slices.length, 3, String(centerPart));
+  }
+});
+
+test('pieSliceLayout CENTER: a valid numeric centerpart is unchanged', () => {
+  const l = pieSliceLayout([1, 2, 3], 'CHART|PIE|CENTER', { centerPart: 2 });
+  assert.equal(l.center.i, 2);
+  assert.equal(l.center.size, 100);
+  assert.equal(l.slices.length, 2);
+});
