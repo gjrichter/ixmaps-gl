@@ -149,6 +149,23 @@ try {
   const dk = await page.evaluate(() => [onMapCount('dchart'), onMapCount('dfeat')]);
   check('deferred theme: a facet filter on a same-URL chart reaches a FEATURE theme loaded once in scale', () => assert.deepEqual(dk, [1, 1]));
   await page.evaluate(async () => { ixmaps.map('rt').removeTheme('dchart'); ixmaps.map('rt').removeTheme('dfeat'); (await window.myMap).map.setZoom(12); }); await settle();
+  // ---- a deferred theme coming into scale loads only itself, from the data cache
+  const dlRequests = [];
+  page.on('request', r => { if (/pts\.geojson\?dl$/.test(r.url())) dlRequests.push(r.url()); });
+  await page.evaluate(() => {
+    const m = ixmaps.map('rt');
+    const url = { url: 'pts.geojson?dl', type: 'geojson' };
+    m.add(ixmaps.layer('dl', l => l.data(url).binding({ geo: 'geometry', value: 'cat' }).type('CHART|DOT|CATEGORICAL|NOLEGEND')
+      .style({ colorscheme: ['#d9534f', '#428bca'], values: ['a', 'b'] }).meta({ name: 'dl_chart' })));
+    m.add(ixmaps.layer('dl', l => l.data(url).binding({ geo: 'geometry' }).type('FEATURE|NOLEGEND')
+      .style({ fillcolor: '#888', featureupper: '1:30000' }).meta({ name: 'dl_feat' })));
+  }); await settle();
+  const dlBefore = dlRequests.length;
+  await page.evaluate(async () => (await window.myMap).map.setZoom(14)); await page.waitForTimeout(4000);
+  const dl = await page.evaluate(() => [onMapCount('dl_chart'), onMapCount('dl_feat')]);
+  check('deferred load: the FEATURE theme gets its data once in scale', () => assert.equal(dl[1], 3));
+  check('deferred load: it reloads neither its layer\'s other theme nor the data (served from the cache)', () => assert.equal(dlRequests.length - dlBefore, 0));
+  await page.evaluate(async () => { ixmaps.map('rt').removeTheme('dl'); (await window.myMap).map.setZoom(12); }); await settle();
   check('no page errors', () => assert.deepEqual(errors, []));
 } finally {
   await browser.close(); server.close();

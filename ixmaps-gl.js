@@ -6656,8 +6656,16 @@ self.onmessage = e => {
           // by layer name, or by theme id (style.name / meta.name) as flat
           const byId = runtimes.filter(r => r._definition && ((r.style && r.style.name === name) || (r.meta && r.meta.name === name)));
           const targets = byId.length ? byId : runtimes.filter(r => r.name === name && r._definition);
+          await reloadRuntimes(targets, { reload: true });
+        }
+      };
+
+      // (re)loads the data of the given themes and replaces their features.
+      // reload: true fetches again (refreshTheme); false takes the map's data
+      // cache like a first load (a scale-deferred theme coming into scale).
+      async function reloadRuntimes(targets, { reload }) {
           for (const rt of targets) {
-            if (rt._named) { await loadNamedTheme(rt, true); continue; }
+            if (rt._named) { await loadNamedTheme(rt, reload); continue; }
             const spec = normalizeTheme(rt._definition);
             // a WMS theme has no records to reload (see build()'s wms
             // branch) — its raster layer is re-synced by the refresh below
@@ -6665,7 +6673,7 @@ self.onmessage = e => {
               ? { type: 'FeatureCollection', features: [] }
               : spec.data && spec.data.obj
               ? await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions)
-              : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload: true }).promise;
+              : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload }).promise;
             // a theme loaded with a filter keeps the filter changeThemeStyle
             // set since (rt._filterExpr), not its definition's, and
             // re-filters the NEW data from now on
@@ -6674,8 +6682,7 @@ self.onmessage = e => {
             maybeZoomToTheme(rt); // a scale-deferred theme gets its first data here
           }
           if (targets.length) { refresh(); notifyRedraw(); }
-        }
-      };
+      }
 
       // removes the given runtimes (all sharing `name`) from this map
       function removeRuntimes(name, removedRuntimes) {
@@ -7383,13 +7390,14 @@ self.onmessage = e => {
 
       // a FEATURE theme out of scale at its definition gets its data once
       // it comes into scale (see deferredFeatureLoad) — for that view
+      // — only that theme (not its layer's others), its data from the cache
       function loadDeferredThemes() {
         const z = map.getZoom();
-        runtimes.forEach(rt => {
-          if (!rt._deferredLoad || featuresHiddenByScale(rt.style, z)) return;
-          rt._deferredLoad = false;
-          engineApi.refreshTheme(rt.name).catch(err => console.error(`[ixmaps-gl] loading theme "${rt.name}":`, err));
-        });
+        const due = runtimes.filter(rt => rt._deferredLoad && !featuresHiddenByScale(rt.style, z));
+        if (!due.length) return;
+        due.forEach(rt => { rt._deferredLoad = false; });
+        reloadRuntimes(due, { reload: false })
+          .catch(err => console.error(`[ixmaps-gl] loading theme(s) ${due.map(rt => `"${themeIdOf(rt)}"`).join(', ')}:`, err));
       }
       map.on('moveend', loadDeferredThemes);
 
