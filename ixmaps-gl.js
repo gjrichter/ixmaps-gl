@@ -15909,7 +15909,12 @@ self.onmessage = e => {
       // and cluster glows keep their own size multiplier (11 vs 9 — a lone
       // point and a packed cluster read differently at the same radius)
       // but share one sorted layer, same as the main bubbles below.
-      if (this.flags.has('GLOW') && !glowHiddenByScale(this.style, liveZoom)) {
+      // flat's gate for GLOW and its `else` AURA alike (maptheme.js 20912,
+      // 20924, fGlowInScale 16985): no ZOOM flag, within glowupper /
+      // glowlower (the exact flag: flat's /ZOOM/ also matches ZOOMTO, which
+      // flat drops from the theme once it zoomed, gl never does)
+      const glowGate = !this.flags.has('ZOOM') && !glowHiddenByScale(this.style, liveZoom);
+      if (this.flags.has('GLOW') && glowGate) {
         layers.push(new IconLayer({
           id: `ix-glow-${this.name}-g${this._iconGeneration}`,
           data: combined, pickable: false,
@@ -15922,7 +15927,7 @@ self.onmessage = e => {
           billboard: true,
           parameters: ICON_LAYER_GLOBE_PARAMETERS
         }));
-      } else if (this.flags.has('AURA') && !this.flags.has('ZOOM')) {
+      } else if (this.flags.has('AURA') && glowGate) {
         // AURA (flat maptheme.js 20924-20930, the GLOW branch's `else`): a circle at 1.3 × the
         // radius behind the symbol, in the line color (else the symbol's), at 0.3 opacity
         layers.push(new IconLayer({
@@ -16532,7 +16537,9 @@ self.onmessage = e => {
           });
           layers.push(...L.box, ...L.titles);
         }
-        if (glows.length && this.flags.has('GLOW') && !glowHiddenByScale(st, liveZoom)) {
+        // flat's gate (maptheme.js 22005-22027): no ZOOM flag, within glowupper / glowlower
+        const glowGate = !this.flags.has('ZOOM') && !glowHiddenByScale(st, liveZoom);
+        if (glows.length && this.flags.has('GLOW') && glowGate) {
           layers.push(new IconLayer({
             id: `ix-glow-${this.name}${bs}-g${this._iconGeneration}`,
             data: glows, pickable: false,
@@ -16544,7 +16551,7 @@ self.onmessage = e => {
             sizeUnits: 'pixels', billboard: true,
             parameters: ICON_LAYER_GLOBE_PARAMETERS
           }));
-        } else if (glows.length && this.flags.has('AURA') && !glowHiddenByScale(st, liveZoom)) {
+        } else if (glows.length && this.flags.has('AURA') && glowGate) {
           layers.push(new IconLayer({
             id: `ix-aura-${this.name}${bs}-g${this._iconGeneration}`,
             data: glows, pickable: false,
@@ -16927,7 +16934,8 @@ self.onmessage = e => {
 
       const TAU = 2 * Math.PI;
       const slices = [], centers = [], glows = [], polar = [], polarDashes = [];
-      const glowOn = has(/GLOW/) && !has(/ZOOM/) && !glowHiddenByScale(st, liveZoom);
+      // flat's glow gate, as for bubbles and sequences (the exact ZOOM flag, see _buildChartLayers)
+      const glowOn = has(/GLOW/) && !this.flags.has('ZOOM') && !glowHiddenByScale(st, liveZoom);
       // the STARBURST ray scale (see the star comment above): style
       // maxvalue, else the biggest part value over the items — flat's
       // `this.nMaxValue || max(nMaxA)`. Without SIZE flat also sets the

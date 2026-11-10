@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>GLOW · AURA gates</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.43/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 360px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>GLOW · AURA gates</b>
+  <span>flat draws a GLOW (else an AURA) only without the ZOOM flag and within glowupper / glowlower.
+    Rows from the top: bubble GLOW in scale (glow), bubble AURA out of glow scale (none), bubble GLOW|ZOOM (none),
+    sequence GLOW|ZOOM (none), sequence AURA|ZOOM (none).</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data: four items per row, three value fields
+  function items(lat0) {
+    var rows = [[3, 5, 2], [6, 2, 4], [1, 4, 7], [5, 5, 5]];
+    return { type: "FeatureCollection", features: rows.map(function (r, i) { return {
+      type: "Feature", properties: { a: r[0], b: r[1], c: r[2], n: r[0] + r[1] + r[2] },
+      geometry: { type: "Point", coordinates: [9.0 + i * 0.12, lat0] } }; }) };
+  }
+  function themeAt(name, lat0, type, value, style) {
+    return ixmaps.layer(name, layer => layer
+      .data({ obj: items(lat0), type: "geojson" })
+      .binding({ geo: "geometry", value: value })
+      .type(type)
+      .style(Object.assign({ colorscheme: ["#e8a33d", "#3d8be8", "#5bb55b"], scale: "1" }, style || {}))
+      .meta({ title: name })
+    );
+  }
+  var themes = [
+    themeAt("bubble-glow", 45.62, "CHART|BUBBLE|SIZE|GLOW|NOLEGEND", "n"),
+    themeAt("bubble-aura-outofscale", 45.52, "CHART|BUBBLE|SIZE|AURA|NOLEGEND", "n", { glowupper: "1:1000" }),
+    themeAt("bubble-glow-zoom", 45.42, "CHART|BUBBLE|SIZE|GLOW|ZOOM|NOLEGEND", "n"),
+    themeAt("sequence-glow-zoom", 45.32, "CHART|SYMBOL|SEQUENCE|GLOW|ZOOM|NOLEGEND", "a|b|c"),
+    themeAt("sequence-aura-zoom", 45.22, "CHART|SYMBOL|SEQUENCE|AURA|ZOOM|NOLEGEND", "a|b|c")
+  ];
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => themes.reduce((m, t) => m.layer(t), map.view([45.42, 9.2], 10))
+  );
+</script>
+</body>
+</html>

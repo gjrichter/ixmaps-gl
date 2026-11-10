@@ -1,0 +1,3962 @@
+{
+ "page": "examples/glow_aura_gates.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.2,
+     45.42
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-bubble-glow-g0",
+     "type": "IconLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "be32506b973ca5d4",
+     "setDigest": "be32506b973ca5d4",
+     "columnDigests": {
+      "getColor": "cf59682237868850",
+      "getIcon": "8d5989043b4efb23",
+      "getPosition": "4c764dc159f31272",
+      "getSize": "11b74e6947ba7808"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getSize": [
+       1000.518133,
+       1225.379452
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-232,163,61",
+        "url": "#183aa38f:10022",
+        "width": 64
+       },
+       [
+        9,
+        45.62
+       ],
+       1000.518133
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-91,181,91",
+        "url": "#81c49da7:9390",
+        "width": 64
+       },
+       [
+        9.12,
+        45.62
+       ],
+       1096.012701
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-91,181,91",
+        "url": "#81c49da7:9390",
+        "width": 64
+       },
+       [
+        9.24,
+        45.62
+       ],
+       1096.012701
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-91,181,91",
+        "url": "#81c49da7:9390",
+        "width": 64
+       },
+       [
+        9.36,
+        45.62
+       ],
+       1225.379452
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-bubble-glow-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "01ffd988123d7c40",
+     "setDigest": "01ffd988123d7c40",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "4c764dc159f31272",
+      "getRadius": "01de30b54c543b1d"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       90.956194,
+       111.398132
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.62
+       ],
+       90.956194
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.62
+       ],
+       99.637518
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.62
+       ],
+       99.637518
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.62
+       ],
+       111.398132
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-bubble-aura-outofscale-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "fa0bc1b04941fdfa",
+     "setDigest": "fa0bc1b04941fdfa",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "2dddbba543bca764",
+      "getRadius": "01de30b54c543b1d"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       90.956194,
+       111.398132
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.52
+       ],
+       90.956194
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.52
+       ],
+       99.637518
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.52
+       ],
+       99.637518
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.52
+       ],
+       111.398132
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-bubble-glow-zoom-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "0cbf529accc2fdf3",
+     "setDigest": "0cbf529accc2fdf3",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "2577fcd675ea6e07",
+      "getRadius": "01de30b54c543b1d"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       90.956194,
+       111.398132
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.42
+       ],
+       90.956194
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.42
+       ],
+       99.637518
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.42
+       ],
+       99.637518
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.42
+       ],
+       111.398132
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-sequence-glow-zoom-g0",
+     "type": "IconLayer",
+     "count": 12,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "cb16517793b938b7",
+     "setDigest": "205a0b75b6e7b90e",
+     "columnDigests": {
+      "getColor": "10b96c7192c6fac4",
+      "getIcon": "699cca27649a640f",
+      "getPixelOffset": "5847441924f09b1d",
+      "getPosition": "c891d0f334529db9",
+      "getSize": "7de5de99db585943"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getSize": [
+       84.209073,
+       222.796264
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       84.209073
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       168.418145
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       222.796264
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       145.854392
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       119.089612
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       206.269259
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       119.089612
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       168.418145
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-sequence-aura-zoom-g0",
+     "type": "IconLayer",
+     "count": 12,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "1a076bf41ac14a89",
+     "setDigest": "081183104f4370e6",
+     "columnDigests": {
+      "getColor": "10b96c7192c6fac4",
+      "getIcon": "699cca27649a640f",
+      "getPixelOffset": "5847441924f09b1d",
+      "getPosition": "c35776781ffec623",
+      "getSize": "7de5de99db585943"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getSize": [
+       84.209073,
+       222.796264
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.22
+       ],
+       84.209073
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.22
+       ],
+       168.418145
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.22
+       ],
+       222.796264
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.22
+       ],
+       145.854392
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.22
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.22
+       ],
+       119.089612
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.22
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.22
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.22
+       ],
+       188.29721
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.22
+       ],
+       206.269259
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.22
+       ],
+       119.089612
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.22
+       ],
+       168.418145
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "bubble-glow",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "bubble-aura-outofscale",
+     "flags": [
+      "AURA",
+      "BUBBLE",
+      "CHART",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "bubble-glow-zoom",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "sequence-glow-zoom",
+     "flags": [
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SEQUENCE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ]
+    },
+    {
+     "name": "sequence-aura-zoom",
+     "flags": [
+      "AURA",
+      "CHART",
+      "NOLEGEND",
+      "SEQUENCE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ]
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "bubble-glow": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "bubble-aura-outofscale": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "bubble-glow-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "sequence-glow-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">6.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr></table>"
+    ],
+    "sequence-aura-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-aura-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-aura-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-aura-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">6.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.2,
+     45.42
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-bubble-glow-g0",
+     "type": "IconLayer",
+     "count": 0,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e3b0c44298fc1c14",
+     "setDigest": "e3b0c44298fc1c14",
+     "columnDigests": {
+      "getColor": "e3b0c44298fc1c14",
+      "getIcon": "e3b0c44298fc1c14",
+      "getPosition": "e3b0c44298fc1c14",
+      "getSize": "e3b0c44298fc1c14"
+     },
+     "stats": {},
+     "sample": []
+    },
+    {
+     "id": "ix-bubbles-bubble-glow-g0",
+     "type": "IconLayer",
+     "count": 0,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e3b0c44298fc1c14",
+     "setDigest": "e3b0c44298fc1c14",
+     "columnDigests": {
+      "getColor": "e3b0c44298fc1c14",
+      "getIcon": "e3b0c44298fc1c14",
+      "getPosition": "e3b0c44298fc1c14",
+      "getSize": "e3b0c44298fc1c14"
+     },
+     "stats": {},
+     "sample": []
+    },
+    {
+     "id": "ix-bubbles-bubble-aura-outofscale-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "13b4790a1d800ad9",
+     "setDigest": "13b4790a1d800ad9",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "2dddbba543bca764",
+      "getRadius": "d7b7182dff772174"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       114.597623,
+       140.352851
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.52
+       ],
+       114.597623
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.52
+       ],
+       125.535407
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.52
+       ],
+       125.535407
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.52
+       ],
+       140.352851
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-bubble-glow-zoom-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "96351952494e0288",
+     "setDigest": "96351952494e0288",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "2577fcd675ea6e07",
+      "getRadius": "d7b7182dff772174"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       114.597623,
+       140.352851
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.42
+       ],
+       114.597623
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.42
+       ],
+       125.535407
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.42
+       ],
+       125.535407
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.42
+       ],
+       140.352851
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-sequence-glow-zoom-g0",
+     "type": "IconLayer",
+     "count": 12,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "209912a1ffcb01ca",
+     "setDigest": "fd5c3dec3780ce33",
+     "columnDigests": {
+      "getColor": "10b96c7192c6fac4",
+      "getIcon": "699cca27649a640f",
+      "getPixelOffset": "5847441924f09b1d",
+      "getPosition": "c891d0f334529db9",
+      "getSize": "0954a39c79a4c5ca"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getSize": [
+       106.096783,
+       280.705703
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       106.096783
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       212.193566
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       280.705703
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       183.765019
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       237.239619
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       150.04351
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       237.239619
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       237.239619
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       237.239619
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       259.882982
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       150.04351
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       212.193566
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-sequence-aura-zoom-g0",
+     "type": "IconLayer",
+     "count": 0,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e3b0c44298fc1c14",
+     "setDigest": "e3b0c44298fc1c14",
+     "columnDigests": {
+      "getColor": "e3b0c44298fc1c14",
+      "getIcon": "e3b0c44298fc1c14",
+      "getPixelOffset": "e3b0c44298fc1c14",
+      "getPosition": "e3b0c44298fc1c14",
+      "getSize": "e3b0c44298fc1c14"
+     },
+     "stats": {},
+     "sample": []
+    }
+   ],
+   "themes": [
+    {
+     "name": "bubble-glow",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "bubble-aura-outofscale",
+     "flags": [
+      "AURA",
+      "BUBBLE",
+      "CHART",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "bubble-glow-zoom",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "sequence-glow-zoom",
+     "flags": [
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SEQUENCE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ]
+    },
+    {
+     "name": "sequence-aura-zoom",
+     "flags": [
+      "AURA",
+      "CHART",
+      "NOLEGEND",
+      "SEQUENCE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ]
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "bubble-aura-outofscale": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "bubble-glow-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "sequence-glow-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">6.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.2,
+     45.42
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-glow-bubble-glow-g0",
+     "type": "IconLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "9f94b57dc1865e37",
+     "setDigest": "9f94b57dc1865e37",
+     "columnDigests": {
+      "getColor": "cf59682237868850",
+      "getIcon": "8d5989043b4efb23",
+      "getPosition": "4c764dc159f31272",
+      "getSize": "9501159ad37bc56e"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getSize": [
+       794.111768,
+       972.584316
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-232,163,61",
+        "url": "#183aa38f:10022",
+        "width": 64
+       },
+       [
+        9,
+        45.62
+       ],
+       794.111768
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-91,181,91",
+        "url": "#81c49da7:9390",
+        "width": 64
+       },
+       [
+        9.12,
+        45.62
+       ],
+       869.905857
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-91,181,91",
+        "url": "#81c49da7:9390",
+        "width": 64
+       },
+       [
+        9.24,
+        45.62
+       ],
+       869.905857
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-91,181,91",
+        "url": "#81c49da7:9390",
+        "width": 64
+       },
+       [
+        9.36,
+        45.62
+       ],
+       972.584316
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-bubble-glow-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "e927c43a77ed5245",
+     "setDigest": "e927c43a77ed5245",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "4c764dc159f31272",
+      "getRadius": "4ba51efd306f1db2"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       72.191979,
+       88.416756
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.62
+       ],
+       72.191979
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.62
+       ],
+       79.082351
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.62
+       ],
+       79.082351
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.62
+       ],
+       88.416756
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-bubble-aura-outofscale-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "7aca287ca0810b5c",
+     "setDigest": "7aca287ca0810b5c",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "2dddbba543bca764",
+      "getRadius": "4ba51efd306f1db2"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       72.191979,
+       88.416756
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.52
+       ],
+       72.191979
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.52
+       ],
+       79.082351
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.52
+       ],
+       79.082351
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.52
+       ],
+       88.416756
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-bubble-glow-zoom-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 4,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "f9fd1cb69b7a1671",
+     "setDigest": "f9fd1cb69b7a1671",
+     "columnDigests": {
+      "getFillColor": "792706361d0cad5b",
+      "getLineColor": "7d4f8694fda35f41",
+      "getLineWidth": "5b7d99b3483b2c24",
+      "getPosition": "2577fcd675ea6e07",
+      "getRadius": "4ba51efd306f1db2"
+     },
+     "stats": {
+      "getFillColor": [
+       91,
+       232
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getRadius": [
+       72.191979,
+       88.416756
+      ]
+     },
+     "sample": [
+      [
+       [
+        232,
+        163,
+        61,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9,
+        45.42
+       ],
+       72.191979
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.12,
+        45.42
+       ],
+       79.082351
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.24,
+        45.42
+       ],
+       79.082351
+      ],
+      [
+       [
+        91,
+        181,
+        91,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.36,
+        45.42
+       ],
+       88.416756
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-sequence-glow-zoom-g0",
+     "type": "IconLayer",
+     "count": 12,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "608832f97005b5ca",
+     "setDigest": "a8989aff39d603c8",
+     "columnDigests": {
+      "getColor": "10b96c7192c6fac4",
+      "getIcon": "699cca27649a640f",
+      "getPixelOffset": "5847441924f09b1d",
+      "getPosition": "c891d0f334529db9",
+      "getSize": "9accfb615455055f"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getSize": [
+       66.836785,
+       176.833512
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       66.836785
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       133.67357
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.32
+       ],
+       176.833512
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       115.764708
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.32
+       ],
+       94.521488
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.32
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       163.71602
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       94.521488
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.32
+       ],
+       133.67357
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-sequence-aura-zoom-g0",
+     "type": "IconLayer",
+     "count": 12,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "7a9512996d654d4b",
+     "setDigest": "e3c73a1ceaeeab3e",
+     "columnDigests": {
+      "getColor": "10b96c7192c6fac4",
+      "getIcon": "699cca27649a640f",
+      "getPixelOffset": "5847441924f09b1d",
+      "getPosition": "c35776781ffec623",
+      "getSize": "9accfb615455055f"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9,
+       9.36
+      ],
+      "getSize": [
+       66.836785,
+       176.833512
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.22
+       ],
+       66.836785
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.22
+       ],
+       133.67357
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.24,
+        45.22
+       ],
+       176.833512
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.22
+       ],
+       115.764708
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.22
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9,
+        45.22
+       ],
+       94.521488
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.22
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.22
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.36,
+        45.22
+       ],
+       149.451595
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-232,163,61-0.85-none-0",
+        "url": "#ed65c6c6:1742",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.22
+       ],
+       163.71602
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-61,139,232-0.85-none-0",
+        "url": "#4e99a7e6:1762",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.22
+       ],
+       94.521488
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-circle-91,181,91-0.85-none-0",
+        "url": "#f1888d8a:1726",
+        "width": 48
+       },
+       [
+        0,
+        0
+       ],
+       [
+        9.12,
+        45.22
+       ],
+       133.67357
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "bubble-glow",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "bubble-aura-outofscale",
+     "flags": [
+      "AURA",
+      "BUBBLE",
+      "CHART",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "bubble-glow-zoom",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SIZE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 11.00",
+      "11.00 - 12.00",
+      "12.00 - 15.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 11,
+       "min": 10
+      },
+      {
+       "max": 12,
+       "min": 11
+      },
+      {
+       "max": 15.00115,
+       "min": 12
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 15,
+     "valueMedian": 12,
+     "maxSizeValue": 15
+    },
+    {
+     "name": "sequence-glow-zoom",
+     "flags": [
+      "CHART",
+      "GLOW",
+      "NOLEGEND",
+      "SEQUENCE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ]
+    },
+    {
+     "name": "sequence-aura-zoom",
+     "flags": [
+      "AURA",
+      "CHART",
+      "NOLEGEND",
+      "SEQUENCE",
+      "SYMBOL",
+      "ZOOM"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "categoryColorsRgb": [
+      [
+       232,
+       163,
+       61
+      ],
+      [
+       61,
+       139,
+       232
+      ],
+      [
+       91,
+       181,
+       91
+      ]
+     ]
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "bubble-glow": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "bubble-aura-outofscale": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-aura-outofscale</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "bubble-glow-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">12.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>bubble-glow-zoom</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr></table>"
+    ],
+    "sequence-glow-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-glow-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">6.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr></table>"
+    ],
+    "sequence-aura-zoom": [
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-aura-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-aura-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>",
+     "<h2 style='margin:0 0 0.15em;padding:0;font-size:1.25em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>sequence-aura-zoom</h2><h3 style='margin:0 0 0.4em;padding:0;font-size:1.1em;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>a</h3><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(232,163,61)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"a\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">a</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">6.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(61,139,232)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"b\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">b</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(91,181,91)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"c\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">c</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}
