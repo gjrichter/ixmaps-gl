@@ -170,7 +170,7 @@
     },
     {
      "id": "ix-bubbles-user-box",
-     "type": "ScatterplotLayer",
+     "type": "GeoJsonLayer",
      "count": 6,
      "constants": {
       "filled": true,
@@ -178,75 +178,88 @@
        0,
        0,
        0,
-       0
+       1
       ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "radiusMinPixels": 1,
-      "radiusUnits": "pixels",
-      "stroked": false
+      "stroked": true
      },
      "columns": [
-      "getPosition",
-      "getRadius"
+      "~geometry"
      ],
-     "digest": "9ada1c7592e1f440",
-     "setDigest": "7d3c111119ba1be9",
+     "digest": "d704dd699cce430e",
+     "setDigest": "5b6c880b5567a97d",
      "columnDigests": {
-      "getPosition": "4813d597ce7d4942",
-      "getRadius": "c00acb6a194b5246"
+      "~geometry": "9eb4c133874a9802"
      },
-     "stats": {
-      "getPosition": [
-       9.05,
-       9.4
-      ],
-      "getRadius": [
-       9.936263,
-       19.828867
-      ]
-     },
+     "stats": {},
      "sample": [
       [
        [
-        9.19,
-        45.5
-       ],
-       9.936263
+        "MultiPolygon",
+        5,
+        [
+         9.179183,
+         45.503791
+        ]
+       ]
       ],
       [
        [
-        9.05,
-        45.5
-       ],
-       11.919026
+        "MultiPolygon",
+        5,
+        [
+         9.036751,
+         45.504643
+        ]
+       ]
       ],
       [
        [
-        9.33,
-        45.5
-       ],
-       14.347404
+        "MultiPolygon",
+        5,
+        [
+         9.313774,
+         45.505687
+        ]
+       ]
       ],
       [
        [
-        9.12,
-        45.5
-       ],
-       15.74408
+        "MultiPolygon",
+        5,
+        [
+         9.102061,
+         45.506287
+        ]
+       ]
       ],
       [
        [
-        9.26,
-        45.5
-       ],
-       17.61896
+        "MultiPolygon",
+        5,
+        [
+         9.239762,
+         45.507092
+        ]
+       ]
       ],
       [
        [
-        9.4,
-        45.5
-       ],
-       19.828867
+        "MultiPolygon",
+        5,
+        [
+         9.377053,
+         45.508042
+        ]
+       ]
       ]
      ]
     },
@@ -476,7 +489,7 @@
     },
     {
      "id": "ix-bubbles-user-circular",
-     "type": "ScatterplotLayer",
+     "type": "GeoJsonLayer",
      "count": 6,
      "constants": {
       "filled": true,
@@ -484,75 +497,88 @@
        0,
        0,
        0,
-       0
+       1
       ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "radiusMinPixels": 1,
-      "radiusUnits": "pixels",
-      "stroked": false
+      "stroked": true
      },
      "columns": [
-      "getPosition",
-      "getRadius"
+      "~geometry"
      ],
-     "digest": "411da472ff034af2",
-     "setDigest": "bbe04d80cae9483f",
+     "digest": "788d88e9c9f4b23e",
+     "setDigest": "a77c1c0e880583c6",
      "columnDigests": {
-      "getPosition": "09cb0d45b61d0379",
-      "getRadius": "c00acb6a194b5246"
+      "~geometry": "c6ecb3b6dab619c0"
      },
-     "stats": {
-      "getPosition": [
-       9.05,
-       9.4
-      ],
-      "getRadius": [
-       9.936263,
-       19.828867
-      ]
-     },
+     "stats": {},
      "sample": [
       [
        [
-        9.19,
-        45.35
-       ],
-       9.936263
+        "MultiPolygon",
+        5,
+        [
+         9.179183,
+         45.353801
+        ]
+       ]
       ],
       [
        [
-        9.05,
-        45.35
-       ],
-       11.919026
+        "MultiPolygon",
+        5,
+        [
+         9.036751,
+         45.354655
+        ]
+       ]
       ],
       [
        [
-        9.33,
-        45.35
-       ],
-       14.347404
+        "MultiPolygon",
+        5,
+        [
+         9.313774,
+         45.355702
+        ]
+       ]
       ],
       [
        [
-        9.12,
-        45.35
-       ],
-       15.74408
+        "MultiPolygon",
+        5,
+        [
+         9.102061,
+         45.356303
+        ]
+       ]
       ],
       [
        [
-        9.26,
-        45.35
-       ],
-       17.61896
+        "MultiPolygon",
+        5,
+        [
+         9.239762,
+         45.357111
+        ]
+       ]
       ],
       [
        [
-        9.4,
-        45.35
-       ],
-       19.828867
+        "MultiPolygon",
+        5,
+        [
+         9.377053,
+         45.358063
+        ]
+       ]
       ]
      ]
     },
@@ -949,7 +975,7 @@
     },
     {
      "id": "ix-bubbles-user-box",
-     "type": "ScatterplotLayer",
+     "type": "GeoJsonLayer",
      "count": 6,
      "constants": {
       "filled": true,
@@ -957,75 +983,88 @@
        0,
        0,
        0,
-       0
+       1
       ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "radiusMinPixels": 1,
-      "radiusUnits": "pixels",
-      "stroked": false
+      "stroked": true
      },
      "columns": [
-      "getPosition",
-      "getRadius"
+      "~geometry"
      ],
-     "digest": "8fa8fc4e711de0af",
-     "setDigest": "66f7dbfa6f1467b8",
+     "digest": "d887bc68bdd7ad54",
+     "setDigest": "c482a64fc62159b1",
      "columnDigests": {
-      "getPosition": "4813d597ce7d4942",
-      "getRadius": "14305f5dc5874771"
+      "~geometry": "d2bca21f42395d0e"
      },
-     "stats": {
-      "getPosition": [
-       9.05,
-       9.4
-      ],
-      "getRadius": [
-       12.518907,
-       24.982808
-      ]
-     },
+     "stats": {},
      "sample": [
       [
        [
-        9.19,
-        45.5
-       ],
-       12.518907
+        "MultiPolygon",
+        5,
+        [
+         9.183185,
+         45.502388
+        ]
+       ]
       ],
       [
        [
-        9.05,
-        45.5
-       ],
-       15.017031
+        "MultiPolygon",
+        5,
+        [
+         9.041654,
+         45.502925
+        ]
+       ]
       ],
       [
        [
-        9.33,
-        45.5
-       ],
-       18.076597
+        "MultiPolygon",
+        5,
+        [
+         9.319778,
+         45.503582
+        ]
+       ]
       ],
       [
        [
-        9.12,
-        45.5
-       ],
-       19.836298
+        "MultiPolygon",
+        5,
+        [
+         9.108699,
+         45.50396
+        ]
+       ]
       ],
       [
        [
-        9.26,
-        45.5
-       ],
-       22.198498
+        "MultiPolygon",
+        5,
+        [
+         9.247251,
+         45.504468
+        ]
+       ]
       ],
       [
        [
-        9.4,
-        45.5
-       ],
-       24.982808
+        "MultiPolygon",
+        5,
+        [
+         9.385544,
+         45.505066
+        ]
+       ]
       ]
      ]
     },
@@ -1255,7 +1294,7 @@
     },
     {
      "id": "ix-bubbles-user-circular",
-     "type": "ScatterplotLayer",
+     "type": "GeoJsonLayer",
      "count": 6,
      "constants": {
       "filled": true,
@@ -1263,75 +1302,88 @@
        0,
        0,
        0,
-       0
+       1
       ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "radiusMinPixels": 1,
-      "radiusUnits": "pixels",
-      "stroked": false
+      "stroked": true
      },
      "columns": [
-      "getPosition",
-      "getRadius"
+      "~geometry"
      ],
-     "digest": "455a95724ded5bea",
-     "setDigest": "2a06860a3e075b5d",
+     "digest": "664ea0f91978193a",
+     "setDigest": "034862f9206a094d",
      "columnDigests": {
-      "getPosition": "09cb0d45b61d0379",
-      "getRadius": "14305f5dc5874771"
+      "~geometry": "4eb816ed50c5cb30"
      },
-     "stats": {
-      "getPosition": [
-       9.05,
-       9.4
-      ],
-      "getRadius": [
-       12.518907,
-       24.982808
-      ]
-     },
+     "stats": {},
      "sample": [
       [
        [
-        9.19,
-        45.35
-       ],
-       12.518907
+        "MultiPolygon",
+        5,
+        [
+         9.183185,
+         45.352395
+        ]
+       ]
       ],
       [
        [
-        9.05,
-        45.35
-       ],
-       15.017031
+        "MultiPolygon",
+        5,
+        [
+         9.041654,
+         45.352933
+        ]
+       ]
       ],
       [
        [
-        9.33,
-        45.35
-       ],
-       18.076597
+        "MultiPolygon",
+        5,
+        [
+         9.319778,
+         45.353592
+        ]
+       ]
       ],
       [
        [
-        9.12,
-        45.35
-       ],
-       19.836298
+        "MultiPolygon",
+        5,
+        [
+         9.108699,
+         45.353971
+        ]
+       ]
       ],
       [
        [
-        9.26,
-        45.35
-       ],
-       22.198498
+        "MultiPolygon",
+        5,
+        [
+         9.247251,
+         45.35448
+        ]
+       ]
       ],
       [
        [
-        9.4,
-        45.35
-       ],
-       24.982808
+        "MultiPolygon",
+        5,
+        [
+         9.385544,
+         45.35508
+        ]
+       ]
       ]
      ]
     },
@@ -1728,7 +1780,7 @@
     },
     {
      "id": "ix-bubbles-user-box",
-     "type": "ScatterplotLayer",
+     "type": "GeoJsonLayer",
      "count": 6,
      "constants": {
       "filled": true,
@@ -1736,75 +1788,88 @@
        0,
        0,
        0,
-       0
+       1
       ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "radiusMinPixels": 1,
-      "radiusUnits": "pixels",
-      "stroked": false
+      "stroked": true
      },
      "columns": [
-      "getPosition",
-      "getRadius"
+      "~geometry"
      ],
-     "digest": "dab5e3692aff6fd9",
-     "setDigest": "0778846dd1b7cf0c",
+     "digest": "c291cc4af65f666e",
+     "setDigest": "da4287c75457706b",
      "columnDigests": {
-      "getPosition": "4813d597ce7d4942",
-      "getRadius": "7c8c19dbbafd7819"
+      "~geometry": "62d3828d0bdb212e"
      },
-     "stats": {
-      "getPosition": [
-       9.05,
-       9.4
-      ],
-      "getRadius": [
-       7.886417,
-       15.738183
-      ]
-     },
+     "stats": {},
      "sample": [
       [
        [
-        9.19,
-        45.5
-       ],
-       7.886417
+        "MultiPolygon",
+        5,
+        [
+         9.172828,
+         45.506018
+        ]
+       ]
       ],
       [
        [
-        9.05,
-        45.5
-       ],
-       9.460137
+        "MultiPolygon",
+        5,
+        [
+         9.028969,
+         45.50737
+        ]
+       ]
       ],
       [
        [
-        9.33,
-        45.5
-       ],
-       11.387542
+        "MultiPolygon",
+        5,
+        [
+         9.304243,
+         45.509027
+        ]
+       ]
       ],
       [
        [
-        9.12,
-        45.5
-       ],
-       12.496085
+        "MultiPolygon",
+        5,
+        [
+         9.091524,
+         45.50998
+        ]
+       ]
       ],
       [
        [
-        9.26,
-        45.5
-       ],
-       13.984178
+        "MultiPolygon",
+        5,
+        [
+         9.227875,
+         45.511258
+        ]
+       ]
       ],
       [
        [
-        9.4,
-        45.5
-       ],
-       15.738183
+        "MultiPolygon",
+        5,
+        [
+         9.363573,
+         45.512766
+        ]
+       ]
       ]
      ]
     },
@@ -2034,7 +2099,7 @@
     },
     {
      "id": "ix-bubbles-user-circular",
-     "type": "ScatterplotLayer",
+     "type": "GeoJsonLayer",
      "count": 6,
      "constants": {
       "filled": true,
@@ -2042,75 +2107,88 @@
        0,
        0,
        0,
-       0
+       1
       ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
       "pickable": true,
-      "radiusMinPixels": 1,
-      "radiusUnits": "pixels",
-      "stroked": false
+      "stroked": true
      },
      "columns": [
-      "getPosition",
-      "getRadius"
+      "~geometry"
      ],
-     "digest": "a635b43241215a75",
-     "setDigest": "de45fa2f7572f5bb",
+     "digest": "1da43228fa50fd0b",
+     "setDigest": "e94c7fb5ef3f0701",
      "columnDigests": {
-      "getPosition": "09cb0d45b61d0379",
-      "getRadius": "7c8c19dbbafd7819"
+      "~geometry": "78a5721bf7baaeba"
      },
-     "stats": {
-      "getPosition": [
-       9.05,
-       9.4
-      ],
-      "getRadius": [
-       7.886417,
-       15.738183
-      ]
-     },
+     "stats": {},
      "sample": [
       [
        [
-        9.19,
-        45.35
-       ],
-       7.886417
+        "MultiPolygon",
+        5,
+        [
+         9.172828,
+         45.356034
+        ]
+       ]
       ],
       [
        [
-        9.05,
-        45.35
-       ],
-       9.460137
+        "MultiPolygon",
+        5,
+        [
+         9.028969,
+         45.35739
+        ]
+       ]
       ],
       [
        [
-        9.33,
-        45.35
-       ],
-       11.387542
+        "MultiPolygon",
+        5,
+        [
+         9.304243,
+         45.359051
+        ]
+       ]
       ],
       [
        [
-        9.12,
-        45.35
-       ],
-       12.496085
+        "MultiPolygon",
+        5,
+        [
+         9.091524,
+         45.360006
+        ]
+       ]
       ],
       [
        [
-        9.26,
-        45.35
-       ],
-       13.984178
+        "MultiPolygon",
+        5,
+        [
+         9.227875,
+         45.361288
+        ]
+       ]
       ],
       [
        [
-        9.4,
-        45.35
-       ],
-       15.738183
+        "MultiPolygon",
+        5,
+        [
+         9.363573,
+         45.3628
+        ]
+       ]
       ]
      ]
     },
