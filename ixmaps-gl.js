@@ -10649,11 +10649,16 @@ self.onmessage = e => {
   // class), each non-last segment's max is nudged just past its shared
   // boundary value so ties resolve toward the lower (already-optimal)
   // segment instead of leaking into the next one.
+  // The nudge is the next float above the boundary (relative, not a fixed
+  // 1e-6): a fixed step swallowed whole classes of 1e-7-scale data and
+  // vanished in the rounding of 1e12-scale data (b + 1e-6 === b).
+  function tieNudgedMax(b) {
+    return b === 0 ? Number.MIN_VALUE : b + Math.abs(b) * Number.EPSILON;
+  }
   function partsFromBreakValues(breakValues, nParts, trueMax) {
-    const TIE_EPSILON = 1e-6;
     return new Array(nParts).fill(null).map((_, i) => ({
       min: breakValues[i],
-      max: i === nParts - 1 ? trueMax : breakValues[i + 1] + TIE_EPSILON
+      max: i === nParts - 1 ? trueMax : tieNudgedMax(breakValues[i + 1])
     }));
   }
 
@@ -11066,7 +11071,10 @@ self.onmessage = e => {
       nMin = Math.floor(nMin / nPreClip) * nPreClip;
       nMax = Math.ceil(nMax / nPreClip) * nPreClip;
     } else {
-      nMax += nMax / 100000;
+      // flat: nMax += nMax / 100000 — which moves a NEGATIVE max down,
+      // below the largest value, so that record fell in no class; the
+      // nudge goes up for every sign (same value for a positive max)
+      nMax += Math.abs(nMax) / 100000;
     }
     nRange = nMax - nMin;
     if (nRange === 0 || values.every(v => v === values[0])) nParts = 1;

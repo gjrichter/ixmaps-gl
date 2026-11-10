@@ -75,6 +75,35 @@ test('partsFromBreakValues: inner maxima get a tie epsilon, the last max is the 
   assert.deepEqual(plain(p[1]), { min: 5, max: 10 });
 });
 
+test('partsFromBreakValues: the tie nudge is relative — a shared boundary stays in the lower class at any data scale', () => {
+  // tiny values: an absolute 1e-6 nudge swallowed every later class
+  const small = G.partsFromBreakValues([0, 1e-7, 3e-7], 2, 3e-7);
+  assert.equal(G.resolvePartsClass(1e-7, small), 0);
+  assert.equal(G.resolvePartsClass(2e-7, small), 1);
+  // huge values: b + 1e-6 === b, so the boundary leaked into the upper class
+  const big = G.partsFromBreakValues([0, 5e12, 9e12], 2, 9e12);
+  assert.equal(G.resolvePartsClass(5e12, big), 0);
+  assert.equal(G.resolvePartsClass(5.000001e12, big), 1);
+  // a zero boundary
+  const zero = G.partsFromBreakValues([-3, 0, 3], 2, 3);
+  assert.equal(G.resolvePartsClass(0, zero), 0);
+  assert.equal(G.resolvePartsClass(1e-300, zero), 1);
+});
+
+test('naturalBreaks: values of 1e-8 scale still spread over the classes', () => {
+  const values = Array.from({ length: 30 }, (_, i) => i * 1e-8);
+  const parts = G.naturalBreaks(values, 3);
+  const classes = new Set(values.map(v => G.resolvePartsClass(v, parts)));
+  assert.deepEqual([...classes].sort(), [0, 1, 2]);
+});
+
+test('flatRangeParts: all-negative values — the maximum is still in the last class', () => {
+  const values = [-900, -700, -500];
+  const parts = G.flatRangeParts(values, -900, -500, 5, new Set());
+  for (const v of values) assert.notEqual(G.resolvePartsClass(v, parts), null, String(v));
+  assert.equal(G.resolvePartsClass(-500, parts), 4);
+});
+
 test('resolvePartsClass: lower bound inclusive, upper exclusive except the last class', () => {
   const parts = [{ min: 0, max: 5 }, { min: 5, max: 10 }];
   assert.equal(G.resolvePartsClass(0, parts), 0);
