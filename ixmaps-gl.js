@@ -5849,6 +5849,40 @@ self.onmessage = e => {
       let resolveBuilt;
       const built = new Promise(r => { resolveBuilt = r; });
       const namedLoads = [];
+      // A theme's runtime from its loaded data, and its entries in the
+      // global theme registry — shared by the build loop below and
+      // defineFromDefinition (themes added later), which used to repeat
+      // both and drift apart (an .obj theme's data key, 509e7e6). Each
+      // caller still picks the data key, the stack position, the sphere
+      // backdrop handling and when htmlgui_onNewTheme fires.
+      function newThemeRuntime(def, spec, raw, engineOptions, { deferred, named, dataSourceKey }) {
+        const fc = filterAndJoin(raw, spec, runtimes);
+        const rt = new LayerRuntime(spec, fc, engineOptions);
+        if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
+        // tags which underlying data source this runtime came from — see
+        // setFacetFilter/clearFacetFilter/clearAllFacetFilters, which use
+        // this to propagate a facet filter to every theme sharing the SAME
+        // data, not just the one the sidebar was built against.
+        rt._dataSourceKey = dataSourceKey;
+        rt._definition = def; // for refreshTheme
+        rt._deferredLoad = deferred;
+        rt._named = named;
+        rt._zoomToPending = wantsZoomToExtent(spec.flags);
+        return { rt, fc };
+      }
+      // See findRuntime's own comment on the three real theme-id
+      // conventions (.layer() name / style.name / meta.name) — this
+      // module-level registry (used by getThemeObj/markThemeClass/the
+      // global ixmaps.data.getFacets) needs the SAME meta.name fallback
+      // findRuntime has, or those globals would silently miss a theme
+      // addressed only by its meta.name. flat's theme id is style.name
+      // (maptheme szId) — several themes can share one .layer() name (a
+      // page's features + charts + texts).
+      function registerTheme(rt) {
+        _globalThemeRegistry.set(rt.name, rt);
+        if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
+        if (themeIdOf(rt) !== rt.name) _globalThemeRegistry.set(themeIdOf(rt), rt);
+      }
       for (const lb of this._layerBuilders) {
        // flat skips a theme it can't load; the others still load
        try {
@@ -5892,34 +5926,11 @@ self.onmessage = e => {
           cacheKey = cached.sourceKey;
           raw = await cached.promise;
         }
-        const fc = filterAndJoin(raw, spec, runtimes);
-        const rt = new LayerRuntime(spec, fc, this._engineOptions);
-        if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
-        // tags which underlying data source this runtime came from — see
-        // setFacetFilter/clearFacetFilter/clearAllFacetFilters below,
-        // which use this to propagate a facet filter to every theme
-        // sharing the SAME data, not just the one the sidebar was built
-        // against.
-        rt._dataSourceKey = cacheKey;
-        rt._definition = def; // for refreshTheme
-        rt._deferredLoad = deferred;
-        rt._named = named;
-        rt._zoomToPending = wantsZoomToExtent(spec.flags);
+        const { rt, fc } = newThemeRuntime(def, spec, raw, this._engineOptions, { deferred, named, dataSourceKey: cacheKey });
         runtimes.push(rt);
         if (fc._sphere) sphereBackdrops.push(rt.style);
         notifyNewTheme(rt);
-        _globalThemeRegistry.set(rt.name, rt);
-        // See findRuntime's own comment on the three real theme-id
-        // conventions (.layer() name / style.name / meta.name) — this
-        // module-level registry (used by getThemeObj/markThemeClass/the
-        // global ixmaps.data.getFacets) needs the SAME meta.name fallback
-        // findRuntime just got, or those globals would silently miss a
-        // theme addressed only by its meta.name, same bug different
-        // resolution path.
-        if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
-        // flat's theme id is style.name (maptheme szId) — several themes
-        // can share one .layer() name (a page's features + charts + texts)
-        if (themeIdOf(rt) !== rt.name) _globalThemeRegistry.set(themeIdOf(rt), rt);
+        registerTheme(rt);
         if (named) namedLoads.push(rt);
        } catch (err) {
         console.error(`[ixmaps-gl] theme "${lb.name}" skipped:`, err);
@@ -6261,8 +6272,7 @@ self.onmessage = e => {
           _chainedLayers = _chainedLayers.then(() => {
             let slot = null;
             if (/replace/i.test(flag || '')) {
-              const def = layerBuilder.definition();
-              const id = (def.style && def.style.name) || (def.meta && def.meta.name);
+              const id = definitionThemeId(layerBuilder.definition());
               if (id) { slot = captureSlot(id); removeThemeById(id); }
             }
             return engineApi.defineLayer(layerBuilder, slot);
@@ -6289,8 +6299,7 @@ self.onmessage = e => {
             let slot = null;
             if (!/force/i.test(f)) {
               if (/replace/i.test(f)) {
-                const def = layerBuilder.definition();
-                const id = (def.style && def.style.name) || (def.meta && def.meta.name);
+                const id = definitionThemeId(layerBuilder.definition());
                 if (id) { slot = captureSlot(id); removeThemeById(id); }
               } else if (/clearcharts|clear|clearall/i.test(f)) {
                 const charts = /clearcharts/i.test(f);
@@ -6893,7 +6902,7 @@ self.onmessage = e => {
       async function defineFromDefinition(def, slot) {
         if (validation) validation.definition(def);
         const pdef = projectThemeToDefinition(def);
-        const replacedId = (pdef.meta && pdef.meta.name) || (pdef.style && pdef.style.name);
+        const replacedId = definitionThemeId(pdef);
         if (replacedId) {
           if (!slot) slot = captureSlot(replacedId);
           removeThemeById(replacedId);
@@ -6915,27 +6924,19 @@ self.onmessage = e => {
           sourceKey = cached.sourceKey;
           raw = await cached.promise;
         }
-        const fc = filterAndJoin(raw, spec, runtimes);
-        const rt = new LayerRuntime(spec, fc, builder._engineOptions);
-        if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
-        rt._definition = pdef; // for refreshTheme
-        rt._deferredLoad = deferred;
-        rt._named = named;
-        rt._zoomToPending = wantsZoomToExtent(spec.flags);
         // an in-memory (.obj) theme is its own data, keyed by its name as
         // in build(): a JSON key of {url, …, obj:true} is the same for
         // every .obj theme, which made their facet filters spread
-        rt._dataSourceKey = named ? 'name:' + spec.data.name
+        const dataSourceKey = named ? 'name:' + spec.data.name
           : spec.data && spec.data.obj ? 'obj:' + spec.name
           : sourceKey || JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
+        const { rt, fc } = newThemeRuntime(pdef, spec, raw, builder._engineOptions, { deferred, named, dataSourceKey });
         // a replacement keeps the stacking position (draw order, legend order) of the theme it replaces:
         // it goes in front of the theme that followed the old one, still on the map after the await above
         const slotAt = slot && slot.anchor ? runtimes.indexOf(slot.anchor) : -1;
         if (slotAt >= 0) runtimes.splice(slotAt, 0, rt); else runtimes.push(rt);
         if (fc._sphere) applySphereBackdrop(map, rt.style);
-        _globalThemeRegistry.set(rt.name, rt);
-        if (rt.meta && rt.meta.name && rt.meta.name !== rt.name) _globalThemeRegistry.set(rt.meta.name, rt);
-        if (themeIdOf(rt) !== rt.name) _globalThemeRegistry.set(themeIdOf(rt), rt);
+        registerTheme(rt);
         addLegendPanel(rt);
         notifyNewTheme(rt);
         refresh();
@@ -18447,6 +18448,12 @@ self.onmessage = e => {
         + `<td style="${td}padding:0.05em 0.8em 0.05em 0;text-align:left"><span title="${escapeHtml(String(r.label).replace(/<[^>]*>/g, ''))}" style="display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom">${r.label}</span></td>`
         + `<td style="${td}padding:0.05em 0;text-align:right;white-space:nowrap">${r.value}</td></tr>`).join('')
       + '</table>';
+  }
+  // the theme id a DEFINITION will have once built: meta.name first, as
+  // normalizeTheme lets meta override style (so a runtime's style.name is
+  // its meta.name) — the add / newTheme / define replace paths all use it
+  function definitionThemeId(def) {
+    return (def && def.meta && def.meta.name) || (def && def.style && def.style.name) || null;
   }
   function themeIdOf(rt) {
     return (rt.style && rt.style.name) || (rt.meta && rt.meta.name) || rt.name;

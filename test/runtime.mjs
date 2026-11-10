@@ -99,6 +99,42 @@ try {
     assert.match(labelWarnings[0], /lab_text_value.*"icon" holds text.*style\.valuefield/);
   });
   check('label: style.valuefield with a numeric value does not warn', () => assert.ok(!labelWarnings.some(w => /lab_valuefield/.test(w))));
+  // ---- theme lifecycle: registration by every id, removal, replace in place (pins add/define/remove paths)
+  // the real stack (draw/legend) order: the engine's runtimes; getThemes() is registry order
+  const order = () => page.evaluate(async () => { const api = await window.myMap; return (api.runtimes || []).map(r => r.name).filter(n => /^lc_/.test(n)).join(','); });
+  await page.evaluate(() => {
+    const m = ixmaps.map('rt');
+    m.add(mk('lc_a', 9.26, 'a'));
+    m.add(ixmaps.layer('lc_b', l => l.data({ obj: { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { cat: 'b', name: 'lc_b' }, geometry: { type: 'Point', coordinates: [9.27, 45.46] } }] }, type: 'geojson' })
+      .binding({ geo: 'geometry', value: 'cat' }).type('CHART|DOT|CATEGORICAL|NOLEGEND').style({ colorscheme: ['#d9534f', '#428bca'], values: ['a', 'b'], name: 'lc_b_style' }).meta({ name: 'lc_b_meta' })));
+    m.add(mk('lc_c', 9.28, 'a'));
+  }); await settle();
+  const lc0 = await page.evaluate(() => ['lc_a', 'lc_b', 'lc_b_meta', 'lc_b_style', 'lc_c'].map(id => { const t = ixmaps.getThemeObj(id); return t ? t.szId : null; }));
+  check('lifecycle: themes added at runtime are found by layer name and meta.name (style.name yields to meta.name)', () =>
+    assert.deepEqual(lc0, ['lc_a', 'lc_b_meta', 'lc_b_meta', null, 'lc_c']));
+  const lcOrder0 = await order();
+  check('lifecycle: stack order a, b, c', () => assert.equal(lcOrder0, 'lc_a,lc_b,lc_c'));
+  // add(…, "replace") with style.name and meta.name differing: one theme, same stack place
+  await page.evaluate(() => ixmaps.map('rt').add(ixmaps.layer('lc_b', l => l.data({ obj: { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { cat: 'a', name: 'lc_b2' }, geometry: { type: 'Point', coordinates: [9.27, 45.46] } }] }, type: 'geojson' })
+    .binding({ geo: 'geometry', value: 'cat' }).type('CHART|DOT|CATEGORICAL|NOLEGEND').style({ colorscheme: ['#d9534f', '#428bca'], values: ['a', 'b'], name: 'lc_b_style' }).meta({ name: 'lc_b_meta' })), 'replace')); await settle();
+  const lcOrder1 = await order();
+  const lcRec = await page.evaluate(() => recordNames('lc_b_meta'));
+  check('lifecycle: add(theme, "replace") swaps the theme in place, not on top', () => assert.deepEqual([lcOrder1, lcRec], ['lc_a,lc_b,lc_c', 'lc_b2']));
+  // replace(id, theme) by meta.name
+  await page.evaluate(() => ixmaps.map('rt').replace('lc_a', mk('lc_a', 9.26, 'b'))); await settle();
+  const lcOrder2 = await order();
+  check('lifecycle: replace(id, theme) keeps the stack place', () => assert.equal(lcOrder2, 'lc_a,lc_b,lc_c'));
+  // removal by layer name drops every registry id
+  await page.evaluate(() => ixmaps.map('rt').removeTheme('lc_b')); await settle();
+  const lc1 = await page.evaluate(() => ['lc_b', 'lc_b_meta'].map(id => !!ixmaps.getThemeObj(id)).concat([ixmaps.map('rt').getThemes().some(t => t.szId === 'lc_b')]));
+  check('lifecycle: removeTheme(layer) leaves no registry entry and no runtime', () => assert.deepEqual(lc1, [false, false, false]));
+  // removal by meta.name
+  await page.evaluate(() => { ixmaps.map('rt').removeTheme('lc_a'); ixmaps.map('rt').removeTheme('lc_c'); }); await settle();
+  const lcOrder3 = await order();
+  check('lifecycle: every lc_ theme removed', () => assert.equal(lcOrder3, ''));
+  // a theme from the Map()'s own definition (build path) is registered like a runtime one
+  const lcBase = await page.evaluate(() => { const t = ixmaps.getThemeObj('base'); return t && [t.szId, t.szName]; });
+  check('lifecycle: the base theme is registered', () => assert.deepEqual(lcBase, ['base', 'base']));
   check('no page errors', () => assert.deepEqual(errors, []));
 } finally {
   await browser.close(); server.close();
