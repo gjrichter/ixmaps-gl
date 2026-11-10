@@ -6922,7 +6922,11 @@ self.onmessage = e => {
         rt._deferredLoad = deferred;
         rt._named = named;
         rt._zoomToPending = wantsZoomToExtent(spec.flags);
+        // an in-memory (.obj) theme is its own data, keyed by its name as
+        // in build(): a JSON key of {url, …, obj:true} is the same for
+        // every .obj theme, which made their facet filters spread
         rt._dataSourceKey = named ? 'name:' + spec.data.name
+          : spec.data && spec.data.obj ? 'obj:' + spec.name
           : sourceKey || JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
         // a replacement keeps the stacking position (draw order, legend order) of the theme it replaces:
         // it goes in front of the theme that followed the old one, still on the map after the await above

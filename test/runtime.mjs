@@ -80,6 +80,14 @@ try {
   const rf3 = await page.evaluate(() => recordNames('filt'));
   check('refresh filter: removing it after a refresh shows every record', () => assert.equal(rf3, 'q0,q1,q2'));
   await page.evaluate(() => ixmaps.map('rt').removeTheme('filt')); await settle();
+  // ---- two in-memory (.obj) themes added at runtime are different data: a facet filter on one stays on it
+  await page.evaluate(() => { ixmaps.map('rt').add(mkPts('ob1', 45.465)); ixmaps.map('rt').add(mkPts('ob2', 45.47)); }); await settle();
+  const ob0 = await page.evaluate(() => [onMapCount('ob1'), onMapCount('ob2')]);
+  check('obj themes: both are on the map', () => assert.deepEqual(ob0, [3, 3]));
+  await page.evaluate(() => window.__setFacetFilter('ob1', 'cat', 'a')); await settle();
+  const ob1 = await page.evaluate(() => [onMapCount('ob1'), onMapCount('ob2')]);
+  check('obj themes: a facet filter on one runtime .obj theme leaves the other alone', () => assert.deepEqual(ob1, [1, 3]));
+  await page.evaluate(() => { ixmaps.map('rt').removeTheme('ob1'); ixmaps.map('rt').removeTheme('ob2'); }); await settle();
   // ---- text on a label: a text field as the value warns, style.valuefield does not
   warnings.length = 0;
   await page.evaluate(() => ixmaps.map('rt').add(mkLabel('lab_text_value', 9.1, 'icon')));

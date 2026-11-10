@@ -26,6 +26,17 @@
         .style({ colorscheme: ["#d9534f", "#428bca"], values: ["a", "b"], scale: 3 }).meta({ name: name }).filter(filter);
     });
   };
+  // three in-memory points (cats a b b) at a given latitude, no filter
+  window.mkPts = function (name, lat) {
+    return ixmaps.layer(name, function (l) {
+      return l.data({ obj: { type: "FeatureCollection", features: [[9.18, "a"], [9.20, "b"], [9.22, "b"]].map(function (r, i) {
+          return { type: "Feature", properties: { cat: r[1], name: name + i }, geometry: { type: "Point", coordinates: [r[0], lat] } }; }) }, type: "geojson" })
+        .binding({ geo: "geometry", value: "cat" }).type("CHART|DOT|CATEGORICAL|NOLEGEND")
+        .style({ colorscheme: ["#d9534f", "#428bca"], values: ["a", "b"], scale: 3 }).meta({ name: name });
+    });
+  };
+  // how many of a theme's records are on the map (facet filters applied)
+  window.onMapCount = function (id) { var t = ixmaps.getThemeObj(id); return t ? t.itemA.view.dbIndexA.length : -1; };
   // the names of a theme's current records (getThemeObj().objTheme: flat's dbTable)
   window.recordNames = function (id) {
     var t = ixmaps.getThemeObj(id);
