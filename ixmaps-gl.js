@@ -1040,6 +1040,16 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   function legendIsOn(opt) {
     return opt !== undefined && opt !== null && opt !== false && opt !== 'false' && opt !== 0 && opt !== '0';
   }
+  // flat's removeDefinitionFromFlag (maptheme.js 25924): the flags without
+  // the given words — a new set, since a flag set's typeString is fixed
+  function flagsWithout(flags, words) {
+    if (!flags || !words.some(w => flags.has(w))) return flags;
+    const out = new Set([...flags].filter(f => !words.includes(f)));
+    if (flags.typeString != null) {
+      Object.defineProperty(out, 'typeString', { value: String(flags.typeString).split('|').filter(w => !words.includes(w.trim())).join('|') });
+    }
+    return out;
+  }
   function wantsZoomToExtent(flags) {
     return !!flags && (flags.has('SHOW') || flags.has('ZOOMTO'));
   }
@@ -6807,6 +6817,10 @@ self.onmessage = e => {
         const bounds = featuresBounds(rt.features);
         if (!bounds) return; // no data yet (named / deferred): wait for it
         rt._zoomToPending = false;
+        // flat drops SHOW / ZOOMTO from the theme's flag once it zooms
+        // (maptheme.js 8718-8733): its substring tests for ZOOM (labels,
+        // glow, bar texts) then no longer read ZOOMTO as ZOOM
+        rt.flags = flagsWithout(rt.flags, ['SHOW', 'ZOOMTO']);
         const [[w, s], [e, n]] = bounds;
         if (w === e && s === n) map.jumpTo({ center: [w, s], zoom: Math.max(map.getZoom(), 12) });
         else map.fitBounds(bounds, { padding: 30, animate: false, maxZoom: 16 });
@@ -19312,7 +19326,7 @@ self.onmessage = e => {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     splitMapEvents, getBounds, chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     dataSourceKey, themeDataSourceKey,

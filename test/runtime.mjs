@@ -209,6 +209,21 @@ try {
   await page.evaluate(() => ixmaps.map('rt').removeTheme('samedef')); await settle();
   // the deliberately failed load may report a page error of its own; any other error still counts
   for (let i = errors.length - 1; i >= 0; i--) if (/samedef_fail|404/.test(errors[i])) errors.splice(i, 1);
+  // ---- ZOOMTO is dropped from the theme's flags once it zoomed (flat): a bubble's labelfield label then shows
+  const zt0 = await page.evaluate(async () => (await window.myMap).map.getCenter().toArray());
+  await page.evaluate(() => ixmaps.map('rt').add(ixmaps.layer('zt', l => l.data({ obj: { type: 'FeatureCollection', features: [
+      { type: 'Feature', properties: { v: 3, name: 'Zt-one' }, geometry: { type: 'Point', coordinates: [9.50, 45.60] } },
+      { type: 'Feature', properties: { v: 5, name: 'Zt-two' }, geometry: { type: 'Point', coordinates: [9.56, 45.64] } }] }, type: 'geojson' })
+    .binding({ geo: 'geometry', value: 'v' }).type('CHART|BUBBLE|SIZE|ZOOMTO|NOLEGEND')
+    .style({ colorscheme: ['#d9534f'], labelfield: 'name', scale: 3 }).meta({ name: 'zt' })))); await page.waitForTimeout(3000);
+  const zt = await page.evaluate(async () => {
+    const api = await window.myMap;
+    const labels = api.overlay._props.layers.flat(Infinity).filter(l => l && /^ix-labels-zt/.test(l.id));
+    return { moved: api.map.getCenter().lng > 9.4, szFlag: ixmaps.getThemeObj('zt').szFlag, labels: labels.reduce((n, l) => n + ((l.props.data || []).length), 0) };
+  });
+  check('ZOOMTO: the map zooms to the theme', () => assert.equal(zt.moved, true));
+  check('ZOOMTO: the flag is gone from the theme once it zoomed, and its labels show', () => assert.deepEqual([/ZOOMTO/.test(zt.szFlag), zt.labels], [false, 2]));
+  await page.evaluate(async c => { ixmaps.map('rt').removeTheme('zt'); (await window.myMap).map.jumpTo({ center: c, zoom: 12 }); }, zt0); await settle();
   check('no page errors', () => assert.deepEqual(errors, []));
 } finally {
   await browser.close(); server.close();
