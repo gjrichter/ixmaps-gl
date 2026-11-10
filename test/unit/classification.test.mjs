@@ -183,3 +183,29 @@ test('HEADTAIL: finite bounds and every value in a class, also with ties at the 
   assert.deepEqual(plain(parts.map(p => p.min)), [1, 286.3888888888889, 1200, 1920, 2560]);
   assert.equal(parts[4].max, 2560.001);
 });
+
+// ---- new data for a range-classed theme (replaceFeatures: refreshTheme, a re-filter, a broker's next load)
+// leaves it as a theme built from that data would be — nothing of the previous data's classes stays
+// (text values count as 0, so only data without records has no classes)
+const rangeFields = ['partsA', '_valueMin', '_valueMax', '_valueMedian', '_nRangeParts', 'categoryLabels',
+  'categoryDisplayLabels', 'categoryColorsRgb', '_rangeClassed'];
+const pt = v => ({ type: 'Feature', properties: { v }, geometry: { type: 'Point', coordinates: [9, 45] } });
+const fcOf = vs => ({ type: 'FeatureCollection', features: vs.map(pt) });
+const rangeTheme = () => G.normalizeTheme({ layer: 'x', binding: { value: 'v' }, style: { type: 'CHOROPLETH|EQUIDISTANT', colorscheme: ['#fff', '#000'], classes: 3 } });
+const rangeState = rt => plain(Object.fromEntries(rangeFields.map(k => [k, rt[k] === undefined ? '(undefined)' : rt[k]])));
+
+test('replaceFeatures: no records (an empty refresh, a filter matching nothing) drops the old classes, as a fresh build has none', () => {
+  const rt = new G.LayerRuntime(rangeTheme(), fcOf([1, 5, 9]), {});
+  assert.ok(rt.partsA && rt.partsA.length, 'classes from the first data');
+  rt.replaceFeatures(fcOf([]));
+  const fresh = new G.LayerRuntime(rangeTheme(), fcOf([]), {});
+  assert.deepEqual(rangeState(rt), rangeState(fresh));
+  assert.equal(rt.partsA, undefined);
+  assert.equal(rt._valueMax, undefined);
+});
+
+test('replaceFeatures: new numeric data is classed afresh', () => {
+  const rt = new G.LayerRuntime(rangeTheme(), fcOf([1, 5, 9]), {});
+  rt.replaceFeatures(fcOf([100, 200, 300]));
+  assert.deepEqual(rangeState(rt), rangeState(new G.LayerRuntime(rangeTheme(), fcOf([100, 200, 300]), {})));
+});

@@ -11302,6 +11302,9 @@ self.onmessage = e => {
     return Object.assign({}, binding, { value: fields.slice(0, -1).join('|') });
   }
 
+  // every runtime field computeRangeClasses sets (cleared when it has none)
+  const RANGE_CLASS_FIELDS = ['_valueMin', '_valueMax', '_valueMedian', 'partsA', '_nRangeParts',
+    'categoryLabels', 'categoryDisplayLabels', 'categoryColorsRgb', '_rangeClassed'];
   function computeRangeClasses(features, binding, style, flags, formatValue) {
     const out = {};
     // DIFFERENCE over several value fields: the difference is the value
@@ -12218,7 +12221,15 @@ self.onmessage = e => {
     }
 
     // pure: buildPartsA → see "Classification — pure functions"
-    _buildPartsA() { const r = computeRangeClasses(this.features, this.binding, this.style, this.flags, v => this._formatTooltipValue(v)); if (r) Object.assign(this, r); }
+    // No numeric value in the data: no classes — also when an earlier
+    // _prepare (replaceFeatures: refreshTheme, a re-filter, a broker's next
+    // load) left the previous data's, which used to stay (old breaks,
+    // min/max, legend labels and colours over the new records)
+    _buildPartsA() {
+      const r = computeRangeClasses(this.features, this.binding, this.style, this.flags, v => this._formatTooltipValue(v));
+      if (r) Object.assign(this, r);
+      else for (const k of RANGE_CLASS_FIELDS) this[k] = undefined;
+    }
 
     // pure versions: see "Classification — pure functions" above the class
     _evenStrideSample(sortedValues, sampleSize) { return evenStrideSample(sortedValues, sampleSize); }
