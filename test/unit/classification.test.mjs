@@ -209,3 +209,21 @@ test('replaceFeatures: new numeric data is classed afresh', () => {
   rt.replaceFeatures(fcOf([100, 200, 300]));
   assert.deepEqual(rangeState(rt), rangeState(new G.LayerRuntime(rangeTheme(), fcOf([100, 200, 300]), {})));
 });
+
+test('flatRangeParts LOG: a negative min or max still gives finite classes; the positive values are classed', () => {
+  const LOG = new Set(['LOG']);
+  const mixed = [-5, 10, 100];
+  const p = G.flatRangeParts(mixed, -5, 100, 3, LOG);
+  for (const c of p) assert.ok(Number.isFinite(c.min) && Number.isFinite(c.max), JSON.stringify(c));
+  assert.notEqual(G.resolvePartsClass(10, p), null);
+  assert.equal(G.resolvePartsClass(100, p), 2);
+  assert.equal(G.resolvePartsClass(-5, p), null); // no logarithm, as flat leaves zeros out
+  const negative = G.flatRangeParts([-9, -3], -9, -3, 3, LOG);
+  for (const c of negative) assert.ok(Number.isFinite(c.min) && Number.isFinite(c.max), JSON.stringify(c));
+});
+
+test('flatRangeParts LOG: a zero min keeps flat\'s min(0.1, max/10) start (unchanged)', () => {
+  const p = G.flatRangeParts([0, 50, 1000], 0, 1000, 4, new Set(['LOG']));
+  assert.ok(Math.abs(p[0].min - 0.1) < 1e-12);
+  assert.equal(G.resolvePartsClass(0, p), null);
+});

@@ -11106,10 +11106,14 @@ self.onmessage = e => {
     parts[parts.length - 1].max = nMax;
     // LOG (maptheme.js 13064-13078): classes evenly spaced on a log scale
     // of the RAW range (a zero min taken as min(0.1, max/10)), replacing
-    // whatever the method above made; the last max is the raw max
+    // whatever the method above made; the last max is the raw max. A
+    // negative min or max has no logarithm (flat's bounds became NaN, every
+    // record in no class): it is taken as zero, so the positive values are
+    // classed and the others stay out, as flat leaves out the zeros
     if (flags.has('LOG')) {
-      const lMin = Math.log(rawMin ? rawMin : Math.min(0.1, rawMax / 10));
-      const lStep = (Math.log(rawMax ? rawMax : 0.1) - lMin) / nParts;
+      const lMax = rawMax > 0 ? rawMax : 0.1;
+      const lMin = Math.log(rawMin > 0 ? rawMin : Math.min(0.1, lMax / 10));
+      const lStep = (Math.log(lMax) - lMin) / nParts;
       parts = new Array(nParts).fill(null).map((_, i) => ({ min: Math.exp(lMin + i * lStep), max: Math.exp(lMin + (i + 1) * lStep) }));
       parts[parts.length - 1].max = rawMax;
     }
