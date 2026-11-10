@@ -11973,10 +11973,19 @@ self.onmessage = e => {
         const explicit = Array.isArray(this.style.values) ? this.style.values
           : Array.isArray(this.style.xaxis) ? this.style.xaxis : null;
         if (explicit) {
+          this._autoCategoryField = undefined; // an explicit list is never carried over as discovered
           this.categoryLabels = explicit.map(String);
           this.categoryIndexByLabel = new Map(this.categoryLabels.map((v, i) => [v, i]));
         } else {
-          const seen = new Map();
+          // first load: flat's order of first appearance. New data for the
+          // same field (replaceFeatures: refreshTheme, a re-filter, a
+          // broker's next load) keeps the categories found before, at
+          // their index — so their colours and legend marks stay — and
+          // appends the new ones; a category gone from the data keeps its
+          // (empty) place
+          const keep = this._autoCategoryField === this.binding.value && this.categoryIndexByLabel instanceof Map;
+          const seen = keep ? new Map(this.categoryIndexByLabel) : new Map();
+          this._autoCategoryField = this.binding.value;
           this.features.forEach(f => {
             let v = f.properties[this.binding.value];
             if (typeof v === 'string') v = v.trim();   // flat: getStringValueIndex strips trailing blanks
