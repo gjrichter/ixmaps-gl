@@ -166,6 +166,23 @@ try {
   check('deferred load: the FEATURE theme gets its data once in scale', () => assert.equal(dl[1], 3));
   check('deferred load: it reloads neither its layer\'s other theme nor the data (served from the cache)', () => assert.equal(dlRequests.length - dlBefore, 0));
   await page.evaluate(async () => { ixmaps.map('rt').removeTheme('dl'); (await window.myMap).map.setZoom(12); }); await settle();
+  // ---- overlapping refreshTheme calls: the newest one's data stays, a slower older answer is dropped
+  let raceCalls = 0;
+  const raceFc = n => JSON.stringify({ type: 'FeatureCollection', features: Array.from({ length: n }, (_, i) =>
+    ({ type: 'Feature', properties: { cat: 'a', name: 'r' + i }, geometry: { type: 'Point', coordinates: [9.18 + i * 0.01, 45.452] } })) });
+  await page.route(/race\.geojson/, async route => {
+    const call = ++raceCalls;
+    if (call === 2) await new Promise(r => setTimeout(r, 2500)); // the first refresh answers late, with old data
+    await route.fulfill({ status: 200, contentType: 'application/json', body: raceFc(call === 1 ? 3 : call === 2 ? 1 : 2) });
+  });
+  await page.evaluate(() => ixmaps.map('rt').add(ixmaps.layer('race', l => l.data({ url: 'race.geojson', type: 'geojson' })
+    .binding({ geo: 'geometry', value: 'cat' }).type('CHART|DOT|CATEGORICAL|NOLEGEND').style({ colorscheme: ['#d9534f'], values: ['a'] }).meta({ name: 'race' })))); await settle();
+  const race0 = await page.evaluate(() => onMapCount('race'));
+  await page.evaluate(() => { const m = ixmaps.map('rt'); m.refreshTheme('race'); setTimeout(() => m.refreshTheme('race'), 300); });
+  await page.waitForTimeout(4500);
+  const race1 = await page.evaluate(() => onMapCount('race'));
+  check('refresh race: the newest refresh\'s data stays when an older one answers last', () => assert.deepEqual([race0, raceCalls, race1], [3, 3, 2]));
+  await page.evaluate(() => ixmaps.map('rt').removeTheme('race')); await settle();
   check('no page errors', () => assert.deepEqual(errors, []));
 } finally {
   await browser.close(); server.close();

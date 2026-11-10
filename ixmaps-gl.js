@@ -6663,9 +6663,13 @@ self.onmessage = e => {
       // (re)loads the data of the given themes and replaces their features.
       // reload: true fetches again (refreshTheme); false takes the map's data
       // cache like a first load (a scale-deferred theme coming into scale).
+      // A load a newer one for the same theme overtook is dropped when it
+      // answers (rt._loadSeq), so a slow older answer can't overwrite newer
+      // data; nor does a theme removed meanwhile get features.
       async function reloadRuntimes(targets, { reload }) {
           for (const rt of targets) {
             if (rt._named) { await loadNamedTheme(rt, reload); continue; }
+            const seq = rt._loadSeq = (rt._loadSeq || 0) + 1;
             const spec = normalizeTheme(rt._definition);
             // a WMS theme has no records to reload (see build()'s wms
             // branch) — its raster layer is re-synced by the refresh below
@@ -6674,6 +6678,7 @@ self.onmessage = e => {
               : spec.data && spec.data.obj
               ? await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions)
               : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload }).promise;
+            if (rt._loadSeq !== seq || !runtimes.includes(rt)) continue;
             // a theme loaded with a filter keeps the filter changeThemeStyle
             // set since (rt._filterExpr), not its definition's, and
             // re-filters the NEW data from now on
