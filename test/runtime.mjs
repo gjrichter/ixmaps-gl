@@ -66,6 +66,20 @@ try {
   check('filter: through the theme handle', () => assert.equal(f5, 'p1,p2'));
   const f6 = await run(() => ixmaps.changeThemeStyle(null, 'filter', 'remove'));
   check('filter: id null removes it from every theme', () => assert.equal(f6, 'p0,p1,p2'));
+  // ---- a theme loaded with .filter(): a filter changeThemeStyle set survives refreshTheme
+  await page.evaluate(() => ixmaps.map('rt').add(mkFiltered('filt', 'WHERE "cat" = "a"'))); await settle();
+  const rf0 = await page.evaluate(() => recordNames('filt'));
+  check('refresh filter: the definition\'s filter applies', () => assert.equal(rf0, 'q0'));
+  await page.evaluate(() => ixmaps.changeThemeStyle('filt', 'filter:WHERE "cat" = "b"', 'set')); await settle();
+  const rf1 = await page.evaluate(() => recordNames('filt'));
+  check('refresh filter: changeThemeStyle re-filters', () => assert.equal(rf1, 'q1,q2'));
+  await page.evaluate(() => ixmaps.map('rt').refreshTheme('filt')); await settle();
+  const rf2 = await page.evaluate(() => [recordNames('filt'), ixmaps.getThemeObj('filt').szFilter]);
+  check('refresh filter: refreshTheme keeps the runtime filter, not the definition\'s', () => assert.deepEqual(rf2, ['q1,q2', 'WHERE "cat" = "b"']));
+  await page.evaluate(() => ixmaps.changeThemeStyle('filt', 'filter', 'remove')); await settle();
+  const rf3 = await page.evaluate(() => recordNames('filt'));
+  check('refresh filter: removing it after a refresh shows every record', () => assert.equal(rf3, 'q0,q1,q2'));
+  await page.evaluate(() => ixmaps.map('rt').removeTheme('filt')); await settle();
   // ---- text on a label: a text field as the value warns, style.valuefield does not
   warnings.length = 0;
   await page.evaluate(() => ixmaps.map('rt').add(mkLabel('lab_text_value', 9.1, 'icon')));

@@ -6646,7 +6646,11 @@ self.onmessage = e => {
               : spec.data && spec.data.obj
               ? await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions)
               : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload: true }).promise;
-            rt.replaceFeatures(filterAndJoin(raw, spec, runtimes));
+            // a theme loaded with a filter keeps the filter changeThemeStyle
+            // set since (rt._filterExpr), not its definition's, and
+            // re-filters the NEW data from now on
+            if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
+            rt.replaceFeatures(filterAndJoin(raw, spec, runtimes, spec.filter ? rt._filterExpr : undefined));
             maybeZoomToTheme(rt); // a scale-deferred theme gets its first data here
           }
           if (targets.length) { refresh(); notifyRedraw(); }
@@ -6829,7 +6833,8 @@ self.onmessage = e => {
           rt._filterExpr = pspec.filter || '';
           spec = pspec;
         }
-        rt.replaceFeatures(namedThemeFeatures(spec, rows, rt._specBinding));
+        // the filter changeThemeStyle set since stays (see refreshTheme)
+        rt.replaceFeatures(namedThemeFeatures(spec, rows, rt._specBinding, spec.filter ? rt._filterExpr : undefined));
         rt._refilter = spec.filter ? expr => namedThemeFeatures(spec, rows, rt._specBinding, expr) : null;
         if (glDebug()) console.info(`[ixmaps-gl debug] data for ${themeIdOf(rt)}: ${rows.length} rows → ${rt.features.length} features`);
         // the legend is built from the theme's classes: build it again
