@@ -157,6 +157,11 @@ swaps the MapLibre projection and rebuilds the projection-dependent layers — t
 current view are never touched (unlike `setProjectJSON`, which re-defines every theme to change
 the projection and, without `"keepview"`, resets the view).
 
+Calling `ixmaps.Map()` again for a div that already holds a map shuts the old map down first —
+its MapLibre map and WebGL context, window listeners, animation loop, timers and registered themes —
+so a page may rebuild its map to switch data without piling up hidden maps. `map().destroy()` does
+the same on request (e.g. before removing the map's div from the page).
+
 `CHART|USER` themes (a page's own `userdraw` chart function) render as live SVG in a pane over
 the map, as flat renders them — vector-crisp at every zoom, labels as real text, following every
 pan via transform-only updates (≈3ms for 8,000 charts). Picking/tooltips run on a transparent

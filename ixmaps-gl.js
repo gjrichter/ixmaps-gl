@@ -3021,6 +3021,8 @@ self.onmessage = e => {
   // their Map() options name — ixmaps.map("name") is the handle of THAT
   // map, ixmaps.map() stays the last built one
   const _mapApis = Object.create(null);
+  // the shutdown of the map built in a container element (build's destroy)
+  const _mapTeardownByEl = new WeakMap();
   // resolves with the first built map's API: ixmaps.map() calls a page
   // makes while the map is still building wait for it
   let _resolveMapReady;
@@ -4295,7 +4297,7 @@ self.onmessage = e => {
   // pinned tooltip to the page and keeps it on its place while the map moves.
   // ---------------------------------------------------------------
   function createTooltips(ctx) {
-    const { builder, map, el, findRuntimeForLayerId } = ctx;
+    const { builder, map, el, findRuntimeForLayerId, disposers } = ctx;
     // the effective (rendered) dark/light probe for tooltip and legend —
     // the builder carries it so the legend look (built later, without the
     // map element at hand) can ask the same question
@@ -4630,8 +4632,10 @@ self.onmessage = e => {
       }
     }
     function mount() {
-      el.addEventListener('pointerdown', () => { contextClick = false; }, true);
-      el.addEventListener('contextmenu', () => { contextClick = true; }, true);
+      const onDown = () => { contextClick = false; }, onMenu = () => { contextClick = true; };
+      el.addEventListener('pointerdown', onDown, true);
+      el.addEventListener('contextmenu', onMenu, true);
+      if (disposers) disposers.push(() => { el.removeEventListener('pointerdown', onDown, true); el.removeEventListener('contextmenu', onMenu, true); });
       map.on('move', updatePinnedTooltipPosition);
       watchHoverTooltip();
       // anchor inside the map container: map.project() gives container-
@@ -5755,6 +5759,15 @@ self.onmessage = e => {
           : (global.innerHeight || 800) + 'px';
         document.body.appendChild(el);
       }
+      // A map built before in this div (a page switching its data by
+      // calling ixmaps.Map() again) is shut down first: its MapLibre map
+      // and WebGL context, window listeners, repaint loop and timers would
+      // otherwise live on behind the new one (see destroy below)
+      const previousMap = _mapTeardownByEl.get(el);
+      if (previousMap) previousMap();
+      // what this map attaches outside itself, undone by destroy()
+      const disposers = [];
+      const onWindow = (type, fn) => { global.addEventListener(type, fn); disposers.push(() => global.removeEventListener(type, fn)); };
       // flat's init replaces the container's content with its own map page
       // (mappage.html via innerHTML), so a page's placeholder inside the
       // map div ("connecting to Internet ...", the fuel-price page) goes
@@ -5787,7 +5800,7 @@ self.onmessage = e => {
       if (!(this.mapOptions && this.mapOptions.height) && !el.clientHeight) {
         this._heightFallbackToWindow = true;
         el.style.height = (global.innerHeight || 800) + 'px';
-        global.addEventListener('resize', () => {
+        onWindow('resize', () => {
           if (this._heightFallbackToWindow) el.style.height = (global.innerHeight || 800) + 'px';
         });
       }
@@ -6111,7 +6124,7 @@ self.onmessage = e => {
       }
 
       // hover / click-to-pin tooltips: createTooltips
-      const tooltips = createTooltips({ builder: this, map, el, findRuntimeForLayerId });
+      const tooltips = createTooltips({ builder: this, map, el, findRuntimeForLayerId, disposers });
 
       const overlay = new MapLibreOverlay({
         interleaved: true,
@@ -7536,7 +7549,7 @@ self.onmessage = e => {
       }
 
       map.on('move', scheduleRefresh);
-      window.addEventListener('resize', () => map.resize());
+      onWindow('resize', () => map.resize());
 
       // GL-PORT COMPAT: real ixmaps-flat's map.on("layerdraw", cb) fires
       // once per THEME as it finishes drawing, handing the callback an
@@ -7567,7 +7580,28 @@ self.onmessage = e => {
           quietRefresh: () => { refreshLayers(); } }));
 
       _lastMapApi = engineApi;
-      if (this.mapOptions && this.mapOptions.name) _mapApis[this.mapOptions.name] = engineApi;
+      const ownName = this.mapOptions && this.mapOptions.name;
+      if (ownName) _mapApis[ownName] = engineApi;
+      // shuts this map down for good: the repaint loop and timers stop, its
+      // window and container listeners go, the MapLibre map is removed (its
+      // map.on handlers, the deck.gl overlay and the WebGL context with it),
+      // and its themes and name leave the global registries. Run by a new
+      // ixmaps.Map() in the same div, or by the page (map.destroy()).
+      let destroyed = false;
+      const destroy = () => {
+        if (destroyed) return;
+        destroyed = true;
+        if (_flowRepaintRAF != null) { global.cancelAnimationFrame(_flowRepaintRAF); _flowRepaintRAF = null; }
+        if (loadingTimer) { clearInterval(loadingTimer); loadingTimer = null; }
+        disposers.splice(0).forEach(d => { try { d(); } catch (e) { /* already gone */ } });
+        for (const [k, v] of [..._globalThemeRegistry]) if (runtimes.includes(v)) _globalThemeRegistry.delete(k);
+        if (ownName && _mapApis[ownName] === engineApi) delete _mapApis[ownName];
+        if (_lastMapApi === engineApi) _lastMapApi = null;
+        try { map.remove(); } catch (e) { /* already removed */ }
+        if (_mapTeardownByEl.get(el) === destroy) _mapTeardownByEl.delete(el);
+      };
+      engineApi.destroy = destroy;
+      _mapTeardownByEl.set(el, destroy);
       // ?ixgl-debug: ixmaps.__glDebug.check() reports, for the moment it is
       // called, every theme's geometry problems (invalid or mixed-dimension
       // coordinates, a shape far larger than the theme's others) and what
@@ -7647,7 +7681,7 @@ self.onmessage = e => {
   for (const m of ['replace', 'add', 'newTheme', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
     'refreshTheme', 'redrawTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize',
     'loadProject', 'project', 'setThemeVisible', 'switchLayer', 'setThemeTimeFrame', 'show', 'hide', 'getZoom', 'getThemeObj',
-    'getThemes', 'theme', 'setView']) {
+    'getThemes', 'theme', 'setView', 'destroy']) {
     if (!MapBuilder.prototype[m]) {
       MapBuilder.prototype[m] = function (...args) {
         return mapHandle(this.mapOptions && this.mapOptions.name)[m](...args);
@@ -18581,7 +18615,7 @@ self.onmessage = e => {
   // last built map; called while the map is still building, they run once
   // it is ready.
   const MAP_HANDLE_METHODS = ['replace', 'add', 'newTheme', 'remove', 'removeTheme', 'replaceTheme', 'changeThemeStyle', 'setThemeStyle',
-    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'switchLayer', 'setThemeTimeFrame', 'attribution', 'on', 'off'];
+    'refreshTheme', 'setBasemapOpacity', 'setMapType', 'setMapTypeId', 'mapType', 'setProjection', 'resize', 'view', 'options', 'layer', 'loadProject', 'require', 'setThemeVisible', 'switchLayer', 'setThemeTimeFrame', 'attribution', 'on', 'off', 'destroy'];
   const _mapHandles = Object.create(null);
   function makeMapHandle(szMap) {
     const h = {};

@@ -9,7 +9,8 @@
     "test": "node --test 'unit/*.test.mjs' && node run.mjs",
     "events": "node events.mjs",
     "runtime": "node runtime.mjs",
-    "tools": "node tools.mjs"
+    "tools": "node tools.mjs",
+    "teardown": "node teardown.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

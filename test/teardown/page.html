@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>map re-created in one div</title>
+<script src="../../ixmaps-gl.js"></script>
+<style>html, body { margin: 0; height: 100%; } #map_div { position: absolute; inset: 0; }</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  // a map with a point theme and an animated (dashed) flow theme, built again in the same div on every call
+  window.buildMap = function (k) {
+    var pts = { type: "FeatureCollection", features: [{ type: "Feature", properties: { cat: "a", name: "p" + k }, geometry: { type: "Point", coordinates: [9.2, 45.46] } }] };
+    window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "white", name: "td" }, function (map) {
+      return map.view([45.46, 9.2], 11)
+        .layer(ixmaps.layer("pts", function (l) {
+          return l.data({ obj: pts, type: "geojson" }).binding({ geo: "geometry", value: "cat" }).type("CHART|DOT|CATEGORICAL|NOLEGEND")
+            .style({ colorscheme: ["#d9534f"], values: ["a"], scale: 3 }).meta({ name: "pts" });
+        }))
+        .layer(ixmaps.layer("flows", function (l) {
+          return l.data({ url: "flows.csv", type: "csv" }).binding({ position: "lat|lon", position2: "lat2|lon2", size: "n" })
+            .type("CHART|VECTOR|DASH|NOLEGEND").style({ colorscheme: ["#3d8be8"], linewidth: 4 }).meta({ name: "flows" });
+        }));
+    });
+    return true;
+  };
+</script>
+</body>
+</html>

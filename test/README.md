@@ -16,6 +16,7 @@ node run.mjs --jobs 4            # pages in parallel (default 2); a full run tak
 npm run events                   # live check of map.on/off events (headless Chromium, needs network)
 npm run runtime                  # live check of adding themes to a built map and of runtime filtering
 npm run tools                    # live check of the theme tools add-on (ixmaps-gl-tools.js)
+npm run teardown                 # live check of a map built again in the same div, and of map.destroy()
 ```
 
 The first run needs network access: it records remote data into `.cache/` (see below).
