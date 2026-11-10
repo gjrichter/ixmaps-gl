@@ -11418,7 +11418,9 @@ self.onmessage = e => {
       const nAlpha = ctx._alphaByFeature.get(f);
       if (nAlpha == null) return null;
       let nOpacity = scale / Math.pow(ctx._alphaMax || 1, pow) * Math.pow(nAlpha, pow);
-      if (nOpacity < 0.0001) nOpacity = 0;
+      // a negative alpha under a dopacitypow is NaN (Math.pow): no opacity,
+      // as a negative alpha already gets without a pow
+      if (!(nOpacity >= 0.0001)) nOpacity = 0;
       return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
     }
     if (isNaN(value) || ctx._valueMin == null) return null;
@@ -11437,7 +11439,7 @@ self.onmessage = e => {
       nOpacity = (value - nMin) / ((nMedian - nMin) || 1) * 0.5;
     }
     nOpacity *= baseOpacity * scale;
-    if (nOpacity < 0.0001) nOpacity = 0;
+    if (!(nOpacity >= 0.0001)) nOpacity = 0;
     return Math.max(0, Math.min(baseOpacity || 0.9, nOpacity));
   }
 

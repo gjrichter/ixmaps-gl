@@ -147,6 +147,16 @@ test('resolveDopacityAlpha: DOPACITYMAX is linear from min to max, capped at the
   assert.equal(G.resolveDopacityAlpha(ctx, null, NaN, 0.8), null);
 });
 
+test('resolveDopacityAlpha: a negative alpha under a dopacitypow is no opacity (0), not NaN', () => {
+  const f = {}, g = {};
+  const ctx = { style: { dopacitypow: 2 }, binding: { alpha: 'a' }, flags: flags(), _alphaMax: 16, _alphaByFeature: new Map([[f, -4], [g, 4]]) };
+  assert.equal(G.resolveDopacityAlpha(ctx, f, 0, 0.8), 0);
+  // a positive alpha is unchanged: 1 / sqrt(16) * sqrt(4) = 0.5
+  assert.equal(G.resolveDopacityAlpha(ctx, g, 0, 0.8), 0.5);
+  // without a pow a negative alpha already gave 0
+  assert.equal(G.resolveDopacityAlpha({ ...ctx, style: {} }, f, 0, 0.8), 0);
+});
+
 test('resolveDopacityAlpha with an alpha binding reads the precomputed per-feature alpha', () => {
   const f = feat({});
   const ctx = { style: {}, binding: { alpha: 'x' }, flags: flags(), _alphaByFeature: new WeakMap([[f, 5]]), _alphaMax: 10 };
