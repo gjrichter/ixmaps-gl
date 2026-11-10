@@ -1,0 +1,1083 @@
+{
+ "page": "examples/bubble_maxcharts_labelfield.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.2,
+     45.45
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-bubbles-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 3,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "b9c73a411ef9bb16",
+     "setDigest": "b9c73a411ef9bb16",
+     "columnDigests": {
+      "getFillColor": "34f9b6776ae42092",
+      "getLineColor": "2da68f4520a026eb",
+      "getLineWidth": "cffb57f282df1536",
+      "getPosition": "5223c800b520779c",
+      "getRadius": "05720faab96a1497"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       61
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.23,
+       9.35
+      ],
+      "getRadius": [
+       171.896435,
+       210.529277
+      ]
+     },
+     "sample": [
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.23,
+        45.45
+       ],
+       171.896435
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.29,
+        45.45
+       ],
+       192.186057
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.35,
+        45.45
+       ],
+       210.529277
+      ]
+     ]
+    },
+    {
+     "id": "ix-points-values-bubbles",
+     "type": "TextLayer",
+     "count": 2,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "fontWeight": "bold",
+      "getAlignmentBaseline": "center",
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "7be732d2e686c165",
+     "setDigest": "7be732d2e686c165",
+     "columnDigests": {
+      "getColor": "296cfe62a3892612",
+      "getPixelOffset": "29b1dec88da8b9cb",
+      "getPosition": "75f95efddaa9e58e",
+      "getSize": "0f82637163d93fe9",
+      "getText": "f0a88eec6b71cf36"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.29,
+       9.35
+      ],
+      "getSize": [
+       153.748845,
+       168.423422
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        38
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.29,
+        45.45
+       ],
+       153.748845,
+       "50"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.35,
+        45.45
+       ],
+       168.423422,
+       "60"
+      ]
+     ]
+    },
+    {
+     "id": "ix-labels-bubbles",
+     "type": "TextLayer",
+     "count": 3,
+     "constants": {
+      "background": true,
+      "backgroundPadding": [
+       17.544106,
+       7.017643
+      ],
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "center",
+      "getBackgroundColor": [
+       255,
+       255,
+       255,
+       102
+      ],
+      "getColor": [
+       0,
+       0,
+       0,
+       179
+      ],
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "6445314e6cc2e8f7",
+     "setDigest": "c1e01faf8ffeca97",
+     "columnDigests": {
+      "getPixelOffset": "786c3f0b57e2cb3b",
+      "getPosition": "5223c800b520779c",
+      "getSize": "47c771415dc0be66",
+      "getText": "d9df3b8c07725eb4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       70.176426,
+       105.264639
+      ],
+      "getPosition": [
+       9.23,
+       9.35
+      ],
+      "getSize": [
+       70.176426,
+       70.176426
+      ]
+     },
+     "sample": [
+      [
+       [
+        81.872497,
+        240.903254
+       ],
+       [
+        9.23,
+        45.45
+       ],
+       70.176426,
+       "Delta"
+      ],
+      [
+       [
+        105.264639,
+        261.192875
+       ],
+       [
+        9.29,
+        45.45
+       ],
+       70.176426,
+       "Epsilon"
+      ],
+      [
+       [
+        70.176426,
+        279.536096
+       ],
+       [
+        9.35,
+        45.45
+       ],
+       70.176426,
+       "Zeta"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "bubbles",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "SIZE",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 60.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 60.0016,
+       "min": 10
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 60,
+     "valueMedian": 30,
+     "maxSizeValue": 60
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "bubbles": [
+     "<b>Delta</b>: 40.00",
+     "<b>Epsilon</b>: 50.00",
+     "<b>Zeta</b>: 60.00"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 11,
+    "center": [
+     9.2,
+     45.45
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-bubbles-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 3,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "886ac1eac3715918",
+     "setDigest": "886ac1eac3715918",
+     "columnDigests": {
+      "getFillColor": "34f9b6776ae42092",
+      "getLineColor": "2da68f4520a026eb",
+      "getLineWidth": "cffb57f282df1536",
+      "getPosition": "5223c800b520779c",
+      "getRadius": "5629dadc6b791287"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       61
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.23,
+       9.35
+      ],
+      "getRadius": [
+       216.575937,
+       265.250268
+      ]
+     },
+     "sample": [
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.23,
+        45.45
+       ],
+       216.575937
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.29,
+        45.45
+       ],
+       242.139259
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.35,
+        45.45
+       ],
+       265.250268
+      ]
+     ]
+    },
+    {
+     "id": "ix-points-values-bubbles",
+     "type": "TextLayer",
+     "count": 3,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "fontWeight": "bold",
+      "getAlignmentBaseline": "center",
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "583c724c2a08ebde",
+     "setDigest": "583c724c2a08ebde",
+     "columnDigests": {
+      "getColor": "ee15e8a140ac7987",
+      "getPixelOffset": "e0ffd1920c9cc044",
+      "getPosition": "5223c800b520779c",
+      "getSize": "cce3239a6a33f72a",
+      "getText": "1f92eb80618860a2"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.23,
+       9.35
+      ],
+      "getSize": [
+       173.260749,
+       212.200214
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        125
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.23,
+        45.45
+       ],
+       173.260749,
+       "40"
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        38
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.29,
+        45.45
+       ],
+       193.711407,
+       "50"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.35,
+        45.45
+       ],
+       212.200214,
+       "60"
+      ]
+     ]
+    },
+    {
+     "id": "ix-labels-bubbles",
+     "type": "TextLayer",
+     "count": 3,
+     "constants": {
+      "background": true,
+      "backgroundPadding": [
+       22.104189,
+       8.841676
+      ],
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "center",
+      "getBackgroundColor": [
+       255,
+       255,
+       255,
+       102
+      ],
+      "getColor": [
+       0,
+       0,
+       0,
+       179
+      ],
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "fa24c792adc14c2d",
+     "setDigest": "fa24c792adc14c2d",
+     "columnDigests": {
+      "getPixelOffset": "675515141d0d0d2c",
+      "getPosition": "5223c800b520779c",
+      "getSize": "4313bcf75c542a0d",
+      "getText": "d9df3b8c07725eb4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       88.416756,
+       132.625134
+      ],
+      "getPosition": [
+       9.23,
+       9.35
+      ],
+      "getSize": [
+       88.416756,
+       88.416756
+      ]
+     },
+     "sample": [
+      [
+       [
+        103.152882,
+        303.51908
+       ],
+       [
+        9.23,
+        45.45
+       ],
+       88.416756,
+       "Delta"
+      ],
+      [
+       [
+        132.625134,
+        329.082402
+       ],
+       [
+        9.29,
+        45.45
+       ],
+       88.416756,
+       "Epsilon"
+      ],
+      [
+       [
+        88.416756,
+        352.193411
+       ],
+       [
+        9.35,
+        45.45
+       ],
+       88.416756,
+       "Zeta"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "bubbles",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "SIZE",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 60.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 60.0016,
+       "min": 10
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 60,
+     "valueMedian": 30,
+     "maxSizeValue": 60
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "bubbles": [
+     "<b>Delta</b>: 40.00",
+     "<b>Epsilon</b>: 50.00",
+     "<b>Zeta</b>: 60.00"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.2,
+     45.45
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-bubbles-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 3,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": false
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "1e32300c41d0c22a",
+     "setDigest": "1e32300c41d0c22a",
+     "columnDigests": {
+      "getFillColor": "34f9b6776ae42092",
+      "getLineColor": "2da68f4520a026eb",
+      "getLineWidth": "cffb57f282df1536",
+      "getPosition": "5223c800b520779c",
+      "getRadius": "5196164182fc7889"
+     },
+     "stats": {
+      "getFillColor": [
+       61,
+       61
+      ],
+      "getLineColor": [
+       0,
+       0
+      ],
+      "getLineWidth": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.23,
+       9.35
+      ],
+      "getRadius": [
+       136.434291,
+       167.097198
+      ]
+     },
+     "sample": [
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.23,
+        45.45
+       ],
+       136.434291
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.29,
+        45.45
+       ],
+       152.538174
+      ],
+      [
+       [
+        61,
+        139,
+        232,
+        217
+       ],
+       [
+        0,
+        0,
+        0,
+        255
+       ],
+       0,
+       [
+        9.35,
+        45.45
+       ],
+       167.097198
+      ]
+     ]
+    },
+    {
+     "id": "ix-points-values-bubbles",
+     "type": "TextLayer",
+     "count": 2,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "fontWeight": "bold",
+      "getAlignmentBaseline": "center",
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "09fb5ecac4485fa5",
+     "setDigest": "09fb5ecac4485fa5",
+     "columnDigests": {
+      "getColor": "296cfe62a3892612",
+      "getPixelOffset": "29b1dec88da8b9cb",
+      "getPosition": "75f95efddaa9e58e",
+      "getSize": "8a292615bc83ef31",
+      "getText": "f0a88eec6b71cf36"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPixelOffset": [
+       0,
+       0
+      ],
+      "getPosition": [
+       9.29,
+       9.35
+      ],
+      "getSize": [
+       122.03054,
+       133.677758
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        38
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.29,
+        45.45
+       ],
+       122.03054,
+       "50"
+      ],
+      [
+       [
+        255,
+        255,
+        255
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        9.35,
+        45.45
+       ],
+       133.677758,
+       "60"
+      ]
+     ]
+    },
+    {
+     "id": "ix-labels-bubbles",
+     "type": "TextLayer",
+     "count": 3,
+     "constants": {
+      "background": true,
+      "backgroundPadding": [
+       13.924767,
+       5.569907
+      ],
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "center",
+      "getBackgroundColor": [
+       255,
+       255,
+       255,
+       102
+      ],
+      "getColor": [
+       0,
+       0,
+       0,
+       179
+      ],
+      "getTextAnchor": "middle",
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText"
+     ],
+     "digest": "67e5722b94a2641d",
+     "setDigest": "ebe32460cad8895f",
+     "columnDigests": {
+      "getPixelOffset": "9a58ab5aa8f23559",
+      "getPosition": "5223c800b520779c",
+      "getSize": "00c20cff8c27f7bb",
+      "getText": "d9df3b8c07725eb4"
+     },
+     "stats": {
+      "getPixelOffset": [
+       55.699066,
+       83.548599
+      ],
+      "getPosition": [
+       9.23,
+       9.35
+      ],
+      "getSize": [
+       55.699066,
+       55.699066
+      ]
+     },
+     "sample": [
+      [
+       [
+        64.982244,
+        191.205039
+       ],
+       [
+        9.23,
+        45.45
+       ],
+       55.699066,
+       "Delta"
+      ],
+      [
+       [
+        83.548599,
+        207.308923
+       ],
+       [
+        9.29,
+        45.45
+       ],
+       55.699066,
+       "Epsilon"
+      ],
+      [
+       [
+        55.699066,
+        221.867946
+       ],
+       [
+        9.35,
+        45.45
+       ],
+       55.699066,
+       "Zeta"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "bubbles",
+     "flags": [
+      "BUBBLE",
+      "CHART",
+      "SIZE",
+      "SYMBOL",
+      "VALUES"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "10.00 - 60.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       61,
+       139,
+       232
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 60.0016,
+       "min": 10
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 10,
+     "valueMax": 60,
+     "valueMedian": 30,
+     "maxSizeValue": 60
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "bubbles": [
+     "<b>Delta</b>: 40.00",
+     "<b>Epsilon</b>: 50.00",
+     "<b>Zeta</b>: 60.00"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

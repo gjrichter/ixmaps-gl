@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>maxcharts · labelfield</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.42/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>maxcharts · labelfield</b>
+  <span>Six bubbles with a name label, maxcharts 3: only the three biggest bubbles are drawn, and only they carry a label.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data: six items in a row, sizes 10..60
+  var rows = [["Alpha", 10], ["Beta", 20], ["Gamma", 30], ["Delta", 40], ["Epsilon", 50], ["Zeta", 60]];
+  var data = { type: "FeatureCollection", features: rows.map(function (r, i) { return {
+    type: "Feature", properties: { name: r[0], n: r[1] },
+    geometry: { type: "Point", coordinates: [9.05 + i * 0.06, 45.45] } }; }) };
+  var bubbles = ixmaps.layer("bubbles", layer => layer
+    .data({ obj: data, type: "geojson" })
+    .binding({ geo: "geometry", value: "n", title: "name" })
+    .type("CHART|BUBBLE|SIZE|VALUES")
+    .style({ colorscheme: ["#3d8be8"], scale: "1.5", labelfield: "name", maxcharts: 3, showdata: "true" })
+    .meta({ title: "bubbles", tooltip: "<b>{{name}}</b>: {{n}}" })
+  );
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([45.45, 9.2], 11).layer(bubbles)
+  );
+</script>
+</body>
+</html>

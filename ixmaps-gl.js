@@ -16149,8 +16149,11 @@ self.onmessage = e => {
         const labelFontPx = 5 * unitPx * (styleNum(this.style.textscale) || 1);
         if (labelFontPx > VALUES_MIN_FONT_PX) {
           const labelData = [];
+          // as the VALUES texts above: an item maxcharts / minvalue left
+          // out draws no chart, so no label either
+          const drawn = new Set(combined);
           for (const d of individual) {
-            if (!d.properties || !d.properties.raw) continue;
+            if (!d.properties || !d.properties.raw || !drawn.has(d)) continue;
             // _chartLabelFn: text, and its place below-right of the chart
             const l = labelOf(d, radiusOf(d));
             if (!l) continue;
