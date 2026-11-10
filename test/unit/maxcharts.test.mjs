@@ -38,3 +38,27 @@ test('maxcharts is rounded as flat (Math.round)', () => {
   applyFlatMaxCharts(list, { maxcharts: 1.6 });
   assert.deepEqual([...list], [4, 5]);
 });
+
+// flatSortCharts: flat's draw-order sort (maptheme.js 16774-16870), shared by
+// the pie, bar and vector builders — only numeric keys take part, as flat
+// builds its draw list from them; ascending (biggest drawn last) or, for
+// SORT|UP, descending; stable for equal keys
+const { flatSortCharts } = win.__ixmapsGlInternals;
+const ids = list => list.map(c => c.id).join(',');
+
+test('flatSortCharts: ascending by key, in place; descending when down', () => {
+  const list = [{ id: 'a', key: 3 }, { id: 'b', key: 1 }, { id: 'c', key: 2 }];
+  assert.equal(flatSortCharts(list, c => c.key, false), list);
+  assert.equal(ids(list), 'b,c,a');
+  assert.equal(ids(flatSortCharts(list, c => c.key, true)), 'a,c,b');
+});
+
+test('flatSortCharts: a chart without a numeric key (blank size or value) is left out, as flat', () => {
+  const list = [{ id: 'a', key: 3 }, { id: 'b', key: NaN }, { id: 'c', key: undefined }, { id: 'd', key: 1 }];
+  assert.equal(ids(flatSortCharts(list, c => c.key, false)), 'd,a');
+});
+
+test('flatSortCharts: equal keys keep their order', () => {
+  const list = [{ id: 'a', key: 1 }, { id: 'b', key: 0 }, { id: 'c', key: 1 }, { id: 'd', key: 1 }];
+  assert.equal(ids(flatSortCharts(list, c => c.key, false)), 'b,a,c,d');
+});

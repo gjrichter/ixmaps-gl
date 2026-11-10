@@ -8510,6 +8510,21 @@ self.onmessage = e => {
   // nToDraw − nMaxCharts, so only the biggest maxcharts are drawn — for
   // every chart type (symbols, pies, bars, VECTOR/BEZIER). In place, on the
   // already sorted list of charts to draw
+  // flat's draw-order sort of a theme's charts (maptheme.js 16774-16870),
+  // in place: only charts with a numeric key take part, since flat builds
+  // its draw list from them (a blank size or value is left out); ascending,
+  // so the biggest is drawn last (on top), or descending for SORT|UP. A
+  // stable sort: equal keys keep their order. Shared by the pie, bar and
+  // vector builders, which used to differ on blank keys (pie and bar kept
+  // them in an undefined order, vector left them out).
+  function flatSortCharts(list, keyOf, down) {
+    const keyed = [];
+    for (const d of list) { const k = keyOf(d); if (!isNaN(k)) keyed.push({ d, k }); }
+    keyed.sort((a, b) => (down ? b.k - a.k : a.k - b.k));
+    list.length = 0;
+    for (const x of keyed) list.push(x.d);
+    return list;
+  }
   function applyFlatMaxCharts(list, style) {
     const n = Math.round(styleNum(style && style.maxcharts)) || 0;
     if (n > 0 && list.length > n) list.splice(0, list.length - n);
@@ -16875,8 +16890,7 @@ self.onmessage = e => {
       if (((this._valueMin !== this._valueMax) || this.binding.size) && !has(/NOSRT/)
         && (!has(/NOSIZE/) || has(/\bSORT\b/))
         && (!has(/CATEGORICAL/) || has(/AGGREGATE/) || this.binding.size || has(/\bSORT\b/))) {
-        const down = has(/\bSORT\b/) && has(/\bUP\b/);
-        charts.sort((a, b) => (down ? b.key - a.key : a.key - b.key) || 0);
+        flatSortCharts(charts, ch => ch.key, has(/\bSORT\b/) && has(/\bUP\b/));
       }
       applyFlatMaxCharts(charts, st);
       // align / offsetx / offsety (flatChartAlignOffset) — flat's PIE
@@ -17363,8 +17377,7 @@ self.onmessage = e => {
       if (((this._valueMin !== this._valueMax) || this.binding.size) && !has(/NOSRT/)
         && (!has(/NOSIZE/) || has(/\bSORT\b/))
         && (!has(/CATEGORICAL/) || has(/AGGREGATE/) || this.binding.size || has(/\bSORT\b/))) {
-        const down = has(/\bSORT\b/) && has(/\bUP\b/);
-        charts.sort((a, b) => (down ? b.key - a.key : a.key - b.key) || 0);
+        flatSortCharts(charts, ch => ch.key, has(/\bSORT\b/) && has(/\bUP\b/));
       }
       applyFlatMaxCharts(charts, st);
 
@@ -17746,10 +17759,7 @@ self.onmessage = e => {
         && (!this.flags.has('CATEGORICAL') || this.flags.has('AGGREGATE') || sized || has(/\bSORT\b/))) {
         const key = (sized || (this.flags.has('AGGREGATE') && has(/SUM/))) ? (it => it.nSize)
           : (this._vectorCategorical ? (it => (it.cat != null && it.cat >= 0 ? it.cat + 1 : 0)) : (it => it.value));
-        const keyed = items.map(it => ({ it, y: key(it) })).filter(d => !isNaN(d.y));
-        const down = has(/\bSORT\b/) && has(/\bUP\b/);
-        keyed.sort((a, b) => (down ? b.y - a.y : a.y - b.y));
-        order = keyed.map(d => d.it);
+        order = flatSortCharts(items.slice(), key, has(/\bSORT\b/) && has(/\bUP\b/));
       }
       // the flows that would be drawn (as the loop below draws them), of
       // which flat keeps the biggest maxcharts
@@ -19270,7 +19280,7 @@ self.onmessage = e => {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     splitMapEvents, getBounds, chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     dataSourceKey, themeDataSourceKey,
