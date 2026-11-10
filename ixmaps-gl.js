@@ -977,6 +977,18 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       // DISS page's 5 layers of one file)
       object: d.object });
   }
+  // a theme's rt._dataSourceKey, for the Map() build and for themes added
+  // later alike: named data and WMS (no records) and in-memory .obj data are
+  // their own; a theme deferred while out of scale is keyed by its data like
+  // any loaded theme (it loads that same data once in scale), so a facet
+  // filter reaches it whether or not it was in scale when the page loaded
+  function themeDataSourceKey(spec, { named, wms, deferred, sourceKey } = {}) {
+    if (named) return 'name:' + spec.data.name;
+    if (wms) return 'wms:' + spec.name;
+    if (spec.data && spec.data.obj) return 'obj:' + spec.name;
+    if (deferred) return dataSourceKey(spec.data);
+    return sourceKey;
+  }
   function dataCacheKey(data, binding) {
     const b = binding || {};
     return dataSourceKey(data) + '|' + (b.lookup && !b.position ? 'table' : 'pos:' + (b.position || ''));
@@ -5917,15 +5929,14 @@ self.onmessage = e => {
         const wms = spec.flags.has('WMS') || spec.flags.has('IMAGE');
         if (deferred || named || wms) {
           raw = { type: 'FeatureCollection', features: [] };
-          cacheKey = named ? 'name:' + spec.data.name : wms ? 'wms:' + spec.name : 'deferred:' + spec.name;
         } else if (spec.data && spec.data.obj) {
           raw = await fetchLayerData(spec.data, spec.binding, this._engineOptions);
-          cacheKey = 'obj:' + spec.name;
         } else {
           const cached = cachedLayerData(dataCache, spec.data, spec.binding, this._engineOptions);
           cacheKey = cached.sourceKey;
           raw = await cached.promise;
         }
+        cacheKey = themeDataSourceKey(spec, { named, wms, deferred, sourceKey: cacheKey });
         const { rt, fc } = newThemeRuntime(def, spec, raw, this._engineOptions, { deferred, named, dataSourceKey: cacheKey });
         runtimes.push(rt);
         if (fc._sphere) sphereBackdrops.push(rt.style);
@@ -6924,13 +6935,8 @@ self.onmessage = e => {
           sourceKey = cached.sourceKey;
           raw = await cached.promise;
         }
-        // an in-memory (.obj) theme is its own data, keyed by its name as
-        // in build(): a JSON key of {url, …, obj:true} is the same for
-        // every .obj theme, which made their facet filters spread
-        const dataSourceKey = named ? 'name:' + spec.data.name
-          : spec.data && spec.data.obj ? 'obj:' + spec.name
-          : sourceKey || JSON.stringify({ url: spec.data && spec.data.url, urls: spec.data && spec.data.urls, type: spec.data && spec.data.type, query: spec.data && spec.data.query, obj: !!(spec.data && spec.data.obj) });
-        const { rt, fc } = newThemeRuntime(pdef, spec, raw, builder._engineOptions, { deferred, named, dataSourceKey });
+        const { rt, fc } = newThemeRuntime(pdef, spec, raw, builder._engineOptions,
+          { deferred, named, dataSourceKey: themeDataSourceKey(spec, { named, wms, deferred, sourceKey }) });
         // a replacement keeps the stacking position (draw order, legend order) of the theme it replaces:
         // it goes in front of the theme that followed the old one, still on the map after the await above
         const slotAt = slot && slot.anchor ? runtimes.indexOf(slot.anchor) : -1;
@@ -19245,6 +19251,7 @@ self.onmessage = e => {
     IXMAPS_GL_VERSION, applyFlatMaxCharts, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     splitMapEvents, getBounds, chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
+    dataSourceKey, themeDataSourceKey,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
     computeAlphaStats, computeMultiFieldClasses, computeDominantStats, resolveDominantClass, computeComposeColorStats,
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,

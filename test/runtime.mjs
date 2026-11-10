@@ -135,6 +135,20 @@ try {
   // a theme from the Map()'s own definition (build path) is registered like a runtime one
   const lcBase = await page.evaluate(() => { const t = ixmaps.getThemeObj('base'); return t && [t.szId, t.szName]; });
   check('lifecycle: the base theme is registered', () => assert.deepEqual(lcBase, ['base', 'base']));
+  // ---- a FEATURE theme out of scale at load shares its URL's data: a facet filter on a chart of that URL reaches it
+  await page.evaluate(() => {
+    const m = ixmaps.map('rt');
+    const url = { url: 'pts.geojson', type: 'geojson' };
+    m.add(ixmaps.layer('dchart', l => l.data(url).binding({ geo: 'geometry', value: 'cat' }).type('CHART|DOT|CATEGORICAL|NOLEGEND')
+      .style({ colorscheme: ['#d9534f', '#428bca'], values: ['a', 'b'] }).meta({ name: 'dchart' })));
+    m.add(ixmaps.layer('dfeat', l => l.data(url).binding({ geo: 'geometry' }).type('FEATURE|NOLEGEND')
+      .style({ fillcolor: '#888', featureupper: '1:30000' }).meta({ name: 'dfeat' })));
+  }); await settle();
+  await page.evaluate(() => window.__setFacetFilter('dchart', 'cat', 'a')); await settle();
+  await page.evaluate(async () => (await window.myMap).map.setZoom(14)); await page.waitForTimeout(4000);
+  const dk = await page.evaluate(() => [onMapCount('dchart'), onMapCount('dfeat')]);
+  check('deferred theme: a facet filter on a same-URL chart reaches a FEATURE theme loaded once in scale', () => assert.deepEqual(dk, [1, 1]));
+  await page.evaluate(async () => { ixmaps.map('rt').removeTheme('dchart'); ixmaps.map('rt').removeTheme('dfeat'); (await window.myMap).map.setZoom(12); }); await settle();
   check('no page errors', () => assert.deepEqual(errors, []));
 } finally {
   await browser.close(); server.close();
