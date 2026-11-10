@@ -183,6 +183,32 @@ try {
   const race1 = await page.evaluate(() => onMapCount('race'));
   check('refresh race: the newest refresh\'s data stays when an older one answers last', () => assert.deepEqual([race0, raceCalls, race1], [3, 3, 2]));
   await page.evaluate(() => ixmaps.map('rt').removeTheme('race')); await settle();
+  // ---- two overlapping define()s of one theme id: one theme, the newer definition's
+  let sdCalls = 0;
+  await page.route(/samedef\.geojson/, async route => {
+    const call = ++sdCalls;
+    if (call === 1) await new Promise(r => setTimeout(r, 2500)); // the first define's data answers late
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ type: 'FeatureCollection',
+      features: Array.from({ length: call }, (_, i) => ({ type: 'Feature', properties: { cat: 'a', name: 's' + i }, geometry: { type: 'Point', coordinates: [9.18 + i * 0.01, 45.458] } })) }) });
+  });
+  await page.evaluate(() => {
+    const def = q => window.myMap.layer('samedef').data({ url: 'samedef.geojson?' + q, type: 'geojson' }).binding({ geo: 'geometry', value: 'cat' })
+      .type('CHART|DOT|CATEGORICAL|NOLEGEND').style({ colorscheme: ['#d9534f'], values: ['a'] }).meta({ name: 'samedef' }).define();
+    def(1); setTimeout(() => def(2), 300);
+  });
+  await page.waitForTimeout(4500);
+  const sd = await page.evaluate(async () => { const api = await window.myMap; return [api.runtimes.filter(r => r.name === 'samedef').length, onMapCount('samedef')]; });
+  check('same-id define: overlapping define()s leave one theme, with the newer definition\'s data', () => assert.deepEqual(sd, [1, 2]));
+  // ---- a re-define whose data fails to load leaves the theme it would replace on the map
+  await page.route(/samedef_fail\.geojson/, route => route.fulfill({ status: 404, body: 'not found' }));
+  await page.evaluate(() => window.myMap.layer('samedef').data({ url: 'samedef_fail.geojson', type: 'geojson' }).binding({ geo: 'geometry', value: 'cat' })
+    .type('CHART|DOT|CATEGORICAL|NOLEGEND').style({ colorscheme: ['#d9534f'], values: ['a'] }).meta({ name: 'samedef' }).define().catch(() => {}));
+  await page.waitForTimeout(2500);
+  const sdFail = await page.evaluate(async () => { const api = await window.myMap; return [api.runtimes.filter(r => r.name === 'samedef').length, onMapCount('samedef')]; });
+  check('same-id define: a failed re-define keeps the existing theme', () => assert.deepEqual(sdFail, [1, 2]));
+  await page.evaluate(() => ixmaps.map('rt').removeTheme('samedef')); await settle();
+  // the deliberately failed load may report a page error of its own; any other error still counts
+  for (let i = errors.length - 1; i >= 0; i--) if (/samedef_fail|404/.test(errors[i])) errors.splice(i, 1);
   check('no page errors', () => assert.deepEqual(errors, []));
 } finally {
   await browser.close(); server.close();

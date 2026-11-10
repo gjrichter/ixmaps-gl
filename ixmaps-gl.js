@@ -6922,14 +6922,19 @@ self.onmessage = e => {
       // status page re-defining its two themes every 10s).
       // `slot` (from captureSlot) is where a replaced theme stood in the stack: the replace paths
       // remove the old theme first and pass it on, so the new one is not appended on top
+      // A theme id defined again replaces its theme — once the new data is
+      // there: the old theme stays on the map while it loads, and stays if
+      // the load fails. Of overlapping definitions of one id (a page's
+      // define() timer, loadProject against define(), neither queued like
+      // map.add) the newest wins: an older one still loading is dropped
+      // when its data comes (_defineSeq), so they never both land.
+      const _defineSeq = new Map();
       async function defineFromDefinition(def, slot) {
         if (validation) validation.definition(def);
         const pdef = projectThemeToDefinition(def);
         const replacedId = definitionThemeId(pdef);
-        if (replacedId) {
-          if (!slot) slot = captureSlot(replacedId);
-          removeThemeById(replacedId);
-        }
+        const seq = replacedId ? (_defineSeq.get(replacedId) || 0) + 1 : 0;
+        if (replacedId) _defineSeq.set(replacedId, seq);
         let spec = normalizeTheme(pdef);
         let raw;
         const deferred = deferredFeatureLoad(spec, map.getZoom());
@@ -6946,6 +6951,11 @@ self.onmessage = e => {
           const cached = cachedLayerData(builder._dataCache, spec.data, spec.binding, builder._engineOptions);
           sourceKey = cached.sourceKey;
           raw = await cached.promise;
+        }
+        if (replacedId) {
+          if (_defineSeq.get(replacedId) !== seq) return null; // a newer definition of this id overtook this one
+          if (!slot) slot = captureSlot(replacedId);
+          removeThemeById(replacedId);
         }
         const { rt, fc } = newThemeRuntime(pdef, spec, raw, builder._engineOptions,
           { deferred, named, dataSourceKey: themeDataSourceKey(spec, { named, wms, deferred, sourceKey }) });
@@ -7004,7 +7014,8 @@ self.onmessage = e => {
             if (/replace/i.test(f) && name) { slot = captureSlot(name); removeThemesNamed(name); }
             else if (i === 0 && !/add/i.test(f)) [...new Set(runtimes.map(r => r.name))].forEach(n => engineApi.removeTheme(n));
             try {
-              report.themes.push(await defineFromDefinition(withoutProjectCode(t, report), slot));
+              const added = await defineFromDefinition(withoutProjectCode(t, report), slot);
+              if (added) report.themes.push(added);
             } catch (e) {
               report.skipped.push({ layer: t.layer, reason: e.message });
             }
