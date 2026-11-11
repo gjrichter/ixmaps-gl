@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SYMBOL · several value fields</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.44/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>SYMBOL · several value fields</b>
+  <span>A plain CHART|SYMBOL bound to three fields (a|b|c), as flat draws it: a symbol per field, stacked upward, each colored by its value class; DOMINANT one symbol (the winning field's; with DEVIATION the whole stack in field colors where no field wins); COMPOSECOLOR the stack in one blended color; AGGREGATE the cells' per-field sums.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data: a row of items per layer; every third item has a zero field, the
+  // last two lie below every field's mean (no DEVIATION winner)
+  var ROWS = [[90, 20, 5], [10, 80, 30], [40, 40, 60], [0, 55, 15], [70, 0, 90], [25, 65, 0],
+              [100, 30, 45], [5, 95, 20], [60, 10, 75], [3, 4, 2], [2, 3, 1]];
+  function items(lat0, n) {
+    var feats = [];
+    ROWS.forEach(function (r, i) {
+      for (var k = 0; k < (n || 1); k++) feats.push({ type: "Feature",
+        properties: { name: "item " + i, a: r[0] + k, b: r[1] + 2 * k, c: r[2] + k },
+        geometry: { type: "Point", coordinates: [9.0 + i * 0.07 + k * 0.004, lat0 + k * 0.003] } });
+    });
+    return { type: "FeatureCollection", features: feats };
+  }
+  function themeAt(name, lat0, type, n, style) {
+    return ixmaps.layer(name, layer => layer
+      .data({ obj: items(lat0, n), type: "geojson" })
+      .binding({ geo: "geometry", value: "a|b|c", title: "name" })
+      .type(type)
+      .style(Object.assign({ colorscheme: [6, "tableau"], fillopacity: 0.7, scale: "0.12", showdata: "true" }, style || {}))
+      .meta({ title: name, tooltip: "<b>{{name}}</b> {{a}} | {{b}} | {{c}}" })
+    );
+  }
+  var L0 = themeAt("stack", 45.60, "CHART|SYMBOL");
+  var L1 = themeAt("dominant", 45.50, "CHART|SYMBOL|DOMINANT");
+  var L2 = themeAt("dominant-deviation", 45.40, "CHART|SYMBOL|DOMINANT|DEVIATION");
+  var L3 = themeAt("composecolor", 45.30, "CHART|SYMBOL|COMPOSECOLOR");
+  var L4 = themeAt("aggregate", 45.20, "CHART|SYMBOL|AGGREGATE|SUM", 4, { gridwidthpx: 20 });
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([45.4, 9.35], 10)
+      .layer(L0)
+      .layer(L1)
+      .layer(L2)
+      .layer(L3)
+      .layer(L4)
+  );
+</script>
+</body>
+</html>

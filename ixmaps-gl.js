@@ -10515,6 +10515,22 @@ self.onmessage = e => {
     _sequenceFlagCache.set(flags, { size: flags.size, info });
     return info;
   }
+  // a plain multi-field SYMBOL's parts (_isMultiFieldSymbol, measured on flat): in field
+  // order, a part of value 0 skipped, the first on the center, each further one centered on
+  // the top edge of the one before (y − its radius, y down). Returns { i, v, r, x, y }
+  function stackLayout(counts, radiusOf) {
+    const parts = [];
+    let y = 0, prevR = 0;
+    counts.forEach((v, i) => {
+      if (!v) return;
+      const r = radiusOf(v);
+      if (!(r > 0)) return;
+      if (parts.length) y -= prevR;
+      parts.push({ i, v, r, x: 0, y });
+      prevR = r;
+    });
+    return parts;
+  }
   function sequenceLayout(counts, flags, radiusOf, opts = {}) {
     const fl = sequenceFlags(flags);
     let order = counts.map((v, i) => ({ i, v }));
@@ -12049,6 +12065,8 @@ self.onmessage = e => {
       // a bar chart's parts are a pie's (its value fields or categories)
       if ((this._isPieChart() || this._isBarChart()) && this.binding.value) {
         this._preparePie();
+      } else if (this._isMultiFieldSymbol()) {
+        this._prepareMultiFieldSymbol();
       } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this) && !this._isDominantGrid()) {
         // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
         // (binding.value is a pipe-joined field list, e.g. one CSV column
@@ -12404,7 +12422,7 @@ self.onmessage = e => {
       // they'd never even share a cell in the first place). Every
       // feature goes into ONE bucket; _buildChartLayers resolves the real
       // 7-class color once it knows each cell's actual aggregated total.
-      if (this._multiFields && this._isMultiFieldSequence()) {
+      if (this._multiFields && (this._isMultiFieldSequence() || this._isMultiFieldSymbol())) {
         // one bucket; each record carries its field values as the chart's
         // parts — and, the same array, as `series` so that an AGGREGATE
         // theme's grid cells combine them PER FIELD (aggregateOnGrid), as
@@ -14103,6 +14121,74 @@ self.onmessage = e => {
     _itemPlotFields() {
       return String(this.binding.value || '').split('|');
     }
+    // a plain CHART|SYMBOL over several value fields (no SEQUENCE, no CATEGORICAL): flat's
+    // symbol branch draws a symbol per field (maptheme.js 21790-21990, measured on flat):
+    //  - the parts in field order, a part of value 0 skipped, each sized
+    //    normalR · (v / max)^(1/sizepow), max the biggest single field value
+    //  - stacked: the first on the item's position, each further one centered on the top
+    //    edge of the one before it (y − r of the previous part)
+    //  - colored by the equidistant value class of the part's value over every field's
+    //    values (PERCENTOFMEAN / DEVIATION alone change nothing); COMPOSECOLOR: every part
+    //    in the item's blended color; DOMINANT (± PERCENTOFMEAN / DEVIATION): one symbol,
+    //    the winning field's, in its color and sized by its value
+    _isMultiFieldSymbol() {
+      return this.flags.has('CHART') && this.flags.has('SYMBOL') && !flatFlag(this.flags, 'SEQUENCE')
+        && !this.flags.has('CATEGORICAL') && !this.flags.has('PLOT') && !this.flags.has('GRIDSIZE')
+        && !this.flags.has('USER') && !this.flags.has('LABEL') && !this.flags.has('BUBBLE')
+        && String(this.binding.value || '').includes('|');
+    }
+    // `features`: the records — or, with AGGREGATE, the aggregated items of a zoom
+    // (_multiFieldSymbolScale): flat measures max, classes and the DOMINANT / COMPOSECOLOR
+    // statistics on its items, which are the cells then
+    _prepareMultiFieldSymbol(features = this.features) {
+      const fields = String(this.binding.value).split('|');
+      const pooled = [];
+      for (const f of features) for (const k of fields) { const v = scanValue(f.properties && f.properties[k]); if (isFinite(v)) pooled.push(v); }
+      let max = 0;
+      for (const v of pooled) if (Math.abs(v) > max) max = Math.abs(v);
+      if (this.flags.has('DOMINANT')) {
+        // the legend and colors are the fields' (computeMultiFieldClasses), the winner the
+        // CHOROPLETH|DOMINANT relevance formulas (resolveDominantClass)
+        Object.assign(this, computeDominantStats(features, this.binding, this.style, this.flags));
+      } else if (this.flags.has('COMPOSECOLOR')) {
+        Object.assign(this, computeComposeColorStats(features, this.binding, this.style));
+        // flat's brightness constants come from the theme's WHOLE colorscheme
+        // (__maptheme_initComposedColor), not only the colors the fields take
+        const n = colorSchemeClassCount(this.style.colorscheme) || fields.length;
+        const all = resolveClassColors(this.style.colorscheme, new Array(n).fill(''), this.style.classes) || this.categoryColorsRgb;
+        this._composeColorSumIntensity = all.reduce((t, c) => t + c[0] + c[1] + c[2], 0) / all.length;
+        this._composeColorMeanMaxIntensity = all.reduce((t, c) => t + Math.max(c[0], c[1], c[2]), 0) / all.length;
+      } else {
+        // the value classes over every field's values (flat's nMin / nMax / partsA)
+        const r = computeRangeClasses(pooled.map(v => ({ properties: { v } })), { value: 'v' }, this.style, this.flags, v => this._formatTooltipValue(v));
+        if (r) Object.assign(this, r);
+      }
+      this._rangeClassed = false; // the parts are classed one by one, never the item's total
+      this.categoryIndexByLabel = new Map((this.categoryLabels || []).map((v, i) => [v, i]));
+      this._multiFields = fields;
+      this._multiFieldPartMax = max || 1;
+      if (features === this.features) { this._mfsRecordMax = max || 1; this._mfsZoom = undefined; }
+      this._partNoFill = new Set();
+    }
+    // AGGREGATE: re-measure the theme on the aggregated items of this zoom (every cell, not
+    // only the visible ones — flat's item set), once per zoom
+    _multiFieldSymbolScale(zoom) {
+      // a new aggregation (data, filter, grid) is a new item set — as _sequenceMaxValue
+      if (!this.flags.has('AGGREGATE')) return;
+      if (this._mfsZoom === zoom && this._mfsFor === this._clusterIndices) return;
+      this._mfsZoom = zoom;
+      this._mfsFor = this._clusterIndices;
+      const { individual, groups } = this._computeAggregatedItems([-180, -90, 180, 90], zoom);
+      const fields = this._multiFields;
+      const items = individual.concat(groups).map(d => {
+        const vals = d.properties.parts || d.properties.series || [];
+        return { properties: Object.fromEntries(fields.map((k, i) => [k, vals[i]])) };
+      });
+      if (items.length) this._prepareMultiFieldSymbol(items);
+      // PERCENTOFMEAN classes the cells but sizes by the records' max (flat: its AGGREGATE
+      // sizes are √(cell max / record max) larger than the other modes', legend on the cells)
+      if (this.flags.has('PERCENTOFMEAN')) this._multiFieldPartMax = this._mfsRecordMax;
+    }
     // CHART|PIE (and PIE|DONUT): one pie per record, its slices the value
     // fields; AGGREGATE and CATEGORICAL pies one pie per item — the records
     // of a position (or grid cell) — its slices the categories or the value
@@ -15637,7 +15723,11 @@ self.onmessage = e => {
           properties: { counts: this._oneHot(f.properties.cat, f.properties.value),
             recordCounts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value,
             ...(f.properties.classValue !== undefined ? { classTotal: f.properties.classValue } : {}),
-            ...(f.properties.titleRaw ? { titleRaw: f.properties.titleRaw } : {}) }
+            ...(f.properties.titleRaw ? { titleRaw: f.properties.titleRaw } : {}),
+            // a multi-field cell's per-field sums (aggregateOnGrid) and size-field value,
+            // as groupCoLocated keeps them with RELOCATE
+            ...(f.properties.series ? { series: f.properties.series } : {}),
+            ...(typeof f.properties.size === 'number' ? { size: f.properties.size } : {}) }
         };
       });
       // MEAN (no CATEGORICAL): a cell's value is the mean of its records,
@@ -15943,7 +16033,7 @@ self.onmessage = e => {
         if (userLayers) return layers.concat(userLayers);
       }
       if (this.flags.has('LABEL')) return layers.concat(this._buildLabelChartLayers(combined, zoom, liveZoom, sizeValueOf));
-      if ((flatFlag(this.flags, 'SEQUENCE') && this.flags.has('CATEGORICAL') && this.flags.has('AGGREGATE')) || (this._multiFields && this._isMultiFieldSequence())) {
+      if ((flatFlag(this.flags, 'SEQUENCE') && this.flags.has('CATEGORICAL') && this.flags.has('AGGREGATE')) || (this._multiFields && (this._isMultiFieldSequence() || this._isMultiFieldSymbol()))) {
         return layers.concat(this._buildSequenceChartLayers(combined, zoom, liveZoom));
       }
       const fillOpacity = styleNum(this.style.fillopacity) || 0.85;
@@ -16410,7 +16500,13 @@ self.onmessage = e => {
     // only the first part's value (flat: nClass 0, maptheme.js 22216).
     _buildSequenceChartLayers(charts, zoom, liveZoom) {
       const st = this.style;
-      const multi = !!this._multiFields && this._isMultiFieldSequence();
+      const multi = !!this._multiFields && (this._isMultiFieldSequence() || this._isMultiFieldSymbol());
+      // a plain multi-field SYMBOL (_isMultiFieldSymbol): stacked parts, each colored by its
+      // value class (COMPOSECOLOR: the item's blend), DOMINANT one part, the winner's
+      const ladder = multi && this._isMultiFieldSymbol();
+      const dominant = ladder && this.flags.has('DOMINANT');
+      const composed = ladder && !dominant && this.flags.has('COMPOSECOLOR');
+      if (ladder) this._multiFieldSymbolScale(zoom);
       // AGGREGATE + AUTO100 (flat normalizes the aggregated item's
       // nValuesA to % of their own sum, maptheme.js 12166-12176): every
       // item's parts in % of that item. Without AGGLEARATE, applyField100
@@ -16482,6 +16578,8 @@ self.onmessage = e => {
       const urlIcon = u => this._urlSymbolIcon(u);
       const shapeOf = i => { const sh = symbols && (symbols[i] || symbols[0]); return normalizeSymbolShape(sh); };
       const colorOf = i => this.classRgb(i);
+      // a part's own color (a ladder part's value class / blend), else its class's
+      const partRgb = p => p.rgb || colorOf(p.i);
       const allParts = [], allGlows = [];
       for (const d of charts) {
         // parts: the record's own field values (a per-item chart, or the
@@ -16510,8 +16608,22 @@ self.onmessage = e => {
         const partRadius = multi
           ? v => Math.max(VALUE_RADIUS_MIN, normalR * Math.pow(Math.abs(v) / seqMax, 1 / sizePow) * sizeFactor)
           : v => valueRadius(v, liveZoom, st, this.mapOptions, this.flags, seqMax, this._sizeBound());
-        let layout = rings ? ringsLayout(counts, partRadius)
-          : sequenceLayout(counts, this.flags, partRadius, { maxRadius: normalR, maxValue: seqMax, nParts: nCats, rangeScale: styleNum(st.rangescale) || 0 });
+        let layout;
+        if (ladder) {
+          const byField = Object.fromEntries(this._multiFields.map((k, i) => [k, counts[i]]));
+          if (dominant) {
+            const w = resolveDominantClass(this, byField);
+            // no field wins (DEVIATION: none above its mean): flat draws every part,
+            // stacked, each in its field's color (measured: 453 items, 904/904 pairs)
+            layout = w ? [{ i: w.index, v: w.value, r: partRadius(w.value), x: 0, y: 0 }] : stackLayout(counts, partRadius);
+          } else {
+            const rgb = composed ? resolveComposedColor(this, byField) : null;
+            layout = stackLayout(counts, partRadius).map(p => ({ ...p, rgb: rgb || this.classRgb(this._resolvePartsClass(p.v)) }));
+          }
+        } else {
+          layout = rings ? ringsLayout(counts, partRadius)
+            : sequenceLayout(counts, this.flags, partRadius, { maxRadius: normalR, maxValue: seqMax, nParts: nCats, rangeScale: styleNum(st.rangescale) || 0 });
+        }
         if (!layout.length) continue;
         // GLOW belongs to the first part (sorted) or to every part, and
         // hides with it when its class is not marked
@@ -16639,7 +16751,7 @@ self.onmessage = e => {
             id: `ix-glow-${this.name}${bs}-g${this._iconGeneration}`,
             data: glows, pickable: false,
             getPosition: d => d.geometry.coordinates,
-            getIcon: d => this._getGlowIcon(colorOf(d.part.i), shapeOf(d.part.i)),
+            getIcon: d => this._getGlowIcon(partRgb(d.part), shapeOf(d.part.i)),
             getSize: d => d.part.r * 11,
             getPixelOffset: offsetOf,
             getColor: d => [255, 255, 255, Math.round(alphaOf(d) * glowOpacityOf(st))],
@@ -16651,7 +16763,7 @@ self.onmessage = e => {
             id: `ix-aura-${this.name}${bs}-g${this._iconGeneration}`,
             data: glows, pickable: false,
             getPosition: d => d.geometry.coordinates,
-            getIcon: d => this._buildSingleIcon(borderRgb || colorOf(d.part.i), 0.3, shapeOf(d.part.i), null, 0),
+            getIcon: d => this._buildSingleIcon(borderRgb || partRgb(d.part), 0.3, shapeOf(d.part.i), null, 0),
             getSize: d => d.part.r * 2 * 1.3,
             getPixelOffset: offsetOf,
             getColor: d => [255, 255, 255, alphaOf(d)],
@@ -16670,7 +16782,7 @@ self.onmessage = e => {
             // fu.scale(nRadius / nMaxRadius) on a nChartSize image
             const u = urlSymbolOf(d.part.i);
             if (u) return urlIcon(u);
-            return this._buildSingleIcon(colorOf(d.part.i), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), borderRgb,
+            return this._buildSingleIcon(partRgb(d.part), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), borderRgb,
               borderRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0);
           },
           getSize: d => d.part.r * 2,
@@ -16720,8 +16832,8 @@ self.onmessage = e => {
             if (fontSize > VALUES_MIN_FONT_PX) {
               labels.push({ geometry: d.geometry, text, fontSize, pixelOffset: offsetOf(d), alpha: alphaOf(d),
                 image,
-                color: image ? flatDerivateRgb(colorOf(d.part.i), 0.7)
-                  : textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(colorOf(d.part.i)) });
+                color: image ? flatDerivateRgb(partRgb(d.part), 0.7)
+                  : textOverride ? hexOrNamedToRgb(textOverride) : flatChartTextRgb(partRgb(d.part)) });
             }
           });
           if (labels.length) {
