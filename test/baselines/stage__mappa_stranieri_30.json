@@ -29,11 +29,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "63ea4a40a56dc323",
-     "setDigest": "7a931e721194bbf3",
+     "digest": "af7abe852adde91d",
+     "setDigest": "2139fdfe4bc42da2",
      "columnDigests": {
       "getColor": "0928284c5d50bfdc",
-      "getIcon": "0343aeb8dc0d070b",
+      "getIcon": "0dd3a94ecf60852c",
       "getPosition": "24db4891fcbd66f3",
       "getSize": "c69fb4b588e1bf5c"
      },
@@ -63,8 +63,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -84,8 +84,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-square|134,182,239",
+        "url": "#63e010e4:1138",
         "width": 64
        },
        [
@@ -105,8 +105,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -126,8 +126,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -147,8 +147,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -168,8 +168,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -189,8 +189,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -210,8 +210,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-diamond|134,182,239",
+        "url": "#db00dca4:1854",
         "width": 64
        },
        [
@@ -231,8 +231,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -252,8 +252,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-diamond|42,120,214",
+        "url": "#bc939d76:1642",
         "width": 64
        },
        [
@@ -273,8 +273,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -294,8 +294,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-square|42,120,214",
+        "url": "#4c405a78:1142",
         "width": 64
        },
        [
@@ -315,8 +315,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -336,8 +336,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-diamond|42,120,214",
+        "url": "#bc939d76:1642",
         "width": 64
        },
        [
@@ -357,8 +357,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-square|42,120,214",
+        "url": "#4c405a78:1142",
         "width": 64
        },
        [
@@ -399,8 +399,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -420,8 +420,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-square|85,152,231",
+        "url": "#4e41a2f:1146",
         "width": 64
        },
        [
@@ -441,8 +441,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-235,104,52",
-        "url": "#8cb86684:9962",
+        "id": "glow-square|235,104,52",
+        "url": "#c0b04b00:1122",
         "width": 64
        },
        [
@@ -462,8 +462,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-square|134,182,239",
+        "url": "#63e010e4:1138",
         "width": 64
        },
        [
@@ -1099,11 +1099,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "c905db079eb48163",
-     "setDigest": "2b3f2fa10ec80ac5",
+     "digest": "557d32d588e9351e",
+     "setDigest": "4589cf9b19831a96",
      "columnDigests": {
       "getColor": "891cb36463627e8d",
-      "getIcon": "6c468215e9ccd0f6",
+      "getIcon": "9b9077c3106aa6ca",
       "getPosition": "6ab462ab22cbaee3",
       "getSize": "f80a302794b47cfe"
      },
@@ -1133,8 +1133,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -1154,8 +1154,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-square|134,182,239",
+        "url": "#63e010e4:1138",
         "width": 64
        },
        [
@@ -1175,8 +1175,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -1196,8 +1196,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -1217,8 +1217,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -1238,8 +1238,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -1259,8 +1259,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -1280,8 +1280,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-diamond|134,182,239",
+        "url": "#db00dca4:1854",
         "width": 64
        },
        [
@@ -1301,8 +1301,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -1322,8 +1322,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-diamond|42,120,214",
+        "url": "#bc939d76:1642",
         "width": 64
        },
        [
@@ -1343,8 +1343,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -1364,8 +1364,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-square|42,120,214",
+        "url": "#4c405a78:1142",
         "width": 64
        },
        [
@@ -1385,8 +1385,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -1406,8 +1406,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-diamond|42,120,214",
+        "url": "#bc939d76:1642",
         "width": 64
        },
        [
@@ -1448,8 +1448,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -1469,8 +1469,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-square|85,152,231",
+        "url": "#4e41a2f:1146",
         "width": 64
        },
        [
@@ -1490,8 +1490,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-235,104,52",
-        "url": "#8cb86684:9962",
+        "id": "glow-square|235,104,52",
+        "url": "#c0b04b00:1122",
         "width": 64
        },
        [
@@ -1511,8 +1511,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-square|134,182,239",
+        "url": "#63e010e4:1138",
         "width": 64
        },
        [
@@ -1532,8 +1532,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -2169,11 +2169,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "032c28be573c0de6",
-     "setDigest": "7f4ca2a58bef0894",
+     "digest": "beb235c486d3f7be",
+     "setDigest": "6d42c4fb00daa6e8",
      "columnDigests": {
       "getColor": "b35ca52ae35a5e40",
-      "getIcon": "1ca2a5c3c6fb9b1c",
+      "getIcon": "50296a0871fa2fc8",
       "getPosition": "514bf1f2cc26c5f0",
       "getSize": "2a7467f9a320d9a8"
      },
@@ -2203,8 +2203,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2224,8 +2224,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-square|134,182,239",
+        "url": "#63e010e4:1138",
         "width": 64
        },
        [
@@ -2245,8 +2245,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -2266,8 +2266,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2287,8 +2287,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2308,8 +2308,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -2329,8 +2329,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2350,8 +2350,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-diamond|134,182,239",
+        "url": "#db00dca4:1854",
         "width": 64
        },
        [
@@ -2371,8 +2371,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-triangle|85,152,231",
+        "url": "#ffb139ea:2918",
         "width": 64
        },
        [
@@ -2392,8 +2392,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-diamond|42,120,214",
+        "url": "#bc939d76:1642",
         "width": 64
        },
        [
@@ -2413,8 +2413,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2434,8 +2434,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2455,8 +2455,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-square|42,120,214",
+        "url": "#4c405a78:1142",
         "width": 64
        },
        [
@@ -2476,8 +2476,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2497,8 +2497,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-diamond|42,120,214",
+        "url": "#bc939d76:1642",
         "width": 64
        },
        [
@@ -2518,8 +2518,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-42,120,214",
-        "url": "#2c2c37e3:10102",
+        "id": "glow-square|42,120,214",
+        "url": "#4c405a78:1142",
         "width": 64
        },
        [
@@ -2560,8 +2560,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-134,182,239",
-        "url": "#adb1d422:10182",
+        "id": "glow-triangle|134,182,239",
+        "url": "#eb893ee1:2918",
         "width": 64
        },
        [
@@ -2581,8 +2581,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-85,152,231",
-        "url": "#a52ffe78:10026",
+        "id": "glow-square|85,152,231",
+        "url": "#4e41a2f:1146",
         "width": 64
        },
        [
@@ -2602,8 +2602,8 @@
         "anchorX": 32,
         "anchorY": 32,
         "height": 64,
-        "id": "glow-235,104,52",
-        "url": "#8cb86684:9962",
+        "id": "glow-square|235,104,52",
+        "url": "#c0b04b00:1122",
         "width": 64
        },
        [

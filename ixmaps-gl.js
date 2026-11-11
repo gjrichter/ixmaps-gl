@@ -12909,20 +12909,42 @@ self.onmessage = e => {
     // opacity washes into a dense overlapping blur at close zoom with many
     // simultaneously-visible points, and this reads better despite being
     // less literally source-faithful. Deliberate divergence, not a lapse.
-    _getGlowIcon(colorRgb) {
-      const key = colorRgb.join(',');
+    // `shape`: the symbol's own (style.symbols, drawSymbolPath) — the halo follows the symbol's
+    // outline: nested copies of the shape, outer to inner, each adding the alpha that brings the
+    // composite to the circle's falloff (0.28 at the center, 0.09 halfway, 0 at the edge) at its
+    // own size. A circle keeps the exact radial gradient (and its cache key / icon id)
+    _getGlowIcon(colorRgb, shape) {
+      shape = shape && shape !== 'circle' && shape !== 'empty' ? shape : 'circle';
+      const rgb = colorRgb.join(',');
+      const key = shape === 'circle' ? rgb : `${shape}|${rgb}`;
       if (!this._glowIconCache.has(key)) {
         const size = 64;
         const canvas = document.createElement('canvas');
         canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
         const c = size / 2;
-        const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
-        grad.addColorStop(0, `rgba(${key},0.28)`);
-        grad.addColorStop(0.5, `rgba(${key},0.09)`);
-        grad.addColorStop(1, `rgba(${key},0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(c, c, c, 0, Math.PI * 2); ctx.fill();
+        if (shape === 'circle') {
+          const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
+          grad.addColorStop(0, `rgba(${rgb},0.28)`);
+          grad.addColorStop(0.5, `rgba(${rgb},0.09)`);
+          grad.addColorStop(1, `rgba(${rgb},0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(c, c, c, 0, Math.PI * 2); ctx.fill();
+        } else {
+          // the same falloff as the gradient, t = 0 center … 1 edge
+          const falloff = t => (t <= 0.5 ? 0.28 - (0.28 - 0.09) * t / 0.5 : 0.09 * (1 - t) / 0.5);
+          const N = 24;
+          let below = 0; // composite alpha of the copies drawn so far (all larger)
+          for (let k = N; k >= 1; k--) {
+            const t = (k - 0.5) / N, target = falloff(t);
+            const a = below >= 1 ? 0 : Math.max(0, 1 - (1 - target) / (1 - below));
+            if (a > 0) {
+              ctx.fillStyle = `rgba(${rgb},${a})`;
+              ctx.beginPath(); drawSymbolPath(ctx, shape, c, c, c * k / N); ctx.closePath(); ctx.fill();
+            }
+            below = Math.max(below, target);
+          }
+        }
         this._glowIconCache.set(key, { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: `glow-${key}` });
       }
       return this._glowIconCache.get(key);
@@ -14717,19 +14739,26 @@ self.onmessage = e => {
             let a = dopacity ? symbolDopacityAlpha(this.style, d.v, tMin, tMax, baseOpacity) : base;
             if (marking && !this._markedClasses.has(d.i)) a = DIMMED_ICON_ALPHA / 255;
             const c = rgb[d.i] || [130, 130, 130];
-            data.push({ geometry: { type: 'Point', coordinates: [center.lng, center.lat] }, rgb: c, alpha: a });
+            data.push({ geometry: { type: 'Point', coordinates: [center.lng, center.lat] }, rgb: c, alpha: a, cat: d.i });
           });
-          // white hexagon, tinted per cell by getColor (rgb + alpha)
-          const r = cellPx / 1.5;
-          // mask icon: deck tints only mask icons with getColor's rgb (non-mask: alpha only)
-          const icon = Object.assign({}, this._buildGridHexIcon('#ffffff', 'none', 0, r), { mask: true });
+          // white cell symbol (style.symbols per dominant class, hexagon without symbols), tinted
+          // per cell by getColor (rgb + alpha); mask icon: deck tints only mask icons with
+          // getColor's rgb (non-mask: alpha only)
+          const cellIcons = new Map();
+          const cellIconOf = cat => {
+            if (!cellIcons.has(cat)) {
+              const ci = this._gridCellIcon('#ffffff', 'none', 0, cellPx, cat, 'hexagon');
+              cellIcons.set(cat, { icon: Object.assign({}, ci.icon, { mask: true }), size: ci.size });
+            }
+            return cellIcons.get(cat);
+          };
           return [new IconLayer({
             id: `ix-grid-${this.name}-g${this._iconGeneration}`,
             data, pickable: false,
             getPosition: d => d.geometry.coordinates,
-            getIcon: () => icon,
+            getIcon: d => cellIconOf(d.cat).icon,
             getColor: d => [d.rgb[0], d.rgb[1], d.rgb[2], Math.round(255 * d.alpha)],
-            getSize: 2 * r,
+            getSize: d => cellIconOf(d.cat).size,
             sizeUnits: 'pixels'
           })];
         }
@@ -14741,18 +14770,15 @@ self.onmessage = e => {
           const a = dopacity ? symbolDopacityAlpha(this.style, cell.sums[0], vMin, vMax, baseOpacity) : base;
           return { geometry: { type: 'Point', coordinates: [center.lng, center.lat] }, alpha: a == null ? base : a };
         });
-        // hexagon tiling (snapToAggregationGrid): column pitch cellPx = 1.5 r, so r = cellPx / 1.5
-        const r = cellPx / 1.5;
-        const icon = hexCells
-          ? this._buildGridHexIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, r)
-          : this._buildGridSquareIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx);
+        // style.symbols[0] per cell, the full-cell square without symbols
+        const ci = this._gridCellIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx, 0, 'square');
         return [new IconLayer({
           id: `ix-grid-${this.name}-g${this._iconGeneration}`,
           data, pickable: false,
           getPosition: d => d.geometry.coordinates,
-          getIcon: () => icon,
+          getIcon: () => ci.icon,
           getColor: d => [255, 255, 255, Math.round(255 * d.alpha)],
-          getSize: hexCells ? 2 * r : cellPx,
+          getSize: ci.size,
           sizeUnits: 'pixels'
         })];
       }
@@ -14761,14 +14787,15 @@ self.onmessage = e => {
         const center = worldPixelToLngLat(cell.px, cell.py, zoom);
         return { geometry: { type: 'Point', coordinates: [center.lng, center.lat] } };
       });
-      const icon = this._buildGridSquareIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx);
+      // style.symbols[0] per cell, the full-cell square without symbols
+      const ci = this._gridCellIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx, 0, 'square');
 
       return [new IconLayer({
         id: `ix-grid-${this.name}-g${this._iconGeneration}`,
         data, pickable: false,
         getPosition: d => d.geometry.coordinates,
-        getIcon: () => icon,
-        getSize: cellPx,
+        getIcon: () => ci.icon,
+        getSize: ci.size,
         sizeUnits: 'pixels'
       })];
     }
@@ -15289,10 +15316,27 @@ self.onmessage = e => {
       return this._cacheIcon(key, icon);
     }
 
-    // one flat-top hexagon of circumradius r (px) filling a square raster — the GRIDSIZE
-    // "hexagon" cell (see _buildGridMeshLayers); drawSymbolPath's own hexagon outline
-    _buildGridHexIcon(fillColor, borderColor, borderWidth, r) {
-      const key = `gridhex|${fillColor}|${borderColor}|${borderWidth}|${r}`;
+    // a GRIDSIZE mesh cell's icon and its getSize (px), class `cat`: the theme's style.symbols
+    // shape for that class (_resolveSymbolShape, flat's szSymbolsA[class]), `defaultShape`
+    // without symbols. "square" is the whole cell (cellPx side); every other shape has flat's
+    // GRIDSIZE item radius — cellPx / 1.5 on the hexagonal grid (snapToAggregationGrid: column
+    // pitch cellPx = 1.5 r), cellPx / 2 with RECT (the hexagon keeps cellPx / 1.5)
+    _gridCellIcon(fillColor, borderColor, borderWidth, cellPx, cat, defaultShape) {
+      const syms = this.style.symbols;
+      // a symbolfield picks per record, and a cell has none: the default shape then
+      const shape = !this.style.symbolfield && Array.isArray(syms) && syms.length
+        ? this._resolveSymbolShape({ cat }) : defaultShape;
+      if (shape === 'square') {
+        return { icon: this._buildGridSquareIcon(fillColor, borderColor, borderWidth, cellPx), size: cellPx };
+      }
+      const r = shape !== 'hexagon' && flatFlag(this.flags, 'RECT') ? cellPx / 2 : cellPx / 1.5;
+      return { icon: this._buildGridHexIcon(fillColor, borderColor, borderWidth, r, shape), size: 2 * r };
+    }
+
+    // one symbol `shape` (default the flat-top hexagon) of radius r (px) filling a square
+    // raster — the GRIDSIZE mesh cell (see _gridCellIcon); drawSymbolPath's own outline
+    _buildGridHexIcon(fillColor, borderColor, borderWidth, r, shape = 'hexagon') {
+      const key = `gridhex|${shape}|${fillColor}|${borderColor}|${borderWidth}|${r}`;
       if (this._iconCache.has(key)) return this._iconCache.get(key);
       const size = Math.max(32, Math.min(256, Math.round(2 * r) || 32));
       const canvas = document.createElement('canvas');
@@ -15300,7 +15344,7 @@ self.onmessage = e => {
       const ctx = canvas.getContext('2d');
       const rr = size / 2 - 1; // 1px margin so the stroke isn't clipped
       ctx.beginPath();
-      drawSymbolPath(ctx, 'hexagon', size / 2, size / 2, rr);
+      drawSymbolPath(ctx, shape, size / 2, size / 2, rr);
       ctx.closePath();
       ctx.fillStyle = fillColor;
       ctx.fill();
@@ -15962,12 +16006,15 @@ self.onmessage = e => {
       // glowlower (the exact flag: flat's /ZOOM/ also matches ZOOMTO, which
       // flat drops from the theme once it zoomed, gl never does)
       const glowGate = !this.flags.has('ZOOM') && !glowHiddenByScale(this.style, liveZoom);
+      // GLOW / AURA halos take the symbol's shape (style.symbols), as the shadow does: a
+      // multi-part item without symbols stays a circle
+      const haloShapeOf = d => (d.properties.counts && !Array.isArray(this.style.symbols) ? 'circle' : this._resolveSymbolShape(d.properties));
       if (this.flags.has('GLOW') && glowGate) {
         layers.push(new IconLayer({
           id: `ix-glow-${this.name}-g${this._iconGeneration}`,
           data: combined, pickable: false,
           getPosition: d => d.geometry.coordinates,
-          getIcon: d => this._getGlowIcon((this.categoryColorsRgb || [])[d.properties.counts ? dominant(this._groupIsolation(d) ? d.properties.counts.map((c, i) => (this._markedClasses.has(i) ? c : 0)) : d.properties.counts) : d.properties.cat]),
+          getIcon: d => this._getGlowIcon((this.categoryColorsRgb || [])[d.properties.counts ? dominant(this._groupIsolation(d) ? d.properties.counts.map((c, i) => (this._markedClasses.has(i) ? c : 0)) : d.properties.counts) : d.properties.cat], haloShapeOf(d)),
           getSize: d => vRadius(sizeValueOf(d)) * (d.properties.counts ? 9 : 11),
           getColor: d => [255, 255, 255, Math.round(this._iconAlpha(d) * glowOpacityOf(this.style))],
           ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
@@ -15982,7 +16029,7 @@ self.onmessage = e => {
           id: `ix-aura-${this.name}-g${this._iconGeneration}`,
           data: combined, pickable: false,
           getPosition: d => d.geometry.coordinates,
-          getIcon: d => this._buildSingleIcon(singleBorderColorRgb || itemRgb(d), 0.3, 'circle', null, 0),
+          getIcon: d => this._buildSingleIcon(singleBorderColorRgb || itemRgb(d), 0.3, haloShapeOf(d), null, 0),
           getSize: d => radiusOf(d) * 2 * 1.3,
           getColor: d => [255, 255, 255, this._iconAlpha(d)],
           ...(alignOf.active ? { getPixelOffset: alignOf } : {}),
@@ -16592,7 +16639,7 @@ self.onmessage = e => {
             id: `ix-glow-${this.name}${bs}-g${this._iconGeneration}`,
             data: glows, pickable: false,
             getPosition: d => d.geometry.coordinates,
-            getIcon: d => this._getGlowIcon(colorOf(d.part.i)),
+            getIcon: d => this._getGlowIcon(colorOf(d.part.i), shapeOf(d.part.i)),
             getSize: d => d.part.r * 11,
             getPixelOffset: offsetOf,
             getColor: d => [255, 255, 255, Math.round(alphaOf(d) * glowOpacityOf(st))],
@@ -16604,7 +16651,7 @@ self.onmessage = e => {
             id: `ix-aura-${this.name}${bs}-g${this._iconGeneration}`,
             data: glows, pickable: false,
             getPosition: d => d.geometry.coordinates,
-            getIcon: d => this._buildSingleIcon(borderRgb || colorOf(d.part.i), 0.3, 'circle', null, 0),
+            getIcon: d => this._buildSingleIcon(borderRgb || colorOf(d.part.i), 0.3, shapeOf(d.part.i), null, 0),
             getSize: d => d.part.r * 2 * 1.3,
             getPixelOffset: offsetOf,
             getColor: d => [255, 255, 255, alphaOf(d)],
