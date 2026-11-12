@@ -9194,6 +9194,8 @@ self.onmessage = e => {
   // position is still technically hit-testable/inspectable rather than
   // functionally deleted.
   const DIMMED_ICON_ALPHA = 8;
+  // a GRIDSIZE cell's ring opacity at flat's default 0.2 px outline, drawn 1 px wide (_gridRingStyle)
+  const GRID_RING_ALPHA = 140;
 
   // deck.gl's IconLayer auto-packing atlas (icon-manager.ts, read and
   // measured on 8.9.35; the guards below are kept for 9.x, not re-measured
@@ -11805,6 +11807,27 @@ self.onmessage = e => {
     }
   }
 
+  // a cell's dominant category (flat's DOMINANT on a CATEGORICAL AGGREGATE chart, measured on
+  // flat: 334 cells): the biggest part ABOVE its category's filter — flat's dominantfilter
+  // "min" (the default), the smallest non-zero part of that category over all cells — the
+  // first of equal ones. A cell where no part passes its filter has no dominant one: flat
+  // draws every part then (e.g. all 1s: one symbol per category, one on top of the other,
+  // in class order; 2,2,1 → only the first 2). Each drawn part becomes a single-symbol item
+  // of its class — value the part, total the cell's sum (the DOPACITY range)
+  function dominantItems(cells, filterOf) {
+    const out = [];
+    for (const cell of cells) {
+      const counts = cell.properties.counts || [];
+      let win = -1;
+      counts.forEach((c, i) => { if (c > filterOf(i) && (win < 0 || c > counts[win])) win = i; });
+      const { counts: _c, ...rest } = cell.properties;
+      const total = counts.reduce((a, c) => a + c, 0);
+      const item = i => ({ geometry: cell.geometry, properties: { ...rest, cat: i, value: counts[i], total, dominant: true } });
+      if (win >= 0) out.push(item(win));
+      else counts.forEach((c, i) => { if (c > 0) out.push(item(i)); });
+    }
+    return out;
+  }
   function groupCoLocated(clusterFeatures, zoom, clusterRadiusPx, nCategories, flags, atCellCenter = false) {
     // Merge tolerance MUST track the same theme-driven, scale-dependent
     // aggregation width the clustering itself just used (clusterRadiusPx,
@@ -12067,7 +12090,8 @@ self.onmessage = e => {
         this._preparePie();
       } else if (this._isMultiFieldSymbol()) {
         this._prepareMultiFieldSymbol();
-      } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this) && !this._isDominantGrid()) {
+      } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this)
+        && !(this.flags.has('CATEGORICAL') && !String(this.binding.value).includes('|'))) {
         // .type("CHOROPLETH|DOMINANT") — a MULTI-field bound value
         // (binding.value is a pipe-joined field list, e.g. one CSV column
         // per age band for the same year/sex — same pipe convention
@@ -14064,15 +14088,44 @@ self.onmessage = e => {
     // GRIDSIZE without PLOT drawn as one uniform square per cell: only a
     // plain grid — a single color, no VALUES, no GLOW
     _isPlainGridMesh() {
-      // categorical CENTER|DOMINANT cells are drawn by the same mesh path, per-cell colored
-      return this._isDominantGrid() || (!this.flags.has('PLOT') && (this.categoryColorsRgb || []).length <= 1
-        && !this.flags.has('VALUES') && !this.flags.has('GLOW'));
+      // a CATEGORICAL DOMINANT theme is a chart like any other (_isCategoricalDominant):
+      // GRIDSIZE only sizes its symbols
+      return !this._isCategoricalDominant() && !this.flags.has('PLOT') && (this.categoryColorsRgb || []).length <= 1
+        && !this.flags.has('VALUES') && !this.flags.has('GLOW');
     }
-    // flat's categorical HexBin (GRIDSIZE|AGGREGATE|CATEGORICAL|DOMINANT): each grid cell takes
-    // the color of its dominant category, with dynamic opacity from that category's part
-    _isDominantGrid() {
-      return this.flags.has('GRIDSIZE') && !this.flags.has('PLOT') && this.flags.has('CATEGORICAL')
-        && this.flags.has('DOMINANT');
+    // CHART|CATEGORICAL|AGGREGATE|DOMINANT over one value field: each aggregated item is
+    // drawn as its dominant category (dominantItems) — the same with GRIDSIZE, AUTOSIZE or
+    // no size flag; those decide only the symbol's size
+    _isCategoricalDominant() {
+      return this.flags.has('CHART') && this.flags.has('CATEGORICAL') && this.flags.has('AGGREGATE')
+        && this.flags.has('DOMINANT') && !this.flags.has('PLOT') && !this.flags.has('CHOROPLETH')
+        && !String(this.binding.value || '').includes('|');
+    }
+    // the theme-wide measures flat takes over ALL its items (not only the visible ones), on
+    // the cells before the dominant step: their totals (nMin / nMax — the DOPACITY range), the
+    // biggest part (nAllMaxValue — the size maximum) and per category its smallest non-zero
+    // part (the dominantfilter "min"). Once per zoom and aggregation
+    _dominantStats(zoom) {
+      if (this._domStats && this._domStatsZoom === zoom && this._domStatsFor === this._clusterIndices) return this._domStats;
+      this._domCellsOnly = true;
+      let cells;
+      try { cells = this._computeAggregatedItems([-180, -90, 180, 90], zoom).groups; } finally { this._domCellsOnly = false; }
+      let tMin = Infinity, tMax = -Infinity, vMax = 0;
+      const mins = [];
+      for (const c of cells) {
+        const counts = c.properties.counts || [];
+        const t = counts.reduce((a, v) => a + v, 0);
+        if (t < tMin) tMin = t;
+        if (t > tMax) tMax = t;
+        counts.forEach((v, i) => {
+          if (v > vMax) vMax = v;
+          if (v > 0 && !(mins[i] <= v)) mins[i] = v;
+        });
+      }
+      this._domStatsZoom = zoom;
+      this._domStatsFor = this._clusterIndices;
+      this._domStats = { totalMin: isFinite(tMin) ? tMin : 0, totalMax: isFinite(tMax) ? tMax : 0, valueMax: vMax || 1, partMins: mins };
+      return this._domStats;
     }
     // GRIDSIZE (no PLOT) symbol chart radius, px: flat's nGridSize / 2
     // (maptheme.js 21843), nGridSize the aggregation cell pitch / nAutoSize
@@ -14798,56 +14851,6 @@ self.onmessage = e => {
         const cells = this._gridIndex;
         const baseOpacity = styleNum(this.style.fillopacity);
         const base = isNaN(baseOpacity) ? 0.9 : baseOpacity;
-        // CATEGORICAL|DOMINANT: dominant category per cell (the biggest part above 0, the
-        // first of equal ones — aggregatedCategoricalClass), opacity from that part against
-        // the biggest dominant part of the same class over all cells (dominantDopacityAlpha)
-        if (this._isDominantGrid()) {
-          const labels = this._plotCategories();
-          const rgb = resolveClassColors(this.style.colorscheme, labels, undefined) || [];
-          const dom = cells.map(c => {
-            let i = -1;
-            c.sums.forEach((v, k) => { if (v > 0 && (i < 0 || v > c.sums[i])) i = k; });
-            return i < 0 ? null : { i, v: c.sums[i] };
-          });
-          // flat's nMin/nMax: extremes of the cell TOTAL over all categories
-          const totals = cells.map(c => c.sums.reduce((s, x) => s + x, 0));
-          const tMin = Math.min(...totals), tMax = Math.max(...totals);
-          const data = [];
-          // legend click (ixmaps.markThemeClass): flat's evidence "isolate" shows only the cells
-          // whose dominant category is marked; "isolate_gray" keeps the others, dimmed
-          const marking = this._markedClasses.size && !this._onMarksChanged;
-          const gray = String(this.style.evidence || 'isolate') === 'isolate_gray';
-          cells.forEach((cell, n) => {
-            const d = dom[n];
-            if (!d) return;
-            if (marking && !this._markedClasses.has(d.i) && !gray) return;
-            const center = worldPixelToLngLat(cell.px, cell.py, zoom);
-            let a = dopacity ? symbolDopacityAlpha(this.style, d.v, tMin, tMax, baseOpacity) : base;
-            if (marking && !this._markedClasses.has(d.i)) a = DIMMED_ICON_ALPHA / 255;
-            const c = rgb[d.i] || [130, 130, 130];
-            data.push({ geometry: { type: 'Point', coordinates: [center.lng, center.lat] }, rgb: c, alpha: a, cat: d.i });
-          });
-          // white cell symbol (style.symbols per dominant class, hexagon without symbols), tinted
-          // per cell by getColor (rgb + alpha); mask icon: deck tints only mask icons with
-          // getColor's rgb (non-mask: alpha only)
-          const cellIcons = new Map();
-          const cellIconOf = cat => {
-            if (!cellIcons.has(cat)) {
-              const ci = this._gridCellIcon('#ffffff', 'none', 0, cellPx, cat, 'hexagon');
-              cellIcons.set(cat, { icon: Object.assign({}, ci.icon, { mask: true }), size: ci.size });
-            }
-            return cellIcons.get(cat);
-          };
-          return [new IconLayer({
-            id: `ix-grid-${this.name}-g${this._iconGeneration}`,
-            data, pickable: false,
-            getPosition: d => d.geometry.coordinates,
-            getIcon: d => cellIconOf(d.cat).icon,
-            getColor: d => [d.rgb[0], d.rgb[1], d.rgb[2], Math.round(255 * d.alpha)],
-            getSize: d => cellIconOf(d.cat).size,
-            sizeUnits: 'pixels'
-          })];
-        }
         // cell-level value stats (the grid IS the dataset for DOPACITY here)
         const vals = cells.map(c => c.sums[0]).filter(v => v != null && !isNaN(v)).sort((a, b) => a - b);
         const vMin = vals[0], vMax = vals[vals.length - 1];
@@ -14857,7 +14860,12 @@ self.onmessage = e => {
           return { geometry: { type: 'Point', coordinates: [center.lng, center.lat] }, alpha: a == null ? base : a };
         });
         // style.symbols[0] per cell, the full-cell square without symbols
-        const ci = this._gridCellIcon(fillColor, borderColor, isNaN(borderWidth) ? 0 : borderWidth, cellPx, 0, 'square');
+        // (its outline is the ring below, not part of the fading fill icon)
+        const ci = this._gridCellIcon(fillColor, 'none', 0, cellPx, 0, 'square');
+        // the cell's ring (_gridRingStyle) in linecolor, else the fill color
+        const ringStyle = this._gridRingStyle();
+        const ring = ringStyle && this._gridCellRingIcon(cellPx, 0, 'square', ringStyle.widthPx);
+        const ringRgb = ringStyle && (ringStyle.rgb || (parseCssColor(fillColor) || [255, 255, 255]).slice(0, 3));
         return [new IconLayer({
           id: `ix-grid-${this.name}-g${this._iconGeneration}`,
           data, pickable: false,
@@ -14866,7 +14874,15 @@ self.onmessage = e => {
           getColor: d => [255, 255, 255, Math.round(255 * d.alpha)],
           getSize: ci.size,
           sizeUnits: 'pixels'
-        })];
+        })].concat(ringStyle ? [new IconLayer({
+          id: `ix-gridring-${this.name}-g${this._iconGeneration}`,
+          data, pickable: false,
+          getPosition: d => d.geometry.coordinates,
+          getIcon: () => ring.icon,
+          getColor: [...ringRgb, ringStyle.alpha],
+          getSize: ring.size,
+          sizeUnits: 'pixels'
+        })] : []);
       }
 
       const data = this._gridIndex.map(cell => {
@@ -15407,16 +15423,61 @@ self.onmessage = e => {
     // without symbols. "square" is the whole cell (cellPx side); every other shape has flat's
     // GRIDSIZE item radius — cellPx / 1.5 on the hexagonal grid (snapToAggregationGrid: column
     // pitch cellPx = 1.5 r), cellPx / 2 with RECT (the hexagon keeps cellPx / 1.5)
-    _gridCellIcon(fillColor, borderColor, borderWidth, cellPx, cat, defaultShape) {
+    // a cell's shape: style.symbols for class `cat`, `defaultShape` without symbols (a
+    // symbolfield picks per record, and a cell has none: the default shape then)
+    _gridCellShapeOf(cat, defaultShape) {
       const syms = this.style.symbols;
-      // a symbolfield picks per record, and a cell has none: the default shape then
-      const shape = !this.style.symbolfield && Array.isArray(syms) && syms.length
-        ? this._resolveSymbolShape({ cat }) : defaultShape;
+      return !this.style.symbolfield && Array.isArray(syms) && syms.length ? this._resolveSymbolShape({ cat }) : defaultShape;
+    }
+    _gridCellIcon(fillColor, borderColor, borderWidth, cellPx, cat, defaultShape) {
+      const shape = this._gridCellShapeOf(cat, defaultShape);
       if (shape === 'square') {
         return { icon: this._buildGridSquareIcon(fillColor, borderColor, borderWidth, cellPx), size: cellPx };
       }
       const r = shape !== 'hexagon' && flatFlag(this.flags, 'RECT') ? cellPx / 2 : cellPx / 1.5;
       return { icon: this._buildGridHexIcon(fillColor, borderColor, borderWidth, r, shape), size: 2 * r };
+    }
+
+    // flat strokes every GRIDSIZE cell at full stroke opacity — in style.linecolor, else the
+    // cell's own color — 0.2 px · style.linewidth (default 1) wide on screen, the same at
+    // every zoom and with any shape (measured on hexbin_circle_flat: 621 cells, linewidth
+    // 1 → 0.2 px, 3 → 0.6 px, linecolor #000 → black) — and only the FILL fades with
+    // DOPACITY, so even an all-but-transparent cell keeps a faint ring. null: no ring
+    // (linecolor "none", linewidth 0). rgb null: the cell's color. A line thinner than 1 px
+    // is drawn 1 px wide and fainter: the browser draws flat's 0.2 px stroke as dark as a
+    // GRID_RING_ALPHA (~55 %) 1 px line (matched on the hexbin_circle pages' luminance
+    // percentiles), proportionally more up to full opacity at 1 px
+    _gridRingStyle() {
+      const lc = styleLineColor(this.style.linecolor);
+      if (lc != null && String(lc).trim().toLowerCase() === 'none') return null;
+      const lw = styleNum(this.style.linewidth);
+      const w = 0.2 * (isNaN(lw) ? 1 : lw);
+      if (!(w > 0)) return null;
+      const rgb = lc != null && String(lc).trim() ? (parseCssColor(String(lc)) || hexOrNamedToRgb(String(lc)) || null) : null;
+      return { rgb: rgb && rgb.slice(0, 3), widthPx: Math.max(1, w), alpha: w >= 1 ? 255 : Math.min(255, Math.round(GRID_RING_ALPHA * w / 0.2)) };
+    }
+    // the ring's outline mask icon ({ icon, size } like _gridCellIcon), widthPx wide on screen
+    _gridCellRingIcon(cellPx, cat, defaultShape, widthPx = 1) {
+      const shape = this._gridCellShapeOf(cat, defaultShape);
+      const square = shape === 'square';
+      const r = square || (shape !== 'hexagon' && flatFlag(this.flags, 'RECT')) ? cellPx / 2 : cellPx / 1.5;
+      const disp = 2 * r;
+      const key = `gridring|${shape}|${disp}|${widthPx}`;
+      if (!this._iconCache.has(key)) {
+        const size = Math.max(32, Math.min(256, Math.round(disp) || 32));
+        const k = size / (disp || size) * widthPx; // the line in raster px
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        drawSymbolPath(ctx, square ? 'squarefull' : shape, size / 2, size / 2, size / 2 - k / 2);
+        ctx.closePath();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = k;
+        ctx.stroke();
+        this._cacheIcon(key, { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key, mask: true });
+      }
+      return { icon: this._iconCache.get(key), size: disp };
     }
 
     // one symbol `shape` (default the flat-top hexagon) of radius r (px) filling a square
@@ -15712,6 +15773,15 @@ self.onmessage = e => {
           this.categoryLabels ? this.categoryLabels.length : 1, this.flags, !doRelocate);
         return { individual: [], groups };
       }
+      // CATEGORICAL|AGGREGATE|DOMINANT: every category of a cell in one group, then the
+      // cell's dominant one(s) (dominantItems) — whatever the size flag
+      if (this._isCategoricalDominant()) {
+        const cells = groupCoLocated(clusterFeatures.concat(individual), effectiveZoom, this._clusterRadiusPx,
+          this.categoryLabels ? this.categoryLabels.length : 1, this.flags, !doRelocate);
+        if (this._domCellsOnly) return { individual: [], groups: cells };
+        const mins = this._dominantStats(zoom).partMins;
+        return { individual: dominantItems(cells, i => mins[i] || 0), groups: [] };
+      }
       // without RELOCATE a cell's item already sits at the cell center
       // (aggregateOnGrid)
       const groups = doRelocate ? this._groupCoLocated(clusterFeatures, effectiveZoom) : clusterFeatures.map(f => {
@@ -15878,7 +15948,13 @@ self.onmessage = e => {
       const gridR = this._gridChartRadiusPx(zoom, liveZoom);
       // AUTOSIZE: the biggest aggregated item is the size of the cell, the others by value
       const autoR = this._autoSizeMaxRadiusPx(zoom, liveZoom);
-      const autoMax = autoR != null ? (this._ensureAggregateStats(zoom).sizeMax || 1) : 1;
+      // a CATEGORICAL DOMINANT theme's items are the cells' dominant parts: their size max is
+      // the biggest dominant part (flat's nAllMaxValue), for AUTOSIZE and the default size alike
+      const domStats = this._isCategoricalDominant() ? this._dominantStats(zoom) : null;
+      if (domStats && !styleNum(this.style.normalsizevalue) && !this.binding.size) this._maxSizeValue = domStats.valueMax;
+      // AUTOSIZE's max value is flat's max(nAllMaxValue, nMax) (maptheme.js 21832): for a
+      // dominant theme the larger of the biggest part and the biggest cell total
+      const autoMax = autoR != null ? (domStats ? Math.max(domStats.valueMax, domStats.totalMax) : (this._ensureAggregateStats(zoom).sizeMax || 1)) : 1;
       const autoPow = autoR != null ? resolveSizePow(this.style, this.flags) : 1;
       const vRadius = v => (gridR != null ? gridR
         : autoR != null ? Math.max(VALUE_RADIUS_MIN, autoR * Math.pow(Math.abs(v || 0) / autoMax, 1 / autoPow))
@@ -16049,6 +16125,14 @@ self.onmessage = e => {
 
       const itemRgb = d => this.classRgb(d.properties.counts ? dominant(d.properties.counts) : d.properties.cat);
       const radiusOf = d => vRadius(sizeValueOf(d));
+      // DOPACITY on a dominant item (flat's SYMBOL DOPACITY, maptheme.js 22142-22146): only
+      // the FILL fades — ((v − nMin) / (nMax − nMin))^(1/dopacitypow) · fillopacity ·
+      // dopacityscale, v the dominant part, nMin / nMax the cells' totals; the outline keeps
+      // full opacity. In 1/50 steps (the icon cache)
+      const dopacity = domStats && !this.binding.alpha && [...this.flags].some(f => /^DOPACITY/.test(f));
+      const fillOf = d => (dopacity && d.properties.dominant
+        ? Math.round(symbolDopacityAlpha(this.style, d.properties.value, domStats.totalMin, domStats.totalMax, styleNum(this.style.fillopacity)) * 50) / 50
+        : fillOpacity);
       // align / offsetx / offsety: the whole chart moves (flatChartAlignOffset)
       // MULTIQUAD / MULTISQUARE: the items at one position side by side
       // (multiQuadOffsets), added to the chart position
@@ -16228,11 +16312,19 @@ self.onmessage = e => {
         if (singleBorderColorRgb) return singleBorderColorRgb;
         if (flatFlag(this.flags, 'NOLINES') || (this.style.linecolor && styleLineColor(this.style.linecolor) === 'none')) return null;
         const fill = this.classRgb(d.properties.cat);
+        // DOMINANT (and SEQUENCE): flat strokes in the class color itself (maptheme.js 21948)
+        if (d.properties.dominant) return fill;
         if (perPartBranch) return flatChartTextRgb(fill);
         return fill.slice(0, 3).every(c => c >= 255) ? [128, 128, 128] : fill;
       };
+      // flat's "symbol equals value" branch (CATEGORICAL without AGGREGATE/GROUP, maptheme.js
+      // 21626) strokes (linewidth || 1) · normalX(min(r / rMax, 1)) instead: one unit at the
+      // normal radius (measured: 1 px at r 15 px, linewidth 3 → 3 px)
+      // a dominant item: 0.2 px · linewidth whatever its size (measured: r 1.2–6.4 px all 0.2)
       const outlinePx = (d, r) => (!outlineRgb(d) ? 0 : symbolOutline
-        ? (styleNum(this.style.linewidth) || 1) * Math.min(2 * r / NORMAL_RADIUS_PX, 0.2 * unitPx)
+        ? (d.properties.dominant ? (styleNum(this.style.linewidth) || 1) * 0.2 * unitPx : perPartBranch
+          ? (styleNum(this.style.linewidth) || 1) * Math.min(2 * r / NORMAL_RADIUS_PX, 0.2 * unitPx)
+          : (styleNum(this.style.linewidth) || 1) * Math.min(r / (NORMAL_RADIUS_PX * unitPx), 1) * unitPx)
         : singleBorderWidthPx * r * 2 / BUBBLE_ICON_SIZE);
       // only single circles (no group icon, no other shape, no pixel
       // offset — ScatterplotLayer has none): drawn as real circles. A
@@ -16260,7 +16352,7 @@ self.onmessage = e => {
           getPosition: d => d.geometry.coordinates,
           getRadius: d => radiusPx(d) - (symbolOutline || circleLook ? 0 : outlinePx(d, radiusPx(d)) / 2),
           radiusUnits: 'pixels',
-          getFillColor: d => [...(this.classRgb(d.properties.cat)).slice(0, 3), noFill ? 0 : Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).fillOpacity : fillOpacity))],
+          getFillColor: d => [...(this.classRgb(d.properties.cat)).slice(0, 3), noFill ? 0 : Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).fillOpacity : fillOf(d)))],
           stroked: circleLook ? combined.some(d => circleLook(d).stroke) : combined.some(d => outlineRgb(d)),
           getLineColor: d => [...lineRgb(d).slice(0, 3), Math.round(this._iconAlpha(d) * (circleLook ? circleLook(d).strokeOpacity : 1))],
           getLineWidth: d => (circleLook ? (circleLook(d).stroke ? circleLook(d).width : 0) : outlinePx(d, radiusPx(d))),
@@ -16284,7 +16376,7 @@ self.onmessage = e => {
           // #888888 whatever the class color
           const r = vRadius(sizeValueOf(d));
           const w = Math.round(outlinePx(d, r) * BUBBLE_ICON_SIZE / Math.max(1e-6, 2 * r) * 4) / 4;
-          return this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOpacity, shape, shape === 'empty' ? [136, 136, 136] : rgb, w);
+          return this._buildSingleIcon((this.categoryColorsRgb || [])[d.properties.cat], fillOf(d), shape, shape === 'empty' ? [136, 136, 136] : rgb, w);
         },
         getSize: d => vRadius(sizeValueOf(d)) * 2,
         // group icons bake a fixed 0.9 alpha; an explicit fillopacity scales it
@@ -16566,6 +16658,10 @@ self.onmessage = e => {
       const star = flatFlag(this.flags, 'STAR');
       const fillOpacity = styleNum(st.fillopacity) || 0.85;
       const borderRgb = st.linecolor && styleLineColor(st.linecolor) !== 'none' ? hexOrNamedToRgb(styleLineColor(st.linecolor)) : null;
+      // a multi-field SYMBOL's parts are flat's per-part symbols: without linecolor each is
+      // stroked in the darker ChartColors.textColor of its own fill (as _buildChartLayers'
+      // outlineRgb; NOLINES / linecolor "none": none) — measured on flat's ladder
+      const noLines = flatFlag(this.flags, 'NOLINES') || (st.linecolor && styleLineColor(st.linecolor) === 'none');
       const lineWidth = styleNum(st.linewidth) || 1;
       const symbols = Array.isArray(st.symbols) ? st.symbols : null;
       // flat draws an external .svg/.png/.jpeg symbol file as an <image>
@@ -16782,8 +16878,9 @@ self.onmessage = e => {
             // fu.scale(nRadius / nMaxRadius) on a nChartSize image
             const u = urlSymbolOf(d.part.i);
             if (u) return urlIcon(u);
-            return this._buildSingleIcon(partRgb(d.part), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), borderRgb,
-              borderRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0);
+            const lineRgb = borderRgb || (ladder && !noLines ? flatChartTextRgb(partRgb(d.part)) : null);
+            return this._buildSingleIcon(partRgb(d.part), noFill.has(d.part.i) ? 0 : fillOpacity, shapeOf(d.part.i), lineRgb,
+              lineRgb ? Math.round(lineWidth * unit * Math.min(2 * d.part.r / normalR, 0.2) * BUBBLE_ICON_SIZE / Math.max(1, 2 * d.part.r) * 4) / 4 : 0);
           },
           getSize: d => d.part.r * 2,
           getPixelOffset: offsetOf,

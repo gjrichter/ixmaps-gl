@@ -489,11 +489,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "ac6a6111412fc26a",
-     "setDigest": "7cfc3b6e316bad56",
+     "digest": "64ecd104f07f8026",
+     "setDigest": "abeba73a56f7d7b6",
      "columnDigests": {
       "getColor": "0928284c5d50bfdc",
-      "getIcon": "4dbda7c114bc207d",
+      "getIcon": "3f39360fe70d7237",
       "getPosition": "24db4891fcbd66f3",
       "getSize": "0a249d6b74f28dee"
      },
@@ -586,8 +586,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -607,8 +607,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -628,8 +628,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-85,152,231-0.85-255,255,255-1.25",
-        "url": "#28c7c782:1674",
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#1feeac6d:1714",
         "width": 48
        },
        [
@@ -649,8 +649,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -670,8 +670,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-134,182,239-0.85-255,255,255-1.25",
-        "url": "#bc35799:1398",
+        "id": "single-diamond-134,182,239-0.85-255,255,255-1.5",
+        "url": "#4310822f:1102",
         "width": 48
        },
        [
@@ -691,8 +691,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-85,152,231-0.85-255,255,255-1.25",
-        "url": "#28c7c782:1674",
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#1feeac6d:1714",
         "width": 48
        },
        [
@@ -712,8 +712,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-42,120,214-0.85-255,255,255-1.25",
-        "url": "#d321c0a2:1446",
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1.5",
+        "url": "#a39b4061:1078",
         "width": 48
        },
        [
@@ -733,8 +733,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -754,8 +754,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-42,120,214-0.85-255,255,255-1.25",
-        "url": "#be33de14:474",
+        "id": "single-square-42,120,214-0.85-255,255,255-1.5",
+        "url": "#325a9adf:514",
         "width": 48
        },
        [
@@ -775,8 +775,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -796,8 +796,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-42,120,214-0.85-255,255,255-1.25",
-        "url": "#d321c0a2:1446",
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1.5",
+        "url": "#a39b4061:1078",
         "width": 48
        },
        [
@@ -817,8 +817,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-42,120,214-0.85-255,255,255-1",
-        "url": "#a9605f76:506",
+        "id": "single-square-42,120,214-0.85-255,255,255-1.5",
+        "url": "#325a9adf:514",
         "width": 48
        },
        [
@@ -838,8 +838,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-circle-85,152,231-0.85-255,255,255-1",
-        "url": "#45d690e0:2310",
+        "id": "single-circle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#a0a43265:2534",
         "width": 48
        },
        [
@@ -859,8 +859,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
-        "url": "#dbdc53a7:1238",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -880,8 +880,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-85,152,231-0.85-255,255,255-1",
-        "url": "#eca5cd72:502",
+        "id": "single-square-85,152,231-0.85-255,255,255-1.5",
+        "url": "#9d5a156d:522",
         "width": 48
        },
        [
@@ -901,8 +901,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-235,104,52-0.85-255,255,255-1",
-        "url": "#3ed523e8:494",
+        "id": "single-square-235,104,52-0.85-255,255,255-1.5",
+        "url": "#b510cab7:522",
         "width": 48
        },
        [
@@ -922,8 +922,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-134,182,239-0.85-255,255,255-1",
-        "url": "#fb3e8631:502",
+        "id": "single-square-134,182,239-0.85-255,255,255-1.5",
+        "url": "#eefc9466:510",
         "width": 48
        },
        [
@@ -1559,11 +1559,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "73ec1401e30f349f",
-     "setDigest": "0c7acf69a440a20a",
+     "digest": "9aac61a3cc2c7643",
+     "setDigest": "9c6d4555f6d78607",
      "columnDigests": {
       "getColor": "891cb36463627e8d",
-      "getIcon": "ebcccb0aa58e9f2e",
+      "getIcon": "26a7d12abc3170f1",
       "getPosition": "6ab462ab22cbaee3",
       "getSize": "0ab665c19ab0bec9"
      },
@@ -1656,8 +1656,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -1677,8 +1677,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -1698,8 +1698,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-85,152,231-0.85-255,255,255-1.25",
-        "url": "#28c7c782:1674",
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#1feeac6d:1714",
         "width": 48
        },
        [
@@ -1719,8 +1719,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -1740,8 +1740,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-134,182,239-0.85-255,255,255-1.25",
-        "url": "#bc35799:1398",
+        "id": "single-diamond-134,182,239-0.85-255,255,255-1.5",
+        "url": "#4310822f:1102",
         "width": 48
        },
        [
@@ -1761,8 +1761,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-85,152,231-0.85-255,255,255-1.25",
-        "url": "#28c7c782:1674",
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#1feeac6d:1714",
         "width": 48
        },
        [
@@ -1782,8 +1782,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-42,120,214-0.85-255,255,255-1.25",
-        "url": "#d321c0a2:1446",
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1.5",
+        "url": "#a39b4061:1078",
         "width": 48
        },
        [
@@ -1803,8 +1803,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -1824,8 +1824,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-42,120,214-0.85-255,255,255-1.25",
-        "url": "#be33de14:474",
+        "id": "single-square-42,120,214-0.85-255,255,255-1.5",
+        "url": "#325a9adf:514",
         "width": 48
        },
        [
@@ -1845,8 +1845,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -1866,8 +1866,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-42,120,214-0.85-255,255,255-1.25",
-        "url": "#d321c0a2:1446",
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1.5",
+        "url": "#a39b4061:1078",
         "width": 48
        },
        [
@@ -1887,8 +1887,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-circle-85,152,231-0.85-255,255,255-1",
-        "url": "#45d690e0:2310",
+        "id": "single-circle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#a0a43265:2534",
         "width": 48
        },
        [
@@ -1908,8 +1908,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
-        "url": "#dbdc53a7:1238",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -1929,8 +1929,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-85,152,231-0.85-255,255,255-1",
-        "url": "#eca5cd72:502",
+        "id": "single-square-85,152,231-0.85-255,255,255-1.5",
+        "url": "#9d5a156d:522",
         "width": 48
        },
        [
@@ -1950,8 +1950,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-235,104,52-0.85-255,255,255-1",
-        "url": "#3ed523e8:494",
+        "id": "single-square-235,104,52-0.85-255,255,255-1.5",
+        "url": "#b510cab7:522",
         "width": 48
        },
        [
@@ -1971,8 +1971,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-134,182,239-0.85-255,255,255-1",
-        "url": "#fb3e8631:502",
+        "id": "single-square-134,182,239-0.85-255,255,255-1.5",
+        "url": "#eefc9466:510",
         "width": 48
        },
        [
@@ -1992,8 +1992,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-85,152,231-0.85-255,255,255-1",
-        "url": "#3ee9adfc:1258",
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#1feeac6d:1714",
         "width": 48
        },
        [
@@ -2629,11 +2629,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "419eb2361f99491f",
-     "setDigest": "6cdc49e8baee2f7b",
+     "digest": "9e35a1d09250a57f",
+     "setDigest": "3ed40242a9704b1a",
      "columnDigests": {
       "getColor": "b35ca52ae35a5e40",
-      "getIcon": "033b8fca50779976",
+      "getIcon": "de7edfd917c95d5e",
       "getPosition": "514bf1f2cc26c5f0",
       "getSize": "fd4735d18c28f34b"
      },
@@ -2726,8 +2726,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -2747,8 +2747,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -2768,8 +2768,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-85,152,231-0.85-255,255,255-1.25",
-        "url": "#28c7c782:1674",
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#1feeac6d:1714",
         "width": 48
        },
        [
@@ -2789,8 +2789,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -2810,8 +2810,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-134,182,239-0.85-255,255,255-1.25",
-        "url": "#bc35799:1398",
+        "id": "single-diamond-134,182,239-0.85-255,255,255-1.5",
+        "url": "#4310822f:1102",
         "width": 48
        },
        [
@@ -2831,8 +2831,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-85,152,231-0.85-255,255,255-1.25",
-        "url": "#28c7c782:1674",
+        "id": "single-triangle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#1feeac6d:1714",
         "width": 48
        },
        [
@@ -2852,8 +2852,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-42,120,214-0.85-255,255,255-1.25",
-        "url": "#d321c0a2:1446",
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1.5",
+        "url": "#a39b4061:1078",
         "width": 48
        },
        [
@@ -2873,8 +2873,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -2894,8 +2894,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -2915,8 +2915,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-42,120,214-0.85-255,255,255-1.25",
-        "url": "#be33de14:474",
+        "id": "single-square-42,120,214-0.85-255,255,255-1.5",
+        "url": "#325a9adf:514",
         "width": 48
        },
        [
@@ -2936,8 +2936,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1.25",
-        "url": "#ca07d737:1642",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -2957,8 +2957,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-42,120,214-0.85-255,255,255-1.25",
-        "url": "#d321c0a2:1446",
+        "id": "single-diamond-42,120,214-0.85-255,255,255-1.5",
+        "url": "#a39b4061:1078",
         "width": 48
        },
        [
@@ -2978,8 +2978,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-42,120,214-0.85-255,255,255-1",
-        "url": "#a9605f76:506",
+        "id": "single-square-42,120,214-0.85-255,255,255-1.5",
+        "url": "#325a9adf:514",
         "width": 48
        },
        [
@@ -2999,8 +2999,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-circle-85,152,231-0.85-255,255,255-1",
-        "url": "#45d690e0:2310",
+        "id": "single-circle-85,152,231-0.85-255,255,255-1.5",
+        "url": "#a0a43265:2534",
         "width": 48
        },
        [
@@ -3020,8 +3020,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.85-255,255,255-1",
-        "url": "#dbdc53a7:1238",
+        "id": "single-triangle-134,182,239-0.85-255,255,255-1.5",
+        "url": "#8a4d9e0b:1694",
         "width": 48
        },
        [
@@ -3041,8 +3041,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-85,152,231-0.85-255,255,255-1",
-        "url": "#eca5cd72:502",
+        "id": "single-square-85,152,231-0.85-255,255,255-1.5",
+        "url": "#9d5a156d:522",
         "width": 48
        },
        [
@@ -3062,8 +3062,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-235,104,52-0.85-255,255,255-1",
-        "url": "#3ed523e8:494",
+        "id": "single-square-235,104,52-0.85-255,255,255-1.5",
+        "url": "#b510cab7:522",
         "width": 48
        },
        [
@@ -3089,11 +3089,11 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "8c027df39b9c4880",
-     "setDigest": "97ed2f69e31e0dc0",
+     "digest": "f699deacf0fa881e",
+     "setDigest": "ea1982bc16ddc549",
      "columnDigests": {
       "getColor": "87332b9f3947a89d",
-      "getIcon": "b6019907bb80dde7",
+      "getIcon": "5908a80723f1a3af",
       "getPosition": "28e48e0320a89238",
       "getSize": "f9d768cead76d5dc"
      },
@@ -3123,8 +3123,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-triangle-134,182,239-0.3-51,51,51-1.25",
-        "url": "#4c625b42:1798",
+        "id": "single-triangle-134,182,239-0.3-51,51,51-2.5",
+        "url": "#b1d354b5:1874",
         "width": 48
        },
        [
@@ -3144,8 +3144,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-134,182,239-0.3-51,51,51-1",
-        "url": "#20934130:530",
+        "id": "single-square-134,182,239-0.3-51,51,51-2.5",
+        "url": "#1ef209a7:590",
         "width": 48
        },
        [
@@ -3165,8 +3165,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-circle-134,182,239-0.3-51,51,51-0.75",
-        "url": "#1cc2b5de:2414",
+        "id": "single-circle-134,182,239-0.3-51,51,51-2.5",
+        "url": "#b1a57c65:2894",
         "width": 48
        },
        [
@@ -3186,8 +3186,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-circle-235,104,52-0.3-51,51,51-0.75",
-        "url": "#6c59618b:2302",
+        "id": "single-circle-235,104,52-0.3-51,51,51-2.5",
+        "url": "#4c7b0fd2:2786",
         "width": 48
        },
        [
@@ -3207,8 +3207,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-diamond-85,152,231-0.3-51,51,51-0.5",
-        "url": "#4d75982e:1182",
+        "id": "single-diamond-85,152,231-0.3-51,51,51-2.5",
+        "url": "#d35b037c:1206",
         "width": 48
        },
        [
@@ -3228,8 +3228,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-85,152,231-0.3-51,51,51-0.5",
-        "url": "#f7c4968b:530",
+        "id": "single-square-85,152,231-0.3-51,51,51-2",
+        "url": "#6d262e9f:534",
         "width": 48
        },
        [
@@ -3249,8 +3249,8 @@
         "anchorX": 24,
         "anchorY": 24,
         "height": 48,
-        "id": "single-square-85,152,231-0.3-51,51,51-0.5",
-        "url": "#f7c4968b:530",
+        "id": "single-square-85,152,231-0.3-51,51,51-2",
+        "url": "#6d262e9f:534",
         "width": 48
        },
        [

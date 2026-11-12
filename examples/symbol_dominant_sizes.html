@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SYMBOL · CATEGORICAL DOMINANT · size flags</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.44/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>SYMBOL · CATEGORICAL DOMINANT · size flags</b>
+  <span>The same CHART|SYMBOL|AGGREGATE|SUM|DOPACITYMAX|CATEGORICAL|CENTER|DOMINANT theme four times: GRIDSIZE (circles), GRIDSIZE (hexagons), AUTOSIZE and no size flag. The size flag changes only the symbol size: in every row a cell shows its dominant category (the biggest part above dominantfilter "min"; without one, every category), in its class color, its fill faded by DOPACITYMAX, its outline not. (Each row lies on its own part of the aggregation grid, so the rows' cells differ.)</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data, the same records in every row: clusters of points with a few categories,
+  // so that cells have a clear winner, a tie above 1, or only single records (no winner)
+  var CATS = ["oak", "beech", "pine", "larch", "chestnut"];
+  function items(lat0) {
+    var seed = 7, rnd = function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    var feats = [];
+    for (var c = 0; c < 14; c++) {
+      var lng = 8.9 + c * 0.06, n = 1 + (c * 5) % 9;
+      for (var k = 0; k < n; k++) {
+        var cat = CATS[(c + (k % (1 + c % 3)) * (c % 2 ? 1 : 2)) % CATS.length];
+        feats.push({ type: "Feature", properties: { name: "tree " + c + "." + k, specie: cat },
+          geometry: { type: "Point", coordinates: [lng + (rnd() - 0.5) * 0.02, lat0 + (rnd() - 0.5) * 0.02] } });
+      }
+    }
+    return { type: "FeatureCollection", features: feats };
+  }
+  function themeAt(name, lat0, sizeFlag, symbol, scale) {
+    return ixmaps.layer(name, layer => layer
+      .data({ obj: items(lat0), type: "geojson" })
+      .binding({ geo: "geometry", value: "specie", title: "name" })
+      .type("CHART|SYMBOL|" + (sizeFlag ? sizeFlag + "|" : "") + "AGGREGATE|SUM|DOPACITYMAX|CATEGORICAL|CENTER|DOMINANT")
+      .style({ colorscheme: [5, "tableau"], values: CATS, fillopacity: 0.7, symbols: [symbol], gridwidthpx: 20,
+        dopacitypow: "2", dopacityscale: "2", scale: scale || 1, showdata: "true" })
+      .meta({ title: name, tooltip: "{{theme.item.chart}}{{theme.item.data}}" })
+    );
+  }
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([45.35, 9.3], 10)
+      .layer(themeAt("gridsize-circle", 45.55, "GRIDSIZE", "circle"))
+      .layer(themeAt("gridsize-hexagon", 45.42, "GRIDSIZE", "hexagon"))
+      .layer(themeAt("autosize", 45.29, "AUTOSIZE", "circle"))
+      .layer(themeAt("no-size-flag", 45.16, "", "circle", 0.1))
+  );
+</script>
+</body>
+</html>

@@ -1,0 +1,5587 @@
+{
+ "page": "examples/symbol_dominant_sizes.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.3,
+     45.35
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-gridsize-circle-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 30,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "892786f4d216de1c",
+     "setDigest": "558472bbc73e1652",
+     "columnDigests": {
+      "getFillColor": "5766b7c2e359824a",
+      "getLineColor": "cf09bda2950a1ea3",
+      "getLineWidth": "232607269cda7069",
+      "getPosition": "420d92e2c18e7511",
+      "getRadius": "47cf54936224186b"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       1.485308,
+       1.485308
+      ],
+      "getPosition": [
+       8.891519,
+       9.688028
+      ],
+      "getRadius": [
+       13.333333,
+       13.333333
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        8.891519,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        9.385904,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.385904,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        9.385904,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.385904,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        9.495767,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.495767,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.485308,
+       [
+        8.946451,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.485308,
+       [
+        8.946451,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.485308,
+       [
+        9.550699,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.550699,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.028848,
+        45.549159
+       ],
+       13.333333
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.485308,
+       [
+        9.028848,
+        45.549159
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.221109,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.303506,
+        45.549159
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.358438,
+        45.549159
+       ],
+       13.333333
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.660562,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.485308,
+       [
+        9.660562,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.688028,
+        45.549159
+       ],
+       13.333333
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.485308,
+       [
+        9.440835,
+        45.538099
+       ],
+       13.333333
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-gridsize-hexagon-g0",
+     "type": "IconLayer",
+     "count": 34,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "6baa37a5c62a6451",
+     "setDigest": "956b2f10b64b022d",
+     "columnDigests": {
+      "getColor": "c755a500d7dd44b1",
+      "getIcon": "a427ad23a52a1f40",
+      "getPosition": "de6ffa24eb60805e",
+      "getSize": "cfbab1d7655f7a65"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.891519,
+       9.688028
+      ],
+      "getSize": [
+       26.666667,
+       26.666667
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-2.75",
+        "url": "#5347517a:2090",
+        "width": 48
+       },
+       [
+        8.891519,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-2.75",
+        "url": "#5347517a:2090",
+        "width": 48
+       },
+       [
+        9.221109,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-2.75",
+        "url": "#a4f51553:2086",
+        "width": 48
+       },
+       [
+        9.221109,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-2.75",
+        "url": "#5347517a:2090",
+        "width": 48
+       },
+       [
+        9.385904,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-255,190,125-0-255,190,125-2.75",
+        "url": "#2423f5fa:1974",
+        "width": 48
+       },
+       [
+        9.385904,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-2.75",
+        "url": "#5347517a:2090",
+        "width": 48
+       },
+       [
+        9.385904,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-255,190,125-0-255,190,125-2.75",
+        "url": "#2423f5fa:1974",
+        "width": 48
+       },
+       [
+        9.385904,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-2.75",
+        "url": "#5347517a:2090",
+        "width": 48
+       },
+       [
+        9.495767,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2.75",
+        "url": "#36edb1ed:2050",
+        "width": 48
+       },
+       [
+        9.495767,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-2.75",
+        "url": "#a4f51553:2086",
+        "width": 48
+       },
+       [
+        8.946451,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-2.75",
+        "url": "#a4f51553:2086",
+        "width": 48
+       },
+       [
+        8.946451,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-2.75",
+        "url": "#a4f51553:2086",
+        "width": 48
+       },
+       [
+        9.193643,
+        45.438454
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-2.75",
+        "url": "#a4f51553:2086",
+        "width": 48
+       },
+       [
+        9.550699,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2.75",
+        "url": "#36edb1ed:2050",
+        "width": 48
+       },
+       [
+        9.028848,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-89,161,79-0-89,161,79-2.75",
+        "url": "#5631d2a1:2066",
+        "width": 48
+       },
+       [
+        9.028848,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2.75",
+        "url": "#36edb1ed:2050",
+        "width": 48
+       },
+       [
+        9.221109,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2.75",
+        "url": "#36edb1ed:2050",
+        "width": 48
+       },
+       [
+        9.303506,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2.75",
+        "url": "#36edb1ed:2050",
+        "width": 48
+       },
+       [
+        9.358438,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2.75",
+        "url": "#36edb1ed:2050",
+        "width": 48
+       },
+       [
+        9.578164,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-255,190,125-0-255,190,125-2.75",
+        "url": "#2423f5fa:1974",
+        "width": 48
+       },
+       [
+        9.08378,
+        45.438454
+       ],
+       26.666667
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-autosize-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 27,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "c3659c6f6165830c",
+     "setDigest": "0533c3ae68b55bb6",
+     "columnDigests": {
+      "getFillColor": "f754cbc441f73e77",
+      "getLineColor": "f2a301cd12c33896",
+      "getLineWidth": "dd5f6c0be323307a",
+      "getPosition": "9bbc0a09f9c3966f",
+      "getRadius": "8039e16079a37dd2"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       1.485308,
+       1.485308
+      ],
+      "getPosition": [
+       8.891519,
+       9.688028
+      ],
+      "getRadius": [
+       4.714045,
+       10.540926
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        8.891519,
+        45.294211
+       ],
+       4.714045
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        9.221109,
+        45.294211
+       ],
+       4.714045
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.485308,
+       [
+        9.550699,
+        45.271987
+       ],
+       4.714045
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.001382,
+        45.294211
+       ],
+       4.714045
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.303506,
+        45.2831
+       ],
+       4.714045
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.358438,
+        45.2831
+       ],
+       4.714045
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.358438,
+        45.2831
+       ],
+       4.714045
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.578164,
+        45.2831
+       ],
+       4.714045
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.485308,
+       [
+        9.633096,
+        45.30532
+       ],
+       4.714045
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.660562,
+        45.294211
+       ],
+       4.714045
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.485308,
+       [
+        9.660562,
+        45.294211
+       ],
+       4.714045
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.688028,
+        45.2831
+       ],
+       4.714045
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.485308,
+       [
+        9.028848,
+        45.2831
+       ],
+       4.714045
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.485308,
+       [
+        9.440835,
+        45.271987
+       ],
+       4.714045
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        133
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        9.193643,
+        45.2831
+       ],
+       6.666667
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        133
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.485308,
+       [
+        9.385904,
+        45.294211
+       ],
+       6.666667
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        133
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.485308,
+       [
+        8.946451,
+        45.294211
+       ],
+       6.666667
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        133
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.485308,
+       [
+        9.193643,
+        45.30532
+       ],
+       6.666667
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        133
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.485308,
+       [
+        9.08378,
+        45.30532
+       ],
+       6.666667
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        133
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.485308,
+       [
+        9.138711,
+        45.2831
+       ],
+       6.666667
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-no-size-flag-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 31,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "94b45da76f94ac39",
+     "setDigest": "e2e0c89b4edcb4c7",
+     "columnDigests": {
+      "getFillColor": "4a69852c12b98dec",
+      "getLineColor": "96c59cb6a71fd60b",
+      "getLineWidth": "ba595f42b325629a",
+      "getPosition": "ea4edcce8b8da6ab",
+      "getRadius": "3c78ee257742d9b5"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       0.148531,
+       0.148531
+      ],
+      "getPosition": [
+       8.891519,
+       9.688028
+      ],
+      "getRadius": [
+       4.981876,
+       11.139813
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.148531,
+       [
+        8.891519,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.148531,
+       [
+        9.221109,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.148531,
+       [
+        9.358438,
+        45.171872
+       ],
+       4.981876
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.148531,
+       [
+        9.385904,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.148531,
+       [
+        9.385904,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.148531,
+       [
+        9.385904,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.148531,
+       [
+        8.973916,
+        45.171872
+       ],
+       4.981876
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.148531,
+       [
+        8.973916,
+        45.171872
+       ],
+       4.981876
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.148531,
+       [
+        9.550699,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.148531,
+       [
+        9.550699,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.148531,
+       [
+        8.973916,
+        45.1496
+       ],
+       4.981876
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.148531,
+       [
+        9.028848,
+        45.171872
+       ],
+       4.981876
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.148531,
+       [
+        9.633096,
+        45.171872
+       ],
+       4.981876
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.148531,
+       [
+        9.056314,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.148531,
+       [
+        9.358438,
+        45.1496
+       ],
+       4.981876
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.148531,
+       [
+        9.660562,
+        45.160737
+       ],
+       4.981876
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.148531,
+       [
+        9.688028,
+        45.171872
+       ],
+       4.981876
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       0.148531,
+       [
+        9.688028,
+        45.171872
+       ],
+       4.981876
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       0.148531,
+       [
+        9.028848,
+        45.1496
+       ],
+       4.981876
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       0.148531,
+       [
+        9.440835,
+        45.160737
+       ],
+       4.981876
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "gridsize-circle",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "GRIDSIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 7
+    },
+    {
+     "name": "gridsize-hexagon",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "GRIDSIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 6
+    },
+    {
+     "name": "autosize",
+     "flags": [
+      "AGGREGATE",
+      "AUTOSIZE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 5
+    },
+    {
+     "name": "no-size-flag",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 5
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "gridsize-circle": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>"
+    ],
+    "gridsize-hexagon": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">6.00</td></tr></table>"
+    ],
+    "autosize": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(89,161,79)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"chestnut\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">chestnut</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>"
+    ],
+    "no-size-flag": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.3,
+     45.35
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-gridsize-circle-g0",
+     "type": "IconLayer",
+     "count": 0,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e3b0c44298fc1c14",
+     "setDigest": "e3b0c44298fc1c14",
+     "columnDigests": {
+      "getColor": "e3b0c44298fc1c14",
+      "getIcon": "e3b0c44298fc1c14",
+      "getPosition": "e3b0c44298fc1c14",
+      "getSize": "e3b0c44298fc1c14"
+     },
+     "stats": {},
+     "sample": []
+    },
+    {
+     "id": "ix-bubbles-gridsize-hexagon-g0",
+     "type": "IconLayer",
+     "count": 40,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "5ada340fa1729910",
+     "setDigest": "d2873cd52e91e306",
+     "columnDigests": {
+      "getColor": "626888f124471841",
+      "getIcon": "14dfa2eaffcab4c2",
+      "getPosition": "6bbb6f1a4e5ae7be",
+      "getSize": "7b96917b34cd0e5b"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.960184,
+       9.633096
+      ],
+      "getSize": [
+       26.666667,
+       26.666667
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-3.25",
+        "url": "#b0ef8a63:2078",
+        "width": 48
+       },
+       [
+        9.193643,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-3.25",
+        "url": "#8c9262eb:2082",
+        "width": 48
+       },
+       [
+        9.193643,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.193643,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-3.25",
+        "url": "#b0ef8a63:2078",
+        "width": 48
+       },
+       [
+        9.372171,
+        45.421829
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.372171,
+        45.421829
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-3.25",
+        "url": "#b0ef8a63:2078",
+        "width": 48
+       },
+       [
+        9.385904,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-3.25",
+        "url": "#b0ef8a63:2078",
+        "width": 48
+       },
+       [
+        9.495767,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.495767,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-3.25",
+        "url": "#b0ef8a63:2078",
+        "width": 48
+       },
+       [
+        9.5095,
+        45.432913
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.5095,
+        45.432913
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-3.25",
+        "url": "#b0ef8a63:2078",
+        "width": 48
+       },
+       [
+        9.5095,
+        45.410743
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-3.25",
+        "url": "#8c9262eb:2082",
+        "width": 48
+       },
+       [
+        8.960184,
+        45.410743
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-3.25",
+        "url": "#8c9262eb:2082",
+        "width": 48
+       },
+       [
+        9.550699,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        8.973916,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.015115,
+        45.421829
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.207376,
+        45.410743
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.317239,
+        45.410743
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.330972,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.495767,
+        45.416286
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-3.25",
+        "url": "#3d218f21:2066",
+        "width": 48
+       },
+       [
+        9.564432,
+        45.410743
+       ],
+       26.666667
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-autosize-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 40,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "77cf34ee5126b2cb",
+     "setDigest": "6ca85e334be00b76",
+     "columnDigests": {
+      "getFillColor": "9059a7116656231d",
+      "getLineColor": "aac2c9dcdf776917",
+      "getLineWidth": "912e9420925925ee",
+      "getPosition": "7563d7178a7a4f08",
+      "getRadius": "3167b5e37ad5a403"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       1.871371,
+       1.871371
+      ],
+      "getPosition": [
+       8.960184,
+       9.633096
+      ],
+      "getRadius": [
+       5.962848,
+       13.333333
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.871371,
+       [
+        9.193643,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.871371,
+       [
+        9.193643,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        9.193643,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.871371,
+       [
+        9.372171,
+        45.299766
+       ],
+       5.962848
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.871371,
+       [
+        9.385904,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.871371,
+       [
+        9.495767,
+        45.294211
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        9.495767,
+        45.294211
+       ],
+       5.962848
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.871371,
+       [
+        9.5095,
+        45.299766
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        9.5095,
+        45.299766
+       ],
+       5.962848
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.871371,
+       [
+        9.5095,
+        45.288656
+       ],
+       5.962848
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.871371,
+       [
+        8.960184,
+        45.299766
+       ],
+       5.962848
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.871371,
+       [
+        9.138711,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.871371,
+       [
+        9.138711,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.871371,
+       [
+        9.550699,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        8.973916,
+        45.2831
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        9.015115,
+        45.288656
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        9.207376,
+        45.277544
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        9.330972,
+        45.294211
+       ],
+       5.962848
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.871371,
+       [
+        9.330972,
+        45.294211
+       ],
+       5.962848
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.871371,
+       [
+        9.330972,
+        45.2831
+       ],
+       5.962848
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-no-size-flag-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 12,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "d3bea780c249a5f5",
+     "setDigest": "c7d706644a15f36f",
+     "columnDigests": {
+      "getFillColor": "b2a16f7a5db4a840",
+      "getLineColor": "5d094ae9fa9828c7",
+      "getLineWidth": "b35e8bf46c362937",
+      "getPosition": "3a3c6094216928e0",
+      "getRadius": "d6eb8bdbd9c3aa8a"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       0.187137,
+       0.187137
+      ],
+      "getPosition": [
+       8.960184,
+       9.619363
+      ],
+      "getRadius": [
+       7.017643,
+       9.924445
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.187137,
+       [
+        9.372171,
+        45.166305
+       ],
+       7.017643
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.187137,
+       [
+        9.5095,
+        45.166305
+       ],
+       7.017643
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.187137,
+       [
+        9.5095,
+        45.166305
+       ],
+       7.017643
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.187137,
+       [
+        9.015115,
+        45.166305
+       ],
+       7.017643
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.187137,
+       [
+        9.317239,
+        45.166305
+       ],
+       7.017643
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.187137,
+       [
+        9.495767,
+        45.171872
+       ],
+       7.017643
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.187137,
+       [
+        9.60563,
+        45.171872
+       ],
+       7.017643
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.187137,
+       [
+        9.08378,
+        45.171872
+       ],
+       7.017643
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.187137,
+       [
+        9.385904,
+        45.171872
+       ],
+       7.017643
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        204
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.187137,
+       [
+        8.960184,
+        45.166305
+       ],
+       9.924445
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        204
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.187137,
+       [
+        9.207376,
+        45.166305
+       ],
+       9.924445
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        204
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.187137,
+       [
+        9.619363,
+        45.166305
+       ],
+       9.924445
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "gridsize-circle",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "GRIDSIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 4
+    },
+    {
+     "name": "gridsize-hexagon",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "GRIDSIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 3
+    },
+    {
+     "name": "autosize",
+     "flags": [
+      "AGGREGATE",
+      "AUTOSIZE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 5
+    },
+    {
+     "name": "no-size-flag",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 4
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "gridsize-hexagon": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">3.00</td></tr></table>"
+    ],
+    "autosize": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">5.00</td></tr></table>"
+    ],
+    "no-size-flag": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.3,
+     45.35
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-bubbles-gridsize-circle-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 19,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "2f9276acf4dd4737",
+     "setDigest": "f96b59ba2ef133bb",
+     "columnDigests": {
+      "getFillColor": "d2cf90fb5c0f9d50",
+      "getLineColor": "8855612094a86099",
+      "getLineWidth": "aef03ca9216e4732",
+      "getPosition": "978c9a16163e733f",
+      "getRadius": "a9357ee0c7bbf101"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       1.17889,
+       1.17889
+      ],
+      "getPosition": [
+       8.891519,
+       9.660562
+      ],
+      "getRadius": [
+       13.333333,
+       13.333333
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        8.891519,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        9.111246,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.17889,
+       [
+        9.111246,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.111246,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        9.550699,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.550699,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.001382,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.001382,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.166177,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.440835,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        128
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        9.385904,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        128
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.17889,
+       [
+        9.660562,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        179
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        9.221109,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        179
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        9.495767,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        179
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        8.946451,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        219
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        9.27604,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        250
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.330972,
+        45.538099
+       ],
+       13.333333
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.17889,
+       [
+        9.056314,
+        45.560218
+       ],
+       13.333333
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.60563,
+        45.560218
+       ],
+       13.333333
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-gridsize-hexagon-g0",
+     "type": "IconLayer",
+     "count": 22,
+     "constants": {
+      "billboard": true,
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getColor",
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "23836e2e45e64202",
+     "setDigest": "6fccb03b878ace36",
+     "columnDigests": {
+      "getColor": "e2463313a4f19208",
+      "getIcon": "d482f0536aa7fed6",
+      "getPosition": "698291301a1be72c",
+      "getSize": "18525e8df3365319"
+     },
+     "stats": {
+      "getColor": [
+       255,
+       255
+      ],
+      "getPosition": [
+       8.891519,
+       9.660562
+      ],
+      "getSize": [
+       26.666667,
+       26.666667
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0-78,121,167-2",
+        "url": "#f6ebf56c:1962",
+        "width": 48
+       },
+       [
+        8.891519,
+        45.449534
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-2",
+        "url": "#7b43cb90:1938",
+        "width": 48
+       },
+       [
+        9.111246,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-89,161,79-0-89,161,79-2",
+        "url": "#2499f876:1962",
+        "width": 48
+       },
+       [
+        9.111246,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0-160,203,232-2",
+        "url": "#7b43cb90:1938",
+        "width": 48
+       },
+       [
+        9.550699,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2",
+        "url": "#b3ef740d:1942",
+        "width": 48
+       },
+       [
+        9.550699,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2",
+        "url": "#b3ef740d:1942",
+        "width": 48
+       },
+       [
+        9.001382,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-89,161,79-0-89,161,79-2",
+        "url": "#2499f876:1962",
+        "width": 48
+       },
+       [
+        9.001382,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0-242,142,43-2",
+        "url": "#b3ef740d:1942",
+        "width": 48
+       },
+       [
+        9.166177,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-89,161,79-0-89,161,79-2",
+        "url": "#2499f876:1962",
+        "width": 48
+       },
+       [
+        9.166177,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-255,190,125-0-255,190,125-2",
+        "url": "#e399d2ba:1870",
+        "width": 48
+       },
+       [
+        9.660562,
+        45.449534
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-89,161,79-0-89,161,79-2",
+        "url": "#2499f876:1962",
+        "width": 48
+       },
+       [
+        9.660562,
+        45.449534
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-255,190,125-0-255,190,125-2",
+        "url": "#e399d2ba:1870",
+        "width": 48
+       },
+       [
+        9.660562,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-89,161,79-0-89,161,79-2",
+        "url": "#2499f876:1962",
+        "width": 48
+       },
+       [
+        9.440835,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0.5-78,121,167-2",
+        "url": "#2a8a4dcb:1874",
+        "width": 48
+       },
+       [
+        9.385904,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0.5-160,203,232-2",
+        "url": "#41d82638:1874",
+        "width": 48
+       },
+       [
+        9.221109,
+        45.449534
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0.7-78,121,167-2",
+        "url": "#3300ff70:1862",
+        "width": 48
+       },
+       [
+        9.221109,
+        45.4052
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-78,121,167-0.7-78,121,167-2",
+        "url": "#3300ff70:1862",
+        "width": 48
+       },
+       [
+        9.495767,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0.7-160,203,232-2",
+        "url": "#d5b4b278:1866",
+        "width": 48
+       },
+       [
+        8.946451,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-160,203,232-0.86-160,203,232-2",
+        "url": "#3941d444:1834",
+        "width": 48
+       },
+       [
+        9.27604,
+        45.427371
+       ],
+       26.666667
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 24,
+        "anchorY": 24,
+        "height": 48,
+        "id": "single-hexagon-242,142,43-0.98-242,142,43-2",
+        "url": "#50864f19:1770",
+        "width": 48
+       },
+       [
+        9.330972,
+        45.4052
+       ],
+       26.666667
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-autosize-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 20,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "d7df54db60fdcf2f",
+     "setDigest": "7e338d43beaa031e",
+     "columnDigests": {
+      "getFillColor": "a2ce9699e21391cd",
+      "getLineColor": "da5b283ec4e01da0",
+      "getLineWidth": "530a55285e0980b1",
+      "getPosition": "cf901d3ceee14f10",
+      "getRadius": "7e346b977d63c44b"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       1.17889,
+       1.17889
+      ],
+      "getPosition": [
+       8.891519,
+       9.715494
+      ],
+      "getRadius": [
+       4.444444,
+       11.758895
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        8.891519,
+        45.316426
+       ],
+       4.444444
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        9.111246,
+        45.271987
+       ],
+       4.444444
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        9.550699,
+        45.271987
+       ],
+       4.444444
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.550699,
+        45.271987
+       ],
+       4.444444
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.001382,
+        45.271987
+       ],
+       4.444444
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.001382,
+        45.271987
+       ],
+       4.444444
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.17889,
+       [
+        9.660562,
+        45.316426
+       ],
+       4.444444
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.660562,
+        45.316426
+       ],
+       4.444444
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.17889,
+       [
+        9.715494,
+        45.294211
+       ],
+       4.444444
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.440835,
+        45.271987
+       ],
+       4.444444
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        128
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        9.385904,
+        45.294211
+       ],
+       6.285394
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        128
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        9.221109,
+        45.316426
+       ],
+       6.285394
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        128
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       1.17889,
+       [
+        9.166177,
+        45.294211
+       ],
+       6.285394
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        179
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        9.221109,
+        45.271987
+       ],
+       7.698004
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        179
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       1.17889,
+       [
+        9.495767,
+        45.294211
+       ],
+       7.698004
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        179
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        8.946451,
+        45.294211
+       ],
+       7.698004
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        219
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       1.17889,
+       [
+        9.27604,
+        45.294211
+       ],
+       8.888889
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        250
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.330972,
+        45.271987
+       ],
+       9.93808
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       1.17889,
+       [
+        9.60563,
+        45.294211
+       ],
+       11.758895
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       1.17889,
+       [
+        9.056314,
+        45.294211
+       ],
+       11.758895
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-no-size-flag-circles-g0",
+     "type": "ScatterplotLayer",
+     "count": 23,
+     "constants": {
+      "billboard": true,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "radiusUnits": "pixels",
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "getLineColor",
+      "getLineWidth",
+      "getPosition",
+      "getRadius"
+     ],
+     "digest": "8e34aab3ef19dafd",
+     "setDigest": "bb00fc74ad496f77",
+     "columnDigests": {
+      "getFillColor": "b03ba7a5264bb3c2",
+      "getLineColor": "e7a5638724d51d0a",
+      "getLineWidth": "5a4e62e0d491bc63",
+      "getPosition": "b2b28380f8cd1ba6",
+      "getRadius": "1c895eb1dea9df4f"
+     },
+     "stats": {
+      "getFillColor": [
+       78,
+       255
+      ],
+      "getLineColor": [
+       78,
+       255
+      ],
+      "getLineWidth": [
+       0.117889,
+       0.117889
+      ],
+      "getPosition": [
+       8.891519,
+       9.715494
+      ],
+      "getRadius": [
+       3.341839,
+       8.841676
+      ]
+     },
+     "sample": [
+      [
+       [
+        78,
+        121,
+        167,
+        0
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.117889,
+       [
+        8.891519,
+        45.183005
+       ],
+       3.341839
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.117889,
+       [
+        9.111246,
+        45.138461
+       ],
+       3.341839
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.117889,
+       [
+        9.221109,
+        45.138461
+       ],
+       3.341839
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.117889,
+       [
+        9.221109,
+        45.138461
+       ],
+       3.341839
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        0
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.117889,
+       [
+        9.550699,
+        45.138461
+       ],
+       3.341839
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.117889,
+       [
+        9.550699,
+        45.138461
+       ],
+       3.341839
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        0
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.117889,
+       [
+        9.001382,
+        45.183005
+       ],
+       3.341839
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.117889,
+       [
+        9.111246,
+        45.183005
+       ],
+       3.341839
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.117889,
+       [
+        9.660562,
+        45.183005
+       ],
+       3.341839
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       0.117889,
+       [
+        9.660562,
+        45.183005
+       ],
+       3.341839
+      ],
+      [
+       [
+        255,
+        190,
+        125,
+        0
+       ],
+       [
+        255,
+        190,
+        125,
+        255
+       ],
+       0.117889,
+       [
+        9.715494,
+        45.160737
+       ],
+       3.341839
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       0.117889,
+       [
+        9.001382,
+        45.138461
+       ],
+       3.341839
+      ],
+      [
+       [
+        89,
+        161,
+        79,
+        0
+       ],
+       [
+        89,
+        161,
+        79,
+        255
+       ],
+       0.117889,
+       [
+        9.440835,
+        45.138461
+       ],
+       3.341839
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        148
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.117889,
+       [
+        9.166177,
+        45.160737
+       ],
+       4.726074
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        148
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.117889,
+       [
+        9.385904,
+        45.160737
+       ],
+       4.726074
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        148
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.117889,
+       [
+        9.221109,
+        45.183005
+       ],
+       4.726074
+      ],
+      [
+       [
+        242,
+        142,
+        43,
+        148
+       ],
+       [
+        242,
+        142,
+        43,
+        255
+       ],
+       0.117889,
+       [
+        9.330972,
+        45.183005
+       ],
+       4.726074
+      ],
+      [
+       [
+        78,
+        121,
+        167,
+        204
+       ],
+       [
+        78,
+        121,
+        167,
+        255
+       ],
+       0.117889,
+       [
+        9.495767,
+        45.160737
+       ],
+       5.788235
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        204
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.117889,
+       [
+        8.946451,
+        45.160737
+       ],
+       5.788235
+      ],
+      [
+       [
+        160,
+        203,
+        232,
+        250
+       ],
+       [
+        160,
+        203,
+        232,
+        255
+       ],
+       0.117889,
+       [
+        9.27604,
+        45.160737
+       ],
+       6.683679
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "gridsize-circle",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "GRIDSIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 7
+    },
+    {
+     "name": "gridsize-hexagon",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "GRIDSIZE",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 7
+    },
+    {
+     "name": "autosize",
+     "flags": [
+      "AGGREGATE",
+      "AUTOSIZE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 7
+    },
+    {
+     "name": "no-size-flag",
+     "flags": [
+      "AGGREGATE",
+      "CATEGORICAL",
+      "CENTER",
+      "CHART",
+      "DOMINANT",
+      "DOPACITYMAX",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 64,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "oak",
+      "beech",
+      "pine",
+      "larch",
+      "chestnut"
+     ],
+     "categoryColorsRgb": [
+      [
+       78,
+       121,
+       167
+      ],
+      [
+       160,
+       203,
+       232
+      ],
+      [
+       242,
+       142,
+       43
+      ],
+      [
+       255,
+       190,
+       125
+      ],
+      [
+       89,
+       161,
+       79
+      ]
+     ],
+     "maxSizeValue": 7
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "gridsize-circle": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(89,161,79)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"chestnut\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">chestnut</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>"
+    ],
+    "gridsize-hexagon": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>"
+    ],
+    "autosize": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(255,190,125)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"larch\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">larch</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>"
+    ],
+    "no-size-flag": [
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(78,121,167)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"oak\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">oak</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(89,161,79)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"chestnut\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">chestnut</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>",
+     "<table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(242,142,43)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"pine\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">pine</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">7.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}
