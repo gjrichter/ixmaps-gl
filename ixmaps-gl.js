@@ -7175,7 +7175,15 @@ self.onmessage = e => {
         const liveZoom = projNow && projNow.type === 'globe' && flatOrthographicByOptions.has(builder._engineOptions)
           ? globeSizingZoom(map.getZoom(), map.getCenter().lat, map.getContainer().clientHeight) : map.getZoom();
         // frozen only while MapLibre really is zooming (see 'moveend')
-        const zoom = isZooming && map.isZooming() ? stableGridZoom : gridZoomOf();
+        const gesture = isZooming && map.isZooming();
+        const zoom = gesture ? stableGridZoom : gridZoomOf();
+        // mid-gesture re-aggregation (see GESTURE_AGG_INTERVAL_MS): the
+        // zoom a cheap theme aggregates at during the gesture, stepped at
+        // most every GESTURE_AGG_INTERVAL_MS
+        if (gesture) {
+          const now = Date.now();
+          if (gestureAggZoom == null || now - gestureAggAt >= GESTURE_AGG_INTERVAL_MS) { gestureAggZoom = gridZoomOf(); gestureAggAt = now; }
+        } else gestureAggZoom = null;
         const viewMoving = map.isMoving();
         const bounds = map.getBounds();
         const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
@@ -7198,7 +7206,25 @@ self.onmessage = e => {
           // _buildUserChartLayers)
           rt._viewMoving = viewMoving;
           try {
-            const built = rt.buildDeckLayers(zoom, bbox, liveZoom, globeCenter);
+            // a theme whose last rebuild at a new zoom stayed within the
+            // budget follows the zoom during the gesture too; a heavier one
+            // (or one not measured yet) keeps the zoom it last aggregated at
+            // — the gesture's start zoom, or its last live step: a theme
+            // near the budget that falls back must not jump back to the
+            // start zoom's cells (measured on uk_collisions_2023: cells
+            // flickering between the start and the live aggregation)
+            const live = gesture && rt._aggCostMs != null && rt._aggCostMs < GESTURE_AGG_BUDGET_MS;
+            const rtZoom = live ? gestureAggZoom : gesture && rt._aggCostZoom != null ? rt._aggCostZoom : zoom;
+            rt._gestureLive = live;
+            const t0 = performance.now();
+            const built = rt.buildDeckLayers(rtZoom, bbox, liveZoom, globeCenter);
+            // the cost of a rebuild at a new zoom (or on new data): what a
+            // mid-gesture step would cost this theme
+            if (rtZoom !== rt._aggCostZoom || rt.features !== rt._aggCostFeatures) {
+              rt._aggCostMs = performance.now() - t0;
+              rt._aggCostZoom = rtZoom;
+              rt._aggCostFeatures = rt.features;
+            }
             built.forEach(l => layerOwner.set(l, rt));
             layers.push(...built);
             rt._drawError = null;
@@ -7207,7 +7233,9 @@ self.onmessage = e => {
             rt._drawError = err;
           }
         });
-        if (isZooming && map.isZooming()) layers = layers.filter(l => !(l.id.startsWith('ix-plot-') || l.id.startsWith('ix-grid-')));
+        // GRIDSIZE plot/grid layers of a frozen theme are hidden for the
+        // gesture (see above); a theme that follows the zoom keeps them
+        if (gesture) layers = layers.filter(l => { const o = layerOwner.get(l); return (o && o._gestureLive) || !(l.id.startsWith('ix-plot-') || l.id.startsWith('ix-grid-')); });
         // flat paints FEATURE/CHOROPLETH themes on the map's shapes and draws
         // charts in their own group above them: whatever the theme order
         // (a choropleth swapped in with add(..., 'replace') comes last), the
@@ -7341,6 +7369,19 @@ self.onmessage = e => {
       // effectively instant, without the unthrottled rebuild storm.
       let isZooming = false;
       let stableGridZoom = gridZoomOf();
+      // Mid-gesture re-aggregation: freezing every theme at the gesture's
+      // start zoom (above) is only needed for the expensive ones. A theme
+      // whose last rebuild at a new zoom took less than
+      // GESTURE_AGG_BUDGET_MS re-aggregates during the gesture as well, at
+      // a zoom stepped at most every GESTURE_AGG_INTERVAL_MS (the refresh
+      // itself runs every REFRESH_INTERVAL_MS). Measured at a new zoom:
+      // small pages < 2 ms, uk_collisions_2023 30-75 ms, the Germany
+      // accidents page ~3 s (whole-dataset aggregation per category) —
+      // that one stays frozen until 'moveend'. The icon atlas growth this
+      // brings is bounded by ICON_CACHE_MAX / ICON_ATLAS_RESET_AFTER.
+      const GESTURE_AGG_INTERVAL_MS = 250;
+      const GESTURE_AGG_BUDGET_MS = 30;
+      let gestureAggZoom = null, gestureAggAt = 0;
       map.on('zoomstart', () => { isZooming = true; });
       map.on('zoomend', () => {
         isZooming = false;
@@ -16560,6 +16601,8 @@ self.onmessage = e => {
     _sequenceMaxValue(zoom) {
       if (this._seqMaxFor !== this._clusterIndices) { this._seqMaxFor = this._clusterIndices; this._seqMax = new Map(); }
       if (!this._seqMax.has(zoom)) {
+        // bounded: mid-gesture re-aggregation visits many zooms
+        if (this._seqMax.size >= 8) this._seqMax.delete(this._seqMax.keys().next().value);
         const { groups } = this._computeAggregatedItems([-180, -90, 180, 90], zoom);
         let max = 0;
         groups.forEach(g => g.properties.counts.forEach(c => { if (c > max) max = c; }));
