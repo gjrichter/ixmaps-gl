@@ -15135,9 +15135,15 @@ self.onmessage = e => {
       let values = [value];
       const fieldNames = this.binding.value && !d.properties.counts ? String(this.binding.value).split('|') : [];
       if (fieldNames.length > 1) {
-        const parts = fieldNames.map(f => scanValue(raw && raw[f[0] === '!' ? f.slice(1) : f]));
+        // an AGGREGATE item's fields are its cell's sums (series), not its first record's
+        const series = Array.isArray(d.properties.series) && d.properties.series.length === fieldNames.length ? d.properties.series : null;
+        const parts = series || fieldNames.map(f => scanValue(raw && raw[f[0] === '!' ? f.slice(1) : f]));
         if (parts.some(v => !isNaN(v))) {
           values = parts.map(v => (isNaN(v) ? 0 : v));
+          // DIFFERENCE: flat's item carries the differences of its fields (one value less, maptheme.js
+          // 11086-11101), and the chart its first — a "voti_no|voti_si" peak is the Sì margin, negative
+          // where No wins (pinnacleChart then draws nothing under NONEGATIVE)
+          if (this.flags.has('DIFFERENCE')) values = cellAggregatedValues({ sums: values, counts: values.map(() => 1) }, this.flags, this.style);
           // COMPOSECOLOR blends all the fields into one colour, so the chart's value is the one that wins it —
           // the highest field (flat itself would hand over the first field here: a deliberate departure,
           // so a "party with the highest result" map prints that party's share)

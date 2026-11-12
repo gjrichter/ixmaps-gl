@@ -1,0 +1,3432 @@
+{
+ "page": "ports/ReferendumPeaks/referendum-peaks-2026-reg.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 5,
+    "center": [
+     12.5,
+     42.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-choropleth-comuni-d2",
+     "type": "GeoJsonLayer",
+     "count": 7896,
+     "constants": {
+      "filled": true,
+      "getLineColor": [
+       136,
+       136,
+       136
+      ],
+      "lineWidthMinPixels": 0.5,
+      "opacity": 0.00004,
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "~geometry"
+     ],
+     "digest": "d1674786410a89ab",
+     "setDigest": "b948a41a4359dc23",
+     "columnDigests": {
+      "getFillColor": "8b1e49fb2e67e8a0",
+      "~geometry": "fa2d520ca016a270"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ]
+     },
+     "sample": [
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.791066,
+         45.386322
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.518272,
+         44.933583
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        17,
+        [
+         7.296949,
+         45.341986
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        11,
+        [
+         7.926891,
+         45.448136
+        ]
+       ]
+      ],
+      [
+       [
+        224,
+        112,
+        112
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.455363,
+         45.117108
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        6,
+        [
+         7.597765,
+         45.408916
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        12,
+        [
+         7.514269,
+         45.119879
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.861695,
+         45.051883
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        11,
+        [
+         7.902299,
+         45.526577
+        ]
+       ]
+      ],
+      [
+       [
+        192,
+        64,
+        64
+       ],
+       [
+        "Polygon",
+        16,
+        [
+         7.211164,
+         44.875605
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        9,
+        [
+         7.906302,
+         45.058704
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        13,
+        [
+         7.434203,
+         45.100482
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "MultiPolygon",
+        16,
+        [
+         7.97207,
+         45.443234
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        7,
+        [
+         7.767618,
+         45.385469
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.498827,
+         45.30106
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.753606,
+         45.421918
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        13,
+        [
+         7.813941,
+         45.083217
+        ]
+       ]
+      ],
+      [
+       [
+        224,
+        112,
+        112
+       ],
+       [
+        "Polygon",
+        16,
+        [
+         7.229751,
+         45.334739
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "MultiPolygon",
+        15,
+        [
+         7.845967,
+         45.462844
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.657528,
+         45.304684
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-comuni",
+     "type": "GeoJsonLayer",
+     "count": 4571,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "aed36cded0fcb696",
+     "setDigest": "2832be726d3c13fa",
+     "columnDigests": {
+      "~geometry": "9e78b5e572a24ab2"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.344517,
+         44.803098
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.071008,
+         44.579408
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.47574,
+         46.019253
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.270021,
+         45.229894
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.221406,
+         44.552418
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.733018,
+         43.908384
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.844172,
+         43.947775
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.804728,
+         44.055698
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.617188,
+         44.486419
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.365937,
+         42.497992
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.955152,
+         43.129164
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.718555,
+         43.495105
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.980438,
+         42.010136
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.557356,
+         41.954026
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.170837,
+         42.14468
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.072107,
+         42.003189
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         13.519694,
+         42.283898
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.651269,
+         41.204516
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.569828,
+         41.353951
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.317976,
+         40.293606
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-comuni~2",
+     "type": "GeoJsonLayer",
+     "count": 3348,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "b1639e94225ac64b",
+     "setDigest": "6fb8132f87ba6bf9",
+     "columnDigests": {
+      "~geometry": "fc74404f662b3147"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.344517,
+         44.803098
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.071008,
+         44.579408
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.47574,
+         46.019253
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.270021,
+         45.229894
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.221406,
+         44.552418
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.733018,
+         43.908384
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.844172,
+         43.947775
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.804728,
+         44.055698
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.617188,
+         44.486419
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.365937,
+         42.497992
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.955152,
+         43.129164
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.718555,
+         43.495105
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.980438,
+         42.010136
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.557356,
+         41.954026
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.170837,
+         42.14468
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.072107,
+         42.003189
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         13.519694,
+         42.283898
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.651269,
+         41.204516
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.569828,
+         41.353951
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.317976,
+         40.293606
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "comuni",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 7896,
+     "active": null,
+     "hidden": false,
+     "categoryColorsRgb": null
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "CHOROPLETH",
+      "EQUIDISTANT"
+     ],
+     "features": 7896,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "8.74 - 18.74",
+      "18.74 - 28.74",
+      "28.74 - 38.74",
+      "38.74 - 48.74",
+      "48.74 - 58.74",
+      "58.74 - 68.74",
+      "68.74 - 78.74",
+      "78.74 - 91.26"
+     ],
+     "categoryColorsRgb": [
+      [
+       139,
+       26,
+       26
+      ],
+      [
+       192,
+       64,
+       64
+      ],
+      [
+       224,
+       112,
+       112
+      ],
+      [
+       240,
+       168,
+       168
+      ],
+      [
+       160,
+       216,
+       216
+      ],
+      [
+       90,
+       200,
+       200
+      ],
+      [
+       26,
+       150,
+       150
+      ],
+      [
+       0,
+       88,
+       88
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 18.74,
+       "min": 8.74
+      },
+      {
+       "max": 28.74,
+       "min": 18.74
+      },
+      {
+       "max": 38.74,
+       "min": 28.74
+      },
+      {
+       "max": 48.74,
+       "min": 38.74
+      },
+      {
+       "max": 58.74,
+       "min": 48.74
+      },
+      {
+       "max": 68.74,
+       "min": 58.74
+      },
+      {
+       "max": 78.74,
+       "min": 68.74
+      },
+      {
+       "max": 91.261913,
+       "min": 78.74
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 8.74,
+     "valueMax": 90.69,
+     "valueMedian": 52.21
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "3D",
+      "AGGREGATE",
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "DIFFERENCE",
+      "NOLEGEND",
+      "NONEGATIVE",
+      "RECT",
+      "RELOCATE",
+      "SUM",
+      "USER",
+      "VALUES"
+     ],
+     "features": 7893,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "-272 000 - -233 000",
+      "-233 000 - -194 000",
+      "-194 000 - -155 000",
+      "-155 000 - -116 000",
+      "-116 000 - -77 000",
+      "-77 000 - -38 000",
+      "-38 000 - 6 000"
+     ],
+     "categoryColorsRgb": [
+      [
+       238,
+       249,
+       249
+      ],
+      [
+       192,
+       234,
+       234
+      ],
+      [
+       136,
+       216,
+       216
+      ],
+      [
+       90,
+       200,
+       200
+      ],
+      [
+       42,
+       171,
+       171
+      ],
+      [
+       0,
+       136,
+       136
+      ],
+      [
+       0,
+       95,
+       95
+      ]
+     ],
+     "partsA": [
+      {
+       "max": -233000,
+       "min": -272000
+      },
+      {
+       "max": -194000,
+       "min": -233000
+      },
+      {
+       "max": -155000,
+       "min": -194000
+      },
+      {
+       "max": -116000,
+       "min": -155000
+      },
+      {
+       "max": -77000,
+       "min": -116000
+      },
+      {
+       "max": -38000,
+       "min": -77000
+      },
+      {
+       "max": 6000.001,
+       "min": -38000
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": -271492,
+     "valueMax": 5512,
+     "valueMedian": 24
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "3D",
+      "AGGREGATE",
+      "CHART",
+      "DIFFERENCE",
+      "HEADTAIL",
+      "NOLEGEND",
+      "NONEGATIVE",
+      "RECT",
+      "RELOCATE",
+      "SUM",
+      "USER",
+      "VALUES"
+     ],
+     "features": 7893,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "-5 512 - 255",
+      "255 - 2 330",
+      "2 330 - 9 952",
+      "9 952 - 38 157",
+      "38 157 - 122 229",
+      "122 229 - 225 220",
+      "225 220 - 272 000"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       136,
+       136
+      ],
+      [
+       249,
+       129,
+       129
+      ],
+      [
+       238,
+       116,
+       116
+      ],
+      [
+       221,
+       97,
+       97
+      ],
+      [
+       198,
+       71,
+       71
+      ],
+      [
+       170,
+       38,
+       38
+      ],
+      [
+       136,
+       0,
+       0
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 255.169263,
+       "min": -5512
+      },
+      {
+       "max": 2329.551673,
+       "min": 255.169264
+      },
+      {
+       "max": 9951.69264,
+       "min": 2329.551674
+      },
+      {
+       "max": 38157.131578,
+       "min": 9951.692641
+      },
+      {
+       "max": 122228.874999,
+       "min": 38157.131579
+      },
+      {
+       "max": 225219.999999,
+       "min": 122228.875
+      },
+      {
+       "max": 272000.001,
+       "min": 225220
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": -5512,
+     "valueMax": 271492,
+     "valueMedian": -24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "comuni": [
+     "<h2 style='margin:0 0 0.5em 0'>AGLIE'</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(198,71,71)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"38 157 - 122 229\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">38 157 - 122 229</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">55</td></tr></table><br>voti in più No:",
+     "<h2 style='margin:0 0 0.5em 0'>SARSINA</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(198,71,71)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"38 157 - 122 229\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">38 157 - 122 229</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">52</td></tr></table><br>voti in più No:",
+     "<h2 style='margin:0 0 0.5em 0'>TEULADA</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(221,97,97)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"9 952 - 38 157\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">9 952 - 38 157</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40</td></tr></table><br>voti in più No:"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 6,
+    "center": [
+     12.5,
+     42.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-choropleth-comuni-d2",
+     "type": "GeoJsonLayer",
+     "count": 7896,
+     "constants": {
+      "filled": true,
+      "getLineColor": [
+       136,
+       136,
+       136
+      ],
+      "lineWidthMinPixels": 0.5,
+      "opacity": 0.00004,
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "~geometry"
+     ],
+     "digest": "d1674786410a89ab",
+     "setDigest": "b948a41a4359dc23",
+     "columnDigests": {
+      "getFillColor": "8b1e49fb2e67e8a0",
+      "~geometry": "fa2d520ca016a270"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ]
+     },
+     "sample": [
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.791066,
+         45.386322
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.518272,
+         44.933583
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        17,
+        [
+         7.296949,
+         45.341986
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        11,
+        [
+         7.926891,
+         45.448136
+        ]
+       ]
+      ],
+      [
+       [
+        224,
+        112,
+        112
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.455363,
+         45.117108
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        6,
+        [
+         7.597765,
+         45.408916
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        12,
+        [
+         7.514269,
+         45.119879
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.861695,
+         45.051883
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        11,
+        [
+         7.902299,
+         45.526577
+        ]
+       ]
+      ],
+      [
+       [
+        192,
+        64,
+        64
+       ],
+       [
+        "Polygon",
+        16,
+        [
+         7.211164,
+         44.875605
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        9,
+        [
+         7.906302,
+         45.058704
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        13,
+        [
+         7.434203,
+         45.100482
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "MultiPolygon",
+        16,
+        [
+         7.97207,
+         45.443234
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        7,
+        [
+         7.767618,
+         45.385469
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.498827,
+         45.30106
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.753606,
+         45.421918
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        13,
+        [
+         7.813941,
+         45.083217
+        ]
+       ]
+      ],
+      [
+       [
+        224,
+        112,
+        112
+       ],
+       [
+        "Polygon",
+        16,
+        [
+         7.229751,
+         45.334739
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "MultiPolygon",
+        15,
+        [
+         7.845967,
+         45.462844
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.657528,
+         45.304684
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-comuni",
+     "type": "GeoJsonLayer",
+     "count": 2656,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "87edfdc550d8ef91",
+     "setDigest": "76b8b6dd275030c9",
+     "columnDigests": {
+      "~geometry": "917c028d583e5425"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.344517,
+         44.803098
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.071008,
+         44.579408
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.270021,
+         45.229894
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.221406,
+         44.552418
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.733018,
+         43.908384
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.844172,
+         43.947775
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.804728,
+         44.055698
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.617188,
+         44.486419
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.365937,
+         42.497992
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.955152,
+         43.129164
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.718555,
+         43.495105
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.980438,
+         42.010136
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.557356,
+         41.954026
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.170837,
+         42.14468
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.072107,
+         42.003189
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         13.519694,
+         42.283898
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.651269,
+         41.204516
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.569828,
+         41.353951
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.317976,
+         40.293606
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.486971,
+         40.133041
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-comuni~2",
+     "type": "GeoJsonLayer",
+     "count": 2462,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "dfe4e75f166abead",
+     "setDigest": "ba4cb5fab9a6c29f",
+     "columnDigests": {
+      "~geometry": "1b19b052645797a2"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.344517,
+         44.803098
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.071008,
+         44.579408
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.270021,
+         45.229894
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.221406,
+         44.552418
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.733018,
+         43.908384
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.844172,
+         43.947775
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.804728,
+         44.055698
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.617188,
+         44.486419
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.365937,
+         42.497992
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.955152,
+         43.129164
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.718555,
+         43.495105
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.980438,
+         42.010136
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.557356,
+         41.954026
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.170837,
+         42.14468
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.072107,
+         42.003189
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         13.519694,
+         42.283898
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.651269,
+         41.204516
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.569828,
+         41.353951
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.317976,
+         40.293606
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.486971,
+         40.133041
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "comuni",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 7896,
+     "active": null,
+     "hidden": false,
+     "categoryColorsRgb": null
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "CHOROPLETH",
+      "EQUIDISTANT"
+     ],
+     "features": 7896,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "8.74 - 18.74",
+      "18.74 - 28.74",
+      "28.74 - 38.74",
+      "38.74 - 48.74",
+      "48.74 - 58.74",
+      "58.74 - 68.74",
+      "68.74 - 78.74",
+      "78.74 - 91.26"
+     ],
+     "categoryColorsRgb": [
+      [
+       139,
+       26,
+       26
+      ],
+      [
+       192,
+       64,
+       64
+      ],
+      [
+       224,
+       112,
+       112
+      ],
+      [
+       240,
+       168,
+       168
+      ],
+      [
+       160,
+       216,
+       216
+      ],
+      [
+       90,
+       200,
+       200
+      ],
+      [
+       26,
+       150,
+       150
+      ],
+      [
+       0,
+       88,
+       88
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 18.74,
+       "min": 8.74
+      },
+      {
+       "max": 28.74,
+       "min": 18.74
+      },
+      {
+       "max": 38.74,
+       "min": 28.74
+      },
+      {
+       "max": 48.74,
+       "min": 38.74
+      },
+      {
+       "max": 58.74,
+       "min": 48.74
+      },
+      {
+       "max": 68.74,
+       "min": 58.74
+      },
+      {
+       "max": 78.74,
+       "min": 68.74
+      },
+      {
+       "max": 91.261913,
+       "min": 78.74
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 8.74,
+     "valueMax": 90.69,
+     "valueMedian": 52.21
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "3D",
+      "AGGREGATE",
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "DIFFERENCE",
+      "NOLEGEND",
+      "NONEGATIVE",
+      "RECT",
+      "RELOCATE",
+      "SUM",
+      "USER",
+      "VALUES"
+     ],
+     "features": 7893,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "-272 000 - -233 000",
+      "-233 000 - -194 000",
+      "-194 000 - -155 000",
+      "-155 000 - -116 000",
+      "-116 000 - -77 000",
+      "-77 000 - -38 000",
+      "-38 000 - 6 000"
+     ],
+     "categoryColorsRgb": [
+      [
+       238,
+       249,
+       249
+      ],
+      [
+       192,
+       234,
+       234
+      ],
+      [
+       136,
+       216,
+       216
+      ],
+      [
+       90,
+       200,
+       200
+      ],
+      [
+       42,
+       171,
+       171
+      ],
+      [
+       0,
+       136,
+       136
+      ],
+      [
+       0,
+       95,
+       95
+      ]
+     ],
+     "partsA": [
+      {
+       "max": -233000,
+       "min": -272000
+      },
+      {
+       "max": -194000,
+       "min": -233000
+      },
+      {
+       "max": -155000,
+       "min": -194000
+      },
+      {
+       "max": -116000,
+       "min": -155000
+      },
+      {
+       "max": -77000,
+       "min": -116000
+      },
+      {
+       "max": -38000,
+       "min": -77000
+      },
+      {
+       "max": 6000.001,
+       "min": -38000
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": -271492,
+     "valueMax": 5512,
+     "valueMedian": 24
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "3D",
+      "AGGREGATE",
+      "CHART",
+      "DIFFERENCE",
+      "HEADTAIL",
+      "NOLEGEND",
+      "NONEGATIVE",
+      "RECT",
+      "RELOCATE",
+      "SUM",
+      "USER",
+      "VALUES"
+     ],
+     "features": 7893,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "-5 512 - 255",
+      "255 - 2 330",
+      "2 330 - 9 952",
+      "9 952 - 38 157",
+      "38 157 - 122 229",
+      "122 229 - 225 220",
+      "225 220 - 272 000"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       136,
+       136
+      ],
+      [
+       249,
+       129,
+       129
+      ],
+      [
+       238,
+       116,
+       116
+      ],
+      [
+       221,
+       97,
+       97
+      ],
+      [
+       198,
+       71,
+       71
+      ],
+      [
+       170,
+       38,
+       38
+      ],
+      [
+       136,
+       0,
+       0
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 255.169263,
+       "min": -5512
+      },
+      {
+       "max": 2329.551673,
+       "min": 255.169264
+      },
+      {
+       "max": 9951.69264,
+       "min": 2329.551674
+      },
+      {
+       "max": 38157.131578,
+       "min": 9951.692641
+      },
+      {
+       "max": 122228.874999,
+       "min": 38157.131579
+      },
+      {
+       "max": 225219.999999,
+       "min": 122228.875
+      },
+      {
+       "max": 272000.001,
+       "min": 225220
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": -5512,
+     "valueMax": 271492,
+     "valueMedian": -24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "comuni": [
+     "<h2 style='margin:0 0 0.5em 0'>AGLIE'</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(198,71,71)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"38 157 - 122 229\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">38 157 - 122 229</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">55</td></tr></table><br>voti in più No:",
+     "<h2 style='margin:0 0 0.5em 0'>SARSINA</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(198,71,71)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"38 157 - 122 229\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">38 157 - 122 229</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">52</td></tr></table><br>voti in più No:",
+     "<h2 style='margin:0 0 0.5em 0'>TEULADA</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(221,97,97)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"9 952 - 38 157\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">9 952 - 38 157</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40</td></tr></table><br>voti in più No:"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 4,
+    "center": [
+     12.5,
+     42.5
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-choropleth-comuni-d2",
+     "type": "GeoJsonLayer",
+     "count": 7896,
+     "constants": {
+      "filled": true,
+      "getLineColor": [
+       136,
+       136,
+       136
+      ],
+      "lineWidthMinPixels": 0.5,
+      "opacity": 0.00004,
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "~geometry"
+     ],
+     "digest": "d1674786410a89ab",
+     "setDigest": "b948a41a4359dc23",
+     "columnDigests": {
+      "getFillColor": "8b1e49fb2e67e8a0",
+      "~geometry": "fa2d520ca016a270"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ]
+     },
+     "sample": [
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.791066,
+         45.386322
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.518272,
+         44.933583
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        17,
+        [
+         7.296949,
+         45.341986
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        11,
+        [
+         7.926891,
+         45.448136
+        ]
+       ]
+      ],
+      [
+       [
+        224,
+        112,
+        112
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.455363,
+         45.117108
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        6,
+        [
+         7.597765,
+         45.408916
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        12,
+        [
+         7.514269,
+         45.119879
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.861695,
+         45.051883
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        11,
+        [
+         7.902299,
+         45.526577
+        ]
+       ]
+      ],
+      [
+       [
+        192,
+        64,
+        64
+       ],
+       [
+        "Polygon",
+        16,
+        [
+         7.211164,
+         44.875605
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        9,
+        [
+         7.906302,
+         45.058704
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        13,
+        [
+         7.434203,
+         45.100482
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "MultiPolygon",
+        16,
+        [
+         7.97207,
+         45.443234
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        7,
+        [
+         7.767618,
+         45.385469
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.498827,
+         45.30106
+        ]
+       ]
+      ],
+      [
+       [
+        90,
+        200,
+        200
+       ],
+       [
+        "Polygon",
+        8,
+        [
+         7.753606,
+         45.421918
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "Polygon",
+        13,
+        [
+         7.813941,
+         45.083217
+        ]
+       ]
+      ],
+      [
+       [
+        224,
+        112,
+        112
+       ],
+       [
+        "Polygon",
+        16,
+        [
+         7.229751,
+         45.334739
+        ]
+       ]
+      ],
+      [
+       [
+        240,
+        168,
+        168
+       ],
+       [
+        "MultiPolygon",
+        15,
+        [
+         7.845967,
+         45.462844
+        ]
+       ]
+      ],
+      [
+       [
+        160,
+        216,
+        216
+       ],
+       [
+        "Polygon",
+        10,
+        [
+         7.657528,
+         45.304684
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-comuni",
+     "type": "GeoJsonLayer",
+     "count": 4572,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "d0d244524731a373",
+     "setDigest": "b251bfbe5adf1d7d",
+     "columnDigests": {
+      "~geometry": "12c3d951f839ba4e"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.344517,
+         44.803098
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.071008,
+         44.579408
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.47574,
+         46.019253
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.270021,
+         45.229894
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.221406,
+         44.552418
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.733018,
+         43.908384
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.844172,
+         43.947775
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.804728,
+         44.055698
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.617188,
+         44.486419
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.365937,
+         42.497992
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.955152,
+         43.129164
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.718555,
+         43.495105
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.980438,
+         42.010136
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.557356,
+         41.954026
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.170837,
+         42.14468
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.072107,
+         42.003189
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         13.519694,
+         42.283898
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.651269,
+         41.204516
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.569828,
+         41.353951
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.317976,
+         40.293606
+        ]
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "ix-bubbles-comuni~2",
+     "type": "GeoJsonLayer",
+     "count": 3348,
+     "constants": {
+      "filled": true,
+      "getFillColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineColor": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "getLineWidth": 4,
+      "lineWidthUnits": "pixels",
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "~geometry"
+     ],
+     "digest": "b1639e94225ac64b",
+     "setDigest": "6fb8132f87ba6bf9",
+     "columnDigests": {
+      "~geometry": "fc74404f662b3147"
+     },
+     "stats": {},
+     "sample": [
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.344517,
+         44.803098
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.071008,
+         44.579408
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.47574,
+         46.019253
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.270021,
+         45.229894
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         9.221406,
+         44.552418
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.733018,
+         43.908384
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.844172,
+         43.947775
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         7.804728,
+         44.055698
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         8.617188,
+         44.486419
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.365937,
+         42.497992
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.955152,
+         43.129164
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.718555,
+         43.495105
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         12.980438,
+         42.010136
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.557356,
+         41.954026
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.170837,
+         42.14468
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.072107,
+         42.003189
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         13.519694,
+         42.283898
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.651269,
+         41.204516
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         14.569828,
+         41.353951
+        ]
+       ]
+      ],
+      [
+       [
+        "MultiPolygon",
+        10,
+        [
+         15.317976,
+         40.293606
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "comuni",
+     "flags": [
+      "FEATURE"
+     ],
+     "features": 7896,
+     "active": null,
+     "hidden": false,
+     "categoryColorsRgb": null
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "CHOROPLETH",
+      "EQUIDISTANT"
+     ],
+     "features": 7896,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "8.74 - 18.74",
+      "18.74 - 28.74",
+      "28.74 - 38.74",
+      "38.74 - 48.74",
+      "48.74 - 58.74",
+      "58.74 - 68.74",
+      "68.74 - 78.74",
+      "78.74 - 91.26"
+     ],
+     "categoryColorsRgb": [
+      [
+       139,
+       26,
+       26
+      ],
+      [
+       192,
+       64,
+       64
+      ],
+      [
+       224,
+       112,
+       112
+      ],
+      [
+       240,
+       168,
+       168
+      ],
+      [
+       160,
+       216,
+       216
+      ],
+      [
+       90,
+       200,
+       200
+      ],
+      [
+       26,
+       150,
+       150
+      ],
+      [
+       0,
+       88,
+       88
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 18.74,
+       "min": 8.74
+      },
+      {
+       "max": 28.74,
+       "min": 18.74
+      },
+      {
+       "max": 38.74,
+       "min": 28.74
+      },
+      {
+       "max": 48.74,
+       "min": 38.74
+      },
+      {
+       "max": 58.74,
+       "min": 48.74
+      },
+      {
+       "max": 68.74,
+       "min": 58.74
+      },
+      {
+       "max": 78.74,
+       "min": 68.74
+      },
+      {
+       "max": 91.261913,
+       "min": 78.74
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 8.74,
+     "valueMax": 90.69,
+     "valueMedian": 52.21
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "3D",
+      "AGGREGATE",
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "DIFFERENCE",
+      "NOLEGEND",
+      "NONEGATIVE",
+      "RECT",
+      "RELOCATE",
+      "SUM",
+      "USER",
+      "VALUES"
+     ],
+     "features": 7893,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "-272 000 - -233 000",
+      "-233 000 - -194 000",
+      "-194 000 - -155 000",
+      "-155 000 - -116 000",
+      "-116 000 - -77 000",
+      "-77 000 - -38 000",
+      "-38 000 - 6 000"
+     ],
+     "categoryColorsRgb": [
+      [
+       238,
+       249,
+       249
+      ],
+      [
+       192,
+       234,
+       234
+      ],
+      [
+       136,
+       216,
+       216
+      ],
+      [
+       90,
+       200,
+       200
+      ],
+      [
+       42,
+       171,
+       171
+      ],
+      [
+       0,
+       136,
+       136
+      ],
+      [
+       0,
+       95,
+       95
+      ]
+     ],
+     "partsA": [
+      {
+       "max": -233000,
+       "min": -272000
+      },
+      {
+       "max": -194000,
+       "min": -233000
+      },
+      {
+       "max": -155000,
+       "min": -194000
+      },
+      {
+       "max": -116000,
+       "min": -155000
+      },
+      {
+       "max": -77000,
+       "min": -116000
+      },
+      {
+       "max": -38000,
+       "min": -77000
+      },
+      {
+       "max": 6000.001,
+       "min": -38000
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": -271492,
+     "valueMax": 5512,
+     "valueMedian": 24
+    },
+    {
+     "name": "comuni",
+     "flags": [
+      "3D",
+      "AGGREGATE",
+      "CHART",
+      "DIFFERENCE",
+      "HEADTAIL",
+      "NOLEGEND",
+      "NONEGATIVE",
+      "RECT",
+      "RELOCATE",
+      "SUM",
+      "USER",
+      "VALUES"
+     ],
+     "features": 7893,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "-5 512 - 255",
+      "255 - 2 330",
+      "2 330 - 9 952",
+      "9 952 - 38 157",
+      "38 157 - 122 229",
+      "122 229 - 225 220",
+      "225 220 - 272 000"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       136,
+       136
+      ],
+      [
+       249,
+       129,
+       129
+      ],
+      [
+       238,
+       116,
+       116
+      ],
+      [
+       221,
+       97,
+       97
+      ],
+      [
+       198,
+       71,
+       71
+      ],
+      [
+       170,
+       38,
+       38
+      ],
+      [
+       136,
+       0,
+       0
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 255.169263,
+       "min": -5512
+      },
+      {
+       "max": 2329.551673,
+       "min": 255.169264
+      },
+      {
+       "max": 9951.69264,
+       "min": 2329.551674
+      },
+      {
+       "max": 38157.131578,
+       "min": 9951.692641
+      },
+      {
+       "max": 122228.874999,
+       "min": 38157.131579
+      },
+      {
+       "max": 225219.999999,
+       "min": 122228.875
+      },
+      {
+       "max": 272000.001,
+       "min": 225220
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": -5512,
+     "valueMax": 271492,
+     "valueMedian": -24
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "comuni": [
+     "<h2 style='margin:0 0 0.5em 0'>AGLIE'</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(198,71,71)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"38 157 - 122 229\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">38 157 - 122 229</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">55</td></tr></table><br>voti in più No:",
+     "<h2 style='margin:0 0 0.5em 0'>SARSINA</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(198,71,71)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"38 157 - 122 229\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">38 157 - 122 229</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">52</td></tr></table><br>voti in più No:",
+     "<h2 style='margin:0 0 0.5em 0'>TEULADA</h2><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"><span style=\"display:inline-block;width:0.75em;height:0.75em;border-radius:50%;background:rgb(221,97,97)\"></span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"9 952 - 38 157\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">9 952 - 38 157</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40</td></tr></table><br>voti in più No:"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

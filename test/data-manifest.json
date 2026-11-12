@@ -179,6 +179,14 @@
   "sha256": "583873402c3190a1991709809320a80de3df002aabf25373590a23e31fb2452b",
   "bytes": 6497
  },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/usercharts/d3/arrow_chart.js": {
+  "sha256": "b0fb96594e450b1190d918713fa743f55b8b3a1ae03f57c568ab3303c8acad0c",
+  "bytes": 13026
+ },
+ "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/usercharts/d3/chart.js": {
+  "sha256": "51813a27c902362aca6a6fde9be90e6d1bf5e7ffa6d1b05f88de0f19ac84405e",
+  "bytes": 7997
+ },
  "https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js": {
   "sha256": "80aa70d0cd17dabddf6d056494ea17926a45a69da8b7850220aace331bad671d",
   "bytes": 17204
@@ -190,6 +198,14 @@
  "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js": {
   "sha256": "fbae778a6211805c0d45698b903d25dc7c3b95e8f315ee9e54e62c2db818b61b",
   "bytes": 14568
+ },
+ "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js": {
+  "sha256": "b8e870c5d2b29772f10c9fa9a693c8b896aac8540ed6701e3cc6304c683febdb",
+  "bytes": 19469
+ },
+ "https://d3js.org/d3.v3.min.js": {
+  "sha256": "76c39718d1c0a3fb321676b3b7e29306c0907919a5716d5728bd1b08ae0169e7",
+  "bytes": 151725
  },
  "https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap": {
   "sha256": "5987aeacae72aaa340a337aad8e1ca7c1d0a428b3305a8574687aa5f813a9932",
@@ -219,6 +235,10 @@
   "sha256": "161635facb52743b035d0c5cab92b2f1194cb9bd0d7c297b11fb7b980daea89b",
   "bytes": 4686409
  },
+ "https://raw.githubusercontent.com/gjrichter/geo/main/italy/boundaries/italy_istat_municipalities_4326_500m.topojson": {
+  "sha256": "a8419fea6b212bd00be5b9b5768f4dbd96c9ca4430a3905e0007e0f4325b8fc2",
+  "bytes": 3407348
+ },
  "https://raw.githubusercontent.com/gjrichter/geo/main/world/ne_10m_admin_0_countries_xs.json": {
   "sha256": "3a7792432659775bff1d8aed6a9dd7b14e812075052338a0b9b174ab93523114",
   "bytes": 1301345
@@ -226,6 +246,10 @@
  "https://raw.githubusercontent.com/gjrichter/ixmaps-data/main/by-project/italy-comuni-demographics/comuni_population_by_age_sex_v3.csv": {
   "sha256": "bcb3f1b3f96ff5d4aa733f398d4d06eef1e6ba8ba5f97a5db31f7d100e396589",
   "bytes": 10047471
+ },
+ "https://raw.githubusercontent.com/ondata/referendum-download/main/data/20260322/scrutini_flat.csv": {
+  "sha256": "225bbae2d39c897aae8fc81580aaa279bd36dfa5ed254696bc8e9d1f968c548c",
+  "bytes": 1104494
  },
  "https://raw.githubusercontent.com/wri/global-power-plant-database/master/output_database/global_power_plant_database.csv": {
   "sha256": "4b1f93e0fd93664f18684d9b05d0a52ed9658c6a8cf0d21ff2520791379ba7fc",
