@@ -1,0 +1,555 @@
+{
+ "page": "examples/choropleth_ranges_colorlist.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 9,
+    "center": [
+     9.18,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-choropleth-squares-d1",
+     "type": "GeoJsonLayer",
+     "count": 4,
+     "constants": {
+      "filled": true,
+      "getLineColor": [
+       255,
+       255,
+       255
+      ],
+      "lineWidthMinPixels": 1,
+      "opacity": 0.612066,
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "~geometry"
+     ],
+     "digest": "156e49fa45861730",
+     "setDigest": "677b68f9e227b667",
+     "columnDigests": {
+      "getFillColor": "a04c3366800873fe",
+      "~geometry": "8b2468fba002e11a"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        0,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         8.95,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        0,
+        255,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.07,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        0,
+        0,
+        255
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.19,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        255,
+        255,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.31,
+         45.35
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "squares",
+     "flags": [
+      "CHOROPLETH",
+      "FEATURE",
+      "RANGES"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 10.00",
+      "10.00 - 20.00",
+      "20.00 - 30.00",
+      "30.00 - 40.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       0,
+       0
+      ],
+      [
+       0,
+       255,
+       0
+      ],
+      [
+       0,
+       0,
+       255
+      ],
+      [
+       255,
+       255,
+       0
+      ]
+     ],
+     "partsA": [
+      {
+       "clampLow": true,
+       "max": 10,
+       "min": 0
+      },
+      {
+       "max": 20,
+       "min": 10
+      },
+      {
+       "max": 30,
+       "min": 20
+      },
+      {
+       "max": 40,
+       "min": 30
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 35,
+     "valueMedian": 15
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "squares": [
+     "range 1: 5.00",
+     "range 3: 25.00",
+     "range 4: 35.00"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 10,
+    "center": [
+     9.18,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-choropleth-squares-d1",
+     "type": "GeoJsonLayer",
+     "count": 4,
+     "constants": {
+      "filled": true,
+      "getLineColor": [
+       255,
+       255,
+       255
+      ],
+      "lineWidthMinPixels": 1,
+      "opacity": 0.612066,
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "~geometry"
+     ],
+     "digest": "156e49fa45861730",
+     "setDigest": "677b68f9e227b667",
+     "columnDigests": {
+      "getFillColor": "a04c3366800873fe",
+      "~geometry": "8b2468fba002e11a"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        0,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         8.95,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        0,
+        255,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.07,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        0,
+        0,
+        255
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.19,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        255,
+        255,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.31,
+         45.35
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "squares",
+     "flags": [
+      "CHOROPLETH",
+      "FEATURE",
+      "RANGES"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 10.00",
+      "10.00 - 20.00",
+      "20.00 - 30.00",
+      "30.00 - 40.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       0,
+       0
+      ],
+      [
+       0,
+       255,
+       0
+      ],
+      [
+       0,
+       0,
+       255
+      ],
+      [
+       255,
+       255,
+       0
+      ]
+     ],
+     "partsA": [
+      {
+       "clampLow": true,
+       "max": 10,
+       "min": 0
+      },
+      {
+       "max": 20,
+       "min": 10
+      },
+      {
+       "max": 30,
+       "min": 20
+      },
+      {
+       "max": 40,
+       "min": 30
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 35,
+     "valueMedian": 15
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "squares": [
+     "range 1: 5.00",
+     "range 3: 25.00",
+     "range 4: 35.00"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.18,
+     45.4
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-choropleth-squares-d1",
+     "type": "GeoJsonLayer",
+     "count": 4,
+     "constants": {
+      "filled": true,
+      "getLineColor": [
+       255,
+       255,
+       255
+      ],
+      "lineWidthMinPixels": 1,
+      "opacity": 0.612066,
+      "pickable": true,
+      "stroked": true
+     },
+     "columns": [
+      "getFillColor",
+      "~geometry"
+     ],
+     "digest": "156e49fa45861730",
+     "setDigest": "677b68f9e227b667",
+     "columnDigests": {
+      "getFillColor": "a04c3366800873fe",
+      "~geometry": "8b2468fba002e11a"
+     },
+     "stats": {
+      "getFillColor": [
+       0,
+       255
+      ]
+     },
+     "sample": [
+      [
+       [
+        255,
+        0,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         8.95,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        0,
+        255,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.07,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        0,
+        0,
+        255
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.19,
+         45.35
+        ]
+       ]
+      ],
+      [
+       [
+        255,
+        255,
+        0
+       ],
+       [
+        "Polygon",
+        5,
+        [
+         9.31,
+         45.35
+        ]
+       ]
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "squares",
+     "flags": [
+      "CHOROPLETH",
+      "FEATURE",
+      "RANGES"
+     ],
+     "features": 4,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 10.00",
+      "10.00 - 20.00",
+      "20.00 - 30.00",
+      "30.00 - 40.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       255,
+       0,
+       0
+      ],
+      [
+       0,
+       255,
+       0
+      ],
+      [
+       0,
+       0,
+       255
+      ],
+      [
+       255,
+       255,
+       0
+      ]
+     ],
+     "partsA": [
+      {
+       "clampLow": true,
+       "max": 10,
+       "min": 0
+      },
+      {
+       "max": 20,
+       "min": 10
+      },
+      {
+       "max": 30,
+       "min": 20
+      },
+      {
+       "max": 40,
+       "min": 30
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 5,
+     "valueMax": 35,
+     "valueMedian": 15
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "squares": [
+     "range 1: 5.00",
+     "range 3: 25.00",
+     "range 4: 35.00"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

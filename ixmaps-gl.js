@@ -11499,7 +11499,11 @@ self.onmessage = e => {
     const nParts = breaks ? breaks.length - 1
       : Math.trunc(styleNum(style.classes)) || colorSchemeClassCount(style.colorscheme) || DEFAULT_RANGE_CLASSES;
     const placeholders = new Array(nParts).fill('');
-    const colorsRgb = resolveClassColors(style.colorscheme, placeholders, breaks ? nParts : style.classes);
+    // explicit ranges: a generated scheme (["N", c1, c2, ...]) is swept to the break count; a plain color list
+    // (n+1 breaks for n colors) is used as given — passing the count turned it into a first-to-last sweep
+    // (applyClassesToColorScheme), so ["#a","#b","#c",...] lost its own middle colors
+    const colorsRgb = resolveClassColors(style.colorscheme, placeholders,
+      breaks && isGeneratedColorScheme(style.colorscheme) ? nParts : style.classes);
 
     out.partsA = breaks ? explicitRangeParts(breaks) : flatRangeParts(values, nMin, nMax, nParts, flags, styleNum(style.rangecentervalue));
     out._nRangeParts = nParts; // the configured count; partsA may have fewer (all values equal)

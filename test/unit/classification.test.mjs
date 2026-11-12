@@ -227,3 +227,22 @@ test('flatRangeParts LOG: a zero min keeps flat\'s min(0.1, max/10) start (uncha
   assert.ok(Math.abs(p[0].min - 0.1) < 1e-12);
   assert.equal(G.resolvePartsClass(0, p), null);
 });
+
+// ---- explicit ranges (style.ranges with RANGES) and the colorscheme
+const rangesClasses = colorscheme => G.computeRangeClasses(
+  [1, 5, 15, 25, 35].map(v => ({ type: 'Feature', properties: { v }, geometry: { type: 'Point', coordinates: [9, 45] } })),
+  { value: 'v' }, { ranges: [0, 10, 20, 30, 40], colorscheme }, new Set(['CHOROPLETH', 'RANGES']), v => String(v));
+const hex = rgb => '#' + [...rgb].slice(0, 3).map(c => c.toString(16).padStart(2, '0')).join('');
+
+test('explicit ranges: a plain color list is used as given, one color per range', () => {
+  const r = rangesClasses(['#ff0000', '#00ff00', '#0000ff', '#ffff00']);
+  assert.equal(r.partsA.length, 4);
+  assert.deepEqual(plain(r.categoryColorsRgb.map(hex)), ['#ff0000', '#00ff00', '#0000ff', '#ffff00']);
+});
+
+test('explicit ranges: a generated scheme ["N", from, to] is still swept to the number of ranges', () => {
+  const r = rangesClasses(['2', '#000000', '#ffffff']);
+  assert.equal(r.categoryColorsRgb.length, 4);
+  assert.equal(hex(r.categoryColorsRgb[0]), '#000000');
+  assert.equal(hex(r.categoryColorsRgb[3]), '#ffffff');
+});
