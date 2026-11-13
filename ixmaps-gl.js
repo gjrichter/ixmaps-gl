@@ -12030,6 +12030,11 @@ self.onmessage = e => {
       this._donorStyle = spec._donorStyle;
       this.flags = symbolsFlagCompat(spec.flags, spec.style);
       this.meta = spec.meta;
+      // flat's style.visible (maptheme.js 1971-1978: visible "false" ->
+      // fVisible false + fUserHidden): the theme is defined hidden, so it
+      // is never drawn until setThemeVisible(id, true) shows it
+      const vis = spec.style && spec.style.visible;
+      this._hidden = vis === false || String(vis).trim().toLowerCase() === 'false';
       // see LAYER_DATA_GENERATION above — unique per runtime, see _dataLayerId
       this._dataGen = ++LAYER_DATA_GENERATION;
       // GL-PORT COMPAT: retained only for ixmaps.getThemeObj()'s szFilter
