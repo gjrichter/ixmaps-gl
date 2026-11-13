@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>USER chart over a DIFFERENCE|RELATIVE|AGGREGATE theme</title>
+<script src="../../ixmaps-gl.js"></script>
+<style>html, body { margin: 0; height: 100%; } #map_div { position: absolute; inset: 0; }</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  // the chart function records what the engine hands it, and draws a small square
+  window.__charts = [];
+  ixmaps.probeChart = function (doc, a) {
+    window.__charts.push({ value: a.value, values: a.values });
+    var r = doc.createElementNS("http://www.w3.org/2000/svg", "rect");
+    r.setAttribute("x", -10); r.setAttribute("y", -10); r.setAttribute("width", 20); r.setAttribute("height", 20);
+    r.setAttribute("fill", a.color || "red");
+    a.target.appendChild(r);
+  };
+  // two censuses per place (a: 2011, b: 2021), as the censimenti page's "P1.1|P1.2":
+  // p0 and p1 lie 80 m apart (one grid cell at zoom 8, apart at zoom 17), p2 far away
+  var places = [["p0", 9.200, 1000, 900], ["p1", 9.201, 500, 700], ["p2", 9.400, 200, 150]];
+  var pts = { type: "FeatureCollection", features: places.map(function (p) {
+    return { type: "Feature", properties: { name: p[0], a: p[2], b: p[3] }, geometry: { type: "Point", coordinates: [p[1], 45.46] } };
+  }) };
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "white", name: "uc" }, function (map) {
+    return map.view([45.46, 9.3], 8)
+      .layer(ixmaps.layer("diff", function (l) {
+        return l.data({ obj: pts, type: "geojson" }).binding({ geo: "geometry", value: "a|b", title: "name" })
+          .type("CHART|USER|DIFFERENCE|RELATIVE|AGGREGATE|SUM|NOLEGEND")
+          .style({ userdraw: "probeChart", colorscheme: ["red", "#9A384E"], gridwidth: "40px", rangecentervalue: "0" })
+          .meta({ name: "diff" });
+      }));
+  });
+</script>
+</body>
+</html>

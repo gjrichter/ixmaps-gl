@@ -17,6 +17,7 @@ npm run events                   # live check of map.on/off events (headless Chr
 npm run runtime                  # live check of adding themes to a built map and of runtime filtering
 npm run tools                    # live check of the theme tools add-on (ixmaps-gl-tools.js)
 npm run teardown                 # live check of a map built again in the same div, and of map.destroy()
+npm run userchart                # live check of the value a USER chart gets over DIFFERENCE|RELATIVE|AGGREGATE fields
 ```
 
 The first run needs network access: it records remote data into `.cache/` (see below).

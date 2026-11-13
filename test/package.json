@@ -10,7 +10,8 @@
     "events": "node events.mjs",
     "runtime": "node runtime.mjs",
     "tools": "node tools.mjs",
-    "teardown": "node teardown.mjs"
+    "teardown": "node teardown.mjs",
+    "userchart": "node userchart.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
