@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>PLOT · long data (CATEGORICAL|AGGREGATE)</title>
+<!-- local engine: this PLOT path is newer than the last released tag -->
+<script src="../ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>PLOT · long data (CATEGORICAL|AGGREGATE)</b>
+  <span>Top row: one record per place and year (value "year", size the measure), aggregated per position into one curve. Bottom row: the same series as wide data (one field per year) — both rows must look the same.</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  var YEARS = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"];
+  var PLACES = [
+    ["Rising",  [10, 20, 30, 40, 50, 60, 70, 80]],
+    ["Falling", [80, 70, 60, 50, 40, 30, 20, 10]],
+    ["Peak",    [10, 30, 60, 90, 60, 30, 20, 10]],
+    ["Valley",  [90, 60, 30, 10, 30, 60, 80, 90]],
+    ["Flat",    [50, 50, 50, 50, 50, 50, 50, 50]],
+    ["Zigzag",  [20, 80, 20, 80, 20, 80, 20, 80]]
+  ];
+  // long: one row per place x year; wide: one row per place, one field per year
+  var longData = [], wideData = [];
+  PLACES.forEach(function (p, i) {
+    var lon = 8.0 + i * 0.5;
+    p[1].forEach(function (v, k) {
+      longData.push({ name: p[0], lat: 46.0, lon: lon, year: YEARS[k], trend_value: v });
+    });
+    var row = { name: p[0], lat: 45.3, lon: lon };
+    p[1].forEach(function (v, k) { row["y" + YEARS[k]] = v; });
+    wideData.push(row);
+  });
+  var STYLE = { colorscheme: ["#1f5a43"], fillopacity: "0.6", normalsizevalue: "100",
+                scale: "0.12", linewidth: "5", textscale: "3", showdata: "true" };
+
+  var L0 = ixmaps.layer("long", layer => layer
+    .data({ obj: longData, type: "json" })
+    .binding({ geo: "lat|lon", value: "year", size: "trend_value", title: "name" })
+    .type("CHART|SYMBOL|PLOT|LINES|AREA|LASTPOP|BOX|FIXSIZE|CATEGORICAL|AGGREGATE|SUM|BOTTOMTITLE|NOLEGEND")
+    .style(Object.assign({}, STYLE, { values: YEARS, label: YEARS }))
+    .meta({ title: "long", tooltip: "<b>{{theme.item.title}}</b>{{theme.item.chart}}" })
+  );
+  var L1 = ixmaps.layer("wide", layer => layer
+    .data({ obj: wideData, type: "json" })
+    .binding({ geo: "lat|lon", value: YEARS.map(function (y) { return "y" + y; }).join("|"), title: "name" })
+    .type("CHART|SYMBOL|PLOT|LINES|AREA|LASTPOP|BOX|FIXSIZE|BOTTOMTITLE|NOLEGEND")
+    .style(Object.assign({}, STYLE, { label: YEARS }))
+    .meta({ title: "wide", tooltip: "<b>{{theme.item.title}}</b>{{theme.item.chart}}" })
+  );
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([45.65, 9.25], 8)
+      .layer(L0)
+      .layer(L1)
+  );
+</script>
+</body>
+</html>

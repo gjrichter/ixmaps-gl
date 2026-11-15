@@ -8862,6 +8862,13 @@ self.onmessage = e => {
     });
     const lineWidth = (styleNum(style.linewidth) || 1) / 30;
     const defined = points.filter(Boolean);
+    // LASTPOP: flat's circle on the last point (maptheme.js 22888-22897) — radius
+    // linewidth × markersize (default 1.5), none for a missing or 0 value
+    let lastPop = null;
+    if (flags.has('LASTPOP')) {
+      const p = points[n - 1];
+      if (p && p.v) lastPop = { x: p.x, y: p.y, r: lineWidth * (styleNum(style.markersize) || 1.5) };
+    }
     let area = null;
     if (flags.has('AREA') && defined.length > 1) {
       const y0 = yOf(0);
@@ -8873,8 +8880,12 @@ self.onmessage = e => {
       x0 = Math.min(x0, p.x - p.r - pad); x1 = Math.max(x1, p.x + p.r + pad);
       y0b = Math.min(y0b, p.y - p.r - pad); y1b = Math.max(y1b, p.y + p.r + pad);
     }
+    if (lastPop) {
+      x1 = Math.max(x1, lastPop.x + lastPop.r + pad);
+      y0b = Math.min(y0b, lastPop.y - lastPop.r - pad); y1b = Math.max(y1b, lastPop.y + lastPop.r + pad);
+    }
     if (area) for (const [, y] of area) { y0b = Math.min(y0b, y); y1b = Math.max(y1b, y); }
-    return { points, area, lineWidth, bbox: { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad } };
+    return { points, area, lineWidth, lastPop, bbox: { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad } };
   }
   // the item's chart anchor: a point, or the bounding-box center of a
   // polygon's largest part (flat places a chart at its shape's position)
@@ -14061,7 +14072,8 @@ self.onmessage = e => {
       // companion layer) takes the uniform mesh shortcut.
       if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox);
       // PLOT without GRIDSIZE: one line chart per item over its value fields
-      if (this.flags.has('PLOT') && this._isItemPlot()) return this._buildItemPlotLayers(zoom, liveZoom);
+      // (or over one categorical field: the records of a position, one value per category)
+      if (this.flags.has('PLOT') && (this._isItemPlot() || this._isCategoryItemPlot())) return this._buildItemPlotLayers(zoom, liveZoom);
       // a plain grid (one color, no values or glow — the Germany page's
       // companion "grid" layer) as one square per cell; a classed GRIDSIZE
       // chart (the fuel-price page) is a symbol chart sized to the grid,
@@ -14563,6 +14575,37 @@ self.onmessage = e => {
     _isItemPlot() {
       return this.flags.has('PLOT') && !this.flags.has('GRIDSIZE') && String(this.binding.value || '').includes('|');
     }
+    // a per-item PLOT over ONE categorical field (long data: one record per
+    // item and time step, e.g. value "year", size the measure): no GRIDSIZE,
+    // no grid width — flat keys the aggregation on the exact position, so
+    // the records of one position become one item, one value per category
+    _isCategoryItemPlot() {
+      return this.flags.has('PLOT') && !this.flags.has('GRIDSIZE') && this.flags.has('CATEGORICAL')
+        && this.binding.value != null && !String(this.binding.value).includes('|');
+    }
+    // the records of `source` grouped by position, aggregated per category
+    // (SUM default, MEAN / MAX / MIN, DIFFERENCE — as the GRIDSIZE cells)
+    _categoryPlotItems(source) {
+      const n = this._plotCategories().length;
+      const combine = aggCombiner(this.flags);
+      const groups = new Map();
+      for (const f of source) {
+        const pos = itemAnchor(f.geometry);
+        if (!pos) continue;
+        const ci = this._gridCategoryIndex(f.properties[this.binding.value]);
+        if (ci == null) continue;
+        const key = pos[0] + ':' + pos[1];
+        let g = groups.get(key);
+        if (!g) groups.set(key, g = { pos, raw: f.properties, sums: new Array(n).fill(0), counts: new Array(n).fill(0) });
+        const v = this._resolveAggregateValue(f.properties);
+        g.sums[ci] = combine(g.sums[ci], v, g.counts[ci] === 0);
+        g.counts[ci]++;
+      }
+      return Array.from(groups.values(), g => ({
+        geometry: { type: 'Point', coordinates: g.pos },
+        properties: { values: this._cellAggregatedValues(g), raw: g.raw }
+      }));
+    }
     // a per-item SEQUENCE chart: CHART|SYMBOL|SEQUENCE, several value
     // fields per item, one part per field (no CATEGORICAL, no AGGREGATE)
     _isMultiFieldSequence() {
@@ -14768,19 +14811,27 @@ self.onmessage = e => {
     }
 
     _buildItemPlotLayers(zoom, liveZoom = zoom) {
-      const fields = this._itemPlotFields();
-      const items = [];
+      let items = [];
       let dMin = Infinity, dMax = -Infinity;
       // facet / runtime WHERE / time frame narrow the drawn charts, as in
       // every other renderer; the value range stays the full data's (as
       // the bubbles' _maxSizeValue), so a filter does not rescale them
-      const active = this._activeFeatures ? new Set(this._activeFeatures) : null;
-      for (const f of this.features) {
-        const pos = itemAnchor(f.geometry);
-        if (!pos) continue;
-        const values = fields.map(k => scanValue(f.properties[k]));
-        for (const v of values) if (!isNaN(v)) { dMin = Math.min(dMin, v); dMax = Math.max(dMax, v); }
-        if (!active || active.has(f)) items.push({ geometry: { type: 'Point', coordinates: pos }, properties: { values, raw: f.properties } });
+      if (this._isCategoryItemPlot()) {
+        if (!this._plotCategories().length) return [];
+        // long data: the charts are re-aggregated over the filtered records
+        const all = this._categoryPlotItems(this.features);
+        for (const it of all) for (const v of it.properties.values) if (!isNaN(v)) { dMin = Math.min(dMin, v); dMax = Math.max(dMax, v); }
+        items = this._activeFeatures ? this._categoryPlotItems(this._activeFeatures) : all;
+      } else {
+        const fields = this._itemPlotFields();
+        const active = this._activeFeatures ? new Set(this._activeFeatures) : null;
+        for (const f of this.features) {
+          const pos = itemAnchor(f.geometry);
+          if (!pos) continue;
+          const values = fields.map(k => scanValue(f.properties[k]));
+          for (const v of values) if (!isNaN(v)) { dMin = Math.min(dMin, v); dMax = Math.max(dMax, v); }
+          if (!active || active.has(f)) items.push({ geometry: { type: 'Point', coordinates: pos }, properties: { values, raw: f.properties } });
+        }
       }
       if (!items.length) return [];
       const sMin = styleNum(this.style.minvalue), sMaxRaw = this.style.maxvalue;
@@ -14865,6 +14916,12 @@ self.onmessage = e => {
         ctx.lineWidth = RASTER / 75;
         ctx.strokeStyle = '#ffffff';
         ctx.stroke();
+      }
+      if (g.lastPop) {
+        ctx.beginPath();
+        ctx.arc(px(g.lastPop.x), py(g.lastPop.y), g.lastPop.r * RASTER, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgb(${rgb})`;
+        ctx.fill();
       }
       const icon = { url: canvas.toDataURL(), width: W, height: H, anchorX: px(0), anchorY: py(0), id: key, heightUnits: y1 - y0 };
       return this._cacheIcon(key, icon);

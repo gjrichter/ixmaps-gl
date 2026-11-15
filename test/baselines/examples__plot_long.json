@@ -1,0 +1,2949 @@
+{
+ "page": "examples/plot_long.html",
+ "views": [
+  {
+   "label": "initial",
+   "view": {
+    "zoom": 7,
+    "center": [
+     9.25,
+     45.65
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-itemplot-box-long-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "96ea23205a683f67",
+     "setDigest": "4cf6f6f24b178a4e",
+     "columnDigests": {
+      "getIcon": "f6b62200df97376d",
+      "getPixelOffset": "f2adad4c45b9e41a",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "2182ff1082e1b8de"
+     },
+     "stats": {
+      "getPixelOffset": [
+       61.02542,
+       61.02542
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       151.5,
+       157.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        8,
+        46
+       ],
+       151.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        8.5,
+        46
+       ],
+       151.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 153.5,
+        "height": 307,
+        "id": "box|133|151.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#515efa71:4138",
+        "width": 270
+       },
+       [
+        61.02542,
+        -52.792322
+       ],
+       [
+        9,
+        46
+       ],
+       153.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 157.5,
+        "height": 315,
+        "id": "box|133|155.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#e111d06d:4238",
+        "width": 270
+       },
+       [
+        61.02542,
+        -54.869544
+       ],
+       [
+        9.5,
+        46
+       ],
+       157.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        10,
+        46
+       ],
+       151.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        10.5,
+        46
+       ],
+       151.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-long-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "74751b417266c0a8",
+     "setDigest": "dd667bd936be9436",
+     "columnDigests": {
+      "getIcon": "8d3e1a7a88b69060",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "42ba744b46483840"
+     },
+     "stats": {
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       135.889631,
+       141.728309
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|10,20,30,40,50,60,70,80|10:90|100",
+        "url": "#2653ab23:4038",
+        "width": 184
+       },
+       [
+        8,
+        46
+       ],
+       135.889631
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|80,70,60,50,40,30,20,10|10:90|100",
+        "url": "#245b49c0:4098",
+        "width": 184
+       },
+       [
+        8.5,
+        46
+       ],
+       135.889631
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 181.12,
+        "height": 197,
+        "heightUnits": 8.168333,
+        "id": "itemplot|10,30,60,90,60,30,20,10|10:90|100",
+        "url": "#1c78aad8:6506",
+        "width": 184
+       },
+       [
+        9,
+        46
+       ],
+       137.573865
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 187.04,
+        "height": 202,
+        "heightUnits": 8.415,
+        "id": "itemplot|90,60,30,10,30,60,80,90|10:90|100",
+        "url": "#e9abac2d:6842",
+        "width": 184
+       },
+       [
+        9.5,
+        46
+       ],
+       141.728309
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|50,50,50,50,50,50,50,50|10:90|100",
+        "url": "#c474b0a3:2810",
+        "width": 184
+       },
+       [
+        10,
+        46
+       ],
+       135.889631
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|20,80,20,80,20,80,20,80|10:90|100",
+        "url": "#894b99a5:6562",
+        "width": 184
+       },
+       [
+        10.5,
+        46
+       ],
+       135.889631
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-long",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "9d4a78036cef03e7",
+     "setDigest": "33628a039024b8ef",
+     "columnDigests": {
+      "getPixelOffset": "f71de8fc7baf947c",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "9d10c6ae8ba4704e",
+      "getText": "ef9d586b9a833e63",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -3.312327,
+       -3.312327
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       8.421171,
+       8.421171
+      ]
+     },
+     "sample": [
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        8,
+        46
+       ],
+       8.421171,
+       "Rising",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        8.5,
+        46
+       ],
+       8.421171,
+       "Falling",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        9,
+        46
+       ],
+       8.421171,
+       "Peak",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        9.5,
+        46
+       ],
+       8.421171,
+       "Valley",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        10,
+        46
+       ],
+       8.421171,
+       "Flat",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        10.5,
+        46
+       ],
+       8.421171,
+       "Zigzag",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-box-wide-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "00022cf8d1595cbe",
+     "setDigest": "d659f5b0314008d4",
+     "columnDigests": {
+      "getIcon": "f6b62200df97376d",
+      "getPixelOffset": "f2adad4c45b9e41a",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "2182ff1082e1b8de"
+     },
+     "stats": {
+      "getPixelOffset": [
+       61.02542,
+       61.02542
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       151.5,
+       157.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        8,
+        45.3
+       ],
+       151.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        8.5,
+        45.3
+       ],
+       151.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 153.5,
+        "height": 307,
+        "id": "box|133|151.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#515efa71:4138",
+        "width": 270
+       },
+       [
+        61.02542,
+        -52.792322
+       ],
+       [
+        9,
+        45.3
+       ],
+       153.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 157.5,
+        "height": 315,
+        "id": "box|133|155.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#e111d06d:4238",
+        "width": 270
+       },
+       [
+        61.02542,
+        -54.869544
+       ],
+       [
+        9.5,
+        45.3
+       ],
+       157.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        10,
+        45.3
+       ],
+       151.5
+      ],
+      [
+       {
+        "anchorX": 135,
+        "anchorY": 151.5,
+        "height": 303,
+        "id": "box|133|149.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#1f815c7e:4086",
+        "width": 270
+       },
+       [
+        61.02542,
+        -51.950204
+       ],
+       [
+        10.5,
+        45.3
+       ],
+       151.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-wide-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "320401cfccf0f72f",
+     "setDigest": "31c7256ead34d362",
+     "columnDigests": {
+      "getIcon": "8d3e1a7a88b69060",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "42ba744b46483840"
+     },
+     "stats": {
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       135.889631,
+       141.728309
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|10,20,30,40,50,60,70,80|10:90|100",
+        "url": "#2653ab23:4038",
+        "width": 184
+       },
+       [
+        8,
+        45.3
+       ],
+       135.889631
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|80,70,60,50,40,30,20,10|10:90|100",
+        "url": "#245b49c0:4098",
+        "width": 184
+       },
+       [
+        8.5,
+        45.3
+       ],
+       135.889631
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 181.12,
+        "height": 197,
+        "heightUnits": 8.168333,
+        "id": "itemplot|10,30,60,90,60,30,20,10|10:90|100",
+        "url": "#1c78aad8:6506",
+        "width": 184
+       },
+       [
+        9,
+        45.3
+       ],
+       137.573865
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 187.04,
+        "height": 202,
+        "heightUnits": 8.415,
+        "id": "itemplot|90,60,30,10,30,60,80,90|10:90|100",
+        "url": "#e9abac2d:6842",
+        "width": 184
+       },
+       [
+        9.5,
+        45.3
+       ],
+       141.728309
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|50,50,50,50,50,50,50,50|10:90|100",
+        "url": "#c474b0a3:2810",
+        "width": 184
+       },
+       [
+        10,
+        45.3
+       ],
+       135.889631
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|20,80,20,80,20,80,20,80|10:90|100",
+        "url": "#894b99a5:6562",
+        "width": 184
+       },
+       [
+        10.5,
+        45.3
+       ],
+       135.889631
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-wide",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "e7d11037af3e930a",
+     "setDigest": "0d41a87907d77537",
+     "columnDigests": {
+      "getPixelOffset": "f71de8fc7baf947c",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "9d10c6ae8ba4704e",
+      "getText": "ef9d586b9a833e63",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -3.312327,
+       -3.312327
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       8.421171,
+       8.421171
+      ]
+     },
+     "sample": [
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        8,
+        45.3
+       ],
+       8.421171,
+       "Rising",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        8.5,
+        45.3
+       ],
+       8.421171,
+       "Falling",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        9,
+        45.3
+       ],
+       8.421171,
+       "Peak",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        9.5,
+        45.3
+       ],
+       8.421171,
+       "Valley",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        10,
+        45.3
+       ],
+       8.421171,
+       "Flat",
+       "start"
+      ],
+      [
+       [
+        -3.312327,
+        12.154557
+       ],
+       [
+        10.5,
+        45.3
+       ],
+       8.421171,
+       "Zigzag",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "long",
+     "flags": [
+      "AGGREGATE",
+      "AREA",
+      "BOTTOMTITLE",
+      "BOX",
+      "CATEGORICAL",
+      "CHART",
+      "FIXSIZE",
+      "LASTPOP",
+      "LINES",
+      "NOLEGEND",
+      "PLOT",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 48,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ]
+     ],
+     "maxSizeValue": 90
+    },
+    {
+     "name": "wide",
+     "flags": [
+      "AREA",
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "FIXSIZE",
+      "LASTPOP",
+      "LINES",
+      "NOLEGEND",
+      "PLOT",
+      "SYMBOL"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       90,
+       67
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "long": [
+     "<b>Rising</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">50.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">70.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>",
+     "<b>Valley</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr></table>",
+     "<b>Zigzag</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>"
+    ],
+    "wide": [
+     "<b>Rising</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">50.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">70.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>",
+     "<b>Valley</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr></table>",
+     "<b>Zigzag</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom+1",
+   "view": {
+    "zoom": 8,
+    "center": [
+     9.25,
+     45.65
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-itemplot-box-long-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "337fc66ca2e3cb27",
+     "setDigest": "45ea515fb3356acb",
+     "columnDigests": {
+      "getIcon": "137b4b8910604b04",
+      "getPixelOffset": "efe279aac53084cf",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "462b721070baf4e8"
+     },
+     "stats": {
+      "getPixelOffset": [
+       76.887211,
+       76.887211
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       190.5,
+       198
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        8,
+        46
+       ],
+       190.5
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        8.5,
+        46
+       ],
+       190.5
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 193,
+        "height": 386,
+        "id": "box|168|191|0|1|white|1|#bbbbbb|0.3",
+        "url": "#663933e3:5698",
+        "width": 340
+       },
+       [
+        76.887211,
+        -66.514157
+       ],
+       [
+        9,
+        46
+       ],
+       193
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 198,
+        "height": 396,
+        "id": "box|168|196|0|1|white|1|#bbbbbb|0.3",
+        "url": "#8492190c:5842",
+        "width": 340
+       },
+       [
+        76.887211,
+        -69.131293
+       ],
+       [
+        9.5,
+        46
+       ],
+       198
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        10,
+        46
+       ],
+       190.5
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        10.5,
+        46
+       ],
+       190.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-long-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "b03dd7fd51b29980",
+     "setDigest": "eeb8cfaf511cbbea",
+     "columnDigests": {
+      "getIcon": "8d3e1a7a88b69060",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "23e9cf6c8471cfe9"
+     },
+     "stats": {
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       171.210206,
+       178.56648
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|10,20,30,40,50,60,70,80|10:90|100",
+        "url": "#2653ab23:4038",
+        "width": 184
+       },
+       [
+        8,
+        46
+       ],
+       171.210206
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|80,70,60,50,40,30,20,10|10:90|100",
+        "url": "#245b49c0:4098",
+        "width": 184
+       },
+       [
+        8.5,
+        46
+       ],
+       171.210206
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 181.12,
+        "height": 197,
+        "heightUnits": 8.168333,
+        "id": "itemplot|10,30,60,90,60,30,20,10|10:90|100",
+        "url": "#1c78aad8:6506",
+        "width": 184
+       },
+       [
+        9,
+        46
+       ],
+       173.332208
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 187.04,
+        "height": 202,
+        "heightUnits": 8.415,
+        "id": "itemplot|90,60,30,10,30,60,80,90|10:90|100",
+        "url": "#e9abac2d:6842",
+        "width": 184
+       },
+       [
+        9.5,
+        46
+       ],
+       178.56648
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|50,50,50,50,50,50,50,50|10:90|100",
+        "url": "#c474b0a3:2810",
+        "width": 184
+       },
+       [
+        10,
+        46
+       ],
+       171.210206
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|20,80,20,80,20,80,20,80|10:90|100",
+        "url": "#894b99a5:6562",
+        "width": 184
+       },
+       [
+        10.5,
+        46
+       ],
+       171.210206
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-long",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "ce974809d8a93627",
+     "setDigest": "05c561a5a81263c3",
+     "columnDigests": {
+      "getPixelOffset": "c4dbe3283835385a",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "61c85237a742a541",
+      "getText": "ef9d586b9a833e63",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -4.173271,
+       -4.173271
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       10.610011,
+       10.610011
+      ]
+     },
+     "sample": [
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        8,
+        46
+       ],
+       10.610011,
+       "Rising",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        8.5,
+        46
+       ],
+       10.610011,
+       "Falling",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        9,
+        46
+       ],
+       10.610011,
+       "Peak",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        9.5,
+        46
+       ],
+       10.610011,
+       "Valley",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        10,
+        46
+       ],
+       10.610011,
+       "Flat",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        10.5,
+        46
+       ],
+       10.610011,
+       "Zigzag",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-box-wide-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "5f4031d4c731083a",
+     "setDigest": "481bbe475d962466",
+     "columnDigests": {
+      "getIcon": "137b4b8910604b04",
+      "getPixelOffset": "efe279aac53084cf",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "462b721070baf4e8"
+     },
+     "stats": {
+      "getPixelOffset": [
+       76.887211,
+       76.887211
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       190.5,
+       198
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        8,
+        45.3
+       ],
+       190.5
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        8.5,
+        45.3
+       ],
+       190.5
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 193,
+        "height": 386,
+        "id": "box|168|191|0|1|white|1|#bbbbbb|0.3",
+        "url": "#663933e3:5698",
+        "width": 340
+       },
+       [
+        76.887211,
+        -66.514157
+       ],
+       [
+        9,
+        45.3
+       ],
+       193
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 198,
+        "height": 396,
+        "id": "box|168|196|0|1|white|1|#bbbbbb|0.3",
+        "url": "#8492190c:5842",
+        "width": 340
+       },
+       [
+        76.887211,
+        -69.131293
+       ],
+       [
+        9.5,
+        45.3
+       ],
+       198
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        10,
+        45.3
+       ],
+       190.5
+      ],
+      [
+       {
+        "anchorX": 170,
+        "anchorY": 190.5,
+        "height": 381,
+        "id": "box|168|188.5|0|1|white|1|#bbbbbb|0.3",
+        "url": "#f90594d8:5630",
+        "width": 340
+       },
+       [
+        76.887211,
+        -65.453156
+       ],
+       [
+        10.5,
+        45.3
+       ],
+       190.5
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-wide-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "77ab008e572916e3",
+     "setDigest": "02a23462556f39bd",
+     "columnDigests": {
+      "getIcon": "8d3e1a7a88b69060",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "23e9cf6c8471cfe9"
+     },
+     "stats": {
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       171.210206,
+       178.56648
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|10,20,30,40,50,60,70,80|10:90|100",
+        "url": "#2653ab23:4038",
+        "width": 184
+       },
+       [
+        8,
+        45.3
+       ],
+       171.210206
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|80,70,60,50,40,30,20,10|10:90|100",
+        "url": "#245b49c0:4098",
+        "width": 184
+       },
+       [
+        8.5,
+        45.3
+       ],
+       171.210206
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 181.12,
+        "height": 197,
+        "heightUnits": 8.168333,
+        "id": "itemplot|10,30,60,90,60,30,20,10|10:90|100",
+        "url": "#1c78aad8:6506",
+        "width": 184
+       },
+       [
+        9,
+        45.3
+       ],
+       173.332208
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 187.04,
+        "height": 202,
+        "heightUnits": 8.415,
+        "id": "itemplot|90,60,30,10,30,60,80,90|10:90|100",
+        "url": "#e9abac2d:6842",
+        "width": 184
+       },
+       [
+        9.5,
+        45.3
+       ],
+       178.56648
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|50,50,50,50,50,50,50,50|10:90|100",
+        "url": "#c474b0a3:2810",
+        "width": 184
+       },
+       [
+        10,
+        45.3
+       ],
+       171.210206
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|20,80,20,80,20,80,20,80|10:90|100",
+        "url": "#894b99a5:6562",
+        "width": 184
+       },
+       [
+        10.5,
+        45.3
+       ],
+       171.210206
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-wide",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "bc2c5b860ac525ee",
+     "setDigest": "a47eb198fac14910",
+     "columnDigests": {
+      "getPixelOffset": "c4dbe3283835385a",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "61c85237a742a541",
+      "getText": "ef9d586b9a833e63",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -4.173271,
+       -4.173271
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       10.610011,
+       10.610011
+      ]
+     },
+     "sample": [
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        8,
+        45.3
+       ],
+       10.610011,
+       "Rising",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        8.5,
+        45.3
+       ],
+       10.610011,
+       "Falling",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        9,
+        45.3
+       ],
+       10.610011,
+       "Peak",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        9.5,
+        45.3
+       ],
+       10.610011,
+       "Valley",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        10,
+        45.3
+       ],
+       10.610011,
+       "Flat",
+       "start"
+      ],
+      [
+       [
+        -4.173271,
+        15.313782
+       ],
+       [
+        10.5,
+        45.3
+       ],
+       10.610011,
+       "Zigzag",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "long",
+     "flags": [
+      "AGGREGATE",
+      "AREA",
+      "BOTTOMTITLE",
+      "BOX",
+      "CATEGORICAL",
+      "CHART",
+      "FIXSIZE",
+      "LASTPOP",
+      "LINES",
+      "NOLEGEND",
+      "PLOT",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 48,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ]
+     ],
+     "maxSizeValue": 90
+    },
+    {
+     "name": "wide",
+     "flags": [
+      "AREA",
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "FIXSIZE",
+      "LASTPOP",
+      "LINES",
+      "NOLEGEND",
+      "PLOT",
+      "SYMBOL"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       90,
+       67
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "long": [
+     "<b>Rising</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">50.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">70.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>",
+     "<b>Valley</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr></table>",
+     "<b>Zigzag</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>"
+    ],
+    "wide": [
+     "<b>Rising</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">50.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">70.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>",
+     "<b>Valley</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr></table>",
+     "<b>Zigzag</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  },
+  {
+   "label": "zoom-1",
+   "view": {
+    "zoom": 6,
+    "center": [
+     9.25,
+     45.65
+    ],
+    "bearing": 0,
+    "pitch": 0,
+    "projection": "mercator"
+   },
+   "layers": [
+    {
+     "id": "ix-itemplot-box-long-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "5c4f8d14ae165481",
+     "setDigest": "2da91e16bd9be798",
+     "columnDigests": {
+      "getIcon": "23da6eea03c2f87f",
+      "getPixelOffset": "56c740973f5c69ce",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "4f464be19136cf81"
+     },
+     "stats": {
+      "getPixelOffset": [
+       48.435908,
+       48.435908
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       121,
+       125.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        8,
+        46
+       ],
+       121
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        8.5,
+        46
+       ],
+       121
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 122,
+        "height": 244,
+        "id": "box|105.5|120|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#60829d52:2926",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.901293
+       ],
+       [
+        9,
+        46
+       ],
+       122
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 125.5,
+        "height": 251,
+        "id": "box|105.5|123.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#18d66b56:3002",
+        "width": 215
+       },
+       [
+        48.435908,
+        -43.549986
+       ],
+       [
+        9.5,
+        46
+       ],
+       125.5
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        10,
+        46
+       ],
+       121
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        10.5,
+        46
+       ],
+       121
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-long-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "9f6084edc5bb1e04",
+     "setDigest": "ebb30f710f387701",
+     "columnDigests": {
+      "getIcon": "8d3e1a7a88b69060",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "1d8fdfcb56050f8e"
+     },
+     "stats": {
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       107.855671,
+       112.489834
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|10,20,30,40,50,60,70,80|10:90|100",
+        "url": "#2653ab23:4038",
+        "width": 184
+       },
+       [
+        8,
+        46
+       ],
+       107.855671
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|80,70,60,50,40,30,20,10|10:90|100",
+        "url": "#245b49c0:4098",
+        "width": 184
+       },
+       [
+        8.5,
+        46
+       ],
+       107.855671
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 181.12,
+        "height": 197,
+        "heightUnits": 8.168333,
+        "id": "itemplot|10,30,60,90,60,30,20,10|10:90|100",
+        "url": "#1c78aad8:6506",
+        "width": 184
+       },
+       [
+        9,
+        46
+       ],
+       109.192449
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 187.04,
+        "height": 202,
+        "heightUnits": 8.415,
+        "id": "itemplot|90,60,30,10,30,60,80,90|10:90|100",
+        "url": "#e9abac2d:6842",
+        "width": 184
+       },
+       [
+        9.5,
+        46
+       ],
+       112.489834
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|50,50,50,50,50,50,50,50|10:90|100",
+        "url": "#c474b0a3:2810",
+        "width": 184
+       },
+       [
+        10,
+        46
+       ],
+       107.855671
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|20,80,20,80,20,80,20,80|10:90|100",
+        "url": "#894b99a5:6562",
+        "width": 184
+       },
+       [
+        10.5,
+        46
+       ],
+       107.855671
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-long",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "62ba66e0c6cca620",
+     "setDigest": "a171c811b437108f",
+     "columnDigests": {
+      "getPixelOffset": "fe6dd20bc1936f58",
+      "getPosition": "5defe641faaad35c",
+      "getSize": "9e1de57aa961597d",
+      "getText": "ef9d586b9a833e63",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -2.628996,
+       -2.628996
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       6.683888,
+       6.683888
+      ]
+     },
+     "sample": [
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        8,
+        46
+       ],
+       6.683888,
+       "Rising",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        8.5,
+        46
+       ],
+       6.683888,
+       "Falling",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        9,
+        46
+       ],
+       6.683888,
+       "Peak",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        9.5,
+        46
+       ],
+       6.683888,
+       "Valley",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        10,
+        46
+       ],
+       6.683888,
+       "Flat",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        10.5,
+        46
+       ],
+       6.683888,
+       "Zigzag",
+       "start"
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-box-wide-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "billboard": true,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPixelOffset",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "bce420ce6e797dc3",
+     "setDigest": "484812ce4b68e56a",
+     "columnDigests": {
+      "getIcon": "23da6eea03c2f87f",
+      "getPixelOffset": "56c740973f5c69ce",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "4f464be19136cf81"
+     },
+     "stats": {
+      "getPixelOffset": [
+       48.435908,
+       48.435908
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       121,
+       125.5
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        8,
+        45.3
+       ],
+       121
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        8.5,
+        45.3
+       ],
+       121
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 122,
+        "height": 244,
+        "id": "box|105.5|120|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#60829d52:2926",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.901293
+       ],
+       [
+        9,
+        45.3
+       ],
+       122
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 125.5,
+        "height": 251,
+        "id": "box|105.5|123.5|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#18d66b56:3002",
+        "width": 215
+       },
+       [
+        48.435908,
+        -43.549986
+       ],
+       [
+        9.5,
+        45.3
+       ],
+       125.5
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        10,
+        45.3
+       ],
+       121
+      ],
+      [
+       {
+        "anchorX": 107.5,
+        "anchorY": 121,
+        "height": 242,
+        "id": "box|105.5|119|0|0.75|white|1|#bbbbbb|0.3",
+        "url": "#4eb7ec1f:2906",
+        "width": 215
+       },
+       [
+        48.435908,
+        -41.232905
+       ],
+       [
+        10.5,
+        45.3
+       ],
+       121
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-wide-g0",
+     "type": "IconLayer",
+     "count": 6,
+     "constants": {
+      "pickable": true,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getIcon",
+      "getPosition",
+      "getSize"
+     ],
+     "digest": "e003e28140ccfddf",
+     "setDigest": "991a8d6ab28f6e86",
+     "columnDigests": {
+      "getIcon": "8d3e1a7a88b69060",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "1d8fdfcb56050f8e"
+     },
+     "stats": {
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       107.855671,
+       112.489834
+      ]
+     },
+     "sample": [
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|10,20,30,40,50,60,70,80|10:90|100",
+        "url": "#2653ab23:4038",
+        "width": 184
+       },
+       [
+        8,
+        45.3
+       ],
+       107.855671
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|80,70,60,50,40,30,20,10|10:90|100",
+        "url": "#245b49c0:4098",
+        "width": 184
+       },
+       [
+        8.5,
+        45.3
+       ],
+       107.855671
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 181.12,
+        "height": 197,
+        "heightUnits": 8.168333,
+        "id": "itemplot|10,30,60,90,60,30,20,10|10:90|100",
+        "url": "#1c78aad8:6506",
+        "width": 184
+       },
+       [
+        9,
+        45.3
+       ],
+       109.192449
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 187.04,
+        "height": 202,
+        "heightUnits": 8.415,
+        "id": "itemplot|90,60,30,10,30,60,80,90|10:90|100",
+        "url": "#e9abac2d:6842",
+        "width": 184
+       },
+       [
+        9.5,
+        45.3
+       ],
+       112.489834
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|50,50,50,50,50,50,50,50|10:90|100",
+        "url": "#c474b0a3:2810",
+        "width": 184
+       },
+       [
+        10,
+        45.3
+       ],
+       107.855671
+      ],
+      [
+       {
+        "anchorX": 4.72,
+        "anchorY": 178.72,
+        "height": 194,
+        "heightUnits": 8.068333,
+        "id": "itemplot|20,80,20,80,20,80,20,80|10:90|100",
+        "url": "#894b99a5:6562",
+        "width": 184
+       },
+       [
+        10.5,
+        45.3
+       ],
+       107.855671
+      ]
+     ]
+    },
+    {
+     "id": "ix-itemplot-titles-wide",
+     "type": "TextLayer",
+     "count": 6,
+     "constants": {
+      "characterSet": "auto",
+      "fontFamily": "arial",
+      "getAlignmentBaseline": "top",
+      "getColor": [
+       136,
+       136,
+       136,
+       255
+      ],
+      "lineHeight": 1,
+      "outlineColor": [
+       255,
+       255,
+       255,
+       128
+      ],
+      "outlineWidth": 0.142857,
+      "pickable": false,
+      "sizeUnits": "pixels"
+     },
+     "columns": [
+      "getPixelOffset",
+      "getPosition",
+      "getSize",
+      "getText",
+      "getTextAnchor"
+     ],
+     "digest": "0e51b2960f14d8b1",
+     "setDigest": "031da409dd4815dc",
+     "columnDigests": {
+      "getPixelOffset": "fe6dd20bc1936f58",
+      "getPosition": "3049d250bff15e92",
+      "getSize": "9e1de57aa961597d",
+      "getText": "ef9d586b9a833e63",
+      "getTextAnchor": "9a7b4a4587578a86"
+     },
+     "stats": {
+      "getPixelOffset": [
+       -2.628996,
+       -2.628996
+      ],
+      "getPosition": [
+       8,
+       10.5
+      ],
+      "getSize": [
+       6.683888,
+       6.683888
+      ]
+     },
+     "sample": [
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        8,
+        45.3
+       ],
+       6.683888,
+       "Rising",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        8.5,
+        45.3
+       ],
+       6.683888,
+       "Falling",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        9,
+        45.3
+       ],
+       6.683888,
+       "Peak",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        9.5,
+        45.3
+       ],
+       6.683888,
+       "Valley",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        10,
+        45.3
+       ],
+       6.683888,
+       "Flat",
+       "start"
+      ],
+      [
+       [
+        -2.628996,
+        9.647078
+       ],
+       [
+        10.5,
+        45.3
+       ],
+       6.683888,
+       "Zigzag",
+       "start"
+      ]
+     ]
+    }
+   ],
+   "themes": [
+    {
+     "name": "long",
+     "flags": [
+      "AGGREGATE",
+      "AREA",
+      "BOTTOMTITLE",
+      "BOX",
+      "CATEGORICAL",
+      "CHART",
+      "FIXSIZE",
+      "LASTPOP",
+      "LINES",
+      "NOLEGEND",
+      "PLOT",
+      "SUM",
+      "SYMBOL"
+     ],
+     "features": 48,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ],
+      [
+       31,
+       90,
+       67
+      ]
+     ],
+     "maxSizeValue": 90
+    },
+    {
+     "name": "wide",
+     "flags": [
+      "AREA",
+      "BOTTOMTITLE",
+      "BOX",
+      "CHART",
+      "FIXSIZE",
+      "LASTPOP",
+      "LINES",
+      "NOLEGEND",
+      "PLOT",
+      "SYMBOL"
+     ],
+     "features": 6,
+     "active": null,
+     "hidden": false,
+     "categoryLabels": [
+      "0.00 - 0.00"
+     ],
+     "categoryColorsRgb": [
+      [
+       31,
+       90,
+       67
+      ]
+     ],
+     "partsA": [
+      {
+       "max": 0.001,
+       "min": 0
+      }
+     ],
+     "rangeClassed": true,
+     "valueMin": 0,
+     "valueMax": 0,
+     "valueMedian": 0
+    }
+   ],
+   "legend": [],
+   "tooltips": {
+    "long": [
+     "<b>Rising</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">50.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">70.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>",
+     "<b>Valley</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr></table>",
+     "<b>Zigzag</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>"
+    ],
+    "wide": [
+     "<b>Rising</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">40.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">50.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">70.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>",
+     "<b>Valley</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">30.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">60.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">90.00</td></tr></table>",
+     "<b>Zigzag</b><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2015\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2015</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2016\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2016</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2017\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2017</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2018\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2018</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">20.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2022\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2022</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">80.00</td></tr></table>"
+    ]
+   },
+   "validation": null
+  }
+ ],
+ "console": []
+}

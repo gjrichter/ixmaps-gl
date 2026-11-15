@@ -47,6 +47,7 @@
     "examples/dot_categorical.html",
     "examples/dot_range_equidistant.html",
     "examples/plot_curves.html",
+    "examples/plot_long.html",
     "examples/pie_size_sum.html",
     "examples/pie_categorical_aggregate.html",
     "examples/bar_horz_categorical_aggregate.html",

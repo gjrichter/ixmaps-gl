@@ -101,7 +101,9 @@ page. It currently implements:
   field100 arithmetic are noted in the console and drawn as plain bars (`SMALLARROW` as `ARROW`)
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
-  geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or one per grid
+  geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or over one
+  categorical field with `CATEGORICAL|AGGREGATE` (long data, one item per position; `LASTPOP` puts
+  a circle on the last point of a per-item chart), or one per grid
   cell with `GRIDSIZE` (a categorical field's series, e.g. one value per year)
 - A native interactive legend (default bars, `SIMPLELEGEND`, `COMPACTLEGEND`,
   `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner or flat `align` option;
