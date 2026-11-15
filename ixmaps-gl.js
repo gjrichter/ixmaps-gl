@@ -1558,7 +1558,14 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     return !!(d && (d.type === 'ext' || d.query));
   }
 
+  // every layer's data passes here: under mapProjection "equalearth" its geometry is mapped to the
+  // Equal Earth plane once (see EE_PLANE); tables and everything else are left as they are
   async function fetchLayerData(dataConfig, binding, engineOptions) {
+    const raw = await fetchLayerDataRaw(dataConfig, binding, engineOptions);
+    const pl = engineOptions && equalEarthByOptions.get(engineOptions);
+    return pl && raw && raw.type === 'FeatureCollection' ? projectFeaturesToPlane(raw, pl) : raw;
+  }
+  async function fetchLayerDataRaw(dataConfig, binding, engineOptions) {
     if (!dataConfig || (!dataConfig.url && !dataConfig.urls && !dataConfig.query && !dataConfig.obj)) {
       throw new Error('[ixmaps-gl] layer .data() needs a url, urls, query, or obj');
     }
@@ -2004,10 +2011,10 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       const v = scanValue(f.properties && f.properties[sizeField]);
       return isFinite(v) ? v / 1000000 : NaN;
     }
-    return geodesicPolygonAreaKm2(f.geometry);
+    return geodesicPolygonAreaKm2(f._geo || f.geometry);
   }
   function featureAreaKm2(f) {
-    return f._flatAreaKm2 !== undefined ? f._flatAreaKm2 : geodesicPolygonAreaKm2(f.geometry);
+    return f._flatAreaKm2 !== undefined ? f._flatAreaKm2 : geodesicPolygonAreaKm2(f._geo || f.geometry);
   }
   // .type("CHOROPLETH|CATEGORICAL|AGGREGATE") on ONE value field (e.g.
   // DOMINANT over the categories of "missione"): flat aggregates every
@@ -4181,6 +4188,18 @@ self.onmessage = e => {
     const opacity = Number.isFinite(styleNum(style.fillopacity)) ? styleNum(style.fillopacity) : 1;
     const paint = () => {
       try {
+        // a plane map's sea is its outline polygon (the background stays the page's): a {type:"Sphere"}
+        // layer is what asks for that outline - the plane draws none by itself
+        if (isPlaneMap(map)) {
+          map.__ixSphereStyle = style;
+          if (!map.getLayer(EE_SEA_LAYER_ID)) addEqualEarthOutline(map, engineOptionsByMap.get(map), style);
+          if (map.getLayer(EE_SEA_LAYER_ID)) {
+            map.setPaintProperty(EE_SEA_LAYER_ID, 'fill-color', color);
+            map.setPaintProperty(EE_SEA_LAYER_ID, 'fill-opacity', opacity);
+            applyEqualEarthLineStyle(map, style, engineOptionsByMap.get(map));
+          }
+          return;
+        }
         const id = map.getLayer(BLANK_BACKGROUND_LAYER_ID) ? BLANK_BACKGROUND_LAYER_ID : SPHERE_BACKDROP_LAYER_ID;
         if (id === SPHERE_BACKDROP_LAYER_ID && !map.getLayer(id)) {
           const first = (map.getStyle().layers || [])[0];
@@ -4194,6 +4213,41 @@ self.onmessage = e => {
     // images load (every pan/zoom) — 'style.load' never fires again then, so
     // a Sphere theme defined at such a moment would never get its color
     if (map.isStyleLoaded() || (map.style && map.style._loaded)) paint(); else map.once('style.load', paint);
+  }
+
+  // the Equal Earth outline of a plane map (mapProjection "equalearth"). The plane draws NO outline by
+  // itself: the user adds one with a {type:"Sphere"} layer (colorscheme = the sea, linecolor = the edge
+  // line, "none" for no line), as on flat's world maps. The options equalearthsea / equalearthline
+  // still ask for one without a layer. Re-added when a style swap drops it.
+  const EE_SEA_LAYER_ID = '__ixmaps_gl_ee_sea', EE_LINE_LAYER_ID = '__ixmaps_gl_ee_line', EE_SOURCE_ID = '__ixmaps_gl_ee_outline';
+  function equalEarthLineColor(style, o) {
+    const lc = style && style.linecolor !== undefined ? styleLineColor(style.linecolor) : undefined;
+    return lc || (o && o.equalearthline) || '#888888';
+  }
+  function applyEqualEarthLineStyle(map, style, o) {
+    if (!map.getLayer(EE_LINE_LAYER_ID)) return;
+    const lc = equalEarthLineColor(style, o);
+    const none = lc === 'none';
+    map.setPaintProperty(EE_LINE_LAYER_ID, 'line-color', none ? 'rgba(0,0,0,0)' : lc);
+    map.setPaintProperty(EE_LINE_LAYER_ID, 'line-width', none ? 0 : 1);
+  }
+  function addEqualEarthOutline(map, engineOptions, sphereStyle) {
+    const o = engineOptions || {};
+    const style = sphereStyle || map.__ixSphereStyle;
+    // nothing asks for an outline: the user decides (a Sphere layer, or the options)
+    if (!style && !o.equalearthsea && !o.equalearthline) return;
+    const add = () => {
+      try {
+        if (map.getLayer(EE_SEA_LAYER_ID)) return;
+        const sea = o.equalearthsea && o.equalearthsea !== 'none' ? o.equalearthsea : 'rgba(0,0,0,0)';
+        map.addSource(EE_SOURCE_ID, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [(equalEarthByOptions.get(o) || EE_PLANE).outline] } } });
+        map.addLayer({ id: EE_SEA_LAYER_ID, type: 'fill', source: EE_SOURCE_ID, paint: { 'fill-color': sea } });
+        map.addLayer({ id: EE_LINE_LAYER_ID, type: 'line', source: EE_SOURCE_ID, paint: { 'line-color': equalEarthLineColor(style, o), 'line-width': 1 } });
+        applyEqualEarthLineStyle(map, style, o);
+        if (style) applySphereBackdrop(map, style);
+      } catch (e) { console.warn('[ixmaps-gl] the Equal Earth outline could not be added:', e); }
+    };
+    if (map.isStyleLoaded() || (map.style && map.style._loaded)) add(); else map.once('style.load', add);
   }
 
   function buildBlankBackgroundStyle(color) {
@@ -5828,7 +5882,14 @@ self.onmessage = e => {
       _titleHost = el;
       // a flat SVG map in another projection (equalearth.svg): its view
       // framing and map scale (see FLAT_SVG_PROJECTIONS)
-      const svgProjection = flatSvgProjectionOf(this.mapOptions.map)
+      // mapProjection "equalearth": the true Equal Earth plane (see EE_PLANE); set before any data is
+      // fetched (fetchLayerData maps the geometry by it)
+      const planeDef = planeOfName(this.mapOptions.mapProjection);
+      const planeMap = !!planeDef;
+      if (planeMap) equalEarthByOptions.set(this._engineOptions, planeDef);
+      else equalEarthByOptions.delete(this._engineOptions);
+      const svgProjection = planeMap ? planeDef.projection
+        : flatSvgProjectionOf(this.mapOptions.map)
         || (isFlatOrthographicName(this.mapOptions.mapProjection) ? FLAT_ORTHOGRAPHIC_PROJECTION : null);
       if (svgProjection) flatSvgProjectionByOptions.set(this._engineOptions, svgProjection);
       if (isFlatOrthographicName(this.mapOptions.mapProjection)) {
@@ -5840,7 +5901,9 @@ self.onmessage = e => {
         ? flatViewToMapLibreZoom(Number(this._viewZoom), Number(vLat), Number(vLng), el.clientWidth, el.clientHeight, svgProjection)
         : 8;
       {
-        _boundsSource = () => viewBounds(Number(vLat), Number(vLng), initialZoom, el.clientWidth, el.clientHeight);
+        _boundsSource = planeMap
+          ? () => { const p = planeDef.forward(Number(vLng), Number(vLat)); const b = viewBounds(p[1], p[0], initialZoom, el.clientWidth, el.clientHeight); return planeViewBounds(b[0], b[1], planeDef); }
+          : () => viewBounds(Number(vLat), Number(vLng), initialZoom, el.clientWidth, el.clientHeight);
       }
 
       // fast local check (missing container) before the network round
@@ -5971,8 +6034,15 @@ self.onmessage = e => {
        }
       }
 
-      const [lat, lon] = this._viewCenter || [45.5, 9.2];
-      const mapTypeColor = resolveMapTypeColor(this.mapOptions.mapType);
+      const [lat0, lon0] = this._viewCenter || [45.5, 9.2];
+      // a plane map's camera works in pseudo coordinates
+      const [lon, lat] = planeMap ? planeDef.forward(Number(lon0), Number(lat0)) : [lon0, lat0];
+      // a plane map has no tile basemap (tiles can't be drawn in it): the mapType color or white
+      let mapTypeColor = resolveMapTypeColor(this.mapOptions.mapType);
+      if (planeMap && !mapTypeColor) {
+        if (this.mapOptions.mapType) console.warn(`[ixmaps-gl] mapProjection "equalearth": mapType "${this.mapOptions.mapType}" is a tile basemap, which has no Equal Earth plane — a plain background is used (set mapType to a color)`);
+        mapTypeColor = '#ffffff';
+      }
       const map = new maplibregl.Map({
         container: this.containerId,
         style: mapTypeColor ? buildBlankBackgroundStyle(mapTypeColor)
@@ -5985,6 +6055,12 @@ self.onmessage = e => {
         // center south (64° at 1024×768) and forces a larger zoom (MapLibre >= 6)
         ...(isFlatOrthographicName(this.mapOptions.mapProjection)
           ? { transformConstrain: (lngLat, zoom) => ({ center: new maplibregl.LngLat(lngLat.lng, globeCenterLat(lngLat.lat)), zoom }) }
+          : {}),
+        // Equal Earth plane: MapLibre's default constrain keeps the world at least as wide as the
+        // map, so the plane could not be zoomed out to a smaller whole world; allow any zoom, keep
+        // the centre on the plane
+        ...(planeMap
+          ? { transformConstrain: (lngLat, zoom) => ({ center: new maplibregl.LngLat(Math.max(-180, Math.min(180, lngLat.lng)), Math.max(-85, Math.min(85, lngLat.lat))), zoom }) }
           : {}),
         // MapLibre's own AttributionControl (bottom right) keeps the
         // basemap's required CARTO/OpenStreetMap credit; the page's own
@@ -6008,9 +6084,11 @@ self.onmessage = e => {
         // basemap tiles wrap) — unless themecopies is off, which is the default
         // (see applyThemeCopies). .options({worldcopies: false}) draws the
         // world once, at the cost of that zoom limit.
-        renderWorldCopies: this._engineOptions.worldcopies !== false
+        // the Equal Earth plane is one world, not a repeating strip
+        renderWorldCopies: !planeMap && this._engineOptions.worldcopies !== false
       });
       engineOptionsByMap.set(map, this._engineOptions);
+      if (planeMap) addEqualEarthOutline(map, this._engineOptions);
       // themecopies (default: off): the map keeps its world copies (free panning past the world's edge, empty
       // space beside it) but the deck.gl overlay, which asks map.getRenderWorldCopies() for its `repeat`, draws the
       // themes once, as flat does. .options({themecopies: true}) repeats them. MapLibre's own transform does not
@@ -6033,7 +6111,8 @@ self.onmessage = e => {
       }
       _boundsSource = () => {
         const b = map.getBounds();
-        return [{ lat: b.getSouth(), lng: b.getWest() }, { lat: b.getNorth(), lng: b.getEast() }];
+        const sw = { lat: b.getSouth(), lng: b.getWest() }, ne = { lat: b.getNorth(), lng: b.getEast() };
+        return planeMap ? planeViewBounds(sw, ne) : [sw, ne];
       };
       // set once by the 'load' event — NOT map.loaded(), which MapLibre turns false again
       // whenever tiles are loading (after every pan/zoom), so a theme defined then would
@@ -6363,6 +6442,7 @@ self.onmessage = e => {
           if (!color && !wasColor && style === current) return engineApi; // same style: nothing to reload
           const projection = typeof map.getProjection === 'function' ? map.getProjection() : null;
           map.once('style.load', () => {
+            if (isPlaneMap(map)) addEqualEarthOutline(map, builder._engineOptions);
             if (projection && projection.type && typeof map.setProjection === 'function') {
               try { map.setProjection({ type: projection.type }); } catch (e) { /* projection unsupported by this build */ }
             }
@@ -6590,8 +6670,9 @@ self.onmessage = e => {
           const c = isOpts ? latlonOrOpts.center : latlonOrOpts;
           const z = isOpts ? latlonOrOpts.zoom : zoom;
           if (c) {
-            const lngLat = Array.isArray(c) ? [c[1], c[0]] : [c.lng, c.lat];
-            jumpLive(Object.assign({ center: lngLat }, z != null ? { zoom: mapLibreZoomOfFlatView(map, Number(z), lngLat[1], lngLat[0]) } : {}));
+            const real = Array.isArray(c) ? [c[1], c[0]] : [c.lng, c.lat];
+            const lngLat = cameraLngLat(map, real[0], real[1]);
+            jumpLive(Object.assign({ center: lngLat }, z != null ? { zoom: mapLibreZoomOfFlatView(map, Number(z), real[1], real[0]) } : {}));
           }
           return engineApi;
         },
@@ -6874,7 +6955,10 @@ self.onmessage = e => {
         }
       }
       function namedThemeFeatures(spec, rows, binding, expr) {
-        return filterAndJoin(rowsResult(rows, binding || spec.binding), spec, runtimes, expr);
+        // broker / named-table data does not pass fetchLayerData: a plane map maps it here
+        let r = rowsResult(rows, binding || spec.binding);
+        if (equalEarthByOptions.get(builder._engineOptions) && r && r.type === 'FeatureCollection') r = projectFeaturesToPlane(r, equalEarthByOptions.get(builder._engineOptions));
+        return filterAndJoin(r, spec, runtimes, expr);
       }
       function fillNamedTheme(rt, spec, table, patch) {
         rt._lastTable = table;
@@ -7055,7 +7139,8 @@ self.onmessage = e => {
       }
 
       function applyProjectMap(m, f, report) {
-        const svg = String(m.map || '');
+        // an Equal Earth plane map keeps its projection (its data is mapped to the plane at ingest)
+        const svg = isPlaneMap(map) ? '' : String(m.map || '');
         // its view and map scale follow the project's map file, as on flat
         if (svg) {
           const svgProjection = flatSvgProjectionOf(svg) || (/orthographic\.svg$/i.test(svg) ? FLAT_ORTHOGRAPHIC_PROJECTION : null);
@@ -7084,8 +7169,8 @@ self.onmessage = e => {
           const c = m.center || {};
           const lat = Number(c.lat), lng = Number(c.lng);
           const z = m.zoom != null && m.zoom !== '' ? Number(m.zoom) : NaN;
-          if (Number.isFinite(lat) && Number.isFinite(lng)) jumpLive(Object.assign({ center: [lng, lat] }, Number.isFinite(z) ? { zoom: mapLibreZoomOfFlatView(map, z, lat, lng) } : {}));
-          else if (Number.isFinite(z)) jumpLive({ zoom: mapLibreZoomOfFlatView(map, z, map.getCenter().lat, map.getCenter().lng) });
+          if (Number.isFinite(lat) && Number.isFinite(lng)) jumpLive(Object.assign({ center: cameraLngLat(map, lng, lat) }, Number.isFinite(z) ? { zoom: mapLibreZoomOfFlatView(map, z, lat, lng) } : {}));
+          else if (Number.isFinite(z)) jumpLive({ zoom: mapLibreZoomOfFlatView(map, z, realCenterOf(map).lat, realCenterOf(map).lng) });
         }
         // a project can't authorize its own scripts — trustedscripts is the page's
         if (m.options && typeof m.options === 'object') {
@@ -7533,7 +7618,12 @@ self.onmessage = e => {
         if (zoomChanged) emitMapEvent('zoomend', detail);
         if (panChanged && !zoomChanged) emitMapEvent('moveend', detail);
       });
-      map.on('click', e => emitMapEvent('mapclick', { lngLat: { lng: e.lngLat.lng, lat: e.lngLat.lat }, point: { x: e.point.x, y: e.point.y } }));
+      map.on('click', e => {
+        // a plane map's pointer is a pseudo position: report the real one (a click outside the outline has none)
+        let ll = { lng: e.lngLat.lng, lat: e.lngLat.lat };
+        if (isPlaneMap(map)) { const r = planeOf(map).inverse(ll.lng, ll.lat); if (!r) return; ll = { lng: r[0], lat: r[1] }; }
+        emitMapEvent('mapclick', { lngLat: ll, point: { x: e.point.x, y: e.point.y } });
+      });
       this.__emitItemClick = detail => emitMapEvent('click', detail);
 
       map.on('load', () => {
@@ -8022,18 +8112,267 @@ self.onmessage = e => {
       scaleConstant: 195.45e6,
       project: (lat, lon) => {
         const p = lat * Math.PI / 180, q = Math.max(-180, Math.min(180, lon)) * Math.PI / 360;
+        // x1 = 2·D·cos p·sin q / sin D is flat's (±2)·D·sqrt(1 − C²) in closed form (identical: sin²D − sin²p = cos²p·sin²q);
+        // flat's square root was NaN (−1e-16) or noisy (1e-8) on the central meridian
         const D = Math.acos(Math.cos(p) * Math.cos(q));
         let x1 = 0, y1 = 0;
-        if (D !== 0) { const C = Math.sin(p) / Math.sin(D); x1 = (q < 0 ? -2 : 2) * D * Math.sqrt(1 - C * C); y1 = D * C; }
+        if (D !== 0) { const C = Math.sin(p) / Math.sin(D); x1 = 2 * D * Math.cos(p) * Math.sin(q) / Math.sin(D); y1 = D * C; }
         return [0.5 * (x1 + 2 * q * Math.cos(50.467)), 0.5 * (y1 + p)];
-      }
+      },
+      invert: (x, y) => newtonInvert(FLAT_SVG_PROJECTIONS.winkel.project, x, y)
     }
   };
+  // [lat, lon] in degrees of a projected point: damped Newton on a forward function (numeric Jacobian);
+  // null where it does not converge (outside the outline)
+  function newtonInvert(f, x, y) {
+    let la = y * 180 / Math.PI * 1.5, lo = x * 180 / Math.PI;
+    la = Math.max(-89.9, Math.min(89.9, la)); lo = Math.max(-179.9, Math.min(179.9, lo));
+    const h = 1e-5;
+    for (let i = 0; i < 60; i++) {
+      const a = f(la, lo), ex = a[0] - x, ey = a[1] - y;
+      if (Math.abs(ex) < 1e-12 && Math.abs(ey) < 1e-12) return [la, lo];
+      const bla = f(la + h, lo), blo = f(la, lo + h);
+      const j11 = (blo[0] - a[0]) / h, j12 = (bla[0] - a[0]) / h, j21 = (blo[1] - a[1]) / h, j22 = (bla[1] - a[1]) / h;
+      const det = j11 * j22 - j12 * j21;
+      if (!isFinite(det) || Math.abs(det) < 1e-14) break;
+      let dlo = (ex * j22 - ey * j12) / det, dla = (ey * j11 - ex * j21) / det;
+      const m = Math.max(Math.abs(dlo), Math.abs(dla));
+      if (m > 20) { dlo *= 20 / m; dla *= 20 / m; }
+      lo = Math.max(-180, Math.min(180, lo - dlo)); la = Math.max(-90, Math.min(90, la - dla));
+    }
+    const b = f(la, lo);
+    return Math.abs(b[0] - x) < 1e-9 && Math.abs(b[1] - y) < 1e-9 ? [la, lo] : null;
+  }
+  // the true Winkel Tripel (standard parallel arccos(2/π), cos φ1 = 2/π) for mapProjection "winkel". flat's own Winkel
+  // (FLAT_SVG_PROJECTIONS.winkel, for map:".../winkel.svg") takes cos(50.467) in radians (0.9797 instead of 2/π), which
+  // makes it wider than the real projection; the plane uses the real one. scaleConstant keeps flat's ratio to the width.
+  const WINKEL_TRIPEL = (() => {
+    const project = (lat, lon) => {
+      const p = lat * Math.PI / 180, q = Math.max(-180, Math.min(180, lon)) * Math.PI / 360;
+      const D = Math.acos(Math.cos(p) * Math.cos(q));
+      let x1 = 0, y1 = 0;
+      if (D !== 0) { x1 = 2 * D * Math.cos(p) * Math.sin(q) / Math.sin(D); y1 = D * Math.sin(p) / Math.sin(D); }
+      return [0.5 * (x1 + 2 * q * 2 / Math.PI), 0.5 * (y1 + p)];
+    };
+    const flatW = FLAT_SVG_PROJECTIONS.winkel;
+    return { svg: flatW.svg, scaleConstant: flatW.scaleConstant * project(0, 180)[0] / flatW.project(0, 180)[0], project,
+      invert: (x, y) => newtonInvert(project, x, y) };
+  })();
   // the flat SVG map projection of a map:/project map URL (generic file
   // name), null for Mercator and every map drawn as is (orthographic → globe)
   function flatSvgProjectionOf(svgUrl) {
     const m = /(?:^|\/)(equalearth|winkel)\.svgz?(?:[?#].*)?$/i.exec(String(svgUrl || ''));
     return m ? FLAT_SVG_PROJECTIONS[m[1].toLowerCase()] : null;
+  }
+  // ---- true Equal Earth (ixmaps.Map(id, {mapProjection: "equalearth"})) ----
+  // MapLibre has Mercator and globe only, so the Equal Earth PLANE is drawn as a pseudo Mercator
+  // world: every data coordinate is mapped once, at ingest (projectFeaturesToPlane), to a pseudo
+  // [lon', lat'] whose Web Mercator position is exactly the Equal Earth position —
+  //   lon' = x · 180 / xmax,  lat' = gd(y · π / xmax)   (gd = Gudermannian, Mercator's inverse y)
+  // The plane then is 360 pseudo-degrees wide and ±65.5° of pseudo-latitude high, so pan, zoom,
+  // deck.gl layers, pixel-sized charts and picking all work unchanged. The real coordinates stay
+  // on the feature as `_geo` (areas, great-circle lengths). Only the API boundary (view, bounds,
+  // pointer) converts back (EE_PLANE.inverse).
+  // one plane per projection: PLANES.equalearth, PLANES.winkel (a projection entry with `project` and `invert`)
+  function makePlane(ee) {
+    const xmax = ee.project(0, 180)[0];
+    const toRad = Math.PI / 180, toDeg = 180 / Math.PI;
+    const forward = (lon, lat) => {
+      const p = ee.project(lat, lon);
+      return [p[0] * 180 / xmax, Math.atan(Math.sinh(p[1] * Math.PI / xmax)) * toDeg];
+    };
+    // [lon, lat] of a pseudo position, null outside the outline
+    const inverse = (lonP, latP) => {
+      const x = lonP / 180 * xmax, y = Math.asinh(Math.tan(latP * toRad)) * xmax / Math.PI;
+      const r = ee.invert(x, y);
+      if (!r || !isFinite(r[0]) || !isFinite(r[1]) || Math.abs(r[1]) > 180 + 1e-6 || Math.abs(r[0]) > 90 + 1e-6) return null;
+      const back = ee.project(r[0], r[1]);
+      return Math.abs(back[0] - x) < 1e-6 && Math.abs(back[1] - y) < 1e-6 ? [r[1], r[0]] : null;
+    };
+    // the outline: the two bounding meridians, pole to pole (pseudo coordinates, closed ring)
+    const outline = (() => {
+      const ring = [];
+      for (let lat = -90; lat <= 90; lat += 1) ring.push(forward(180, lat));
+      for (let lat = 90; lat >= -90; lat -= 1) ring.push(forward(-180, lat));
+      ring.push(ring[0]);
+      return ring;
+    })();
+    // metersToWorldPixels takes a latitude and scales by cos(lat): on the plane a meter is the same
+    // length everywhere (one pseudo-degree = xmax/180 earth radii), which is the cos of this latitude
+    const gridRefLat = Math.acos(xmax / Math.PI) * 180 / Math.PI;
+    // the flat view zoom conventions (flatViewToMapLibreZoom, proj.plane) with the plane's true px-per-unit
+    const projection = Object.assign({}, ee, { plane: true, xmax });
+    return { forward, inverse, outline, xmax, gridRefLat, projection };
+  }
+  const PLANES = { equalearth: makePlane(FLAT_SVG_PROJECTIONS.equalearth), winkel: makePlane(WINKEL_TRIPEL) };
+  const EE_PLANE = PLANES.equalearth;
+  // the plane a mapProjection value names (null: not a plane projection)
+  function planeOfName(v) {
+    const n = String(v || '').trim();
+    if (/^equal[ _-]?earth$/i.test(n)) return PLANES.equalearth;
+    if (/^winkel([ _-]?tripel)?$/i.test(n)) return PLANES.winkel;
+    return null;
+  }
+  function isEqualEarthName(v) { return !!planeOfName(v); }
+  // the plane being mapped by the entry points below (planeGeometry, projectFeaturesToPlane,
+  // planeViewBounds), which run synchronously; the helpers between them read it
+  let activePlane = EE_PLANE;
+  function withPlane(pl, fn) {
+    const prev = activePlane; activePlane = pl || EE_PLANE;
+    try { return fn(); } finally { activePlane = prev; }
+  }
+  const equalEarthByOptions = new WeakMap();
+  // a geometry's coordinates, mapped to the plane; segments longer than 1° are split (a straight
+  // plane segment of a long edge would otherwise cut across the curved meridians), except across
+  // the antimeridian
+  function planeLine(coords, closed) {
+    const out = [];
+    for (let i = 0; i < coords.length; i++) {
+      const c = coords[i];
+      if (i > 0) {
+        const p = coords[i - 1], dLon = c[0] - p[0], dLat = c[1] - p[1];
+        const n = Math.abs(dLon) > 180 ? 1 : Math.min(360, Math.ceil(Math.max(Math.abs(dLon), Math.abs(dLat))));
+        for (let k = 1; k < n; k++) out.push(activePlane.forward(p[0] + dLon * k / n, p[1] + dLat * k / n));
+      }
+      out.push(activePlane.forward(c[0], c[1]));
+    }
+    return out;
+  }
+  // ---- antimeridian: a ring or line whose longitudes jump by more than 180° between two
+  // vertices crosses ±180°. It is unwrapped to a continuous longitude and cut at every
+  // ±180° + 360°·m meridian (Sutherland–Hodgman for rings, segment clipping for lines), each
+  // piece shifted back into the plane. A ring that encloses a pole (its unwrapped ends are 360°
+  // apart, Antarctica) is closed along the pole first. The cut edges lie on the ±180° meridian
+  // and the pole, which planeLine bends along the outline.
+  function unwrapLine(coords) {
+    const out = []; let off = 0;
+    for (let i = 0; i < coords.length; i++) {
+      if (i > 0) { const d = coords[i][0] - coords[i - 1][0]; if (d > 180) off -= 360; else if (d < -180) off += 360; }
+      out.push([coords[i][0] + off, coords[i][1]]);
+    }
+    return out;
+  }
+  function crossesAntimeridian(coords) {
+    for (let i = 1; i < coords.length; i++) if (Math.abs(coords[i][0] - coords[i - 1][0]) > 180) return true;
+    return false;
+  }
+  function clipRingX(pts, bound, keepGreater) {
+    const out = [], inside = q => (keepGreater ? q[0] >= bound : q[0] <= bound);
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i], b = pts[(i + 1) % pts.length], ia = inside(a), ib = inside(b);
+      if (ia) out.push(a);
+      if (ia !== ib) { const t = (bound - a[0]) / (b[0] - a[0]); out.push([bound, a[1] + (b[1] - a[1]) * t]); }
+    }
+    return out;
+  }
+  function clipLineStrip(pts, lo, hi) {
+    const pieces = []; let cur = null;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1], dx = b[0] - a[0];
+      let t0 = 0, t1 = 1;
+      if (dx === 0) { if (a[0] < lo || a[0] > hi) { cur = null; continue; } }
+      else {
+        let ta = (lo - a[0]) / dx, tb = (hi - a[0]) / dx;
+        if (ta > tb) { const x = ta; ta = tb; tb = x; }
+        t0 = Math.max(0, ta); t1 = Math.min(1, tb);
+        if (t0 > t1) { cur = null; continue; }
+      }
+      const at = t => [a[0] + dx * t, a[1] + (b[1] - a[1]) * t];
+      if (!cur || t0 > 0) { cur = [at(t0)]; pieces.push(cur); }
+      cur.push(at(t1));
+      if (t1 < 1) cur = null;
+    }
+    return pieces;
+  }
+  const windowsOf = pts => {
+    let mn = Infinity, mx = -Infinity;
+    pts.forEach(q => { if (q[0] < mn) mn = q[0]; if (q[0] > mx) mx = q[0]; });
+    const out = [];
+    for (let m = Math.floor((mn + 180 + 1e-9) / 360); m <= Math.floor((mx + 180 - 1e-9) / 360); m++) out.push(m);
+    return out;
+  };
+  // a ring (closed, [lon, lat]) → [{m, pts}]: its pieces inside the plane, `m` the 360° window
+  function planeRingPieces(ring) {
+    const open = ring.slice(0, ring.length - (ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1] ? 1 : 0));
+    const u = unwrapLine(open);
+    const closeGap = open[0][0] - open[open.length - 1][0];
+    const closeOff = (u[u.length - 1][0] - open[open.length - 1][0]) + (closeGap > 180 ? -360 : closeGap < -180 ? 360 : 0);
+    let pts = u;
+    if (Math.abs(closeOff) > 180) { // encloses a pole
+      const pole = open.reduce((s, q) => s + q[1], 0) / open.length < 0 ? -90 : 90;
+      pts = u.concat([[u[u.length - 1][0], pole], [u[0][0], pole]]);
+    }
+    const pieces = [];
+    windowsOf(pts).forEach(m => {
+      const lo = -180 + 360 * m, hi = 180 + 360 * m;
+      const c = clipRingX(clipRingX(pts, lo, true), hi, false);
+      if (c.length < 3) return;
+      const shifted = c.map(q => [q[0] - 360 * m, q[1]]);
+      shifted.push(shifted[0]);
+      pieces.push({ m, pts: shifted });
+    });
+    return pieces;
+  }
+  function planePolygon(rings) {
+    if (!rings.some(crossesAntimeridian)) return { type: 'Polygon', coordinates: rings.map(r => planeLine(r)) };
+    const byM = new Map();
+    rings.forEach((r, ri) => planeRingPieces(r).forEach(({ m, pts }) => {
+      let e = byM.get(m); if (!e) { e = { outer: null, holes: [] }; byM.set(m, e); }
+      if (ri === 0) e.outer = planeLine(pts); else e.holes.push(planeLine(pts));
+    }));
+    const polys = [...byM.values()].filter(e => e.outer).map(e => [e.outer, ...e.holes]);
+    return polys.length === 1 ? { type: 'Polygon', coordinates: polys[0] } : { type: 'MultiPolygon', coordinates: polys };
+  }
+  function planeLineParts(coords) {
+    if (!crossesAntimeridian(coords)) return [planeLine(coords)];
+    const u = unwrapLine(coords), parts = [];
+    windowsOf(u).forEach(m => clipLineStrip(u, -180 + 360 * m, 180 + 360 * m).forEach(piece => {
+      if (piece.length >= 2) parts.push(planeLine(piece.map(q => [q[0] - 360 * m, q[1]])));
+    }));
+    return parts;
+  }
+  const wrapLon = lon => (lon > 180 || lon < -180 ? ((lon + 540) % 360 + 360) % 360 - 180 : lon);
+  function planeGeometry(g, pl) {
+    if (!g || !g.coordinates) return g;
+    return withPlane(pl, () => planeGeometryIn(g));
+  }
+  function planeGeometryIn(g) {
+    const pt = c => activePlane.forward(wrapLon(c[0]), c[1]);
+    switch (g.type) {
+      case 'Point': return { type: 'Point', coordinates: pt(g.coordinates) };
+      case 'MultiPoint': return { type: 'MultiPoint', coordinates: g.coordinates.map(pt) };
+      case 'LineString': { const parts = planeLineParts(g.coordinates); return parts.length === 1 ? { type: 'LineString', coordinates: parts[0] } : { type: 'MultiLineString', coordinates: parts }; }
+      case 'MultiLineString': return { type: 'MultiLineString', coordinates: g.coordinates.flatMap(planeLineParts) };
+      case 'Polygon': return planePolygon(g.coordinates);
+      case 'MultiPolygon': {
+        const polys = [];
+        g.coordinates.forEach(pc => { const r = planePolygon(pc); if (r.type === 'Polygon') polys.push(r.coordinates); else r.coordinates.forEach(x => polys.push(x)); });
+        return { type: 'MultiPolygon', coordinates: polys };
+      }
+      default: return g;
+    }
+  }
+  // a fetched FeatureCollection mapped to the plane (new feature objects: the page's own .obj data is not touched)
+  function projectFeaturesToPlane(fc, pl) {
+    if (!fc || !Array.isArray(fc.features) || fc._plane) return fc;
+    const out = Object.assign({}, fc, {
+      features: fc.features.map(f => (f && f.geometry && f.geometry.coordinates) ? Object.assign({}, f, { geometry: planeGeometry(f.geometry, pl), _geo: f.geometry }) : f)
+    });
+    Object.defineProperty(out, '_plane', { value: true });
+    if (fc._sphere) Object.defineProperty(out, '_sphere', { value: true, enumerable: false });
+    return out;
+  }
+  // the real [south, west, north, east] box of what a plane view shows: the inverse of a grid of
+  // the view's pseudo corners/edges (points outside the outline are skipped)
+  function planeViewBounds(pSw, pNe, pl) {
+    pl = pl || EE_PLANE;
+    let s = 90, n = -90, w = 180, e = -180, any = false;
+    for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) {
+      const r = pl.inverse(pSw.lng + (pNe.lng - pSw.lng) * i / 8, pSw.lat + (pNe.lat - pSw.lat) * j / 8);
+      if (!r) continue;
+      any = true; w = Math.min(w, r[0]); e = Math.max(e, r[0]); s = Math.min(s, r[1]); n = Math.max(n, r[1]);
+    }
+    return any ? [{ lat: s, lng: w }, { lat: n, lng: e }] : [{ lat: -90, lng: -180 }, { lat: 90, lng: 180 }];
   }
   // the flat SVG projection a map's options object belongs to (set by the
   // map's init and loadProject; the runtimes only see the options object)
@@ -8092,6 +8431,9 @@ self.onmessage = e => {
   // FLAT_SVG_PROJECTIONS), else flatToMapLibreZoom
   function flatViewToMapLibreZoom(flatZoom, lat, lng, width, height, proj) {
     if (!proj || !(width > 0) || !(height > 0) || !Number.isFinite(lat) || !Number.isFinite(lng)) return flatToMapLibreZoom(flatZoom);
+    // every plane shares Equal Earth's zoom: one pseudo-degree of longitude is the same width at the same view zoom, so the
+    // world is as wide on a Winkel plane as on an Equal Earth one (flat's own Winkel fit clamps |lon| and pins zoomed-out views)
+    if (proj.plane) proj = PLANES.equalearth.projection;
     if (proj.orthographic) {
       // the globe's radius as flat draws it; MapLibre's is 512 · 2^zoom / 2π / cos(center lat)
       const disc = FLAT_ORTHOGRAPHIC_RADIUS_PER_HEIGHT * height * Math.pow(2, flatZoom - 2.5);
@@ -8102,6 +8444,8 @@ self.onmessage = e => {
     const a = proj.project(sw.lat, sw.lng), b = proj.project(ne.lat, ne.lng);
     const kx = width / Math.abs(b[0] - a[0]), ky = height / Math.abs(b[1] - a[1]);
     const k = ne.lng - sw.lng < 180 ? kx : Math.min(kx, ky);
+    // the true plane: k px per Equal Earth unit, one pseudo-degree = xmax/180 units
+    if (proj.plane) return Math.log2(k * proj.xmax * 2 / 512);
     const pxPerDegree = k * (proj.project(lat, lng + 0.5)[0] - proj.project(lat, lng - 0.5)[0]);
     return Math.log2(pxPerDegree * 360 / 512);
   }
@@ -8123,9 +8467,20 @@ self.onmessage = e => {
     const options = engineOptionsByMap.get(map);
     return (options && flatSvgProjectionByOptions.get(options)) || null;
   }
+  // a live map's center as real {lat, lng} (a plane map's center is a pseudo position)
+  function planeOf(map) { const o = engineOptionsByMap.get(map); return (o && equalEarthByOptions.get(o)) || null; }
+  function isPlaneMap(map) { return !!planeOf(map); }
+  function realCenterOf(map) {
+    const c = map.getCenter();
+    if (!isPlaneMap(map)) return c;
+    const r = planeOf(map).inverse(c.lng, c.lat);
+    return r ? { lat: r[1], lng: r[0] } : { lat: 0, lng: 0 };
+  }
+  // a real [lng, lat] → what MapLibre's camera takes
+  function cameraLngLat(map, lng, lat) { const pl = planeOf(map); return pl ? pl.forward(lng, lat) : [lng, lat]; }
   // the flat view zoom a live map shows / the MapLibre zoom of a flat view
   function flatViewZoomOf(map, mapLibreZoom) {
-    const c = map.getCenter(), el = map.getContainer();
+    const c = realCenterOf(map), el = map.getContainer();
     return mapLibreToFlatViewZoom(mapLibreZoom == null ? map.getZoom() : mapLibreZoom, c.lat, c.lng, el.clientWidth, el.clientHeight, mapSvgProjection(map));
   }
   function mapLibreZoomOfFlatView(map, flatZoom, lat, lng) {
@@ -12912,7 +13267,7 @@ self.onmessage = e => {
           if (lat > maxLat) maxLat = lat;
         }
       });
-      this._gridRefLat = (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
+      this._gridRefLat = equalEarthByOptions.get(this.mapOptions) ? equalEarthByOptions.get(this.mapOptions).gridRefLat : (minLat <= maxLat) ? (minLat + maxLat) / 2 : 0;
     }
 
     // (re)builds the per-category GridAggregateIndex for the grid width
@@ -18274,7 +18629,8 @@ self.onmessage = e => {
           }
           run = []; runColors = [];
         };
-        const chordM = lift ? greatCircleMeters(p1, p2) : 0;
+        const chordM = lift ? greatCircleMeters(...(equalEarthByOptions.get(this.mapOptions)
+          ? [p1, p2].map(q => equalEarthByOptions.get(this.mapOptions).inverse(q[0], q[1]) || q) : [p1, p2])) : 0;
         ll.forEach((c, i) => { if (visible(c)) { run.push(lift ? [c[0], c[1], vectorArcHeight(i, ll.length - 1, chordM, archRatio)] : c); runColors.push(vertexColor(i)); } else flush(); });
         flush();
         if (arrow && visible(toLngLat(end))) {
@@ -19553,7 +19909,7 @@ self.onmessage = e => {
   function getProjectString() {
     if (!_lastMapApi || !_lastMapApi.map) return JSON.stringify({ map: {} });
     const map = _lastMapApi.map;
-    const center = map.getCenter();
+    const center = realCenterOf(map);
     const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
     const svgProjection = mapSvgProjection(map);
     return JSON.stringify({
@@ -19627,7 +19983,7 @@ self.onmessage = e => {
     highlightThemeItems: () => warnOnce('highlightThemeItems', '[ixmaps-gl] ixmaps.highlightThemeItems is not supported yet'),
     // flat's global forms with the map name first (htmlgui.js) — the map
     // handle's methods on the last built map
-    getCenter: () => (_lastMapApi && _lastMapApi.map ? _lastMapApi.map.getCenter() : null),
+    getCenter: () => (_lastMapApi && _lastMapApi.map ? realCenterOf(_lastMapApi.map) : null),
     getMapTypeId: () => (_lastMapApi && _lastMapApi.getMapTypeId ? _lastMapApi.getMapTypeId() : ''),
     // flat's attribution: ixmaps.setAttribution(text) and its htmlgui_ pair
     setAttribution: (text) => { if (_lastMapApi && _lastMapApi.setAttribution) _lastMapApi.setAttribution(text); },
@@ -19674,6 +20030,7 @@ self.onmessage = e => {
   // test-only: lets test/unit/*.test.mjs call pure internals directly (the
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
+    EE_PLANE, PLANES, planeOfName, planeGeometry, projectFeaturesToPlane, planeViewBounds, isEqualEarthName,
     IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     splitMapEvents, getBounds, chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,

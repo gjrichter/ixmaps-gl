@@ -191,8 +191,26 @@ actually displayed; the `normalSizeScale` option key is matched in any spelling
 (`normalsizescale`), as flat does. Code that talks
 to the MapLibre map directly (`api.map.getZoom()`, `jumpTo`) sees MapLibre zooms.
 
-Flat's Equal Earth and Winkel world maps (`map: ".../generic/equalearth.svg"`, `winkel.svg`) are
-drawn in Mercator, but framed and scaled as flat shows them: flat fits its Leaflet view's bounds
+**True Equal Earth and Winkel** are opt-in with the map option `mapProjection: "equalearth"` or `"winkel"` (the true Winkel Tripel, cos φ1 = 2/π — flat's own Winkel is wider; one plane registry serves both, and both planes share the same zoom: the world is as wide at the same view zoom). MapLibre only
+knows Mercator and globe, so the engine maps every real `[lon, lat]` through the Equal Earth
+formula once, when the data is read, onto a Mercator-linear "plane" (the longitude spans
+360° pseudo-degrees, the pole sits at about ±65.5° pseudo-latitude). MapLibre and deck.gl then
+draw that plane unchanged — pan, zoom, picking and pixel-sized charts need no special case. At the
+API boundary the engine converts back, so `view()`, `getBounds()`, `getCenter()`,
+`getProjectString()` and `mapclick` all speak real lon/lat and the ixmaps zoom is the same
+pixels-per-unit as flat's Equal Earth. Geometry crossing the antimeridian is cut at ±180°
+and a ring around a pole (Antarctica) is closed along the pole; areas, grid widths in metres
+and 3D arc lengths use the real coordinates (kept as `_geo` on each feature). The plane has no
+tile basemap: a `mapType` that names tiles is replaced by a plain white sea (a colour `mapType`
+is used as given). The plane draws **no outline by itself** — the page decides: a
+`{type:"Sphere"}` layer adds it (its `colorscheme` is the sea fill, `fillopacity` the sea opacity,
+`linecolor` the edge line, `"none"` for none), as on flat's world maps; without a layer, the options
+`equalearthsea` (sea fill) and `equalearthline` (edge line, default `#888888`) ask for one too. A plane map ignores the project's `map` file, so the
+projection cannot be switched at runtime — rebuild the map (the GHS page reloads with
+`?projection=equalearth`). See `examples/equalearth_plane.html`.
+
+Flat's Equal Earth and Winkel world maps given as a map file (`map: ".../generic/equalearth.svg"`, `winkel.svg`) are
+still drawn in Mercator, but framed and scaled as flat shows them: flat fits its Leaflet view's bounds
 into the projected map, so the same zoom shows a different area there (Equal Earth at zoom 2:
 1.55× the Mercator scale). ixmaps-gl converts every API zoom to the MapLibre zoom with the same
 pixels per degree of longitude at the view's center, and back, and sizes dynamically scaled

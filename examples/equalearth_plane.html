@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Equal Earth plane (mapProjection: "equalearth")</title>
+<script src="../ixmaps-gl.js?cb=ee1"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; background: #fff; }
+  #map_div { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  // graticule every 30°, as GeoJSON lines (the engine maps them to the plane and bends them)
+  var grat = { type: "FeatureCollection", features: [] };
+  for (var lo = -180; lo <= 180; lo += 30) { var c = []; for (var la = -90; la <= 90; la += 5) c.push([lo, la]); grat.features.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: c } }); }
+  for (var la2 = -60; la2 <= 60; la2 += 30) { var c2 = []; for (var lo2 = -180; lo2 <= 180; lo2 += 5) c2.push([lo2, la2]); grat.features.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: c2 } }); }
+  // marker points whose plane positions are known
+  var pts = { type: "FeatureCollection", features: [[0,0],[0,60],[0,-60],[179,0],[-179,0],[10,45],[139,35],[-74,40],[-58,-34],[151,-33]].map(function (p, i) {
+    return { type: "Feature", properties: { v: 10 + i * 5 }, geometry: { type: "Point", coordinates: p } }; }) };
+
+  var countries = ixmaps.layer("countries", layer => layer
+    .data({ url: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json", type: "topojson", object: "countries" })
+    .type("FEATURE")
+    .style({ colorscheme: ["#dfe7ee"], linecolor: "#7a8a99", fillopacity: "1" })
+    .meta({ title: "countries" }));
+  var graticule = ixmaps.layer("graticule", layer => layer
+    .data({ obj: grat, type: "geojson" }).binding({ geo: "geometry" }).type("FEATURE")
+    .style({ linecolor: "#ccaa00", linewidth: "0.5", fillopacity: "0" }).meta({ title: "graticule" }));
+  var marks = ixmaps.layer("marks", layer => layer
+    .data({ obj: pts, type: "geojson" }).binding({ geo: "geometry", value: "v" }).type("CHART|BUBBLE|SIZE")
+    .style({ colorscheme: ["#d62728"], scale: "1", fillopacity: "0.7" }).meta({ title: "marks" }));
+
+  window._mapPromise = ixmaps.Map("map_div", { mapProjection: "equalearth", mapType: "#ffffff", legend: "false" },
+    map => map.view([10, 10], 2)
+      .options({ objectscaling: "dynamic", normalSizeScale: "55364168", equalearthsea: "#eaf4fb" })
+      .layer(countries).layer(graticule).layer(marks));
+</script>
+</body>
+</html>
