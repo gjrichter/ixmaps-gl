@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>INFOBUBBLE · CATEGORICAL</title>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.49/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 340px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>INFOBUBBLE · CATEGORICAL</b>
+  <span>|INFOBUBBLE on a BUBBLE chart: a permanent HTML info card anchored to each bubble — the same Mustache
+  template as the tooltip (<code>meta.infobubble</code>, else <code>meta.tooltip</code>), always visible, with a close
+  button. Base type <code>INFOBUBBLE</code> alone draws a dot + card per record (|NOICON: card only).</span><br>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  // inline data: the comuni of the sisma 2016-2017 crater (schematic positions),
+  // one record per comune with its profile (A/B/C), need and priority
+  var rows = [
+    ["Valle Castellana", "A", "1 medico, 118 da Teramo, ambulatorio mobile; redditi più bassi del cratere", "lavoro e reddito, sanità stabile, scuola", 13.53, 42.52],
+    ["Accumoli",         "A", "case d'emergenza, nessuna scuola, nessun trasporto pubblico", "servizi minimi + gestore locale", 13.23, 42.69],
+    ["Arquata del Tronto","A", "pochi medici, frazioni senza segnale, ricettivo quasi assente", "domiciliarità e trasporto anziani", 13.30, 42.61],
+    ["Acquasanta Terme", "A", "nessun pronto soccorso, prelievi 1 g/sett., turismo mordi e fuggi", "presidio sanitario, turismo → lavoro", 13.27, 42.75],
+    ["Amatrice",         "A", "presenze < anagrafe, famiglie altrove, presidio temporaneo", "presidi sanitari/educativi, rientro famiglie", 13.29, 42.63],
+    ["Amandola",         "B", "specialistici verso la costa, vuoto produttivo", "polo di area, coop. comunità", 13.36, 42.98],
+    ["Roccafluvione",    "B", "perdita giovani adulti, accesso specialistico difficile", "lavoro/formazione giovani", 13.28, 42.79],
+    ["Camerino",         "B", "centro in cantiere, musei chiusi, fibra sorprendentemente bassa", "polo per i comuni fragili, fibra", 13.07, 43.14],
+    ["Matelica",         "C", "sedi istituzionali provvisorie, sport e protezione civile scoperti", "sedi + servizi di area", 13.01, 43.25],
+    ["Norcia",           "C", "prima infanzia e alunni in calo, economia legata al turismo", "educazione/cultura, diversificare", 12.94, 42.79],
+    ["Sarnano",          "C", "teatro e sedi civiche chiusi, nessuna impresa sociale", "sedi culturali, economia sociale", 13.30, 42.99]
+  ];
+  var comuni = { type: "FeatureCollection", features: rows.map(function (r) { return {
+    type: "Feature",
+    properties: { comune: r[0], profilo: r[1], bisogno: r[2], priorita: r[3] },
+    geometry: { type: "Point", coordinates: [r[4], r[5]] } }; }) };
+
+  var __layer = ixmaps.layer("COMUNI", layer => layer
+    .data({ obj: comuni, type: "geojson" })
+    .type("CHART|BUBBLE|CATEGORICAL|INFOBUBBLE")
+    .binding({ position: "geometry", value: "profilo", title: "comune" })
+    .style({
+      colorscheme: ["3", "#c0392b", "#e67e22", "#27ae60"],
+      fillopacity: "0.85", scale: "1.4",
+      bubbleoffset: "26,-10", bubblemax: "20"
+    })
+    .meta({
+      title: "Bisogni per profilo di comune — area pilota sisma 2016-2017",
+      tooltip: "<b>{{comune}}</b> ({{profilo}})",
+      infobubble: "<b style='font-size:1.15em'>{{comune}}</b> · profilo {{profilo}}<br>{{bisogno}}<br><i>Priorità: {{priorita}}</i>"
+    })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([42.78, 13.18], 9).layer(__layer)
+  );
+</script>
+</body>
+</html>
