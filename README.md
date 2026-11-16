@@ -54,6 +54,10 @@ page. It currently implements:
 - **CHART\|LABEL** — flat's value label: a rounded box sized by the bubble radius of the size value
   in the item color, with `VALUES` the value in bold; with `TEXTONLY` only the text, over a halo of
   the theme color
+- **INFOBUBBLE** — a permanent info card per drawn item (see *Permanent info bubbles*): alone it draws a
+  dot per record plus the card (`NOICON`: card only); as a `|INFOBUBBLE` modifier on a symbol chart
+  (`CHART|BUBBLE`/`SYMBOL`/`LABEL`/`USER`) or a `CHOROPLETH` it adds the card to every drawn item,
+  anchored to the item's geography
 - Chart values (`VALUES`, labels) as flat prints them: the `valuefield` value, flat's number format
   (thousands with spaces, `valuedecimals`, years without breaks), `units` after a space
 - `align` (`left`, `2left`, `right`, `above`, `below`, …) and `offsetx`/`offsety` move a whole
@@ -527,6 +531,29 @@ numeric `value` (or `size`) binding and name the text field in `style.valuefield
 With `CATEGORICAL` the value field holds the categories and `valuefield` names the text. The text is drawn as a
 single-color glyph with a halo, so an emoji comes out as a monochrome silhouette (seen in a headless Chromium
 test): use image symbols (see Symbols) for colored icons.
+
+### Permanent info bubbles (`INFOBUBBLE`)
+
+`INFOBUBBLE` adds a **permanent info card** (an "info bubble") to a geographic entity: as a type on its own it
+draws one dot per record plus one card per record (`|NOICON`: cards only); as a `|INFOBUBBLE` modifier on a
+symbol chart (`CHART|BUBBLE`/`SYMBOL`/`LABEL`/`USER`) or a `CHOROPLETH` it adds one card to every drawn item,
+anchored to the item's position (a polygon's card sits on its shape center). The card content is the **same Mustache template as the
+tooltip**, rendered by the same code path: `meta.infobubble` (or `style.infobubble`) if given, else
+`meta.tooltip`, else flat's default — so `{{field}}`, `{{theme.item.title}}`, `{{theme.item.chart}}` … work
+identically to the hover/pinned tooltip. Cards are DOM overlays positioned with `map.project()` and kept in place
+while the map pans/zooms, styled like the tooltip (light/dark with the basemap), each with a close button.
+
+```js
+.type("CHART|BUBBLE|CATEGORICAL|INFOBUBBLE")
+.binding({ position: "geometry", value: "profilo", title: "comune" })
+.style({ bubbleoffset: "26,-10", bubblemax: "20" })   // card offset from the anchor, max cards (biggest kept)
+.meta({ infobubble: "<b>{{comune}}</b><br>{{bisogno}}<br><i>Priorità: {{priorita}}</i>" })
+```
+
+Style keys: `bubbleoffset` (`"dx,dy"` px, default `"28,-12"` — flips to the other side of the anchor near the map
+edge), `bubblemax` (cap on the card count, keeping the biggest items by value, like `maxcharts`),
+`bubblecss` (extra CSS for the card). Cards follow the theme's own scale gates (`chartlower`/`chartupper`,
+`layerlower`/`layerupper`) and disappear with a hidden theme. See `examples/infobubble_categorical.html`.
 
 ### Runtime filtering
 

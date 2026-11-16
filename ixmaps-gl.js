@@ -53,7 +53,13 @@
 // (headTailBreaks); LOG/POW2/POW3 are recognized type flags but not
 // implemented, see KNOWN_INERT_FLAGS. CHART|USER draws a page's own chart
 // function (style.userdraw, _buildUserChartLayers), CHART|LABEL flat's
-// value label, boxed or TEXTONLY (_buildLabelChartLayers), CHART|PIE (and
+// value label, boxed or TEXTONLY (_buildLabelChartLayers), INFOBUBBLE a
+// permanent info card per drawn item (alone: a DOT marker plus the card,
+// |NOICON: cards only; as a |INFOBUBBLE modifier on a symbol chart
+// (CHART|BUBBLE/SYMBOL/LABEL/USER) or a CHOROPLETH: the same card per drawn
+// item — DOM overlay via
+// createInfoBubbles, content from the same Mustache tooltip template:
+// meta.infobubble, else meta.tooltip, else flat's default), CHART|PIE (and
 // PIE|DONUT) a pie per record, a slice per value field, flat's sizing,
 // CENTER part and VALUES leader labels (_buildPieLayers; 3D/VOLUME/
 // STARBURST/RAYS/BOW variants are noted, drawn flat; AGGREGATE and
@@ -2243,7 +2249,14 @@ self.onmessage = e => {
   // tests: forget the worker and the loaded d3-contour
   function kdeReset() { if (_kdeWorker && _kdeWorker.terminate) _kdeWorker.terminate(); _kdeWorker = null; _kdePending.clear(); _d3ContourPromise = null; }
   // tests: the deck.gl layer classes a runtime builds with, without loading deck.gl
-  function setDeckLayerClassesForTests(classes) { if (classes.GeoJsonLayer) GeoJsonLayer = classes.GeoJsonLayer; }
+  function setDeckLayerClassesForTests(classes) {
+    if (classes.GeoJsonLayer) GeoJsonLayer = classes.GeoJsonLayer;
+    if (classes.ScatterplotLayer) ScatterplotLayer = classes.ScatterplotLayer;
+    if (classes.IconLayer) IconLayer = classes.IconLayer;
+    if (classes.TextLayer) TextLayer = classes.TextLayer;
+    if (classes.PathLayer) PathLayer = classes.PathLayer;
+    if (classes.HeatmapLayer) HeatmapLayer = classes.HeatmapLayer;
+  }
   function kdeCompute(points, bwKm, maxCells) {
     return new Promise(resolve => {
       try {
@@ -3655,7 +3668,7 @@ self.onmessage = e => {
     'sizepow', 'rangescale', 'minvalue', 'maxvalue', 'markersize', 'boxopacity', 'outlierscale', 'valuescale',
     'brightness', 'fractionscale', 'dopacityscale', 'dopacitypow', 'gridwidthpx', 'textscale', 'rangecentervalue',
     'shadowblur', 'shadowdx', 'shadowdy', 'maxshadow', 'offsetx', 'offsety', 'gridx', 'boxmargin', 'borderwidth',
-    'borderradius', 'maxcharts', 'archeight', 'alignmargin',
+    'borderradius', 'maxcharts', 'bubblemax', 'archeight', 'alignmargin',
     // HEATMAP / MLHEATMAP / KDE (a project JSON writes them as strings)
     'radiuspx', 'intensity', 'threshold', 'weightmax', 'bandwidth', 'bandwidthscale', 'bandwidthzoompow', 'bandwidthzoomref'];
   function toNumberIfNumeric(v) {
@@ -4700,6 +4713,142 @@ self.onmessage = e => {
       el.appendChild(pinnedTooltipEl);
     }
     return { getTooltip, onClick, mount };
+  }
+
+  // ---------------------------------------------------------------
+  // Permanent info bubbles (type flag INFOBUBBLE): one always-visible HTML
+  // card per drawn item of a theme carrying the flag, anchored to the
+  // item's geography (a Point's position, a polygon's shape center —
+  // flatShapeCenter). The content is the SAME Mustache template the
+  // tooltips use (meta.infobubble, else meta.tooltip, else flat's default),
+  // built by the runtime's own buildTooltipHtml — so {{FIELD}},
+  // {{theme.item.title}}, {{theme.item.chart}} … work identically to the
+  // hover/pinned tooltip. The cards are DOM, not deck.gl, because the
+  // content is HTML; they are positioned with map.project() and kept on
+  // their place on every 'move', exactly like the pinned tooltip above.
+  // ctx: the builder, the MapLibre map, its container element, the runtimes,
+  // the disposers. sync() runs at the end of every refreshLayers().
+  // ---------------------------------------------------------------
+  function createInfoBubbles(ctx) {
+    const { builder, map, el, runtimes, disposers } = ctx;
+    const pane = document.createElement('div');
+    pane.style.cssText = 'position:absolute;top:0;left:0;z-index:6;pointer-events:none;';
+    // key (infoBubbleKey) -> { el, content, rt, item, anchor, html }
+    const cards = new Map();
+    // cards the user closed stay closed for the session — a pan/zoom that
+    // rebuilds the same item must not pop them open again
+    const closedKeys = new Set();
+
+    // the effective (rendered) dark/light probe, same as the tooltips' (see
+    // createTooltips' tooltipIsDark — builder.__effectiveDark is set there)
+    const isDark = () => {
+      const o = parseFloat(builder._engineOptions.basemapopacity);
+      const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
+      return typeof builder.__effectiveDark === 'function'
+        ? builder.__effectiveDark(isNaN(o) ? 1 : o, builder.mapOptions.mapType, legendBackground)
+        : flatLegendLook(builder.mapOptions.mapType, isNaN(o) ? 1 : o, legendBackground).dark;
+    };
+    // same look as the tooltips (createTooltips' tooltipLook)
+    const cardLook = () => {
+      const fontsize = Math.min(14, Math.max(11, (22 / 1200 * (global.innerWidth || 1200))));
+      const fonts = { fontFamily: 'arial narrow, system', fontSize: fontsize + 'px', lineHeight: '20px' };
+      return isDark()
+        ? Object.assign(fonts, { background: 'rgba(50,50,50,0.95)', color: 'rgb(200,205,214)', border: '0.5px solid #555', borderRadius: '5px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)' })
+        : Object.assign(fonts, { background: 'rgba(255,255,255,0.95)', color: '#444', border: '0.5px solid black', borderRadius: '5px',
+            boxShadow: 'rgba(0,0,0,0.2) 0px 2px 4px 0px, rgba(0,0,0,0.19) 0px 3px 10px 0px' });
+    };
+
+    function makeCard(rt, key) {
+      const cardEl = document.createElement('div');
+      cardEl.style.cssText = 'position:absolute;top:0;left:0;display:block;pointer-events:auto;max-width:340px;padding:0.5em 0.7em 0.5em 0.5em;';
+      const content = document.createElement('div');
+      content.style.cssText = 'margin:0.2em;max-height:300px;overflow:auto';
+      cardEl.appendChild(content);
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.setAttribute('aria-label', 'chiudi');
+      closeBtn.title = 'chiudi';
+      closeBtn.textContent = '×';
+      closeBtn.style.cssText = 'position:absolute;top:5px;right:5px;width:1.5em;height:1.5em;padding:0;' +
+        'display:flex;align-items:center;justify-content:center;border:none;border-radius:50%;' +
+        'background:rgba(128,128,128,0.18);color:inherit;font-size:1em;line-height:1;font-weight:bold;cursor:pointer';
+      closeBtn.addEventListener('click', () => { closedKeys.add(key); cardEl.remove(); cards.delete(key); });
+      cardEl.appendChild(closeBtn);
+      Object.assign(cardEl.style, cardLook());
+      // .style({bubblecss}) — extra css for the card (a colored border, a
+      // background …), applied once at creation
+      if (rt.style.bubblecss) cardEl.style.cssText += ';' + rt.style.bubblecss;
+      return { el: cardEl, content, rt, item: null, anchor: null, html: null };
+    }
+
+    function positionCard(c) {
+      if (!c.anchor) return;
+      const pt = map.project(c.anchor);
+      const [dx, dy] = infoBubbleOffset(c.rt.style);
+      const vw = el.clientWidth || global.innerWidth || 1200, vh = el.clientHeight || global.innerHeight || 800;
+      const w = c.el.offsetWidth || 0, h = c.el.offsetHeight || 0;
+      // an anchor off the visible map gets no card (it would clamp to an edge)
+      if (pt.x < -w - 40 || pt.x > vw + 40 || pt.y < -h - 40 || pt.y > vh + 40) {
+        c.el.style.display = 'none';
+        return;
+      }
+      c.el.style.display = 'block';
+      let x = pt.x + dx, y = pt.y + dy;
+      // flip to the other side of the anchor when the card would leave the
+      // map container (it clips, overflow:hidden), then clamp inside it
+      if (x + w > vw - 8) x = pt.x - dx - w;
+      if (y + h > vh - 8) y = vh - h - 8;
+      x = Math.min(Math.max(8, x), Math.max(8, vw - w - 8));
+      y = Math.min(Math.max(8, y), Math.max(8, vh - h - 8));
+      c.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    }
+
+    // rebuild the card set from what the runtimes drew in the last
+    // buildDeckLayers pass (rt._infoBubbleItems) — called at the end of
+    // every refreshLayers()
+    function sync() {
+      const desired = new Map();
+      runtimes.forEach(rt => {
+        if (!rt.flags.has('INFOBUBBLE') || rt._hidden) return;
+        const items = rt._infoBubbleItems;
+        if (!items || !items.length) return;
+        items.forEach(item => {
+          const anchor = flatShapeCenter(item.geometry);
+          if (!anchor) return;
+          const key = infoBubbleKey(rt.name, anchor);
+          if (!desired.has(key) && !closedKeys.has(key)) desired.set(key, { rt, item, anchor });
+        });
+      });
+      [...cards.keys()].forEach(k => {
+        if (!desired.has(k)) { cards.get(k).el.remove(); cards.delete(k); }
+      });
+      desired.forEach((d, key) => {
+        let c = cards.get(key);
+        if (!c) { c = makeCard(d.rt, key); cards.set(key, c); pane.appendChild(c.el); }
+        c.rt = d.rt; c.item = d.item; c.anchor = d.anchor;
+        Object.assign(c.el.style, cardLook());
+        let html = null;
+        try { html = c.rt.buildTooltipHtml(c.item, isDark()); } catch (err) { console.error('[ixmaps-gl] info bubble failed:', err); }
+        if (html && html !== c.html) { c.content.innerHTML = html; c.html = html; }
+        positionCard(c);
+      });
+    }
+
+    function updatePositions() { cards.forEach(positionCard); }
+
+    function mount() {
+      anchorInside(el);
+      el.appendChild(pane);
+      map.on('move', updatePositions);
+      map.on('resize', updatePositions);
+      if (disposers) disposers.push(() => {
+        map.off('move', updatePositions);
+        map.off('resize', updatePositions);
+        pane.remove();
+      });
+    }
+    return { sync, mount, updatePositions };
   }
 
   // ---------------------------------------------------------------
@@ -6204,6 +6353,8 @@ self.onmessage = e => {
 
       // hover / click-to-pin tooltips: createTooltips
       const tooltips = createTooltips({ builder: this, map, el, findRuntimeForLayerId, disposers });
+      // permanent info bubbles (type flag INFOBUBBLE): createInfoBubbles
+      const infoBubbles = createInfoBubbles({ builder: this, map, el, runtimes, disposers });
 
       const overlay = new MapLibreOverlay({
         interleaved: true,
@@ -6220,6 +6371,7 @@ self.onmessage = e => {
       map.addControl(overlay);
       map.addControl(new maplibregl.NavigationControl(), 'top-left');
       tooltips.mount();
+      infoBubbles.mount();
       // the page's attribution (.attribution(), Map option attribution)
       const attributionBox = createAttribution(map);
       attributionBox.set(this._attributionText != null ? this._attributionText : this.mapOptions.attribution);
@@ -7370,6 +7522,9 @@ self.onmessage = e => {
         // reconcile them with the current runtimes on every rebuild
         syncWmsLayers();
         syncNativeHeatmaps(map, runtimes, mlHeatLayerIds);
+        // the permanent info bubbles follow the rebuilt layers (the runtimes
+        // recorded their INFOBUBBLE items inside buildDeckLayers above)
+        infoBubbles.sync();
       }
 
       // flat's WMS theme type (szFlag /\bWMS|IMAGE\b/, maptheme.js 8207-8247):
@@ -9008,6 +9163,23 @@ self.onmessage = e => {
     const n = Math.round(styleNum(style && style.maxcharts)) || 0;
     if (n > 0 && list.length > n) list.splice(0, list.length - n);
     return list;
+  }
+
+  // INFOBUBBLE's .style({bubbleoffset: "dx,dy"}) in px — the card's offset
+  // from its anchor, default right of it like a tooltip
+  function infoBubbleOffset(style) {
+    const v = style && style.bubbleoffset;
+    if (v != null && String(v).trim() !== '') {
+      const parts = String(v).split(/[,\s]+/).map(Number);
+      if (parts.length === 2 && parts.every(Number.isFinite)) return parts;
+    }
+    return [28, -12];
+  }
+  // stable per-theme per-anchor key for the info-bubble cards — same idea as
+  // createTooltips' isSameAsPinned: the geometry position keys the item
+  // across rebuilds (item object references are rebuilt every redraw)
+  function infoBubbleKey(name, anchor) {
+    return name + '::' + anchor[0].toFixed(6) + ',' + anchor[1].toFixed(6);
   }
 
   function flatChartAlignOffset(style, g) {
@@ -13728,9 +13900,11 @@ self.onmessage = e => {
     }
 
     buildTooltipHtml(object, fDark) {
-      // no .meta({tooltip}): flat's default template (tooltip_mustache.js 394)
-      // — the theme title, the item's title and its chart
-      const template = this.meta.tooltip || FLAT_DEFAULT_TOOLTIP;
+      // INFOBUBBLE cards get their own template when given —
+      // .meta({infobubble}) (or .style({infobubble})) — else the tooltip's;
+      // no .meta({tooltip}) either: flat's default template
+      // (tooltip_mustache.js 394) — the theme title, the item's title and its chart
+      const template = this.meta.infobubble || this.style.infobubble || this.meta.tooltip || FLAT_DEFAULT_TOOLTIP;
       if (!global.Mustache) {
         console.warn('[ixmaps-gl] tooltips need Mustache.js, which is not loaded — ' +
           'include https://unpkg.com/mustache@4.2.0/mustache.min.js before ixmaps-gl.js.');
@@ -14033,6 +14207,10 @@ self.onmessage = e => {
     buildDeckLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
       this._lastZoom = zoom;
       this._lastBbox = bbox;
+      // INFOBUBBLE: the permanent info cards (createInfoBubbles) read this
+      // list after every build — cleared here so a hidden / out-of-scale /
+      // empty theme drops its cards on this pass
+      this._infoBubbleItems = null;
       // the live USER-chart SVG pane is not part of the deck layers — an
       // early return here must also unmount its groups, or the pane keeps
       // showing the last drawing after the theme went out of scale (or was
@@ -14061,7 +14239,17 @@ self.onmessage = e => {
         }
         return this._buildHeatmapLayers(liveZoom);
       }
-      if (this.flags.has('DOT')) return this._buildDotLayers();
+      if (this.flags.has('DOT')) {
+        if (this.flags.has('INFOBUBBLE')) this._recordInfoBubbles(this._dotItems());
+        return this._buildDotLayers();
+      }
+      // INFOBUBBLE as a base type (no CHART/CHOROPLETH): one dot per feature
+      // like DOT plus a permanent info card per feature — the cards are DOM
+      // (createInfoBubbles), |NOICON draws no marker at all
+      if (this.flags.has('INFOBUBBLE')) {
+        this._recordInfoBubbles(this._dotItems());
+        return this.flags.has('NOICON') ? [] : this._buildDotLayers();
+      }
       // GRIDSIZE (spatial grid binning) is checked before the generic
       // CHART|SYMBOL bubble pipeline, same "more specific base type wins"
       // precedence as DOT: PLOT+GRIDSIZE is the per-year curves mini-chart
@@ -14275,6 +14463,16 @@ self.onmessage = e => {
     // other branch here is zoom-independent.
     _buildChoroplethLayers(zoom) {
       const source = this._activeFeatures || this.features;
+      // |INFOBUBBLE on a choropleth: a permanent card per polygon, anchored
+      // at its shape center — the joined features carry the raw data record
+      // as properties, wrapped here into the {raw} shape buildTooltipHtml
+      // expects (a choropleth's own picked objects carry the built
+      // {value, raw, cat}, these pre-build ones don't)
+      if (this.flags.has('INFOBUBBLE')) this._recordInfoBubbles(source.map(f => ({
+        type: 'Feature',
+        geometry: f.geometry,
+        properties: f.properties && f.properties.raw ? f.properties : { raw: f.properties }
+      })));
       // flat (maptheme.js 13811-13823): a polygon whose value falls in no
       // class is painted in style.nodatacolor (default white); a polygon
       // with no data row at all is not painted by the choropleth (it keeps
@@ -16129,6 +16327,37 @@ self.onmessage = e => {
       })];
     }
 
+    // the {geometry, properties:{value, raw, cat}} item shape DOT layers
+    // draw and INFOBUBBLE cards read alike — factored out of _buildDotLayers
+    // so the INFOBUBBLE base type records the same items it draws
+    _dotItems() {
+      const source = this._activeFeatures || this.features;
+      const hasClasses = !!this.categoryLabels;
+      return source.map(f => ({
+        geometry: f.geometry,
+        properties: {
+          value: this.binding.size ? scanValue(f.properties[this.binding.size]) : undefined,
+          raw: f.properties,
+          cat: hasClasses ? this._resolveClassIndex(f.properties[this.binding.value]) : null
+        }
+      }));
+    }
+
+    // INFOBUBBLE: createInfoBubbles reads this list after every
+    // buildDeckLayers — set by the DOT / base / CHART / CHOROPLETH paths,
+    // cleared at the top of buildDeckLayers. .style({bubblemax: n}) caps
+    // the card count, keeping the biggest items by value (like maxcharts)
+    _recordInfoBubbles(items) {
+      let list = items;
+      const max = Math.round(styleNum(this.style.bubblemax)) || 0;
+      if (max > 0 && list.length > max) {
+        list = list.slice().sort((a, b) =>
+          ((b.properties.total != null ? b.properties.total : b.properties.value) || 0) -
+          ((a.properties.total != null ? a.properties.total : a.properties.value) || 0)).slice(0, max);
+      }
+      this._infoBubbleItems = list;
+    }
+
     // .type("DOT") — one point per record, always (no clustering, matching
     // the real engine bypassing AGGREGATE for this type). Color comes from
     // a bound value's class — CATEGORICAL (exact match) or numeric
@@ -16137,18 +16366,8 @@ self.onmessage = e => {
     // individual CHART points use so buildTooltipHtml/_buildTooltipContext
     // works unchanged.
     _buildDotLayers() {
-      const source = this._activeFeatures || this.features;
-      const hasClasses = !!this.categoryLabels;
       const fallbackRgb = this._dotFallbackColor();
-
-      const data = source.map(f => ({
-        geometry: f.geometry,
-        properties: {
-          value: this.binding.size ? scanValue(f.properties[this.binding.size]) : undefined,
-          raw: f.properties,
-          cat: hasClasses ? this._resolveClassIndex(f.properties[this.binding.value]) : null
-        }
-      }));
+      const data = this._dotItems();
 
       return [new ScatterplotLayer({
         id: `ix-dot-${this.name}`,
@@ -16572,6 +16791,10 @@ self.onmessage = e => {
       // maxcharts: like the flat engine (maptheme.js nMaxCharts), draw only the
       // biggest N items — combined is ascending, so drop from the front
       applyFlatMaxCharts(combined, this.style);
+      // |INFOBUBBLE modifier on any chart type: the permanent info cards
+      // (createInfoBubbles) read the drawn items — after minvalue/maxcharts,
+      // so a culled item gets no card either
+      if (this.flags.has('INFOBUBBLE')) this._recordInfoBubbles(combined);
       if (this.flags.has('USER')) {
         const userLayers = this._buildUserChartLayers(combined, liveZoom, sizeValueOf);
         if (userLayers) return layers.concat(userLayers);
@@ -20088,8 +20311,8 @@ self.onmessage = e => {
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     EE_PLANE, PLANES, planeOfName, planeGeometry, projectFeaturesToPlane, planeViewBounds, isEqualEarthName,
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
-    splitMapEvents, getBounds, chartBoxLayout, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, infoBubbleOffset, infoBubbleKey, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    splitMapEvents, getBounds, chartBoxLayout, createInfoBubbles, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     dataSourceKey, themeDataSourceKey,
     equalIntervalBreaks, quantileBreaks, naturalBreaks, evenStrideSample, jenksBreakValues, partsFromBreakValues, resolvePartsClass,
