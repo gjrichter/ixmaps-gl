@@ -59,7 +59,9 @@
 // (CHART|BUBBLE/SYMBOL/LABEL/USER) or a CHOROPLETH: the same card per drawn
 // item — DOM overlay via
 // createInfoBubbles, content from the same Mustache tooltip template:
-// meta.infobubble, else meta.tooltip, else flat's default), CHART|PIE (and
+// meta.infobubble, else meta.tooltip, else flat's default; at most 50 cards
+// unless style.bubblemax says otherwise ("all" for none); on any other type
+// the flag draws no cards and warns once), CHART|PIE (and
 // PIE|DONUT) a pie per record, a slice per value field, flat's sizing,
 // CENTER part and VALUES leader labels (_buildPieLayers; 3D/VOLUME/
 // STARBURST/RAYS/BOW variants are noted, drawn flat; AGGREGATE and
@@ -4910,23 +4912,34 @@ self.onmessage = e => {
     // via .visibility (not display:none) so the measured size survives.
     function layoutCards() {
       const vw = el.clientWidth || global.innerWidth || 1200, vh = el.clientHeight || global.innerHeight || 800;
-      const valueOf = c => { const p = c.item && c.item.properties; return (p && (p.total != null ? p.total : p.value)) || 0; };
+      const valueOf = c => infoBubbleRank(c.item && c.item.properties);
       const ordered = [...cards.entries()]
         .sort((a, b) => valueOf(b[1]) - valueOf(a[1]) || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-      // every drawn item's anchor, once: the BUBBLES are obstacles too — a
-      // card may not cover one (it hides the very thing it explains) and
-      // may not stand beside another comune's bubble as if it were its
-      const anchorPts = ordered
-        .filter(([, c]) => c.anchor)
-        .map(([key, c]) => ({ key, pt: map.project(c.anchor) }));
-      const placed = [];
-      const lines = [];
+      // READ phase first — every anchor projected and every card measured
+      // before any card is moved: interleaving offsetWidth reads with the
+      // style writes below forced a style recalc per card. An anchor off the
+      // visible map gets no card (it would clamp to an edge) and takes no
+      // further part: only on-screen cards and bubbles enter the pairwise
+      // placement loops, so a pan's cost follows what is visible.
+      const live = [];
       ordered.forEach(([key, c]) => {
         if (!c.anchor) return;
         const pt = map.project(c.anchor);
         const w = c.el.offsetWidth || 0, h = c.el.offsetHeight || 0;
-        // an anchor off the visible map gets no card (it would clamp to an edge)
         if (!w || !h || pt.x < -w - 40 || pt.x > vw + 40 || pt.y < -h - 40 || pt.y > vh + 40) {
+          live.push({ key, c, pt, w, h, off: true });
+          return;
+        }
+        live.push({ key, c, pt, w, h, off: false });
+      });
+      // every on-screen item's anchor, once: the BUBBLES are obstacles too —
+      // a card may not cover one (it hides the very thing it explains) and
+      // may not stand beside another comune's bubble as if it were its
+      const anchorPts = live.filter(L => !L.off).map(L => ({ key: L.key, pt: L.pt }));
+      const placed = [];
+      const lines = [];
+      live.forEach(({ key, c, pt, w, h, off }) => {
+        if (off) {
           c.el.style.visibility = 'hidden';
           return;
         }
@@ -9388,6 +9401,26 @@ self.onmessage = e => {
       if (parts.length === 2 && parts.every(Number.isFinite)) return parts;
     }
     return [28, -12];
+  }
+  // INFOBUBBLE's ranking value for an item's properties — the biggest items
+  // keep their cards under bubblemax and are placed first. Numeric only: a
+  // CATEGORICAL choropleth's value is its class LABEL (a string), which
+  // would make the comparator NaN and the order arbitrary — counts as 0
+  function infoBubbleRank(p) {
+    const v = Number(p && (p.total != null ? p.total : p.value));
+    return Number.isFinite(v) ? v : 0;
+  }
+  // INFOBUBBLE's card cap from .style({bubblemax}): unset → 50 (the
+  // collision placement is quadratic in the card count, every card is a
+  // DOM node), a positive n → n, "all" / 0 / a negative number → no cap
+  const INFOBUBBLE_DEFAULT_MAX = 50;
+  function infoBubbleMax(style) {
+    const v = style && style.bubblemax;
+    if (v == null || String(v).trim() === '') return INFOBUBBLE_DEFAULT_MAX;
+    if (/^\s*all\s*$/i.test(String(v))) return Infinity;
+    const n = Math.round(Number(v));
+    if (!Number.isFinite(n)) return INFOBUBBLE_DEFAULT_MAX;
+    return n > 0 ? n : Infinity;
   }
   // stable per-theme per-anchor key for the info-bubble cards — same idea as
   // createTooltips' isSameAsPinned: the geometry position keys the item
@@ -14427,7 +14460,23 @@ self.onmessage = e => {
     // see that method's own comment for why this is needed at all
     // (billboarded icons have no orientation-based back-face culling the
     // way the FEATURE/CHOROPLETH GeoJsonLayer polygons do).
+    //
+    // A thin wrapper around the type dispatch: |INFOBUBBLE is recorded only
+    // by the paths that support it (DOT, the INFOBUBBLE base type, symbol
+    // charts, CHOROPLETH). A theme that DREW something but recorded no card
+    // items carries the flag on a type without cards (PIE, BAR, VECTOR,
+    // PLOT, the GRIDSIZE grid …) — say so once instead of failing silently.
+    // Hidden, out-of-scale and empty themes draw nothing and stay quiet.
     buildDeckLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+      const layers = this._buildDeckLayersDispatch(zoom, bbox, liveZoom, globeCenter);
+      if (this.flags.has('INFOBUBBLE') && this._infoBubbleItems == null && layers && layers.length && !this._warnedInfoBubble) {
+        this._warnedInfoBubble = true;
+        console.warn(`[ixmaps-gl] layer "${this.name}": |INFOBUBBLE draws no cards on this chart type — ` +
+          'supported: INFOBUBBLE alone, DOT, CHART|BUBBLE/SYMBOL/LABEL/USER, CHOROPLETH');
+      }
+      return layers;
+    }
+    _buildDeckLayersDispatch(zoom, bbox, liveZoom = zoom, globeCenter = null) {
       this._lastZoom = zoom;
       this._lastBbox = bbox;
       // INFOBUBBLE: the permanent info cards (createInfoBubbles) read this
@@ -14690,16 +14739,6 @@ self.onmessage = e => {
     // other branch here is zoom-independent.
     _buildChoroplethLayers(zoom) {
       const source = this._activeFeatures || this.features;
-      // |INFOBUBBLE on a choropleth: a permanent card per polygon, anchored
-      // at its shape center — the joined features carry the raw data record
-      // as properties, wrapped here into the {raw} shape buildTooltipHtml
-      // expects (a choropleth's own picked objects carry the built
-      // {value, raw, cat}, these pre-build ones don't)
-      if (this.flags.has('INFOBUBBLE')) this._recordInfoBubbles(source.map(f => ({
-        type: 'Feature',
-        geometry: f.geometry,
-        properties: f.properties && f.properties.raw ? f.properties : { raw: f.properties }
-      })));
       // flat (maptheme.js 13811-13823): a polygon whose value falls in no
       // class is painted in style.nodatacolor (default white); a polygon
       // with no data row at all is not painted by the choropleth (it keeps
@@ -14823,6 +14862,13 @@ self.onmessage = e => {
         if (!this._markedClasses.size || this._onMarksChanged || this._markedClasses.has(d.properties.cat)) return null;
         return evidenceMode === 'isolate' ? 'hide' : 'gray';
       };
+      // |INFOBUBBLE on a choropleth: a permanent card per PAINTED polygon,
+      // anchored at its shape center, from the BUILT items ({value, raw,
+      // cat}) so {{theme.item.color}}/label/class and the leader color
+      // resolve; a polygon without data and a class isolated away by a
+      // legend mark get no card
+      if (this.flags.has('INFOBUBBLE')) this._recordInfoBubbles(
+        collection.features.filter(d => hasData(d) && unmarkedEvidence(d) !== 'hide'));
       const grayOf = ([r, g, b]) => { const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b); return [y, y, y]; };
       // deck.gl re-runs the color accessors only for new data or a changed trigger
       const colorKey = JSON.stringify([[...this._markedClasses], !!this._onMarksChanged, evidenceMode,
@@ -16572,15 +16618,14 @@ self.onmessage = e => {
 
     // INFOBUBBLE: createInfoBubbles reads this list after every
     // buildDeckLayers — set by the DOT / base / CHART / CHOROPLETH paths,
-    // cleared at the top of buildDeckLayers. .style({bubblemax: n}) caps
-    // the card count, keeping the biggest items by value (like maxcharts)
+    // cleared at the top of buildDeckLayers. .style({bubblemax}) caps the
+    // card count (infoBubbleMax: default 50, "all" for none), keeping the
+    // biggest items by numeric value (infoBubbleRank, like maxcharts)
     _recordInfoBubbles(items) {
       let list = items;
-      const max = Math.round(styleNum(this.style.bubblemax)) || 0;
-      if (max > 0 && list.length > max) {
-        list = list.slice().sort((a, b) =>
-          ((b.properties.total != null ? b.properties.total : b.properties.value) || 0) -
-          ((a.properties.total != null ? a.properties.total : a.properties.value) || 0)).slice(0, max);
+      const max = infoBubbleMax(this.style);
+      if (list.length > max) {
+        list = list.slice().sort((a, b) => infoBubbleRank(b.properties) - infoBubbleRank(a.properties)).slice(0, max);
       }
       this._infoBubbleItems = list;
     }
@@ -20538,7 +20583,7 @@ self.onmessage = e => {
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     EE_PLANE, PLANES, planeOfName, planeGeometry, projectFeaturesToPlane, planeViewBounds, isEqualEarthName,
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, infoBubbleOffset, infoBubbleKey, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, infoBubbleOffset, infoBubbleKey, infoBubbleRank, infoBubbleMax, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     splitMapEvents, getBounds, chartBoxLayout, createInfoBubbles, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     dataSourceKey, themeDataSourceKey,
