@@ -126,6 +126,38 @@
         }
         #region-select option { background: #1e1e1e; color: #f0f0f0; }
         #region-select:hover { border-color: rgba(255,255,255,0.5); }
+
+        /* camera orbit panel */
+        #orbit-panel {
+            position: absolute;
+            bottom: 30px; left: 14px;
+            z-index: 1001;
+            background: rgba(20,20,20,0.82);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 9px 12px;
+            color: #e8e8e8;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.35);
+            display: grid;
+            grid-template-columns: auto 110px 3.6em;
+            gap: 5px 8px;
+            align-items: center;
+        }
+        #orbit-panel .btns { grid-column: 1 / -1; display: flex; gap: 6px; }
+        #orbit-panel button {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: 6px;
+            color: #f0f0f0;
+            font-size: 0.78rem;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        #orbit-panel button:hover { border-color: rgba(255,255,255,0.5); }
+        #orbit-panel input[type=range] { width: 110px; margin: 0; accent-color: #5ac8c8; }
+        #orbit-panel output { text-align: right; font-variant-numeric: tabular-nums; color: #bbb; }
     </style>
 </head>
 <body>
@@ -158,6 +190,14 @@
         </select>
     </div>
     <div id="map"></div>
+    <div id="orbit-panel">
+        <div class="btns">
+            <button id="orbit-play" title="Ruota la vista attorno al centro della mappa">⟳ Orbita</button>
+            <button id="orbit-reset" title="Vista dall'alto, nord in alto">Reset</button>
+        </div>
+        <label for="orbit-speed">Velocità</label><input id="orbit-speed" type="range" min="-30" max="30" step="1" value="8"><output id="orbit-speed-out">8°/s</output>
+        <label for="orbit-tilt">Inclinazione</label><input id="orbit-tilt" type="range" min="0" max="85" step="1" value="0"><output id="orbit-tilt-out">0°</output>
+    </div>
 </div>
 
 <script>
@@ -401,6 +441,67 @@ function buildMap() {
 }
 
 buildMap();
+
+// ── Camera orbit: the orbit preset of the ixmaps-gl camera paths ─────────
+// ixmaps.map().cameraOrbit() turns the bearing round the map center in ONE
+// continuous MapLibre movement (the engine keeps its chart freeze / move
+// throttle, as during a drag); it circles whatever is in the middle of the
+// map (pan there first, or pick a region). A drag, scroll or touch on the
+// map stops it. See camera_orbit.html, camera_path.html.
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var playBtn = $("orbit-play");
+    var mapLibre = function () { return ixmaps.map().getMapLibre(); };
+    var orbit = null, hooked = false;
+
+    function syncTilt(p) {
+        $("orbit-tilt").value = Math.round(p);
+        $("orbit-tilt-out").value = Math.round(p) + "°";
+    }
+    function stop() {
+        if (orbit) orbit.pause();
+        playBtn.textContent = "⟳ Orbita";
+    }
+    function start() {
+        var ml = mapLibre();
+        if (!ml) return;
+        if (!hooked) {
+            hooked = true;
+            ml.setMaxPitch(85);
+            // keep the tilt slider in step with the user's own gestures
+            ml.on("pitchend", function () { syncTilt(ml.getPitch()); });
+        }
+        // a new orbit round the map center of this moment; seen straight
+        // from above an orbit is just a turning map: it tilts to 60° first
+        if (orbit) orbit.destroy();
+        var tilt = ml.getPitch() < 5 ? 60 : null;
+        if (tilt) syncTilt(tilt);
+        orbit = ixmaps.map().cameraOrbit({
+            pitch: tilt, degPerSec: +$("orbit-speed").value, approach: 600,
+            onPause: function () { playBtn.textContent = "⟳ Orbita"; }  // a gesture on the map
+        });
+        orbit.play();
+        playBtn.textContent = "❚❚ Pausa";
+    }
+
+    playBtn.onclick = function () { orbit && orbit.playing ? stop() : start(); };
+    $("orbit-reset").onclick = function () {
+        var ml = mapLibre(); if (!ml) return;
+        stop();
+        ml.easeTo({ bearing: 0, pitch: 0, duration: 800 });
+        syncTilt(0);
+    };
+    $("orbit-speed").oninput = function (e) {
+        $("orbit-speed-out").value = e.target.value + "°/s";
+        if (orbit) orbit.setDegPerSec(+e.target.value);
+    };
+    $("orbit-tilt").oninput = function (e) {
+        var ml = mapLibre(); if (!ml) return;
+        ml.setMaxPitch(85);
+        ml.setPitch(+e.target.value);
+        $("orbit-tilt-out").value = e.target.value + "°";
+    };
+})();
 
 </script>
 </body>
