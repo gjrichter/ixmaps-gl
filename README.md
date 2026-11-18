@@ -287,6 +287,41 @@ field.
 the same box as `[{lat, lng} SW, {lat, lng} NE]`); `ixmaps.map().getMapLibre()` returns the MapLibre
 map itself, or `undefined` until it is built.
 
+### Camera paths (gl only)
+
+`ixmaps.map().cameraPath(keyframes, options)` flies the camera through keyframes on a smooth curve
+(also on the promise `ixmaps.Map()` returns; made before the map is built, it flies once it is). A
+keyframe is `{center: {lat, lng}, zoom, pitch, bearing, duration, hold}`: `zoom` is a view zoom as in
+`.view()`, `duration` the ms of travel to it from the keyframe before (default 3000; the first
+keyframe's: the approach from where the camera stands), `hold` the ms the camera stays there. A value a
+keyframe leaves out keeps the one before; the bearing turns the short way round.
+`ixmaps.map().getCamera()` returns the current view as such a keyframe.
+
+Options: `loop` (fly back to the first keyframe and on, without a seam), `speed` (a factor), `easing`
+(`"ease"`, default: slow start and stop on each stretch between holds; `"linear"`, default for a
+loop; or a function), `smooth: false` (straight lines between the keyframes), `channels` (the camera
+values the flight drives, of `["center", "zoom", "pitch", "bearing"]`, default all; the start still
+eases onto all of them), `approach` (ms of the start's ease onto the path), `stopOnGesture: false`
+(a drag, wheel or touch on the map pauses the flight unless set), `onKeyframe(i, keyframe)`,
+`onPause()` and `onEnd()`.
+
+It returns a controller: `play()`, `pause()`, `stop()` (pause and back to the start), `seek(ms)`,
+`setSpeed(factor)`, `destroy()`; `playing`, `time`, `duration` and `keyframeTimes` (ms).
+
+`ixmaps.map().cameraOrbit(options)` is the orbit preset: four keyframes a quarter turn apart round a
+center, as a closed linear loop that drives the bearing only (a page's own tilt or zoom changes during
+the orbit stay). Options: `center` (`{lat, lng}`, default the map center), `zoom` and `pitch` (eased
+to at the start, default the camera's), `degPerSec` (default 10, negative: counter-clockwise),
+`approach` (ms, default 800), `stopOnGesture`, `onPause()`. Its controller: `play()` (after a pause:
+round the map center of that moment), `pause()`, `stop()`, `destroy()`, `setDegPerSec(d)` (live; 0
+stands still, another direction turns on from the bearing the camera has); `playing`, `degPerSec`.
+
+The flight is one continuous MapLibre movement (linear eases chained under one `easeId`), so charts
+behave as during a drag — kept or redrawn as their cost allows — instead of being redrawn in full on
+every frame; a hold ends the movement and the view is drawn in full while the camera waits. See
+[`examples/camera_path.html`](./examples/camera_path.html) (a recorder: navigate, add keyframes, play,
+copy the JSON) and [`examples/camera_orbit.html`](./examples/camera_orbit.html).
+
 ### Click to action
 
 flat's click-to-action (`ui/js/tools/tooltip_to_action.js`, e.g. a click on a country filters every

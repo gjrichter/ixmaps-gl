@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera · path</title>
+<script src="../ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #panel {
+    position: absolute; top: 1em; left: 1em; z-index: 10; width: 340px; max-height: calc(100% - 2em); overflow: auto;
+    background: rgba(255,255,255,0.94); padding: 0.6em 1em 0.8em; border-radius: 6px;
+    font-size: 0.85em; box-shadow: 0 2px 6px rgba(0,0,0,0.15); box-sizing: border-box;
+  }
+  #panel b.title { display: block; margin-bottom: 0.2em; font-size: 1.05em; }
+  #panel .intro { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.9em; }
+  .row { display: flex; gap: 0.4em; align-items: center; margin-top: 0.6em; flex-wrap: wrap; }
+  button { font-size: 0.95em; padding: 0.3em 0.7em; cursor: pointer; }
+  #play { min-width: 5.5em; }
+  label { white-space: nowrap; }
+  input[type=number] { width: 4.2em; }
+  #progress { width: 100%; margin-top: 0.5em; }
+  #list { list-style: none; margin: 0.6em 0 0; padding: 0; counter-reset: kf; }
+  #list li { display: flex; align-items: center; gap: 0.4em; padding: 0.25em 0.3em; border-radius: 4px; font-variant-numeric: tabular-nums; }
+  #list li.current { background: #e6f2ff; }
+  #list li span { flex: 1; }
+  #list li button { padding: 0.1em 0.45em; font-size: 0.85em; }
+  textarea { width: 100%; height: 9em; margin-top: 0.4em; font: 11px/1.35 ui-monospace, Menlo, monospace; box-sizing: border-box; }
+  details { margin-top: 0.6em; }
+  @media (max-width: 500px) { #panel { width: calc(100% - 2em); max-height: 45%; } }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="panel">
+  <b class="title">Camera · path</b>
+  <span class="intro">The camera flies through keyframes on a smooth curve: <code>ixmaps.map().cameraPath(keyframes, options)</code>. Navigate the map and press <i>+ keyframe</i> to record the view; a hold stops the camera there for a while. Touching the map pauses the flight.</span>
+  <div class="row">
+    <button id="play">▶ Play</button>
+    <button id="stop">■ Stop</button>
+    <label><input id="loop" type="checkbox"> loop</label>
+    <label>speed <input id="speed" type="range" min="0.25" max="3" step="0.25" value="1"></label>
+  </div>
+  <input id="progress" type="range" min="0" max="1000" value="0" title="time on the path">
+  <div class="row">
+    <button id="add">+ keyframe</button>
+    <label>travel <input id="dur" type="number" min="0" step="0.5" value="4"> s</label>
+    <label>hold <input id="hold" type="number" min="0" step="0.5" value="0"> s</label>
+  </div>
+  <ol id="list"></ol>
+  <details>
+    <summary>keyframes as JSON</summary>
+    <textarea id="json" spellcheck="false"></textarea>
+    <div class="row"><button id="apply">Apply JSON</button><button id="clear">Clear all</button></div>
+  </details>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  __setColors = objTheme => {
+    for (i = 0; i < objTheme.szLabelA.length; i++) {
+      if (objTheme.szLabelA[i].match(/investimento/i)) objTheme.colorScheme[i] = "#ff0088";
+      else if (objTheme.szLabelA[i].match(/tamponamento/i)) objTheme.colorScheme[i] = "#0066cc";
+      else if (objTheme.szLabelA[i].match(/scontro/i)) objTheme.colorScheme[i] = "#ddbb22";
+      else objTheme.colorScheme[i] = "#00aaaa";
+    }
+  };
+
+  var __layer = ixmaps.layer("AREU", layer => layer
+    .data({ url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/AREU/ISTAT_2019_2023.topojson.gz", type: "topojson" })
+    .type("CHART|SYMBOL|GLOW|CATEGORICAL|AGGREGATE|COUNT|RELOCATE")
+    .binding({ position: "geometry", value: "NATURA_INC", size: "FERITI" })
+    .style({
+      colorscheme: __setColors.toString(),
+      fillopacity: "0.9",
+      units: "feriti",
+      normalsizevalue: "50",
+      valuedecimals: "0",
+      aggregation: ["1:1", "3px", "1:500000", "1px"]
+    })
+    .meta({ title: "Road accidents, Milano 2019-2023", tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}" })
+  );
+
+  // a tour of Milan: the keyframes as the page would write them (zoom: the
+  // flat view zoom of .view(); duration / hold in ms)
+  let keyframes = [
+    { center: { lat: 45.4642, lng: 9.1916 }, zoom: 12, pitch: 0, bearing: 0 },
+    { center: { lat: 45.4535, lng: 9.1775 }, zoom: 14.2, pitch: 55, bearing: -30, duration: 5000 },
+    { center: { lat: 45.4850, lng: 9.2040 }, zoom: 14.5, pitch: 62, bearing: 40, duration: 6000, hold: 2500 },
+    { center: { lat: 45.4790, lng: 9.1560 }, zoom: 13.8, pitch: 50, bearing: 120, duration: 6000 },
+    { center: { lat: 45.4642, lng: 9.1916 }, zoom: 12.3, pitch: 35, bearing: 0, duration: 5000 }
+  ];
+
+  const $ = id => document.getElementById(id);
+  let path = null, progressTimer = 0;
+
+  ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT" },
+    map => map.view([45.4642, 9.1916], 12)
+      .options({ objectscaling: "dynamic", normalSizeScale: "259302", dynamicScalePow: "3" })
+      .layer(__layer)
+  );
+
+  // a new path for the current keyframes and options (the old one let go)
+  function makePath() {
+    const wasPlaying = path && path.playing;
+    if (path) path.destroy();
+    path = null;
+    render();
+    if (!keyframes.length) return;
+    path = ixmaps.map().cameraPath(keyframes, {
+      loop: $("loop").checked,
+      speed: +$("speed").value,
+      onKeyframe: i => highlight(i),
+      onEnd: () => setPlayLabel()
+    });
+    if (wasPlaying) path.play();
+  }
+  function setPlayLabel() { $("play").textContent = path && path.playing ? "❚❚ Pause" : "▶ Play"; }
+  function highlight(i) {
+    [...$("list").children].forEach((li, j) => li.classList.toggle("current", j === i));
+  }
+  const fmt = k => `${k.center.lat.toFixed(4)}, ${k.center.lng.toFixed(4)} · z ${(+k.zoom).toFixed(1)} · ${Math.round(k.pitch || 0)}° / ${Math.round(k.bearing || 0)}°`
+    + (k.duration != null ? ` · ${(k.duration / 1000).toFixed(1)} s` : "") + (k.hold ? ` · hold ${(k.hold / 1000).toFixed(1)} s` : "");
+  function render() {
+    const list = $("list");
+    list.innerHTML = "";
+    keyframes.forEach((k, i) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<b>${i + 1}</b><span>${fmt(k)}</span><button title="fly there">go</button><button title="remove">✕</button>`;
+      const [go, del] = li.querySelectorAll("button");
+      go.onclick = () => { if (path) path.pause(); ixmaps.map().getMapLibre().flyTo({ center: [k.center.lng, k.center.lat], pitch: k.pitch || 0, bearing: k.bearing || 0, zoom: ixmaps.map().getMapLibre().getZoom() + (k.zoom - ixmaps.map().getZoom()) }); };
+      del.onclick = () => { keyframes.splice(i, 1); makePath(); };
+      list.appendChild(li);
+    });
+    $("json").value = "[\n" + keyframes.map(k => "  " + JSON.stringify(k)).join(",\n") + "\n]";
+  }
+
+  window._ready = new Promise(resolve => {
+    const wait = setInterval(() => { if (ixmaps.map().getMapLibre && ixmaps.map().getMapLibre()) { clearInterval(wait); resolve(); } }, 100);
+  }).then(() => {
+    makePath();
+    $("play").onclick = () => {
+      if (!path) return;
+      if (path.playing) path.pause(); else path.play();
+      setTimeout(setPlayLabel, 0);
+    };
+    $("stop").onclick = () => { if (path) { path.stop(); highlight(-1); setTimeout(setPlayLabel, 0); } };
+    $("loop").onchange = makePath;
+    $("speed").oninput = e => { if (path) path.setSpeed(+e.target.value); };
+    $("add").onclick = () => {
+      const k = ixmaps.map().getCamera();
+      if (keyframes.length) k.duration = Math.round(+$("dur").value * 1000);
+      if (+$("hold").value > 0) k.hold = Math.round(+$("hold").value * 1000);
+      keyframes.push(k);
+      makePath();
+    };
+    $("apply").onclick = () => {
+      try { keyframes = JSON.parse($("json").value); makePath(); }
+      catch (e) { alert("Not valid JSON: " + e.message); }
+    };
+    $("clear").onclick = () => { keyframes = []; makePath(); };
+    // the progress slider follows the flight, and seeks when dragged
+    let dragging = false;
+    $("progress").oninput = e => { dragging = true; if (path && path.duration) path.seek(e.target.value / 1000 * path.duration); };
+    $("progress").onchange = () => { dragging = false; };
+    progressTimer = setInterval(() => {
+      if (path && path.duration && !dragging) $("progress").value = Math.round(path.time / path.duration * 1000);
+      setPlayLabel();
+    }, 200);
+  });
+</script>
+</body>
+</html>

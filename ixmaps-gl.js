@@ -6815,6 +6815,11 @@ self.onmessage = e => {
         // broker calls in flight (themes whose data comes by name)
         pendingLoads: () => pendingLoads,
         getZoom: () => flatViewZoomOf(map),
+        // gl only: a scripted camera flight through keyframes, and the live
+        // camera as one (see createCameraPath)
+        cameraPath: (keyframes, opts) => createCameraPath(map, keyframes, opts),
+        cameraOrbit: (opts) => createCameraOrbit(map, opts),
+        getCamera: () => cameraOf(map),
         require: (url) => { loadRequiredScripts([url]); return engineApi; },
         // flat's theme-level calls by theme id (style.name / meta.name, else
         // the layer name): add(theme, flag) — "replace" swaps a theme of the
@@ -8349,6 +8354,10 @@ self.onmessage = e => {
       promise.off = (...args) => { if (resolvedApi) resolvedApi.off(...args); else builder.off(...args); return promise; };
       promise.getBounds = () => getBounds();
       promise.getMapLibre = () => (resolvedApi ? resolvedApi.map : undefined);
+      // gl only: camera paths (createCameraPath), as on the map handle
+      promise.cameraPath = (keyframes, opts) => createCameraPath(resolvedApi ? resolvedApi.map : promise.then(a => a.map), keyframes, opts);
+      promise.cameraOrbit = (opts) => createCameraOrbit(resolvedApi ? resolvedApi.map : promise.then(a => a.map), opts);
+      promise.getCamera = () => (resolvedApi ? resolvedApi.getCamera() : undefined);
       promise.layer = (nameOrBuilder) => {
         if (typeof nameOrBuilder !== 'string') {
           // object form (a pre-built LayerBuilder, e.g. from the global
@@ -8926,6 +8935,375 @@ self.onmessage = e => {
   function flatViewZoomOf(map, mapLibreZoom) {
     const c = realCenterOf(map), el = map.getContainer();
     return mapLibreToFlatViewZoom(mapLibreZoom == null ? map.getZoom() : mapLibreZoom, c.lat, c.lng, el.clientWidth, el.clientHeight, mapSvgProjection(map));
+  }
+  // ---- camera paths: a scripted camera flight through keyframes ----
+  // A keyframe: { center: {lat, lng} or [lat, lng], zoom (a flat view
+  // zoom, as .view()), pitch, bearing (degrees), duration (ms of travel to
+  // it from the keyframe before; the first's: the approach from wherever
+  // the camera is when the path starts), hold (ms it stays) }. A channel a
+  // keyframe leaves out keeps the one before's (the first's: the camera's
+  // when the path is made); the bearing turns the short way round.
+  // The flight is ONE continuous MapLibre movement: every
+  // CAMERA_PATH_TICK_MS a linear easeTo CAMERA_PATH_AHEAD_MS along the
+  // path, all sharing one easeId, so none ends the movement (MapLibre's
+  // keyboard chaining). The map stays "moving" as during a drag, and the
+  // engine keeps its chart freeze / move throttle instead of redrawing in
+  // full every frame (a jumpTo per frame: movestart/moveend each frame). A
+  // hold ends the movement: the view is drawn in full while the camera
+  // waits. Measured, referendum peaks page (all Italy, M4): 4 keyframes in
+  // 18 s, one movestart / one moveend, within 0.02 zoom of the curve,
+  // 89 fps. See examples/camera_path.html.
+  const CAMERA_PATH_TICK_MS = 200, CAMERA_PATH_AHEAD_MS = 500, CAMERA_PATH_EASE_ID = 'ixmaps-camera-path';
+  const CAMERA_PATH_DURATION_MS = 3000, CAMERA_PATH_APPROACH_MS = 1200;
+  function cameraPathEasing(e, closedLoop) {
+    if (typeof e === 'function') return e;
+    if (e === 'linear' || (e == null && closedLoop)) return t => t;
+    return t => t * t * (3 - 2 * t); // 'ease': slow start and stop at the ends of each leg
+  }
+  function normalizeCameraKeyframe(k) {
+    k = k || {};
+    const num = v => (v == null || v === '' || isNaN(Number(v)) ? null : Number(v));
+    const c = k.center != null ? k.center : (k.lat != null ? { lat: k.lat, lng: k.lng != null ? k.lng : k.lon } : null);
+    const center = c == null ? null
+      : Array.isArray(c) ? { lat: Number(c[0]), lng: Number(c[1]) }
+      : { lat: Number(c.lat), lng: Number(c.lng != null ? c.lng : c.lon) };
+    return { center, zoom: num(k.zoom), pitch: num(k.pitch), bearing: num(k.bearing), duration: num(k.duration), hold: Math.max(0, num(k.hold) || 0) };
+  }
+  // the live camera as a keyframe (flat view zoom, real center), rounded
+  function cameraOf(map) {
+    const c = realCenterOf(map);
+    const r = (v, d) => Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
+    return { center: { lat: r(c.lat, 5), lng: r(c.lng, 5) }, zoom: r(flatViewZoomOf(map), 2),
+      pitch: r(map.getPitch(), 1), bearing: r((((map.getBearing() % 360) + 540) % 360) - 180, 1) };
+  }
+  // mapSource: the MapLibre map, or a promise of it (a map still building)
+  // → { play, pause, stop, seek, setSpeed, destroy, playing, time, duration }
+  function createCameraPath(mapSource, keyframes, opts = {}) {
+    const kfs = (Array.isArray(keyframes) ? keyframes : []).map(normalizeCameraKeyframe);
+    if (!kfs.length) throw new Error('[ixmaps-gl] cameraPath: no keyframes');
+    const loop = opts.loop === true || opts.loop === 'true';
+    const smooth = opts.smooth !== false;
+    // the camera values the flight drives (opts.channels: of center, zoom,
+    // pitch, bearing — the orbit turns the bearing only, so a page's own tilt
+    // or zoom changes during it stay); the start eases onto all of them
+    const CHANNELS = ['center', 'zoom', 'pitch', 'bearing'];
+    const animated = new Set(Array.isArray(opts.channels) && opts.channels.length ? opts.channels.filter(c => CHANNELS.includes(c)) : CHANNELS);
+    let map = null, path = null;
+    let elapsed = 0, speed = Number(opts.speed) > 0 ? Number(opts.speed) : 1;
+    let playing = false, timer = 0, lastTick = 0, lastTarget = null, nextKf = 0, approach = 0, unhook = null, started = false;
+
+    // the path in camera channels [lng, lat, MapLibre zoom, pitch, bearing]
+    // on a timeline of keyframe times T and holds; legs run between holds
+    function build() {
+      const now = [map.getCenter().lng, map.getCenter().lat, map.getZoom(), map.getPitch(), map.getBearing()];
+      const ch = [], dur = [], hold = [];
+      let prev = now, prevReal = realCenterOf(map);
+      kfs.forEach((k, i) => {
+        const real = k.center || prevReal;
+        const [x, y] = cameraLngLat(map, real.lng, real.lat);
+        const z = k.zoom != null ? mapLibreZoomOfFlatView(map, k.zoom, real.lat, real.lng) : prev[2];
+        const b = k.bearing != null ? prev[4] + ((((k.bearing - prev[4]) % 360) + 540) % 360 - 180) : prev[4];
+        const c = [x, y, z, k.pitch != null ? k.pitch : prev[3], b];
+        ch.push(c); hold.push(k.hold);
+        dur.push(i === 0 ? 0 : (k.duration != null ? k.duration : CAMERA_PATH_DURATION_MS));
+        prev = c; prevReal = real;
+      });
+      // a loop flies back to the first keyframe and goes on without a seam
+      if (loop && ch.length > 1) {
+        const c0 = ch[0], last = ch[ch.length - 1];
+        ch.push([c0[0], c0[1], c0[2], c0[3], last[4] + ((((c0[4] - last[4]) % 360) + 540) % 360 - 180)]);
+        hold.push(0);
+        dur.push(kfs[0].duration != null && kfs[0].duration > 0 ? kfs[0].duration : CAMERA_PATH_DURATION_MS);
+      }
+      const n = ch.length, T = [0];
+      for (let i = 1; i < n; i++) T.push(T[i - 1] + hold[i - 1] + dur[i]);
+      const total = T[n - 1] + hold[n - 1];
+      const legs = [];
+      let a = 0;
+      for (let i = 1; i < n; i++) {
+        if (hold[i] > 0 || i === n - 1) { legs.push({ a, b: i, t0: T[a] + hold[a], t1: T[i] }); a = i; }
+      }
+      // one leg round a closed loop: the curve's neighbours wrap round
+      const closed = loop && n > 2 && legs.length === 1 && hold[0] === 0;
+      path = { ch, T, hold, total, legs, closed, ease: cameraPathEasing(opts.easing, closed) };
+      maxPitch(Math.max(...ch.map(c => c[3])));
+    }
+    function maxPitch(p) {
+      if (p > map.getMaxPitch()) map.setMaxPitch(Math.min(85, Math.ceil(p)));
+    }
+    const legAt = t => path.legs.find(l => t >= l.t0 && t <= l.t1) || null;
+    // the eased path time at a clock time (the keyframes' own times stay put)
+    function pathTime(t) {
+      const leg = legAt(t);
+      if (!leg || leg.t1 <= leg.t0) return t;
+      return leg.t0 + path.ease((t - leg.t0) / (leg.t1 - leg.t0)) * (leg.t1 - leg.t0);
+    }
+    function channelsAt(t) {
+      const { ch, T, hold, total, closed } = path;
+      t = Math.max(0, Math.min(total, t));
+      for (let i = 0; i < ch.length; i++) if (t >= T[i] && t <= T[i] + hold[i]) return ch[i];
+      const leg = legAt(t);
+      if (!leg) return ch[ch.length - 1];
+      const s = pathTime(t);
+      const knot = i => (i === leg.a ? leg.t0 : T[i]);
+      let i = leg.a;
+      while (i < leg.b - 1 && s > knot(i + 1)) i++;
+      const u = Math.max(0, Math.min(1, (s - knot(i)) / ((knot(i + 1) - knot(i)) || 1)));
+      const p1 = ch[i], p2 = ch[i + 1];
+      if (!smooth) return p1.map((v, j) => v + (p2[j] - v) * u);
+      // Catmull-Rom through the keyframes: neighbours from the same leg, or
+      // round a closed loop (its last point is the first one again; their
+      // bearings differ by the turns made, so those wrap by the same amount)
+      const turn = closed ? ch[ch.length - 1][4] - ch[0][4] : 0;
+      const shift = (c, d) => [c[0], c[1], c[2], c[3], c[4] + d];
+      const p0 = i > leg.a ? ch[i - 1] : closed ? shift(ch[ch.length - 2], -turn) : p1;
+      const p3 = i + 2 <= leg.b ? ch[i + 2] : closed ? shift(ch[1], turn) : p2;
+      return p1.map((_, j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * u + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u * u
+        + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u * u * u));
+    }
+    // the camera options of path channels — all of them, or the animated ones
+    const cameraOpts = (c, all) => {
+      const o = {};
+      if (all || animated.has('center')) o.center = [c[0], c[1]];
+      if (all || animated.has('zoom')) o.zoom = c[2];
+      if (all || animated.has('pitch')) o.pitch = c[3];
+      if (all || animated.has('bearing')) o.bearing = c[4];
+      return o;
+    };
+    function fireKeyframes() {
+      const s = pathTime(elapsed);
+      while (nextKf < kfs.length && s >= path.T[nextKf]) {
+        const i = nextKf++;
+        if (typeof opts.onKeyframe === 'function') {
+          try { opts.onKeyframe(i, keyframes[i]); } catch (e) { console.error('[ixmaps-gl] cameraPath onKeyframe:', e); }
+        }
+      }
+    }
+    function tick() {
+      const now = performance.now();
+      elapsed += (now - lastTick) * speed;
+      lastTick = now;
+      if (elapsed >= path.total) {
+        if (!loop) { fireKeyframes(); finish(); return; }
+        elapsed -= path.total;
+        nextKf = 0;
+        lastTarget = null;
+      }
+      fireKeyframes();
+      const leg = legAt(elapsed);
+      // in a hold: nothing to do, the movement ends and the view is drawn
+      if (!leg || elapsed < leg.t0) { lastTarget = null; return; }
+      const ahead = CAMERA_PATH_AHEAD_MS * speed;
+      // a closed loop runs on into its next round; else stop at the leg's end
+      const wraps = path.closed && elapsed + ahead > path.total;
+      const end = wraps ? elapsed + ahead : Math.min(elapsed + ahead, leg.t1);
+      if (!wraps && end === leg.t1 && lastTarget === leg.t1) return; // its last ease is under way
+      lastTarget = end;
+      map.easeTo(Object.assign(cameraOpts(channelsAt(wraps ? end - path.total : end)),
+        { duration: Math.max(0, (end - elapsed) / speed), easing: t => t, easeId: CAMERA_PATH_EASE_ID }));
+    }
+    function startTicking() {
+      started = true;
+      lastTick = performance.now();
+      lastTarget = null;
+      tick();
+      if (playing) timer = setInterval(tick, CAMERA_PATH_TICK_MS);
+    }
+    function finish() {
+      clearInterval(timer);
+      playing = false;
+      elapsed = path.total;
+      if (typeof opts.onEnd === 'function') {
+        try { opts.onEnd(); } catch (e) { console.error('[ixmaps-gl] cameraPath onEnd:', e); }
+      }
+    }
+    // is the camera on the path at this time (to a pixel / a tenth of a
+    // degree) — in all channels, or the animated ones?
+    function onPath(c, all) {
+      const has = ch => all || animated.has(ch);
+      const p = map.project([c[0], c[1]]), q = map.project(map.getCenter());
+      const db = Math.abs((((map.getBearing() - c[4]) % 360) + 540) % 360 - 180);
+      return (!has('center') || Math.hypot(p.x - q.x, p.y - q.y) < 1) && (!has('zoom') || Math.abs(map.getZoom() - c[2]) < 0.01)
+        && (!has('pitch') || Math.abs(map.getPitch() - c[3]) < 0.1) && (!has('bearing') || db < 0.1);
+    }
+    const ready = Promise.resolve(mapSource).then(m => {
+      if (!m) throw new Error('[ixmaps-gl] cameraPath: no map');
+      map = m;
+      build();
+      // a gesture takes the camera back (opts.stopOnGesture false: it doesn't)
+      if (opts.stopOnGesture !== false) {
+        const onGesture = () => { if (playing || approach) ctl.pause(); };
+        const events = ['mousedown', 'touchstart', 'wheel'];
+        events.forEach(ev => map.on(ev, onGesture));
+        unhook = () => events.forEach(ev => map.off(ev, onGesture));
+      }
+      return map;
+    });
+    ready.catch(err => console.error(err));
+    const ctl = {
+      // from where it stands (the start, or where pause() left it); a camera
+      // off the path (the start, a gesture) first eases onto it
+      play() {
+        ready.then(() => {
+          if (playing) return;
+          if (elapsed >= path.total) { elapsed = 0; nextKf = 0; }
+          playing = true;
+          const target = channelsAt(elapsed);
+          // the first start eases onto every channel, a resume onto the animated ones
+          const all = !started;
+          if (onPath(target, all)) { startTicking(); return; }
+          const id = ++approach;
+          map.once('moveend', () => {
+            if (approach !== id) return;
+            approach = 0;
+            if (playing) startTicking();
+          });
+          map.easeTo(Object.assign(cameraOpts(target, all), {
+            duration: Number(opts.approach) >= 0 && opts.approach !== null && opts.approach !== ''
+              ? Number(opts.approach)
+              : elapsed === 0 && kfs[0].duration != null ? kfs[0].duration : CAMERA_PATH_APPROACH_MS }));
+        });
+        return ctl;
+      },
+      // stops where it is: the movement ends, the view is drawn
+      pause() {
+        ready.then(() => {
+          const was = playing || approach;
+          playing = false;
+          approach = 0;
+          clearInterval(timer);
+          if (was) {
+            map.stop();
+            if (typeof opts.onPause === 'function') {
+              try { opts.onPause(); } catch (e) { console.error('[ixmaps-gl] cameraPath onPause:', e); }
+            }
+          }
+        });
+        return ctl;
+      },
+      // pause, back to the start
+      stop() {
+        ctl.pause();
+        ready.then(() => { elapsed = 0; nextKf = 0; started = false; });
+        return ctl;
+      },
+      // the camera to that time of the path (ms), playing on if it played
+      seek(ms) {
+        ready.then(() => {
+          const was = playing;
+          if (was) ctl.pause();
+          elapsed = Math.max(0, Math.min(path.total, Number(ms) || 0));
+          nextKf = path.T.filter((t, i) => i < kfs.length && t < pathTime(elapsed)).length;
+          map.jumpTo(cameraOpts(channelsAt(elapsed), true));
+          if (was) ctl.play();
+        });
+        return ctl;
+      },
+      setSpeed(s) { if (Number(s) > 0) speed = Number(s); return ctl; },
+      destroy() { ctl.pause(); ready.then(() => { if (unhook) unhook(); }); },
+      get playing() { return playing || !!approach; },
+      get time() { return elapsed; },
+      get duration() { return path ? path.total : undefined; },
+      // the keyframes' own times on the path (ms): T[i] is where keyframe i is reached
+      get keyframeTimes() { return path ? path.T.slice(0, kfs.length) : undefined; },
+      ready
+    };
+    return ctl;
+  }
+  // The orbit preset: the camera circles a point — a camera path of four
+  // keyframes a quarter turn apart round the center, a closed linear loop
+  // that turns the bearing only (a page's own tilt or zoom changes during it
+  // stay). opts: center ({lat, lng}, default the map center at the start),
+  // zoom / pitch (default the camera's; eased to at the start), degPerSec
+  // (default 10, negative: counter-clockwise), approach (ms, default 800),
+  // stopOnGesture, onPause(). → { play, pause, stop, destroy, setDegPerSec,
+  // playing, degPerSec }; each play() after a pause turns on from where the
+  // camera stands, round the map center of that moment.
+  function createCameraOrbit(mapSource, opts = {}) {
+    let deg = Number(opts.degPerSec != null ? opts.degPerSec : 10) || 0;
+    // cur: the path's own flags — its pause() reports back later (async), so
+    // a dropped path or a pause of the orbit's own must be told apart there
+    let path = null, cur = null, builtDeg = 0, want = false, first = true, map = null;
+    const ready = Promise.resolve(mapSource).then(m => { if (!m) throw new Error('[ixmaps-gl] cameraOrbit: no map'); map = m; return m; });
+    ready.catch(err => console.error(err));
+    function drop() {
+      if (!path) return;
+      cur.dropped = true;
+      path.destroy();
+      path = cur = null;
+    }
+    // a pause of the orbit's own (a standstill), not reported as a stop
+    function quietPause() {
+      if (!path || !path.playing) return;
+      cur.quiet = true;
+      path.pause();
+    }
+    // a new path from the camera as it stands (the first: from the options)
+    function make() {
+      drop();
+      const o = first ? opts : {};
+      first = false;
+      const real = realCenterOf(map);
+      const center = normalizeCameraKeyframe({ center: o.center || { lat: real.lat, lng: real.lng } }).center;
+      const zoom = o.zoom != null ? Number(o.zoom) : flatViewZoomOf(map);
+      const pitch = o.pitch != null ? Number(o.pitch) : map.getPitch();
+      const b0 = map.getBearing(), dir = deg < 0 ? -1 : 1, quarter = 90 / Math.abs(deg) * 1000;
+      const keyframes = [0, 1, 2, 3].map(i => ({ center, zoom, pitch, bearing: b0 + dir * 90 * i, duration: quarter }));
+      builtDeg = deg;
+      const flags = cur = { dropped: false, quiet: false };
+      path = createCameraPath(map, keyframes, {
+        loop: true, easing: 'linear', channels: ['bearing'], stopOnGesture: opts.stopOnGesture,
+        approach: opts.approach != null ? opts.approach : 800,
+        // a pause from outside (a gesture): the orbit stops
+        onPause: () => {
+          if (flags.dropped) return;
+          if (flags.quiet) { flags.quiet = false; return; }
+          want = false;
+          if (typeof opts.onPause === 'function') {
+            try { opts.onPause(); } catch (e) { console.error('[ixmaps-gl] cameraOrbit onPause:', e); }
+          }
+        }
+      });
+    }
+    const ctl = {
+      play() {
+        ready.then(() => {
+          want = true;
+          if (!deg) return; // at 0°/s it waits for a speed
+          if (!path || !path.playing) make();
+          path.play();
+        });
+        return ctl;
+      },
+      pause() {
+        ready.then(() => { want = false; if (path) path.pause(); });
+        return ctl;
+      },
+      stop() { return ctl.pause(); },
+      destroy() { ready.then(() => { want = false; drop(); }); },
+      // live: the same direction changes the path's pace; another (or a
+      // standstill) turns on from the bearing the camera has
+      setDegPerSec(d) {
+        ready.then(() => {
+          d = Number(d) || 0;
+          const same = path && builtDeg && d && Math.sign(d) === Math.sign(builtDeg);
+          deg = d;
+          if (same) {
+            path.setSpeed(Math.abs(d / builtDeg));
+            // on again after a standstill
+            if (want && !path.playing) path.play();
+            return;
+          }
+          if (!d) { quietPause(); return; }
+          if (want) { make(); path.play(); } else drop();
+        });
+        return ctl;
+      },
+      get playing() { return !!(path && path.playing); },
+      get degPerSec() { return deg; },
+      ready
+    };
+    return ctl;
   }
   function mapLibreZoomOfFlatView(map, flatZoom, lat, lng) {
     const el = map.getContainer();
@@ -20088,6 +20466,19 @@ self.onmessage = e => {
     h.getBounds = () => getBounds();
     // the MapLibre map itself (undefined until the map is built)
     h.getMapLibre = () => { const a = api(); return a ? a.map : undefined; };
+    // gl only: camera paths (createCameraPath) — made at once, flown once the map is built
+    h.cameraPath = (keyframes, opts) => {
+      const a = api();
+      return createCameraPath(a ? a.map : (declared() ? declared().promise : _mapReady).then(r => r.map), keyframes, opts);
+    };
+    h.cameraOrbit = (opts) => {
+      const a = api();
+      return createCameraOrbit(a ? a.map : (declared() ? declared().promise : _mapReady).then(r => r.map), opts);
+    };
+    h.getCamera = () => { const a = api(); return a ? a.getCamera() : undefined; };
+    // gl only: broker calls in flight (themes whose data comes by name) — a
+    // page waits for 0 before it goes on (the Palermo flight before its orbit)
+    h.pendingLoads = () => { const a = api(); return a ? a.pendingLoads() : undefined; };
     h.getThemeObj = id => getThemeObj(id);
     // flat's mapApi.message(szText) (htmlgui_flat.js 1381): a short status
     // line over the map — the same accepted no-op as the global
