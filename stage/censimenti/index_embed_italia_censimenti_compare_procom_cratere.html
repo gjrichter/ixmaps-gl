@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<!-- **********************************************************************
+
+ixmaps map embed html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2023/04/22 $
+$Author: guenter richter $
+$Id:index_embed_Open_Data_PNRR_Dati_Universo_REGIS_III.html 1 2023-04-22 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Confronto censimenti ISTAT 2011-2021: popolazione, istruzione e residenti stranieri per sezione censuaria">
+    <meta name="author" content="guenter richter">
+
+    <title>Data Viz Italia - Censimenti 2011-2021 - cratere sisma 2016</title>
+
+    <!-- Preconnect per performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://gjrichter.github.io">
+
+    <link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+    <!-- CSS Site -->
+    <link rel="stylesheet" href="./css/site_procom.css">
+
+    <style>
+        /* camera orbit panel — in the style of the ixmaps legend card
+           (.ix-native-legend / .ix-legend-stack: white 0.9, radius 6, soft
+           shadow, 12px -apple-system; its slider: grey track, green thumb) */
+        #orbit-panel {
+            position: absolute; bottom: 39px; left: 55px; z-index: 1001; /* left: as the legend card */
+            width: 280px; box-sizing: border-box;
+            background: rgba(255,255,255,0.9); color: #1a1a1a;
+            font: 12px/1.4 -apple-system, Arial, sans-serif;
+            padding: 10px 12px 12px; border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+            display: grid; grid-template-columns: auto 1fr 3.4em; gap: 6px 10px; align-items: center;
+        }
+        #orbit-panel .title { grid-column: 1 / -1; font-size: 13px; font-weight: 600; line-height: 1.4; } /* as the legend's title */
+        #orbit-panel .btns { grid-column: 1 / -1; display: flex; gap: 6px; }
+        #orbit-panel button {
+            flex: 1; background: #fff; border: 1px solid rgba(0,0,0,0.15); border-radius: 4px;
+            color: #1a1a1a; font: 600 12px/1.4 -apple-system, Arial, sans-serif; padding: 4px 8px; cursor: pointer;
+        }
+        #orbit-panel button:hover { border-color: rgba(0,0,0,0.35); background: #f7f7f7; }
+        #orbit-panel input[type=range] {
+            -webkit-appearance: none; appearance: none; width: 100%; margin: 0;
+            height: 5px; border-radius: 10px; background: rgba(155,155,155,0.3);
+            outline: none; opacity: 0.7; transition: opacity 0.2s; cursor: pointer;
+        }
+        #orbit-panel input[type=range]:hover { opacity: 1; }
+        #orbit-panel input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #4caf50; cursor: pointer;
+        }
+        #orbit-panel input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #4caf50; cursor: pointer; }
+        #orbit-panel output { text-align: right; font-variant-numeric: tabular-nums; color: #555; }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- Logo -->
+    <div class="logo">
+        <div class="logo-text">
+            Data<br>
+            <span style="padding-left: 2px;">Viz</span>
+            <em style="font-style: italic;"> i</em>
+        </div>
+    </div>
+
+    <!-- Contenitore principale -->
+    <main>
+        <!-- Mappa -->
+        <div id="map_div" role="application" aria-label="Mappa interattiva del confronto censimenti in Italia"></div>
+
+        <!-- Orbita della camera -->
+        <div id="orbit-panel">
+            <div class="title">Camera</div>
+            <div class="btns">
+                <button id="orbit-play" title="Ruota la vista attorno al centro della mappa">⟳ Orbita</button>
+                <button id="orbit-reset" title="Vista dall'alto, nord in alto">Reset</button>
+            </div>
+            <div class="btns">
+                <button id="path-play" title="Percorso della camera sul cratere del sisma 2016">▶ Cratere</button>
+            </div>
+            <label for="orbit-speed">Velocità</label><input id="orbit-speed" type="range" min="-30" max="30" step="1" value="8"><output id="orbit-speed-out">8°/s</output>
+            <label for="orbit-tilt">Inclinazione</label><input id="orbit-tilt" type="range" min="0" max="85" step="1" value="0"><output id="orbit-tilt-out">0°</output>
+        </div>
+
+        <!-- Sidebar toggle (mobile) -->
+        <div class="sidebar" id="sidebar_toggle" style="background: none; box-shadow: none; border: none;">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Apri menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Sidebar principale -->
+        <aside class="sidebar" id="main_sidebar">
+            <div class="sidebar-content" id="main_sidebar_content">
+                <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Chiudi menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm8.5 9.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z" />
+                    </svg>
+                </button>
+
+                <header>
+                    <h1>Popolazione<br>2011 - 2021</h1>
+                    <p style="margin: 0; font-size: 0.9em; color: var(--secondary-color);">
+                        Visualizzazione di dati pubblicati dall'ISTAT in <a href="" target="_blank"
+                            class="source-link">Basi territoriali e variabili censuarie</a>
+                    </p>
+                    <a href="javascript:__infoOverlay()" class="info-link" role="button" tabindex="0"
+                        aria-label="Come funziona il confronto tra i censimenti">
+                        <span class="info-icon">i</span> Come confrontiamo i due censimenti
+                    </a>
+                </header>
+
+                <div class="comune-select" id="comune-select"></div>
+
+                <div class="nav-title">Popolazione</div>
+                <ul class="nav-menu">
+                    <li>
+                        <a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_population_percent')">Variazione % della
+                            popolazione</a>
+                        <ul>
+                            <li><a class="select foreground active"
+                                    href="javascript:setForegroundTheme('variation_population')">n° totali</a></li>
+                        </ul>
+                    </li>
+                    <li><a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_population_meno_5')">Fascia d'età &lt; 5
+                            anni</a></li>
+                    <li><a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_population_piu_75_percent')">Fascia d'età
+                            &gt; 75 anni</a></li>
+                </ul>
+
+                <div class="nav-title">Istruzione</div>
+                <ul class="nav-menu">
+                    <li>
+                        <a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_educazione_terzo_percent')">Diploma di
+                            terzo grado</a>
+                        <ul>
+                            <li><a class="select foreground"
+                                    href="javascript:setForegroundTheme('variation_educazione_terzo')">n° totali</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li><a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_educazione_secondaria_percent')">Diploma di
+                            scuola secondaria</a></li>
+                    <li><a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_educazione_media_percent')">Diploma di
+                            scuola media</a></li>
+                    <li><a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_educazione_elementare_percent')">Diploma di
+                            scuola elementare</a></li>
+                </ul>
+
+                <div class="nav-title">Stranieri</div>
+                <ul class="nav-menu">
+                    <li>
+                        <a class="select foreground"
+                            href="javascript:setForegroundTheme('variation_population_stranieri_percent')">% stranieri
+                            e apolidi residenti in Italia</a>
+                        <ul>
+                            <li><a class="select foreground"
+                                    href="javascript:setForegroundTheme('variation_population_stranieri')">n°
+                                    totale</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="controls">
+                    <label for="myRange1" class="control-label">grandezza grafici</label>
+                    <input type="range" min="0.1" max="5" step="0.01" value="1" class="slider" id="myRange1"
+                        aria-label="Regola grandezza grafici">
+                </div>
+
+                <div class="controls" id="fondo-poligoni" style="display:none">
+                    <label class="control-label">Fondo (poligoni censimento 2021)</label>
+                    <ul class="nav-menu">
+                        <li><a class="select background" href="javascript:ixmaps.map().remove('choropleth')">fondo
+                                vuoto</a></li>
+                        <li><a class="select background active"
+                                href="javascript:ixmaps.map().add(__sez2021_pop_choropleth(),'replace|silent')">densità
+                                della popolazione</a></li>
+                        <li><a class="select background"
+                                href="javascript:ixmaps.map().add(__sez2021_eta_choropleth(),'replace|silent')">fascia
+                                età sopra alla media</a></li>
+                        <li><a class="select background"
+                                href="javascript:ixmaps.map().add(__sez2021_edu_choropleth(),'replace|silent')">grado
+                                di istruzione sopra alla media</a></li>
+                        <li><a class="select background"
+                                href="javascript:ixmaps.map().add(__sez2021_stranieri_choropleth(),'replace|silent')">provenienza
+                                stranieri predominante</a></li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Overlay info: metodo di confronto -->
+        <div id="info-overlay" class="info-overlay" style="display:none">
+            <div class="info-container">
+                <button class="info-close" onclick="__infoOverlay()" aria-label="Chiudi">&times;</button>
+                <h2>Come confrontiamo i censimenti 2011 e 2021</h2>
+                <p>
+                    Questa mappa confronta i censimenti ISTAT 2011 e 2021 per l'Italia: variazione
+                    della popolazione, dell'istruzione e dei residenti stranieri, letta sia a
+                    livello di comune sia a livello di sezione di censimento (la suddivisione più
+                    fine con cui l'ISTAT rileva i dati).
+                </p>
+                <p>
+                    I dati vengono dagli indicatori censuari ISTAT del 2011 e del 2021 (uno per
+                    comune, uno per sezione) e dalla tabella ISTAT delle variazioni amministrative
+                    dei comuni dal 1991 a oggi, usata per riconoscere fusioni e cambi di provincia.
+                </p>
+                <p>
+                    Confrontare due censimenti non è immediato: tra il 2011 e il 2021 <strong>464
+                    comuni</strong> hanno cambiato codice e le sezioni di censimento sono state
+                    ridisegnate. La mappa riallinea i comuni tramite la tabella delle variazioni,
+                    sommando i valori dei comuni confluiti in uno nuovo; per le sezioni rinuncia
+                    invece a un riallineamento puntuale e aggrega spazialmente i valori
+                    <strong>prima</strong> di calcolare la differenza, così le ridefinizioni dei
+                    confini si compensano invece di apparire come falsi aumenti o cali.
+                </p>
+                <a href="./censimenti_2011_2021_metodo_di_confronto.html" target="_blank" class="source-link">
+                    Leggi la spiegazione completa del metodo &rarr;
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- ------------------------------------- -->
+    <!--                                       -->
+    <!-- c o d e                         -->
+    <!--                                       -->
+    <!-- ------------------------------------- -->
+
+    <!--========================================================================= -->
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+    <script type="text/javascript" src="./js/dataprovider_flatgeobuffer_sezioni.js"></script>
+    <script type="text/javascript" src="./js/layer_compare.js"></script>
+    <script type="text/javascript" src="./js/comune_selector.js"></script>
+
+    <!--========================================================================= -->
+
+    <script type="text/javascript" charset="utf-8">
+        /**
+         ** change background color on select
+         **/
+
+        __select = (el) => {
+            if (el.hasClass("foreground")) {
+                $(".foreground").removeClass("active");
+            }
+            if (el.hasClass("background")) {
+                $(".background").removeClass("active");
+            }
+            el.addClass("active");
+        };
+        $(".select").attr("onclick", "__select($(this))");
+
+        var setChartSize = function (nValue) {
+            ixmaps.map().changeThemeStyle('chart', 'scale:' + nValue, 'set');
+            ixmaps.map().changeThemeStyle('chart_procom_all', 'scale:' + nValue, 'set');
+        }
+        var setGrid = function (nValue) {
+            ixmaps.map().changeThemeStyle('chart', 'gridwidthpx:' + nValue, 'set');
+            ixmaps.map().changeThemeStyle('chart_grid', 'gridwidthpx:' + nValue, 'set');
+
+        }
+        var slider = document.getElementById("myRange1");
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function () {
+            if (ixmaps.sliderT1) {
+                clearTimeout(ixmaps.sliderT1);
+            }
+            ixmaps.value = this.value;
+            ixmaps.sliderT1 = setTimeout(function () {
+                setChartSize(ixmaps.value)
+            }, 10);
+        }
+        /**
+        slider = document.getElementById("myRange2");
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function() {
+            if (ixmaps.sliderT2) {
+                clearTimeout(ixmaps.sliderT2);
+            }
+            ixmaps.value = this.value;
+            ixmaps.sliderT2 = setTimeout(function() {
+                setGrid(ixmaps.value)
+            }, 250);
+        }
+        **/
+
+
+        var szForegroundTheme = "variation_population";
+        var setForegroundTheme = function (szTheme) {
+            szForegroundTheme = szTheme;
+            loadForegroundTheme();
+        };
+
+        var loadForegroundTheme = function () {
+            switch (szForegroundTheme) {
+                case "variation_population_percent":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_user_relative(), 'silent');
+                    break;
+                case "variation_population":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_user(), 'silent');
+                    break;
+                case "variation_population_meno_5":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative_meno_5(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_eta_meno_5(), 'silent');
+                    break;
+                case "variation_population_piu_75_percent":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative_piu_75(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_eta_piu_75(), 'silent');
+                    break;
+                case "variation_population_stranieri_percent":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative_stranieri(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_stranieri(), 'silent');
+                    break;
+                case "variation_population_stranieri":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_stranieri(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_stranieri(), 'silent');
+                    break;
+                case "variation_educazione_terzo_percent":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative_educazione_terzo(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_terzo(), 'silent');
+                    break;
+                case "variation_educazione_terzo":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_educazione_terzo(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_terzo(), 'silent');
+                    break;
+                case "variation_educazione_media_percent":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative_educazione_media(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_media(), 'silent');
+                    break;
+                case "variation_educazione_secondaria_percent":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative_educazione_secondaria(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_secondaria(), 'silent');
+                    break;
+                case "variation_educazione_elementare_percent":
+                    ixmaps.map().replace('chart_procom_all', __procom_2011_2021_arrow_user_relative_educazione_elementare(), 'silent');
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_elementare(), 'silent');
+                    break;
+            }
+        };
+
+        var reloadForegroundTheme = function () {
+            switch (szForegroundTheme) {
+                case "variation_population_percent":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_user_relative(), 'silent');
+                    break;
+                case "variation_population":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_user(), 'silent');
+                    break;
+                case "variation_population_meno_5":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_eta_meno_5(), 'silent');
+                    break;
+                case "variation_population_piu_75_percent":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_eta_piu_75(), 'silent');
+                    break;
+                case "variation_population_stranieri_percent":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_stranieri(), 'silent');
+                    break;
+                case "variation_population_stranieri":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_stranieri(), 'silent');
+                    break;
+                case "variation_educazione_terzo_percent":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_terzo(), 'silent');
+                    break;
+                case "variation_educazione_terzo":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_terzo(), 'silent');
+                    break;
+                case "variation_educazione_media_percent":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_media(), 'silent');
+                    break;
+                case "variation_educazione_secondaria_percent":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_secondaria(), 'silent');
+                    break;
+                case "variation_educazione_elementare_percent":
+                    ixmaps.map().replace('chart', __sez_2011_2021_pop_arrow_edu_elementare(), 'silent');
+                    break;
+            }
+        };
+
+        // ---------------------------------------------------
+        // ---------------------------------------------------
+        //
+        // t h e   m a p.
+        //
+        // ---------------------------------------------------
+        // ---------------------------------------------------
+
+        /**
+         ** ************************************
+         ** define the ixmaps themes and project
+         ** ************************************
+         **/
+
+        var __filter = "";
+        var __lat = null;
+        var __lon = null;
+        var __zoom = null;
+        var __scale_chart = 1;
+        var __legend = true;
+
+        /**
+         ** strings used by the map
+         **/
+
+        attribution =
+            "powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
+
+        /**
+         ** get query params and adapt theme and project definitions
+         **/
+
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+
+        if (params.filter) {
+            __filter = params.filter;
+        }
+
+        if (params.view) {
+            var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+            __lat = latlonA[0];
+            __lon = latlonA[1];
+            __zoom = parseFloat(params.view.split(',')[2]);
+            //setTimeout("ixmaps.setView(null,"+params.view+")",1000);
+        };
+
+        if (params.scale) {
+            __scale_chart = params.scale;
+        };
+
+        if (params.legend) {
+            __legend = params.legend;
+        };
+
+
+        ixmaps.regione = "03";
+        ixmaps.procom = "*";
+
+
+        const nuts2 =
+            ixmaps.layer("nuts2", layer => layer
+                .type("FEATURES|SILENT|LOCKED|NOLEGEND")
+                .data({
+                    url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2021_4326_LEVL_2.geojson",
+                    type: "geojson"
+                })
+                .binding({
+                    id: "NUTS_ID"
+                })
+                .filter("WHERE CNTR_CODE = IT")
+                .style({
+                    colorscheme: [
+                        "white"
+                    ],
+                    fillopacity: "1",
+                    linecolor: "#F7F6EF",
+                    linewidth: "2",
+                    shadow: true,
+                    showdata: true,
+                    featurelower: "1:2000000",
+                    titlefield: "NUTS_NAME",
+                    name: "nuts2"
+                })
+            );
+
+
+        // sisma 2016: the outline of the cratere (138 comuni) — as on
+        // stage/censimenti_sisma_2016/sisma_2016_italia_censimenti_compare_procom.html
+        const cratere_outline =
+            ixmaps.layer("cratere_sisma_2016_outline", layer => layer
+                .data({ url: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@7bc0a88/by-project/sisma-2016-cratere/cratere_sisma_2016_outline.geojson", type: "geojson" })
+                .type("FEATURE|SILENT|NOLEGEND")
+                .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
+            );
+
+
+        // the 11 comuni of the CRISMAT needs mapping (borghi e territori in rete,
+        // onthefly/borghi_e_territori_in_rete/crismat_fabbisogni_map.html): a circle
+        // each, sized by its residents (pop: ISTAT, 1 January 2026, as in that map),
+        // at the area-weighted centroid of the comune's largest polygon (the same
+        // anchor as that map's bubbles)
+        const COMUNI_CRISMAT = [
+            { code: 54035, pop: 4399, name: "Norcia", prov: "PG", lat: 42.787, lon: 13.1218 },
+            { code: 43007, pop: 5935, name: "Camerino", prov: "MC", lat: 43.1357, lon: 13.0748 },
+            { code: 43024, pop: 9026, name: "Matelica", prov: "MC", lat: 43.2718, lon: 13.0244 },
+            { code: 43049, pop: 3058, name: "Sarnano", prov: "MC", lat: 43.0226, lon: 13.2832 },
+            { code: 44001, pop: 2411, name: "Acquasanta Terme", prov: "AP", lat: 42.7603, lon: 13.4076 },
+            { code: 44006, pop: 910, name: "Arquata del Tronto", prov: "AP", lat: 42.7625, lon: 13.2823 },
+            { code: 44064, pop: 1816, name: "Roccafluvione", prov: "AP", lat: 42.8492, lon: 13.4396 },
+            { code: 109002, pop: 3206, name: "Amandola", prov: "FM", lat: 42.9896, lon: 13.3504 },
+            { code: 57001, pop: 493, name: "Accumoli", prov: "RI", lat: 42.6951, lon: 13.2448 },
+            { code: 57002, pop: 2146, name: "Amatrice", prov: "RI", lat: 42.6262, lon: 13.2924 },
+            { code: 67046, pop: 818, name: "Valle Castellana", prov: "TE", lat: 42.7285, lon: 13.5022 }
+        ];
+        const comuni_crismat =
+            ixmaps.layer("comuni_crismat", layer => layer
+                .data({ obj: COMUNI_CRISMAT, type: "json" })
+                .binding({ geo: "lat|lon", value: "pop", title: "name" })
+                .type("CHART|BUBBLE|SIZE|NOLEGEND")
+                // no fill: fillopacity 0.01, not 0 — flat (maptheme.js 13406) and gl take 0
+                // for "not set" and fill the circle; the tooltip still answers over all of it
+                .style({ colorscheme: ["#1f6fe5"], fillopacity: "0.01", linecolor: "#000000", linewidth: "1",
+                         normalsizevalue: "5000", scale: "1", showdata: "true" })
+                .meta({ name: "comuni_crismat", tooltip: "<b>{{name}}</b> ({{prov}})<br>{{pop}} residenti (2026)<br>uno degli 11 comuni della mappatura CRISMAT" })
+            );
+
+
+        /**
+         **
+         ** sidebar / responsive handling
+         **
+         **/
+
+        let sidebarOpen = window.innerWidth > 768;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('main_sidebar');
+            sidebarOpen = !sidebarOpen;
+            sidebar.style.display = sidebarOpen ? 'flex' : 'none';
+            setTimeout(() => {
+                if (typeof ixmaps !== 'undefined') {
+                    ixmaps.map().resize();
+                }
+            }, 300);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function handleResize() {
+            const sidebar = document.getElementById('main_sidebar');
+            // a narrow window closes it; a wide one keeps it as it is (the camera
+            // path closes it — a resize during the flight must not open it again)
+            if (window.innerWidth <= 768) {
+                sidebar.style.display = 'none';
+                sidebarOpen = false;
+            }
+            if (typeof ixmaps !== 'undefined') {
+                ixmaps.map().resize();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.innerWidth <= 768) {
+                document.getElementById('main_sidebar').style.display = 'none';
+            }
+            window.addEventListener('resize', debounce(handleResize, 250));
+        });
+
+        ixmaps.htmlgui_onNewTheme = function (szId) {
+            if (szId == "chart") {
+                setChartSize(ixmaps.value || 1);
+            }
+        };
+
+        let __oldZoomAndPan = ixmaps.htmlgui_onZoomAndPan;
+        ixmaps.htmlgui_onZoomAndPan = function () {
+
+            var nOpacity = (ixmaps.getZoom() - 7) / 3;
+            ixmaps.map().setBasemapOpacity(nOpacity, "absolute");
+
+            if (ixmaps.getZoom() > 11.5) {
+                $("#fondo-poligoni").show();
+            } else {
+                $("#fondo-poligoni").hide();
+            }
+            __oldZoomAndPan();
+        };
+
+
+        var fInfo = false;
+        __infoOverlay = function () {
+            if ($("#info-overlay").css("display") != "none") {
+                $("#info-overlay").hide();
+            } else {
+                $("#info-overlay").show();
+            }
+            fInfo = !fInfo;
+        }
+
+
+        // ---------------------------------------------------
+        // e m b e d   t h e   m a p
+        // ---------------------------------------------------
+
+        /**
+         **
+         ** create the interactive map an append it to the document
+         **
+         **/
+
+        ixmaps.Map("map_div", {
+            mapService: "leaflet_vt",
+            mapType: "CartoDB - Positron",
+            map: "../../maps/svg/maps/generic/mercator.svg",
+            legend: ((__legend == true) ? "true" : 0),
+            align: "left",
+            mode: "pan",
+            about: "test",
+            search: "Italy"
+        })
+            .view({
+                "center": {
+                    "lat": __lat || "42.30234655149951",
+                    "lng": __lon || "13.987399620595363"
+                },
+                "zoom": __zoom || "8.27681771091248"
+            })
+            .options({
+                featurescaling: "true",
+                objectscaling: "true",
+                normalSizeScale: "50000",
+                dynamicScalePow: "1",
+                flushChartDraw: "1000000",
+                flushPaintShape: "1000000",
+                basemapopacity: "0.5",
+                hideOnPan: "false",
+                freezeOnPan: "true"
+            })
+            .local("aggregated", "")
+            .local("... creating theme ...", "...")
+            .local("loading data ...", "scaricando dati ...")
+            .require("https://d3js.org/d3.v3.min.js")
+            .require("https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/usercharts/d3/arrow_chart.js")
+            .attribution(attribution)
+
+            // -----------------------------
+            // the data visualization layer
+            // -----------------------------
+
+            .layer(nuts2)
+            .layer(__georef_urban())
+            .layer(__georef())
+            .layer(__georef_sez2011_fgb())
+            .layer(__georef_sez2021_fgb())
+            .layer(__sez2021_pop_choropleth())
+            // over the census background, under the charts
+            .layer(cratere_outline)
+            .layer(__pop_procom_circle())
+            // variazione della popolazione, n° totali
+            .layer(__procom_2011_2021_arrow_user())
+            .layer(__sez_2011_2021_pop_arrow_user())
+            // the 11 CRISMAT comuni, outlined over the arrows
+            .layer(comuni_crismat)
+
+
+    </script>
+
+    <script type="text/javascript">
+        // ── Camera orbit: the orbit preset of the ixmaps-gl camera paths ──
+        // ixmaps.map().cameraOrbit() turns the bearing round the map center in
+        // ONE continuous MapLibre movement (the engine keeps its chart freeze /
+        // move throttle, as during a drag). A drag, scroll or touch on the map
+        // stops it. See examples/camera_orbit.html, examples/camera_path.html.
+        (function () {
+            var $id = function (id) { return document.getElementById(id); };
+            var playBtn = $id("orbit-play");
+            var mapLibre = function () { return ixmaps.map().getMapLibre(); };
+            var orbit = null, hooked = false;
+
+            function syncTilt(p) {
+                $id("orbit-tilt").value = Math.round(p);
+                $id("orbit-tilt-out").value = Math.round(p) + "°";
+            }
+            function stop() {
+                if (orbit) orbit.pause();
+                playBtn.textContent = "⟳ Orbita";
+            }
+            function start() {
+                var ml = mapLibre();
+                if (!ml) return;
+                if (!hooked) {
+                    hooked = true;
+                    ml.setMaxPitch(85);
+                    // keep the tilt slider in step with the user's own gestures
+                    ml.on("pitchend", function () { syncTilt(ml.getPitch()); });
+                }
+                // a new orbit round the map center of this moment; seen straight
+                // from above an orbit is just a turning map: it tilts to 60° first
+                if (orbit) orbit.destroy();
+                var tilt = ml.getPitch() < 5 ? 60 : null;
+                if (tilt) syncTilt(tilt);
+                orbit = ixmaps.map().cameraOrbit({
+                    pitch: tilt, degPerSec: +$id("orbit-speed").value, approach: 600,
+                    onPause: function () { playBtn.textContent = "⟳ Orbita"; }  // a gesture on the map
+                });
+                orbit.play();
+                playBtn.textContent = "❚❚ Pausa";
+            }
+
+            playBtn.onclick = function () { orbit && orbit.playing ? stop() : start(); };
+            $id("orbit-reset").onclick = function () {
+                var ml = mapLibre(); if (!ml) return;
+                stop();
+                ml.easeTo({ bearing: 0, pitch: 0, duration: 800 });
+                syncTilt(0);
+            };
+            $id("orbit-speed").oninput = function (e) {
+                $id("orbit-speed-out").value = e.target.value + "°/s";
+                if (orbit) orbit.setDegPerSec(+e.target.value);
+            };
+            $id("orbit-tilt").oninput = function (e) {
+                var ml = mapLibre(); if (!ml) return;
+                ml.setMaxPitch(85);
+                ml.setPitch(+e.target.value);
+                $id("orbit-tilt-out").value = e.target.value + "°";
+            };
+        })();
+    </script>
+
+    <script type="text/javascript">
+        // ── Percorso della camera sul cratere del sisma 2016 ──────────────────
+        // ixmaps.map().cameraPath(): dall'Italia sul cratere (vista dall'alto),
+        // poi inclinato, con una sosta su Amatrice/Arquata, Norcia e Camerino, e
+        // ritorno alla vista d'insieme. zoom: lo zoom di .view(); duration / hold
+        // in ms. Parte una volta da sé dopo il caricamento; il bottone lo rilancia
+        // o lo mette in pausa; un gesto sulla mappa lo ferma.
+        (function () {
+            // tutto il percorso resta sotto lo zoom 9.79 (1:500 000), dove compaiono i
+            // cerchi della popolazione (chart_procom_pop) e, più vicino, a 11.53
+            // (1:150 000) le sezioni di censimento: nessun cambio di tema durante il
+            // volo; la sidebar si chiude quando il percorso parte, il cratere sta al centro
+            var CRATERE_PATH = [
+                { center: { lat: 42.86, lng: 13.20 }, zoom: 9.3, pitch: 0, bearing: 0, duration: 4000, hold: 2000 },
+                { center: { lat: 42.80, lng: 13.22 }, zoom: 9.5, pitch: 55, bearing: -20, duration: 5000 },
+                { center: { lat: 42.66, lng: 13.28 }, zoom: 9.65, pitch: 60, bearing: 20, duration: 6000, hold: 2500 },   // Amatrice, Arquata
+                { center: { lat: 42.79, lng: 13.09 }, zoom: 9.65, pitch: 60, bearing: 70, duration: 6000, hold: 2500 },   // Norcia
+                { center: { lat: 43.135, lng: 13.07 }, zoom: 9.65, pitch: 55, bearing: 140, duration: 7000, hold: 2500 }, // Camerino
+                { center: { lat: 42.86, lng: 13.20 }, zoom: 9.4, pitch: 45, bearing: 0, duration: 7000 }
+            ];
+            var btn = document.getElementById("path-play");
+            var path = null;
+            // the flight takes the whole map: the sidebar closes (its ⋮ button opens it again)
+            function closeSidebar() { if (sidebarOpen) toggleSidebar(); }
+            var label = function () { btn.textContent = path && path.playing ? "❚❚ Cratere" : "▶ Cratere"; };
+            function makePath() {
+                path = ixmaps.map().cameraPath(CRATERE_PATH, { onPause: label, onEnd: label });
+            }
+            btn.onclick = function () {
+                if (!path) makePath();
+                if (path.playing) path.pause(); else { closeSidebar(); path.play(); }
+                setTimeout(label, 50); // play() / pause() act once the map is ready
+            };
+            // once, a few seconds after the map is there (the first data loaded)
+            var wait = setInterval(function () {
+                if (!(ixmaps.map().getMapLibre && ixmaps.map().getMapLibre())) return;
+                clearInterval(wait);
+                setTimeout(function () { if (!path) { makePath(); closeSidebar(); path.play(); setTimeout(label, 50); } }, 4000);
+            }, 200);
+        })();
+    </script>
+
+</body>
+
+</html>

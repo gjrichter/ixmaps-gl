@@ -36,6 +36,39 @@ $Log:index_only_map_embed.html,v $
     <!-- CSS Site -->
     <link rel="stylesheet" href="./css/site_procom.css">
 
+    <style>
+        /* camera orbit panel — in the style of the ixmaps legend card
+           (.ix-native-legend / .ix-legend-stack: white 0.9, radius 6, soft
+           shadow, 12px -apple-system; its slider: grey track, green thumb) */
+        #orbit-panel {
+            position: absolute; bottom: 39px; left: 55px; z-index: 1001; /* left: as the legend card */
+            width: 280px; box-sizing: border-box;
+            background: rgba(255,255,255,0.9); color: #1a1a1a;
+            font: 12px/1.4 -apple-system, Arial, sans-serif;
+            padding: 10px 12px 12px; border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+            display: grid; grid-template-columns: auto 1fr 3.4em; gap: 6px 10px; align-items: center;
+        }
+        #orbit-panel .title { grid-column: 1 / -1; font-size: 13px; font-weight: 600; line-height: 1.4; } /* as the legend's title */
+        #orbit-panel .btns { grid-column: 1 / -1; display: flex; gap: 6px; }
+        #orbit-panel button {
+            flex: 1; background: #fff; border: 1px solid rgba(0,0,0,0.15); border-radius: 4px;
+            color: #1a1a1a; font: 600 12px/1.4 -apple-system, Arial, sans-serif; padding: 4px 8px; cursor: pointer;
+        }
+        #orbit-panel button:hover { border-color: rgba(0,0,0,0.35); background: #f7f7f7; }
+        #orbit-panel input[type=range] {
+            -webkit-appearance: none; appearance: none; width: 100%; margin: 0;
+            height: 5px; border-radius: 10px; background: rgba(155,155,155,0.3);
+            outline: none; opacity: 0.7; transition: opacity 0.2s; cursor: pointer;
+        }
+        #orbit-panel input[type=range]:hover { opacity: 1; }
+        #orbit-panel input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #4caf50; cursor: pointer;
+        }
+        #orbit-panel input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #4caf50; cursor: pointer; }
+        #orbit-panel output { text-align: right; font-variant-numeric: tabular-nums; color: #555; }
+    </style>
+
 </head>
 
 <body>
@@ -53,6 +86,17 @@ $Log:index_only_map_embed.html,v $
     <main>
         <!-- Mappa -->
         <div id="map_div" role="application" aria-label="Mappa interattiva del confronto censimenti in Italia"></div>
+
+        <!-- Orbita della camera -->
+        <div id="orbit-panel">
+            <div class="title">Camera</div>
+            <div class="btns">
+                <button id="orbit-play" title="Ruota la vista attorno al centro della mappa">⟳ Orbita</button>
+                <button id="orbit-reset" title="Vista dall'alto, nord in alto">Reset</button>
+            </div>
+            <label for="orbit-speed">Velocità</label><input id="orbit-speed" type="range" min="-30" max="30" step="1" value="8"><output id="orbit-speed-out">8°/s</output>
+            <label for="orbit-tilt">Inclinazione</label><input id="orbit-tilt" type="range" min="0" max="85" step="1" value="0"><output id="orbit-tilt-out">0°</output>
+        </div>
 
         <!-- Sidebar toggle (mobile) -->
         <div class="sidebar" id="sidebar_toggle" style="background: none; box-shadow: none; border: none;">
@@ -454,6 +498,16 @@ $Log:index_only_map_embed.html,v $
             );
 
 
+        // sisma 2016: the outline of the cratere (138 comuni) — as on
+        // stage/censimenti_sisma_2016/sisma_2016_italia_censimenti_compare_procom.html
+        const cratere_outline =
+            ixmaps.layer("cratere_sisma_2016_outline", layer => layer
+                .data({ url: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@7bc0a88/by-project/sisma-2016-cratere/cratere_sisma_2016_outline.geojson", type: "geojson" })
+                .type("FEATURE|SILENT|NOLEGEND")
+                .style({ colorscheme: ["none"], linecolor: "#e6550d", linewidth: "3", name: "cratere_sisma_2016_outline" })
+            );
+
+
         /**
          **
          ** sidebar / responsive handling
@@ -593,11 +647,75 @@ $Log:index_only_map_embed.html,v $
             .layer(__georef_sez2011_fgb())
             .layer(__georef_sez2021_fgb())
             .layer(__sez2021_pop_choropleth())
+            // over the census background, under the charts
+            .layer(cratere_outline)
             .layer(__pop_procom_circle())
             .layer(__procom_2011_2021_arrow_user_relative())
             .layer(__sez_2011_2021_pop_arrow_user_relative())
 
 
+    </script>
+
+    <script type="text/javascript">
+        // ── Camera orbit: the orbit preset of the ixmaps-gl camera paths ──
+        // ixmaps.map().cameraOrbit() turns the bearing round the map center in
+        // ONE continuous MapLibre movement (the engine keeps its chart freeze /
+        // move throttle, as during a drag). A drag, scroll or touch on the map
+        // stops it. See examples/camera_orbit.html, examples/camera_path.html.
+        (function () {
+            var $id = function (id) { return document.getElementById(id); };
+            var playBtn = $id("orbit-play");
+            var mapLibre = function () { return ixmaps.map().getMapLibre(); };
+            var orbit = null, hooked = false;
+
+            function syncTilt(p) {
+                $id("orbit-tilt").value = Math.round(p);
+                $id("orbit-tilt-out").value = Math.round(p) + "°";
+            }
+            function stop() {
+                if (orbit) orbit.pause();
+                playBtn.textContent = "⟳ Orbita";
+            }
+            function start() {
+                var ml = mapLibre();
+                if (!ml) return;
+                if (!hooked) {
+                    hooked = true;
+                    ml.setMaxPitch(85);
+                    // keep the tilt slider in step with the user's own gestures
+                    ml.on("pitchend", function () { syncTilt(ml.getPitch()); });
+                }
+                // a new orbit round the map center of this moment; seen straight
+                // from above an orbit is just a turning map: it tilts to 60° first
+                if (orbit) orbit.destroy();
+                var tilt = ml.getPitch() < 5 ? 60 : null;
+                if (tilt) syncTilt(tilt);
+                orbit = ixmaps.map().cameraOrbit({
+                    pitch: tilt, degPerSec: +$id("orbit-speed").value, approach: 600,
+                    onPause: function () { playBtn.textContent = "⟳ Orbita"; }  // a gesture on the map
+                });
+                orbit.play();
+                playBtn.textContent = "❚❚ Pausa";
+            }
+
+            playBtn.onclick = function () { orbit && orbit.playing ? stop() : start(); };
+            $id("orbit-reset").onclick = function () {
+                var ml = mapLibre(); if (!ml) return;
+                stop();
+                ml.easeTo({ bearing: 0, pitch: 0, duration: 800 });
+                syncTilt(0);
+            };
+            $id("orbit-speed").oninput = function (e) {
+                $id("orbit-speed-out").value = e.target.value + "°/s";
+                if (orbit) orbit.setDegPerSec(+e.target.value);
+            };
+            $id("orbit-tilt").oninput = function (e) {
+                var ml = mapLibre(); if (!ml) return;
+                ml.setMaxPitch(85);
+                ml.setPitch(+e.target.value);
+                $id("orbit-tilt-out").value = e.target.value + "°";
+            };
+        })();
     </script>
 
 </body>
