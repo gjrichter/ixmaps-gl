@@ -111,8 +111,10 @@ $Log: layer_compare.js,v $
             // the next refreshTheme() retries
             try {
 
-                var data_2011 = dataquery_flatgeobuffer;
-                var data_2021 = dataquery_flatgeobuffer_2;
+                // window.: data not loaded yet reads undefined (the bail-out
+                // below) instead of throwing a ReferenceError
+                var data_2011 = window.dataquery_flatgeobuffer;
+                var data_2021 = window.dataquery_flatgeobuffer_2;
                 //ixmaps.szThemeNameA[options.theme.szName] = options.theme.szName;
 
                 // sezioni_censimento_11/_21 (flatgeobuf) reload asynchronously on
