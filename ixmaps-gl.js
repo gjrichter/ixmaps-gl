@@ -6352,6 +6352,17 @@ self.onmessage = e => {
       function newThemeRuntime(def, spec, raw, engineOptions, { deferred, named, dataSourceKey }) {
         const fc = filterAndJoin(raw, spec, runtimes);
         const rt = new LayerRuntime(spec, fc, engineOptions);
+        // a CHOROPLETH with geometry of its own (no lookup join) still paints,
+        // in flat, the shapes of its same-named FEATURE base, and they keep the
+        // base's stroke (paintShape sets the fill, a stroke only from the
+        // choropleth's own linecolor): its outline (linewidth, linecolor
+        // "none") and no-data fill fall back to the base's style, as in the
+        // joined case (joinChoroplethFeatures). Without it the census sections
+        // page drew gl's default 1 px white outline round every section.
+        if (!rt._donorStyle && rt.flags.has('CHOROPLETH')) {
+          const base = runtimes.find(r => r.name === spec.name && (r.flags.has('FEATURE') || r.flags.has('FEATURES')));
+          if (base) rt._donorStyle = base.style;
+        }
         if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
         // tags which underlying data source this runtime came from — see
         // setFacetFilter/clearFacetFilter/clearAllFacetFilters, which use
