@@ -374,19 +374,28 @@ function buildMap() {
     // GL port: the engine has no map.on("zoomend") — flat's own
     // htmlgui_onZoomAndPan hook fires on every zoom/pan (and once on load)
 
-    var _zoomMoveTimer = null;
+    // Applied at once, not after a 500 ms debounce: the engine calls this
+    // hook on 'load' before the first chart draw (and during a zoom, in
+    // step with its redraws), so a delayed minvaluesize let the first draw
+    // (and every draw right after a zoom or region change) show the
+    // style's minvaluesize:8 labels, removed again half a second later.
+    // Each value is set only when it changes — a pan alone redraws nothing.
+    var _lastOpacity = null, _lastMinSize = null;
     ixmaps.htmlgui_onZoomAndPan = function() {
-        clearTimeout(_zoomMoveTimer);
-        _zoomMoveTimer = setTimeout(function() {
-            var z = ixmaps.getZoom();
-            var opacity = Math.max(0, Math.min(0.8, (z - 9) / 3));
-            var minSize = z > 10 ? 1 : z > 9 ? 6 : z > 8 ? 7 : z > 7 ? 8 : 18;
+        var z = ixmaps.getZoom();
+        var opacity = Math.max(0, Math.min(0.8, (z - 9) / 3));
+        var minSize = z > 10 ? 1 : z > 9 ? 6 : z > 8 ? 7 : z > 7 ? 8 : 18;
 
-            var m = ixmaps.map();
+        var m = ixmaps.map();
+        if (opacity !== _lastOpacity) {
+            _lastOpacity = opacity;
             m.setBasemapOpacity(opacity, "absolute");
+        }
+        if (minSize !== _lastMinSize) {
+            _lastMinSize = minSize;
             m.changeThemeStyle("chart_si", "minvaluesize:" + minSize);
             m.changeThemeStyle("chart_no", "minvaluesize:" + minSize);
-        }, 500);
+        }
     };
 
 }
