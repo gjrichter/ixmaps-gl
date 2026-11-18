@@ -3178,6 +3178,18 @@ self.onmessage = e => {
   // the user chart's size unit: flat's normalX(15) = 300 is the chart's
   // normal radius (maxSize), shown at gl's normal bubble radius
   const USER_CHART_MAX_SIZE = 300;
+  // while the map moves, a theme's USER charts are redrawn at most every
+  // (last drawing's cost × USER_CHART_MOVE_LOAD) ms — about a sixteenth of
+  // the time at most (the browser's restyle and deck.gl's work on the next
+  // frame come on top), on the 150 ms move throttle — and not at all when
+  // one drawing takes USER_CHART_MOVE_MAX_MS or more (a visible stutter):
+  // those keep their last drawing until 'moveend' (flat's freezeOnPan).
+  // Measured, orbit at 60° on the referendum peaks page (M4): ~280 charts
+  // ~2 ms → every tick, 60 fps; all Italy 4572 + 3348 charts ~17 ms →
+  // every ~270 ms, 58–60 fps (factor 8: 52 fps, frames up to 80 ms; frozen
+  // 65); uncached ~870 ms → frozen.
+  const USER_CHART_MOVE_MAX_MS = 100;
+  const USER_CHART_MOVE_LOAD = 16;
   // ---- the pane USER charts render into: one per map, live over the canvas ----
   // flat draws its user charts as LIVE SVG over the map — vector-crisp at
   // every zoom, labels as real text. The first port here rasterized every
@@ -15999,9 +16011,37 @@ self.onmessage = e => {
     _clearUserChartPane() {
       if (this._chartPaneGroup) this._chartPaneGroup.remove();
       this._chartPaneGroup = null;
+      this._chartPaneEls = null;
       this._chartItems = null;
+      // the theme drew nothing (hidden, out of scale): deck.gl dropped its
+      // layers — kept, the same charts back in view handed it those finalized
+      // objects again ("initialization of GeoJsonLayer … assertion failed", a
+      // camera path out of the census sections' scale and back)
+      this._userChartLastLayers = null;
+      this._userChartLayersKey = null;
     }
     _buildUserChartLayers(combined, liveZoom, sizeValueOf) {
+      // While the map moves the last drawing stays (as flat's freezeOnPan)
+      // when drawing is expensive: the charts change with every step of a
+      // zoom (size) and a pan (the grid), and drawing thousands of them —
+      // chart functions, markup, picking outlines — every 150 ms of a
+      // gesture kept the page busy until it hardly reacted. So a drawing is
+      // repeated as often as its cost allows (USER_CHART_MOVE_LOAD,
+      // USER_CHART_MOVE_MAX_MS): charts coming into the view during a pan
+      // or a camera orbit appear while it moves. Measured as a whole
+      // drawing; the view is drawn in full once it stands still ('moveend').
+      if (this._viewMoving && this._userChartLastLayers) {
+        const cost = this._userChartCostMs;
+        if (!(cost < USER_CHART_MOVE_MAX_MS) || performance.now() - this._userChartDrawnAt < cost * USER_CHART_MOVE_LOAD)
+          return this._userChartLastLayers;
+      }
+      const t0 = performance.now();
+      const layers = this._drawUserChartLayers(combined, liveZoom, sizeValueOf);
+      this._userChartDrawnAt = performance.now();
+      this._userChartCostMs = this._userChartDrawnAt - t0;
+      return layers;
+    }
+    _drawUserChartLayers(combined, liveZoom, sizeValueOf) {
       const name = String(this.style.userdraw || '');
       const draw = resolveUserChartFunction(name);
       if (!draw || typeof document === 'undefined') {
@@ -16014,19 +16054,30 @@ self.onmessage = e => {
       // on every draw (arrowChart a gradient per chart), and a group kept
       // for good grew by thousands of them within a few zooms, slowing every
       // draw until the page blocked. A chart's own image keeps the defs it
-      // uses (_drawUserChartSvg).
-      // While the map moves the last drawing stays (as flat's freezeOnPan):
-      // the charts change with every step of a zoom (size) and a pan (the
-      // grid), and drawing them — hundreds of chart functions and image
-      // decodes — every 150 ms of a gesture kept the page busy until it
-      // hardly reacted. The view is drawn once it stands still ('moveend').
-      if (this._viewMoving && this._userChartLastLayers) return this._userChartLastLayers;
+      // uses (_drawUserChartSvg). While the map moves, _buildUserChartLayers
+      // decides whether to draw at all.
       const host = userChartHost();
       if (this._userChartGroup) this._userChartGroup.remove();
       this._userChartGroup = document.createElementNS(SVG_NS, 'g');
       host.appendChild(this._userChartGroup);
       const valueOf = d => (d.properties.counts ? d.properties.total : d.properties.value);
       const theme = this._userChartTheme(combined.map(valueOf).filter(v => typeof v === 'number' && isFinite(v)));
+      // the cached charts (_userChartSvg) were drawn with the theme fields
+      // of their time: a changed style (changeThemeStyle minvaluesize, the
+      // referendum peaks page's zoom rule; textscale, colors, …) must redraw
+      // them — kept, a chart's VALUES label stayed as first decided, and
+      // zooming in (a lower minvaluesize) never added labels. The data
+      // range (nMin/nMax, every pan) is left out of the key, as before.
+      const themeKey = JSON.stringify(Object.assign({}, theme, { nMin: undefined, nMax: undefined }));
+      const themeChanged = themeKey !== this._userChartThemeKey;
+      if (this._userChartSvgs && themeChanged) this._userChartSvgs.clear();
+      this._userChartThemeKey = themeKey;
+      // the cache holds at least twice this drawing: smaller, the oldest-first
+      // eviction drops, chart by chart, exactly the charts the next drawing
+      // needs, and nothing is ever found (referendum peaks page, all Italy:
+      // 4572 charts over a 2000 limit, every drawing ~870 ms from scratch;
+      // with them cached ~35–60 ms)
+      this._userChartCacheMax = Math.max(ICON_CACHE_MAX, 2 * combined.length);
       const init = resolveUserChartFunction(name + '_init');
       try { if (init) init.call(global.ixmaps, document, { target: this._userChartGroup, theme }); } catch (e) {
         if (!this._userChartInitError) console.error(`[ixmaps-gl] ${name}_init:`, e);
@@ -16044,13 +16095,34 @@ self.onmessage = e => {
       // this view's charts, mounted as live <g> elements in the pane (see
       // chartHostFor) — flat's own SVG rendering: no atlas, no raster, no
       // async image decode, the whole drawing is synchronous
+      // The pane is kept from drawing to drawing: a chart still in the view
+      // keeps its element, only the charts coming into it are parsed and
+      // inserted, the ones leaving it removed. Rebuilt whole (innerHTML)
+      // every drawing made the browser restyle and repaint every chart:
+      // all Italy on the referendum peaks page (4572 peaks) ~80 ms after a
+      // ~36 ms drawing, a hitch at every redraw of a camera orbit.
+      // A changed theme (themeKey: other colours, gradients, labels) or a
+      // pane taken off the map starts afresh.
+      if (themeChanged || (this._chartPaneGroup && !this._chartPaneGroup.isConnected)) {
+        this._clearUserChartPane();
+        if (this._chartPaneDefs) this._chartPaneDefs.remove();
+        this._chartPaneDefs = null;
+      }
+      // the charts' defs (gradients), once per id, kept with the pane —
+      // only ever added to (a few per colour); replacing them every drawing
+      // re-resolved every chart's url(#id) fill as well
+      if (!this._chartPaneDefs || !this._chartPaneDefs.isConnected) {
+        if (this._chartPaneDefs) this._chartPaneDefs.remove();
+        this._chartPaneDefs = document.createElementNS(SVG_NS, 'g');
+        chartHost.defs.appendChild(this._chartPaneDefs);
+        this._chartPaneDefIds = new Set();
+      }
+      const paneDefs = this._chartPaneDefs, paneDefIds = this._chartPaneDefIds;
+      const prevEls = this._chartPaneEls || new Map();
       const items = [];
-      const defsSeen = new Set();
-      // this drawing's defs, swapped in for the previous drawing's below —
-      // appended to the shared pane <defs> on every draw they grew without
-      // bound (and getElementById then found a stale earlier copy)
-      const paneDefs = document.createElementNS(SVG_NS, 'g');
-      let html = '';
+      const keysSeen = new Set();
+      let freshHtml = '';
+      const fresh = [];
       for (const d of combined) {
         const value = valueOf(d);
         // the item's class (range classes set it for groups too — a negative
@@ -16060,45 +16132,72 @@ self.onmessage = e => {
         const size = radiusPx / pxPerUnit;
         const chart = this._userChartSvg(draw, name, theme, flag, d, value, cat, size, sizeValueOf(d));
         if (!chart) continue;
-        html += chart.markup;
         // the chart's own defs (gradients) go to the pane once per id —
         // several charts share one (pinnacle's per-color gradient)
         for (const id of chart.ids) {
-          if (defsSeen.has(id)) continue;
-          defsSeen.add(id);
-          // drawn now (fresh), else a cached chart's: the previous drawing's copy
-          const def = this._userChartGroup.querySelector('#' + CSS.escape(id)) || this._userChartGroup.ownerDocument.getElementById(id);
+          if (paneDefIds.has(id)) continue;
+          paneDefIds.add(id);
+          // drawn now (fresh), else the copy a cached chart keeps
+          const def = this._userChartGroup.querySelector('#' + CSS.escape(id));
           if (def) paneDefs.appendChild(def.cloneNode(true));
           else if (chart.defsById && chart.defsById[id]) paneDefs.insertAdjacentHTML('beforeend', chart.defsById[id]);
         }
-        items.push({ d, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit, pick: chart.pick,
+        // the element's key: the chart's drawing at the item's position
+        // (two equal charts at one position each get their own)
+        const base = chart.key + '@' + d.geometry.coordinates.join(',');
+        let key = base;
+        for (let n = 1; keysSeen.has(key); n++) key = base + '#' + n;
+        keysSeen.add(key);
+        const el = prevEls.get(key);
+        if (el) prevEls.delete(key);
+        items.push({ d, key, el, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit, pick: chart.pick,
           r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2,
           // the chart's measured box (flat's getBox of the chart group) in px
           // around the map position: the pane draws a chart point at
           // p + s · (point − origin)
           ext: [(chart.bb.x - chart.ox) * pxPerUnit, (chart.bb.y - chart.oy) * pxPerUnit,
             (chart.bb.x + chart.bb.width - chart.ox) * pxPerUnit, (chart.bb.y + chart.bb.height - chart.oy) * pxPerUnit] });
+        if (!el) { fresh.push(items[items.length - 1]); freshHtml += chart.markup; }
       }
       if (glDebug()) console.info(`[ixmaps-gl debug] ${themeIdOf(this)}: zoom ${mapLibreToFlatZoom(liveZoom).toFixed(2)}, ${combined.length} charts, ${items.length} drawn${this._viewMoving ? ' (moving)' : ''}`);
       if (!items.length) {
-        if (this._chartPaneGroup) this._chartPaneGroup.remove();
-        this._chartPaneGroup = null;
-        this._chartItems = null;
+        this._clearUserChartPane();
         return (this._userChartLastLayers = []);
       }
-      chartHost.defs.appendChild(paneDefs);
-      if (this._chartPaneDefs) this._chartPaneDefs.remove();
-      this._chartPaneDefs = paneDefs;
-      if (this._chartPaneGroup) this._chartPaneGroup.remove();
-      this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
-      chartHost.pane.appendChild(this._chartPaneGroup);
-      this._chartPaneGroup.innerHTML = html;
-      const els = this._chartPaneGroup.children;
-      for (let i = 0; i < items.length; i++) items[i].el = els[i];
+      if (!this._chartPaneGroup) {
+        this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
+        chartHost.pane.appendChild(this._chartPaneGroup);
+      }
+      const paneGroup = this._chartPaneGroup;
+      // the charts that left the view
+      for (const el of prevEls.values()) el.remove();
+      // the new ones, parsed together
+      if (fresh.length) {
+        const tmp = document.createElementNS(SVG_NS, 'g');
+        tmp.innerHTML = freshHtml;
+        const els = [...tmp.children];
+        for (let i = 0; i < fresh.length; i++) fresh[i].el = els[i];
+      }
+      // in the theme's draw order (ascending size, see buildDeckLayers): the
+      // kept charts already are, a new one goes in before the first kept
+      // chart after it — nothing that stays is moved
+      let ref = paneGroup.firstChild;
+      for (const it of items) {
+        if (it.el === ref) ref = ref.nextSibling;
+        else paneGroup.insertBefore(it.el, ref);
+      }
+      this._chartPaneEls = new Map(items.map(it => [it.key, it.el]));
       this._chartItems = items;
       chartHost.runtimes.add(this);
       this._chartHost = chartHost; // removeRuntimes takes it out again
       chartHost.update();
+      // the same charts at the same zoom and style as the last drawing (a
+      // camera orbit over a view that shows them all): its picking, box and
+      // title layers stand — new ones made deck.gl re-tessellate thousands of
+      // chart outlines on the next frame (all Italy, referendum peaks page)
+      const layersKey = liveZoom + '|' + JSON.stringify(this.style) + '|' + items.map(it => it.key).join('\n');
+      if (layersKey === this._userChartLayersKey && this._userChartLastLayers) return this._userChartLastLayers;
+      this._userChartLayersKey = layersKey;
       // picking: a transparent circle per chart — the VISIBLE chart is the
       // live SVG in the pane; this deck layer only serves hover, click and
       // the tooltips (pickedFeature unwraps the {d, icon} entry shape)
@@ -16192,7 +16291,8 @@ self.onmessage = e => {
       if (chart === undefined) {
         chart = this._drawUserChartSvg(draw, name, theme, flag, d, value, cat, size, nSize, values, composed);
         if (chart === undefined) return null;
-        if (this._userChartSvgs.size >= ICON_CACHE_MAX) this._userChartSvgs.delete(this._userChartSvgs.keys().next().value);
+        if (chart) chart.key = base; // the pane keeps a chart's element by it (_drawUserChartLayers)
+        if (this._userChartSvgs.size >= (this._userChartCacheMax || ICON_CACHE_MAX)) this._userChartSvgs.delete(this._userChartSvgs.keys().next().value);
         this._userChartSvgs.set(base, chart);
       }
       return chart || null;
