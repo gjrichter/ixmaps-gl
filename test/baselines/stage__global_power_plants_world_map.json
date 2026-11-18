@@ -4,10 +4,10 @@
   {
    "label": "initial",
    "view": {
-    "zoom": 0.584962,
+    "zoom": 1.267,
     "center": [
-     0,
-     0
+     33.015728,
+     24.950524
     ],
     "bearing": 0,
     "pitch": 0,
@@ -17,7 +17,7 @@
     {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
-     "count": 34936,
+     "count": 32808,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -29,13 +29,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "310c09b0efee5a72",
-     "setDigest": "f8655d9b631d560c",
+     "digest": "1c639f291e5f9e70",
+     "setDigest": "33ce627f601dfb54",
      "columnDigests": {
-      "getColor": "665d9d61b10427f6",
-      "getIcon": "e8da4c4681de5ec7",
-      "getPosition": "c7dd9db1c907f013",
-      "getSize": "585b859ce6d25ed2"
+      "getColor": "6643dd351562ddab",
+      "getIcon": "c1b502c1738bf8b4",
+      "getPosition": "d6364bcccb5a9dc1",
+      "getSize": "ea1a2bf9d73e0e84"
      },
      "stats": {
       "getColor": [
@@ -43,12 +43,12 @@
        255
       ],
       "getPosition": [
-       -179.9777,
+       -116.5714,
        179.3887
       ],
       "getSize": [
        1.1,
-       58.006589
+       67.907109
       ]
      },
      "sample": [
@@ -477,7 +477,7 @@
     {
      "id": "ix-bubbles-power_plants-circles-g0",
      "type": "ScatterplotLayer",
-     "count": 34936,
+     "count": 32808,
      "constants": {
       "billboard": true,
       "lineWidthUnits": "pixels",
@@ -492,14 +492,14 @@
       "getPosition",
       "getRadius"
      ],
-     "digest": "361991116c5a6112",
-     "setDigest": "cd1ed576c0f800af",
+     "digest": "44422614696007ec",
+     "setDigest": "b25da9298a4c745a",
      "columnDigests": {
-      "getFillColor": "27d107d5ae24bd3e",
-      "getLineColor": "1b1c2d21a5e310cf",
-      "getLineWidth": "159c3af1da7ef637",
-      "getPosition": "c7dd9db1c907f013",
-      "getRadius": "fd1747d18bba6a31"
+      "getFillColor": "26716516040b456d",
+      "getLineColor": "a2e4acacf99ff2ab",
+      "getLineWidth": "b062da3f78d111a5",
+      "getPosition": "d6364bcccb5a9dc1",
+      "getRadius": "edf6908746bd845e"
      },
      "stats": {
       "getFillColor": [
@@ -511,16 +511,16 @@
        178
       ],
       "getLineWidth": [
-       0.008359,
-       0.060702
+       0.009044,
+       0.071063
       ],
       "getPosition": [
-       -179.9777,
+       -116.5714,
        179.3887
       ],
       "getRadius": [
        0.1,
-       5.273326
+       6.173374
       ]
      },
      "sample": [
@@ -537,7 +537,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         138.5882,
         -34.9453
@@ -557,7 +557,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         133.8682,
         -23.7685
@@ -577,7 +577,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         -40.2747,
         -6.0039
@@ -597,7 +597,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         -88.3141,
         48.9428
@@ -617,7 +617,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         -115.9476,
         49.669
@@ -637,7 +637,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         -110.7199,
         50.0378
@@ -657,7 +657,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         18.1182,
         49.7088
@@ -677,7 +677,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         17.4311,
         49.2488
@@ -697,7 +697,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         15.8273,
         48.9951
@@ -717,7 +717,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         13.8468,
         50.3435
@@ -737,7 +737,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         15.9981,
         48.962
@@ -757,7 +757,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         14.5048,
         49.0301
@@ -777,7 +777,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         16.1614,
         50.3968
@@ -797,7 +797,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         14.1163,
         50.4488
@@ -817,7 +817,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         17.3579,
         49.078
@@ -837,7 +837,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         13.1598,
         49.348
@@ -857,7 +857,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         13.9193,
         50.6644
@@ -877,7 +877,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         17.976,
         49.9565
@@ -897,7 +897,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         13.6627,
         49.9352
@@ -917,7 +917,7 @@
         0,
         77
        ],
-       0.008359,
+       0.009044,
        [
         14.9249,
         48.9514
@@ -1041,12 +1041,12 @@
     }
    ],
    "legend": [
-    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 965 541 Gas 1 493 051 Hydro 1 053 160 Nuclear 407 912 Wind 263 054 Oil 261 879 Solar 188 312 Biomass 34 281 Waste 14 749 Geothermal 12 688 Cogeneration 4 048 Other 3 613 Petcoke 2 425 Storage 1 712 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
+    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 962 263 Gas 1 439 860 Hydro 992 457 Nuclear 404 389 Oil 257 918 Wind 250 100 Solar 178 489 Biomass 32 588 Waste 13 012 Geothermal 9 727 Cogeneration 3 920 Other 3 499 Petcoke 2 397 Storage 1 417 Wave and Tidal 552 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
    ],
    "tooltips": {
     "power_plants": [
      "<b>Adelaide Showgrounds</b><br>Australia<br>Solar<br>1 MW",
-     "<b>ERB Candeias</b><br>Brazil<br>Biomass<br>17 MW",
+     "<b>Allegheny Hydro No 9</b><br>United States of America<br>Hydro<br>18 MW",
      "<b>Three Gorges Dam</b><br>China<br>Hydro<br>22 500 MW"
     ]
    },
@@ -1055,10 +1055,10 @@
   {
    "label": "zoom+1",
    "view": {
-    "zoom": 1.584962,
+    "zoom": 2.267,
     "center": [
-     0,
-     0
+     33.015728,
+     24.950524
     ],
     "bearing": 0,
     "pitch": 0,
@@ -1068,7 +1068,7 @@
     {
      "id": "ix-glow-power_plants-g0",
      "type": "IconLayer",
-     "count": 31675,
+     "count": 16241,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -1080,13 +1080,13 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "db7400b2c7e724b5",
-     "setDigest": "38ac98e68dca4610",
+     "digest": "588d8584f102a17d",
+     "setDigest": "31ec69546149bc70",
      "columnDigests": {
-      "getColor": "5caad350d8a434f0",
-      "getIcon": "6c41c1ce880ec683",
-      "getPosition": "ba8a4efcbb8e9a7a",
-      "getSize": "d7a86e5a4abb62c1"
+      "getColor": "06d78a78f8503b60",
+      "getIcon": "1833d7f6bb07ff28",
+      "getPosition": "06e6b332af3d5d8a",
+      "getSize": "af6d5e16c0a3b9a1"
      },
      "stats": {
       "getColor": [
@@ -1094,12 +1094,12 @@
        255
       ],
       "getPosition": [
-       -119.9914,
-       119.9921
+       -41.7667,
+       107.8081
       ],
       "getSize": [
        1.1,
-       73.083722
+       65.158724
       ]
      },
      "sample": [
@@ -1121,69 +1121,6 @@
        [
         -40.2747,
         -6.0039
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -88.3141,
-        48.9428
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -115.9476,
-        49.669
-       ],
-       1.1
-      ],
-      [
-       [
-        255,
-        255,
-        255,
-        255
-       ],
-       {
-        "anchorX": 32,
-        "anchorY": 32,
-        "height": 64,
-        "id": "glow-255,214,0",
-        "url": "#692c40f1:7774",
-        "width": 64
-       },
-       [
-        -110.7199,
-        50.0378
        ],
        1.1
       ],
@@ -1522,13 +1459,76 @@
         49.1225
        ],
        1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        17.5515,
+        49.428
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        14.009,
+        50.3979
+       ],
+       1.1
+      ],
+      [
+       [
+        255,
+        255,
+        255,
+        255
+       ],
+       {
+        "anchorX": 32,
+        "anchorY": 32,
+        "height": 64,
+        "id": "glow-255,214,0",
+        "url": "#692c40f1:7774",
+        "width": 64
+       },
+       [
+        13.8096,
+        50.6643
+       ],
+       1.1
       ]
      ]
     },
     {
      "id": "ix-bubbles-power_plants-circles-g0",
      "type": "ScatterplotLayer",
-     "count": 31675,
+     "count": 16241,
      "constants": {
       "billboard": true,
       "lineWidthUnits": "pixels",
@@ -1543,14 +1543,14 @@
       "getPosition",
       "getRadius"
      ],
-     "digest": "67ec402fa3da1c2e",
-     "setDigest": "6ce63bd6b05bc221",
+     "digest": "2bf951925361714a",
+     "setDigest": "a9295220cf171728",
      "columnDigests": {
-      "getFillColor": "34616375cb4770e5",
-      "getLineColor": "5d1b8623db1c4baf",
-      "getLineWidth": "815da97dbee8c635",
-      "getPosition": "ba8a4efcbb8e9a7a",
-      "getRadius": "145438d6ff043e03"
+      "getFillColor": "9375f180ba3dd24c",
+      "getLineColor": "37a9042246fe4bf3",
+      "getLineWidth": "44356142ff594230",
+      "getPosition": "06e6b332af3d5d8a",
+      "getRadius": "115c8d0414ba1d6a"
      },
      "stats": {
       "getFillColor": [
@@ -1562,16 +1562,16 @@
        178
       ],
       "getLineWidth": [
-       0.009383,
-       0.07648
+       0.010152,
+       0.078135
       ],
       "getPosition": [
-       -119.9914,
-       119.9921
+       -41.7667,
+       107.8081
       ],
       "getRadius": [
        0.1,
-       6.643975
+       5.92352
       ]
      },
      "sample": [
@@ -1588,7 +1588,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         -40.2747,
         -6.0039
@@ -1608,67 +1608,7 @@
         0,
         77
        ],
-       0.009383,
-       [
-        -88.3141,
-        48.9428
-       ],
-       0.1
-      ],
-      [
-       [
-        255,
-        214,
-        0,
-        217
-       ],
-       [
-        178,
-        149,
-        0,
-        77
-       ],
-       0.009383,
-       [
-        -115.9476,
-        49.669
-       ],
-       0.1
-      ],
-      [
-       [
-        255,
-        214,
-        0,
-        217
-       ],
-       [
-        178,
-        149,
-        0,
-        77
-       ],
-       0.009383,
-       [
-        -110.7199,
-        50.0378
-       ],
-       0.1
-      ],
-      [
-       [
-        255,
-        214,
-        0,
-        217
-       ],
-       [
-        178,
-        149,
-        0,
-        77
-       ],
-       0.009383,
+       0.010152,
        [
         18.1182,
         49.7088
@@ -1688,7 +1628,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         17.4311,
         49.2488
@@ -1708,7 +1648,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         15.8273,
         48.9951
@@ -1728,7 +1668,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         13.8468,
         50.3435
@@ -1748,7 +1688,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         15.9981,
         48.962
@@ -1768,7 +1708,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         14.5048,
         49.0301
@@ -1788,7 +1728,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         16.1614,
         50.3968
@@ -1808,7 +1748,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         14.1163,
         50.4488
@@ -1828,7 +1768,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         17.3579,
         49.078
@@ -1848,7 +1788,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         13.1598,
         49.348
@@ -1868,7 +1808,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         13.9193,
         50.6644
@@ -1888,7 +1828,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         17.976,
         49.9565
@@ -1908,7 +1848,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         13.6627,
         49.9352
@@ -1928,7 +1868,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         14.9249,
         48.9514
@@ -1948,7 +1888,7 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         15.8044,
         49.962
@@ -1968,10 +1908,70 @@
         0,
         77
        ],
-       0.009383,
+       0.010152,
        [
         15.023,
         49.1225
+       ],
+       0.1
+      ],
+      [
+       [
+        255,
+        214,
+        0,
+        217
+       ],
+       [
+        178,
+        149,
+        0,
+        77
+       ],
+       0.010152,
+       [
+        17.5515,
+        49.428
+       ],
+       0.1
+      ],
+      [
+       [
+        255,
+        214,
+        0,
+        217
+       ],
+       [
+        178,
+        149,
+        0,
+        77
+       ],
+       0.010152,
+       [
+        14.009,
+        50.3979
+       ],
+       0.1
+      ],
+      [
+       [
+        255,
+        214,
+        0,
+        217
+       ],
+       [
+        178,
+        149,
+        0,
+        77
+       ],
+       0.010152,
+       [
+        13.8096,
+        50.6643
        ],
        0.1
       ]
@@ -2092,13 +2092,13 @@
     }
    ],
    "legend": [
-    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 1 663 575 Gas 1 331 219 Hydro 945 883 Nuclear 318 574 Wind 233 319 Oil 203 375 Solar 171 333 Biomass 32 365 Waste 13 255 Geothermal 7 658 Cogeneration 4 040 Other 3 499 Petcoke 2 397 Storage 1 603 Wave and Tidal 298 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
+    "Global Power Plants Installed capacity by fuel type — bubble size = capacity (MW), color = fuel type ▾ All (167) Afghanistan Albania Algeria Angola Antarctica Argentina Armenia Australia Austria Azerbaijan Bahrain Bangladesh Belarus Belgium Benin Bhutan Bolivia Bosnia and Herzegovina Botswana Brazil Brunei Darussalam Bulgaria Burkina Faso Burundi Cambodia Cameroon Canada Cape Verde Central African Republic Chile China Colombia Congo Costa Rica Cote DIvoire Croatia Cuba Cyprus Czech Republic Democratic Republic of the Congo Denmark Djibouti Dominican Republic Ecuador Egypt El Salvador Equatorial Guinea Eritrea Estonia Ethiopia Fiji Finland France French Guiana Gabon Gambia Georgia Germany Ghana Greece Guatemala Guinea Guinea-Bissau Guyana Honduras Hungary Iceland India Indonesia Iran Iraq Ireland Israel Italy Jamaica Japan Jordan Kazakhstan Kenya Kosovo Kuwait Kyrgyzstan Laos Latvia Lebanon Lesotho Liberia Libya Lithuania Luxembourg Macedonia Madagascar Malawi Malaysia Mali Mauritania Mauritius Mexico Moldova Mongolia Montenegro Morocco Mozambique Myanmar Namibia Nepal Netherlands New Zealand Nicaragua Niger Nigeria North Korea Norway Oman Pakistan Palestine Panama Papua New Guinea Paraguay Peru Philippines Poland Portugal Qatar Romania Russia Rwanda Saint Lucia Saudi Arabia Senegal Serbia Sierra Leone Singapore Slovakia Slovenia South Africa South Korea Spain Sri Lanka Sudan Suriname Swaziland Sweden Switzerland Syrian Arab Republic Taiwan Tajikistan Tanzania Thailand Togo Trinidad and Tobago Tunisia Turkey Turkmenistan Uganda Ukraine United Arab Emirates United Kingdom United States of America Uruguay Uzbekistan Venezuela Vietnam Western Sahara Yemen Zambia Zimbabwe Coal 751 824 Gas 661 751 Hydro 523 163 Nuclear 176 325 Oil 133 154 Solar 103 581 Wind 91 357 Biomass 10 646 Waste 4 478 Geothermal 3 349 Cogeneration 3 006 Other 1 699 Storage 897 Wave and Tidal 278 One bubble per power plant, sized by installed capacity and colored by primary fuel. Source: World Resources Institute — Global Power Plant Database Chart size: 100%"
    ],
    "tooltips": {
     "power_plants": [
      "<b>Tauá</b><br>Brazil<br>Solar<br>1 MW",
-     "<b>Le Lamentin</b><br>France<br>Solar<br>15 MW",
-     "<b>Three Gorges Dam</b><br>China<br>Hydro<br>22 500 MW"
+     "<b>Hook Valley Solar Park</b><br>United Kingdom<br>Solar<br>15 MW",
+     "<b>Baihetan Dam</b><br>China<br>Hydro<br>13 050 MW"
     ]
    },
    "validation": null
@@ -2108,7 +2108,7 @@
    "view": {
     "zoom": 0.584962,
     "center": [
-     0,
+     33.015728,
      0
     ],
     "bearing": 0,
