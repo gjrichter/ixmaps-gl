@@ -6744,6 +6744,24 @@ self.onmessage = e => {
           });
         });
       }
+      // the page's basemapopacity holds from the first painted frame: set
+      // as soon as the style is read ('style.load', before any tile is
+      // drawn), and again on every later style (a basemap switch). Applied
+      // only at 'load' before, the tiles were already on screen at full
+      // opacity by then — and the splash went with that same 'load', the
+      // chart refresh ahead of the fade blocking the next frame for
+      // seconds on a big map (the referendum peaks page: full basemap,
+      // then faded). 'load' still re-reads the option (see below). Only
+      // when an opacity was asked for (the option, setBasemapOpacity):
+      // otherwise the style keeps its own opacities and zoom expressions.
+      let _basemapOpacityAsked = false;
+      {
+        const o = parseFloat(this._engineOptions.basemapopacity);
+        if (!isNaN(o)) { _basemapOpacity = Math.max(0, Math.min(1, o)); _basemapOpacityAsked = true; }
+        const applyAsked = () => { if (_basemapOpacityAsked) applyBasemapOpacity(); };
+        map.on('style.load', applyAsked);
+        if (map.isStyleLoaded()) applyAsked();
+      }
 
       let _chainedLayers = Promise.resolve();
       // Jump the live map AND make sure deck.gl follows: deck's picking
@@ -6882,6 +6900,7 @@ self.onmessage = e => {
           _basemapOpacity = mode === 'relative'
             ? Math.max(0, Math.min(1, _basemapOpacity + (parseFloat(delta) || 0)))
             : Math.max(0, Math.min(1, parseFloat(delta)));
+          _basemapOpacityAsked = true;
           applyBasemapOpacity();
           return _basemapOpacity;
         },
