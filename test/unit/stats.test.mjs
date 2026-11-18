@@ -568,6 +568,27 @@ test('itemPlotGeometry: flat\'s per-item PLOT layout in chart units (x step 1, y
   assert.ok(area.area[0][1] < 0, 'AREA fills down to the value-0 level, below the chart origin when min > 0');
 });
 
+test('itemPlotGeometry: SMOOTH (interior 3-point mean), symbols "none", LASTARROW (flat 21325, 22908)', () => {
+  const sm = G.itemPlotGeometry([0, 6, 0, 6], { min: 0, max: 6 }, {}, flags('PLOT', 'LINES', 'SMOOTH', 'FIXSIZE'), 6);
+  assert.deepEqual(plain(sm.points.map(p => p.v)), [0, 2, 4, 6], 'first/last raw, interior averaged from the raw neighbours');
+  const none = G.itemPlotGeometry([1, 2, 3], { min: 0, max: 3 }, { symbols: 'none' }, flags('PLOT', 'LINES', 'FIXSIZE'), 3);
+  assert.ok(none.points.every(p => p.r === 0), 'symbols "none": no point markers');
+  const arr = G.itemPlotGeometry([0, 1], { min: 0, max: 1 }, { linewidth: 3, markersize: 1 }, flags('PLOT', 'LINES', 'LASTARROW'), 1);
+  const s = 5 * 1 * (3 / 30);
+  const tip = arr.lastArrow[1];
+  const end = arr.points[1];
+  assert.ok(Math.abs(Math.hypot(tip[0] - end.x, tip[1] - end.y) - (s - s / 1.7)) < 1e-9, 'tip nP·(1 − 1/1.7) past the line end');
+  assert.ok(arr.bbox.x1 >= Math.max(...arr.lastArrow.map(p => p[0])), 'the arrow is inside the bbox');
+  assert.equal(G.itemPlotGeometry([0, 1], { min: 0, max: 1 }, {}, flags('PLOT', 'LINES'), 1).lastArrow, null, 'no LASTARROW: none');
+});
+
+test('donorFillRgba: the FEATURE donor\'s fill for choropleth polygons without data', () => {
+  assert.deepEqual(plain(G.donorFillRgba({ colorscheme: ['#e8e8e8'] }, 0.96)), [232, 232, 232, 255], 'compensated for the layer opacity, capped');
+  assert.deepEqual(plain(G.donorFillRgba({ colorscheme: ['#000000'], fillopacity: 0.4 }, 0.8)), [0, 0, 0, 128]);
+  assert.deepEqual(plain(G.donorFillRgba({ colorscheme: ['none'] }, 1)), [0, 0, 0, 0]);
+  assert.deepEqual(plain(G.donorFillRgba({}, 1)), [0, 0, 0, 0], 'no donor color: transparent, as before');
+});
+
 test('itemAnchor: a point, or the bounding-box center of a polygon\'s largest part', () => {
   assert.deepEqual(plain(G.itemAnchor({ type: 'Point', coordinates: [9, 45] })), [9, 45]);
   const sq = (x, y, s) => [[[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]];

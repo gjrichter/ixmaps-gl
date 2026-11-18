@@ -34,15 +34,15 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "918be6cd39707940",
-     "setDigest": "923cc23223f71a8c",
+     "digest": "b259bdf9ef2f1474",
+     "setDigest": "ad556b669876e35e",
      "columnDigests": {
-      "getFillColor": "8695e2910c7ff394",
+      "getFillColor": "8986f78bdf774f2c",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
       "getFillColor": [
-       0,
+       77,
        253
       ]
      },
@@ -483,7 +483,7 @@
        255
       ],
       "lineWidthMinPixels": 0.08,
-      "opacity": 0.26841,
+      "opacity": 1,
       "pickable": true,
       "stroked": true
      },
@@ -491,15 +491,15 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "918be6cd39707940",
-     "setDigest": "923cc23223f71a8c",
+     "digest": "a2f71b45350f11d0",
+     "setDigest": "e655669b5940ad4b",
      "columnDigests": {
-      "getFillColor": "8695e2910c7ff394",
+      "getFillColor": "0d0a2a595621d75f",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
       "getFillColor": [
-       0,
+       77,
        253
       ]
      },
@@ -508,7 +508,8 @@
        [
         102,
         104,
-        159
+        159,
+        140
        ],
        [
         "Polygon",
@@ -523,7 +524,8 @@
        [
         77,
         185,
-        156
+        156,
+        140
        ],
        [
         "Polygon",
@@ -538,7 +540,8 @@
        [
         84,
         147,
-        164
+        164,
+        140
        ],
        [
         "Polygon",
@@ -553,7 +556,8 @@
        [
         253,
         236,
-        80
+        80,
+        140
        ],
        [
         "Polygon",
@@ -568,7 +572,8 @@
        [
         148,
         218,
-        115
+        115,
+        140
        ],
        [
         "Polygon",
@@ -583,7 +588,8 @@
        [
         84,
         147,
-        164
+        164,
+        140
        ],
        [
         "Polygon",
@@ -598,7 +604,8 @@
        [
         102,
         104,
-        159
+        159,
+        140
        ],
        [
         "Polygon",
@@ -613,7 +620,8 @@
        [
         84,
         147,
-        164
+        164,
+        140
        ],
        [
         "Polygon",
@@ -628,7 +636,8 @@
        [
         253,
         236,
-        80
+        80,
+        140
        ],
        [
         "Polygon",
@@ -643,7 +652,8 @@
        [
         148,
         218,
-        115
+        115,
+        140
        ],
        [
         "Polygon",
@@ -658,7 +668,8 @@
        [
         253,
         236,
-        80
+        80,
+        140
        ],
        [
         "Polygon",
@@ -673,7 +684,8 @@
        [
         148,
         218,
-        115
+        115,
+        140
        ],
        [
         "Polygon",
@@ -688,7 +700,8 @@
        [
         77,
         185,
-        156
+        156,
+        140
        ],
        [
         "MultiPolygon",
@@ -703,7 +716,8 @@
        [
         102,
         104,
-        159
+        159,
+        140
        ],
        [
         "Polygon",
@@ -718,7 +732,8 @@
        [
         148,
         218,
-        115
+        115,
+        140
        ],
        [
         "Polygon",
@@ -733,7 +748,8 @@
        [
         253,
         236,
-        80
+        80,
+        140
        ],
        [
         "Polygon",
@@ -748,7 +764,8 @@
        [
         253,
         236,
-        80
+        80,
+        140
        ],
        [
         "Polygon",
@@ -763,7 +780,8 @@
        [
         104,
         51,
-        117
+        117,
+        140
        ],
        [
         "Polygon",
@@ -778,7 +796,8 @@
        [
         84,
         147,
-        164
+        164,
+        140
        ],
        [
         "MultiPolygon",
@@ -793,7 +812,8 @@
        [
         77,
         185,
-        156
+        156,
+        140
        ],
        [
         "Polygon",
@@ -948,15 +968,15 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "918be6cd39707940",
-     "setDigest": "923cc23223f71a8c",
+     "digest": "b259bdf9ef2f1474",
+     "setDigest": "ad556b669876e35e",
      "columnDigests": {
-      "getFillColor": "8695e2910c7ff394",
+      "getFillColor": "8986f78bdf774f2c",
       "~geometry": "ad62f0ceb140c1e4"
      },
      "stats": {
       "getFillColor": [
-       0,
+       77,
        253
       ]
      },

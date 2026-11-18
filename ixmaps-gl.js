@@ -2499,6 +2499,23 @@ self.onmessage = e => {
     return isolating && unmarkedEvidence(d) === 'hide' ? [0, 0, 0, 0] : lineRgb;
   }
 
+  // the fill a choropleth's FEATURE donor would draw (its _buildFeaturesLayers
+  // one-color fill: colorscheme[0], a generated scheme's first color, × its
+  // fillopacity), divided by the choropleth layer's own opacity so the two
+  // don't multiply; transparent without a donor color or for "none"
+  function donorFillRgba(st, layerOpacity) {
+    const cs = st && st.colorscheme;
+    if (cs == null) return [0, 0, 0, 0];
+    let raw = Array.isArray(cs) ? cs[0] : cs;
+    if (Array.isArray(cs) && isGeneratedColorScheme(cs)) {
+      const sweep = flatColorSweep(cs[1], cs[2], Number(cs[0]) || 5, cs[3], cs[4]);
+      if (sweep && sweep.length) raw = sweep[0];
+    }
+    if (raw == null || raw === 'none') return [0, 0, 0, 0];
+    const a = cssColorAlpha(raw) * (styleNum(st.fillopacity) || 1) / (layerOpacity || 1);
+    return [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * Math.min(1, a))];
+  }
+
   function joinChoroplethFeatures(spec, table, runtimes) {
     // a page can define several FEATURE layers of one name — e.g. the
     // comuni as polygons and as center points (for chart positions); flat
@@ -2526,6 +2543,9 @@ self.onmessage = e => {
     // the donor's own style (outline) — the layer registry is keyed by name,
     // so the same-named CHOROPLETH replaces the donor there and can't find it
     Object.defineProperty(spec, '_donorStyle', { value: geomRt.style, configurable: true });
+    // and the donor itself: it draws its own shapes again while the
+    // choropleth is hidden (flat keeps the base layer's look then)
+    Object.defineProperty(spec, '_donorRuntime', { value: geomRt, configurable: true });
     const idField = geometryIdField(geomRt, geomRt.binding.id);
     const lookupField = spec.binding.lookup;
     if (!idField || !lookupField) {
@@ -9225,8 +9245,21 @@ self.onmessage = e => {
   //   point markers r = 1/3 (FIXSIZE, ÷ normalsizevalue) or ½·(|v| /
   //   max)^(1/sizepow), white outline 1/75, none for 0 values (not STACKED)
   // → { points: [{x, y, v, r}], area: [[x, y]...] | null, bbox, lineWidth }
+  //   SMOOTH: flat's 3-point rolling average of the interior values (the
+  //   first and last keep their raw value, maptheme.js 21325-21335);
+  //   symbols "none": no point markers; LASTARROW: flat's marker-end on the
+  //   last segment (22908-22928) — a triangle nP = 5 · markersize (3) line
+  //   widths, ref (nP / 1.7, nP / 2) on the line end, along the segment
+  // → … lastArrow: [[x, y] × 3] | null, baseY (the value 0 level, FADE)
   function itemPlotGeometry(values, range, style, flags, sizeMax) {
     const n = values.length;
+    if (flags.has('SMOOTH') && n >= 3) {
+      const raw = values;
+      const ok = v => v != null && !isNaN(v);
+      values = raw.map((v, i) => (i === 0 || i === n - 1 || !ok(v) || !ok(raw[i - 1]) || !ok(raw[i + 1])
+        ? v : (raw[i - 1] + v + raw[i + 1]) / 3));
+    }
+    const noMarkers = [].concat(style.symbols == null ? [] : style.symbols).some(s => String(s) === 'none');
     const rs = styleNum(style.rangescale) || 1;
     const span = (range.max - range.min) || 1;
     const k = Math.max(1, n - 1) / span * rs;
@@ -9237,7 +9270,7 @@ self.onmessage = e => {
     const points = values.map((v, i) => {
       if (v == null || isNaN(v)) return null;
       let r = 0;
-      if (!(v === 0 && !flags.has('STACKED'))) {
+      if (!noMarkers && !(v === 0 && !flags.has('STACKED'))) {
         r = flags.has('FIXSIZE') ? 1 / 3 / normal : 0.5 * Math.pow(Math.abs(v) / (sizeMax || 1), 1 / pow);
       }
       return { x: i, y: yOf(v), v, r };
@@ -9267,7 +9300,19 @@ self.onmessage = e => {
       y0b = Math.min(y0b, lastPop.y - lastPop.r - pad); y1b = Math.max(y1b, lastPop.y + lastPop.r + pad);
     }
     if (area) for (const [, y] of area) { y0b = Math.min(y0b, y); y1b = Math.max(y1b, y); }
-    return { points, area, lineWidth, lastPop, bbox: { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad } };
+    let lastArrow = null;
+    if (flags.has('LASTARROW') && flags.has('LINES') && defined.length > 1) {
+      const a = defined[defined.length - 2], b = defined[defined.length - 1];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      if (len > 0) {
+        const s = 5 * (styleNum(style.markersize) || 3) * lineWidth;
+        const ux = (b.x - a.x) / len, uy = (b.y - a.y) / len;
+        const at = (u, v) => [b.x + ux * u - uy * v, b.y + uy * u + ux * v];
+        lastArrow = [at(-s / 1.7, s / 2), at(s - s / 1.7, 0), at(-s / 1.7, -s / 2)];
+        for (const [x, y] of lastArrow) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0b = Math.min(y0b, y); y1b = Math.max(y1b, y); }
+      }
+    }
+    return { points, area, lineWidth, lastPop, lastArrow, baseY: yOf(0), bbox: { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad } };
   }
   // the item's chart anchor: a point, or the bounding-box center of a
   // polygon's largest part (flat places a chart at its shape's position)
@@ -12813,6 +12858,7 @@ self.onmessage = e => {
       this.binding = spec.binding;
       this.style = spec.style;
       this._donorStyle = spec._donorStyle;
+      if (spec._donorRuntime) spec._donorRuntime._choroplethConsumer = this;
       this.flags = symbolsFlagCompat(spec.flags, spec.style);
       this.meta = spec.meta;
       // flat's style.visible (maptheme.js 1971-1978: visible "false" ->
@@ -14534,10 +14580,10 @@ self.onmessage = e => {
       // size of its cell, colored by its class (QUANTILE of the MEAN, the
       // fuel-price page). Only a plain one-color grid (the "grid"
       // companion layer) takes the uniform mesh shortcut.
-      if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox);
+      if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox, globeCenter);
       // PLOT without GRIDSIZE: one line chart per item over its value fields
       // (or over one categorical field: the records of a position, one value per category)
-      if (this.flags.has('PLOT') && (this._isItemPlot() || this._isCategoryItemPlot())) return this._buildItemPlotLayers(zoom, liveZoom);
+      if (this.flags.has('PLOT') && (this._isItemPlot() || this._isCategoryItemPlot())) return this._buildItemPlotLayers(zoom, liveZoom, globeCenter);
       // a plain grid (one color, no values or glow — the Germany page's
       // companion "grid" layer) as one square per cell; a classed GRIDSIZE
       // chart (the fuel-price page) is a symbol chart sized to the grid,
@@ -14563,7 +14609,7 @@ self.onmessage = e => {
       // already provides its own "no data" fallback color for any
       // unmatched polygon, so the donor's fill serves no purpose once
       // superseded.
-      if (this._isChoroplethGeometryDonor) return [];
+      if (this._isChoroplethGeometryDonor && !(this._choroplethConsumer && this._choroplethConsumer._hidden)) return [];
       // flat's WMS theme (one server image over the view) renders here as
       // a native MapLibre raster source+layer managed by syncWmsLayers —
       // not as deck.gl layers — so its own build returns nothing
@@ -14624,11 +14670,16 @@ self.onmessage = e => {
         // "$item$" (or a field list) is no numeric field: a plain FEATURE
         // layer keeps its one fill color
         && this.binding.value && this.binding.value !== '$item$' && !String(this.binding.value).includes('|');
-      const classColorOf = f => {
-        const cls = this._resolvePartsClass(scanValue(f.properties && f.properties[this.binding.value]));
-        return this.classRgb(cls);
-      };
+      const classOf = f => this._resolvePartsClass(scanValue(f.properties && f.properties[this.binding.value]));
+      const classColorOf = f => this.classRgb(classOf(f));
       const catAlpha = Math.round(255 * (styleNum(this.style.fillopacity) || 1));
+      // the layer's own one-color look; flat's paintShape leaves a shape
+      // whose value falls in no class unpainted (e.g. a text field bound as
+      // value, the EV page's NAME_ENGL), so it keeps this look
+      const plainFill = filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * cssColorAlpha(raw) * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0];
+      const plainLine = this.style.linecolor
+        ? withAlpha(hexOrNamedToRgb(styleLineColor(this.style.linecolor)), cssColorAlpha(styleLineColor(this.style.linecolor)))
+        : [130, 130, 130];
       const nodataRgb = parseCssColor(this.style.nodatacolor) || [255, 255, 255];
       const shadow = filled && flatShadowOn(this.style, this.features.length, zoom)
         ? this._buildShadowLayers(hexOrNamedToRgb(raw), zoom, bbox) : [];
@@ -14653,15 +14704,13 @@ self.onmessage = e => {
             const cat = this._resolveClassIndex(f.properties[this.binding.value]);
             return [...(cat != null ? (this.categoryColorsRgb || [])[cat] || nodataRgb : nodataRgb).slice(0, 3), catAlpha];
           }
-          : byClass ? f => [...classColorOf(f).slice(0, 3), catAlpha]
-          : filled ? [...hexOrNamedToRgb(raw).slice(0, 3), Math.round(255 * cssColorAlpha(raw) * (styleNum(this.style.fillopacity) || 1))] : [0, 0, 0, 0],
+          : byClass ? f => (classOf(f) == null ? plainFill : [...classColorOf(f).slice(0, 3), catAlpha])
+          : plainFill,
         getLineColor: byClass
           // flat's paintShape strokes a line shape with its class color
           // (fill:none;stroke:class-color), at stroke-opacity fillopacity
-          ? f => [...classColorOf(f).slice(0, 3), catAlpha]
-          : this.style.linecolor
-          ? withAlpha(hexOrNamedToRgb(styleLineColor(this.style.linecolor)), cssColorAlpha(styleLineColor(this.style.linecolor)))
-          : [130, 130, 130],
+          ? f => (classOf(f) == null ? plainLine : [...classColorOf(f).slice(0, 3), catAlpha])
+          : plainLine,
         lineWidthMinPixels: styleNum(this.style.linewidth) || 1,
         // Confirmed live (2026-09-21, deck.gl v9.4/MapLibre-globe upgrade):
         // this layer's fill rendered with a moire/hatching pattern of
@@ -14870,23 +14919,33 @@ self.onmessage = e => {
       if (this.flags.has('INFOBUBBLE')) this._recordInfoBubbles(
         collection.features.filter(d => hasData(d) && unmarkedEvidence(d) !== 'hide'));
       const grayOf = ([r, g, b]) => { const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b); return [y, y, y]; };
+      // a polygon without a data row keeps the FEATURE base's look in flat;
+      // the base draws nothing here (_isChoroplethGeometryDonor), so it is
+      // painted with the donor's fill, under this layer's opacity
+      const fillAlpha = dopacityActive ? 1 : baseOpacity;
+      const donorFill = donorFillRgba(donorStyle, 1);
+      // flat puts fillopacity into the shapes' fill-opacity only (maptheme.js
+      // 13407, 14071-14078): the polygon outline stays opaque, so the opacity
+      // is baked into the fill colour's alpha (linear in deck.gl 9, unlike
+      // the gamma-encoded layer opacity, see linearOpacity) and the layer is
+      // drawn at opacity 1; DOPACITY's per-item alpha already carries it
       // deck.gl re-runs the color accessors only for new data or a changed trigger
       const colorKey = JSON.stringify([[...this._markedClasses], !!this._onMarksChanged, evidenceMode,
-        this.categoryColorsRgb, fallbackRgb, classAlpha, lineRgb]);
+        this.categoryColorsRgb, fallbackRgb, classAlpha, lineRgb, donorFill, fillAlpha]);
       // flat paints a LINE shape's value color as its STROKE (paintShape on
       // a line shape, szShapeType line — its DOPACITY writes stroke-opacity
       // there too): a choropleth over line geometry, the Milano street lines,
       // shows the value color ON the line; a polygon keeps it as its fill
       const isLineGeometry = d => { const t = d.geometry && d.geometry.type; return t === 'LineString' || t === 'MultiLineString'; };
       const valueColorOf = d => {
-        if (!hasData(d)) return [0, 0, 0, 0];
+        if (!hasData(d)) return isLineGeometry(d) ? [0, 0, 0, 0] : donorFill;
         const rgb = d.properties.composedColor
           || (d.properties.cat != null ? (this.categoryColorsRgb || [])[d.properties.cat] : null) || fallbackRgb;
         const evidence = unmarkedEvidence(d);
         if (evidence === 'hide') return [0, 0, 0, 0];
-        if (evidence === 'gray') return [...grayOf(rgb), 90];
+        if (evidence === 'gray') return [...grayOf(rgb), Math.round(90 * fillAlpha)];
         const a = alphaOfClass(d.properties.cat);
-        return d.properties.dopacityAlpha != null ? [...rgb.slice(0, 3), Math.round(d.properties.dopacityAlpha * a * 255)] : withAlpha(rgb, a);
+        return d.properties.dopacityAlpha != null ? [...rgb.slice(0, 3), Math.round(d.properties.dopacityAlpha * a * 255)] : withAlpha(rgb, a * fillAlpha);
       };
       // flat re-styles the SAME shape nodes the FEATURE base drew, so a line
       // choropleth keeps the base's own line width — the donor's linewidth
@@ -14908,10 +14967,9 @@ self.onmessage = e => {
         getLineColor: !anyLine && !isolating ? lineRgb
           : d => choroplethOutlineColor(isLineGeometry(d), valueColorOf, d, isolating, unmarkedEvidence, lineRgb),
         lineWidthMinPixels: lineW,
-        // per-feature alpha (baked above) already carries the resolved
-        // base opacity — a layer-level opacity on TOP of that would
-        // multiply it a second time.
-        opacity: dopacityActive ? 1 : baseOpacity,
+        // per-feature fill alpha (baked above) already carries the resolved
+        // base opacity; a layer-level opacity would also fade the outlines
+        opacity: 1,
         // Same coplanar z-fighting fix as the FEATURE/FEATURES GeoJsonLayer
         // (see _buildFeaturesLayers' own comment): under globe projection
         // the interleaved polygon surface and MapLibre's own sphere mesh
@@ -15281,7 +15339,7 @@ self.onmessage = e => {
       return explicit ? fields.map((f, i) => String(explicit[i] != null ? explicit[i] : f)) : fields;
     }
 
-    _buildItemPlotLayers(zoom, liveZoom = zoom) {
+    _buildItemPlotLayers(zoom, liveZoom = zoom, globeCenter = null) {
       let items = [];
       let dMin = Infinity, dMax = -Infinity;
       // facet / runtime WHERE / time frame narrow the drawn charts, as in
@@ -15304,6 +15362,10 @@ self.onmessage = e => {
           if (!active || active.has(f)) items.push({ geometry: { type: 'Point', coordinates: pos }, properties: { values, raw: f.properties } });
         }
       }
+      // globe: depthCompare 'always' (ICON_LAYER_GLOBE_PARAMETERS) lets nothing
+      // hide a far-side chart, so those are dropped (the value range above
+      // stays the whole data's)
+      if (globeCenter) items = items.filter(d => isOnVisibleHemisphere(d.geometry.coordinates[0], d.geometry.coordinates[1], globeCenter));
       if (!items.length) return [];
       const sMin = styleNum(this.style.minvalue), sMaxRaw = this.style.maxvalue;
       const autoMax = String(sMaxRaw) === 'auto';
@@ -15341,7 +15403,9 @@ self.onmessage = e => {
         // height in S units × S px
         getSize: d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity).heightUnits * S,
         sizeUnits: 'pixels',
-        updateTriggers: { getSize: [S] }
+        updateTriggers: { getSize: [S] },
+        // globe: MapLibre's sphere surface would otherwise hide the icons
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
       }), ...boxLayers.titles];
     }
 
@@ -15359,8 +15423,30 @@ self.onmessage = e => {
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
       const rgb = color.slice(0, 3).join(',');
-      if (g.area) {
-        ctx.fillStyle = `rgba(${rgb},${isNaN(fillOpacity) ? 1 : fillOpacity})`;
+      const fo = isNaN(fillOpacity) ? 1 : fillOpacity;
+      if (g.area && this.flags.has('FADE')) {
+        // FADE: flat fills the area segment by segment, each with its own
+        // vertical gradient (objectBoundingBox) from opacity 1 at the
+        // segment's top to 0.1 at its bottom, × fill-opacity (22837-22852)
+        const pts = g.points.filter(Boolean);
+        const seam = 0.5 / RASTER;
+        for (let i = 1; i < pts.length; i++) {
+          const a = pts[i - 1], b = pts[i];
+          const top = Math.max(a.y, b.y, g.baseY), bottom = Math.min(a.y, b.y, g.baseY);
+          const grad = ctx.createLinearGradient(0, py(top), 0, py(bottom));
+          grad.addColorStop(0, `rgba(${rgb},${fo})`);
+          grad.addColorStop(1, `rgba(${rgb},${fo * 0.1})`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.moveTo(px(a.x - seam), py(g.baseY));
+          ctx.lineTo(px(a.x - seam), py(a.y));
+          ctx.lineTo(px(b.x), py(b.y));
+          ctx.lineTo(px(b.x), py(g.baseY));
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else if (g.area) {
+        ctx.fillStyle = `rgba(${rgb},${fo})`;
         ctx.beginPath();
         g.area.forEach(([x, y], i) => (i ? ctx.lineTo(px(x), py(y)) : ctx.moveTo(px(x), py(y))));
         ctx.closePath();
@@ -15391,6 +15477,13 @@ self.onmessage = e => {
       if (g.lastPop) {
         ctx.beginPath();
         ctx.arc(px(g.lastPop.x), py(g.lastPop.y), g.lastPop.r * RASTER, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgb(${rgb})`;
+        ctx.fill();
+      }
+      if (g.lastArrow) {
+        ctx.beginPath();
+        g.lastArrow.forEach(([x, y], i) => (i ? ctx.lineTo(px(x), py(y)) : ctx.moveTo(px(x), py(y))));
+        ctx.closePath();
         ctx.fillStyle = `rgb(${rgb})`;
         ctx.fill();
       }
@@ -15451,7 +15544,7 @@ self.onmessage = e => {
     // per-cell (each cell's own local min/max, not a shared reference),
     // optionally stretched/compressed by style.rangescale. This config
     // sets neither minvalue nor maxvalue, so scaling here is automatic.
-    _buildPlotLayers(zoom, bbox) {
+    _buildPlotLayers(zoom, bbox, globeCenter = null) {
       this._ensureGridIndex(zoom);
       let categories = this._plotCategories();
       if (!categories.length) return [];
@@ -15487,10 +15580,15 @@ self.onmessage = e => {
       data.forEach(d => d.properties.values.forEach(v => { if (v > datasetMax) datasetMax = v; if (v < datasetMin) datasetMin = v; }));
       datasetMax = datasetMax || 1;
       if (isNaN(normalSizeValue)) normalSizeValue = datasetMax;
+      // globe: depthCompare 'always' (ICON_LAYER_GLOBE_PARAMETERS) lets nothing
+      // hide a far-side chart, so those are dropped (the scale above stays
+      // the whole grid's)
+      const drawn = globeCenter
+        ? data.filter(d => isOnVisibleHemisphere(d.geometry.coordinates[0], d.geometry.coordinates[1], globeCenter)) : data;
 
       // BOX / TITLE: flat's chart-group box around every chart; the chart is
       // the iconSize square on the cell's center (flat's chart size is 30 units)
-      const boxRows = this._boxRows(data, { unit: iconSize / 30, liveZoom: zoom,
+      const boxRows = this._boxRows(drawn, { unit: iconSize / 30, liveZoom: zoom,
         extentOf: () => [-iconSize / 2, -iconSize / 2, iconSize / 2, iconSize / 2] });
       const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
         unit: iconSize / 30, liveZoom: zoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
@@ -15498,11 +15596,13 @@ self.onmessage = e => {
       }) : { box: [], titles: [] };
       return [...boxLayers.box, new IconLayer({
         id: `ix-plot-${this.name}-g${this._iconGeneration}`,
-        data, pickable: true,
+        data: drawn, pickable: true,
         getPosition: d => d.geometry.coordinates,
         getIcon: d => this._buildPlotIcon(d.properties.values, categories, labels, normalSizeValue, datasetMax, datasetMin),
         getSize: iconSize,
-        sizeUnits: 'pixels'
+        sizeUnits: 'pixels',
+        // globe: MapLibre's sphere surface would otherwise hide the icons
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
       }), ...boxLayers.titles];
     }
 
@@ -20508,6 +20608,20 @@ self.onmessage = e => {
   function compatToggleTheme(...a) {
     new themeApi(null, a.length >= 2 ? a[1] : a[0]).toggle();
   }
+  // flat's ixmaps.showTheme / hideTheme(szThemeId) (htmlgui.js 1889-1908;
+  // htmlgui_flat.js also calls them as (szMap, szTheme)): the theme shown /
+  // hidden, then the page's htmlgui_onDrawTheme(id) hook, as flat
+  function compatSetThemeShown(shown, a) {
+    const id = a.length >= 2 ? a[1] : a[0];
+    const api = new themeApi(null, id);
+    if (shown) api.show(); else api.hide();
+    const hook = global.ixmaps && global.ixmaps.htmlgui_onDrawTheme;
+    if (typeof hook === 'function') {
+      try { hook.call(global.ixmaps, id); } catch (e) { console.error('[ixmaps-gl] htmlgui_onDrawTheme:', e); }
+    }
+  }
+  function compatShowTheme(...a) { compatSetThemeShown(true, a); }
+  function compatHideTheme(...a) { compatSetThemeShown(false, a); }
   function compatSetBasemapOpacity(...a) {
     if (a.length >= 3) {
       const api = (a[0] && _mapApis[a[0]]) || _lastMapApi;
@@ -20544,6 +20658,8 @@ self.onmessage = e => {
     changeThemeStyle: compatChangeThemeStyle,
     removeTheme: compatRemoveTheme,
     toggleTheme: compatToggleTheme,
+    showTheme: compatShowTheme,
+    hideTheme: compatHideTheme,
     // flat's ixmaps.setLocalString(orig, local) (htmlgui.js 3814 →
     // Api.setLocalString → Dictionary.replace): a page-wide translation,
     // e.g. the migration page's ISO code → country name; usable before
@@ -20592,7 +20708,7 @@ self.onmessage = e => {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, donorFillRgba, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb, heatmapColorRange, heatmapWeight,
     mlHeatmapPoints, mlHeatmapWeightMax, mlHeatmapRadius, mlHeatmapPaint, syncNativeHeatmaps, mlHeatLayerId,

@@ -26,7 +26,7 @@
        255
       ],
       "lineWidthMinPixels": 1,
-      "opacity": 0.612066,
+      "opacity": 1,
       "pickable": true,
       "stroked": true
      },
@@ -34,10 +34,10 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "156e49fa45861730",
-     "setDigest": "677b68f9e227b667",
+     "digest": "da0a451a53fa8c53",
+     "setDigest": "5634935dd2261a00",
      "columnDigests": {
-      "getFillColor": "a04c3366800873fe",
+      "getFillColor": "59d83c5ad2b763b8",
       "~geometry": "8b2468fba002e11a"
      },
      "stats": {
@@ -51,7 +51,8 @@
        [
         255,
         0,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -66,7 +67,8 @@
        [
         0,
         255,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -81,7 +83,8 @@
        [
         0,
         0,
-        255
+        255,
+        204
        ],
        [
         "Polygon",
@@ -96,7 +99,8 @@
        [
         255,
         255,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -209,7 +213,7 @@
        255
       ],
       "lineWidthMinPixels": 1,
-      "opacity": 0.612066,
+      "opacity": 1,
       "pickable": true,
       "stroked": true
      },
@@ -217,10 +221,10 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "156e49fa45861730",
-     "setDigest": "677b68f9e227b667",
+     "digest": "da0a451a53fa8c53",
+     "setDigest": "5634935dd2261a00",
      "columnDigests": {
-      "getFillColor": "a04c3366800873fe",
+      "getFillColor": "59d83c5ad2b763b8",
       "~geometry": "8b2468fba002e11a"
      },
      "stats": {
@@ -234,7 +238,8 @@
        [
         255,
         0,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -249,7 +254,8 @@
        [
         0,
         255,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -264,7 +270,8 @@
        [
         0,
         0,
-        255
+        255,
+        204
        ],
        [
         "Polygon",
@@ -279,7 +286,8 @@
        [
         255,
         255,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -392,7 +400,7 @@
        255
       ],
       "lineWidthMinPixels": 1,
-      "opacity": 0.612066,
+      "opacity": 1,
       "pickable": true,
       "stroked": true
      },
@@ -400,10 +408,10 @@
       "getFillColor",
       "~geometry"
      ],
-     "digest": "156e49fa45861730",
-     "setDigest": "677b68f9e227b667",
+     "digest": "da0a451a53fa8c53",
+     "setDigest": "5634935dd2261a00",
      "columnDigests": {
-      "getFillColor": "a04c3366800873fe",
+      "getFillColor": "59d83c5ad2b763b8",
       "~geometry": "8b2468fba002e11a"
      },
      "stats": {
@@ -417,7 +425,8 @@
        [
         255,
         0,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -432,7 +441,8 @@
        [
         0,
         255,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
@@ -447,7 +457,8 @@
        [
         0,
         0,
-        255
+        255,
+        204
        ],
        [
         "Polygon",
@@ -462,7 +473,8 @@
        [
         255,
         255,
-        0
+        0,
+        204
        ],
        [
         "Polygon",
