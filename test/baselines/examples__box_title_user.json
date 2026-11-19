@@ -188,6 +188,7 @@
       ],
       "getLineWidth": 4,
       "lineWidthUnits": "pixels",
+      "pickOnly": true,
       "pickable": true,
       "stroked": true
      },
@@ -507,6 +508,7 @@
       ],
       "getLineWidth": 4,
       "lineWidthUnits": "pixels",
+      "pickOnly": true,
       "pickable": true,
       "stroked": true
      },
@@ -993,6 +995,7 @@
       ],
       "getLineWidth": 4,
       "lineWidthUnits": "pixels",
+      "pickOnly": true,
       "pickable": true,
       "stroked": true
      },
@@ -1312,6 +1315,7 @@
       ],
       "getLineWidth": 4,
       "lineWidthUnits": "pixels",
+      "pickOnly": true,
       "pickable": true,
       "stroked": true
      },
@@ -1798,6 +1802,7 @@
       ],
       "getLineWidth": 4,
       "lineWidthUnits": "pixels",
+      "pickOnly": true,
       "pickable": true,
       "stroked": true
      },
@@ -2117,6 +2122,7 @@
       ],
       "getLineWidth": 4,
       "lineWidthUnits": "pixels",
+      "pickOnly": true,
       "pickable": true,
       "stroked": true
      },

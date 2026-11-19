@@ -6629,6 +6629,12 @@ self.onmessage = e => {
       const overlay = new MapLibreOverlay({
         interleaved: true,
         layers: [],
+        // a layer marked pickOnly (or a sublayer of one — a GeoJsonLayer draws
+        // through its sublayers) takes part in picking only, never in drawing
+        layerFilter: ({ layer, isPicking }) => {
+          for (let l = layer; l; l = l.parent) if (l.props && l.props.pickOnly) return !!isPicking;
+          return true;
+        },
         // pointer becomes a hand over anything pickable (bubbles/points), so
         // hovering something clickable actually looks clickable — except in
         // the 'pan' input mode, where nothing responds to hovering
@@ -16612,8 +16618,14 @@ self.onmessage = e => {
         id: `ix-bubbles-${this.name}`,
         data: { type: 'FeatureCollection', features: pickFeatures },
         pickable: true,
+        // picking only (the overlay's layerFilter): never drawn on the map. These
+        // outlines lie flat on the map, the SVG charts stand upright on screen:
+        // with the map tilted or turned they part, and drawn — even at alpha
+        // 1/255 — some GPUs showed them as grey "shadows" of the arrows (Rome's
+        // long footprint on the cratere page)
+        pickOnly: true,
         filled: true, stroked: true,
-        // alpha 1/255: invisible, but never a fully transparent fragment a renderer might skip
+        // alpha 1/255: never a fully transparent fragment the picking pass might discard
         getFillColor: [0, 0, 0, 1], getLineColor: [0, 0, 0, 1],
         lineWidthUnits: 'pixels', getLineWidth: 4,
         parameters: ICON_LAYER_GLOBE_PARAMETERS
