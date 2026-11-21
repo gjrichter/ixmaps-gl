@@ -12,20 +12,20 @@
   "bytes": 16656
  },
  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json": {
-  "sha256": "fc5bdb44e1d74c0602dd82bba3837b368fe3a96437d0edbbcf96d9dfe96b8a75",
-  "bytes": 70431
+  "sha256": "69118eea14377400803c099063bedd49c577bc59c5d9fbc7fe26b88eee6b84b3",
+  "bytes": 67090
  },
  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json": {
-  "sha256": "a9e202b9696cf1734fddc2e9cd48358ee494efe99135a426323b0bc23522bc61",
-  "bytes": 106878
+  "sha256": "092f54d24babe35e653ad5b31025fbeb0a43e1670d2b5c1c532d7d5cd5d0bb33",
+  "bytes": 66798
  },
  "https://cdn.jsdelivr.net/gh/gjrichter/data.js/data.js": {
-  "sha256": "7b22a17c33961eb4b5e031f7d7f191dd09be7ec436b8442467b4099063d4fe1f",
-  "bytes": 423220
+  "sha256": "91682449f3c2a563a32ede957970fb618cfcce8ce4057cfca8a674d16b0db625",
+  "bytes": 431940
  },
  "https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js": {
-  "sha256": "7b22a17c33961eb4b5e031f7d7f191dd09be7ec436b8442467b4099063d4fe1f",
-  "bytes": 423220
+  "sha256": "91682449f3c2a563a32ede957970fb618cfcce8ce4057cfca8a674d16b0db625",
+  "bytes": 431940
  },
  "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@7bb685b882be08d83c132e68bc8832150673a7e8/by-project/uk-collisions-2023/collisions.csv": {
   "sha256": "88509492624ceca7b95dd1032add7a20a8f9659afea31883ad8ee2b4acdf4cd3",
@@ -208,7 +208,7 @@
   "bytes": 151725
  },
  "https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap": {
-  "sha256": "5987aeacae72aaa340a337aad8e1ca7c1d0a428b3305a8574687aa5f813a9932",
+  "sha256": "d9093050ef621b1dc00c8cc9dbb11567567c55835445a848d708b2b3adb9912b",
   "bytes": 7368
  },
  "https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K6z9mXg.woff2": {
