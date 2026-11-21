@@ -18079,7 +18079,11 @@ self.onmessage = e => {
           // character: €" and no glyph)
           characterSet: 'auto',
           getTextAnchor: 'middle',
-          getAlignmentBaseline: 'center'
+          getAlignmentBaseline: 'center',
+          // on MapLibre 3D terrain the texts sit at sea level, under the
+          // terrain surface: with the depth test they vanish while the
+          // bubbles under them (also depthCompare 'always') stay
+          parameters: { depthCompare: 'always' }
         };
         // flat's SYMBOL branch writes its values in normal weight
         if (shownPointLabels.length) layers.push(new TextLayer({ id: `ix-points-values-${this.name}`, data: shownPointLabels, getPixelOffset: d => d.pixelOffset, ...textLayerCommonProps,
