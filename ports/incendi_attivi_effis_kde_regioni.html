@@ -996,7 +996,7 @@ var __actualizeUrl = function () {
 // this map's own default zoom (~6) sits just below the zero-crossing, matching the
 // reference's own default view.
 function updateBasemapOpacity() {
-    var nOpacity = (ixmaps.getZoom() - 7) / 2;
+    var nOpacity = (ixmaps.getZoom() - 5) / 2;
     try { ixmaps.map().setBasemapOpacity(nOpacity, "absolute"); } catch (e) {}
 }
 

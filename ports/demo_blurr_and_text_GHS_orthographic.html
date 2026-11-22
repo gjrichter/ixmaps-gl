@@ -52,7 +52,7 @@
             Data.feed({
                 source: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Copernicus/GHS/ghs_ucdb_r2024a_parquet/ucdb_emissions.parquet",
                 type: "parquet",
-                columns: ["ID_UC_G0", "GC_POP_TOT_2025", "EM_PM2_TOT_2024", "geometry"]
+                columns: ["ID_UC_G0", "GC_POP_TOT_2025", "EM_PM2_CON_2020", "geometry"]
                 }).load(function (mydata) { 
                         ixmaps.setExternalData(mydata, {
                             type: "dbtable",
@@ -126,16 +126,16 @@
                     type: "ext"
                 })
                 .binding({
-                    value: "EM_PM2_TOT_2024",
+                    value: "EM_PM2_CON_2020",
                     position: "geometry"
                 })
-                .type("GLOW|CHART|BUBBLE|AGGREGATE|MEAN")
+                .type("GLOW|CHART|BUBBLE")
                 .style({
                     colorscheme: ["15", "#F2F226", "#100050", "3colors", "#CC4878"],
                     opacity: "0.5",
-                    fillopacity: "0.0001",
+                    fillopacity: "0.00001",
                     textcolor: "black",
-                    scale: "1",
+                    scale: "0.3",
                     linecolor: ["none"],
                     gridwidthpx: "3",
                     title: "Concertation of PM2.5 in 2014",
@@ -152,13 +152,14 @@
                     type: "ext"
                 })
                 .binding({
-                    value: "EM_PM2_TOT_2024",
+                    value: "EM_PM2_CON_2020",
                     position: "geometry"
                 })
                 .type("CHART|LABEL|QUANTILE|VALUES|LEGEND")
                 .style({
                     colorscheme: ["5", "#F2F226", "#000000", "3colors", "#D2E216"],
-                    fillopacity: "0.1",
+                    fillopacity: "0.00001",
+                    linecolor: "rgba(0,0,0,0)",
                     textcolor: "black",
                     units: "μg",
                     units100: "",
