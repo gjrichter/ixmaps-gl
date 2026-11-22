@@ -17,11 +17,28 @@
  *
  * Options in the layer definition:
  *   .data({type: "ext", name: "dataquery_pmtiles", url: "<pmtiles url>"})
- * The archive must contain MVT tiles with a layer named LAYER_NAME and
- * properties on the features (id, type, subtype, height, ...). Buildings
- * clipped at tile borders (fragments share the same 'id' property) are
- * stitched back into whole polygons, so layer transparency shows no seams
- * along tile bounds and split buildings count once in the legend.
+ * The defaults below suit the EUBUCCO buildings archive. Any other archive
+ * sets what differs, as extra keys of the same .data({...}) call:
+ *   layer       MVT layer name inside the tiles           (default "buildings")
+ *   minzoom     flat zoom below which nothing is queried  (default 13)
+ *   tilemin     lowest tile zoom the archive holds        (default 12)
+ *   tilemax     highest tile zoom the archive holds       (default 14)
+ *   stitch      feature property that identifies the pieces of a polygon
+ *               clipped at tile borders, which are unioned back together;
+ *               "false" disables (use when the features have no such id)
+ *                                                         (default "id")
+ *   maxtiles    viewport tile budget for one query        (default 16)
+ *   maxfeatures abort above this feature count            (default 150000)
+ *   label       what the features are, for the status box (default "buildings")
+ * The archive must contain MVT tiles with the named layer and properties on
+ * the features. With stitching on, polygons clipped at tile borders
+ * (fragments share the same id property) are stitched back into whole
+ * polygons, so layer transparency shows no seams along tile bounds and
+ * split polygons count once in the legend.
+ *
+ * Several themes may use this provider on one page, each with its own archive
+ * and options (e.g. two PMTiles hazard layers): the archive handle, options
+ * and loaded tile zoom are kept per theme, the viewport bounds are shared.
  */
 
 window.ixmaps = window.ixmaps || {};
@@ -29,34 +46,37 @@ window.ixmaps = window.ixmaps || {};
 
 	"use strict";
 
-	const MIN_ZOOM = 13;          // flat zoom gate (below: no query, show hint)
 	const DEBOUNCE_MS = 500;
 	const BBOX_PADDING = 0.1;     // 10% padding around the viewport
-	const MAX_FEATURES = 150000;  // abort with error above this feature count
-	const MAX_TILES = 16;         // viewport tile budget for one query
 
-	// archive tile zoom range: EUBUCCO's header says 12-15, but z15 is only
-	// sparsely populated - z14 is the effective coverage zoom (the eubucco
-	// map pins maxzoom 14 for the same reason; beyond, tiles are overzoomed)
-	const TILE_MIN_ZOOM = 12;
-	const TILE_MAX_ZOOM = 14;
+	// per-archive defaults (EUBUCCO buildings); every key can be overridden in
+	// the layer's .data({...}) - see the header
+	//   minzoom: flat zoom gate (below: no query, show hint)
+	//   tilemin/tilemax: archive tile zoom range - EUBUCCO's header says 12-15,
+	//     but z15 is only sparsely populated - z14 is the effective coverage zoom
+	//     (the eubucco map pins maxzoom 14 for the same reason; beyond, tiles
+	//     are overzoomed)
+	const DEFAULTS = {
+		layer: "buildings", minzoom: 13, tilemin: 12, tilemax: 14,
+		stitch: "id", maxtiles: 16, maxfeatures: 150000, label: "buildings"
+	};
 
 	const PMTILES_LIB = "https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js";
 	const VECTORTILE_LIB = "https://esm.sh/@mapbox/vector-tile@1.3.1";
 	const PBF_LIB = "https://esm.sh/pbf@3.2.1";
 	const POLYGONCLIPPING_LIB = "https://esm.sh/polygon-clipping@0.15.3";
-	const LAYER_NAME = "buildings";
 
 	// ixmaps-gl: flat zoom = MapLibre zoom + 1 (FLAT_ZOOM_OFFSET in the engine);
 	// the tile zoom is chosen from the MapLibre zoom
 	const FLAT_ZOOM_OFFSET = 1;
 
-	let szThemeUrl = "";
 	let szThemeNameA = [];
 	let __oldBounds = null;
-	let __loadedTileZoom = null;  // tile zoom of the last successful query
+	let __cfgA = {};              // theme name -> its resolved options
+	let __loadedTileZoomA = {};   // theme name -> tile zoom of its last successful query
+	let __loadedBoundsA = {};     // theme name -> viewport bounds of its last query
 
-	let __pmtilesInstance = null;
+	const __pmtilesInstances = new Map();   // archive url -> PMTiles handle
 	let __VectorTile = null;
 	let __Pbf = null;
 	let __polygonUnion = null;
@@ -70,13 +90,26 @@ window.ixmaps = window.ixmaps || {};
 	// Library loading
 	// -------------------------------------------------------------------------
 
-	function __ensurePmtiles() {
-		if (__pmtilesInstance) return Promise.resolve(__pmtilesInstance);
+	// the option values arrive as strings or numbers (.data() may be JSON)
+	function __resolveConfig(option) {
+		const cfg = Object.assign({}, DEFAULTS);
+		for (const k of Object.keys(DEFAULTS)) {
+			if (option[k] == null || option[k] === "") continue;
+			cfg[k] = (typeof DEFAULTS[k] === "number") ? Number(option[k]) : option[k];
+		}
+		if (cfg.stitch === false || String(cfg.stitch).toLowerCase() === "false") cfg.stitch = null;
+		cfg.url = option.ext;
+		return cfg;
+	}
+
+	function __ensurePmtiles(url) {
+		if (__pmtilesInstances.has(url)) return Promise.resolve(__pmtilesInstances.get(url));
 		return new Promise((resolve, reject) => {
 			const create = () => {
 				try {
-					__pmtilesInstance = new window.pmtiles.PMTiles(szThemeUrl);
-					resolve(__pmtilesInstance);
+					const inst = new window.pmtiles.PMTiles(url);
+					__pmtilesInstances.set(url, inst);
+					resolve(inst);
 				} catch (e) {
 					reject(e);
 				}
@@ -134,7 +167,7 @@ window.ixmaps = window.ixmaps || {};
 		}
 		if ( nRefresh === 0 ) {
 			__oldBounds = __noBounds();
-			__loadedTileZoom = null;
+			__loadedTileZoomA = {};
 		}
 	}
 
@@ -151,8 +184,8 @@ window.ixmaps = window.ixmaps || {};
 	// -------------------------------------------------------------------------
 
 	// tile zoom for a flat zoom, clamped to the archive's coverage range
-	function __tileZoomFor(nFlatZoom) {
-		return Math.max(TILE_MIN_ZOOM, Math.min(TILE_MAX_ZOOM, Math.round(nFlatZoom - FLAT_ZOOM_OFFSET)));
+	function __tileZoomFor(cfg, nFlatZoom) {
+		return Math.max(cfg.tilemin, Math.min(cfg.tilemax, Math.round(nFlatZoom - FLAT_ZOOM_OFFSET)));
 	}
 
 	// latitude -> fractional tile y at zoom z (Mercator, clamp at the poles)
@@ -187,13 +220,15 @@ window.ixmaps = window.ixmaps || {};
 	// seams along the tile bounds - so fragments of the same id are unioned
 	// back into the whole building polygon.
 
-	function __stitchTileFragments(features) {
-		if (!__polygonUnion) return features;
+	// idProp: the feature property that identifies the pieces of one polygon
+	// (null: no stitching - features without such an id cannot be matched)
+	function __stitchTileFragments(features, idProp) {
+		if (!__polygonUnion || !idProp) return features;
 
 		// group features by source id
 		const groups = new Map();
 		for (const f of features) {
-			const pid = (f.properties && f.properties.id != null) ? String(f.properties.id) : null;
+			const pid = (f.properties && f.properties[idProp] != null) ? String(f.properties[idProp]) : null;
 			if (pid == null) continue;
 			const g = groups.get(pid);
 			if (g) g.push(f); else groups.set(pid, [f]);
@@ -226,7 +261,7 @@ window.ixmaps = window.ixmaps || {};
 		// rebuild: a merged group contributes only its first (stitched) feature
 		const out = [];
 		for (const f of features) {
-			const pid = (f.properties && f.properties.id != null) ? String(f.properties.id) : null;
+			const pid = (f.properties && f.properties[idProp] != null) ? String(f.properties[idProp]) : null;
 			if (pid == null || !mergedIds.has(pid)) { out.push(f); continue; }
 			if (groups.get(pid)[0] === f) out.push(f);
 		}
@@ -239,25 +274,27 @@ window.ixmaps = window.ixmaps || {};
 
 	ixmaps.dataquery_pmtiles = async function (data, option) {
 
-		szThemeNameA[option.theme.szName] = option.theme.szName;
-		szThemeUrl = option.ext;
+		const szTheme = option.theme.szName;
+		szThemeNameA[szTheme] = szTheme;
+		const cfg = (__cfgA[szTheme] = __resolveConfig(option));
 
-		if (!szThemeUrl) {
+		if (!cfg.url) {
 			ixmaps.setTitleBox("error while loading: no data url", "RGBA(128,0,0,0.5)");
 			__oldBounds = __noBounds();
 			ixmaps.setExternalData(__emptyTable(), { type: "jsonDB", name: option.name });
 			return;
 		}
 
-		if (ixmaps.getZoom() < MIN_ZOOM) {
-			ixmaps.setTitleBox("zoom in to load buildings ...");
+		if (ixmaps.getZoom() < cfg.minzoom) {
+			ixmaps.setTitleBox("zoom in to load " + cfg.label + " ...");
 			__oldBounds = __noBounds();
-			__loadedTileZoom = null;
+			delete __loadedTileZoomA[szTheme];
 			ixmaps.setExternalData(__emptyTable(), { type: "jsonDB", name: option.name });
 			return;
 		}
 
 		let bounds = (__oldBounds = ixmaps.getBoundingBox());
+		__loadedBoundsA[szTheme] = bounds;
 
 		// bbox with padding, so small pans don't re-fetch
 		let width = bounds[1].lng - bounds[0].lng;
@@ -273,25 +310,25 @@ window.ixmaps = window.ixmaps || {};
 		ixmaps.in_query = true;
 
 		try {
-			const pmtiles = await __ensurePmtiles();
+			const pmtiles = await __ensurePmtiles(cfg.url);
 			await __ensureVectorTile();
 
 			// tile zoom from the MapLibre zoom, clamped to the archive's coverage
-			const z = __tileZoomFor(ixmaps.getZoom());
-			__loadedTileZoom = z;
+			const z = __tileZoomFor(cfg, ixmaps.getZoom());
+			__loadedTileZoomA[szTheme] = z;
 
 			const tiles = __tileCover(bbox, z);
-			if (tiles.length > MAX_TILES) {
-				throw new Error("viewport covers " + tiles.length + " tiles (limit " + MAX_TILES + ") - zoom in");
+			if (tiles.length > cfg.maxtiles) {
+				throw new Error("viewport covers " + tiles.length + " tiles (limit " + cfg.maxtiles + ") - zoom in");
 			}
 
 			const incoming = [];
 			await Promise.all(tiles.map(async (t) => {
-				// missing tile = area without buildings (normal, not an error)
+				// missing tile = area without features (normal, not an error)
 				const resp = await pmtiles.getZxy(z, t.x, t.y);
 				if (!resp) return;
 				const tile = new __VectorTile(new __Pbf(resp.data));
-				const layer = tile.layers[LAYER_NAME];
+				const layer = tile.layers[cfg.layer];
 				if (!layer) return;
 				for (let i = 0; i < layer.length; i++) {
 					incoming.push(layer.feature(i).toGeoJSON(t.x, t.y, z));
@@ -299,12 +336,12 @@ window.ixmaps = window.ixmaps || {};
 			}));
 
 			// one tile zoom for the whole screen: a uniform polygon resolution
-			// reads better than mixing LOD levels across the view; buildings
+			// reads better than mixing LOD levels across the view; polygons
 			// clipped at tile borders are stitched back into whole polygons
-			const features = __stitchTileFragments(incoming);
+			const features = __stitchTileFragments(incoming, cfg.stitch);
 
-			if (features.length > MAX_FEATURES) {
-				throw new Error("viewport selects " + features.length.toLocaleString() + " buildings (limit " + MAX_FEATURES.toLocaleString() + ") - zoom in");
+			if (features.length > cfg.maxfeatures) {
+				throw new Error("viewport selects " + features.length.toLocaleString() + " " + cfg.label + " (limit " + cfg.maxfeatures.toLocaleString() + ") - zoom in");
 			}
 
 			ixmaps.setTitle("");
@@ -315,7 +352,7 @@ window.ixmaps = window.ixmaps || {};
 		} catch (e) {
 			ixmaps.setTitleBox("error while loading: " + (e && e.message ? e.message : e), "RGBA(128,0,0,0.5)");
 			__oldBounds = __noBounds();
-			__loadedTileZoom = null;
+			delete __loadedTileZoomA[szTheme];
 			ixmaps.setExternalData(__emptyTable(), { type: "jsonDB", name: option.name });
 		} finally {
 			ixmaps.in_query = false;
@@ -335,6 +372,25 @@ window.ixmaps = window.ixmaps || {};
 			bounds[1].lng <= __oldBounds[1].lng
 		);
 	}
+
+	// A theme that was hidden while the map was panned/zoomed is not refreshed
+	// by the hook below (only visible themes are), so it still holds the data of
+	// an older viewport. Showing a theme runs htmlgui_onDrawTheme(id): there,
+	// reload the theme if its viewport no longer covers the current one.
+	const __oldDrawHook = ixmaps.htmlgui_onDrawTheme;
+	ixmaps.htmlgui_onDrawTheme = function (szId) {
+		if (__oldDrawHook) __oldDrawHook.apply(this, arguments);
+		try {
+			if (!szThemeNameA[szId] || ixmaps.in_query) return;
+			if (!__isThemeVisible(ixmaps.getThemeObj && ixmaps.getThemeObj(szId))) return;
+			const loaded = __loadedBoundsA[szId];
+			const b = ixmaps.getBoundingBox();
+			const covered = loaded &&
+				b[0].lat >= loaded[0].lat && b[0].lng >= loaded[0].lng &&
+				b[1].lat <= loaded[1].lat && b[1].lng <= loaded[1].lng;
+			if (!covered) ixmaps.refreshTheme(szId);
+		} catch (e) { /* a refresh problem must never break the draw hook */ }
+	};
 
 	// the previous hook, captured ONCE at load: a shared 'htmlgui_onZoomAndPan_old'
 	// property gets overwritten when a second provider loads, and this wrapper
@@ -368,8 +424,11 @@ window.ixmaps = window.ixmaps || {};
 		// (lower zooms drop tiny polygons), so data loaded for a zoomed-out
 		// view must not be reused when zooming back in - it would leave holes
 		// where the dropped buildings were.
+		// (every theme of this provider must still be at its own loaded tile zoom)
 		let nFlatZoom = (nZoom != null ? nZoom : ixmaps.getZoom());
-		if (__boundsInsideOld(bounds) && __tileZoomFor(nFlatZoom) === __loadedTileZoom) {
+		const __allAtLoadedZoom = Object.keys(szThemeNameA).every(
+			n => __cfgA[n] && __tileZoomFor(__cfgA[n], nFlatZoom) === __loadedTileZoomA[n]);
+		if (__boundsInsideOld(bounds) && __allAtLoadedZoom) {
 			ixmaps.setTitle("");
 			if (__oldZoomHook) __oldZoomHook(nZoom);
 			return;

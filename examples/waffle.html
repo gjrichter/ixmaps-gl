@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WAFFLE · value fields and AGGREGATE categories</title>
+<script src="../ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #caption {
+    position: absolute; top: 1em; left: 1em; z-index: 10; max-width: 320px;
+    background: rgba(255,255,255,0.92); padding: 0.6em 1em; border-radius: 6px;
+    font-size: 0.9em; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  #caption b { display: block; margin-bottom: 0.2em; }
+  #caption span { opacity: 0.75; }
+  #back { display: inline-block; margin-top: 0.5em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="caption">
+  <b>WAFFLE</b>
+  <span>A square per count. North: CHART|WAFFLE|SORT, three value fields per city. South: CHART|WAFFLE|CATEGORICAL|AGGREGATE, a square per record of each place, a part per kind. Twin on real flat: waffle_svg.html.</span>
+  <a id="back" href="index.html">&larr; all examples</a>
+</div>
+<script>
+  var fields = ixmaps.layer("cities", layer => layer
+    .data({ url: "waffle_fields.csv", type: "csv", name: "wafflefields", cache: "true" })
+    .binding({ position: "lat|lon", value: "small|medium|large", title: "name" })
+    .type("CHART|WAFFLE|SORT")
+    .style({ colorscheme: ["#e8a33d", "#3d8fe8", "#7a3de8"], label: ["small", "medium", "large"], fillopacity: "1" })
+    .meta({ title: "Counts per city", tooltip: "<b>{{name}}</b><br>{{theme.item.chart}}" })
+  );
+  var kinds = ixmaps.layer("transit", layer => layer
+    .data({ url: "waffle_categories.csv", type: "csv", name: "wafflekinds", cache: "true" })
+    .binding({ position: "lat|lon", value: "kind" })
+    .type("CHART|WAFFLE|CATEGORICAL|AGGREGATE")
+    .style({ colorscheme: ["#d6402c", "#2c9d6a", "#555555"], values: ["bus", "tram", "metro"], fillopacity: "1" })
+    .meta({ title: "Records by kind" })
+  );
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "true" },
+    map => map.view([42.6, 12.3], 6).options({ objectscaling: "true" }).layer(fields).layer(kinds)
+  );
+</script>
+</body>
+</html>
