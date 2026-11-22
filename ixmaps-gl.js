@@ -73,13 +73,17 @@
 // (_buildVectorLayers; VALUES, DYNAMICWIDTH, LONG and the DASH animation
 // are noted, see VECTOR_INERT_FLAGS), CHART|BAR (and BARS) a bar chart
 // per record or aggregated item, a bar per value field or category, flat's
-// sizing, HORZ / STACKED / SORT, POINTER and ARROW pointers, VALUES texts,
-// BOX and TITLE (_buildBarLayers; 3D, VOLUME, DOTTED, TRENDLINE, the axis
-// labels … are noted, drawn plain, see BAR_INERT_FLAGS). These
+// sizing, HORZ / STACKED / SORT, POINTER and ARROW pointers, VALUES and
+// XAXIS texts, BOX and TITLE (_buildBarLayers; 3D, VOLUME, DOTTED, TRENDLINE
+// … are noted, drawn plain, see BAR_INERT_FLAGS), CHART|WAFFLE a
+// square per count, a part per value field or category, per record or per
+// AGGREGATE / CATEGORICAL item (_buildWaffleLayers, flatWaffleLayout;
+// AUTOSIZE sizing, CLIP / MORPH are noted, see
+// WAFFLE_INERT_FLAGS). These
 // base types are dispatched by buildDeckLayers in the real engine's own
 // precedence order — DOT is checked first because the real engine's DOT
 // bypasses the whole drawChart/modifier pipeline rather than being
-// "BUBBLE with the size locked." Other real base types (QUAD, WAFFLE,
+// "BUBBLE with the size locked." Other real base types (QUAD, BUFFER,
 // and SYMBOL's own shape variants) are NOT
 // implemented yet — adding one means a new _buildXLayers() method plus a
 // dispatch line, not a rewrite, but each should be added deliberately
@@ -1005,6 +1009,34 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const c = dataConfig && dataConfig.cache;
     return c === false || (typeof c === 'string' && c.trim().toLowerCase() === 'false');
   }
+  // .data({preload: true}) on a theme held back by scale: its file is
+  // downloaded once the map is idle (see preloadDeferredData) and kept as
+  // a Blob — not decoded or parsed, which would block the page — until the
+  // theme comes into scale and fetchData hands it over, once. A failed
+  // preload is dropped and the theme fetches as usual.
+  const _preloads = new Map(); // url → Promise<Blob>
+  function preloadData(url) {
+    if (_preloads.has(url)) return;
+    const p = fetch(url).then(resp => {
+      if (!resp.ok) throw new Error(`[ixmaps-gl] data.preload: failed to fetch ${url}: ${resp.status}`);
+      return resp.blob();
+    });
+    p.catch(() => { if (_preloads.get(url) === p) _preloads.delete(url); });
+    _preloads.set(url, p);
+  }
+  async function fetchData(url) {
+    const p = _preloads.get(url);
+    if (p) {
+      _preloads.delete(url);
+      try { return new Response(await p); } catch (err) { /* fetched below */ }
+    }
+    return fetch(url);
+  }
+  function isPreloadWanted(data) {
+    const v = data && data.preload;
+    return v === true || (typeof v === 'string' && v.trim().toLowerCase() === 'true');
+  }
+
   // cache: Map key → Promise; a failed load is not kept (the next theme tries again)
   function cachedLayerData(cache, data, binding, engineOptions, { reload = false } = {}) {
     const key = dataCacheKey(data, binding);
@@ -1651,7 +1683,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (dataConfig.type === 'csv') {
       const urls = dataConfig.urls || [dataConfig.url];
       const texts = await Promise.all(urls.map(async url => {
-        const resp = await fetch(url);
+        const resp = await fetchData(url);
         if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${url}: ${resp.status}`);
         return resp.text();
       }));
@@ -1699,7 +1731,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     if (dataConfig.type === 'topojson' || dataConfig.type === 'geojson') {
       // read by this engine itself: features directly (data.js would turn
       // them into a table with a geometry column, and back)
-      const resp = await fetch(dataConfig.url);
+      const resp = await fetchData(dataConfig.url);
       if (!resp.ok) throw new Error(`[ixmaps-gl] failed to fetch ${dataConfig.url}: ${resp.status}`);
       if (dataConfig.type === 'topojson') return processFeatureCollection(topojsonToFeatureCollection(await resp.json(), dataConfig.object), dataConfig);
       return processFeatureCollection(sanitizeGeoJSON(await resp.json()), dataConfig);
@@ -2424,6 +2456,151 @@ self.onmessage = e => {
     };
   }
 
+  // ── .data({type:"pmtiles", url, layer}) — a theme MapLibre draws ITSELF from a PMTiles vector
+  // archive. The definition is an ordinary ixmaps theme (binding, FEATURE|CHOROPLETH|CATEGORICAL,
+  // style.colorscheme / values / fillopacity / linecolor, meta); only the data line differs, and the
+  // engine loads no records: the archive is a native `vector` source (HTTP range requests, tiles
+  // streamed and cached by MapLibre) and the theme a `fill` layer (+ a `line` layer for an outline),
+  // put BEFORE the first deck.gl layer so charts and symbols stay on top. No zoom gate, no feature
+  // cap, no tile-edge seams — and no per-feature items: version 1 has neither tooltip nor click, and
+  // the legend shows classes and colors without counts (there are no records to count).
+  //   data.url    the .pmtiles archive (absolute, or relative to the page)
+  //   data.layer  the MVT layer inside the tiles (required: the tiles can hold several)
+  // The classes are the CATEGORICAL ones: style.values → the colorscheme (classRgb), matched on the
+  // binding.value property; a theme without classes gets its one FEATURE fill color.
+  const PMTILES_LIB_URL = 'https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js';
+  const mlPmtilesId = rt => 'ixmaps-pmt:' + String(themeIdOf(rt)).replace(/[^a-zA-Z0-9_-]/g, '_');
+  let _pmtilesProtocol = null;       // Promise: the pmtiles:// protocol is registered with MapLibre
+  let _pmtilesProtocolReady = false;
+  function ensurePmtilesProtocol() {
+    if (_pmtilesProtocol) return _pmtilesProtocol;
+    _pmtilesProtocol = new Promise((resolve, reject) => {
+      const register = () => {
+        try {
+          global.maplibregl.addProtocol('pmtiles', new global.pmtiles.Protocol().tile);
+          _pmtilesProtocolReady = true;
+          resolve();
+        } catch (e) { reject(e); }
+      };
+      if (global.pmtiles) { register(); return; }
+      const script = document.createElement('script');
+      script.src = PMTILES_LIB_URL;
+      script.onload = register;
+      script.onerror = () => reject(new Error('failed to load pmtiles.js from ' + PMTILES_LIB_URL));
+      document.head.appendChild(script);
+    });
+    _pmtilesProtocol.catch(() => { _pmtilesProtocol = null; });   // a later rebuild may retry
+    return _pmtilesProtocol;
+  }
+  const rgbCss = c => 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+  // the fill color expression: one color per class label (a CATEGORICAL theme), else the one FEATURE fill
+  function mlPmtilesFillColor(rt) {
+    const field = rt.binding && rt.binding.value;
+    const labels = rt.categoryLabels;
+    if (field && labels && labels.length && rt.categoryColorsRgb) {
+      const expr = ['match', ['to-string', ['get', field]]];
+      const seen = new Set();
+      labels.forEach((label, i) => {
+        const c = rt.categoryColorsRgb[i];
+        if (seen.has(String(label)) || !c) return;   // a repeated label would make MapLibre reject the expression
+        seen.add(String(label));
+        expr.push(String(label), rgbCss(c));
+      });
+      expr.push('rgba(0,0,0,0)');                   // a value outside the classes is not drawn
+      return expr;
+    }
+    const d = donorFillRgba(rt.style, 1);
+    return 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
+  }
+  // the classes marked in the legend isolate them (as for any theme): a native filter
+  function mlPmtilesFilter(rt) {
+    const field = rt.binding && rt.binding.value;
+    if (!field || !rt._markedClasses || !rt._markedClasses.size || !rt.categoryLabels) return null;
+    const marked = [...rt._markedClasses].map(i => String(rt.categoryLabels[i]));
+    return ['in', ['to-string', ['get', field]], ['literal', marked]];
+  }
+  function removeNativePmtiles(map, id) {
+    [id + ':line', id].forEach(l => { try { if (map.getLayer(l)) map.removeLayer(l); } catch (e) { /* already gone */ } });
+    try { if (map.getSource(id)) map.removeSource(id); } catch (e) { /* already gone */ }
+  }
+  function syncNativePmtiles(map, runtimes, owned) {
+    if (!map || typeof map.getLayer !== 'function') return;
+    const desired = runtimes.filter(rt => rt.flags && rt.flags.has('MLPMTILES'));
+    if (!desired.length && !owned.size) return;
+    const wanted = new Set(desired.map(mlPmtilesId));
+    [...owned].forEach(id => {
+      if (wanted.has(id)) return;
+      owned.delete(id);
+      removeNativePmtiles(map, id);
+    });
+    if (!desired.length) return;
+    if (!_pmtilesProtocolReady) {
+      // the first sync loads pmtiles.js and registers the protocol, then syncs again
+      ensurePmtilesProtocol().then(() => syncNativePmtiles(map, runtimes, owned),
+        err => console.warn('[ixmaps-gl] PMTiles theme not drawn:', err && err.message ? err.message : err));
+      return;
+    }
+    desired.forEach(rt => {
+      const id = mlPmtilesId(rt);
+      const st = rt._mlPmt || (rt._mlPmt = {});
+      try {
+        const data = (rt._definition && rt._definition.data) || {};
+        const url = data.url || data.ext;
+        const srcLayer = data.layer;
+        if (!url) throw new Error('.data({type:"pmtiles"}) needs a url');
+        if (!srcLayer) throw new Error('.data({type:"pmtiles"}) needs layer: the MVT layer name inside the archive');
+        const source = 'pmtiles://' + new URL(url, global.location.href).href;
+        const existing = map.getSource(id);
+        if (existing && existing.url !== source) removeNativePmtiles(map, id);   // the theme was redefined on another archive
+        if (!map.getSource(id)) map.addSource(id, { type: 'vector', url: source });
+        owned.add(id);
+        const style = rt.style || {};
+        const fo = styleNum(style.fillopacity);
+        const fillPaint = { 'fill-color': mlPmtilesFillColor(rt), 'fill-opacity': fo > 0 ? Math.min(1, fo) : 0.8 };
+        const before = mlFirstCustomLayerId(map);
+        const fillKey = JSON.stringify(fillPaint);
+        if (!map.getLayer(id)) {
+          map.addLayer({ id, type: 'fill', source: id, 'source-layer': srcLayer, paint: fillPaint }, before);
+          st.fillKey = fillKey;
+        } else if (st.fillKey !== fillKey) {
+          Object.keys(fillPaint).forEach(k => map.setPaintProperty(id, k, fillPaint[k]));
+          st.fillKey = fillKey;
+        }
+        // the outline: a line layer above the fill, only when the theme asks for a line color
+        const lineColor = styleLineColor(style.linecolor);
+        const wantLine = lineColor != null && String(lineColor).trim().toLowerCase() !== 'none';
+        const lineId = id + ':line';
+        if (wantLine) {
+          const linePaint = { 'line-color': String(lineColor), 'line-width': styleNum(style.linewidth) > 0 ? styleNum(style.linewidth) : Number(style.linewidth) || 0.5 };
+          const lineKey = JSON.stringify(linePaint);
+          if (!map.getLayer(lineId)) {
+            map.addLayer({ id: lineId, type: 'line', source: id, 'source-layer': srcLayer, paint: linePaint }, before);
+            st.lineKey = lineKey;
+          } else if (st.lineKey !== lineKey) {
+            Object.keys(linePaint).forEach(k => map.setPaintProperty(lineId, k, linePaint[k]));
+            st.lineKey = lineKey;
+          }
+        } else if (map.getLayer(lineId)) {
+          map.removeLayer(lineId);
+          st.lineKey = null;
+        }
+        const filter = mlPmtilesFilter(rt);
+        const filterKey = JSON.stringify(filter);
+        if (st.filterKey !== filterKey) {
+          [id, lineId].forEach(l => { if (map.getLayer(l)) map.setFilter(l, filter); });
+          st.filterKey = filterKey;
+        }
+        const visibility = rt._hidden ? 'none' : 'visible';
+        [id, lineId].forEach(l => {
+          if (map.getLayer(l) && (map.getLayoutProperty(l, 'visibility') || 'visible') !== visibility) map.setLayoutProperty(l, 'visibility', visibility);
+        });
+        st.failed = false;
+      } catch (err) {
+        if (!st.failed) { st.failed = true; console.warn(`[ixmaps-gl] layer "${rt.name}": PMTiles theme not drawn:`, err && err.message ? err.message : err); }
+      }
+    });
+  }
+
   // The native heatmap layers of the MLHEATMAP themes, kept in step with the runtimes (as the WMS
   // raster layers are): per theme one GeoJSON source of weighted points and one `heatmap` layer, put
   // BEFORE the first deck.gl layer (those are MapLibre custom layers) so the symbols stay on top.
@@ -3013,8 +3190,13 @@ self.onmessage = e => {
   // flat's BAR / BARS variants with no rendering here (see flatBarLayout):
   // the bar is drawn plain (SMALLARROW as ARROW) — tested as substrings,
   // as flat does
-  const BAR_INERT_FLAGS = [/3D/, /VOLUME/, /COLUMN/, /DOTTED/, /SMALLARROW/, /TRENDLINE/, /AXIS/, /^CLIP$/, /MORPH/,
+  const BAR_INERT_FLAGS = [/3D/, /VOLUME/, /COLUMN/, /DOTTED/, /SMALLARROW/, /TRENDLINE/, /^CLIP$/, /MORPH/,
     /ZOOM/, /NORMSIZE/, /MENUSIZE/, /INVERT/, /DIAGLEFT/, /DIAGRIGHT/, /^WIDTH$/, /^MULTIPLE$/, /^DIFFUSE$/,
+    /^DIFFERENCE$/, /^FRACTION$/, /^PERCENT$/, /^PERMILLE$/, /^PRODUCT$/, /^CALCVAL$/, /^RELATIVE$/];
+  // flat's WAFFLE modifiers with no rendering here (see _buildWaffleLayers):
+  // the sizing by the grid or the size field, the chart BOX / TITLE, the
+  // animation and the multi-chart layouts
+  const WAFFLE_INERT_FLAGS = [/AUTOSIZE/, /^CLIP$/, /MORPH/, /^MULTIPLE$/, /^DIFFUSE$/,
     /^DIFFERENCE$/, /^FRACTION$/, /^PERCENT$/, /^PERMILLE$/, /^PRODUCT$/, /^CALCVAL$/, /^RELATIVE$/];
   // flat's VECTOR / BEZIER modifiers with no rendering here (see
   // _buildVectorLayers), the word → what happens instead
@@ -3228,7 +3410,8 @@ self.onmessage = e => {
           const off = p.x < -margin || p.y < -margin || p.x > w + margin || p.y > h + margin;
           if (off) { if (it.el.style.display !== 'none') it.el.style.display = 'none'; continue; }
           if (it.el.style.display === 'none') it.el.style.display = '';
-          it.el.setAttribute('transform', `translate(${p.x} ${p.y}) scale(${it.s}) translate(${-it.ox} ${-it.oy})`);
+          const o = it.off || [0, 0];   // align / offsetx / offsety (flatChartAlignOffset), px
+          it.el.setAttribute('transform', `translate(${p.x + o[0]} ${p.y + o[1]}) scale(${it.s}) translate(${-it.ox} ${-it.oy})`);
         }
       }
     };
@@ -3786,6 +3969,8 @@ self.onmessage = e => {
       if (f.length > 11 && f.startsWith('CATEGORICAL')) { flags.add('CATEGORICAL'); flags.add(f.slice(11)); }
     });
     if (flags.has('BUBBLE')) flags.add('SYMBOL');
+    // .data({type:"pmtiles"}): MapLibre draws the theme from the archive (syncNativePmtiles) — an internal flag
+    if (def.data && String(def.data.type).toLowerCase() === 'pmtiles') flags.add('MLPMTILES');
     // flat tests its base type as a substring (szFlag.match(/CHOROPLETH/)),
     // so "CHOROPLETHE" is a choropleth there too
     if (!flags.has('CHOROPLETH') && [...flags].some(f => f.includes('CHOROPLETH'))) flags.add('CHOROPLETH');
@@ -3808,7 +3993,7 @@ self.onmessage = e => {
           console.info(`[ixmaps-gl] type flag "${flag}" on a PIE chart recognized, not drawn yet — the pie is drawn flat and plain`);
         }
       });
-      // AGGREGATE / CATEGORICAL pies (_isAggregatedPie): what is not ported
+      // AGGREGATE / CATEGORICAL pies (_hasAggregatedParts): what is not ported
       if (flags.has('AGGREGATE') || flags.has('CATEGORICAL')) {
         flags.forEach(flag => {
           const inert = PIE_AGGREGATE_INERT_FLAGS.find(re => re.test(flag));
@@ -3826,6 +4011,17 @@ self.onmessage = e => {
         if (BAR_INERT_FLAGS.some(re => re.test(flag)) && !_warnedFlags.has('BAR:' + flag)) {
           _warnedFlags.add('BAR:' + flag);
           console.info(`[ixmaps-gl] type flag "${flag}" on a BAR chart recognized, not ported yet — the bars are drawn plain`);
+        }
+      });
+    }
+
+    // WAFFLE modifiers _buildWaffleLayers doesn't draw (the waffle is drawn
+    // at flat's plain size)
+    if (isWaffleChart(flags)) {
+      flags.forEach(flag => {
+        if (WAFFLE_INERT_FLAGS.some(re => re.test(flag)) && !_warnedFlags.has('WAFFLE:' + flag)) {
+          _warnedFlags.add('WAFFLE:' + flag);
+          console.info(`[ixmaps-gl] type flag "${flag}" on a WAFFLE chart recognized, not ported yet — the waffle is drawn at its plain size`);
         }
       });
     }
@@ -5461,7 +5657,7 @@ self.onmessage = e => {
           // partsA[i].nSum accumulates each item's nSize, maptheme.js 16649; legend.js 677); a size
           // of "$item$" is the count anyway
           const useSum = flatFlag(rt.flags, 'SUM') && (rt.style.valuefield
-            || ((rt._isVectorChart() || rt._isAggregatedPie()) && rt.binding.size)
+            || ((rt._isVectorChart() || rt._hasAggregatedParts()) && rt.binding.size)
             || (rt.flags.has('CATEGORICAL') && rt.binding.size && rt.binding.size !== '$item$'));
           const valueField = rt.style.valuefield || rt.binding.size;
           // legendunits wins over the theme's general-purpose units
@@ -5474,7 +5670,7 @@ self.onmessage = e => {
           // (a VECTOR / BEZIER or aggregated PIE legend: flat's szUnit, the
           // units after a space unless they start with ".", measured on the
           // twin pages)
-          const flatUnitLegend = rt._isVectorChart() || rt._isAggregatedPie();
+          const flatUnitLegend = rt._isVectorChart() || rt._hasAggregatedParts();
           const rawLegendUnit = rt.style.legendunits || rt.style.units || '';
           // COUNT: the rows are record counts — flat prints them as whole numbers
           // with no unit (legend.js 705, 810: __formatValue(count, nDecimals,
@@ -5627,7 +5823,8 @@ self.onmessage = e => {
           // factor/cap (legend.js:980-984/946-950) collapses to a plain
           // linear percentage-of-max once the bar's available width
           // isn't a fixed constant this code has to guess at.
-          const isSimple = rt.flags.has('SIMPLELEGEND');
+          // a PMTiles theme has no records to count: swatch + label rows, as SIMPLELEGEND
+          const isSimple = rt.flags.has('SIMPLELEGEND') || rt.flags.has('MLPMTILES');
           const isCompact = rt.flags.has('COMPACTLEGEND');
           // Compact mode's bar can't use the full-width mode's
           // percentage-of-flex-track trick (there's no full-width track
@@ -6430,8 +6627,8 @@ self.onmessage = e => {
         // Here the same theme becomes a MapLibre raster tile source (one
         // 256px image per XYZ tile via the {bbox-epsg-3857} placeholder —
         // real cached tiles, not a re-fetched viewport image per pan), see
-        // syncWmsLayers: no records to load, ever
-        const wms = spec.flags.has('WMS') || spec.flags.has('IMAGE');
+        // syncWmsLayers: no records to load, ever (nor for a PMTiles theme: syncNativePmtiles)
+        const wms = spec.flags.has('WMS') || spec.flags.has('IMAGE') || spec.flags.has('MLPMTILES');
         if (deferred || named || wms) {
           raw = { type: 'FeatureCollection', features: [] };
         } else if (spec.data && spec.data.obj) {
@@ -6611,6 +6808,7 @@ self.onmessage = e => {
           if (base === `ix-bubbles-${r.name}`) return isSymbolChart(r.flags);
           if (base === `ix-pie-${r.name}`) return r._isPieChart();
           if (base === `ix-bar-${r.name}`) return r._isBarChart();
+          if (base === `ix-waffle-${r.name}`) return r._isWaffleChart();
           if (base === `ix-vector-${r.name}` || base === `ix-vector-heads-${r.name}`) return r._isVectorChart();
           if (base === `ix-dot-${r.name}`) return r.flags.has('DOT');
           if (base === `ix-choropleth-${r.name}`) return r.flags.has('CHOROPLETH');
@@ -6672,13 +6870,42 @@ self.onmessage = e => {
         this._legendHtml = html;
         if (!html) return;
         const legendEl = document.createElement('div');
-        // a page legend (map.legend(html)) is positioned by the map's
-        // own align option — the same rule that places the native stack
-        legendEl.style.cssText = 'position:absolute;' + legendAlignCssFor(this.mapOptions) + 'z-index:5;pointer-events:none';
+        // flat shows a page legend in its legend pane (ui/css/legend.css
+        // .map-legend, htmlgui_flat.js 405-445): 25% wide (300-500px) at
+        // 0.95 opacity, left-aligned in the pane's base font — not the
+        // page's (body text-align) or MapLibre's map font. An unfolded pane
+        // sits at top 11px, right calc(4% - 4px) (legend.css !important,
+        // over a right align's own offset); a left one keeps its left. With
+        // a left / right align it gets the box: legendBackground, 0.5em
+        // radius, 0 1em padding. Centre / top: legendAlignCssFor as before
+        const align = String(this.mapOptions.align || '');
+        const sideAligned = /left|right/.test(align);
+        const px = v => /^\d+(\.\d+)?$/.test(v) ? v + 'px' : v;
+        const pos = /left/.test(align) ? 'left:' + (px(align.split('left')[0]) || '55px') + ';top:11px;'
+          : (sideAligned || !align) ? 'right:calc(4% - 4px);top:11px;' : legendAlignCssFor(this.mapOptions);
+        const legendBg = this.mapOptions.legendBackground || this.mapOptions.legendbackground || 'rgba(255,255,255,0.9)';
+        legendEl.style.cssText = 'position:absolute;' + pos + 'z-index:5;pointer-events:none;'
+          + 'width:25%;min-width:300px;max-width:500px;opacity:0.95;'
+          + (sideAligned ? 'background:' + legendBg + ';border-radius:0.5em;padding:0 1em;' : '')
+          + "text-align:left;font-family:'Open Sans','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#444;line-height:normal";
+        legendEl.className = 'ix-page-legend';
+        // flat's #map-legend-body: the html pulled up 1em, its div with
+        // legend.css's margins; and legend.css's h3 rule (margin 0, normal weight)
+        const legendBody = document.createElement('div');
+        legendBody.className = 'ix-page-legend-body';
+        legendBody.style.marginTop = '-1em';
+        legendEl.appendChild(legendBody);
+        if (!document.getElementById('ix-page-legend-css')) {
+          const css = document.createElement('style');
+          css.id = 'ix-page-legend-css';
+          css.textContent = '.ix-page-legend h3{margin:0;padding:0;font-weight:normal}'
+            + '.ix-page-legend-body>div{margin:0.2em 24px 0 0}';
+          document.head.appendChild(css);
+        }
         // flat's legend takes the pane's html OR a URL to it (htmlgui):
         // a value without a tag is fetched, its html shown
-        if (/<[a-z!]/i.test(html)) legendEl.innerHTML = html;
-        else fetch(html).then(r => r.ok ? r.text() : '').then(t => { legendEl.innerHTML = t; }).catch(() => {});
+        if (/<[a-z!]/i.test(html)) legendBody.innerHTML = html;
+        else fetch(html).then(r => r.ok ? r.text() : '').then(t => { legendBody.innerHTML = t; }).catch(() => {});
         // inside the map container, never the page's body (see the pinned
         // tooltip mount) — styling body breaks page-positioned elements
         anchorInside(el);
@@ -6766,6 +6993,8 @@ self.onmessage = e => {
           // (SVG-projection, tile-free) maps, so basemapopacity here would
           // otherwise make the "no basemap" background itself vanish.
           if (layer.id === BLANK_BACKGROUND_LAYER_ID) return;
+          // a PMTiles theme's native layers are thematic data, not basemap: they keep the theme's own fillopacity
+          if (layer.id.indexOf('ixmaps-pmt:') === 0) return;
           const props = OPACITY_PAINT_PROPS[layer.type];
           if (!props) return; // includes 'custom' (deck.gl's own interleaved layers) — left alone
           props.forEach(prop => {
@@ -7222,26 +7451,38 @@ self.onmessage = e => {
       // A load a newer one for the same theme overtook is dropped when it
       // answers (rt._loadSeq), so a slow older answer can't overwrite newer
       // data; nor does a theme removed meanwhile get features.
-      async function reloadRuntimes(targets, { reload }) {
+      // showLoading: the loading message stays up until each target's data
+      // is in (scale-deferred loads; not refreshTheme, which may run on a timer)
+      async function reloadRuntimes(targets, { reload, showLoading = false }) {
+          // each target counted once by this call, and released once
+          const pending = new Set(showLoading ? targets.filter(rt => !rt._named) : []);
+          pending.forEach(rt => { rt._dataLoading = (rt._dataLoading || 0) + 1; });
+          if (pending.size) setDataLoading();
+          const loaded = rt => { if (pending.delete(rt)) { rt._dataLoading--; setDataLoading(); } };
+          try {
           for (const rt of targets) {
             if (rt._named) { await loadNamedTheme(rt, reload); continue; }
+            try {
             const seq = rt._loadSeq = (rt._loadSeq || 0) + 1;
             const spec = normalizeTheme(rt._definition);
             // a WMS theme has no records to reload (see build()'s wms
             // branch) — its raster layer is re-synced by the refresh below
-            const raw = (spec.flags.has('WMS') || spec.flags.has('IMAGE'))
+            const raw = (spec.flags.has('WMS') || spec.flags.has('IMAGE') || spec.flags.has('MLPMTILES'))
               ? { type: 'FeatureCollection', features: [] }
               : spec.data && spec.data.obj
               ? await fetchLayerData(spec.data, rt._specBinding, builder._engineOptions)
               : await cachedLayerData(builder._dataCache, spec.data, rt._specBinding, builder._engineOptions, { reload }).promise;
             if (rt._loadSeq !== seq || !runtimes.includes(rt)) continue;
+            loaded(rt);
             // a theme loaded with a filter keeps the filter changeThemeStyle
             // set since (rt._filterExpr), not its definition's, and
             // re-filters the NEW data from now on
             if (spec.filter) rt._refilter = expr => filterAndJoin(raw, spec, runtimes, expr);
             rt.replaceFeatures(filterAndJoin(raw, spec, runtimes, spec.filter ? rt._filterExpr : undefined));
             maybeZoomToTheme(rt); // a scale-deferred theme gets its first data here
+            } finally { loaded(rt); }
           }
+          } finally { targets.forEach(loaded); }
           if (targets.length) { refresh(); notifyRedraw(); }
       }
 
@@ -7334,8 +7575,8 @@ self.onmessage = e => {
       setDataLoading = () => {
         if (loadSilent || !el.parentElement) return;
         const z = map.getZoom();
-        const shownLoading = runtimes.some(r => r._brokerLoading > 0 && !r._hidden && !themeHiddenByScale(r.flags, r.style, z));
-        if (shownLoading) {
+        const shown = runtimes.filter(r => (r._brokerLoading > 0 || r._dataLoading > 0) && !r._hidden && !themeHiddenByScale(r.flags, r.style, z));
+        if (shown.length) {
           if (!loadingEl) {
             ensureLoadingStyle();
             loadingEl = document.createElement('div');
@@ -7343,7 +7584,12 @@ self.onmessage = e => {
             loadingEl.innerHTML = '<span class="ixmaps-gl-loading-spin"></span><span class="ixmaps-gl-loading-text"></span>';
             el.appendChild(loadingEl);
           }
-          const msgs = [localText('loading data ...'), localText(' ... ')];
+          // a scale-deferred theme coming into scale says its meta.splash
+          // (flat shows it in the legend while the theme isn't drawn yet,
+          // legend.js 2016), else flat's broker text
+          const splashOf = r => r._dataLoading > 0 && ((r.meta && r.meta.splash) || (r.style && r.style.splash));
+          const withSplash = shown.find(splashOf);
+          const msgs = withSplash ? [localText(String(splashOf(withSplash))), localText(' ... ')] : [localText('loading data ...'), localText(' ... ')];
           let i = 0;
           loadingEl.querySelector('.ixmaps-gl-loading-text').textContent = msgs[0];
           loadingEl.style.display = 'flex';
@@ -7502,8 +7748,8 @@ self.onmessage = e => {
         let raw;
         const deferred = deferredFeatureLoad(spec, map.getZoom());
         const named = namedDataTheme(spec);
-        // WMS themes carry no records (see build()'s own wms branch)
-        const wms = spec.flags.has('WMS') || spec.flags.has('IMAGE');
+        // WMS and PMTiles themes carry no records (see build()'s own wms branch)
+        const wms = spec.flags.has('WMS') || spec.flags.has('IMAGE') || spec.flags.has('MLPMTILES');
         let sourceKey = null;
         if (deferred || named || wms) {
           raw = { type: 'FeatureCollection', features: [] };
@@ -7707,6 +7953,37 @@ self.onmessage = e => {
         const lat = map.getCenter().lat * Math.PI / 180;
         return Math.round((z - Math.log2(Math.cos(lat))) * 1e6) / 1e6;
       }
+      // GRIDSIZE plot / plain grid themes: see refreshLayers (gesture). gestureBuilt: the last built layers,
+      // gestureBases: id -> the zoom a scaled layer was built at (empty outside a gesture)
+      const gestureScalable = rt => rt.flags.has('GRIDSIZE') && (rt.flags.has('PLOT') || rt._isPlainGridMesh());
+      let gestureBuilt = [], gestureBases = new Map();
+      // those themes re-aggregate DEBOUNCED: SCALE_REAGG_DEBOUNCE_MS after the last zoom activity (a move frame of a
+      // zoom, zoomstart, zoomend), not on every step and not at the first zoomend of a wheel burst. Until then
+      // they keep the layers built at frozenScaleZoom and grow them with the live zoom
+      const SCALE_REAGG_DEBOUNCE_MS = 250;
+      // while the zoom goes on they also re-aggregate every SCALE_REAGG_INTERVAL_MS, at the live zoom; between two
+      // steps the layers grow from that step's zoom (scale 1 right after each step)
+      const SCALE_REAGG_INTERVAL_MS = 500;
+      let zoomActiveAt = 0, frozenScaleZoom = null, scaleStepAt = 0, reaggTimer = null, stepTimer = null;
+      function markZoomActive() {
+        if (!runtimes.some(gestureScalable)) return;
+        zoomActiveAt = Date.now();
+        clearTimeout(reaggTimer);
+        reaggTimer = setTimeout(() => { reaggTimer = null; refreshLayers(); }, SCALE_REAGG_DEBOUNCE_MS + 5);
+        if (!stepTimer) stepTimer = setTimeout(() => { stepTimer = null; refreshLayers(); }, SCALE_REAGG_INTERVAL_MS);
+      }
+      function scaleGestureLayers() {
+        const z = gridZoomOf();
+        return gestureBuilt.map(l => {
+          if (!gestureBases.has(l.id)) return l;
+          const name = l.constructor.layerName;
+          if (name !== 'IconLayer' && name !== 'TextLayer') return l;   // a polygon box keeps its px width
+          return l.clone(gestureScaleProps(l.props, Math.pow(2, z - gestureBases.get(l.id))));
+        });
+      }
+      // the re-check while an icon-atlas swap waits (see refreshLayers)
+      let atlasSwapTimer = null;
+      disposers.push(() => { clearTimeout(atlasSwapTimer); atlasSwapTimer = null; });
       function refreshLayers() {
         const projNow = typeof map.getProjection === 'function' && map.getProjection();
         const liveZoom = projNow && projNow.type === 'globe' && flatOrthographicByOptions.has(builder._engineOptions)
@@ -7731,7 +8008,24 @@ self.onmessage = e => {
         const proj = (typeof map.getProjection === 'function' && map.getProjection()) || { type: 'mercator' };
         const globeCenter = proj.type === 'globe' ? map.getCenter() : null;
         let layers = [];
+        const holdScaled = Date.now() - zoomActiveAt < SCALE_REAGG_DEBOUNCE_MS;   // a zoom just ended: still inside the debounce
+        let anyScaled = false;
         const layerOwner = new Map();
+        const scaleZoomOf = new Map();   // layer -> the zoom a gesture-scaled layer was built at
+        // a due icon-atlas swap is made once the theme's current atlas
+        // layers ("-gN" ids, as drawn now) have loaded their icons (see
+        // LayerRuntime._commitAtlasSwap); until then this looks again soon
+        const deckLive = overlay._deck || overlay.deck;
+        const liveLayers = deckLive && deckLive.layerManager ? deckLive.layerManager.getLayers().filter(l => !l.parent) : [];
+        let atlasSwapWaiting = false;
+        runtimes.forEach(rt => {
+          if (!rt._atlasSwapPendingSince) return;
+          const own = liveLayers.filter(l => /-g\d+(~\d+)?$/.test(l.id) && layerRuntimeById.get(l.id) === rt);
+          if (!rt._commitAtlasSwap(own.every(l => l.isLoaded), Date.now())) atlasSwapWaiting = true;
+        });
+        if (atlasSwapWaiting && !atlasSwapTimer) {
+          atlasSwapTimer = setTimeout(() => { atlasSwapTimer = null; refreshLayers(); }, ATLAS_SWAP_RECHECK_MS);
+        }
         // a choropleth whose sub-theme is active is not drawn: in flat the
         // sub-theme re-paints the SAME map shapes (fill and fill-opacity),
         // so it replaces the parent's colors rather than lying over them
@@ -7750,8 +8044,18 @@ self.onmessage = e => {
             // near the budget that falls back must not jump back to the
             // start zoom's cells (measured on uk_collisions_2023: cells
             // flickering between the start and the live aggregation)
-            const live = gesture && rt._aggCostMs != null && rt._aggCostMs < GESTURE_AGG_BUDGET_MS;
-            const rtZoom = live ? gestureAggZoom : gesture && rt._aggCostZoom != null ? rt._aggCostZoom : zoom;
+            // a GRIDSIZE plot / plain grid keeps the layers of the gesture's start zoom and GROWS them with the
+            // zoom each frame (scaleGestureLayers), visible: neither re-aggregating at stepped zooms (cells
+            // reshuffling, sizes jumping every GESTURE_AGG_INTERVAL_MS) nor hidden; one rebuild at the end
+            const scaled = (gesture || holdScaled) && gestureScalable(rt);
+            if (scaled) anyScaled = true;
+            const live = gesture && !scaled && rt._aggCostMs != null && rt._aggCostMs < GESTURE_AGG_BUDGET_MS;
+            if (scaled && (frozenScaleZoom == null || (gesture && Date.now() - scaleStepAt >= SCALE_REAGG_INTERVAL_MS - 30))) {
+              frozenScaleZoom = gesture ? gridZoomOf() : zoom;   // a re-aggregation step: the live zoom
+              scaleStepAt = Date.now();
+            }
+            const rtZoom = scaled ? frozenScaleZoom
+              : live ? gestureAggZoom : gesture && rt._aggCostZoom != null ? rt._aggCostZoom : zoom;
             rt._gestureLive = live;
             const t0 = performance.now();
             const built = rt.buildDeckLayers(rtZoom, bbox, liveZoom, globeCenter);
@@ -7762,7 +8066,7 @@ self.onmessage = e => {
               rt._aggCostZoom = rtZoom;
               rt._aggCostFeatures = rt.features;
             }
-            built.forEach(l => layerOwner.set(l, rt));
+            built.forEach(l => { layerOwner.set(l, rt); if (scaled) scaleZoomOf.set(l, rtZoom); });
             layers.push(...built);
             rt._drawError = null;
           } catch (err) {
@@ -7770,9 +8074,10 @@ self.onmessage = e => {
             rt._drawError = err;
           }
         });
+        if (!anyScaled) frozenScaleZoom = null;
         // GRIDSIZE plot/grid layers of a frozen theme are hidden for the
         // gesture (see above); a theme that follows the zoom keeps them
-        if (gesture) layers = layers.filter(l => { const o = layerOwner.get(l); return (o && o._gestureLive) || !(l.id.startsWith('ix-plot-') || l.id.startsWith('ix-grid-')); });
+        if (gesture) layers = layers.filter(l => { const o = layerOwner.get(l); return (o && o._gestureLive) || scaleZoomOf.has(l) || !(l.id.startsWith('ix-plot-') || l.id.startsWith('ix-grid-')); });
         // flat paints FEATURE/CHOROPLETH themes on the map's shapes and draws
         // charts in their own group above them: whatever the theme order
         // (a choropleth swapped in with add(..., 'replace') comes last), the
@@ -7795,13 +8100,18 @@ self.onmessage = e => {
           const owner = layerOwner.get(l);
           const out = n > 1 ? l.clone({ id: l.id + '~' + n }) : l;
           if (owner) layerRuntimeById.set(out.id, owner);
+          if (scaleZoomOf.has(l) && out !== l) scaleZoomOf.set(out, scaleZoomOf.get(l));
           return out;
         });
         if (glDebug()) {
           const order = layers.map(l => l.id).join(' < ');
           if (order !== refreshLayers._lastOrder) { refreshLayers._lastOrder = order; console.info('[ixmaps-gl debug] draw order (bottom → top): ' + order); }
         }
-        overlay.setProps({ layers });
+        // the layers a gesture grows with the zoom: remembered as built, drawn scaled to the live zoom
+        gestureBuilt = layers;
+        gestureBases = new Map();
+        layers.forEach(l => { if (scaleZoomOf.has(l)) gestureBases.set(l.id, scaleZoomOf.get(l)); });
+        overlay.setProps({ layers: gestureBases.size ? scaleGestureLayers() : layers });
         // start/stop the flow repaint loop: any layer whose paths carry
         // dash offsets animates, and only then (a static map renders
         // nothing new; the loop is one rAF, one triggerRepaint each)
@@ -7822,6 +8132,7 @@ self.onmessage = e => {
         // reconcile them with the current runtimes on every rebuild
         syncWmsLayers();
         syncNativeHeatmaps(map, runtimes, mlHeatLayerIds);
+        syncNativePmtiles(map, runtimes, mlPmtilesIds);
         // the permanent info bubbles follow the rebuilt layers (the runtimes
         // recorded their INFOBUBBLE items inside buildDeckLayers above)
         infoBubbles.sync();
@@ -7842,6 +8153,7 @@ self.onmessage = e => {
       // of a page that has no WMS theme
       const wmsLayerIds = new Set();
       const mlHeatLayerIds = new Set();   // the MLHEATMAP layers added to the map (syncNativeHeatmaps)
+      const mlPmtilesIds = new Set();     // the PMTiles themes' sources added to the map (syncNativePmtiles)
       function syncWmsLayers() {
         if (!map || !map.getLayer) return;
         const idOf = name => 'ixmaps-wms:' + String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -7887,7 +8199,7 @@ self.onmessage = e => {
       }
       // a style swap (setMapType) drops every native layer — rebuild the
       // WMS ones once the new style stands
-      map.on('style.load', () => { syncWmsLayers(); syncNativeHeatmaps(map, runtimes, mlHeatLayerIds); });
+      map.on('style.load', () => { syncWmsLayers(); syncNativeHeatmaps(map, runtimes, mlHeatLayerIds); syncNativePmtiles(map, runtimes, mlPmtilesIds); });
 
       // isZooming flips true/false on every 'zoomstart'/'zoomend' pair —
       // and a scroll-wheel or trackpad zoom fires MANY such pairs per
@@ -7983,17 +8295,27 @@ self.onmessage = e => {
       // theme has been drawn: here once per settled redraw, for every
       // shown theme, with its id. Not re-entered when the hook itself
       // changes a theme (changeThemeStyle → refresh → here again).
-      let inDrawThemeHook = false;
+      // Flat calls it once a theme is drawn, asynchronously: a burst of
+      // refreshes in one task (a page setting a filter theme by theme)
+      // gives each shown theme one call, right after that task, not one
+      // per refresh.
+      let inDrawThemeHook = false, drawHooksQueued = false;
       function callDrawThemeHooks() {
         const hook = pageIxmaps() && pageIxmaps().htmlgui_onDrawTheme;
-        if (typeof hook !== 'function' || inDrawThemeHook) return;
-        inDrawThemeHook = true;
-        try {
-          for (const rt of runtimes.slice()) {
-            if (rt._hidden) continue;
-            try { hook.call(global.ixmaps, themeIdOf(rt)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onDrawTheme:', e); }
-          }
-        } finally { inDrawThemeHook = false; }
+        if (typeof hook !== 'function' || inDrawThemeHook || drawHooksQueued) return;
+        drawHooksQueued = true;
+        queueMicrotask(() => {
+          drawHooksQueued = false;
+          const hookNow = pageIxmaps() && pageIxmaps().htmlgui_onDrawTheme;
+          if (typeof hookNow !== 'function') return;
+          inDrawThemeHook = true;
+          try {
+            for (const rt of runtimes.slice()) {
+              if (rt._hidden) continue;
+              try { hookNow.call(global.ixmaps, themeIdOf(rt)); } catch (e) { console.error('[ixmaps-gl] htmlgui_onDrawTheme:', e); }
+            }
+          } finally { inDrawThemeHook = false; }
+        });
       }
       function notifyRedraw() {
         redrawListeners.slice().forEach(cb => { try { cb(); } catch (err) { console.error('[ixmaps-gl] onRedraw callback failed:', err); } });
@@ -8012,18 +8334,38 @@ self.onmessage = e => {
         notifyRedraw();
       }
 
-      // a FEATURE theme out of scale at its definition gets its data once
+      // a theme out of scale at its definition gets its data once
       // it comes into scale (see deferredFeatureLoad) — for that view
       // — only that theme (not its layer's others), its data from the cache
       function loadDeferredThemes() {
         const z = map.getZoom();
-        const due = runtimes.filter(rt => rt._deferredLoad && !featuresHiddenByScale(rt.style, z));
+        const due = runtimes.filter(rt => rt._deferredLoad && !themeHiddenByScale(rt.flags, rt.style, z));
         if (!due.length) return;
         due.forEach(rt => { rt._deferredLoad = false; });
-        reloadRuntimes(due, { reload: false })
+        reloadRuntimes(due, { reload: false, showLoading: true })
           .catch(err => console.error(`[ixmaps-gl] loading theme(s) ${due.map(rt => `"${themeIdOf(rt)}"`).join(', ')}:`, err));
       }
       map.on('moveend', loadDeferredThemes);
+
+      // a scale-deferred theme with data.preload downloads its file once
+      // the map is idle (see _preloads) — only the download; decoding and
+      // parsing wait until the theme comes into scale
+      function preloadDeferredData() {
+        runtimes.forEach(rt => {
+          if (!rt._deferredLoad || rt._preloadChecked || !rt._definition) return;
+          const d = rt._definition.data;
+          if (!isPreloadWanted(d)) return;
+          rt._preloadChecked = true;
+          if (!/^(csv|geojson|topojson)$/.test(d.type)) {
+            warnOnce('preload:' + d.type, `[ixmaps-gl] data.preload: type "${d.type}" is not preloaded (csv, geojson and topojson are)`);
+            return;
+          }
+          const source = dataSourceKey(d) + '|';
+          if ([...builder._dataCache.keys()].some(k => k.startsWith(source))) return; // already loaded
+          (d.urls || [d.url]).filter(Boolean).forEach(preloadData);
+        });
+      }
+      map.on('idle', preloadDeferredData);
 
       // map events (flat's mapApi.on): see MAP_EVENTS_WIRED. "layerdraw" is approximated below.
       const mapListeners = Object.create(null);
@@ -8135,6 +8477,14 @@ self.onmessage = e => {
       }
 
       map.on('move', scheduleRefresh);
+      // every frame of a zoom: the gesture-scaled layers follow the live zoom (cheap: uniforms and a few
+      // hundred offsets), without the rebuild that scheduleRefresh throttles
+      map.on('move', () => {
+        if (map.isZooming()) markZoomActive();
+        if (gestureBases.size) overlay.setProps({ layers: scaleGestureLayers() });
+      });
+      map.on('zoomstart', markZoomActive);
+      map.on('zoomend', markZoomActive);
       onWindow('resize', () => map.resize());
 
       // GL-PORT COMPAT: real ixmaps-flat's map.on("layerdraw", cb) fires
@@ -8501,6 +8851,60 @@ self.onmessage = e => {
   // _buildPlotLayers). The height reserved at the bottom for XAXIS tick
   // labels, when that flag is set, comes out of this same square.
   const PLOT_ICON_RASTER_SIZE = 100;
+  const PLOT_RASTER_SS = 2;   // supersampling of the plot icon canvas
+  // the curve's side margin in the raster, and the share of the raster its X span covers
+  const PLOT_MARGIN_X = 6;
+  const PLOT_RASTER_X_SPAN = (PLOT_ICON_RASTER_SIZE - 2 * PLOT_MARGIN_X) / PLOT_ICON_RASTER_SIZE;
+  // flat fits a PLOT of n values (one chart size of 30 u per X step) into its grid cell: the
+  // curve spans (n-1)/n of cell x scale (maptheme.js 16940, 22437; measured: 124.8 px for 48
+  // values in a 127.5 px cell, 66.7 px for 3 in 100). The raster's curve covers
+  // PLOT_RASTER_X_SPAN of its width, so the icon is sized to that span
+  function plotIconSizePx(cellPx, scale, nPts) {
+    return cellPx * scale * (nPts > 1 ? (nPts - 1) / nPts : 2 / 3) / PLOT_RASTER_X_SPAN;
+  }
+  // flat's stroke is linewidth / 30 of one X step (normalX(linewidth) against
+  // normalX(nChartSize = 30) per step): a many-valued curve with a big linewidth is thin
+  // x PLOT_STROKE_CALIBRATION: empirical, not from flat's source. The raster is filtered when deck.gl
+  // scales it, so a hairline looks wider than flat's SVG stroke of the same width (user-chosen 0.8)
+  const PLOT_STROKE_CALIBRATION = 0.8;
+  function plotStrokePx(linewidth, stepX) { return linewidth * stepX / 30 * PLOT_STROKE_CALIBRATION; }
+  // The props that make a layer built at one zoom follow a LIVE zoom without a rebuild: every size in px (icon
+  // size, text size) x f = 2^(live zoom - build zoom), and every px offset x f too (they are distances from the
+  // chart's anchor), so the whole chart (curve, box, title) grows with the map as flat's zoom animation does.
+  // `props` are the built layer's props; returns what to clone it with
+  function gestureScaleProps(props, f) {
+    const o = { sizeScale: (props.sizeScale == null ? 1 : props.sizeScale) * f };
+    const po = props.getPixelOffset;
+    if (po) {
+      o.getPixelOffset = typeof po === 'function' ? (d, info) => { const v = po(d, info); return [v[0] * f, v[1] * f]; } : [po[0] * f, po[1] * f];
+      o.updateTriggers = { ...(props.updateTriggers || {}), getPixelOffset: [f] };
+    }
+    return o;
+  }
+  // raster y of the value-0 level (flat closes every AREA segment there), from the raster row of
+  // the range minimum, the plot height and the value span; unclamped
+  function plotZeroY(baselineY, plotAreaH, yMin, valueSpan) { return baselineY - ((0 - yMin) / valueSpan) * plotAreaH; }
+  // flat's PLOT y axis (maptheme.js 22610-22625): the step, the range rounded to whole steps and
+  // the tick labels ("0", two decimals, whole numbers above a rounded max of 5); null for no range
+  function plotYAxis(min, max) {
+    if (!(max > min) || !isFinite(min + max)) return null;
+    let step = Math.ceil(max - min) / 5;
+    if (step < 0.5) step = Math.ceil(max - min) / 10;
+    if (step > 1) {
+      const dez = Math.pow(10, Math.floor(Math.log10(step)));
+      step = (Math.ceil(step / dez) * dez) || 1;
+    }
+    const rMax = Math.ceil(max / step) * step, rMin = Math.floor(min / step) * step;
+    for (let i = 0; i < 30 && (rMax - rMin) / step < 5; i++) step /= 2;
+    if ((rMax - rMin) / step > 5) step *= 2;
+    const ticks = [];
+    for (let i = 0, nT = Math.round((rMax - rMin) / step); i <= nT; i++) {
+      const v = rMin + i * step;
+      const r = Math.round(v * 100) / 100;
+      ticks.push({ v, label: Math.abs(r) < 1e-9 ? '0' : rMax > 5 ? String(Math.round(v)) : r.toFixed(2) });
+    }
+    return { step, min: rMin, max: rMax, ticks };
+  }
   const PLOT_XAXIS_HEIGHT = 12;
 
   // standard 96dpi Web Mercator scale-denominator constant for 256px
@@ -9902,10 +10306,24 @@ self.onmessage = e => {
 
   function flatChartAlignOffset(style, g) {
     const num = v => (isNaN(styleNum(v)) ? 0 : styleNum(v));
-    const sym = g.symbolScale || 1;
+    const plot = g.kind === 'plot';
+    const sym = plot ? 1 : (g.symbolScale || 1);                 // flat 24447: a PLOT has no symbol scale
     let x = num(style.offsetx) * g.unit * sym, y = -num(style.offsety) * g.unit * sym;
     const a = String(style.align || '');
-    if (a) {
+    if (a && plot) {                                             // flat 24457: w = nChartSize · n / gridx
+      const w = g.width;
+      if (/center/.test(a)) { x = w / 2; if (!/top/.test(a)) y = -w / 2; }
+      if (/right/.test(a)) x = w;
+      if (/23right/.test(a)) x = w * 0.66;
+      if (/10%right/.test(a)) x = w * 0.90;
+      if (/10%left/.test(a)) x = w * 0.10;
+      if (/23left/.test(a)) x = w * 0.33;
+    } else if (a && g.gridx) {                                   // flat 24476: a non-PLOT chart in a gridx layout
+      const w = g.width;                                         // nChartSize / parts · n / gridx
+      if (/center/.test(a)) x = w / 2;
+      if (/right/.test(a)) x = w;
+      if (/23right/.test(a)) x = w * 0.66;
+    } else if (a) {
       const h = g.half, o = g.orig;
       if (/center/.test(a)) y = 0;
       if (/bottom/.test(a)) y = o || h * 2 / 5;
@@ -10113,10 +10531,12 @@ self.onmessage = e => {
   }
 
   // flat's realize() returns before loading any data for a FEATURE theme
-  // out of scale (maptheme.js 8250-8260) and loads it once the theme comes
-  // into scale — for the view of that moment, the bbox a broker queries
+  // out of scale (maptheme.js 8250-8260), and execute() never realizes a
+  // theme out of its chartupper/chartlower range (maptheme.js 3256-3263):
+  // either loads its data once it comes into scale — for the view of that
+  // moment, the bbox a broker queries
   function deferredFeatureLoad(spec, zoom) {
-    return !!(spec.flags && (spec.flags.has('FEATURE') || spec.flags.has('FEATURES')) && featuresHiddenByScale(spec.style, zoom));
+    return !!(spec.flags && themeHiddenByScale(spec.flags, spec.style, zoom));
   }
 
   // flat's shadow gate (maptheme.js 1326-1343, 16732-16762): style.shadow
@@ -10551,6 +10971,11 @@ self.onmessage = e => {
   // MAX_TEXTURE_SIZE (16384) and the boxes drew black. 2 Mpx leaves room
   // for the atlas's row-packing waste (measured ~2×) below that limit.
   const ICON_ATLAS_AREA_RESET_AFTER = 2 * 1024 * 1024;
+  // A due atlas swap waits for the current atlas layers' icon loads (see
+  // LayerRuntime._commitAtlasSwap) at most this long; while it waits,
+  // refreshLayers looks again every ATLAS_SWAP_RECHECK_MS.
+  const ATLAS_SWAP_MAX_WAIT_MS = 2000;
+  const ATLAS_SWAP_RECHECK_MS = 200;
 
   // Shared packing layout for a multi-category group's sub-bubbles — used
   // both to draw the packed icon raster (_buildBubbleIcon) and to position
@@ -10743,6 +11168,66 @@ self.onmessage = e => {
     return /BAR/.test(t) && !/\bUSER\b|PIE|WAFFLE|BUBBLE|SYMBOL|BUFFER/.test(t);
   }
 
+  // CHART|WAFFLE: flat's drawChart WAFFLE branch (maptheme.js 20533) comes
+  // after USER and PIE and before BUBBLE, SYMBOL and BAR; flat tests /WAFFLE/
+  // as a substring
+  function isWaffleChart(flags) {
+    if (!flags.has('CHART') || isVectorChart(flags) || flags.has('DOT')) return false;
+    const t = flags.typeString != null ? flags.typeString : [...flags].join('|');
+    return /WAFFLE/.test(t) && !/\bUSER\b|PIE/.test(t);
+  }
+
+  // One item's waffle as flat draws it (maptheme.js 20533-20640), in chart
+  // units u (flat's raw SVG units / 20), y down, the chart centred on 0:
+  //  - the chart is normalX(nChartSize = 30) = 30 u wide, x 0.97; behind it
+  //    a square inset 10 raw (0.5 u) with a faint fill (boxcolor, else
+  //    black at boxopacity 0.05; bordercolor, else none), the waffle grid
+  //    x 0.9 of that
+  //  - gridx columns, else 10 for WAFFLE100 / AUTO100 (WAFFLE1000 matches
+  //    flat's /WAFFLE100/ substring test, so it is capped at 100 too), else
+  //    max(5, round(sqrt(max(|nMin|, nMax)))); a cell is the grid width /
+  //    (columns x 1.1), the gap 0.1 of a cell
+  //  - the parts in order (SORT: largest first), a part's value rounded to
+  //    its cell count (a 0 or negative one has none), the cells from the
+  //    bottom left, rows going up; WAFFLE100 stops at 100 cells in all
+  // `values` the item's parts, `o`: { themeMin, themeMax, gridX, boxOpacity }.
+  // Returns { cells: [{ r: [x0, y0, x1, y1], part }], back: [x0, y0, x1, y1],
+  //   extent } or null when the item has no cell.
+  function flatWaffleLayout(values, t, o) {
+    t = String(t || '');
+    const has = re => re.test(t);
+    // o.width: the chart width in u (GRIDSIZE: the grid cell), else 30
+    const width = (o.width || 30) * 0.97;
+    const nMax = Math.max(o.themeMax, Math.abs(o.themeMin));
+    let gridX = o.gridX || (has(/WAFFLE100/) ? 10 : Math.max(5, Math.round(Math.sqrt(nMax))));
+    if (has(/AUTO100/)) gridX = 10;
+    const w = width * 0.9;
+    const cell = w / (gridX * 1.1);
+    const counts = values.map(v => Math.round(isFinite(v) ? v : 0));
+    let order = counts.map((v, i) => i);
+    if (has(/\bSORT\b/)) order = counts.map((v, i) => ({ i, v })).sort((a, b) => b.v - a.v).map(s => s.i);
+    const cells = [];
+    let x = -w / 2, y = w / 2, nX = 0, left = has(/WAFFLE100/) ? 100 : 100000;
+    for (const i of order) {
+      if (!counts[i]) continue;
+      const n = Math.min(counts[i], left);
+      left -= counts[i];
+      for (let k = 0; k < n; k++) {
+        cells.push({ r: [x, y - cell, x + cell, y], part: i });
+        x += cell * 1.1;
+        if (++nX >= gridX) { x = -w / 2; y -= cell * 1.1; nX = 0; }
+      }
+    }
+    if (!cells.length) return null;
+    const half = width / 2;
+    // flat boxes getBox(shapeGroup): the background square plus any rows that
+    // overflow it (maptheme.js 18781)
+    const back = [-half + 0.5, -half + 0.5, half - 0.5, half - 0.5];
+    const extent = cells.reduce((e, c) => [Math.min(e[0], c.r[0]), Math.min(e[1], c.r[1]),
+      Math.max(e[2], c.r[2]), Math.max(e[3], c.r[3])], back.slice());
+    return { cells, back, extent };
+  }
+
   // One item's bar chart as real ixmaps-flat draws it — maptheme.js
   // drawChart's BAR branch (23283-24425) — in flat's normal units (u:
   // normalX(1), the chart size is 30 u; px = u · the object zoom factor ×
@@ -10757,6 +11242,7 @@ self.onmessage = e => {
   //   valueDecimals (explicit, else undefined), noBreaks, gridX, nClasses
   //   (partsA.length), classMax (partsA[k].max), nColors, fillOpacity,
   //   lineWidth, lineColor (linecolor, else undefined), fadeNegative,
+  //   xaxis / labels (style.xaxis / label as arrays: the XAXIS texts),
   //   fadeValuePow, hideValues (valueupper/lower), means / medians / devs
   //   (per part, OFFSETMEAN / OFFSETMEDIAN / DEVIATION)
   //   measure(text, font)  the text's width at that font size (u)
@@ -10776,10 +11262,14 @@ self.onmessage = e => {
   //          cls, part }
   //   lines: STACKED leader lines { x0, y0, x1, y1 }
   // Divergences (not drawn here): 3D, VOLUME, COLUMN's cylinders, DOTTED,
-  // SMALLARROW (drawn as ARROW), TRENDLINE, the XAXIS/AXIS labels, the
+  // SMALLARROW (drawn as ARROW), TRENDLINE, the
   // mean/median marks, CLIP / MORPH frames, showparts / clipparts, ZOOM /
   // NORMSIZE / MENUSIZE, INVERT, DIAGLEFT / DIAGRIGHT — bars are drawn
   // plain instead (see BAR_INERT_FLAGS).
+  // a style list (xaxis, label): an array, or a '|'-separated string
+  function styleList(v) {
+    return Array.isArray(v) ? v : typeof v === 'string' && v ? v.split('|') : undefined;
+  }
   function flatBarLayout(values, t, o) {
     t = String(t || '');
     const has = re => re.test(t);
@@ -10975,6 +11465,29 @@ self.onmessage = e => {
       }
       if (drawn) bars.push(bar);
 
+      // XAXIS / AXIS: the axis text below the bar (flat 23999-24037): its
+      // xaxis entry (with gridx: its column's), else its label; gray, half
+      // the bar width, ending under the bar — 45° up, or reading up / flat
+      // by case (flat's text-anchor:end: x, y here are the text's start)
+      const axisTexts = o.xaxis || o.labels;
+      if (has(/AXIS/) && axisTexts && (has(/VALUES/) || o.xaxis) && !(oy > 0 && has(/NONEGATIVE/)) && !o.hideValues) {
+        const label = String(axisTexts[idx / (o.gridX || 1)] ?? '').replace(/\s+/g, ' ').trim();
+        if (label) {
+          const fa = W * (has(/HORZ/) ? 0.7 : has(/\bUP\b/) ? 0.6 : 0.5);
+          const ptX = 0.8, ptY = W / 2 + f * 2 / 5;
+          let ex, ey, angle = 90;
+          if (o.themeMin < 0) { ex = posX + ptY; ey = -ptX + f * 0.9 + 0.5; }
+          else if (has(/CENTER/)) { ex = posX + ptY; ey = chartSize / 2 + f * 0.9; }
+          else if (has(/HORZ/)) { ex = posX + ptY; ey = -ptX + f * 0.9 + 0.25; }
+          else if (n === 1) { angle = 0; ex = posX + ptY * 1.5; ey = -ptX; }
+          else if (label.length > 1) { angle = 45; ex = posX + ptY * 0.66; ey = f * 0.66 + 0.5; }
+          else { angle = 0; ex = posX + ptY * 0.1; ey = -ptX + f; }
+          const r = angle * Math.PI / 180, w = measure(label, fa);
+          texts.push({ text: label, x: ex - w * Math.cos(r), y: ey + w * Math.sin(r), angle, font: fa,
+            opacity: 1, color: '#888888', bg: null, cls, part: idx });
+        }
+      }
+
       // the value text
       const H = v * step;
       if (has(/VALUES/) && !(oy > 0 && has(/NONEGATIVE/)) && !o.hideValues
@@ -11130,7 +11643,10 @@ self.onmessage = e => {
     const boxR = circular ? (o.radius != null ? o.radius : Math.max(w, h) / 2) * 1.1 + margin : 0;
     let title = null;
     if (o.titleText) {
-      const f = typeof o.titleFont === 'function' ? o.titleFont(w) : o.titleFont;
+      // a font that follows the box (DTEXT, GRIDSIZE) takes its width: with
+      // CIRCULARBOX the circle's diameter, as flat sizes it after making the
+      // circle (maptheme.js 18802-18822)
+      const f = typeof o.titleFont === 'function' ? o.titleFont(circular ? boxR * 2 : w) : o.titleFont;
       const measure = o.measure || titleTextWidth;
       const lines = wrapTitleLines(o.titleText, f, circular ? boxR * 2 : w, measure).split('\n');
       const width = Math.max(...lines.map(l => measure(l, f)));
@@ -11151,6 +11667,9 @@ self.onmessage = e => {
         b[0] = Math.min(b[0], title.extent[0]); b[1] = Math.min(b[1], title.extent[1]) + 0.1 * title.f;
         b[2] = Math.max(b[2], title.extent[2]); b[3] = Math.max(b[3], title.extent[3]);
       }
+      // flat (maptheme.js 18912): AUTOSIZE / GRIDSIZE boxes are made square when the content is wider
+      // than tall, by extending the top: y -= w - h, height = w + 2 margin (o.square)
+      if (o.square && b[2] - b[0] > b[3] - b[1]) b[1] = b[3] - (b[2] - b[0]);
       rect = [b[0] - margin, b[1] - margin, b[2] + margin, b[3] + margin];
     }
     return { rect, boxR, cx: center[0], cy: center[1], w, margin, title };
@@ -11474,7 +11993,7 @@ self.onmessage = e => {
   // maximum / minimum (a part missing so far counts 0, as in flat; the
   // record count stays 1); FIRST: the first record only; LAST: the last.
   // A CATEGORICAL record of no category (-1) adds its size only.
-  function flatPieAccumulate(item, rec, flags) {
+  function flatPartsAccumulate(item, rec, flags) {
     const max = flags.has('MAX'), min = flags.has('MIN');
     if (item && flags.has('FIRST')) return item;
     if (!item || flags.has('LAST')) {
@@ -11511,7 +12030,7 @@ self.onmessage = e => {
   // % of their sum. `nParts`: the number of parts (CATEGORICAL with
   // style.values: every category; without: up to the item's last one, as
   // flat's sparse nValuesA). Returns { parts, size }.
-  function flatPieItemValues(item, t, o = {}) {
+  function flatPartsItemValues(item, t, o = {}) {
     t = String(t || '');
     const n = o.nParts != null ? o.nParts : item.parts.length;
     let parts = [];
@@ -12633,12 +13152,12 @@ self.onmessage = e => {
   function weightedRecord(f, weightOf) {
     // a pie record's parts were weighted in flatPieRecord, and its size
     // (nValueSize) stays raw — nothing to do here
-    if (f.properties && f.properties.pie) return f;
+    if (f.properties && f.properties.agg) return f;
     const p = Object.assign({}, f.properties);
     if (p.value !== undefined && !isNaN(p.value)) p.value = p.value * weightOf(0);
     if (Array.isArray(p.series)) p.series = p.series.map((v, i) => (isNaN(v) ? v : v * weightOf(i)));
     // the multi-field pie's parts — the SAME per-field values as series,
-    // but the grid cell's pie accumulates THESE (flatPieAccumulate's
+    // but the grid cell's pie accumulates THESE (flatPartsAccumulate's
     // rec.parts), so they carry the weights too
     if (Array.isArray(p.parts)) p.parts = p.parts.map((v, i) => (isNaN(v) ? v : v * weightOf(i)));
     return Object.assign({}, f, { properties: p });
@@ -12988,7 +13507,25 @@ self.onmessage = e => {
   // field: an aggregation field (aggregation / aggregationscale) — the
   // records are grouped by its value, at their mean position (flat
   // relocates a field aggregation, maptheme.js 11141) — instead of a grid
-  function aggregateOnGrid(features, zoom, cellPx, flags, post, field) {
+  // An aggregated item's common title: the binding.title value every
+  // record it holds shares (non-empty), shown in place of "(n)" — not a
+  // flat rule (flat titles a group "(n)" or after its first record).
+  // A member that is itself an aggregate passes its own on.
+  const MIXED_TITLE = Symbol('mixed title');
+  function memberTitleOf(props, titleField) {
+    if (!titleField || !props) return MIXED_TITLE;
+    if (props.cluster || props.counts) return typeof props.commonTitle === 'string' ? props.commonTitle : MIXED_TITLE;
+    const raw = props.raw || props;
+    const v = raw && raw[titleField];
+    return v != null && String(v) !== '' ? String(v) : MIXED_TITLE;
+  }
+  function mergeCommonTitle(cell, props, titleField) {
+    const t = memberTitleOf(props, titleField);
+    cell.commonTitle = cell.commonTitle === undefined || cell.commonTitle === t ? t : MIXED_TITLE;
+  }
+  const commonTitleProp = cell => (typeof cell.commonTitle === 'string' ? { commonTitle: cell.commonTitle } : {});
+
+  function aggregateOnGrid(features, zoom, cellPx, flags, post, field, titleField) {
     const relocate = flags.has('RELOCATE') || !!field;
     const combine = aggCombiner(flags);
     // MAX / MIN aggregation: the cell IS one defined record — the one
@@ -13018,13 +13555,14 @@ self.onmessage = e => {
         (cell.raws = cell.raws || []).push(f.properties.raw);
       }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
+      mergeCommonTitle(cell, f.properties, titleField);
       const first = cell.n === 1;
       cell.value = combine(cell.value, f.properties.value, first);
       if (f.properties.classValue !== undefined) cell.classValue = combine(cell.classValue, f.properties.classValue, first);
       if (post) cell.value100 = combine(cell.value100, f.properties.value100 || 0, first);
       // an AGGREGATE / CATEGORICAL pie's record (flatPieRecord): its parts
-      // and size added to the cell's item as flat does (flatPieAccumulate)
-      if (f.properties.pie) cell.pie = flatPieAccumulate(cell.pie || null, f.properties.pie, flags);
+      // and size added to the cell's item as flat does (flatPartsAccumulate)
+      if (f.properties.agg) cell.agg = flatPartsAccumulate(cell.agg || null, f.properties.agg, flags);
       const series = f.properties.series;
       if (series) {
         if (!cell.series) cell.series = new Array(series.length).fill(0);
@@ -13067,11 +13605,11 @@ self.onmessage = e => {
         // the one holding the max (min), else the first (flat's itemTitle)
         ? { cluster: true, point_count: cell.n, value: cell.value, ...(hasClass ? { classValue: cell.classValue } : {}),
             titleRaw: (cell.titleFrom || cell.first).properties.raw || (cell.titleFrom || cell.first).properties,
-            ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}) }
+            ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}), ...commonTitleProp(cell) }
         : cell.first.properties;
       if (cell.series && cell.n > 1) props = Object.assign({}, props, { series: cell.series });
       if (cell.series100 && cell.n > 1) props = Object.assign({}, props, { series100: cell.series100 });
-      if (cell.pie) props = Object.assign({}, props, { pie: cell.pie });
+      if (cell.agg) props = Object.assign({}, props, { agg: cell.agg });
       if (typeof cell.size === 'number' && cell.n > 1) props = Object.assign({}, props, { size: cell.size });
       // a field aggregation's cell key (the field value): the categories of
       // one cell are merged by it (groupCoLocated), not by their positions
@@ -13092,13 +13630,13 @@ self.onmessage = e => {
   // load()/getClusters(bbox, zoom) surface, aggregating the whole dataset
   // once per zoom (cached) and filtering by bbox.
   class GridAggregateIndex {
-    constructor(cellPx, flags, post, field) { this.cellPx = cellPx; this.flags = flags; this.post = post; this.field = field || null; this.features = []; this._byZoom = new Map(); }
+    constructor(cellPx, flags, post, field, titleField) { this.cellPx = cellPx; this.flags = flags; this.post = post; this.field = field || null; this.titleField = titleField || null; this.features = []; this._byZoom = new Map(); }
     load(features) { this.features = features; this._byZoom.clear(); return this; }
     getClusters(bbox, zoom) {
       let items = this._byZoom.get(zoom);
       if (!items) {
         if (this._byZoom.size >= 8) this._byZoom.delete(this._byZoom.keys().next().value);
-        items = aggregateOnGrid(this.features, zoom, this.cellPx, this.flags, this.post, this.field);
+        items = aggregateOnGrid(this.features, zoom, this.cellPx, this.flags, this.post, this.field, this.titleField);
         this._byZoom.set(zoom, items);
       }
       return items.filter(f => {
@@ -13129,7 +13667,7 @@ self.onmessage = e => {
     }
     return out;
   }
-  function groupCoLocated(clusterFeatures, zoom, clusterRadiusPx, nCategories, flags, atCellCenter = false) {
+  function groupCoLocated(clusterFeatures, zoom, clusterRadiusPx, nCategories, flags, atCellCenter = false, titleField = null) {
     // Merge tolerance MUST track the same theme-driven, scale-dependent
     // aggregation width the clustering itself just used (clusterRadiusPx,
     // set by _ensureClusterIndices right before this runs) — not an
@@ -13157,6 +13695,7 @@ self.onmessage = e => {
       let cell = cells.get(key);
       if (!cell) { cell = { sumX: 0, sumY: 0, n: 0, cx: snapped.x, cy: snapped.y, counts: new Array(n).fill(0), recordCounts: new Array(n).fill(0), classTotal: undefined }; cells.set(key, cell); }
       cell.sumX += p.x; cell.sumY += p.y; cell.n++;
+      mergeCommonTitle(cell, f.properties, titleField);
       // the cell's title: with MAX/MIN aggregation the member holding the
       // biggest (smallest) size (the cell IS that one item), else the
       // first — flat's itemTitle
@@ -13208,7 +13747,7 @@ self.onmessage = e => {
         geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] },
         properties: { counts: cell.counts, total: cell.counts.reduce((a, c) => a + c, 0), recordCounts: cell.recordCounts, ...(cell.classTotal !== undefined ? { classTotal: cell.classTotal } : {}),
           ...(cell.raws && cell.raws.length ? { raws: cell.raws } : {}),
-          ...(cell.titleRaw ? { titleRaw: cell.titleRaw } : {}),
+          ...(cell.titleRaw ? { titleRaw: cell.titleRaw } : {}), ...commonTitleProp(cell),
           ...(cell.series ? { series: cell.series } : {}),
           ...(typeof cell.size === 'number' ? { size: cell.size } : {}) }
       };
@@ -13328,6 +13867,7 @@ self.onmessage = e => {
       // IconLayer instance with a fresh, empty atlas (see
       // ICON_ATLAS_RESET_AFTER for why this is necessary at all).
       this._iconGeneration = 0;
+      this._atlasSwapPendingSince = 0;   // when _cacheIcon found a swap due (see _commitAtlasSwap)
       this._iconsSinceAtlasReset = 0;
       this._iconAreaSinceAtlasReset = 0;
       this._prepare();
@@ -13345,16 +13885,17 @@ self.onmessage = e => {
     // (one this cache hasn't seen before, whether the cache is still
     // growing or already evicting to make room) also counts against
     // deck.gl's OWN cumulative, never-evicted atlas. Once enough new
-    // icons have been created since the last reset, bump the generation
-    // counter — the caller's layer id changes next redraw, and deck.gl
-    // throws away the old IconLayer (and its bloated atlas) for a fresh
-    // one, the same way React remounts a component when its key changes.
+    // icons have been created since the last reset, a swap is due: the
+    // generation counter is bumped (_commitAtlasSwap), the caller's layer
+    // id changes, and deck.gl throws away the old IconLayer (and its
+    // bloated atlas) for a fresh one, the same way React remounts a
+    // component when its key changes.
     _cacheIcon(key, icon) {
       if (!this._iconCache.has(key)) {
         this._iconsSinceAtlasReset++;
         this._iconAreaSinceAtlasReset += (icon.width || 0) * (icon.height || 0);
         if (this._iconsSinceAtlasReset > ICON_ATLAS_RESET_AFTER || this._iconAreaSinceAtlasReset > ICON_ATLAS_AREA_RESET_AFTER) {
-          this._iconGeneration++;
+          if (!this._atlasSwapPendingSince) this._atlasSwapPendingSince = Date.now();
           this._iconsSinceAtlasReset = 0;
           this._iconAreaSinceAtlasReset = 0;
         }
@@ -13364,6 +13905,25 @@ self.onmessage = e => {
       }
       this._iconCache.set(key, icon);
       return icon;
+    }
+
+    // The atlas swap _cacheIcon asked for, made by refreshLayers before it
+    // builds this theme's layers — but only once deck.gl has finished
+    // loading the icons of the theme's current atlas layers
+    // (`layersLoaded`, IconLayer.isLoaded). deck.gl 9.4's IconManager does
+    // not cancel its icon loads when its layer is finalized: a swap during
+    // a load deletes the atlas texture, and the loads still copy into it
+    // ("bindTexture: attempt to use a deleted object", plot_curves with
+    // 2× plot icons: the area cap was hit after 53 icons, mid-load).
+    // A load that never finishes must not keep the atlas growing: after
+    // ATLAS_SWAP_MAX_WAIT_MS the swap is made anyway. Returns true when the
+    // generation changed.
+    _commitAtlasSwap(layersLoaded, now) {
+      if (!this._atlasSwapPendingSince) return false;
+      if (!layersLoaded && now - this._atlasSwapPendingSince < ATLAS_SWAP_MAX_WAIT_MS) return false;
+      this._iconGeneration++;
+      this._atlasSwapPendingSince = 0;
+      return true;
     }
 
     _prepare() {
@@ -13393,8 +13953,8 @@ self.onmessage = e => {
       if (gridwidthIsMeters || aggregationHasMetersEntry(this.style.aggregation || this.style.aggregationscale)) this._scanGridRefLat();
 
       // a bar chart's parts are a pie's (its value fields or categories)
-      if ((this._isPieChart() || this._isBarChart()) && this.binding.value) {
-        this._preparePie();
+      if ((this._isPieChart() || this._isBarChart() || this._isWaffleChart() || this._isGridPlot()) && this.binding.value) {
+        this._prepareParts();
       } else if (this._isMultiFieldSymbol()) {
         this._prepareMultiFieldSymbol();
       } else if (this.flags.has('DOMINANT') && this.binding.value && !isAggregatedCategoricalChoropleth(this)
@@ -13714,10 +14274,10 @@ self.onmessage = e => {
       });
       // an AGGREGATE / CATEGORICAL pie: one bucket, each record carrying its
       // contribution to its item (flatPieRecord), added up per position or
-      // grid cell by aggregateOnGrid (flatPieAccumulate)
-      if (this._isAggregatedPie()) {
+      // grid cell by aggregateOnGrid (flatPartsAccumulate)
+      if (this._hasAggregatedParts()) {
         const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
-        const fields = this._pieCategorical ? null : String(this.binding.value || '').split('|');
+        const fields = this._partsCategorical ? null : String(this.binding.value || '').split('|');
         const rules = flatValueRules(t, fields ? fields.length : 1);
         const sizeField = this.binding.size && this.binding.size !== '$item$' ? this.binding.size : null;
         const feats = [];
@@ -13727,20 +14287,20 @@ self.onmessage = e => {
         for (const f of sourceFeatures) {
           const p = f.properties || {};
           let cat;
-          if (this._pieCategorical) {
+          if (this._partsCategorical) {
             const k = this._pieCategoryKey(p[this.binding.value]);
             const i = k == null ? undefined : this._pieCategoryIndex.get(k);
             cat = i == null ? -1 : i;
           }
           const pie = flatPieRecord(p, { rules, sizeField, cat, fields, weights: pieWeightOf });
           if (!pie) continue;
-          feats.push({ type: 'Feature', geometry: f.geometry, properties: { value: pie.size, pie, raw: p } });
+          feats.push({ type: 'Feature', geometry: f.geometry, properties: { value: pie.size, agg: pie, raw: p } });
         }
         this._featuresByCategory = [feats];
         this._clusterIndices = null;
         this._clusterRadiusPx = null;
         this._aggregateStatsCache = null;
-        this._pieStatsCache = null;
+        this._partsStatsCache = null;
         return;
       }
       // Range-classed (non-CATEGORICAL numeric) coloring: DON'T pre-split
@@ -13989,7 +14549,7 @@ self.onmessage = e => {
     _usesAggregationIndex() {
       // AGGREGATE / CATEGORICAL pies aggregate their records into items
       // (see _buildAggregationIndex)
-      if (this._isAggregatedPie()) return true;
+      if (this._hasAggregatedParts()) return true;
       // GRIDSIZE bins its own grid (_ensureGridIndex) — PLOT curves and the
       // plain mesh; a classed GRIDSIZE symbol chart is aggregated like any
       // other (see _isPlainGridMesh)
@@ -14249,7 +14809,7 @@ self.onmessage = e => {
       // arithmetic above — a weighted SUM, not a sum weighted afterward
       const weightOf = fieldWeightOf(this.style, (this._multiFields || [this.binding && this.binding.value]).length, true);
       this._clusterIndices = this._featuresByCategory.map(feats =>
-        new GridAggregateIndex(radiusPx, this.flags, post, aggField).load(weightOf ? feats.map(f => weightedRecord(f, weightOf)) : feats));
+        new GridAggregateIndex(radiusPx, this.flags, post, aggField, this.binding.title).load(weightOf ? feats.map(f => weightedRecord(f, weightOf)) : feats));
     }
 
     // Reverted from the source-accurate two-flat-circle GLOW (radius*6
@@ -14611,6 +15171,8 @@ self.onmessage = e => {
       // holding the max (min) — so it carries that record's real title;
       // "(n)" is the label of a summed/mean aggregate
       if (this.flags.has('MAX') || this.flags.has('MIN')) return title;
+      // every record of the aggregate has the same title: that one (not a flat rule)
+      if (aggregated && typeof props.commonTitle === 'string') return props.commonTitle;
       if (aggregated && this._clusterRadiusPx && !this._clusterField) {
         const n = groupRecordCount(props);
         if (!title || n > 3) return '(' + n + ')';
@@ -15040,6 +15602,8 @@ self.onmessage = e => {
       // a native MapLibre raster source+layer managed by syncWmsLayers —
       // not as deck.gl layers — so its own build returns nothing
       if (this.flags.has('WMS') || this.flags.has('IMAGE')) return [];
+      // a PMTiles theme: a native MapLibre fill layer managed by syncNativePmtiles
+      if (this.flags.has('MLPMTILES')) return [];
       // flat's POSITION theme (maptheme.js 8328-8353): loads its data and
       // draws nothing — it only exists as this layer's id→position provider
       // for the join (joinChartPositions reads its features, its binding.id
@@ -15060,6 +15624,8 @@ self.onmessage = e => {
       // BAR / BARS (flat's BAR branch, after BUBBLE and SYMBOL: a type
       // with those is not a bar chart, see isBarChart)
       if (this._isBarChart()) return this._buildBarLayers(zoom, bbox, liveZoom, globeCenter);
+      // WAFFLE (flat's WAFFLE branch: after PIE, before BUBBLE / SYMBOL / BAR)
+      if (this._isWaffleChart()) return this._buildWaffleLayers(zoom, bbox, liveZoom, globeCenter);
       if (isSymbolChart(this.flags)) return this._buildChartLayers(zoom, bbox, liveZoom, globeCenter);
       // once per theme, not on every redraw
       if (!this._warnedNoRenderer) {
@@ -15648,11 +16214,13 @@ self.onmessage = e => {
     // CHART|PIE (and PIE|DONUT): one pie per record, its slices the value
     // fields; AGGREGATE and CATEGORICAL pies one pie per item — the records
     // of a position (or grid cell) — its slices the categories or the value
-    // fields (_isAggregatedPie, _buildPieLayers)
+    // fields (_hasAggregatedParts, _buildPieLayers)
     _isVectorChart() { return isVectorChart(this.flags); }
     // CHART|BAR / BARS: a bar chart per record or item, its bars a pie's
     // parts (_buildBarLayers)
     _isBarChart() { return isBarChart(this.flags); }
+    // CHART|WAFFLE: a square per count, its parts a pie's (_buildWaffleLayers)
+    _isWaffleChart() { return isWaffleChart(this.flags); }
     _isPieChart() {
       return !isVectorChart(this.flags) && this.flags.has('CHART') && this.flags.has('PIE') && !this.flags.has('DOT');
     }
@@ -15660,21 +16228,38 @@ self.onmessage = e => {
     // AGGREGATE, or CATEGORICAL (a part per category — flat sums the
     // records of an item's position by category even without AGGREGATE)
     // (a bar chart's items too)
-    _isAggregatedPie() {
-      return (this._isPieChart() || this._isBarChart()) && (this.flags.has('AGGREGATE') || this.flags.has('CATEGORICAL'));
+    _hasAggregatedParts() {
+      return (this._isPieChart() || this._isBarChart() || this._isWaffleChart() || this._isGridPlot()) && (this.flags.has('AGGREGATE') || this.flags.has('CATEGORICAL'));
+    }
+    // CHART|PLOT|GRIDSIZE: one curve per grid cell, its points the cell's parts (_buildPlotLayers)
+    _isGridPlot() { return this.flags.has('PLOT') && this.flags.has('GRIDSIZE'); }
+    // flat: a PLOT with style.ranges colours each segment by the class of its own value
+    // (maptheme.js 21966), RANGES flag or not; null = one colour
+    _plotValueClasses() {
+      if (this._plotClassesCache !== undefined) return this._plotClassesCache;
+      let r = this.style.ranges;
+      if (typeof r === 'string') r = r.split(r.includes('|') ? '|' : ',');
+      r = Array.isArray(r) ? r.map(Number) : [];
+      let out = null;
+      if (r.length > 2 && r.every(isFinite)) {
+        const parts = explicitRangeParts(r);   // class max nudged +1e-9: a break belongs to the class below
+        const colors = resolveClassColors(this.style.colorscheme, parts.map(() => ''), this.style.classes);
+        out = { colors, classOf: v => { for (let i = 0; i < parts.length; i++) if (v < parts[i].max) return i; return parts.length - 1; } };
+      }
+      return (this._plotClassesCache = out);
     }
     // a per-item chart whose parts are its value fields (legend rows, sums)
     _isMultiFieldChart() {
-      return !!this._multiFields && (this._isMultiFieldSequence() || this._isPieChart() || this._isBarChart());
+      return !!this._multiFields && (this._isMultiFieldSequence() || this._isPieChart() || this._isBarChart() || this._isWaffleChart());
     }
     // flat's theme statistics for a pie (maptheme.js 9119-9130): nMin/nMax
     // over every part value of every item, the classes (partsA, flat's
     // distributeValues over that range, as many as the colorscheme has
     // colors) — flat colors a 1-part pie (or any with CLASSES) by them
     // (maptheme.js 20330-20341); several parts are colored by field.
-    _preparePie() {
-      if (this.flags.has('CATEGORICAL')) { this._preparePieCategories(); return; }
-      this._pieCategorical = false;
+    _prepareParts() {
+      if (this.flags.has('CATEGORICAL')) { this._preparePartsCategories(); return; }
+      this._partsCategorical = false;
       const fields = String(this.binding.value).split('|');
       const pooled = [];
       for (const f of this.features) {
@@ -15694,7 +16279,7 @@ self.onmessage = e => {
         this._multiFields = null;
         this._partNoFill = new Set();
       }
-      this._pieFields = fields;
+      this._partsFields = fields;
       if (pooled.length) {
         this._valueMin = nMin;
         this._valueMax = nMax;
@@ -15709,8 +16294,8 @@ self.onmessage = e => {
     // category in its colorscheme color, labeled by style.label. flat's
     // classes are the category numbers (partsA: i + 1, the last one 0.001
     // wider) — its value range (nMin / nMax) follows the items
-    // (_pieAggregateStats).
-    _preparePieCategories() {
+    // (_partsStats).
+    _preparePartsCategories() {
       const st = this.style;
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
       const ignoreCase = /IGNORECASE/.test(t), undefinedIsValue = /UNDEFINEDISVALUE/.test(t);
@@ -15721,7 +16306,8 @@ self.onmessage = e => {
         return k.trim();
       };
       const index = new Map();
-      const explicit = Array.isArray(st.values) ? st.values : null;
+      // a PLOT's X axis list is its ordered categories too
+      const explicit = Array.isArray(st.values) ? st.values : (this._isGridPlot() && Array.isArray(st.xaxis) ? st.xaxis : null);
       const labels = [];
       if (explicit) {
         explicit.forEach(v => { const k = key(v); if (k != null && !index.has(k)) { index.set(k, labels.length); labels.push(String(v).trim()); } });
@@ -15731,8 +16317,8 @@ self.onmessage = e => {
           if (k != null && !index.has(k)) { index.set(k, labels.length); labels.push(k); }
         }
       }
-      this._pieCategorical = true;
-      this._pieExplicitValues = !!explicit;
+      this._partsCategorical = true;
+      this._partsExplicitValues = !!explicit;
       this._pieCategoryKey = key;
       this._pieCategoryIndex = index;
       this.categoryLabels = labels;
@@ -15753,7 +16339,7 @@ self.onmessage = e => {
       this.partsA = labels.map((l, i) => ({ min: i + 1, max: i + 1 + (i === n - 1 ? 0.001 : 0) + 1e-9 }));
       this._rangeClassed = false;
       this._multiFields = null;
-      this._pieFields = null;
+      this._partsFields = null;
       this._partNoFill = new Set();
     }
 
@@ -15816,8 +16402,14 @@ self.onmessage = e => {
         const b = itemPlotGeometry(d.properties.values, rangeFor(d.properties.values), this.style, this.flags, sizeMax).bbox;
         return [b.x0 * S, -b.y1 * S, b.x1 * S, -b.y0 * S];
       } });
+      // align / offsetx / offsety: flat's PLOT branch of the chart position (flatChartAlignOffset);
+      // the width is n steps of nChartSize (30 units). No ZOOM; the anchor of an item PLOT is the position
+      const ipUnit = S / (2 * NORMAL_RADIUS_PX);
+      const ipN = items[0].properties.values.length;
+      const ipOff = this.flags.has('ZOOM') ? [0, 0]
+        : flatChartAlignOffset(this.style, { kind: 'plot', unit: ipUnit, width: ipN * 30 * ipUnit / (styleNum(this.style.gridx) || 1) });
       const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
-        unit: S / (2 * NORMAL_RADIUS_PX), liveZoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
+        unit: S / (2 * NORMAL_RADIUS_PX), liveZoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => ipOff,
         ids: { circle: `ix-itemplot-box-${this.name}`, icon: `ix-itemplot-box-${this.name}`, polygons: `ix-itemplot-box-polygons-${this.name}`, titles: `ix-itemplot-titles-${this.name}` }
       }) : { box: [], titles: [] };
       return [...boxLayers.box, new IconLayer({
@@ -15828,6 +16420,7 @@ self.onmessage = e => {
         // the icon is drawn in chart units (see _buildItemPlotIcon): its
         // height in S units × S px
         getSize: d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity).heightUnits * S,
+        ...(ipOff[0] || ipOff[1] ? { getPixelOffset: ipOff } : {}),
         sizeUnits: 'pixels',
         updateTriggers: { getSize: [S] },
         // globe: MapLibre's sphere surface would otherwise hide the icons
@@ -15971,25 +16564,37 @@ self.onmessage = e => {
     // optionally stretched/compressed by style.rangescale. This config
     // sets neither minvalue nor maxvalue, so scaling here is automatic.
     _buildPlotLayers(zoom, bbox, globeCenter = null) {
-      this._ensureGridIndex(zoom);
       let categories = this._plotCategories();
+      // value fields: one point per field, whatever the X axis list says
+      if (this._partsFields && categories.length !== this._partsFields.length) categories = this._partsFields.slice();
       if (!categories.length) return [];
-      let labels = Array.isArray(this.style.label) ? this.style.label.map(String) : categories;
+      let labels = Array.isArray(this.style.label) && this.style.label.length === categories.length ? this.style.label.map(String) : categories;
       // DIFFERENCE: one value less per cell (cellAggregatedValues)
-      if (this.flags.has('DIFFERENCE') && categories.length > 1) {
+      const difference = this.flags.has('DIFFERENCE') && categories.length > 1;
+      if (difference) {
         categories = categories.slice(0, -1);
         labels = labels.slice(0, categories.length);
       }
 
-      const data = this._gridIndex.map(cell => {
-        const center = worldPixelToLngLat(cell.px, cell.py, zoom);
-        return {
-          geometry: { type: 'Point', coordinates: [center.lng, center.lat] },
-          properties: { values: this._cellAggregatedValues(cell) }
-        };
+      // the cells are the parts processor's items (one per grid cell, its
+      // parts one per category / value field, SUM / MEAN / MAX as flat)
+      const data = this._partsItems(zoom, [-180, -90, 180, 90]).map(f => {
+        let values = this._partsOf(f.properties.agg).parts;
+        const n = difference ? categories.length + 1 : categories.length;
+        values = Array.from({ length: n }, (_, i) => values[i] || 0);
+        if (difference) values = cellAggregatedValues({ sums: values, counts: values.map(() => 1) }, this.flags, this.style);
+        const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
+        return { geometry: { type: 'Point', coordinates: f.geometry.coordinates }, properties: { values, titleRaw: raws[0] || null } };
       });
 
-      const iconSize = (styleNum(this.style.gridwidthpx) || GRID_WIDTH_PX_DEFAULT) * (styleNum(this.style.scale) || 1);
+      // the grid cell width in px: the processor's grid (gridwidthpx,
+      // gridwidth, aggregation); a meters grid scales with the zoom
+      const cellPx = this._clusterRadiusPx
+        ? this._clusterRadiusPx * (this._clusterUsesFixedZoom ? Math.pow(2, zoom - GRIDWIDTH_METERS_REFERENCE_ZOOM) : 1)
+        : GRID_WIDTH_PX_DEFAULT;
+      // flat's auto-fit of the curve into the cell (plotIconSizePx); box and title unit follow iconSize
+      const nPts = difference ? categories.length + 1 : categories.length;
+      const iconSize = plotIconSizePx(cellPx, styleNum(this.style.scale) || 1, nPts);
 
       // Under FIXSIZE, both the Y-axis auto-scale and the curve point
       // markers are calibrated against the WHOLE dataset, not each cell's
@@ -16012,20 +16617,45 @@ self.onmessage = e => {
       const drawn = globeCenter
         ? data.filter(d => isOnVisibleHemisphere(d.geometry.coordinates[0], d.geometry.coordinates[1], globeCenter)) : data;
 
+      // icons (and boxes, titles) only for the cells in view, plus a margin: every distinct
+      // curve is an icon in deck.gl's one shared texture atlas, so the whole grid is too many
+      const padX = (bbox[2] - bbox[0]) * 0.15, padY = (bbox[3] - bbox[1]) * 0.15;
+      const inView = d => { const c = d.geometry.coordinates; return c[0] >= bbox[0] - padX && c[0] <= bbox[2] + padX && c[1] >= bbox[1] - padY && c[1] <= bbox[3] + padY; };
+      const visible = bbox && isFinite(bbox[0] + bbox[1] + bbox[2] + bbox[3]) ? drawn.filter(inView) : drawn;
+
       // BOX / TITLE: flat's chart-group box around every chart; the chart is
       // the iconSize square on the cell's center (flat's chart size is 30 units)
-      const boxRows = this._boxRows(drawn, { unit: iconSize / 30, liveZoom: zoom,
-        extentOf: () => [-iconSize / 2, -iconSize / 2, iconSize / 2, iconSize / 2] });
+      // one X step is 30 flat units (600 raw): flat's unit, the margin's basis (boxmargin x unit), is a
+      // step / 30 - not iconSize / 30 (measured: EU boxmargin 50 -> 8.86 px a side, box 157.6 px)
+      const stepPx = iconSize * PLOT_RASTER_X_SPAN / Math.max(1, nPts - 1);
+      const plotUnitPx = stepPx / 30;
+      // the box content is the axes frame (grid lines + labels) of the item's own icon, as in flat; without GRID the
+      // iconSize square (flat sizes by what is not hidden, unverified there). Square when GRIDSIZE / AUTOSIZE and wider than tall
+      const rasterPx = iconSize / PLOT_ICON_RASTER_SIZE, rasterMid = PLOT_ICON_RASTER_SIZE / 2;
+      const boxRows = this._boxRows(visible, { unit: plotUnitPx, liveZoom: zoom,
+        square: flatFlag(this.flags, 'GRIDSIZE') || flatFlag(this.flags, 'AUTOSIZE'),
+        extentOf: d => {
+          const e = this._buildPlotIcon(d.properties.values, categories, labels, normalSizeValue, datasetMax, datasetMin, true).axesExtent;
+          return e ? e.map(v => (v - rasterMid) * rasterPx) : [-iconSize / 2, -iconSize / 2, iconSize / 2, iconSize / 2];
+        } });
+      // align / offsetx / offsety: flat's PLOT branch of the chart position (flatChartAlignOffset), for the
+      // whole chart (curve, box, titles); not under ZOOM. One X step is 30 flat units (600 raw)
+      const plotOff = this.flags.has('ZOOM') ? [0, 0]
+        : flatChartAlignOffset(this.style, { kind: 'plot', unit: plotUnitPx, width: nPts * 30 * plotUnitPx / (styleNum(this.style.gridx) || 1) });
+      // flat 18564: a grid PLOT's corner-anchored box is recentred by nGridSize / 2 = n steps / 2, while the
+      // curve spans n-1 steps: it sits half a step left of the cell centre (measured on the EU page, n = 48)
+      const off = this.flags.has('ZOOM') ? [0, 0] : [plotOff[0] - 0.5 * stepPx, plotOff[1]];
       const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
-        unit: iconSize / 30, liveZoom: zoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
+        unit: plotUnitPx, liveZoom: zoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => off,
         ids: { circle: `ix-plot-box-${this.name}`, icon: `ix-plot-box-${this.name}`, polygons: `ix-plot-box-polygons-${this.name}`, titles: `ix-plot-titles-${this.name}` }
       }) : { box: [], titles: [] };
       return [...boxLayers.box, new IconLayer({
         id: `ix-plot-${this.name}-g${this._iconGeneration}`,
-        data: drawn, pickable: true,
+        data: visible, pickable: true,
         getPosition: d => d.geometry.coordinates,
         getIcon: d => this._buildPlotIcon(d.properties.values, categories, labels, normalSizeValue, datasetMax, datasetMin),
         getSize: iconSize,
+        getPixelOffset: off,
         sizeUnits: 'pixels',
         // globe: MapLibre's sphere surface would otherwise hide the icons
         parameters: ICON_LAYER_GLOBE_PARAMETERS
@@ -16039,11 +16669,17 @@ self.onmessage = e => {
     // markersize/normalsizevalue/boxopacity/bordercolor) — matching the
     // exact config this was built against, not a generalized
     // reinterpretation of every real PLOT style option.
-    _buildPlotIcon(values, categories, labels, normalSizeValue, datasetMax, datasetMin = 0) {
+    // extentOnly: no raster, just { axesExtent } — the box layout needs the axes frame of every cell while the
+    // layers are built (inside the gesture-budget timing), and drawing every icon there cost ~7 ms each
+    _buildPlotIcon(values, categories, labels, normalSizeValue, datasetMax, datasetMin = 0, extentOnly = false) {
       const W = PLOT_ICON_RASTER_SIZE, H = PLOT_ICON_RASTER_SIZE;
-      const hasXAxis = this.flags.has('XAXIS');
+      // flat draws the axis only inside its BOX + GRID block (maptheme.js 22657)
+      const hasXAxis = this.flags.has('XAXIS') && flatFlag(this.flags, 'BOX') && this.flags.has('GRID');   // \bGRID\b: not GRIDSIZE
       const chartH = hasXAxis ? H - PLOT_XAXIS_HEIGHT : H;
-      const marginX = 6;
+      const marginX = PLOT_MARGIN_X;
+      // flat's coordinate grid: y lines + labels and, from style.xaxis, x ticks + labels (BOX + GRID)
+      const gridAxes = flatFlag(this.flags, 'BOX') && this.flags.has('GRID');
+      const flatXAxis = gridAxes && Array.isArray(this.style.xaxis) && this.style.xaxis.length > 0;
 
       // SMOOTH — a literal 3-point centered rolling average over INTERIOR
       // points only, matching the real engine exactly (maptheme.js:21271,
@@ -16089,8 +16725,12 @@ self.onmessage = e => {
         ? (datasetMax || 1)
         : (definedValues.length ? Math.max(0.0001, ...definedValues) : 0.0001);
       const effectiveMin = !isNaN(styleMin) ? styleMin : autoMin;
-      const effectiveMax = effectiveMin + (( !isNaN(styleMax) ? styleMax : autoMax) - effectiveMin) / rangeScale;
+      const rawMax = !isNaN(styleMax) ? styleMax : autoMax;
+      const effectiveMax = effectiveMin + (rawMax - effectiveMin) / rangeScale;
       const valueSpan = (effectiveMax - effectiveMin) || 1;
+      // with the grid, the baseline is the axis' rounded minimum (flat: nPValue = value - nMinValue)
+      const yAxis = gridAxes ? plotYAxis(effectiveMin, rawMax) : null;
+      const yMin = yAxis ? yAxis.min : effectiveMin;
 
       // FIXSIZE: every curve point marker (the "symbol" on this chart
       // type) renders at ONE fixed size, with no dependency on any value
@@ -16103,14 +16743,24 @@ self.onmessage = e => {
       // valueRadius uses.
       const baseMarkerR = styleNum(this.style.markersize) || 0;
       const sizePow = resolveSizePow(this.style, this.flags);
-      const markerRadiusFor = v => this.flags.has('FIXSIZE')
+      // flat: symbols "none" draws no point markers (same rule as itemPlotGeometry)
+      const noMarkers = [].concat(this.style.symbols == null ? [] : this.style.symbols).some(s => String(s) === 'none');
+      const markerRadiusFor = v => noMarkers ? 0 : this.flags.has('FIXSIZE')
         ? baseMarkerR / (normalSizeValue || 1)
         : baseMarkerR * Math.pow(Math.max(0, v || 0) / (normalSizeValue || 1), 1 / sizePow);
 
+      const byValue = this._plotValueClasses();   // flat: each segment takes its own value's class colour
       const n = categories.length;
       const stepX = n > 1 ? (W - marginX * 2) / (n - 1) : 0;
-      const baselineY = chartH - 3;
-      const plotAreaH = chartH - 8;
+      // grid plots sit 3 raster px higher (flat's measured placement), leaving room for the x labels
+      const baselineY = chartH - (gridAxes ? 6 : 3);
+      // flat (maptheme.js 22481): the value range is as tall as the curve is wide (x rangescale),
+      // 88 raster px; an XAXIS band still caps it, as the icon has no room below
+      const plotAreaH = n > 1 ? Math.min((n - 1) * stepX, chartH - 8) : chartH - 8;
+      // flat fills every AREA segment to the value-0 level, not to the bottom of the range
+      // (measured on the flat EU page: baseline = the zero line, negative values fill upward);
+      // unclamped — a zero outside the range falls outside the icon and is clipped
+      const zeroY = plotZeroY(baselineY, plotAreaH, yMin, valueSpan);
 
       // Point Y positions (and marker radii) are quantized to a coarse
       // grid BEFORE anything else happens — including before they become
@@ -16123,11 +16773,13 @@ self.onmessage = e => {
       // closer zoom) — same failure mode, and same fix, as the
       // multi-bubble cluster icon's quantized bucket-mix signature
       // earlier in this file.
-      const Y_QUANT_PX = 8;
+      // coarse for short curves (they repeat across cells and share one icon); a many-point
+      // curve is unique per cell anyway, so a coarse step would only stair-step it
+      const Y_QUANT_PX = n > 6 ? 1 : 8;
       const R_QUANT_PX = 0.5;
       const points = plotValues.map((v, i) => {
         if (v == null || isNaN(v) || (!zeroIsValue && v === 0)) return null;
-        const ratio = (v - effectiveMin) / valueSpan;
+        const ratio = (v - yMin) / valueSpan;
         const rawY = baselineY - Math.max(0, Math.min(1, ratio)) * plotAreaH;
         // marker radius reflects this point's own RAW value (values[i]),
         // not the SMOOTH-averaged plotValues[i] used for the line's Y
@@ -16136,16 +16788,49 @@ self.onmessage = e => {
         return {
           x: marginX + i * stepX,
           y: Math.round(rawY / Y_QUANT_PX) * Y_QUANT_PX,
-          r: Math.round(markerRadiusFor(values[i]) / R_QUANT_PX) * R_QUANT_PX
+          r: Math.round(markerRadiusFor(values[i]) / R_QUANT_PX) * R_QUANT_PX,
+          c: byValue ? byValue.classOf(plotValues[i]) : 0
         };
       });
 
-      const key = points.map(p => (p ? `${p.y}:${p.r}` : 'x')).join('-') + `|${n}`;
+      // the axes frame's extent [l, t, r, b] in raster px (grid lines + y labels + x labels): flat sizes a
+      // PLOT's BOX by exactly this (maptheme.js 18774, the curve group is hidden then). Null without GRID.
+      // Text boxes as the browser reports them for flat's SVG text: ascent .905 / descent .212 of the font
+      const axesExtent = (() => {
+        if (!yAxis) return null;
+        const k = stepX / 600, ppu = plotAreaH / valueSpan;
+        const left = marginX - 120 * k, right = marginX + (n - 1) * stepX;
+        const fs = Math.max(n, 3) * 20 * k;
+        let e = null;
+        const grow = (l, t, r, b) => { e = e ? [Math.min(e[0], l), Math.min(e[1], t), Math.max(e[2], r), Math.max(e[3], b)] : [l, t, r, b]; };
+        const ys = yAxis.ticks.map(t => baselineY - (t.v - yMin) * ppu);
+        if (ys.length) grow(left, Math.min(...ys), right, Math.max(...ys));
+        yAxis.ticks.forEach((t, i) => {
+          const base = ys[i] + fs * 0.3, wd = titleTextWidth(t.label, fs), x = marginX - 132 * k;
+          grow(x - wd, base - 0.905 * fs, x, base + 0.212 * fs);
+        });
+        if (flatXAxis) {
+          const xs = this.style.xaxis.map(String), top = baselineY - (yAxis.max - yMin) * ppu;
+          xs.forEach((lab, s) => {
+            if (!((lab.length && lab !== ' ') || s === 0 || s === xs.length - 1)) return;
+            const x = marginX + s * stepX, wd = titleTextWidth(lab, fs), base = baselineY + fs * 1.5;
+            grow(x, Math.min(top, baselineY + 100 * k), x, baselineY + 100 * k);
+            if (lab.length && lab !== ' ') grow(x - wd / 2, base - 0.905 * fs, x + wd / 2, base + 0.212 * fs);
+          });
+        }
+        return e;
+      })();
+      if (extentOnly) return { axesExtent };
+
+      const key = points.map(p => (p ? `${p.y}:${p.r}${byValue ? ':' + p.c : ''}` : 'x')).join('-') + `|${n}`;
       if (this._iconCache.has(key)) return this._iconCache.get(key);
 
       const canvas = document.createElement('canvas');
-      canvas.width = W; canvas.height = H;
+      // drawn at PLOT_RASTER_SS x resolution (all coordinates stay in 100-unit space): deck.gl scales the
+      // icon up to the cell size, and a hairline curve would otherwise be smeared wider than flat's SVG
+      canvas.width = W * PLOT_RASTER_SS; canvas.height = H * PLOT_RASTER_SS;
       const ctx = canvas.getContext('2d');
+      ctx.scale(PLOT_RASTER_SS, PLOT_RASTER_SS);
 
       // BOX (a plot without the BOX flag keeps its own canvas box; with it the
       // shared box layer draws it — see _buildPlotLayers)
@@ -16155,7 +16840,7 @@ self.onmessage = e => {
         ctx.fillRect(0, 0, W, H);
       }
       const borderColor = this.style.bordercolor;
-      if (borderColor && borderColor !== 'none') {
+      if (borderColor && borderColor !== 'none' && !flatFlag(this.flags, 'BOX')) {
         ctx.strokeStyle = borderColor;
         ctx.lineWidth = 1;
         ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
@@ -16178,6 +16863,8 @@ self.onmessage = e => {
       // without ZEROISVALUE) exactly like the original point-by-point
       // tracing did, each drawn as its own independent curve.
       const useSpline = this.flags.has('SPLINE');
+      const bySeg = !!byValue && !useSpline;
+      const segColor = p => (byValue ? byValue.colors[p.c].join(',') : rgbStr);
       const runs = [];
       { let cur = []; points.forEach(p => { if (p) cur.push(p); else if (cur.length) { runs.push(cur); cur = []; } }); if (cur.length) runs.push(cur); }
       function tracePath(ctx, run) {
@@ -16195,43 +16882,129 @@ self.onmessage = e => {
         }
       }
 
+      // GRID — flat's coordinate grid (maptheme.js 22657-22740), drawn under the curve; every size is
+      // flat's raw unit (20 per chart unit) x k, one X step being 600 raw
+      if (yAxis) {
+        const k = stepX / 600, ppu = plotAreaH / valueSpan, nP = n;
+        const left = marginX - 120 * k, right = marginX + (n - 1) * stepX;
+        const fs = Math.max(nP, 3) * 20 * k;
+        ctx.save();
+        ctx.lineWidth = nP * k;
+        yAxis.ticks.forEach(t => {
+          const y = baselineY - (t.v - yMin) * ppu;
+          if (Math.abs(t.v) < 1e-9) { ctx.strokeStyle = '#444444'; ctx.setLineDash([]); }
+          else { ctx.strokeStyle = 'rgba(136,136,136,0.4)'; ctx.setLineDash([6 * nP * k, 3 * nP * k]); }
+          ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#888888';
+        ctx.font = `${fs}px arial`;
+        ctx.textAlign = 'right';
+        yAxis.ticks.forEach(t => ctx.fillText(t.label, marginX - 132 * k, baselineY - (t.v - yMin) * ppu + fs * 0.3));
+        if (flatXAxis) {
+          const xs = this.style.xaxis.map(String), top = baselineY - (yAxis.max - yMin) * ppu;
+          ctx.strokeStyle = 'rgba(136,136,136,0.4)';
+          ctx.lineWidth = xs.length * k;
+          ctx.textAlign = 'center';
+          xs.forEach((lab, s) => {
+            if (!((lab.length && lab !== ' ') || s === 0 || s === xs.length - 1)) return;
+            const x = marginX + s * stepX;
+            ctx.setLineDash([6 * xs.length * k, 3 * xs.length * k]);
+            ctx.beginPath(); ctx.moveTo(x, baselineY + 100 * k); ctx.lineTo(x, top); ctx.stroke();
+            ctx.fillText(lab, x, baselineY + fs * 1.5);
+          });
+        }
+        ctx.restore();
+      }
+
       // AREA — fill between the line and the baseline
       if (this.flags.has('AREA')) {
         const fillOpacity = styleNum(this.style.fillopacity);
-        ctx.fillStyle = `rgba(${rgbStr},${isNaN(fillOpacity) ? 0.15 : fillOpacity})`;
-        ctx.beginPath();
-        runs.forEach(run => {
-          ctx.moveTo(run[0].x, baselineY);
-          ctx.lineTo(run[0].x, run[0].y);
-          tracePath(ctx, run);
-          ctx.lineTo(run[run.length - 1].x, baselineY);
-        });
-        ctx.closePath();
-        ctx.fill();
+        const fo = isNaN(fillOpacity) ? 0.15 : fillOpacity;
+        if ((this.flags.has('FADE') || bySeg) && !useSpline) {
+          // flat's FADE (maptheme.js 22837): each segment is filled with its own vertical
+          // gradient, opacity 1 at its top to 0.1 at the baseline, x fillopacity; colour by
+          // value fills each segment in its end point's class colour
+          runs.forEach(run => {
+            for (let i = 1; i < run.length; i++) {
+              const a = run[i - 1], b = run[i];
+              const c = segColor(b);
+              if (this.flags.has('FADE')) {
+                const grad = ctx.createLinearGradient(0, Math.min(a.y, b.y, zeroY), 0, Math.max(a.y, b.y, zeroY));
+                grad.addColorStop(0, `rgba(${c},${fo})`);
+                grad.addColorStop(1, `rgba(${c},${fo * 0.1})`);
+                ctx.fillStyle = grad;
+              } else ctx.fillStyle = `rgba(${c},${fo})`;
+              ctx.beginPath();
+              ctx.moveTo(a.x - 0.5, zeroY);
+              ctx.lineTo(a.x - 0.5, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.lineTo(b.x, zeroY);
+              ctx.closePath();
+              ctx.fill();
+            }
+          });
+        } else {
+          ctx.fillStyle = `rgba(${rgbStr},${fo})`;
+          ctx.beginPath();
+          runs.forEach(run => {
+            ctx.moveTo(run[0].x, zeroY);
+            ctx.lineTo(run[0].x, run[0].y);
+            tracePath(ctx, run);
+            ctx.lineTo(run[run.length - 1].x, zeroY);
+          });
+          ctx.closePath();
+          ctx.fill();
+        }
       }
 
       // LINES
       if (this.flags.has('LINES')) {
         ctx.strokeStyle = `rgb(${rgbStr})`;
-        ctx.lineWidth = styleNum(this.style.linewidth) || 1;
-        ctx.beginPath();
-        runs.forEach(run => {
-          ctx.moveTo(run[0].x, run[0].y);
-          tracePath(ctx, run);
-        });
-        ctx.stroke();
+        ctx.lineWidth = plotStrokePx(styleNum(this.style.linewidth) || 1, stepX);
+        if (bySeg) {
+          ctx.lineCap = 'round';
+          runs.forEach(run => {
+            for (let i = 1; i < run.length; i++) {
+              ctx.strokeStyle = `rgb(${segColor(run[i])})`;
+              ctx.beginPath();
+              ctx.moveTo(run[i - 1].x, run[i - 1].y);
+              ctx.lineTo(run[i].x, run[i].y);
+              ctx.stroke();
+            }
+          });
+        } else {
+          ctx.beginPath();
+          runs.forEach(run => {
+            ctx.moveTo(run[0].x, run[0].y);
+            tracePath(ctx, run);
+          });
+          ctx.stroke();
+        }
       }
 
       // point markers — each dot's own radius, calibrated by
       // normalsizevalue per-point (see markerRadiusFor above)
       if (baseMarkerR > 0) {
-        ctx.fillStyle = `rgb(${rgbStr})`;
         points.forEach(p => {
           if (!p || p.r <= 0) return;
+          ctx.fillStyle = `rgb(${segColor(p)})`;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
           ctx.fill();
         });
+      }
+
+      // LASTPOP — flat (maptheme.js 22888): a filled dot at the last point, in that point's
+      // class colour, radius linewidth (5) x markersize (1.5) chart units of 20 raw; one X step
+      // is 600 raw, so the radius is that many 1/600 steps
+      if (this.flags.has('LASTPOP') && plotValues[n - 1] && points[n - 1]) {
+        const lp = points[n - 1];
+        const rDot = (styleNum(this.style.linewidth) || 5) * (styleNum(this.style.markersize) || 1.5) * 20 * stepX / 600;
+        ctx.fillStyle = `rgb(${segColor(lp)})`;
+        ctx.beginPath();
+        ctx.arc(lp.x, lp.y, rDot, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       // LASTARROW — small arrowhead at the final plotted point, oriented
@@ -16268,7 +17041,7 @@ self.onmessage = e => {
       // label (including the ones sitting right at the canvas edges)
       // pushed roughly half their width off-canvas, clipping "2019" down
       // to what looked like "!015".
-      if (hasXAxis) {
+      if (hasXAxis && !flatXAxis) {
         ctx.fillStyle = '#888';
         ctx.font = '8px arial';
         labels.forEach((lab, i) => {
@@ -16280,10 +17053,9 @@ self.onmessage = e => {
       // anchored at the icon's true geometric center (not chartH, even
       // with XAXIS) so the whole chart+axis block sits centered over its
       // grid cell, aligned with the grid-mesh square underneath it —
-      // .style({offsetx, offsety}) is deliberately NOT applied as a whole-
-      // icon shift (tried that first; it visibly detached each chart from
-      // its own cell, floating over the row above instead)
-      const icon = { url: canvas.toDataURL(), width: W, height: H, anchorX: W / 2, anchorY: H / 2, id: key };
+      // align / offsetx / offsety are applied by the layer (_buildPlotLayers, getPixelOffset
+      // through flatChartAlignOffset, flat's own units), not baked into the icon
+      const icon = { url: canvas.toDataURL(), width: W * PLOT_RASTER_SS, height: H * PLOT_RASTER_SS, anchorX: W * PLOT_RASTER_SS / 2, anchorY: H * PLOT_RASTER_SS / 2, id: key, axesExtent };
       return this._cacheIcon(key, icon);
     }
 
@@ -16445,6 +17217,11 @@ self.onmessage = e => {
       this._userChartGroup = document.createElementNS(SVG_NS, 'g');
       host.appendChild(this._userChartGroup);
       const valueOf = d => (d.properties.counts ? d.properties.total : d.properties.value);
+      // align / offsetx / offsety: flat's generic chart position (flatChartAlignOffset), the same px for every
+      // chart (ASSUMPTION: not measured on flat for USER; the half size is flat's normalX(nChartSize / 2))
+      const userUnit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1);
+      const userOff = (this.style.align || styleNum(this.style.offsetx) || styleNum(this.style.offsety))
+        ? flatChartAlignOffset(this.style, { unit: userUnit, symbolScale: 1, half: NORMAL_RADIUS_PX * userUnit }) : [0, 0];
       const theme = this._userChartTheme(combined.map(valueOf).filter(v => typeof v === 'number' && isFinite(v)));
       // the cached charts (_userChartSvg) were drawn with the theme fields
       // of their time: a changed style (changeThemeStyle minvaluesize, the
@@ -16534,7 +17311,7 @@ self.onmessage = e => {
         keysSeen.add(key);
         const el = prevEls.get(key);
         if (el) prevEls.delete(key);
-        items.push({ d, key, el, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit, pick: chart.pick,
+        items.push({ d, key, el, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit, pick: chart.pick, off: userOff,
           r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2,
           // the chart's measured box (flat's getBox of the chart group) in px
           // around the map position: the pane draws a chart point at
@@ -16594,7 +17371,7 @@ self.onmessage = e => {
         unit: objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1), liveZoom, extentOf: d => extOf.get(d) });
       const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
         unit: objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(this.style.scale) || 1), liveZoom,
-        positionOf: b => b.d.geometry.coordinates, offsetOf: () => [0, 0],
+        positionOf: b => b.d.geometry.coordinates, offsetOf: () => userOff,
         ids: { circle: `ix-user-box-${this.name}`, icon: `ix-user-box-${this.name}`, polygons: `ix-user-box-polygons-${this.name}`, titles: `ix-user-titles-${this.name}` }
       }) : { box: [], titles: [] };
       // each chart answers to its own outline: the polygons sampled from its drawing (else its box), in px
@@ -16607,7 +17384,7 @@ self.onmessage = e => {
         const rings = it.pick && it.pick.length ? it.pick
           : [[[it.ext[0] / it.s, it.ext[1] / it.s], [it.ext[2] / it.s, it.ext[1] / it.s], [it.ext[2] / it.s, it.ext[3] / it.s], [it.ext[0] / it.s, it.ext[3] / it.s]]];
         const polys = rings.map(r => {
-          const ring = r.map(([x, y]) => [lng + x * kx, lat - y * ky]);
+          const ring = r.map(([x, y]) => [lng + (x + userOff[0] / it.s) * kx, lat - (y + userOff[1] / it.s) * ky]);
           ring.push(ring[0]);
           return [ring];
         });
@@ -16794,6 +17571,7 @@ self.onmessage = e => {
         // (W 362 units → font 72.35)
         titleFontOf: (unit, w) => (flatFlag(this.flags, 'DTEXT')
           ? Math.max(0.9 * unit, Math.min(w / 5, 14 * unit / (styleNum(st.scale) || 1)))
+          : flatFlag(this.flags, 'GRIDSIZE') ? Math.max(w / 10, 6)   // flat 18821: max(bBox.width/10, normalX(6))
           : 5 * unit) * titleScale
       };
     }
@@ -16815,7 +17593,7 @@ self.onmessage = e => {
       return (typeof items === 'function' ? items() : items).map(d => {
         const itemTitle = spec.titleShown ? this._itemTitle(d.properties) : null;
         const L = chartBoxLayout(o.extentOf(d), { unit: o.unit, margin: spec.margin, circular: spec.circular,
-          radius: o.radiusOf ? o.radiusOf(d) : undefined, center: o.centerOf ? o.centerOf(d) : undefined,
+          radius: o.radiusOf ? o.radiusOf(d) : undefined, center: o.centerOf ? o.centerOf(d) : undefined, square: o.square,
           titleText: itemTitle ? itemTitle + units : null, titleFont: w => spec.titleFontOf(o.unit, w),
           bottomTitle: spec.bottomTitle, alignRight: spec.alignRight });
         // geometry/properties of the chart's feature on the row: the circular
@@ -16991,7 +17769,8 @@ self.onmessage = e => {
     _gridCellIcon(fillColor, borderColor, borderWidth, cellPx, cat, defaultShape) {
       const shape = this._gridCellShapeOf(cat, defaultShape);
       if (shape === 'square') {
-        return { icon: this._buildGridSquareIcon(fillColor, borderColor, borderWidth, cellPx), size: cellPx };
+        const icon = this._buildGridSquareIcon(fillColor, borderColor, borderWidth, cellPx);
+        return { icon, size: icon.dispSize };
       }
       const r = shape !== 'hexagon' && flatFlag(this.flags, 'RECT') ? cellPx / 2 : cellPx / 1.5;
       return { icon: this._buildGridHexIcon(fillColor, borderColor, borderWidth, r, shape), size: 2 * r };
@@ -17020,19 +17799,21 @@ self.onmessage = e => {
       const shape = this._gridCellShapeOf(cat, defaultShape);
       const square = shape === 'square';
       const r = square || (shape !== 'hexagon' && flatFlag(this.flags, 'RECT')) ? cellPx / 2 : cellPx / 1.5;
-      const disp = 2 * r;
+      // flat strokes the cell's outline centred ON the boundary, so the strokes of two neighbours coincide
+      // (one line, not two side by side): the icon is the cell plus half the stroke on every side
+      const disp = 2 * r + widthPx;
       const key = `gridring|${shape}|${disp}|${widthPx}`;
       if (!this._iconCache.has(key)) {
         const size = Math.max(32, Math.min(256, Math.round(disp) || 32));
-        const k = size / (disp || size) * widthPx; // the line in raster px
+        const k = size / (disp || size);   // raster px per screen px
         const canvas = document.createElement('canvas');
         canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
         ctx.beginPath();
-        drawSymbolPath(ctx, square ? 'squarefull' : shape, size / 2, size / 2, size / 2 - k / 2);
+        drawSymbolPath(ctx, square ? 'squarefull' : shape, size / 2, size / 2, r * k);
         ctx.closePath();
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = k;
+        ctx.lineWidth = widthPx * k;
         ctx.stroke();
         this._cacheIcon(key, { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key, mask: true });
       }
@@ -17076,18 +17857,25 @@ self.onmessage = e => {
       // its true 1:1 thickness, visible as a fine line on close inspection
       // — confirmed against the real ixmaps engine on this exact config,
       // which shows a faint grid outline, not an invisible or thick one.
-      const size = Math.max(32, Math.min(256, Math.round(cellPx) || 32));
+      // flat strokes the cell's outline centred ON the boundary, so the strokes of two neighbours coincide
+      // (one line, not two side by side): the icon is the cell plus half the stroke on every side, the
+      // fill covers exactly the cell. dispSize: its on-screen size (the layer's getSize)
+      const stroked = borderColor && borderColor !== 'none' && borderWidth > 0;
+      const sw = stroked ? borderWidth : 0;
+      const dispSize = cellPx + sw;
+      const size = Math.max(32, Math.min(256, Math.round(dispSize) || 32));
+      const k = size / (dispSize || size);   // raster px per screen px
       const canvas = document.createElement('canvas');
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = fillColor;
-      ctx.fillRect(0, 0, size, size);
-      if (borderColor && borderColor !== 'none' && borderWidth > 0) {
+      ctx.fillRect(sw / 2 * k, sw / 2 * k, cellPx * k, cellPx * k);
+      if (stroked) {
         ctx.strokeStyle = borderColor;
-        ctx.lineWidth = borderWidth * (size / (cellPx || size));
-        ctx.strokeRect(1, 1, size - 2, size - 2);
+        ctx.lineWidth = sw * k;
+        ctx.strokeRect(sw / 2 * k, sw / 2 * k, cellPx * k, cellPx * k);
       }
-      const icon = { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key };
+      const icon = { url: canvas.toDataURL(), width: size, height: size, anchorX: size / 2, anchorY: size / 2, id: key, dispSize };
       return this._cacheIcon(key, icon);
     }
 
@@ -17349,14 +18137,14 @@ self.onmessage = e => {
       // every category of a cell, single records included, in one group
       if (flatFlag(this.flags, 'SEQUENCE') && this.flags.has('CATEGORICAL')) {
         const groups = groupCoLocated(clusterFeatures.concat(individual), effectiveZoom, this._clusterRadiusPx,
-          this.categoryLabels ? this.categoryLabels.length : 1, this.flags, !doRelocate);
+          this.categoryLabels ? this.categoryLabels.length : 1, this.flags, !doRelocate, this.binding.title);
         return { individual: [], groups };
       }
       // CATEGORICAL|AGGREGATE|DOMINANT: every category of a cell in one group, then the
       // cell's dominant one(s) (dominantItems) — whatever the size flag
       if (this._isCategoricalDominant()) {
         const cells = groupCoLocated(clusterFeatures.concat(individual), effectiveZoom, this._clusterRadiusPx,
-          this.categoryLabels ? this.categoryLabels.length : 1, this.flags, !doRelocate);
+          this.categoryLabels ? this.categoryLabels.length : 1, this.flags, !doRelocate, this.binding.title);
         if (this._domCellsOnly) return { individual: [], groups: cells };
         const mins = this._dominantStats(zoom).partMins;
         return { individual: dominantItems(cells, i => mins[i] || 0), groups: [] };
@@ -17373,6 +18161,7 @@ self.onmessage = e => {
             recordCounts: this._oneHot(f.properties.cat, f.properties.point_count), total: f.properties.value,
             ...(f.properties.classValue !== undefined ? { classTotal: f.properties.classValue } : {}),
             ...(f.properties.titleRaw ? { titleRaw: f.properties.titleRaw } : {}),
+            ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}),
             // a multi-field cell's per-field sums (aggregateOnGrid) and size-field value,
             // as groupCoLocated keeps them with RELOCATE
             ...(f.properties.series ? { series: f.properties.series } : {}),
@@ -18665,14 +19454,14 @@ self.onmessage = e => {
     //    unit.
     //  - draw order: flat's sort before drawing (by the size value, the
     //    sum or the first value; the biggest on top)
-    //  - AGGREGATE / CATEGORICAL (_isAggregatedPie): a pie per item — the
+    //  - AGGREGATE / CATEGORICAL (_hasAggregatedParts): a pie per item — the
     //    records of a position, or of an aggregation grid cell —
-    //    (_pieAggregatedItems; flatPieRecord / flatPieAccumulate /
-    //    flatPieItemValues), a slice per category (CATEGORICAL, in its
+    //    (_partsItems; flatPieRecord / flatPartsAccumulate /
+    //    flatPartsItemValues), a slice per category (CATEGORICAL, in its
     //    category color) or per value field; its size the item's summed
     //    size field (flat's nSize, every record of the item counted), the
     //    theme's nMin / nMax / nMaxSize those of the items
-    //    (_pieAggregateStats); draw order by the item's size with a size
+    //    (_partsStats); draw order by the item's size with a size
     //    field or AGGREGATE|SUM; COUNT prints a part's record count;
     //    CENTERVALUE the item's record count
     // Not drawn here (a console note at type parsing, PIE_INERT_FLAGS,
@@ -18692,13 +19481,13 @@ self.onmessage = e => {
       const st = this.style;
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
       const has = re => re.test(t);
-      const agg = this._isAggregatedPie();
-      const cat = !!this._pieCategorical;
-      const fields = cat ? null : (this._pieFields || String(this.binding.value || '').split('|'));
+      const agg = this._hasAggregatedParts();
+      const cat = !!this._partsCategorical;
+      const fields = cat ? null : (this._partsFields || String(this.binding.value || '').split('|'));
       const multi = !cat && fields.length > 1;
       // AGGREGATE / CATEGORICAL: the statistics of the items (sets
       // _valueMin / _valueMax), their biggest size flat's nMaxSize
-      const stats = agg ? this._pieAggregateStats(zoom) : null;
+      const stats = agg ? this._partsStats(zoom) : null;
       const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
       const sizePow = resolveSizePow(st, this.flags);
       // flat tests /SIZE/: also NOSIZE and GRIDSIZE
@@ -18758,13 +19547,13 @@ self.onmessage = e => {
 
       const charts = [];
       if (agg) {
-        // one pie per item (_pieAggregatedItems), its parts and size as flat
-        // has them after aggregation (flatPieItemValues)
-        for (const f of this._pieAggregatedItems(zoom, bbox)) {
+        // one pie per item (_partsItems), its parts and size as flat
+        // has them after aggregation (flatPartsItemValues)
+        for (const f of this._partsItems(zoom, bbox)) {
           const c = f.geometry.coordinates;
           if (globeCenter && !isOnVisibleHemisphere(c[0], c[1], globeCenter)) continue;
-          const pie = f.properties.pie;
-          const { parts: values, size } = this._pieItemValues(pie);
+          const pie = f.properties.agg;
+          const { parts: values, size } = this._partsOf(pie);
           const layout = pieSliceLayout(values, t, { centerPart: st.centerpart, itemCount: pie.n });
           if (!layout) continue;
           if (cat) layout.slices.forEach(sl => { sl.single = values.length === 1; });
@@ -18780,7 +19569,8 @@ self.onmessage = e => {
           // page's own {{field}}s from the first, as flat's data[0])
           const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
           const properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
-            titleRaw: f.properties.titleRaw || f.properties.raw || null };
+            titleRaw: f.properties.titleRaw || f.properties.raw || null,
+            ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}) };
           charts.push({ c, r, layout, size, count: pie.n, partCounts: pie.counts, nParts: values.length, key, properties });
         }
       }
@@ -19012,26 +19802,26 @@ self.onmessage = e => {
     // AGGREGATE on the theme's aggregation grid (gridwidth, aggregation …,
     // see _ensureClusterIndices; none: per position), else per position
     // (flat sums a CATEGORICAL theme's records of one shape by category
-    // without AGGREGATE too). Each item's properties.pie: flatPieAccumulate's.
-    _pieAggregatedItems(zoom, bbox) {
+    // without AGGREGATE too). Each item's properties.agg: flatPartsAccumulate's.
+    _partsItems(zoom, bbox) {
       if (!this._featuresByCategory) return [];
       if (this.flags.has('AGGREGATE')) {
         this._ensureClusterIndices(zoom);
         return this._clusterIndices[0].getClusters(bbox, this._clusterUsesFixedZoom ? GRIDWIDTH_METERS_REFERENCE_ZOOM : zoom);
       }
       const feats = this._featuresByCategory[0];
-      if (!this._pieExactIndex || this._pieExactIndex.features !== feats) {
-        this._pieExactIndex = new GridAggregateIndex(null, this.flags, undefined, null).load(feats);
+      if (!this._partsExactIndex || this._partsExactIndex.features !== feats) {
+        this._partsExactIndex = new GridAggregateIndex(null, this.flags, undefined, null).load(feats);
       }
-      return this._pieExactIndex.getClusters(bbox, zoom);
+      return this._partsExactIndex.getClusters(bbox, zoom);
     }
 
     // an aggregated pie item's parts (a CATEGORICAL pie with style.values:
-    // one per category) and size (flatPieItemValues)
-    _pieItemValues(pie) {
+    // one per category) and size (flatPartsItemValues)
+    _partsOf(pie) {
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
-      const nParts = this._pieCategorical ? (this._pieExplicitValues ? this.categoryLabels.length : null) : (this._pieFields || []).length;
-      return flatPieItemValues(pie, t, { categorical: !!this._pieCategorical, nParts });
+      const nParts = this._partsCategorical ? (this._partsExplicitValues ? this.categoryLabels.length : null) : (this._partsFields || []).length;
+      return flatPartsItemValues(pie, t, { categorical: !!this._partsCategorical, nParts });
     }
 
     // flat's statistics of an aggregated pie theme (maptheme.js
@@ -19039,17 +19829,17 @@ self.onmessage = e => {
     // nMin / nMax over the items' sizes (CATEGORICAL or a size field), else
     // over their parts; nMaxSize the biggest size; the classes of a
     // value-field pie (partsA) over the items' parts, as for a per-record
-    // pie (_preparePie). Sets the theme's _valueMin / _valueMax / partsA.
-    _pieAggregateStats(zoom) {
+    // pie (_prepareParts). Sets the theme's _valueMin / _valueMax / partsA.
+    _partsStats(zoom) {
       const feats = this._featuresByCategory && this._featuresByCategory[0];
       const zkey = this.flags.has('AGGREGATE') ? zoom : null;
-      const cache = this._pieStatsCache;
+      const cache = this._partsStatsCache;
       if (cache && cache.feats === feats && cache.zoom === zkey) return cache;
       let nMin = Infinity, nMax = -Infinity, maxSize = -Infinity;
       const pooled = [];
-      const bySize = !!this._pieCategorical || !!(this.binding.size && this.binding.size !== '$item$');
-      for (const f of this._pieAggregatedItems(zoom, [-180, -90, 180, 90])) {
-        const { parts, size } = this._pieItemValues(f.properties.pie);
+      const bySize = !!this._partsCategorical || !!(this.binding.size && this.binding.size !== '$item$');
+      for (const f of this._partsItems(zoom, [-180, -90, 180, 90])) {
+        const { parts, size } = this._partsOf(f.properties.agg);
         if (isFinite(size) && size > maxSize) maxSize = size;
         for (const v of parts) if (isFinite(v)) pooled.push(v);
         if (bySize) {
@@ -19061,7 +19851,7 @@ self.onmessage = e => {
       if (nMin <= nMax) {
         this._valueMin = nMin;
         this._valueMax = nMax;
-        if (!this._pieCategorical && pooled.length) {
+        if (!this._partsCategorical && pooled.length) {
           const nParts = Math.trunc(styleNum(this.style.classes)) || colorSchemeClassCount(this.style.colorscheme) || DEFAULT_RANGE_CLASSES;
           this.partsA = flatRangeParts(pooled, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
           // a 1-field pie's legend rows are these classes (in place, as
@@ -19071,8 +19861,8 @@ self.onmessage = e => {
           }
         }
       }
-      this._pieStatsCache = { feats, zoom: zkey, maxSize: maxSize > -Infinity ? maxSize : undefined };
-      return this._pieStatsCache;
+      this._partsStatsCache = { feats, zoom: zkey, maxSize: maxSize > -Infinity ? maxSize : undefined };
+      return this._partsStatsCache;
     }
 
     // the value texts of _buildPieLayers (see there)
@@ -19185,7 +19975,7 @@ self.onmessage = e => {
     // CHART|BAR / BARS (_isBarChart) — flat's bar chart per item
     // (flatBarLayout, maptheme.js drawChart's BAR branch): its items and
     // theme statistics as a pie's (one per record, or AGGREGATE /
-    // CATEGORICAL items via _pieAggregatedItems / _pieAggregateStats), a bar
+    // CATEGORICAL items via _partsItems / _partsStats), a bar
     // per value field or category:
     //  - size: SIZE by the size field (or the values' sum) with sizepow, the
     //    width chart size / parts · 0.66, the length value · 30 u / nMax
@@ -19225,10 +20015,10 @@ self.onmessage = e => {
       const st = this.style;
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
       const has = re => re.test(t);
-      const agg = this._isAggregatedPie();
-      const cat = !!this._pieCategorical;
-      const fields = cat ? null : (this._pieFields || String(this.binding.value || '').split('|'));
-      const stats = agg ? this._pieAggregateStats(zoom) : null;
+      const agg = this._hasAggregatedParts();
+      const cat = !!this._partsCategorical;
+      const fields = cat ? null : (this._partsFields || String(this.binding.value || '').split('|'));
+      const stats = agg ? this._partsStats(zoom) : null;
       const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
       const sizeField = !!(this.binding.size && this.binding.size !== '$item$');
       const nsv = styleNum(st.normalsizevalue);
@@ -19239,13 +20029,13 @@ self.onmessage = e => {
       const items = [];
       const itemValues = f => {
         if (agg) {
-          const { parts, size } = this._pieItemValues(f.properties.pie);
+          const { parts, size } = this._partsOf(f.properties.agg);
           return { values: parts, size };
         }
         const raw = f.properties || {};
         return { values: fields.map(k => flatNumber(raw[k], this.flags)), size: sizeField ? scanValue(raw[this.binding.size]) : undefined };
       };
-      const all = agg ? this._pieAggregatedItems(zoom, [-180, -90, 180, 90]) : (this._activeFeatures || this.features);
+      const all = agg ? this._partsItems(zoom, [-180, -90, 180, 90]) : (this._activeFeatures || this.features);
       // flat's per-part mean, median (getMeanMedianQuantile) and standard
       // deviation over every item
       let means, medians, devs;
@@ -19271,12 +20061,13 @@ self.onmessage = e => {
         nColors: colors.length, fillOpacity: num(st.fillopacity), lineWidth: num(st.linewidth),
         fadeNegative: num(st.fadenegative), fadeValuePow: num(st.fadevaluepow),
         textColor: st.textcolor || undefined, valueColor: st.valuecolor || undefined,
-        hideValues: valuesHiddenByScale(st, zoom), means, medians, devs, measure
+        hideValues: valuesHiddenByScale(st, zoom), means, medians, devs, measure,
+        xaxis: styleList(st.xaxis), labels: styleList(st.label)
       };
       const inView = c => c[0] >= bbox[0] && c[0] <= bbox[2] && c[1] >= bbox[1] && c[1] <= bbox[3]
         && (!globeCenter || isOnVisibleHemisphere(c[0], c[1], globeCenter));
       const charts = [];
-      for (const f of agg ? this._pieAggregatedItems(zoom, bbox) : all) {
+      for (const f of agg ? this._partsItems(zoom, bbox) : all) {
         const c = f.geometry && f.geometry.coordinates;
         if (!c || typeof c[0] !== 'number' || !inView(c)) continue;
         const { values, size } = itemValues(f);
@@ -19285,10 +20076,11 @@ self.onmessage = e => {
         const sum = values.reduce((a, v) => a + (isFinite(v) ? v : 0), 0);
         let properties;
         if (agg) {
-          const pie = f.properties.pie;
+          const pie = f.properties.agg;
           const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
           properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
-            titleRaw: f.properties.titleRaw || f.properties.raw || null };
+            titleRaw: f.properties.titleRaw || f.properties.raw || null,
+            ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}) };
         } else {
           const raw = f.properties || {};
           properties = values.length > 1 ? { value: values[0], parts: values, raw }
@@ -19297,7 +20089,7 @@ self.onmessage = e => {
         // flat's draw-order key (as for pies, maptheme.js 16812-16860)
         const key = agg ? (this.binding.size || (has(/AGGREGATE/) && has(/SUM/)) ? size : values[0])
           : (this.binding.size ? size : has(/SIZE/) ? sum : values[0]);
-        charts.push({ c, layout, key, properties });
+        charts.push({ c, layout, key, properties, parts: values.length });
       }
       if (((this._valueMin !== this._valueMax) || this.binding.size) && !has(/NOSRT/)
         && (!has(/NOSIZE/) || has(/\bSORT\b/))
@@ -19306,10 +20098,13 @@ self.onmessage = e => {
       }
       applyFlatMaxCharts(charts, st);
 
-      // a BAR draws its box as a shader shape (rectangle only, no CIRCULARBOX):
-      // the gates, margin, title font and placement are the box's, shared with
+      // a BAR draws its rectangular box as a shader shape, a CIRCULARBOX as
+      // the shared circle layer (_boxTitleLayers, as pies and symbols): the
+      // gates, margin, title font and placement are the box's, shared with
       // every chart type (_boxSpec / chartBoxLayout, here in chart units)
       const boxSpec = this._boxSpec(liveZoom);
+      const circularBox = flatFlag(this.flags, 'CIRCULAR');
+      const circleRows = [];
       const boxUnits = st.titleunits ? ' ' + st.titleunits : '';
       const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
       const borderStyle = String(st.borderstyle || '');
@@ -19321,6 +20116,11 @@ self.onmessage = e => {
       const lineRgbOf = (spec, rgb) => (spec.rgb === 'color' ? rgb : spec.rgb === 'low' ? flatDerivateRgb(rgb, 0.7)
         : spec.rgb === 'high' ? flatDerivateRgb(rgb, 1.3) : (lc && lc !== 'none' ? hexOrNamedToRgb(lc) : [0, 0, 0]));
       const align = !!(st.align || styleNum(st.offsetx) || styleNum(st.offsety));
+      // flat fills a bar with its colorscheme color as given (an RGBA keeps its
+      // alpha) and fill-opacity on top: SVG multiplies them (maptheme.js 23956)
+      const cs = st.colorscheme;
+      const classAlpha = Array.isArray(cs) && cs.length && !/^\d+$/.test(String(cs[0])) ? cs.map(cssColorAlpha) : null;
+      const alphaOfClass = i => (classAlpha && classAlpha[i] != null ? classAlpha[i] : 1);
 
       const shapes = [], texts = [], titles = [], lines = [];
       // a shape in chart units → the instance (px; the circle around it)
@@ -19341,25 +20141,37 @@ self.onmessage = e => {
         let box = null;
         if (boxSpec) {
           const title = boxSpec.titleShown ? this._itemTitle(ch.properties) : '';
-          box = chartBoxLayout(L.extent, { unit: 1, margin: boxSpec.margin, titleText: title ? title + boxUnits : '',
+          box = chartBoxLayout(L.extent, { unit: 1, margin: boxSpec.margin, circular: circularBox, titleText: title ? title + boxUnits : '',
             titleFont: w => boxSpec.titleFontOf(1, w), bottomTitle: boxSpec.bottomTitle, alignRight: boxSpec.alignRight, measure });
         }
-        const ext = box ? box.rect : L.extent;
-        // align / offsetx / offsety (flatChartAlignOffset), the chart's
-        // half height as its size (ASSUMPTION: not measured on flat for BAR)
-        ch.off = align ? flatChartAlignOffset(st, { unit, symbolScale: 1, half: (ext[3] - ext[1]) / 2 * unit }) : [0, 0];
-        if (box) {
+        const ext = !box ? L.extent : box.rect || [box.cx - box.boxR, box.cy - box.boxR, box.cx + box.boxR, box.cy + box.boxR];
+        // align / offsetx / offsety (flatChartAlignOffset). With gridx (not
+        // ZOOM) flat shifts the chart sideways only, by its sized chart size
+        // · parts / classes / gridx (maptheme.js 24476-24486, nChartSize ·
+        // nSizer from 23361); otherwise the chart's half height as its size
+        // (ASSUMPTION: not measured on flat for BAR)
+        const gridx = has(/ZOOM/) ? 0 : (num(st.gridx) || 0);
+        ch.off = align ? flatChartAlignOffset(st, { unit, symbolScale: 1, half: (ext[3] - ext[1]) / 2 * unit, gridx,
+          width: gridx ? 30 * (L.sizer || 1) * ch.parts / ((this.partsA || []).length || ch.parts) / gridx * unit : 0 }) : [0, 0];
+        if (box && box.rect) {
           const r = box.rect;
           shape(ch, { base: [(r[0] + r[2]) / 2, r[3]], dir: 0, len: r[3] - r[1], w2: (r[2] - r[0]) / 2, sw: (r[2] - r[0]) / 2, band: 0, head: 0 },
             boxFill, boxLine, borderWidth * 0.2 * box.w / 30, null, true);
+        } else if (box) {
+          // flat's circle (maptheme.js 18796-18803), in px around the chart's position
+          circleRows.push({ d: ch, geometry: { type: 'Point', coordinates: ch.c }, properties: ch.properties,
+            cx: box.cx * unit, cy: box.cy * unit, boxR: box.boxR * unit, w: box.w * unit });
+        }
+        if (box) {
           // the title in px, rendered by the shared title layer
           if (box.title) titles.push({ d: ch, title: { text: box.title.text, x: box.title.x * unit, anchor: box.title.anchor,
             top: box.title.top * unit, f: box.title.f * unit } });
         }
         for (const b of L.bars) {
-          const rgb = this.classRgb(b.cls);
-          const a = Math.round(255 * b.fill.opacity * b.opacity);
-          const line = [...lineRgbOf(b.line, rgb).slice(0, 3), Math.round(255 * b.line.opacity * b.opacity)];
+          const rgb = this.classRgb(b.cls), ca = alphaOfClass(b.cls);
+          const a = Math.round(255 * b.fill.opacity * b.opacity * ca);
+          // a bar outlined in its own color (flat's stroke: nColor) keeps that alpha too
+          const line = [...lineRgbOf(b.line, rgb).slice(0, 3), Math.round(255 * b.line.opacity * b.opacity * (b.line.rgb === 'color' ? ca : 1))];
           shape(ch, b, [...rgb.slice(0, 3), a], line, b.line.width, ch.properties, false);
         }
         for (const tx of L.texts) {
@@ -19422,11 +20234,135 @@ self.onmessage = e => {
           backgroundPadding: [0.3, 0, 0.4, 0.1].map(k => k * boxed.reduce((a, d) => a + d.font, 0) / boxed.length)
         })));
       }
+      // the circular boxes under the bars
+      if (circleRows.length) layers.unshift(...this._boxTitleLayers(circleRows, {
+        unit, liveZoom, positionOf: b => b.d.c, offsetOf: b => b.d.off,
+        ids: { circle: `ix-bar-box-${this.name}` }
+      }).box);
       if (titles.length) layers.push(...this._boxTitleLayers(titles, {
         box: false, unit, liveZoom, positionOf: b => b.d.c, offsetOf: b => b.d.off,
         ids: { titles: `ix-bar-titles-${this.name}` }
       }).titles);
       return layers;
+    }
+
+    // CHART|WAFFLE: a waffle per record, or per item with AGGREGATE /
+    // CATEGORICAL (the records of a position or grid cell), a square per
+    // count, a part per value field or category — the items and parts are a
+    // pie's and a bar's (_hasAggregatedParts, _partsOf), the layout
+    // flat's (flatWaffleLayout). Drawn: the squares in the part's color
+    // (fillopacity), the faint square behind them (boxcolor, boxopacity,
+    // bordercolor, borderwidth), SORT, gridx, WAFFLE100 / AUTO100, MEAN and
+    // AUTO100's % after aggregation. Not drawn (WAFFLE_INERT_FLAGS, a
+    // console note): AUTOSIZE sizing, CLIP / MORPH. BOX / TITLE are drawn (_boxRows). GRIDSIZE sizes the
+    // waffle to its grid cell (AGGREGATE).
+    // Known divergence: flat's draw order by the item's value is not kept
+    // (every waffle is the same size, so they overlap only on a shared position).
+    _buildWaffleLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+      const st = this.style;
+      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
+      const agg = this._hasAggregatedParts();
+      const cat = !!this._partsCategorical;
+      const fields = cat ? null : (this._partsFields || String(this.binding.value || '').split('|'));
+      const stats = agg ? this._partsStats(zoom) : null;
+      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
+      const num = v => { const x = styleNum(v); return isNaN(x) ? undefined : x; };
+      const itemValues = f => {
+        if (agg) return this._partsOf(f.properties.agg).parts;
+        const raw = f.properties || {};
+        return fields.map(k => flatNumber(raw[k], this.flags));
+      };
+      const inView = c => c[0] >= bbox[0] && c[0] <= bbox[2] && c[1] >= bbox[1] && c[1] <= bbox[3]
+        && (!globeCenter || isOnVisibleHemisphere(c[0], c[1], globeCenter));
+      // flat: GRIDSIZE -> nChartWidth = nGridSize * 1.05 (maptheme.js 20537)
+      const gridR = this._gridChartRadiusPx(zoom, liveZoom);
+      const lo = { themeMin: this._valueMin, themeMax: this._valueMax, gridX: num(st.gridx),
+        width: gridR ? gridR * 2 * 1.05 / unit : undefined };
+      const fillAlpha = Math.round(255 * (isNaN(num(st.fillopacity)) ? 1 : num(st.fillopacity)));
+      const backOpacity = num(st.boxopacity) || 0.05;
+      const backRgb = isNoneColor(st.boxcolor) || !st.boxcolor ? [0, 0, 0] : hexOrNamedToRgb(st.boxcolor).slice(0, 3);
+      const hasBorder = st.bordercolor && !isNoneColor(styleLineColor(st.bordercolor));
+      const backLine = hasBorder ? [...hexOrNamedToRgb(styleLineColor(st.bordercolor)).slice(0, 3), 255] : [0, 0, 0, 0];
+      const borderWidth = (num(st.borderwidth) || 2) / 20;
+      const noFill = this._partNoFill || new Set();
+      // legend classes marked (flat's MapTheme.markClass, maptheme.js 14339-14450):
+      // the squares of the other classes are hidden (evidence "isolate", the
+      // default) or only outlined in gray (isolate_gray: no fill, #888888 at
+      // fillopacity x 0.9); nothing is re-packed. A page's own mark handler wins.
+      const marking = this._markedClasses.size > 0 && !this._onMarksChanged;
+      const grayMarks = marking && String(st.evidence || 'isolate') === 'isolate_gray';
+
+      const shapes = [];
+      const charts = [];
+      let cells = 0;
+      const rect = (ch, r, fill, line, lineWidth, props, noPick) => {
+        const hw = (r[2] - r[0]) / 2, hh = r[3] - r[1];
+        const cx = ((r[0] + r[2]) / 2) * unit, cy = (r[3] - hh / 2) * unit;
+        const lw = line[3] > 0 ? lineWidth * unit : 0;
+        shapes.push({
+          position: ch, off: [cx, -cy], properties: props, fill, line,
+          r: Math.hypot(hw * unit, hh * unit / 2) + lw + 2,
+          shape: [hw * unit, hw * unit, hh * unit, 0],
+          shape2: [0, 0 + (noPick ? 4 : 0), lw, hh * unit / 2]
+        });
+      };
+      for (const f of agg ? this._partsItems(zoom, bbox) : (this._activeFeatures || this.features)) {
+        const c = f.geometry && f.geometry.coordinates;
+        if (!c || typeof c[0] !== 'number' || !inView(c)) continue;
+        const values = itemValues(f);
+        const layout = flatWaffleLayout(values, t, lo);
+        if (!layout) continue;
+        let properties;
+        if (agg) {
+          const pie = f.properties.agg;
+          const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
+          const sum = values.reduce((a, v) => a + (isFinite(v) ? v : 0), 0);
+          properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
+            titleRaw: f.properties.titleRaw || f.properties.raw || null,
+            ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}) };
+        } else {
+          const raw = f.properties || {};
+          properties = values.length > 1 ? { value: values[0], parts: values, raw }
+            : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
+        }
+        charts.push({ c, layout, properties, off: [0, 0] });
+        rect(c, layout.back, [...backRgb, Math.round(255 * backOpacity)], backLine, borderWidth, properties, true);
+        for (const cell of layout.cells) {
+          if (noFill.has(cell.part)) continue;
+          if (marking && !this._markedClasses.has(cell.part)) {
+            // ASSUMPTION: flat's 10 / nScale stroke width is 0.5 u at nScale 1
+            if (grayMarks) rect(c, cell.r, [0, 0, 0, 0], [0x88, 0x88, 0x88, Math.round(fillAlpha * 0.9)], 0.5, properties, false);
+            continue;
+          }
+          rect(c, cell.r, [...this.classRgb(cell.part).slice(0, 3), fillAlpha], [0, 0, 0, 0], 0, properties, false);
+          cells++;
+        }
+      }
+      if (cells > 50000 && !this._warnedWaffleCells) {
+        this._warnedWaffleCells = true;
+        console.warn(`[ixmaps-gl] layer "${this.name}": ${cells} waffle squares in view — zoom in or use WAFFLE100 to keep it fast`);
+      }
+      // BOX / TITLE: flat's chart-group box (maptheme.js 18757) around what the
+      // waffle drew, its background square and any overflowing rows; the title is the box's
+      const boxRows = this._boxRows(charts, { unit, liveZoom, extentOf: ch => ch.layout.extent.map(v => v * unit) });
+      const boxL = boxRows && boxRows.length ? this._boxTitleLayers(boxRows, {
+        unit, liveZoom, positionOf: b => b.d.c, offsetOf: b => b.d.off,
+        ids: { circle: `ix-waffle-box-${this.name}`, icon: `ix-waffle-box-${this.name}`,
+          polygons: `ix-waffle-box-polygons-${this.name}`, titles: `ix-waffle-titles-${this.name}` }
+      }) : { box: [], titles: [] };
+      return [...boxL.box, new BarShapeLayer({
+        id: `ix-waffle-${this.name}`,
+        data: shapes, pickable: true,
+        getPosition: d => d.position,
+        getRadius: d => d.r,
+        getPixelOffset: d => d.off,
+        getFillColor: d => d.fill,
+        getLineColor: d => d.line,
+        getBarShape: d => d.shape,
+        getBarShape2: d => d.shape2,
+        radiusUnits: 'pixels', billboard: true, stroked: false, filled: true, antialiasing: true,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      }), ...boxL.titles];
     }
 
     // CHART|VECTOR / CHART|BEZIER — the theme's classes as flat has them:
@@ -20210,7 +21146,7 @@ self.onmessage = e => {
     _oneHot(cat, value) { return oneHot(cat, value, this.categoryLabels ? this.categoryLabels.length : 1); }
 
     // pure: groupCoLocated → see the pure-function sections above the class
-    _groupCoLocated(clusterFeatures, zoom) { return groupCoLocated(clusterFeatures, zoom, this._clusterRadiusPx, this.categoryLabels ? this.categoryLabels.length : 1, this.flags); }
+    _groupCoLocated(clusterFeatures, zoom) { return groupCoLocated(clusterFeatures, zoom, this._clusterRadiusPx, this.categoryLabels ? this.categoryLabels.length : 1, this.flags, false, this.binding.title); }
   }
 
   function dominant(counts) {
@@ -21236,7 +22172,7 @@ self.onmessage = e => {
   // engine runs in a Node vm there); deliberately NOT on the ixmaps object
   global.__ixmapsGlInternals = {
     EE_PLANE, PLANES, planeOfName, planeGeometry, projectFeaturesToPlane, planeViewBounds, isEqualEarthName,
-    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, infoBubbleOffset, infoBubbleKey, infoBubbleRank, infoBubbleMax, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
+    IXMAPS_GL_VERSION, applyFlatMaxCharts, flatSortCharts, flagsWithout, infoBubbleOffset, infoBubbleKey, infoBubbleRank, infoBubbleMax, youtubeClickToPlay, symbolsFlagCompat, tooltipTable, legendRowLabels, scaleDenom, cssColorAlpha, aggregatedCategoricalClass, dominantDopacityAlpha, isAggregatedCategoricalChoropleth, computeBubblePackLayout, isolatedBubblePackLayout, sequenceLayout, ringsLayout, pieSliceLayout, pieValueLabelLayout, isBarChart, flatBarLayout, isWaffleChart, flatWaffleLayout, plotIconSizePx, plotStrokePx, gestureScaleProps, plotZeroY, plotYAxis, flatValueRules, flatPieRecord, flatPartsAccumulate, flatPartsItemValues, flatVectorItems, orthographicPlane, vectorArcHeight, pathBackIndex, greatCircleMeters, cameraOptions, bezierVectorLayout, cubicBezierPoints, arrowMarkerTriangle, fadeGradientStops, flatToArray, hashUnit, flowDashPhase, multiQuadOffsets, pixelOffsetLngLat, chartTextTransmittance, insideSymbolShape,
     splitMapEvents, getBounds, chartBoxLayout, createInfoBubbles, choroplethOutlineColor, normalizeTheme, projectThemeToDefinition, withoutProjectCode, groupRecordCount, resolveBasemapStyleUrl, resolveMapTypeColor, LayerBuilder, LayerRuntime, MapBuilder, typeStyleNumbers, styleNum,
     resolveScriptUrl, isTrustedScriptUrl, loadProcessingScript, loadBrokerData, applyBrokerThemePatch, makeBrokerTheme,
     dataSourceKey, themeDataSourceKey,

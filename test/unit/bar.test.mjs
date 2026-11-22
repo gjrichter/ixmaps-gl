@@ -140,6 +140,54 @@ test('bar: an AGGREGATE|CATEGORICAL bar theme prepares its categories like a pie
     style: { type: HORZ, values: ['a', 'b'], colorscheme: ['#ff0000', '#00ff00'] } });
   const rt = new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
   assert.equal(rt._isBarChart(), true);
-  assert.equal(rt._isAggregatedPie(), true, 'its items aggregated as a pie\'s');
+  assert.equal(rt._hasAggregatedParts(), true, 'its items aggregated as a pie\'s');
   assert.equal(rt._isPieChart(), false);
+});
+
+// XAXIS: flat 23999-24037, measured on index_embed_..._fasi_ritardi_reg_prov_com_9.html
+// (stato_reg, Lombardia): bar width 35.257, text "progett." font 17.629 (W·0.5),
+// text-anchor:end at translate(20.943, 33.270) rotate(315) — (W/2 + 0.4f)·0.66 and
+// 0.66f + 10 (raw; 0.5 u) with f = W (STACKED|gridx: f = 5·sizer = W)
+const axisEnd = tx => { const r = tx.angle * Math.PI / 180, w = measure(tx.text, tx.font); return [tx.x + w * Math.cos(r), tx.y - w * Math.sin(r)]; };
+test('bar: XAXIS texts below a STACKED gridx chart, one per column, as flat draws them', () => {
+  const T = 'CHART|BAR|STACKED|XAXIS|NOSORT|SUM|BOX';
+  const l = flatBarLayout([1, 2, 3, 4, 5, 6], T, { themeMin: 0, themeMax: 21, nClasses: 6, nColors: 6, gridX: 3, xaxis: ['pro', 'ass'], measure });
+  const W = l.width;
+  assert.deepEqual(plain(l.texts.map(t => t.text)), ['pro', 'ass'], 'one per column (index / gridx)');
+  const cols = [...new Set(l.bars.map(b => b.base[0]))];
+  assert.equal(cols.length, 2);
+  l.texts.forEach((tx, k) => {
+    assert.equal(tx.angle, 45);
+    assert.equal(tx.color, '#888888');
+    near(tx.font, W * 0.5, 'half the bar width');
+    const [ex, ey] = axisEnd(tx);
+    near(ex - (cols[k] - W / 2), 20.942734 / 35.257129 * W, 'ends under its column (flat ratio)');
+    near(ey, 0.66 * W + 0.5, 'below the baseline');
+  });
+  // flat's measured case itself, in u (raw / 20): W = f = 1.7628564
+  near(0.66 * (1.7628564 / 2 + 0.4 * 1.7628564), 20.942734 / 20, 'formula vs flat x', 1e-4);
+  near(0.66 * 1.7628564 + 0.5, 33.269705 / 20, 'formula vs flat y', 1e-4);
+});
+
+test('bar: XAXIS needs the flag and a list, falls back to label, hides with the values', () => {
+  const o = { themeMin: 0, themeMax: 4, nClasses: 2, nColors: 2, measure };
+  assert.equal(flatBarLayout([1, 3], 'CHART|BAR', Object.assign({ xaxis: ['a', 'b'] }, o)).texts.length, 0, 'no XAXIS flag');
+  assert.equal(flatBarLayout([1, 3], 'CHART|BAR|XAXIS', o).texts.length, 0, 'no list');
+  assert.deepEqual(plain(flatBarLayout([1, 3], 'CHART|BAR|XAXIS|VALUES', Object.assign({ labels: ['first', 'second'] }, o))
+    .texts.filter(t => t.color === '#888888').map(t => t.text)), ['first', 'second'], 'label with VALUES');
+  assert.equal(flatBarLayout([1, 3], 'CHART|BAR|XAXIS', Object.assign({ xaxis: ['a1', 'b1'], hideValues: true }, o)).texts.length, 0, 'valueupper/lower');
+  const neg = flatBarLayout([1, 3], 'CHART|BAR|XAXIS', Object.assign({}, o, { themeMin: -1, xaxis: ['a1', 'b1'] }));
+  assert.deepEqual(plain(neg.texts.map(t => t.angle)), [90, 90], 'negative values: reading up (rotate(270))');
+});
+
+// align with gridx (flat maptheme.js 24476-24486): the chart moves sideways only,
+// by w = nChartSize·nSizer · parts / classes / gridx — "right" w, "center" w / 2 —
+// whatever its height (the bar build passes gridx and that width)
+test('bar: align with gridx shifts the chart left by flat\'s width, not by its height', () => {
+  const { flatChartAlignOffset } = win.__ixmapsGlInternals;
+  const w = 30 * 0.8 * 12 / 12 / 3;
+  for (const half of [2, 40]) {
+    assert.deepEqual(plain(flatChartAlignOffset({ align: 'right' }, { unit: 1, half, gridx: 3, width: w })), [-w, 0]);
+    assert.deepEqual(plain(flatChartAlignOffset({ align: 'center' }, { unit: 1, half, gridx: 3, width: w })), [-w / 2, 0]);
+  }
 });

@@ -15,7 +15,7 @@
    },
    "layers": [
     {
-     "id": "ix-seqbox-seq-rect-b5-g1",
+     "id": "ix-seqbox-seq-rect-b5-g0",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -145,7 +145,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b5-g1",
+     "id": "ix-bubbles-seq-rect-b5-g0",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -266,7 +266,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b4-g1",
+     "id": "ix-seqbox-seq-rect-b4-g0",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -396,7 +396,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b4-g1",
+     "id": "ix-bubbles-seq-rect-b4-g0",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -517,7 +517,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b3-g2",
+     "id": "ix-seqbox-seq-rect-b3-g0",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -647,7 +647,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b3-g2",
+     "id": "ix-bubbles-seq-rect-b3-g0",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -768,7 +768,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b2-g3",
+     "id": "ix-seqbox-seq-rect-b2-g0",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -898,7 +898,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b2-g3",
+     "id": "ix-bubbles-seq-rect-b2-g0",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -1019,7 +1019,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b1-g4",
+     "id": "ix-seqbox-seq-rect-b1-g0",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -1149,7 +1149,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b1-g4",
+     "id": "ix-bubbles-seq-rect-b1-g0",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -1270,7 +1270,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b0-g5",
+     "id": "ix-seqbox-seq-rect-b0-g0",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -1400,7 +1400,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b0-g5",
+     "id": "ix-bubbles-seq-rect-b0-g0",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -3075,12 +3075,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "2cd51864b7d3c788",
-     "setDigest": "2cd51864b7d3c788",
+     "digest": "e4894d68336d443c",
+     "setDigest": "e4894d68336d443c",
      "columnDigests": {
-      "getPixelOffset": "3ac9047ff9253d6e",
+      "getPixelOffset": "75bba3093ad3f00c",
       "getPosition": "93982b64e52ff42a",
-      "getSize": "f86bbb8e86f2492a",
+      "getSize": "fef8313df5591109",
       "getText": "a82e663f2558ac07",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -3094,21 +3094,21 @@
        9.19
       ],
       "getSize": [
-       96.011846,
-       96.011846
+       125.997285,
+       125.997285
       ]
      },
      "sample": [
       [
        [
         81.691963,
-        -268.258921
+        -313.237079
        ],
        [
         9.19,
         45.3
        ],
-       96.011846,
+       125.997285,
        "Gamma",
        "middle"
       ]
@@ -3320,12 +3320,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "f4d9229ae53a1896",
-     "setDigest": "f4d9229ae53a1896",
+     "digest": "cc1c6feb7c5d9f91",
+     "setDigest": "cc1c6feb7c5d9f91",
      "columnDigests": {
-      "getPixelOffset": "5903609ae39e02f2",
+      "getPixelOffset": "9bd950e94955776c",
       "getPosition": "9b1ac02525f11a83",
-      "getSize": "af74c9700206d9ad",
+      "getSize": "ea7c06f85573cac1",
       "getText": "ec2017d5496abcaf",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -3339,21 +3339,21 @@
        9.05
       ],
       "getSize": [
-       123.262092,
-       123.262092
+       152.023247,
+       152.023247
       ]
      },
      "sample": [
       [
        [
         84.23188,
-        -385.915742
+        -429.057474
        ],
        [
         9.05,
         45.3
        ],
-       123.262092,
+       152.023247,
        "Alpha",
        "middle"
       ]
@@ -3565,12 +3565,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "09e5bb1c137fc240",
-     "setDigest": "09e5bb1c137fc240",
+     "digest": "189590d3c9ba24ed",
+     "setDigest": "189590d3c9ba24ed",
      "columnDigests": {
-      "getPixelOffset": "c7bbda135e8d5825",
+      "getPixelOffset": "f1ac4070a2e34896",
       "getPosition": "f1cbad7083e48392",
-      "getSize": "3613a07bea278118",
+      "getSize": "cb02fedaaf99fd1c",
       "getText": "a10d260e48816a34",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -3584,21 +3584,21 @@
        9.33
       ],
       "getSize": [
-       112.668028,
-       112.668028
+       153.142969,
+       153.142969
       ]
      },
      "sample": [
       [
        [
         56.268707,
-        -353.90462
+        -414.617032
        ],
        [
         9.33,
         45.3
        ],
-       112.668028,
+       153.142969,
        "Epsilon",
        "middle"
       ]
@@ -3810,12 +3810,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "3a8e0e9634bd8ce4",
-     "setDigest": "3a8e0e9634bd8ce4",
+     "digest": "080dd91999895cea",
+     "setDigest": "080dd91999895cea",
      "columnDigests": {
-      "getPixelOffset": "da6a9fd68f4f94ae",
+      "getPixelOffset": "d52a538a2546fde3",
       "getPosition": "86dbc5d3048d879c",
-      "getSize": "31c0e39e8c174277",
+      "getSize": "ad994d5d66384be5",
       "getText": "8449de729b96f0fe",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -3829,21 +3829,21 @@
        9.12
       ],
       "getSize": [
-       141.736081,
-       141.736081
+       155.957385,
+       155.957385
       ]
      },
      "sample": [
       [
        [
         143.097488,
-        -956.965736
+        -1035.182908
        ],
        [
         9.12,
         45.3
        ],
-       141.736081,
+       155.957385,
        "Beta,\nlong\nname\nthat\nwraps",
        "middle"
       ]
@@ -5012,7 +5012,7 @@
    },
    "layers": [
     {
-     "id": "ix-seqbox-seq-rect-b5-g11",
+     "id": "ix-seqbox-seq-rect-b5-g2",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -5142,7 +5142,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b5-g11",
+     "id": "ix-bubbles-seq-rect-b5-g2",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -5263,7 +5263,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b4-g11",
+     "id": "ix-seqbox-seq-rect-b4-g2",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -5393,7 +5393,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b4-g11",
+     "id": "ix-bubbles-seq-rect-b4-g2",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -5514,7 +5514,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b3-g11",
+     "id": "ix-seqbox-seq-rect-b3-g2",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -5644,7 +5644,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b3-g11",
+     "id": "ix-bubbles-seq-rect-b3-g2",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -5765,7 +5765,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b2-g11",
+     "id": "ix-seqbox-seq-rect-b2-g2",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -5895,7 +5895,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b2-g11",
+     "id": "ix-bubbles-seq-rect-b2-g2",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -6016,7 +6016,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b1-g11",
+     "id": "ix-seqbox-seq-rect-b1-g2",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -6146,7 +6146,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b1-g11",
+     "id": "ix-bubbles-seq-rect-b1-g2",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -6267,7 +6267,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b0-g11",
+     "id": "ix-seqbox-seq-rect-b0-g2",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -6397,7 +6397,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b0-g11",
+     "id": "ix-bubbles-seq-rect-b0-g2",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -8072,12 +8072,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "368e357146a546c7",
-     "setDigest": "368e357146a546c7",
+     "digest": "46bfa4fff009b7f8",
+     "setDigest": "46bfa4fff009b7f8",
      "columnDigests": {
-      "getPixelOffset": "ae1f73ae99f2653a",
+      "getPixelOffset": "f83d0011e11cff66",
       "getPosition": "93982b64e52ff42a",
-      "getSize": "846bcd721080d1bf",
+      "getSize": "c2bb2b7c18cc827c",
       "getText": "a82e663f2558ac07",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -8091,21 +8091,21 @@
        9.19
       ],
       "getSize": [
-       120.967346,
-       120.967346
+       158.746631,
+       158.746631
       ]
      },
      "sample": [
       [
        [
         102.925424,
-        -337.985062
+        -394.653989
        ],
        [
         9.19,
         45.3
        ],
-       120.967346,
+       158.746631,
        "Gamma",
        "middle"
       ]
@@ -8317,12 +8317,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "c31d0c415fd9584c",
-     "setDigest": "c31d0c415fd9584c",
+     "digest": "e55d398deb131c2a",
+     "setDigest": "e55d398deb131c2a",
      "columnDigests": {
-      "getPixelOffset": "180f5e095dd68933",
+      "getPixelOffset": "d27892d3e42bb405",
       "getPosition": "9b1ac02525f11a83",
-      "getSize": "e0751ef615974a85",
+      "getSize": "e84857b13f1836ff",
       "getText": "ec2017d5496abcaf",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -8336,21 +8336,21 @@
        9.05
       ],
       "getSize": [
-       155.300505,
-       155.300505
+       191.537289,
+       191.537289
       ]
      },
      "sample": [
       [
        [
         106.125518,
-        -486.223366
+        -540.578543
        ],
        [
         9.05,
         45.3
        ],
-       155.300505,
+       191.537289,
        "Alpha",
        "middle"
       ]
@@ -8562,12 +8562,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "00af91e06a56b6ce",
-     "setDigest": "00af91e06a56b6ce",
+     "digest": "461a8201ee34606a",
+     "setDigest": "461a8201ee34606a",
      "columnDigests": {
-      "getPixelOffset": "0189df3b09bd6917",
+      "getPixelOffset": "b75f921810e70d5b",
       "getPosition": "f1cbad7083e48392",
-      "getSize": "a55d88776aef9596",
+      "getSize": "0fb7474499a06d93",
       "getText": "a10d260e48816a34",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -8581,21 +8581,21 @@
        9.33
       ],
       "getSize": [
-       141.95282,
-       141.95282
+       192.94805,
+       192.94805
       ]
      },
      "sample": [
       [
        [
         70.894128,
-        -445.891881
+        -522.384726
        ],
        [
         9.33,
         45.3
        ],
-       141.95282,
+       192.94805,
        "Epsilon",
        "middle"
       ]
@@ -8807,12 +8807,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "56c1393a57720cfa",
-     "setDigest": "56c1393a57720cfa",
+     "digest": "68d57a63f203f431",
+     "setDigest": "68d57a63f203f431",
      "columnDigests": {
-      "getPixelOffset": "bfb8d745f3fa8efb",
+      "getPixelOffset": "fd9bd49e10fd88b3",
       "getPosition": "86dbc5d3048d879c",
-      "getSize": "75b70246a29e3f89",
+      "getSize": "382d061d9dad6bab",
       "getText": "8449de729b96f0fe",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -8826,21 +8826,21 @@
        9.12
       ],
       "getSize": [
-       178.576272,
-       178.576272
+       196.493992,
+       196.493992
       ]
      },
      "sample": [
       [
        [
         180.291537,
-        -1205.701275
+        -1304.248736
        ],
        [
         9.12,
         45.3
        ],
-       178.576272,
+       196.493992,
        "Beta,\nlong\nname\nthat\nwraps",
        "middle"
       ]
@@ -9664,7 +9664,7 @@
    },
    "layers": [
     {
-     "id": "ix-seqbox-seq-rect-b5-g14",
+     "id": "ix-seqbox-seq-rect-b5-g3",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -9794,7 +9794,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b5-g14",
+     "id": "ix-bubbles-seq-rect-b5-g3",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -9915,7 +9915,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b4-g14",
+     "id": "ix-seqbox-seq-rect-b4-g3",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -10045,7 +10045,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b4-g14",
+     "id": "ix-bubbles-seq-rect-b4-g3",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -10166,7 +10166,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b3-g14",
+     "id": "ix-seqbox-seq-rect-b3-g3",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -10296,7 +10296,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b3-g14",
+     "id": "ix-bubbles-seq-rect-b3-g3",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -10417,7 +10417,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b2-g14",
+     "id": "ix-seqbox-seq-rect-b2-g3",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -10547,7 +10547,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b2-g14",
+     "id": "ix-bubbles-seq-rect-b2-g3",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -10668,7 +10668,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b1-g14",
+     "id": "ix-seqbox-seq-rect-b1-g3",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -10798,7 +10798,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b1-g14",
+     "id": "ix-bubbles-seq-rect-b1-g3",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -10919,7 +10919,7 @@
      ]
     },
     {
-     "id": "ix-seqbox-seq-rect-b0-g14",
+     "id": "ix-seqbox-seq-rect-b0-g3",
      "type": "IconLayer",
      "count": 1,
      "constants": {
@@ -11049,7 +11049,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-seq-rect-b0-g14",
+     "id": "ix-bubbles-seq-rect-b0-g3",
      "type": "IconLayer",
      "count": 3,
      "constants": {
@@ -12724,12 +12724,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "6016c60e36289dca",
-     "setDigest": "6016c60e36289dca",
+     "digest": "a973c5d9b571098f",
+     "setDigest": "a973c5d9b571098f",
      "columnDigests": {
-      "getPixelOffset": "3b882866f06cf6ed",
+      "getPixelOffset": "5a39f5825d6127b7",
       "getPosition": "93982b64e52ff42a",
-      "getSize": "3473670b217c3d8c",
+      "getSize": "485e4668cfd0dae5",
       "getText": "a82e663f2558ac07",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -12743,21 +12743,21 @@
        9.19
       ],
       "getSize": [
-       76.204653,
-       76.204653
+       100.004111,
+       100.004111
       ]
      },
      "sample": [
       [
        [
         64.838954,
-        -212.917247
+        -248.616434
        ],
        [
         9.19,
         45.3
        ],
-       76.204653,
+       100.004111,
        "Gamma",
        "middle"
       ]
@@ -12969,12 +12969,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "bd18e22c9fc56a33",
-     "setDigest": "bd18e22c9fc56a33",
+     "digest": "de668fd4cb0ac691",
+     "setDigest": "de668fd4cb0ac691",
      "columnDigests": {
-      "getPixelOffset": "2a0ef4d8a5f16247",
+      "getPixelOffset": "82c05fe087edf1e1",
       "getPosition": "9b1ac02525f11a83",
-      "getSize": "4b0e9673eccac828",
+      "getSize": "cd7a11ed873a1283",
       "getText": "ec2017d5496abcaf",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -12988,21 +12988,21 @@
        9.05
       ],
       "getSize": [
-       97.833187,
-       97.833187
+       120.660931,
+       120.660931
       ]
      },
      "sample": [
       [
        [
         66.854887,
-        -306.301527
+        -340.543143
        ],
        [
         9.05,
         45.3
        ],
-       97.833187,
+       120.660931,
        "Alpha",
        "middle"
       ]
@@ -13214,12 +13214,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "92cd7411fad06c49",
-     "setDigest": "92cd7411fad06c49",
+     "digest": "d6595cd1ab5112d9",
+     "setDigest": "d6595cd1ab5112d9",
      "columnDigests": {
-      "getPixelOffset": "f04a27abbbae59d0",
+      "getPixelOffset": "f7e4591af67925be",
       "getPosition": "f1cbad7083e48392",
-      "getSize": "38a595a7cb1e168e",
+      "getSize": "63a332763314bd97",
       "getText": "a10d260e48816a34",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -13233,21 +13233,21 @@
        9.33
       ],
       "getSize": [
-       89.424673,
-       89.424673
+       121.549655,
+       121.549655
       ]
      },
      "sample": [
       [
        [
         44.660502,
-        -280.894283
+        -329.081756
        ],
        [
         9.33,
         45.3
        ],
-       89.424673,
+       121.549655,
        "Epsilon",
        "middle"
       ]
@@ -13459,12 +13459,12 @@
       "getText",
       "getTextAnchor"
      ],
-     "digest": "e8af67813647e803",
-     "setDigest": "e8af67813647e803",
+     "digest": "196dff29f1022817",
+     "setDigest": "196dff29f1022817",
      "columnDigests": {
-      "getPixelOffset": "2dda96e94e569f58",
+      "getPixelOffset": "d5ce6326266212e6",
       "getPosition": "86dbc5d3048d879c",
-      "getSize": "7dfd21a310a1c136",
+      "getSize": "bc2da89bef0a308a",
       "getText": "8449de729b96f0fe",
       "getTextAnchor": "604dc80c5b39a9f8"
      },
@@ -13478,21 +13478,21 @@
        9.12
       ],
       "getSize": [
-       112.496002,
-       112.496002
+       123.783458,
+       123.783458
       ]
      },
      "sample": [
       [
        [
         113.576551,
-        -759.544208
+        -821.625218
        ],
        [
         9.12,
         45.3
        ],
-       112.496002,
+       123.783458,
        "Beta,\nlong\nname\nthat\nwraps",
        "middle"
       ]

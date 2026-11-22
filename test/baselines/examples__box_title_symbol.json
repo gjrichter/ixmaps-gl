@@ -15,7 +15,7 @@
    },
    "layers": [
     {
-     "id": "ix-box-box-rect-g2",
+     "id": "ix-box-box-rect-g0",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -169,7 +169,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-rect-circles-g2",
+     "id": "ix-bubbles-box-rect-circles-g0",
      "type": "ScatterplotLayer",
      "count": 6,
      "constants": {
@@ -873,7 +873,7 @@
      ]
     },
     {
-     "id": "ix-box-box-dtext-g2",
+     "id": "ix-box-box-dtext-g0",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -1027,7 +1027,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-dtext-circles-g2",
+     "id": "ix-bubbles-box-dtext-circles-g0",
      "type": "ScatterplotLayer",
      "count": 6,
      "constants": {
@@ -1335,7 +1335,7 @@
      ]
     },
     {
-     "id": "ix-box-box-multiquad-g2",
+     "id": "ix-box-box-multiquad-g0",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -1489,7 +1489,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-multiquad-g2",
+     "id": "ix-bubbles-box-multiquad-g0",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -2082,7 +2082,7 @@
    },
    "layers": [
     {
-     "id": "ix-box-box-rect-g4",
+     "id": "ix-box-box-rect-g2",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -2236,7 +2236,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-rect-circles-g4",
+     "id": "ix-bubbles-box-rect-circles-g2",
      "type": "ScatterplotLayer",
      "count": 6,
      "constants": {
@@ -2940,7 +2940,7 @@
      ]
     },
     {
-     "id": "ix-box-box-dtext-g5",
+     "id": "ix-box-box-dtext-g2",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -3094,7 +3094,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-dtext-circles-g5",
+     "id": "ix-bubbles-box-dtext-circles-g2",
      "type": "ScatterplotLayer",
      "count": 6,
      "constants": {
@@ -3402,7 +3402,7 @@
      ]
     },
     {
-     "id": "ix-box-box-multiquad-g4",
+     "id": "ix-box-box-multiquad-g2",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -3556,7 +3556,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-multiquad-g4",
+     "id": "ix-bubbles-box-multiquad-g2",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -4149,7 +4149,7 @@
    },
    "layers": [
     {
-     "id": "ix-box-box-rect-g6",
+     "id": "ix-box-box-rect-g3",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -4303,7 +4303,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-rect-circles-g6",
+     "id": "ix-bubbles-box-rect-circles-g3",
      "type": "ScatterplotLayer",
      "count": 6,
      "constants": {
@@ -5007,7 +5007,7 @@
      ]
     },
     {
-     "id": "ix-box-box-dtext-g6",
+     "id": "ix-box-box-dtext-g3",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -5161,7 +5161,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-dtext-circles-g6",
+     "id": "ix-bubbles-box-dtext-circles-g3",
      "type": "ScatterplotLayer",
      "count": 6,
      "constants": {
@@ -5469,7 +5469,7 @@
      ]
     },
     {
-     "id": "ix-box-box-multiquad-g6",
+     "id": "ix-box-box-multiquad-g3",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -5623,7 +5623,7 @@
      ]
     },
     {
-     "id": "ix-bubbles-box-multiquad-g6",
+     "id": "ix-bubbles-box-multiquad-g3",
      "type": "IconLayer",
      "count": 6,
      "constants": {

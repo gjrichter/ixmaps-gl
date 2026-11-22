@@ -47,6 +47,8 @@ page. It currently implements:
   `glowlower` and `glowupper`),
   multi-point grouping, on-bubble value labels, `NORMALIZE`, chart boxes (`BOX`, `CIRCULARBOX`)
   with the item title above or below (`TITLE`, `BOTTOMTITLE`), between `boxlower` and `boxupper`.
+  An aggregated item's title is "(n)" or its first record's, as in flat — except (gl only) when every
+  record it holds has the same `binding.title` value: then that title.
   A `CATEGORICAL` `BUBBLE` (also `EXACT`/`AGGREGATE`) is filled and outlined as in flat, each
   bubble and each part of a grouped one: `fillopacity` (1), outlined in the category color × 0.7
   or `linecolor` (none with `NOLINES`), `linewidth` (0.1) growing with √radius (`OUTLINE`: up to the
@@ -97,14 +99,30 @@ page. It currently implements:
   value with `SIZE`, negative ones pointing down in `fadenegative`), `OFFSETMEAN`/`OFFSETMEDIAN`/
   `DEVIATION`; `VALUES` (beyond the bar or inside it, `valuedecimals`, `units`, `DTEXT`,
   `VALUEBACKGROUND`/`CTEXT`), `FADEIN`/`FADENEGATIVE`, `fillopacity`/`linecolor`/`linewidth`;
-  `BOX` and `TITLE`. `3D`, `VOLUME`, `COLUMN`, `DOTTED`, `TRENDLINE`, the `XAXIS` labels, `ZOOM` and
+  `BOX` and `TITLE`; `XAXIS` (`style.xaxis`, else `label`; one per column with `gridx`) below the bars,
+  as flat, 45° up. `3D`, `VOLUME`, `COLUMN`, `DOTTED`, `TRENDLINE`, `ZOOM` and
   field100 arithmetic are noted in the console and drawn as plain bars (`SMALLARROW` as `ARROW`)
+- **CHART\|WAFFLE** — a square per count, as flat draws it: a part per value field or, with
+  `CATEGORICAL|AGGREGATE`, per category of each item's records; the parts in order (`SORT`: largest
+  first), each value rounded to its cell count, filled from the bottom left, rows going up. `gridx`
+  sets the columns, else 10 for `WAFFLE100`/`AUTO100` (which stop at 100 cells), else
+  max(5, round(√max)); the waffle sits on a faint square (`boxcolor`/`boxopacity`, `bordercolor`).
+  `AUTOSIZE`, `CLIP`, `MORPH` and the value arithmetic flags are noted in the console, not drawn
 - **DOT** — the simplest base symbol (fixed-radius, unclustered points)
 - **PLOT** — a small line/area chart per item over its value fields (flat's per-item PLOT
   geometry: first point at the item, `scale`/`rangescale`, FIXSIZE markers), or over one
   categorical field with `CATEGORICAL|AGGREGATE` (long data, one item per position; `LASTPOP` puts
   a circle on the last point of a per-item chart), or one per grid
-  cell with `GRIDSIZE` (a categorical field's series, e.g. one value per year)
+  cell with `GRIDSIZE` (a categorical field's series, e.g. one value per year; fitted into the
+  grid cell as flat does — the curve spans (n−1)/n of the cell × `scale` for n values, and `linewidth` is
+  1/30 of one X step per unit, so a big `linewidth` over many values is thin —, with `BOX`/`TITLE`; the
+  title is the cell's first record). The
+  `XAXIS` labels need `BOX` and `GRID` too, as in flat; `XAXIS` alone draws none. A grid plot's value
+  range is as tall as the curve is wide × `rangescale`; the area fills to the value-0 level (negative values fill upward) and `FADE` fades it; `align` / `offsetx` / `offsety` move a plot as in flat (flat units, PLOT keywords, one place for every chart type); with
+  `style.ranges` every segment takes the colour of its own value's class (the colorscheme sweep, no
+  `RANGES` flag needed); `LASTPOP` puts a dot on each cell's last point (`linewidth` × `markersize`).
+  `BOX` + `GRID` draw flat's coordinate grid: y lines and labels on the axis' rounded steps (the zero
+  line solid), plus x ticks and labels from `style.xaxis`
 - A native interactive legend (default bars, `SIMPLELEGEND`, `COMPACTLEGEND`,
   `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner or flat `align` option;
   collapsible, collapsed by default on narrow/mobile screens). As flat's `#map-legend` it is one box:
@@ -116,7 +134,7 @@ page. It currently implements:
   `window.__setFacetFilter`) for building filterable sidebars
 - Globe (orthographic) projection alongside flat Mercator
 
-Not yet implemented: the `QUAD`/`WAFFLE` base types. SYMBOL shapes: the built-in ones and image-URL
+Not yet implemented: the `QUAD` base type. SYMBOL shapes: the built-in ones and image-URL
 symbols are described under [Symbols](#symbols).
 The top-of-file comment in [`ixmaps-gl.js`](./ixmaps-gl.js) is the single source of truth
 for scope; this list only summarises it.
@@ -346,6 +364,16 @@ format comes as a table with a `geometry` column; `.binding({geo: "geometry"})` 
 points, lines or polygons. GeoJSON and TopoJSON are read by ixmaps-gl itself (features directly),
 and without data.js CSV falls back to ixmaps-gl's own parser (same rows, ~10 % faster on 1.2M rows).
 
+`.data({type: "pmtiles", url, layer})` (gl only) draws a theme straight from a PMTiles vector
+archive: MapLibre streams the tiles itself (HTTP range requests), so there is no zoom gate, feature
+cap or tile-edge seam, and ixmaps-gl loads no records. `layer` names the MVT layer inside the
+tiles (required). The theme is an ordinary `FEATURE`/`CHOROPLETH|CATEGORICAL` definition:
+`style.values` and `colorscheme` color the `binding.value` property (a value outside the classes is
+not drawn; without classes the FEATURE fill color is used), `fillopacity` (default 0.8),
+`linecolor`/`linewidth` for an outline; classes marked in the legend filter the map. It draws
+below every deck.gl layer. There are no per-feature items yet: no tooltip, no click, and the legend
+shows the classes without counts. pmtiles.js is loaded from unpkg on first use.
+
 ### Loading ixmaps-flat project files
 
 `map.loadProject(src, flags)` (and the global `ixmaps.loadProject` / `ixmaps.setProjectJSON`)
@@ -424,6 +452,13 @@ in. The scale is flat's, about `442913385 / 2^z` for the zoom `z` you give `.vie
 | scale 1: | 432533 | 216266 | 108133 | 54067 | 27033 | 13517 | 6758 | 3379 |
 
 `featureupper`/`featurelower` gate FEATURE themes the same way, `glowupper`/`glowlower` the glow halo.
+
+A theme out of its range when the map opens loads no data until it comes into scale, as in flat; while it
+loads, the map shows the theme's `meta.splash` (or "loading data ..."). For a large file,
+`.data({ url, type: "csv", preload: true })` (gl only; flat ignores it) downloads the file once the map is idle
+after its first draw, without decoding or parsing it, so the page doesn't stall; the theme then reads it from
+memory when it comes into scale. Only `csv`, `geojson` and `topojson` are preloaded. The file is held
+uncompressed (a server's gzip is undone on download), so preload only what most visitors will zoom into.
 
 ### Aggregation grid and symbol size
 

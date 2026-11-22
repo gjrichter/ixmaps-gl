@@ -1,6 +1,6 @@
 // CHART|PIE / DONUT: flat's slice layout (maptheme.js drawChart's PIE
 // branch, piechart.js DonutChart.realize), its leader-line value labels
-// (drawDonutText) and the theme statistics a pie theme gets (_preparePie).
+// (drawDonutText) and the theme statistics a pie theme gets (_prepareParts).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -102,15 +102,15 @@ test('pie theme: classes over every part value, as many as colors; nMin/nMax of 
   assert.deepEqual(plain(rt.categoryLabels), ['a', 'b'], 'one legend row per field');
   assert.equal(rt._maxSizeValue, 20);
   assert.equal(rt._isMultiFieldChart(), true);
-  assert.equal(rt._isAggregatedPie(), false, 'a per-record pie');
+  assert.equal(rt._hasAggregatedParts(), false, 'a per-record pie');
   const agg = new LayerRuntime(normalizeTheme({ layer: 'c', binding: { value: 'a|b' }, style: { type: 'CHART|PIE|AGGREGATE' } }), { type: 'FeatureCollection', features: [] }, {});
-  assert.equal(agg._isPieChart() && agg._isAggregatedPie(), true, 'an AGGREGATE pie: a pie per item');
+  assert.equal(agg._isPieChart() && agg._hasAggregatedParts(), true, 'an AGGREGATE pie: a pie per item');
   const cat = new LayerRuntime(normalizeTheme({ layer: 'c', binding: { value: 'a' }, style: { type: 'CHART|PIE|CATEGORICAL' } }), { type: 'FeatureCollection', features: [] }, {});
-  assert.equal(cat._isPieChart() && cat._isAggregatedPie(), true, 'a CATEGORICAL one too');
+  assert.equal(cat._isPieChart() && cat._hasAggregatedParts(), true, 'a CATEGORICAL one too');
 });
 
 // ---------------------------------------------------------------- AGGREGATE / CATEGORICAL pies
-const { flatValueRules, flatPieRecord, flatPieAccumulate, flatPieItemValues } = win.__ixmapsGlInternals;
+const { flatValueRules, flatPieRecord, flatPartsAccumulate, flatPartsItemValues } = win.__ixmapsGlInternals;
 const flagSet = t => new Set(t.split('|'));
 
 test('aggregated pie record (flatPieRecord): size field or 1; a category none of style.values is part -1, its size still counts', () => {
@@ -126,9 +126,9 @@ test('aggregated pie record (flatPieRecord): size field or 1; a category none of
   assert.deepEqual(plain(f), { parts: [2, 0, 0], zeroNot: [false, true, true], size: 1 }, 'value fields: no number 0; ZEROISNOTVALUE keeps the record, the 0 out of the mean');
 });
 
-test('aggregated pie item (flatPieAccumulate): SUM adds parts and |sizes|, MAX / MIN as flat (a missing part counts 0), FIRST / LAST', () => {
+test('aggregated pie item (flatPartsAccumulate): SUM adds parts and |sizes|, MAX / MIN as flat (a missing part counts 0), FIRST / LAST', () => {
   const recs = [{ cat: 0, size: 4 }, { cat: 1, size: 6 }, { cat: -1, size: 5 }, { cat: 0, size: 1 }];
-  const run = t => recs.reduce((it, r) => flatPieAccumulate(it, r, flagSet(t)), null);
+  const run = t => recs.reduce((it, r) => flatPartsAccumulate(it, r, flagSet(t)), null);
   const sum = run('CHART|PIE|AGGREGATE|SUM');
   assert.deepEqual([sum.parts[0], sum.parts[1], sum.size, sum.n], [5, 6, 16, 4], 'part -1 adds its size only');
   assert.deepEqual([sum.counts[0], sum.counts[1]], [2, 1]);
@@ -139,19 +139,19 @@ test('aggregated pie item (flatPieAccumulate): SUM adds parts and |sizes|, MAX /
   assert.deepEqual(plain(run('CHART|PIE|AGGREGATE|FIRST').parts), [4]);
   assert.equal(run('CHART|PIE|AGGREGATE|LAST').parts[0], 1);
   const fields = [{ parts: [1, 2], zeroNot: [false, false], size: 1 }, { parts: [3, 0], zeroNot: [false, true], size: 1 }]
-    .reduce((it, r) => flatPieAccumulate(it, r, flagSet('CHART|PIE|AGGREGATE|SUM')), null);
+    .reduce((it, r) => flatPartsAccumulate(it, r, flagSet('CHART|PIE|AGGREGATE|SUM')), null);
   assert.deepEqual(plain([fields.parts, fields.counts, fields.size]), [[4, 2], [2, 1], 2]);
 });
 
-test('aggregated pie values (flatPieItemValues): one part per category of style.values, MEAN per part, AUTO100 in %', () => {
+test('aggregated pie values (flatPartsItemValues): one part per category of style.values, MEAN per part, AUTO100 in %', () => {
   const it = { parts: [], counts: [], size: 10, n: 4 };
   it.parts[1] = 6; it.counts[1] = 3; it.parts[2] = 2; it.counts[2] = 1;
-  assert.deepEqual(plain(flatPieItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE|SUM', { categorical: true, nParts: 4 })), { parts: [0, 6, 2, 0], size: 10 });
-  assert.deepEqual(plain(flatPieItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE', { categorical: true })).parts, [0, 6, 2], 'without values: up to the last category the item has');
-  assert.deepEqual(plain(flatPieItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE|MEAN', { categorical: true, nParts: 3 })), { parts: [0, 2, 2], size: 2.5 });
-  assert.equal(flatPieItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE|MEAN|SIZESUM', { categorical: true }).size, 10);
-  assert.deepEqual(plain(flatPieItemValues({ parts: [3, 1], counts: [1, 1], size: 2, n: 2 }, 'CHART|PIE|AGGREGATE|MEAN', { nParts: 2 }).parts), [1.5, 0.5], 'value fields: by the item\'s records');
-  assert.deepEqual(plain(flatPieItemValues({ parts: [3, 1], counts: [1, 1], size: 2, n: 2 }, 'CHART|PIE|AGGREGATE|AUTO100', { nParts: 2 }).parts), [75, 25]);
+  assert.deepEqual(plain(flatPartsItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE|SUM', { categorical: true, nParts: 4 })), { parts: [0, 6, 2, 0], size: 10 });
+  assert.deepEqual(plain(flatPartsItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE', { categorical: true })).parts, [0, 6, 2], 'without values: up to the last category the item has');
+  assert.deepEqual(plain(flatPartsItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE|MEAN', { categorical: true, nParts: 3 })), { parts: [0, 2, 2], size: 2.5 });
+  assert.equal(flatPartsItemValues(it, 'CHART|PIE|CATEGORICAL|AGGREGATE|MEAN|SIZESUM', { categorical: true }).size, 10);
+  assert.deepEqual(plain(flatPartsItemValues({ parts: [3, 1], counts: [1, 1], size: 2, n: 2 }, 'CHART|PIE|AGGREGATE|MEAN', { nParts: 2 }).parts), [1.5, 0.5], 'value fields: by the item\'s records');
+  assert.deepEqual(plain(flatPartsItemValues({ parts: [3, 1], counts: [1, 1], size: 2, n: 2 }, 'CHART|PIE|AGGREGATE|AUTO100', { nParts: 2 }).parts), [75, 25]);
 });
 
 test('CATEGORICAL|AGGREGATE pie theme: a pie per position, a part per category, the size sums every record (flat nSize); classes = category numbers', () => {
@@ -165,14 +165,14 @@ test('CATEGORICAL|AGGREGATE pie theme: a pie per position, a part per category, 
   assert.equal(rt.flags.has('CATEGORICAL'), true, 'EXACT is CATEGORICAL');
   assert.deepEqual(plain(rt.categoryLabels), ['A', 'B', 'C']);
   assert.deepEqual(plain(rt.partsA.map(p => [p.min, Math.round(p.max * 1e9) / 1e9])), [[1, 1.000000001], [2, 2.000000001], [3, 3.001000001]]);
-  const items = rt._pieAggregatedItems(4, [-180, -90, 180, 90])
-    .map(f => ({ x: Math.round(f.geometry.coordinates[0] * 1e6) / 1e6, ...rt._pieItemValues(f.properties.pie), n: f.properties.pie.n }))
+  const items = rt._partsItems(4, [-180, -90, 180, 90])
+    .map(f => ({ x: Math.round(f.geometry.coordinates[0] * 1e6) / 1e6, ...rt._partsOf(f.properties.agg), n: f.properties.agg.n }))
     .sort((a, b) => a.x - b.x);
   assert.deepEqual(plain(items), [
     { x: 1, parts: [12, 5, 0], size: 117, n: 4 },
     { x: 2, parts: [0, 0, 7], size: 7, n: 1 },
     { x: 3, parts: [0, 0, 0], size: 3, n: 1 }], '"B " is B (trimmed), Z counts in the size only, a size "x" leaves the record out');
-  const stats = rt._pieAggregateStats(4);
+  const stats = rt._partsStats(4);
   assert.deepEqual([rt._valueMin, rt._valueMax, stats.maxSize], [3, 117, 117], 'nMin / nMax over the items\' sizes');
   assert.equal(rt.categoryIndexByLabel.get('B '), 1, 'the legend finds a raw value');
 });
@@ -182,7 +182,7 @@ test('CATEGORICAL pie without AGGREGATE: the records of one position are one pie
   const pt = (props, x) => ({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [x, 10] } });
   const rt = new LayerRuntime(spec, { type: 'FeatureCollection', features: [pt({ k: 'u' }, 5), pt({ k: 'v' }, 5), pt({ k: 'u' }, 5), pt({ k: 'v' }, 6)] }, {});
   assert.deepEqual(plain(rt.categoryLabels), ['u', 'v'], 'categories in data order');
-  const items = rt._pieAggregatedItems(3, [-180, -90, 180, 90]).map(f => rt._pieItemValues(f.properties.pie).parts);
+  const items = rt._partsItems(3, [-180, -90, 180, 90]).map(f => rt._partsOf(f.properties.agg).parts);
   assert.deepEqual(plain(items.sort((a, b) => b.length - a.length || b[0] - a[0])), [[2, 1], [0, 1]], 'counts per category (no size field); the 2nd item ends at its last category');
 });
 

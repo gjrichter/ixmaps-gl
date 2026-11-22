@@ -184,6 +184,19 @@ test('basemap names: dark/black/night/matter -> Dark Matter, anything else -> Po
   assert.equal(color('VT_DATAVIZ_DARK'), null);
 });
 
+test("keyless vector basemaps by name: Voyager (and flat's VT_VOYAGER names), the no-label styles and OpenFreeMap", () => {
+  const { resolveBasemapStyleUrl: url } = loadEngine();
+  assert.match(url('CARTO - Voyager'), /voyager-gl-style/);
+  assert.equal(url('VT_VOYAGER'), url('CARTO - Voyager'));
+  assert.match(url('VT_VOYAGER_LIGHT'), /voyager-nolabels/);
+  assert.match(url('CARTO - Positron (no labels)'), /positron-nolabels/);
+  assert.match(url('CARTO - Dark Matter (no labels)'), /dark-matter-nolabels/);
+  for (const n of ['Liberty', 'Bright', 'Positron']) assert.equal(url('OpenFreeMap - ' + n), 'https://tiles.openfreemap.org/styles/' + n.toLowerCase());
+  // the old rule is untouched: a dark/light name without an entry still picks Dark Matter / Positron
+  assert.match(url('VT_DATAVIZ_DARK'), /dark-matter-gl-style/);
+  assert.match(url('VT_TONER_LITE'), /positron-gl-style/);
+});
+
 test('style.opacity is the fill opacity unless fillopacity is set; empty/null opacity is ignored', () => {
   const { normalizeTheme } = loadEngine();
   const fo = style => normalizeTheme({ layer: 'a', style: { type: 'CHART|BUBBLE', ...style } }).style.fillopacity;
@@ -229,6 +242,9 @@ test('chartBoxLayout: the one box/title layout — rect, title above, bottom tit
   const c = chartBoxLayout([0, 0, 60, 30], { margin: 2, circular: true, titleText: 'ab', titleFont: 5, bottomTitle: true, measure });
   near(c.boxR, 37); near(c.cx, 30); near(c.cy, 15); assert.equal(c.rect, null);
   near(c.title.baseline, 15 + 37 + 5); near(c.title.x, 30.5); assert.equal(c.title.anchor, 'middle');
+  // a font following the box (DTEXT, GRIDSIZE) takes the circle's diameter with CIRCULARBOX (flat 18802-18822)
+  near(chartBoxLayout([0, 0, 60, 30], { margin: 2, circular: true, titleText: 'ab', titleFont: width => width / 5, measure }).title.f, 74 / 5);
+  near(chartBoxLayout([0, 0, 60, 30], { margin: 2, titleText: 'ab', titleFont: width => width / 5, measure }).title.f, 60 / 5);
   // an explicit radius / center (a single symbol sits on its anchor)
   const s = chartBoxLayout([-10, -10, 10, 10], { unit: 2, margin: 2, circular: true, radius: 10, center: [0, 0], measure });
   near(s.boxR, 10 * 1.1 + Math.min(2 * 2 * 2, 2 * 20 / 30)); near(s.cx, 0);

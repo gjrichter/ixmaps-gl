@@ -15,7 +15,7 @@
    },
    "layers": [
     {
-     "id": "ix-pie-box-pie-box-g2",
+     "id": "ix-pie-box-pie-box-g0",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -784,7 +784,7 @@
      ]
     },
     {
-     "id": "ix-pie-box-pie-bottom-g2",
+     "id": "ix-pie-box-pie-bottom-g0",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -1553,7 +1553,7 @@
      ]
     },
     {
-     "id": "ix-pie-box-pie-starburst-g5",
+     "id": "ix-pie-box-pie-starburst-g0",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -2515,7 +2515,7 @@
    },
    "layers": [
     {
-     "id": "ix-pie-box-pie-box-g4",
+     "id": "ix-pie-box-pie-box-g2",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -3284,7 +3284,7 @@
      ]
     },
     {
-     "id": "ix-pie-box-pie-bottom-g4",
+     "id": "ix-pie-box-pie-bottom-g2",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -4053,7 +4053,7 @@
      ]
     },
     {
-     "id": "ix-pie-box-pie-starburst-g10",
+     "id": "ix-pie-box-pie-starburst-g2",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -5015,7 +5015,7 @@
    },
    "layers": [
     {
-     "id": "ix-pie-box-pie-box-g6",
+     "id": "ix-pie-box-pie-box-g3",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -5784,7 +5784,7 @@
      ]
     },
     {
-     "id": "ix-pie-box-pie-bottom-g6",
+     "id": "ix-pie-box-pie-bottom-g3",
      "type": "IconLayer",
      "count": 6,
      "constants": {
@@ -6553,7 +6553,7 @@
      ]
     },
     {
-     "id": "ix-pie-box-pie-starburst-g15",
+     "id": "ix-pie-box-pie-starburst-g3",
      "type": "IconLayer",
      "count": 6,
      "constants": {

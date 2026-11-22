@@ -637,3 +637,24 @@ test('multi-field SEQUENCE AUTO100: the part scale follows replaced data', () =>
   rt.replaceFeatures(fc([pt({ a: 1, b: 1 }, 9)]));
   assert.equal(scale(), 50, 'the new data\'s share, not the old 90');
 });
+
+// ---- the common title of an aggregate (gl, not flat): every record with the same binding.title value → that title
+const tpt = (lng, lat, value, name) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { value, raw: name === undefined ? {} : { name } } });
+test('aggregateOnGrid: a cell whose records share one title carries it as commonTitle; a different or missing one, none', () => {
+  const merged = recs => G.aggregateOnGrid(recs, 12, 10, flags('RECT'), undefined, undefined, 'name').find(f => f.properties.cluster).properties;
+  assert.equal(merged([tpt(9.19, 45.46, 2, 'Roma'), tpt(9.19001, 45.46001, 3, 'Roma')]).commonTitle, 'Roma');
+  assert.equal(merged([tpt(9.19, 45.46, 2, 'Roma'), tpt(9.19001, 45.46001, 3, 'Milano')]).commonTitle, undefined, 'mixed');
+  assert.equal(merged([tpt(9.19, 45.46, 2, 'Roma'), tpt(9.19001, 45.46001, 3)]).commonTitle, undefined, 'one without a title');
+  assert.equal(merged([tpt(9.19, 45.46, 2, 'Roma'), tpt(9.19001, 45.46001, 3, 'Roma')].map(f => f)).commonTitle, 'Roma');
+  assert.equal(G.aggregateOnGrid([tpt(9.19, 45.46, 2, 'Roma'), tpt(9.19001, 45.46001, 3, 'Roma')], 12, 10, flags('RECT'))
+    .find(f => f.properties.cluster).properties.commonTitle, undefined, 'no title field');
+});
+test('groupCoLocated: commonTitle across members, an aggregated member passing its own on', () => {
+  const rec = (cat, name) => ({ geometry: { coordinates: [9.19, 45.46] }, properties: { cat, value: 1, raw: { name } } });
+  const agg = (cat, commonTitle) => ({ geometry: { coordinates: [9.19, 45.46] }, properties: { cat, value: 2, cluster: true, point_count: 2, ...(commonTitle ? { commonTitle } : {}) } });
+  const one = members => G.groupCoLocated(members, 10, 2, 2, flags(), false, 'name')[0].properties.commonTitle;
+  assert.equal(one([rec(0, 'Roma'), rec(1, 'Roma')]), 'Roma');
+  assert.equal(one([rec(0, 'Roma'), agg(1, 'Roma')]), 'Roma', 'a nested aggregate with the same title');
+  assert.equal(one([rec(0, 'Roma'), agg(1)]), undefined, 'a nested aggregate of mixed titles');
+  assert.equal(one([rec(0, 'Roma'), rec(1, 'Milano')]), undefined);
+});
