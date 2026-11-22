@@ -19,7 +19,7 @@
      "type": "IconLayer",
      "count": 3725,
      "constants": {
-      "getSize": 100,
+      "getSize": 100.2,
       "pickable": false,
       "sizeUnits": "pixels"
      },
@@ -27,10 +27,10 @@
       "getIcon",
       "getPosition"
      ],
-     "digest": "da66d5eb3684bae3",
-     "setDigest": "848f184fe2da9774",
+     "digest": "9b60f9079eb057fb",
+     "setDigest": "998aa0284b61ee4b",
      "columnDigests": {
-      "getIcon": "e50dde326ac8e597",
+      "getIcon": "fefb2eb3e598b0a8",
       "getPosition": "7f4701bf870426c3"
      },
      "stats": {
@@ -44,9 +44,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -58,9 +59,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -72,9 +74,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -86,9 +89,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -100,9 +104,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -114,9 +119,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -128,9 +134,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -142,9 +149,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -156,9 +164,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -170,9 +179,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -184,9 +194,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -198,9 +209,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -212,9 +224,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -226,9 +239,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -240,9 +254,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -254,9 +269,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -268,9 +284,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -282,9 +299,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -296,9 +314,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -310,9 +329,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -325,7 +345,7 @@
     {
      "id": "ix-plot-box-Mercator-g0",
      "type": "IconLayer",
-     "count": 3725,
+     "count": 129,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -337,417 +357,421 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "7f69b5a395fd7546",
-     "setDigest": "bb982bc0f0c7f6ea",
+     "digest": "438669dedff2ec65",
+     "setDigest": "cf1c821d2e8a9c9d",
      "columnDigests": {
-      "getIcon": "1f0fae84d5594112",
-      "getPixelOffset": "25124ea3ba22b18d",
-      "getPosition": "7f4701bf870426c3",
-      "getSize": "4108334914a0573e"
+      "getIcon": "a9169b6f38737d38",
+      "getPixelOffset": "f4a2d5f8df51e7ab",
+      "getPosition": "0072aec84c63e0d8",
+      "getSize": "feea6eb7d7fd9c3b"
      },
      "stats": {
       "getPixelOffset": [
-       0,
-       0
+       -3.333333,
+       -3.333333
       ],
       "getPosition": [
-       8.537075,
-       11.425989
+       9.046884,
+       9.338203
       ],
       "getSize": [
-       115.5,
-       115.5
+       86.5,
+       86.5
       ]
      },
      "sample": [
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.241096,
-        45.730813
+        9.313926,
+        45.544099
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.289649,
-        45.730813
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.265373,
-        45.730813
+        45.544099
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.696912
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.289649,
-        45.696912
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.265373,
-        45.696912
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.595083
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.612067
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.21682,
-        45.629046
+        45.476048
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.629046
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.411032,
-        45.64602
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.265373,
-        45.612067
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.21682,
-        45.662989
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.192543,
-        45.662989
+        45.493068
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.21682,
-        45.64602
+        9.192543,
+        45.459023
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.289649,
-        45.595083
+        9.14399,
+        45.459023
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.289649,
-        45.578093
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.265373,
-        45.561098
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.265373,
-        45.578093
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.241096,
-        45.578093
+        45.510084
        ],
-       115.5
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.459023
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.527094
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.192543,
+        45.476048
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.493068
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.441992
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.407915
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.21682,
+        45.493068
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.14399,
+        45.476048
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.192543,
+        45.441992
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.476048
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.510084
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.119713,
+        45.510084
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.241096,
+        45.493068
+       ],
+       86.5
       ]
      ]
     },
     {
      "id": "ix-plot-Mercator-g0",
      "type": "IconLayer",
-     "count": 3725,
+     "count": 129,
      "constants": {
-      "getSize": 100,
+      "getPixelOffset": [
+       -3.333333,
+       -11.111111
+      ],
+      "getSize": 75.757576,
       "pickable": true,
       "sizeUnits": "pixels"
      },
@@ -755,297 +779,317 @@
       "getIcon",
       "getPosition"
      ],
-     "digest": "47e3edf0f368b150",
-     "setDigest": "d35e454ae5683957",
+     "digest": "e578ba385966a90c",
+     "setDigest": "540635734e4ab84b",
      "columnDigests": {
-      "getIcon": "07edaad3492f2740",
-      "getPosition": "7f4701bf870426c3"
+      "getIcon": "52e47fda8854f4d4",
+      "getPosition": "0072aec84c63e0d8"
      },
      "stats": {
       "getPosition": [
-       8.537075,
-       11.425989
+       9.046884,
+       9.338203
       ]
      },
      "sample": [
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-88:0|3",
+        "url": "#34e098f9:3578",
+        "width": 200
        },
        [
-        9.241096,
-        45.730813
+        9.313926,
+        45.544099
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "88:0-88:0-88:0|3",
-        "url": "#e31213a6:2010",
-        "width": 100
-       },
-       [
-        9.289649,
-        45.730813
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "88:0-80:0-88:0|3",
-        "url": "#78e56d59:2962",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-96:0-96:0|3",
+        "url": "#82dad996:3654",
+        "width": 200
        },
        [
         9.265373,
-        45.730813
+        45.544099
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.696912
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-88:0|3",
-        "url": "#86cb1be4:2582",
-        "width": 100
-       },
-       [
-        9.289649,
-        45.696912
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "88:0-80:0-80:0|3",
-        "url": "#f451aa30:2586",
-        "width": 100
-       },
-       [
-        9.265373,
-        45.696912
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "72:0-80:0-72:0|3",
-        "url": "#1b5b3de7:2862",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.595083
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "72:0-80:0-72:0|3",
-        "url": "#1b5b3de7:2862",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.612067
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "8:0-48:0-8:0|3",
+        "url": "#dac97320:5854",
+        "width": 200
        },
        [
         9.21682,
-        45.629046
+        45.476048
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.629046
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "88:0-80:0-80:0|3",
-        "url": "#f451aa30:2586",
-        "width": 100
-       },
-       [
-        9.411032,
-        45.64602
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.265373,
-        45.612067
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.21682,
-        45.662989
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "8:0-48:0-16:0|3",
+        "url": "#ed0ca626:5578",
+        "width": 200
        },
        [
         9.192543,
-        45.662989
+        45.493068
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "16:0-56:0-40:0|3",
+        "url": "#8345cc79:5278",
+        "width": 200
        },
        [
-        9.21682,
-        45.64602
+        9.192543,
+        45.459023
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "32:0-56:0-40:0|3",
+        "url": "#4785fa3a:5162",
+        "width": 200
        },
        [
-        9.289649,
-        45.595083
+        9.14399,
+        45.459023
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-72:0-72:0|3",
-        "url": "#e0b95589:2498",
-        "width": 100
-       },
-       [
-        9.289649,
-        45.578093
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "72:0-80:0-72:0|3",
-        "url": "#1b5b3de7:2862",
-        "width": 100
-       },
-       [
-        9.265373,
-        45.561098
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-72:0-72:0|3",
-        "url": "#e0b95589:2498",
-        "width": 100
-       },
-       [
-        9.265373,
-        45.578093
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "80:0-88:0-80:0|3",
+        "url": "#38b00884:4502",
+        "width": 200
        },
        [
         9.241096,
-        45.578093
+        45.510084
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "16:0-64:0-32:0|3",
+        "url": "#39d476c7:6138",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.459023
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "72:0-88:0-80:0|3",
+        "url": "#63b3209a:4938",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.527094
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "16:0-56:0-24:0|3",
+        "url": "#6d3e9e1b:5610",
+        "width": 200
+       },
+       [
+        9.192543,
+        45.476048
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "56:0-72:0-64:0|3",
+        "url": "#5cce8cf7:4930",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.493068
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "40:0-64:0-48:0|3",
+        "url": "#8940b858:5146",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.441992
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-96:0-88:0|3",
+        "url": "#37531a82:4498",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.407915
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "24:0-48:0-32:0|3",
+        "url": "#5579acf4:5162",
+        "width": 200
+       },
+       [
+        9.21682,
+        45.493068
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "48:0-64:0-48:0|3",
+        "url": "#43d204ac:4838",
+        "width": 200
+       },
+       [
+        9.14399,
+        45.476048
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "40:0-64:0-48:0|3",
+        "url": "#8940b858:5146",
+        "width": 200
+       },
+       [
+        9.192543,
+        45.441992
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "24:0-64:0-32:0|3",
+        "url": "#fef795c9:5614",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.476048
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "72:0-80:0-72:0|3",
+        "url": "#d26bf1ff:4526",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.510084
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "80:0-88:0-80:0|3",
+        "url": "#38b00884:4502",
+        "width": 200
+       },
+       [
+        9.119713,
+        45.510084
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "64:0-80:0-72:0|3",
+        "url": "#5af28993:4934",
+        "width": 200
+       },
+       [
+        9.241096,
+        45.493068
        ]
       ]
      ]
@@ -1151,6 +1195,21 @@
        102
       ]
      ],
+     "partsA": [
+      {
+       "max": 1,
+       "min": 1
+      },
+      {
+       "max": 2,
+       "min": 2
+      },
+      {
+       "max": 3.001,
+       "min": 3
+      }
+     ],
+     "rangeClassed": false,
      "maxSizeValue": 24
     }
    ],
@@ -1162,9 +1221,9 @@
      "~err:Cannot read properties of undefined (reading 'counts')"
     ],
     "Mercator": [
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">14.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">14.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">10.00</td></tr></table>",
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">101.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">65.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">86.00</td></tr></table>",
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>"
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">15.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">25.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">37.00</td></tr></table>",
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">43.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">26.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">42.00</td></tr></table>",
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr></table>"
     ]
    },
    "validation": null
@@ -1187,7 +1246,7 @@
      "type": "IconLayer",
      "count": 8348,
      "constants": {
-      "getSize": 100,
+      "getSize": 100.2,
       "pickable": false,
       "sizeUnits": "pixels"
      },
@@ -1195,10 +1254,10 @@
       "getIcon",
       "getPosition"
      ],
-     "digest": "6d80200cd82f2f04",
-     "setDigest": "dc72db2022014005",
+     "digest": "d53e1f50f48ea283",
+     "setDigest": "843fe11bc64eab41",
      "columnDigests": {
-      "getIcon": "75e9955cf16c7f52",
+      "getIcon": "449caabb8799a107",
       "getPosition": "c393d5614f29704d"
      },
      "stats": {
@@ -1212,9 +1271,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1226,9 +1286,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1240,9 +1301,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1254,9 +1316,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1268,9 +1331,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1282,9 +1346,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1296,9 +1361,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1310,9 +1376,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1324,9 +1391,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1338,9 +1406,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1352,9 +1421,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1366,9 +1436,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1380,9 +1451,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1394,9 +1466,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1408,9 +1481,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1422,9 +1496,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1436,9 +1511,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1450,9 +1526,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1464,9 +1541,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1478,9 +1556,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -1491,9 +1570,9 @@
      ]
     },
     {
-     "id": "ix-plot-box-Mercator-g0",
+     "id": "ix-plot-box-Mercator-g1",
      "type": "IconLayer",
-     "count": 8348,
+     "count": 130,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -1505,417 +1584,421 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "0d0e3a0a538df7f1",
-     "setDigest": "7c22b1ba33b33668",
+     "digest": "a063ceac692c7645",
+     "setDigest": "6908176576d03f9a",
      "columnDigests": {
-      "getIcon": "587e26cfff914567",
-      "getPixelOffset": "fde854458e743dd4",
-      "getPosition": "c393d5614f29704d",
-      "getSize": "1cc6cf88b6d5959d"
+      "getIcon": "8a302dbe44a09ee1",
+      "getPixelOffset": "2ab5a7617a8c003b",
+      "getPosition": "bcc0daacff57a06c",
+      "getSize": "712682e39fec1258"
      },
      "stats": {
       "getPixelOffset": [
-       0,
-       0
+       -3.333333,
+       -3.333333
       ],
       "getPosition": [
-       8.537075,
-       11.413851
+       9.119713,
+       9.265373
       ],
       "getSize": [
-       115.5,
-       115.5
+       86.5,
+       86.5
       ]
      },
      "sample": [
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.253235,
-        45.739286
+        9.204681,
+        45.484559
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.277511,
-        45.730813
+        9.204681,
+        45.476048
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.265373,
-        45.739286
+        9.180405,
+        45.484559
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.253235,
-        45.696912
+        9.180405,
+        45.450508
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.301788,
-        45.705389
+        9.14399,
+        45.467536
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.253235,
-        45.688433
+        9.168267,
+        45.459023
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.241096,
-        45.603575
+        9.156128,
+        45.484559
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.228958,
-        45.629046
+        9.168267,
+        45.441992
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.629046
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.228958,
-        45.612067
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.253235,
-        45.612067
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.253235,
-        45.603575
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.265373,
-        45.688433
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.289649,
-        45.696912
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.411032,
-        45.64602
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.228958,
-        45.620557
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.620557
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.612067
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.228958,
-        45.637534
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.21682,
-        45.662989
+        45.484559
        ],
-       115.5
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.180405,
+        45.441992
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.192543,
+        45.476048
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.228958,
+        45.484559
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.14399,
+        45.484559
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.180405,
+        45.476048
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.192543,
+        45.450508
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.21682,
+        45.467536
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.156128,
+        45.476048
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.168267,
+        45.467536
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.228958,
+        45.493068
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.265373,
+        45.433475
+       ],
+       86.5
       ]
      ]
     },
     {
-     "id": "ix-plot-Mercator-g0",
+     "id": "ix-plot-Mercator-g1",
      "type": "IconLayer",
-     "count": 8348,
+     "count": 130,
      "constants": {
-      "getSize": 100,
+      "getPixelOffset": [
+       -3.333333,
+       -11.111111
+      ],
+      "getSize": 75.757576,
       "pickable": true,
       "sizeUnits": "pixels"
      },
@@ -1923,297 +2006,317 @@
       "getIcon",
       "getPosition"
      ],
-     "digest": "ee03d7de4bf20fe2",
-     "setDigest": "466569eae3140556",
+     "digest": "cd057d5875e9decb",
+     "setDigest": "acc3499ccb0bbc36",
      "columnDigests": {
-      "getIcon": "ce9d8f461acdacca",
-      "getPosition": "c393d5614f29704d"
+      "getIcon": "753bf74c4e682eed",
+      "getPosition": "bcc0daacff57a06c"
      },
      "stats": {
       "getPosition": [
-       8.537075,
-       11.413851
+       9.119713,
+       9.265373
       ]
      },
      "sample": [
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "40:0-72:0-40:0|3",
+        "url": "#31932ae8:4470",
+        "width": 200
        },
        [
-        9.253235,
-        45.739286
+        9.204681,
+        45.484559
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-80:0|3",
-        "url": "#17bfdc3f:2962",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "32:0-56:0-24:0|3",
+        "url": "#b3887ee1:5478",
+        "width": 200
        },
        [
-        9.277511,
-        45.730813
+        9.204681,
+        45.476048
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "88:0-88:0-88:0|3",
-        "url": "#e31213a6:2010",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "48:0-80:0-48:0|3",
+        "url": "#1a50db61:4494",
+        "width": 200
        },
        [
-        9.265373,
-        45.739286
+        9.180405,
+        45.484559
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-88:0|3",
-        "url": "#86cb1be4:2582",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "48:0-64:0-48:0|3",
+        "url": "#43d204ac:4838",
+        "width": 200
        },
        [
-        9.253235,
-        45.696912
+        9.180405,
+        45.450508
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-80:0|3",
-        "url": "#17bfdc3f:2962",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "48:0-64:0-56:0|3",
+        "url": "#a0bbd8cc:4926",
+        "width": 200
        },
        [
-        9.301788,
-        45.705389
+        9.14399,
+        45.467536
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-80:0|3",
-        "url": "#17bfdc3f:2962",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "16:0-64:0-32:0|3",
+        "url": "#39d476c7:6138",
+        "width": 200
        },
        [
-        9.253235,
-        45.688433
+        9.168267,
+        45.459023
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "56:0-72:0-48:0|3",
+        "url": "#eb9de500:5082",
+        "width": 200
        },
        [
-        9.241096,
-        45.603575
+        9.156128,
+        45.484559
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "64:0-80:0-64:0|3",
+        "url": "#bf7bce37:4842",
+        "width": 200
        },
        [
-        9.228958,
-        45.629046
+        9.168267,
+        45.441992
        ]
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.629046
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.228958,
-        45.612067
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "72:0-80:0-80:0|3",
-        "url": "#595267e9:2510",
-        "width": 100
-       },
-       [
-        9.253235,
-        45.612067
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.253235,
-        45.603575
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "88:0-88:0-80:0|3",
-        "url": "#cdc2a726:2530",
-        "width": 100
-       },
-       [
-        9.265373,
-        45.688433
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "88:0-80:0-80:0|3",
-        "url": "#f451aa30:2586",
-        "width": 100
-       },
-       [
-        9.289649,
-        45.696912
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.411032,
-        45.64602
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.228958,
-        45.620557
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.620557
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "72:0-80:0-72:0|3",
-        "url": "#1b5b3de7:2862",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.612067
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-80:0|3",
-        "url": "#17bfdc3f:2962",
-        "width": 100
-       },
-       [
-        9.228958,
-        45.637534
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "8:0-24:0-8:0|3",
+        "url": "#959ddc15:4834",
+        "width": 200
        },
        [
         9.21682,
-        45.662989
+        45.484559
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "40:0-64:0-48:0|3",
+        "url": "#8940b858:5146",
+        "width": 200
+       },
+       [
+        9.180405,
+        45.441992
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "32:0-72:0-64:0|3",
+        "url": "#86e85625:5494",
+        "width": 200
+       },
+       [
+        9.192543,
+        45.476048
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "56:0-72:0-56:0|3",
+        "url": "#561b1823:4854",
+        "width": 200
+       },
+       [
+        9.228958,
+        45.484559
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "64:0-72:0-56:0|3",
+        "url": "#5804fdff:4866",
+        "width": 200
+       },
+       [
+        9.14399,
+        45.484559
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "64:0-80:0-64:0|3",
+        "url": "#bf7bce37:4842",
+        "width": 200
+       },
+       [
+        9.180405,
+        45.476048
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "32:0-48:0-40:0|3",
+        "url": "#55903da1:4922",
+        "width": 200
+       },
+       [
+        9.192543,
+        45.450508
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "48:0-64:0-40:0|3",
+        "url": "#c57b4374:5086",
+        "width": 200
+       },
+       [
+        9.21682,
+        45.467536
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "64:0-80:0-72:0|3",
+        "url": "#5af28993:4934",
+        "width": 200
+       },
+       [
+        9.156128,
+        45.476048
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "40:0-72:0-48:0|3",
+        "url": "#b74db9ae:5542",
+        "width": 200
+       },
+       [
+        9.168267,
+        45.467536
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "56:0-72:0-64:0|3",
+        "url": "#5cce8cf7:4930",
+        "width": 200
+       },
+       [
+        9.228958,
+        45.493068
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.265373,
+        45.433475
        ]
       ]
      ]
@@ -2319,6 +2422,21 @@
        102
       ]
      ],
+     "partsA": [
+      {
+       "max": 1,
+       "min": 1
+      },
+      {
+       "max": 2,
+       "min": 2
+      },
+      {
+       "max": 3.001,
+       "min": 3
+      }
+     ],
+     "rangeClassed": false,
      "maxSizeValue": 24
     }
    ],
@@ -2330,9 +2448,9 @@
      "~err:Cannot read properties of undefined (reading 'counts')"
     ],
     "Mercator": [
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">8.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">8.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">6.00</td></tr></table>",
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr></table>",
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">2.00</td></tr></table>"
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">158.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">67.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">145.00</td></tr></table>",
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">41.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">33.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">49.00</td></tr></table>",
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>"
     ]
    },
    "validation": null
@@ -2355,7 +2473,7 @@
      "type": "IconLayer",
      "count": 1351,
      "constants": {
-      "getSize": 100,
+      "getSize": 100.2,
       "pickable": false,
       "sizeUnits": "pixels"
      },
@@ -2363,10 +2481,10 @@
       "getIcon",
       "getPosition"
      ],
-     "digest": "a7cad39aef1c8ff3",
-     "setDigest": "c93e77ccd6a5f794",
+     "digest": "3dbdd79f84bb5fc1",
+     "setDigest": "f6d2bd820a99bbc4",
      "columnDigests": {
-      "getIcon": "9373cba0a02dc9c1",
+      "getIcon": "ae70aa0ecc802ffd",
       "getPosition": "7f5c7b218e5500c7"
      },
      "stats": {
@@ -2380,9 +2498,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2394,9 +2513,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2408,9 +2528,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2422,9 +2543,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2436,9 +2558,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2450,9 +2573,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2464,9 +2588,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2478,9 +2603,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2492,9 +2618,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2506,9 +2633,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2520,9 +2648,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2534,9 +2663,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2548,9 +2678,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2562,9 +2693,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2576,9 +2708,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2590,9 +2723,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2604,9 +2738,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2618,9 +2753,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2632,9 +2768,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2646,9 +2783,10 @@
        {
         "anchorX": 50,
         "anchorY": 50,
+        "dispSize": 100.2,
         "height": 100,
         "id": "grid|rgba(255,255,255,0.3)|black|0.2|100",
-        "url": "#cd998e1c:946",
+        "url": "#acae33eb:870",
         "width": 100
        },
        [
@@ -2659,9 +2797,9 @@
      ]
     },
     {
-     "id": "ix-plot-box-Mercator-g0",
+     "id": "ix-plot-box-Mercator-g1",
      "type": "IconLayer",
-     "count": 1351,
+     "count": 130,
      "constants": {
       "billboard": true,
       "pickable": false,
@@ -2673,417 +2811,421 @@
       "getPosition",
       "getSize"
      ],
-     "digest": "1cd216011c6b55b9",
-     "setDigest": "11807f7ef75094ea",
+     "digest": "e43a00285207bf8e",
+     "setDigest": "d5e195f34c6e97a0",
      "columnDigests": {
-      "getIcon": "5aa79e74c9425160",
-      "getPixelOffset": "49d6b6acb217a35e",
-      "getPosition": "7f5c7b218e5500c7",
-      "getSize": "8bda525bfe66af6a"
+      "getIcon": "8a302dbe44a09ee1",
+      "getPixelOffset": "2ab5a7617a8c003b",
+      "getPosition": "6a4aaa334112a3ba",
+      "getSize": "712682e39fec1258"
      },
      "stats": {
       "getPixelOffset": [
-       0,
-       0
+       -3.333333,
+       -3.333333
       ],
       "getPosition": [
-       8.512799,
-       11.425989
+       8.901224,
+       9.483862
       ],
       "getSize": [
-       115.5,
-       115.5
+       86.5,
+       86.5
       ]
      },
      "sample": [
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.747757
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.289649,
-        45.747757
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.713865
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.289649,
-        45.713865
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.679953
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.241096,
         45.612067
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.241096,
-        45.64602
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.386756,
-        45.64602
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
-       ],
-       [
-        9.192543,
-        45.64602
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.289649,
         45.578093
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.241096,
         45.578093
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.289649,
         45.612067
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.338203,
         45.578093
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.289649,
         45.544099
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
-       ],
-       [
-        9.192543,
-        45.679953
-       ],
-       115.5
-      ],
-      [
-       {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
-       },
-       [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.241096,
         45.544099
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.14399,
         45.612067
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.14399,
         45.578093
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
         9.095437,
         45.612067
        ],
-       115.5
+       86.5
       ],
       [
        {
-        "anchorX": 115.5,
-        "anchorY": 115.5,
-        "height": 231,
-        "id": "box|113.5|113.5|0|0.75|white|0.001|null|0.3",
-        "url": "#e205033b:2654",
-        "width": 231
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
        },
        [
-        0,
-        0
+        -3.333333,
+        -11.111111
        ],
        [
-        9.289649,
-        45.64602
+        9.192543,
+        45.578093
        ],
-       115.5
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.386756,
+        45.578093
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.192543,
+        45.612067
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.338203,
+        45.612067
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.386756,
+        45.612067
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.435309,
+        45.612067
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.435309,
+        45.578093
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.483862,
+        45.305562
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.386756,
+        45.3397
+       ],
+       86.5
+      ],
+      [
+       {
+        "anchorX": 86.5,
+        "anchorY": 86.5,
+        "height": 173,
+        "id": "box|84.5|84.5|0|0.5|white|0.001|null|0.3",
+        "url": "#5ef31d71:1754",
+        "width": 173
+       },
+       [
+        -3.333333,
+        -11.111111
+       ],
+       [
+        9.435309,
+        45.407915
+       ],
+       86.5
       ]
      ]
     },
     {
-     "id": "ix-plot-Mercator-g0",
+     "id": "ix-plot-Mercator-g1",
      "type": "IconLayer",
-     "count": 1351,
+     "count": 130,
      "constants": {
-      "getSize": 100,
+      "getPixelOffset": [
+       -3.333333,
+       -11.111111
+      ],
+      "getSize": 75.757576,
       "pickable": true,
       "sizeUnits": "pixels"
      },
@@ -3091,97 +3233,28 @@
       "getIcon",
       "getPosition"
      ],
-     "digest": "20307da02d9d4319",
-     "setDigest": "a373111db5b02208",
+     "digest": "d74642bbb49555b5",
+     "setDigest": "cc43f86a948f16df",
      "columnDigests": {
-      "getIcon": "e1579a55705cbfa5",
-      "getPosition": "7f5c7b218e5500c7"
+      "getIcon": "f63aec56f3a89d01",
+      "getPosition": "6a4aaa334112a3ba"
      },
      "stats": {
       "getPosition": [
-       8.512799,
-       11.425989
+       8.901224,
+       9.483862
       ]
      },
      "sample": [
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.747757
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-80:0|3",
-        "url": "#17bfdc3f:2962",
-        "width": 100
-       },
-       [
-        9.289649,
-        45.747757
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.713865
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-88:0-88:0|3",
-        "url": "#86cb1be4:2582",
-        "width": 100
-       },
-       [
-        9.289649,
-        45.713865
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.679953
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "72:0-80:0-80:0|3",
-        "url": "#595267e9:2510",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#135b5def:2518",
+        "width": 200
        },
        [
         9.241096,
@@ -3190,54 +3263,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.241096,
-        45.64602
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.386756,
-        45.64602
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.192543,
-        45.64602
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-72:0-72:0|3",
-        "url": "#e0b95589:2498",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-88:0-80:0|3",
+        "url": "#8e27557f:3574",
+        "width": 200
        },
        [
         9.289649,
@@ -3246,12 +3278,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#135b5def:2518",
+        "width": 200
        },
        [
         9.241096,
@@ -3260,12 +3293,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
        },
        [
         9.289649,
@@ -3274,12 +3308,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
        },
        [
         9.338203,
@@ -3288,12 +3323,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-88:0-88:0|3",
+        "url": "#135b5def:2518",
+        "width": 200
        },
        [
         9.289649,
@@ -3302,26 +3338,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
-       },
-       [
-        9.192543,
-        45.679953
-       ]
-      ],
-      [
-       {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "64:0-80:0-72:0|3",
-        "url": "#353d5345:3018",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "80:0-88:0-88:0|3",
+        "url": "#24ea06b3:3646",
+        "width": 200
        },
        [
         9.241096,
@@ -3330,12 +3353,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-96:0-88:0|3",
+        "url": "#37531a82:4498",
+        "width": 200
        },
        [
         9.14399,
@@ -3344,12 +3368,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-96:0-96:0|3",
+        "url": "#82dad996:3654",
+        "width": 200
        },
        [
         9.14399,
@@ -3358,12 +3383,13 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
        },
        [
         9.095437,
@@ -3372,16 +3398,152 @@
       ],
       [
        {
-        "anchorX": 50,
-        "anchorY": 50,
-        "height": 100,
-        "id": "80:0-80:0-80:0|3",
-        "url": "#d8c950d1:2014",
-        "width": 100
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-96:0-96:0|3",
+        "url": "#82dad996:3654",
+        "width": 200
        },
        [
-        9.289649,
-        45.64602
+        9.192543,
+        45.578093
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.386756,
+        45.578093
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "88:0-96:0-96:0|3",
+        "url": "#82dad996:3654",
+        "width": 200
+       },
+       [
+        9.192543,
+        45.612067
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.338203,
+        45.612067
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.386756,
+        45.612067
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.435309,
+        45.612067
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.435309,
+        45.578093
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.483862,
+        45.305562
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.386756,
+        45.3397
+       ]
+      ],
+      [
+       {
+        "anchorX": 100,
+        "anchorY": 100,
+        "axesExtent": null,
+        "height": 200,
+        "id": "96:0-96:0-96:0|3",
+        "url": "#be08805d:2514",
+        "width": 200
+       },
+       [
+        9.435309,
+        45.407915
        ]
       ]
      ]
@@ -3487,6 +3649,21 @@
        102
       ]
      ],
+     "partsA": [
+      {
+       "max": 1,
+       "min": 1
+      },
+      {
+       "max": 2,
+       "min": 2
+      },
+      {
+       "max": 3.001,
+       "min": 3
+      }
+     ],
+     "rangeClassed": false,
      "maxSizeValue": 24
     }
    ],
@@ -3498,9 +3675,9 @@
      "~err:Cannot read properties of undefined (reading 'counts')"
     ],
     "Mercator": [
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">29.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">34.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">48.00</td></tr></table>",
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">4.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr></table>",
-     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr></table>"
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">270.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">150.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">235.00</td></tr></table>",
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">222.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">115.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">127.00</td></tr></table>",
+     "<b>Numero dei feriti per anno</b><br><table style=\"border-collapse:collapse;border:none;background:transparent;margin:0.2em 0;font-size:1em;line-height:1.15\"><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2019\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2019</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">0.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2020\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2020</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">1.00</td></tr><tr><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.4em 0.05em 0;vertical-align:middle\"></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0.8em 0.05em 0;text-align:left\"><span title=\"2021\" style=\"display:inline-block;max-width:13em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom\">2021</span></td><td style=\"border:none;background:transparent;font:inherit;color:inherit;line-height:1.15;padding:0.05em 0;text-align:right;white-space:nowrap\">3.00</td></tr></table>"
     ]
    },
    "validation": null
