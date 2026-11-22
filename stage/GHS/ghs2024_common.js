@@ -15,15 +15,17 @@ window.GHS = (function () {
   var look = "dark", legendTheme = null, tiles = false, lightMapType = "";
 
   // country backdrop, identical on every page of one look
+  function landColor() { return look === "light" ? "#d9d9d9" : "#444444"; }
   function countries() {
     var light = look === "light";
-    if (light || tiles) return null;   // the light look has the basemap only (as demo_blurr_and_text_GHS_orthographic.html); so has the dark one with start({ tiles: true })
+    // on the Equal Earth plane the engine draws no tile basemap: the countries are the land in both looks
+    if (!plane && (light || tiles)) return null;   // the light look has the basemap only (as demo_blurr_and_text_GHS_orthographic.html); so has the dark one with start({ tiles: true })
     return ixmaps.layer("World_countries", function (layer) {
       return layer
         .data({ url: COUNTRIES_URL, type: "topojson", cache: "true" })
         .binding({ geo: "geometry", id: "ISO3_CODE" })
         .type("FEATURE|NOLEGEND")
-        .style({ colorscheme: ["#444444"], opacity: "1", shadow: "false", linecolor: ["#000000"], linewidth: "0.5" })
+        .style({ colorscheme: [landColor()], opacity: "1", shadow: "false", linecolor: [light ? "#ffffff" : "#000000"], linewidth: "0.5" })
         .meta({ name: "countries", tooltip: "{{}}" });
     });
   }
@@ -59,7 +61,8 @@ window.GHS = (function () {
   // which swaps its backdrop and themes to the new look
   // light: "" = the engine's default light basemap (CARTO Positron, country names), as in demo_blurr_and_text_GHS_orthographic.html
   // dark: a black sea with the dark country layer, or with start({ tiles: true }) the dark tile basemap (CARTO Dark Matter), no country layer
-  function mapTypeOf(l) { return l === "light" ? lightMapType : tiles ? "CartoDB - Dark matter" : "black"; }
+  var plane = false;   // Equal Earth: the engine draws no tile basemap there, the sea is a plain colour
+  function mapTypeOf(l) { return l === "light" ? (plane ? "#ffffff" : lightMapType) : tiles && !plane ? "CartoDB - Dark matter" : "black"; }
   function addLookToggle(el, onLook) {
     var sep = document.createElement("span");
     sep.style.cssText = "width:1px;height:14px;background:currentColor;opacity:.3;margin:0 4px";
@@ -78,11 +81,17 @@ window.GHS = (function () {
       look = look === "dark" ? "light" : "dark";
       paint();
       ixmaps.map().setMapType(mapTypeOf(look));
+      if (plane) ixmaps.map().setThemeStyle("World_countries", { colorscheme: [landColor()], linecolor: [look === "light" ? "#ffffff" : "#000000"] });
       if (onLook) onLook(look);
     });
   }
 
-  function addToggle(startGlobe, lookToggle, onLook) {
+  // the projection selector of the pill: Mercator | Globe | Equal Earth | Winkel. Mercator <-> Globe switch live (the project's
+  // map file); Equal Earth and Winkel are different coordinate planes (the engine maps the data at ingest), so any switch from
+  // or to it reloads the page with ?projection=... (the start view is kept in the URL)
+  function isPlane(p) { return p === "equalearth" || p === "winkel"; }
+  var PROJECTIONS = [["mercator", "Mercator"], ["orthographic", "Globe"], ["equalearth", "Equal Earth"], ["winkel", "Winkel"]];
+  function addToggle(startProjection, lookToggle, onLook) {
     var css = document.createElement("style");
     css.textContent =
       "html,body{margin:0;height:100%;background:#000;font-family:-apple-system,sans-serif}" +
@@ -94,6 +103,7 @@ window.GHS = (function () {
       "#map_div{position:absolute;inset:0}" +
       "#projection-toggle{position:absolute;left:12px;bottom:28px;z-index:10;display:flex;align-items:center;gap:8px;" +
       "background:rgba(20,20,20,.85);color:#888;padding:6px 12px;border-radius:16px;font-size:12px;user-select:none}" +
+      "#projection-toggle .pt-label{cursor:pointer}" +
       "#projection-toggle .pt-label.active{color:#fff;font-weight:600}" +
       "#projection-toggle .pt-switch{position:relative;width:40px;height:20px;border-radius:10px;background:#555;cursor:pointer;flex:none}" +
       "#projection-toggle .pt-switch.globe{background:#ff9800}" +
@@ -102,51 +112,64 @@ window.GHS = (function () {
     document.head.appendChild(css);
     var el = document.createElement("div");
     el.id = "projection-toggle";
-    el.innerHTML = '<span class="pt-label" id="pt-label-flat">Mercator</span>' +
-      '<div class="pt-switch" id="pt-switch"><div class="pt-knob"></div></div>' +
-      '<span class="pt-label" id="pt-label-globe">Globe</span>';
+    el.innerHTML = PROJECTIONS.map(function (p) { return '<span class="pt-label" data-proj="' + p[0] + '">' + p[1] + '</span>'; }).join('<span style="opacity:.3">|</span>');
     document.body.appendChild(el);
     if (lookToggle) addLookToggle(el, onLook);
 
-    var sw = document.getElementById("pt-switch"), lf = document.getElementById("pt-label-flat"), lg = document.getElementById("pt-label-globe");
-    var isGlobe = !!startGlobe;
-    function paint() { sw.classList.toggle("globe", isGlobe); lf.classList.toggle("active", !isGlobe); lg.classList.toggle("active", isGlobe); }
+    var current = startProjection;
+    var labels = el.querySelectorAll("[data-proj]");
+    function paint() { labels.forEach(function (l) { l.classList.toggle("active", l.dataset.proj === current); }); }
     paint();
-    sw.addEventListener("click", function () {
-      isGlobe = !isGlobe;
-      var project = JSON.parse(ixmaps.getProjectString());
-      project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/" + (isGlobe ? "orthographic" : "mercator") + ".svg";
-      ixmaps.setProjectJSON(project, "keepview");
-      paint();
+    labels.forEach(function (l) {
+      l.addEventListener("click", function () {
+        var next = l.dataset.proj;
+        if (next === current) return;
+        if (isPlane(next) || isPlane(current)) {
+          var u = new URL(location.href);
+          u.searchParams.set("projection", next);
+          location.href = u.toString();
+          return;
+        }
+        current = next;
+        var project = JSON.parse(ixmaps.getProjectString());
+        project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/" + (next === "orthographic" ? "orthographic" : "mercator") + ".svg";
+        ixmaps.setProjectJSON(project, "keepview");
+        paint();
+      });
     });
   }
 
-  // opts: { view: [lat, lng], zoom, normalSizeScale, globe: true|false, layers: [...] (after the backdrop),
+  // opts: { view: [lat, lng], zoom, normalSizeScale, projection: "mercator"|"orthographic"|"equalearth"|"winkel" (or globe: true|false; ?projection= in the URL wins), layers: [...] (after the backdrop),
   //         look: "dark" (default) | "light", lookToggle: true (Light/Dark switch), onLook: function (look),
   //         legendTheme: "light" | "dark", options: { ... } (more map options, merged over the defaults),
   //         tiles: true (the dark look is the dark tile basemap, no country layer),
   //         lightMapType: the light look's basemap (ixmaps mapType name, e.g. "ArcGIS - Topo"; default "" = CARTO Positron),
   //         mapOptions: { ... } (more ixmaps.Map options, e.g. align: "left" for the legend) }
   function start(opts) {
-    var startGlobe = opts.globe !== false;
+    // projection: ?projection=mercator|orthographic|equalearth in the URL, else opts.projection, else opts.globe (default: globe)
+    var fromUrl = new URLSearchParams(location.search).get("projection");
+    var projection = PROJECTIONS.some(function (p) { return p[0] === fromUrl; }) ? fromUrl
+      : opts.projection || (opts.globe === false ? "mercator" : "orthographic");
+    plane = projection === "equalearth" || projection === "winkel";
     look = opts.look === "light" ? "light" : "dark";
     legendTheme = opts.legendTheme || null;
     tiles = !!opts.tiles;
     lightMapType = opts.lightMapType || "";
     var mapOpts = { mapType: mapTypeOf(look), legend: "true" };
-    if (startGlobe) mapOpts.mapProjection = "orthographic";
+    if (projection !== "mercator") mapOpts.mapProjection = projection;
     Object.assign(mapOpts, opts.mapOptions);
     var back = countries();
     // layers may be a function: built after the look is set (centres() reads it)
     var layers = typeof opts.layers === "function" ? opts.layers() : opts.layers;
     window._mapPromise = ixmaps.Map("map_div", mapOpts, function (map) {
-      map = map.view(opts.view || [20, 20], opts.zoom || 2)
+      // the plane shows the whole world: opts.planeView / opts.planeZoom (default [10, 10], 1.2)
+      map = (plane ? map.view(opts.planeView || [10, 10], opts.planeZoom || 1.2) : map.view(opts.view || [20, 20], opts.zoom || 2))
         .options(Object.assign({ objectscaling: "dynamic", normalSizeScale: opts.normalSizeScale || "55364168", flushChartDraw: "1000000" }, opts.options))
       if (back) map = map.layer(back);
       layers.forEach(function (l) { map = map.layer(l); });
       return map;
     });
-    addToggle(startGlobe, opts.lookToggle, opts.onLook);
+    addToggle(projection, opts.lookToggle, opts.onLook);
     document.body.classList.toggle("ghs-light", look === "light");
     return window._mapPromise;
   }
