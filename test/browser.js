@@ -154,9 +154,27 @@
       const picks = [...new Set([0, Math.floor(items.length / 2), items.length - 1])];
       tooltips[rt.name] = picks.map(i => { try { return text(rt.buildTooltipHtml(items[i])); } catch (e) { return `~err:${e.message}`; } });
     }
+    // charts drawn as live SVG in the map's chart pane (USER charts; PLOT up to 2000 in view) are no deck.gl
+    // layers: per theme, how many, a digest of their markup and the first transforms (only when there are any,
+    // so pages without such charts keep their snapshot)
+    const panes = [];
+    for (const rt of runtimes) {
+      const items = rt._chartItems;
+      if (!items || !items.length) continue;
+      const markup = items.map(it => (it.el ? it.el.outerHTML : '').replace(/\stransform="[^"]*"/, '').replace(/ixpg\w+/g, 'ixpg')
+        .replace(/-?\d+\.\d+/g, v => String(Math.round(+v * 10) / 10)));
+      panes.push({
+        theme: rt.name,
+        count: items.length,
+        digest: await sha(markup.join('\n')),
+        setDigest: await sha(markup.slice().sort().join('\n')),
+        transforms: items.slice(0, 5).map(it => String(it.el && it.el.getAttribute('transform') || '').replace(/-?\d+\.\d+/g, v => String(Math.round(+v * 10) / 10))),
+      });
+    }
     return {
       label,
       view: { zoom: round(map.getZoom()), center: [round(c.lng), round(c.lat)], bearing: round(map.getBearing()), pitch: round(map.getPitch()), projection: (proj && proj.type) || 'mercator' },
+      ...(panes.length ? { panes } : {}),
       layers,
       themes: runtimes.map(themeState),
       legend: [...document.querySelectorAll('.ix-native-legend')].map(el => text(el.innerText)),

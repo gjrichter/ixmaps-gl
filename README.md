@@ -123,6 +123,8 @@ page. It currently implements:
   `RANGES` flag needed); `LASTPOP` puts a dot on each cell's last point (`linewidth` × `markersize`).
   `BOX` + `GRID` draw flat's coordinate grid: y lines and labels on the axis' rounded steps (the zero
   line solid), plus x ticks and labels from `style.xaxis`
+  · PLOT charts (per item and per grid cell) are drawn as live SVG over the map, as flat draws them — sharp
+  at every zoom, line widths as set — while at most 2000 are in view; with more, as WebGL icons
 - A native interactive legend (default bars, `SIMPLELEGEND`, `COMPACTLEGEND`,
   `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner or flat `align` option;
   collapsible, collapsed by default on narrow/mobile screens). As flat's `#map-legend` it is one box:

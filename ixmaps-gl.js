@@ -3411,7 +3411,10 @@ self.onmessage = e => {
           if (off) { if (it.el.style.display !== 'none') it.el.style.display = 'none'; continue; }
           if (it.el.style.display === 'none') it.el.style.display = '';
           const o = it.off || [0, 0];   // align / offsetx / offsety (flatChartAlignOffset), px
-          it.el.setAttribute('transform', `translate(${p.x + o[0]} ${p.y + o[1]}) scale(${it.s}) translate(${-it.ox} ${-it.oy})`);
+          // SVG PLOT charts (_mountSvgCharts) follow a zoom between drawings as their deck.gl icons would:
+          // a grid PLOT with the map (its cells), a per-item PLOT with the object scaling
+          const g = it.grow ? it.grow(map.getZoom()) : 1;
+          it.el.setAttribute('transform', `translate(${p.x + o[0] * g} ${p.y + o[1] * g}) scale(${it.s * g}) translate(${-it.ox} ${-it.oy})`);
         }
       }
     };
@@ -3419,6 +3422,108 @@ self.onmessage = e => {
     map.on('resize', host.requestUpdate);
     _chartHosts.set(mapOptions, host);
     return host;
+  }
+  // ---- SVG PLOT charts: the Canvas 2D drawing of a PLOT icon, recorded as SVG ----
+  // The PLOT icons (_buildItemPlotIcon, _buildPlotIcon) are drawn with a Canvas 2D context. Handed this
+  // context instead, the same drawing code produces SVG markup — mounted live in the chart pane like a
+  // USER chart (_mountSvgCharts): vector-sharp at every zoom, no icon atlas. It records what those two
+  // drawings use: paths (moveTo, lineTo, bezierCurveTo, arc, closePath, rect), fill / stroke, fillRect /
+  // strokeRect, fillText, line dashes, linear gradients, save / restore and a uniform scale. Canvas and SVG
+  // share their y-down pixel space, so coordinates carry over as they are. markup(w, h) wraps the drawing
+  // in a w × h viewport that clips as the canvas does.
+  const SVG_PLOT_MAX_CHARTS = 2000;   // more visible PLOT charts than this: deck.gl icons (DOM cost)
+  const SVG_PLOT_UNIT = 24;            // an SVG per-item PLOT is drawn at 24 units per chart unit (exact coordinates)
+  let _svgGradientSeq = 0;
+  // PLOT as SVG charts: at most SVG_PLOT_MAX_CHARTS of the items in the view (bbox [w, s, e, n]; none: all count)
+  function svgPlotFits(items, bbox) {
+    if (!(bbox && isFinite(bbox[0] + bbox[1] + bbox[2] + bbox[3]))) return items.length <= SVG_PLOT_MAX_CHARTS;
+    let n = 0;
+    for (const d of items) {
+      const c = d.geometry.coordinates;
+      if (c[0] >= bbox[0] && c[0] <= bbox[2] && c[1] >= bbox[1] && c[1] <= bbox[3] && ++n > SVG_PLOT_MAX_CHARTS) return false;
+    }
+    return true;
+  }
+  // the theme's style and flags as a short key: a cached SVG chart is drawn with them
+  function svgStyleSig(style, flags) {
+    const s = JSON.stringify(style || {}) + '|' + [...(flags || [])].sort().join('|');
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return (h >>> 0).toString(36);
+  }
+  class SvgContext2D {
+    constructor() {
+      this.out = [];
+      this.defs = [];
+      this.k = 1;
+      this.path = '';
+      this.state = { fillStyle: '#000', strokeStyle: '#000', lineWidth: 1, lineCap: 'butt', lineJoin: 'miter', dash: [], font: '10px sans-serif', textAlign: 'start' };
+      this.stack = [];
+    }
+    get fillStyle() { return this.state.fillStyle; } set fillStyle(v) { this.state.fillStyle = v; }
+    get strokeStyle() { return this.state.strokeStyle; } set strokeStyle(v) { this.state.strokeStyle = v; }
+    get lineWidth() { return this.state.lineWidth; } set lineWidth(v) { this.state.lineWidth = v; }
+    get lineCap() { return this.state.lineCap; } set lineCap(v) { this.state.lineCap = v; }
+    get lineJoin() { return this.state.lineJoin; } set lineJoin(v) { this.state.lineJoin = v; }
+    get font() { return this.state.font; } set font(v) { this.state.font = v; }
+    get textAlign() { return this.state.textAlign; } set textAlign(v) { this.state.textAlign = v; }
+    setLineDash(d) { this.state.dash = (d || []).slice(); }
+    save() { this.stack.push(Object.assign({}, this.state, { dash: this.state.dash.slice(), k: this.k })); }
+    restore() { const s = this.stack.pop(); if (s) { this.k = s.k; delete s.k; this.state = s; } }
+    scale(kx) { this.k *= kx; }
+    n(v) { return +(v * this.k).toFixed(2); }
+    beginPath() { this.path = ''; }
+    moveTo(x, y) { this.path += `M${this.n(x)} ${this.n(y)}`; }
+    lineTo(x, y) { this.path += `L${this.n(x)} ${this.n(y)}`; }
+    bezierCurveTo(a, b, c, d, x, y) { this.path += `C${this.n(a)} ${this.n(b)} ${this.n(c)} ${this.n(d)} ${this.n(x)} ${this.n(y)}`; }
+    closePath() { this.path += 'Z'; }
+    rect(x, y, w, h) { this.path += `M${this.n(x)} ${this.n(y)}h${this.n(w)}v${this.n(h)}h${this.n(-w)}Z`; }
+    arc(x, y, r, a0, a1) {
+      const R = this.n(r);
+      if (Math.abs(a1 - a0) >= 2 * Math.PI - 1e-9) {
+        // a full circle: two half arcs (one arc cannot start and end at the same point)
+        this.path += `M${this.n(x + r)} ${this.n(y)}A${R} ${R} 0 1 0 ${this.n(x - r)} ${this.n(y)}A${R} ${R} 0 1 0 ${this.n(x + r)} ${this.n(y)}Z`;
+        return;
+      }
+      const sx = x + r * Math.cos(a0), sy = y + r * Math.sin(a0), ex = x + r * Math.cos(a1), ey = y + r * Math.sin(a1);
+      this.path += `${this.path ? 'L' : 'M'}${this.n(sx)} ${this.n(sy)}A${R} ${R} 0 ${Math.abs(a1 - a0) > Math.PI ? 1 : 0} 1 ${this.n(ex)} ${this.n(ey)}`;
+    }
+    createLinearGradient(x0, y0, x1, y1) {
+      const g = { svgGradient: true, x0, y0, x1, y1, stops: [], id: null, addColorStop(o, c) { this.stops.push([o, c]); } };
+      return g;
+    }
+    // a paint: a colour string, or a gradient (defined once, in user space as the canvas does)
+    paint(v) {
+      if (!v || !v.svgGradient) return escapeHtml(String(v));
+      if (!v.id) {
+        v.id = 'ixpg' + (++_svgGradientSeq).toString(36);
+        this.defs.push(`<linearGradient id="${v.id}" gradientUnits="userSpaceOnUse" x1="${this.n(v.x0)}" y1="${this.n(v.y0)}" x2="${this.n(v.x1)}" y2="${this.n(v.y1)}">`
+          + v.stops.map(([o, c]) => `<stop offset="${o}" stop-color="${escapeHtml(String(c))}"/>`).join('') + '</linearGradient>');
+      }
+      return `url(#${v.id})`;
+    }
+    fill() { if (this.path) this.out.push(`<path d="${this.path}" fill="${this.paint(this.state.fillStyle)}"/>`); }
+    stroke() {
+      if (!this.path) return;
+      const s = this.state;
+      const dash = s.dash.length ? ` stroke-dasharray="${s.dash.map(d => this.n(d)).join(' ')}"` : '';
+      this.out.push(`<path d="${this.path}" fill="none" stroke="${this.paint(s.strokeStyle)}" stroke-width="${this.n(s.lineWidth)}"`
+        + ` stroke-linecap="${s.lineCap}" stroke-linejoin="${s.lineJoin}"${dash}/>`);
+    }
+    fillRect(x, y, w, h) { this.out.push(`<rect x="${this.n(x)}" y="${this.n(y)}" width="${this.n(w)}" height="${this.n(h)}" fill="${this.paint(this.state.fillStyle)}"/>`); }
+    strokeRect(x, y, w, h) {
+      this.out.push(`<rect x="${this.n(x)}" y="${this.n(y)}" width="${this.n(w)}" height="${this.n(h)}" fill="none" stroke="${this.paint(this.state.strokeStyle)}" stroke-width="${this.n(this.state.lineWidth)}"/>`);
+    }
+    fillText(t, x, y) {
+      const m = /([\d.]+)px\s+(.*)$/.exec(this.state.font || '') || [null, '10', 'sans-serif'];
+      const anchor = { right: 'end', end: 'end', center: 'middle' }[this.state.textAlign] || 'start';
+      this.out.push(`<text x="${this.n(x)}" y="${this.n(y)}" font-size="${this.n(+m[1])}" font-family="${escapeHtml(m[2])}" text-anchor="${anchor}" fill="${this.paint(this.state.fillStyle)}">${escapeHtml(String(t))}</text>`);
+    }
+    // the drawing, clipped to the canvas it stands for (w × h in drawing units, after scale)
+    markup(w, h) {
+      return `<g><svg x="0" y="0" width="${this.n(w)}" height="${this.n(h)}" overflow="hidden">`
+        + (this.defs.length ? `<defs>${this.defs.join('')}</defs>` : '') + this.out.join('') + '</svg></g>';
+    }
   }
   // ?ixgl-debug in the page URL: ixmaps-gl logs what it draws (console.info)
   function glDebug() {
@@ -3583,7 +3688,7 @@ self.onmessage = e => {
   // edit it by hand; `npm run unit` fails when it drifts.
   // ---------------------------------------------------------------
   // <grammar:binding-aliases>
-  // generated from ixmaps-grammar 0.1.31 (ixmaps-flat 1.0.42, 2b978d5 2026-10-02) — 52 aliases
+  // generated from ixmaps-grammar 0.1.32 (ixmaps-flat 1.0.42, 2b978d5 2026-10-02) — 52 aliases
   const FLAT_BINDING_ALIASES = {
     "aggregation": "style.aggregationfield",
     "aggregationfield": "style.aggregationfield",
@@ -3645,7 +3750,7 @@ self.onmessage = e => {
   // both — so .style({tooltip}) is a tooltip and .meta({fillopacity}) a style
   // property. GENERATED by test/sync-grammar.mjs — do not edit.
   // <grammar:meta-keys>
-  // generated from ixmaps-grammar 0.1.31 — 5 meta keys
+  // generated from ixmaps-grammar 0.1.32 — 5 meta keys
   const FLAT_META_KEYS = ["description","name","snippet","title","tooltip"];
   // </grammar:meta-keys>
 
@@ -8019,8 +8124,13 @@ self.onmessage = e => {
         const liveLayers = deckLive && deckLive.layerManager ? deckLive.layerManager.getLayers().filter(l => !l.parent) : [];
         let atlasSwapWaiting = false;
         runtimes.forEach(rt => {
-          if (!rt._atlasSwapPendingSince) return;
           const own = liveLayers.filter(l => /-g\d+(~\d+)?$/.test(l.id) && layerRuntimeById.get(l.id) === rt);
+          // the atlas deck.gl actually holds: a fresh layer re-adds every icon it draws, the cached ones too, which
+          // the theme's own count of NEW icons (_cacheIcon) never sees — fast scale changes filled a box layer's
+          // atlas to 1024 × 16384 px while the count stood below the limit (box_title_symbol: black boxes). Past
+          // ATLAS_SWAP_HEIGHT_PX, swap now, whatever is still loading
+          if (own.some(l => atlasHeightOf(l) > ATLAS_SWAP_HEIGHT_PX)) { rt._forceAtlasSwap(); return; }
+          if (!rt._atlasSwapPendingSince) return;
           if (!rt._commitAtlasSwap(own.every(l => l.isLoaded), Date.now())) atlasSwapWaiting = true;
         });
         if (atlasSwapWaiting && !atlasSwapTimer) {
@@ -8782,8 +8892,12 @@ self.onmessage = e => {
   // earlier hand-tuned 12.5 drew every symbol 1.2× (with the reference
   // below, 1.3×) smaller than flat.
   const NORMAL_RADIUS_PX = 15;
-  // largest BOX side (px) still drawn as a canvas icon (at 2×), see _buildBoxIcon
+  // largest BOX side (px) still drawn as a canvas icon, see _buildBoxIcon
   const BOX_ICON_MAX_PX = 2048;
+  // a BOX icon's raster: at most this many px a side (2× for small boxes, less for large ones — deck.gl scales
+  // it up). At a fixed 2× a 600 px box was a 1200 px icon, wider than deck.gl's 1024 px icon atlas: such icons
+  // could not be packed and drew black (box_title_* pages zoomed in, fast scale changes)
+  const BOX_ICON_RASTER_MAX = 480;
   // Flat's own map scale, which dynamic object scaling compares with
   // normalSizeScale (mapscript2.js 2849: dx = nTrueMapScale · nZoomScale /
   // nNormalSizeScale), read from a real flat page: the generic Mercator
@@ -10142,7 +10256,29 @@ self.onmessage = e => {
         for (const [x, y] of lastArrow) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0b = Math.min(y0b, y); y1b = Math.max(y1b, y); }
       }
     }
-    return { points, area, lineWidth, lastPop, lastArrow, baseY: yOf(0), bbox: { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad } };
+    // ink: the extent of what is drawn — line, markers, area down to its base, LASTPOP, LASTARROW.
+    // bbox above spans the whole value range (flat's chart box frames it); the icon only needs the
+    // ink, which for a series using a small part of a shared range is far smaller
+    let ink = null;
+    if (defined.length) {
+      let ix0 = Infinity, ix1 = -Infinity, iy0 = Infinity, iy1 = -Infinity;
+      const add = (x, y, r) => { ix0 = Math.min(ix0, x - r); ix1 = Math.max(ix1, x + r); iy0 = Math.min(iy0, y - r); iy1 = Math.max(iy1, y + r); };
+      for (const p of defined) add(p.x, p.y, p.r + pad);
+      if (lastPop) add(lastPop.x, lastPop.y, lastPop.r + pad);
+      if (area) for (const [x, y] of area) add(x, y, 0);
+      if (lastArrow) for (const [x, y] of lastArrow) add(x, y, 0);
+      ink = { x0: ix0 - pad, x1: ix1 + pad, y0: iy0 - pad, y1: iy1 + pad };
+    }
+    const bbox = { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad };
+    return { points, area, lineWidth, lastPop, lastArrow, baseY: yOf(0), bbox, ink: ink || bbox };
+  }
+  // raster px per chart unit for a per-item PLOT icon (_buildItemPlotIcon): the step's on-screen size in device
+  // px, rounded to the nearest power of 2 (so zooming rebuilds the icons only when it crosses one), between 2 and
+  // 24. A fixed 24 drew 270 small sparklines of a shared range into far more icon atlas than WebGL allows, and
+  // an icon drawn much larger than shown is mipmap-filtered when deck.gl shrinks it: thin lines come out pale.
+  function plotRasterPx(stepPx, dpr) {
+    const want = (stepPx > 0 ? stepPx : 24) * (dpr > 0 ? dpr : 1);
+    return Math.min(24, Math.max(2, Math.pow(2, Math.round(Math.log2(Math.max(want, 1))))));
   }
   // the item's chart anchor: a point, or the bounding-box center of a
   // polygon's largest part (flat places a chart at its shape's position)
@@ -10975,6 +11111,15 @@ self.onmessage = e => {
   // LayerRuntime._commitAtlasSwap) at most this long; while it waits,
   // refreshLayers looks again every ATLAS_SWAP_RECHECK_MS.
   const ATLAS_SWAP_MAX_WAIT_MS = 2000;
+  // an icon layer's atlas (deck.gl's 1024 px wide canvas) taller than this is swapped at once (refreshLayers):
+  // half the smallest max texture size in use (8192), as one more drawing adds to it before the next check
+  const ATLAS_SWAP_HEIGHT_PX = 4096;
+  // the height of a deck.gl IconLayer's icon atlas (its IconManager, deck.gl 9.4 internals), 0 when unknown
+  function atlasHeightOf(layer) {
+    const im = layer && layer.state && layer.state.iconManager;
+    const h = im && (im._canvasHeight || (im._texture && im._texture.height));
+    return typeof h === 'number' && isFinite(h) ? h : 0;
+  }
   const ATLAS_SWAP_RECHECK_MS = 200;
 
   // Shared packing layout for a multi-category group's sub-bubbles — used
@@ -13894,8 +14039,18 @@ self.onmessage = e => {
       if (!this._iconCache.has(key)) {
         this._iconsSinceAtlasReset++;
         this._iconAreaSinceAtlasReset += (icon.width || 0) * (icon.height || 0);
-        if (this._iconsSinceAtlasReset > ICON_ATLAS_RESET_AFTER || this._iconAreaSinceAtlasReset > ICON_ATLAS_AREA_RESET_AFTER) {
-          if (!this._atlasSwapPendingSince) this._atlasSwapPendingSince = Date.now();
+        // a swap that waits for loading icons (_commitAtlasSwap) is made now once half the limit more has come
+        // in meanwhile (1.5× the limit since the last fresh atlas — fast scale or zoom changes make new box
+        // rasters every redraw): the late loads' WebGL warnings beat an atlas past the max texture size (8192 px
+        // on some GPUs, with deck.gl's ~2× packing waste), which deck.gl draws as black boxes
+        const waiting = !!this._atlasSwapPendingSince;
+        const cap = waiting ? 0.5 : 1;
+        if (this._iconsSinceAtlasReset > ICON_ATLAS_RESET_AFTER * cap || this._iconAreaSinceAtlasReset > ICON_ATLAS_AREA_RESET_AFTER * cap) {
+          if (!waiting) this._atlasSwapPendingSince = Date.now();
+          else {
+            this._iconGeneration++;
+            this._atlasSwapPendingSince = 0;
+          }
           this._iconsSinceAtlasReset = 0;
           this._iconAreaSinceAtlasReset = 0;
         }
@@ -13918,6 +14073,13 @@ self.onmessage = e => {
     // A load that never finishes must not keep the atlas growing: after
     // ATLAS_SWAP_MAX_WAIT_MS the swap is made anyway. Returns true when the
     // generation changed.
+    // a swap made at once (refreshLayers: an atlas past ATLAS_SWAP_HEIGHT_PX), counts reset
+    _forceAtlasSwap() {
+      this._iconGeneration++;
+      this._atlasSwapPendingSince = 0;
+      this._iconsSinceAtlasReset = 0;
+      this._iconAreaSinceAtlasReset = 0;
+    }
     _commitAtlasSwap(layersLoaded, now) {
       if (!this._atlasSwapPendingSince) return false;
       if (!layersLoaded && now - this._atlasSwapPendingSince < ATLAS_SWAP_MAX_WAIT_MS) return false;
@@ -14507,6 +14669,7 @@ self.onmessage = e => {
       this.features = applyField100(isVectorChart(this.flags) ? withDensity : filterFlatValues(withDensity, this.binding, this.flags), this.binding, this.flags, this.style);
       this.binding = field100Binding(this.binding, this.flags);
       this._iconCache.clear();
+      if (this._svgChartCache) this._svgChartCache.clear();
       this._glowIconCache.clear();
       this._clusterIndices = null;
       this._prepare();
@@ -15571,7 +15734,7 @@ self.onmessage = e => {
       if (this.flags.has('GRIDSIZE') && this.flags.has('PLOT')) return this._buildPlotLayers(zoom, bbox, globeCenter);
       // PLOT without GRIDSIZE: one line chart per item over its value fields
       // (or over one categorical field: the records of a position, one value per category)
-      if (this.flags.has('PLOT') && (this._isItemPlot() || this._isCategoryItemPlot())) return this._buildItemPlotLayers(zoom, liveZoom, globeCenter);
+      if (this.flags.has('PLOT') && (this._isItemPlot() || this._isCategoryItemPlot())) return this._buildItemPlotLayers(zoom, liveZoom, globeCenter, bbox);
       // a plain grid (one color, no values or glow — the Germany page's
       // companion "grid" layer) as one square per cell; a classed GRIDSIZE
       // chart (the fuel-price page) is a symbol chart sized to the grid,
@@ -16351,7 +16514,7 @@ self.onmessage = e => {
       return explicit ? fields.map((f, i) => String(explicit[i] != null ? explicit[i] : f)) : fields;
     }
 
-    _buildItemPlotLayers(zoom, liveZoom = zoom, globeCenter = null) {
+    _buildItemPlotLayers(zoom, liveZoom = zoom, globeCenter = null, bbox = null) {
       let items = [];
       let dMin = Infinity, dMax = -Infinity;
       // facet / runtime WHERE / time frame narrow the drawn charts, as in
@@ -16408,39 +16571,62 @@ self.onmessage = e => {
       const ipN = items[0].properties.values.length;
       const ipOff = this.flags.has('ZOOM') ? [0, 0]
         : flatChartAlignOffset(this.style, { kind: 'plot', unit: ipUnit, width: ipN * 30 * ipUnit / (styleNum(this.style.gridx) || 1) });
-      const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
+      // the deck.gl box and title layers (icon charts); SVG charts draw both in the pane (_svgBoxCharts)
+      const boxLayersOf = () => boxRows ? this._boxTitleLayers(boxRows, {
         unit: S / (2 * NORMAL_RADIUS_PX), liveZoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => ipOff,
         ids: { circle: `ix-itemplot-box-${this.name}`, icon: `ix-itemplot-box-${this.name}`, polygons: `ix-itemplot-box-polygons-${this.name}`, titles: `ix-itemplot-titles-${this.name}` }
       }) : { box: [], titles: [] };
+      // SVG charts in the chart pane (vector-sharp, no icon atlas) while at most SVG_PLOT_MAX_CHARTS are in
+      // view; more: deck.gl icons below (the DOM cost of thousands of live SVG charts)
+      if (this._svgPlotOk(items, bbox)) {
+        const pick = this._svgPlotLayers(liveZoom, () => {
+          const sig = svgStyleSig(this.style, this.flags);
+          const zRef = liveZoom, mo = this.mapOptions;
+          const boxes = this._svgBoxCharts(boxRows, S / (2 * NORMAL_RADIUS_PX), () => ipOff);
+          return this._mountSvgCharts(items.flatMap(d => [].concat(boxes.has(d) ? [boxes.get(d)] : [], [{
+            d, chart: this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity, SVG_PLOT_UNIT, sig),
+            s: S / SVG_PLOT_UNIT, off: ipOff }])),
+          liveZoom, dz => objectZoomFactor(zRef + dz, mo) / objectZoomFactor(zRef, mo), `ix-itemplot-${this.name}`);
+        });
+        if (pick) return [pick];
+      } else this._clearUserChartPane();
+      const boxLayers = boxLayersOf();
+      const raster = plotRasterPx(S, global.devicePixelRatio);
+      const iconOf = d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity, raster);
       return [...boxLayers.box, new IconLayer({
         id: `ix-itemplot-${this.name}-g${this._iconGeneration}`,
         data: items, pickable: true,
         getPosition: d => d.geometry.coordinates,
-        getIcon: d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity),
+        getIcon: iconOf,
         // the icon is drawn in chart units (see _buildItemPlotIcon): its
         // height in S units × S px
-        getSize: d => this._buildItemPlotIcon(d.properties.values, rangeFor(d.properties.values), sizeMax, color, fillOpacity).heightUnits * S,
+        getSize: d => iconOf(d).heightUnits * S,
         ...(ipOff[0] || ipOff[1] ? { getPixelOffset: ipOff } : {}),
         sizeUnits: 'pixels',
-        updateTriggers: { getSize: [S] },
+        updateTriggers: { getSize: [S, raster], getIcon: [raster] },
         // globe: MapLibre's sphere surface would otherwise hide the icons
         parameters: ICON_LAYER_GLOBE_PARAMETERS
       }), ...boxLayers.titles];
     }
 
     // canvas for one per-item PLOT chart (itemPlotGeometry), RASTER px per
-    // chart unit; anchored at the chart origin (the item position)
-    _buildItemPlotIcon(values, range, sizeMax, color, fillOpacity) {
-      const RASTER = 24;
-      const key = 'itemplot|' + values.join(',') + '|' + range.min + ':' + range.max + '|' + sizeMax;
-      if (this._iconCache.has(key)) return this._iconCache.get(key);
+    // chart unit (plotRasterPx: follows the chart's size on screen); only the
+    // drawn extent (g.ink), anchored at the chart origin (the item position) —
+    // which may lie outside the canvas when the series sits high in its range.
+    // svg: the same drawing as SVG (SvgContext2D) for the chart pane — { markup, ox, oy, ext, key }
+    // in RASTER units per chart unit, not an atlas icon
+    _buildItemPlotIcon(values, range, sizeMax, color, fillOpacity, raster, svg = '') {
+      const RASTER = raster || 24;
+      const key = (svg ? 'svg|' + svg + '|' : '') + 'itemplot|' + values.join(',') + '|' + range.min + ':' + range.max + '|' + sizeMax + '|r' + RASTER + (svg ? '|' + color.join(',') + '|' + fillOpacity : '');
+      const cache = svg ? this._svgChartCacheMap() : this._iconCache;
+      if (cache.has(key)) return cache.get(key);
       const g = itemPlotGeometry(values, range, this.style, this.flags, sizeMax);
-      const { x0, x1, y0, y1 } = g.bbox;
+      const { x0, x1, y0, y1 } = g.ink;
       const W = Math.max(2, Math.ceil((x1 - x0) * RASTER)), H = Math.max(2, Math.ceil((y1 - y0) * RASTER));
       const px = x => (x - x0) * RASTER, py = y => (y1 - y) * RASTER;
-      const canvas = document.createElement('canvas');
-      canvas.width = W; canvas.height = H;
-      const ctx = canvas.getContext('2d');
+      const canvas = svg ? null : document.createElement('canvas');
+      if (canvas) { canvas.width = W; canvas.height = H; }
+      const ctx = svg ? new SvgContext2D() : canvas.getContext('2d');
       const rgb = color.slice(0, 3).join(',');
       const fo = isNaN(fillOpacity) ? 1 : fillOpacity;
       if (g.area && this.flags.has('FADE')) {
@@ -16506,8 +16692,108 @@ self.onmessage = e => {
         ctx.fillStyle = `rgb(${rgb})`;
         ctx.fill();
       }
+      if (svg) {
+        // the whole canvas is the chart's box (its ink), the origin the item position
+        return this._cacheSvgChart(key, { markup: ctx.markup(W, H), ox: px(0), oy: py(0), ext: [0, 0, W, H], key });
+      }
       const icon = { url: canvas.toDataURL(), width: W, height: H, anchorX: px(0), anchorY: py(0), id: key, heightUnits: y1 - y0 };
       return this._cacheIcon(key, icon);
+    }
+
+    // PLOT as SVG charts? a chart pane (DOM) and at most SVG_PLOT_MAX_CHARTS charts in the view (bbox)
+    _svgPlotOk(items, bbox) {
+      return typeof document !== 'undefined' && !!_chartHosts.get(this.mapOptions) && svgPlotFits(items, bbox);
+    }
+    // while the map moves, the last SVG drawing stays as often as its cost asks (the USER chart rule,
+    // USER_CHART_MOVE_MAX_MS / USER_CHART_MOVE_LOAD); its pane follows the map in between
+    _svgPlotLayers(liveZoom, build) {
+      if (this._viewMoving && this._svgPlotLast && this._chartItems) {
+        const cost = this._svgPlotCostMs;
+        if (!(cost < USER_CHART_MOVE_MAX_MS) || performance.now() - this._svgPlotDrawnAt < cost * USER_CHART_MOVE_LOAD) return this._svgPlotLast;
+      }
+      const t0 = performance.now();
+      const layer = build();
+      this._svgPlotDrawnAt = performance.now();
+      this._svgPlotCostMs = this._svgPlotDrawnAt - t0;
+      this._svgPlotLast = layer;
+      return layer;
+    }
+
+    // SVG PLOT charts (SvgContext2D markup): their own cache, apart from the icon atlas's count —
+    // FIFO-bounded like _iconCache, at least twice what one drawing can show
+    _svgChartCacheMap() { return this._svgChartCache || (this._svgChartCache = new Map()); }
+    _cacheSvgChart(key, chart) {
+      const c = this._svgChartCacheMap();
+      while (c.size >= 2 * SVG_PLOT_MAX_CHARTS + ICON_CACHE_MAX) c.delete(c.keys().next().value);
+      c.set(key, chart);
+      return chart;
+    }
+
+    // mount SVG PLOT charts in the map's chart pane (chartHostFor), as _drawUserChartLayers does for
+    // USER charts: a chart keeps its element from drawing to drawing (keyed by its markup and position),
+    // a map 'move' only updates transforms, and one pick-only deck.gl layer answers hover and click.
+    //   charts: [{ d, chart: { markup, ox, oy, ext, key }, s (px per chart unit), off: [px, px] }]
+    //   grow: zoom change since this drawing → size factor while the map moves; layerId: the pick layer's id
+    // Returns the pick layer, or null without a chart pane (no DOM).
+    _mountSvgCharts(charts, liveZoom, grow, layerId) {
+      const chartHost = _chartHosts.get(this.mapOptions);
+      if (!chartHost || typeof document === 'undefined') return null;
+      if (this._chartPaneGroup && !this._chartPaneGroup.isConnected) this._clearUserChartPane();
+      const prevEls = this._chartPaneEls || new Map();
+      const items = [], keysSeen = new Set(), fresh = [];
+      let freshHtml = '';
+      for (const c of charts) {
+        const base = c.chart.key + '@' + c.d.geometry.coordinates.join(',');
+        let key = base;
+        for (let n = 1; keysSeen.has(key); n++) key = base + '#' + n;
+        keysSeen.add(key);
+        const el = prevEls.get(key);
+        if (el) prevEls.delete(key);
+        const e = c.chart.ext;
+        const it = { d: c.d, key, el, coords: c.d.geometry.coordinates, ox: c.chart.ox, oy: c.chart.oy, s: c.s, off: c.off, pick: c.pick !== false,
+          ext: [(e[0] - c.chart.ox) * c.s, (e[1] - c.chart.oy) * c.s, (e[2] - c.chart.ox) * c.s, (e[3] - c.chart.oy) * c.s] };
+        items.push(it);
+        if (!el) { fresh.push(it); freshHtml += c.chart.markup; }
+      }
+      if (!items.length) { this._clearUserChartPane(); return null; }
+      if (!this._chartPaneGroup) {
+        this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
+        chartHost.pane.appendChild(this._chartPaneGroup);
+      }
+      for (const el of prevEls.values()) el.remove();
+      if (fresh.length) {
+        const tmp = document.createElementNS(SVG_NS, 'g');
+        tmp.innerHTML = freshHtml;
+        const els = [...tmp.children];
+        for (let i = 0; i < fresh.length; i++) fresh[i].el = els[i];
+      }
+      // in the given order (draw order): kept charts stay where they are, a new one goes in before the next kept one
+      let ref = this._chartPaneGroup.firstChild;
+      for (const it of items) {
+        if (it.el === ref) ref = ref.nextSibling;
+        else this._chartPaneGroup.insertBefore(it.el, ref);
+      }
+      this._chartPaneEls = new Map(items.map(it => [it.key, it.el]));
+      this._chartItems = items;
+      if (grow) { const z0 = chartHost.map.getZoom(); const at = z => grow(z - z0); items.forEach(it => { it.grow = at; }); }
+      chartHost.runtimes.add(this);
+      this._chartHost = chartHost;   // removeRuntimes takes it out again
+      chartHost.update();
+      // picking: each chart's box in px around its position, as lng/lat at this zoom (see _drawUserChartLayers)
+      const degPerPx = 360 / (512 * Math.pow(2, liveZoom));
+      const features = items.filter(it => it.pick).map(it => {
+        const [lng, lat] = it.coords, o = it.off || [0, 0];
+        const kx = degPerPx, ky = degPerPx * Math.cos(lat * Math.PI / 180);
+        const [l, t, r, b] = it.ext;
+        const ring = [[l, t], [r, t], [r, b], [l, b], [l, t]].map(([x, y]) => [lng + (x + o[0]) * kx, lat - (y + o[1]) * ky]);
+        return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {}, icon: true, d: it.d };
+      });
+      return new GeoJsonLayer({
+        id: layerId, data: { type: 'FeatureCollection', features }, pickable: true,
+        pickOnly: true, filled: true, stroked: false,
+        getFillColor: [0, 0, 0, 1],
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      });
     }
 
     _plotCategories() {
@@ -16645,10 +16931,25 @@ self.onmessage = e => {
       // flat 18564: a grid PLOT's corner-anchored box is recentred by nGridSize / 2 = n steps / 2, while the
       // curve spans n-1 steps: it sits half a step left of the cell centre (measured on the EU page, n = 48)
       const off = this.flags.has('ZOOM') ? [0, 0] : [plotOff[0] - 0.5 * stepPx, plotOff[1]];
-      const boxLayers = boxRows ? this._boxTitleLayers(boxRows, {
+      // the deck.gl box and title layers (icon charts); SVG charts draw both in the pane (_svgBoxCharts)
+      const boxLayersOf = () => boxRows ? this._boxTitleLayers(boxRows, {
         unit: plotUnitPx, liveZoom: zoom, positionOf: b => b.d.geometry.coordinates, offsetOf: () => off,
         ids: { circle: `ix-plot-box-${this.name}`, icon: `ix-plot-box-${this.name}`, polygons: `ix-plot-box-polygons-${this.name}`, titles: `ix-plot-titles-${this.name}` }
       }) : { box: [], titles: [] };
+      // SVG charts in the chart pane while at most SVG_PLOT_MAX_CHARTS cells are in view (see _buildItemPlotLayers);
+      // between drawings they grow with the map, as the gesture-scaled icons do (gestureScaleProps)
+      if (this._svgPlotOk(drawn, bbox)) {
+        const pick = this._svgPlotLayers(zoom, () => {
+          const sig = svgStyleSig(this.style, this.flags);
+          const boxes = this._svgBoxCharts(boxRows, plotUnitPx, () => off);
+          return this._mountSvgCharts(visible.flatMap(d => [].concat(boxes.has(d) ? [boxes.get(d)] : [], [{
+            d, chart: this._buildPlotIcon(d.properties.values, categories, labels, normalSizeValue, datasetMax, datasetMin, false, sig),
+            s: iconSize / PLOT_ICON_RASTER_SIZE, off }])),
+          zoom, dz => Math.pow(2, dz), `ix-plot-${this.name}`);
+        });
+        if (pick) return [pick];
+      } else this._clearUserChartPane();
+      const boxLayers = boxLayersOf();
       return [...boxLayers.box, new IconLayer({
         id: `ix-plot-${this.name}-g${this._iconGeneration}`,
         data: visible, pickable: true,
@@ -16671,7 +16972,9 @@ self.onmessage = e => {
     // reinterpretation of every real PLOT style option.
     // extentOnly: no raster, just { axesExtent } — the box layout needs the axes frame of every cell while the
     // layers are built (inside the gesture-budget timing), and drawing every icon there cost ~7 ms each
-    _buildPlotIcon(values, categories, labels, normalSizeValue, datasetMax, datasetMin = 0, extentOnly = false) {
+    // svg: a style signature (svgStyleSig) — the same drawing as SVG for the chart pane (SvgContext2D):
+    // { markup, ox, oy, ext, key } in the icon's 100-unit space, flat's stroke width (no raster calibration)
+    _buildPlotIcon(values, categories, labels, normalSizeValue, datasetMax, datasetMin = 0, extentOnly = false, svg = '') {
       const W = PLOT_ICON_RASTER_SIZE, H = PLOT_ICON_RASTER_SIZE;
       // flat draws the axis only inside its BOX + GRID block (maptheme.js 22657)
       const hasXAxis = this.flags.has('XAXIS') && flatFlag(this.flags, 'BOX') && this.flags.has('GRID');   // \bGRID\b: not GRIDSIZE
@@ -16822,15 +17125,16 @@ self.onmessage = e => {
       })();
       if (extentOnly) return { axesExtent };
 
-      const key = points.map(p => (p ? `${p.y}:${p.r}${byValue ? ':' + p.c : ''}` : 'x')).join('-') + `|${n}`;
-      if (this._iconCache.has(key)) return this._iconCache.get(key);
+      const key = (svg ? 'svg|' + svg + '|' + labels.join(',') + '|' : '') + points.map(p => (p ? `${p.y}:${p.r}${byValue ? ':' + p.c : ''}` : 'x')).join('-') + `|${n}`;
+      const cache = svg ? this._svgChartCacheMap() : this._iconCache;
+      if (cache.has(key)) return cache.get(key);
 
-      const canvas = document.createElement('canvas');
+      const canvas = svg ? null : document.createElement('canvas');
       // drawn at PLOT_RASTER_SS x resolution (all coordinates stay in 100-unit space): deck.gl scales the
       // icon up to the cell size, and a hairline curve would otherwise be smeared wider than flat's SVG
-      canvas.width = W * PLOT_RASTER_SS; canvas.height = H * PLOT_RASTER_SS;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(PLOT_RASTER_SS, PLOT_RASTER_SS);
+      if (canvas) { canvas.width = W * PLOT_RASTER_SS; canvas.height = H * PLOT_RASTER_SS; }
+      const ctx = svg ? new SvgContext2D() : canvas.getContext('2d');
+      if (!svg) ctx.scale(PLOT_RASTER_SS, PLOT_RASTER_SS);
 
       // BOX (a plot without the BOX flag keeps its own canvas box; with it the
       // shared box layer draws it — see _buildPlotLayers)
@@ -16961,7 +17265,8 @@ self.onmessage = e => {
       // LINES
       if (this.flags.has('LINES')) {
         ctx.strokeStyle = `rgb(${rgbStr})`;
-        ctx.lineWidth = plotStrokePx(styleNum(this.style.linewidth) || 1, stepX);
+        // SVG draws flat's own width: the calibration only offsets the raster's filtering
+        ctx.lineWidth = plotStrokePx(styleNum(this.style.linewidth) || 1, stepX) / (svg ? PLOT_STROKE_CALIBRATION : 1);
         if (bySeg) {
           ctx.lineCap = 'round';
           runs.forEach(run => {
@@ -17055,6 +17360,19 @@ self.onmessage = e => {
       // grid cell, aligned with the grid-mesh square underneath it —
       // align / offsetx / offsety are applied by the layer (_buildPlotLayers, getPixelOffset
       // through flatChartAlignOffset, flat's own units), not baked into the icon
+      if (svg) {
+        // picking answers on the curve's box (its points, the area down to the 0 level, a stroke's margin), as
+        // the icon answered on its drawn pixels only — not on the whole cell square
+        const pts = points.filter(Boolean);
+        let ext = [0, 0, W, H];
+        if (pts.length) {
+          const m = 2 + Math.max(...pts.map(p => p.r));
+          const ys = pts.map(p => p.y).concat(this.flags.has('AREA') ? [Math.max(0, Math.min(H, zeroY))] : []);
+          ext = [Math.max(0, Math.min(...pts.map(p => p.x)) - m), Math.max(0, Math.min(...ys) - m),
+            Math.min(W, Math.max(...pts.map(p => p.x)) + m), Math.min(H, Math.max(...ys) + m)];
+        }
+        return this._cacheSvgChart(key, { markup: ctx.markup(W, H), ox: W / 2, oy: H / 2, ext, key, axesExtent });
+      }
       const icon = { url: canvas.toDataURL(), width: W * PLOT_RASTER_SS, height: H * PLOT_RASTER_SS, anchorX: W * PLOT_RASTER_SS / 2, anchorY: H * PLOT_RASTER_SS / 2, id: key, axesExtent };
       return this._cacheIcon(key, icon);
     }
@@ -17165,6 +17483,7 @@ self.onmessage = e => {
     // USER charts (see resolveUserChartFunction): one icon per chart, drawn
     // by the page's function; null → no such function (drawn as bubbles)
     _clearUserChartPane() {
+      this._svgPlotLast = null;
       if (this._chartPaneGroup) this._chartPaneGroup.remove();
       this._chartPaneGroup = null;
       this._chartPaneEls = null;
@@ -17649,16 +17968,7 @@ self.onmessage = e => {
         }));
       } else {
         // flat's rectangular box (the chart and its title plus the margin)
-        const borderStyle = String(st.borderstyle || '');
-        const boxLook = {
-          fill: st.boxcolor || 'white',
-          fillOpacity: boxOpacity,
-          stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
-          strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3,
-        };
-        const borderWidth = styleNum(st.borderwidth) || 1;
-        const borderRadius = styleNum(st.borderradius);
-        const strokeOf = b => borderWidth * 0.2 * b.w / 30;
+        const { boxLook, borderRadius, strokeOf } = this._rectBoxLook(boxOpacity);
         // a box larger than BOX_ICON_MAX_PX (a MULTIQUAD grid of thousands
         // of items) would need a huge canvas: it is drawn as a polygon in
         // map coordinates instead (square corners)
@@ -17698,8 +18008,8 @@ self.onmessage = e => {
           data: iconBoxes, pickable: false,
           getPosition: positionOf,
           getIcon: b => b.icon,
-          // the icon is drawn at 2× with a stroke padding around the box
-          getSize: b => b.icon.height / 2,
+          // the icon is drawn at k× (_buildBoxIcon: 2, less for large boxes) with a stroke padding around the box
+          getSize: b => b.icon.height / (b.icon.k || 2),
           getPixelOffset: b => { const f = offsetOf(b); return [(b.rect[0] + b.rect[2]) / 2 + f[0], (b.rect[1] + b.rect[3]) / 2 + f[1]]; },
           sizeUnits: 'pixels',
           billboard: true,
@@ -17730,6 +18040,61 @@ self.onmessage = e => {
       return { box, titles };
     }
 
+    // flat's rectangular BOX look from the style: fill, opacity, border (borderstyle none / bordercolor), the
+    // stroke width of a row (borderwidth × 0.2 × w / 30) and the corner radius (borderradius) — shared by the
+    // deck.gl boxes (_boxTitleLayers) and the SVG ones (_svgBoxCharts)
+    _rectBoxLook(boxOpacity) {
+      const st = this.style;
+      const borderStyle = String(st.borderstyle || '');
+      const boxLook = {
+        fill: st.boxcolor || 'white',
+        fillOpacity: boxOpacity,
+        stroke: borderStyle === 'none' || isNoneColor(styleLineColor(st.bordercolor)) ? null : styleLineColor(st.bordercolor) || '#bbbbbb',
+        strokeOpacity: /^(solid|dotted|dashed)$/.test(borderStyle) ? 1 : 0.3,
+      };
+      const borderWidth = styleNum(st.borderwidth) || 1;
+      return { boxLook, borderRadius: styleNum(st.borderradius), strokeOf: b => borderWidth * 0.2 * b.w / 30 };
+    }
+
+    // the BOX (and its title) of SVG-drawn charts as SVG too (_mountSvgCharts): one chart-pane element per row, in px around
+    // the chart's position, drawn just under its own chart as flat's chart group does — no box icons in the
+    // atlas (fast scale / zoom changes made new box rasters by the hundred until the atlas overflowed: black
+    // boxes). Rectangle: _rectBoxLook; CIRCULAR: the circle box of the deck path. Returns Map(d → entry).
+    _svgBoxCharts(rows, unit, offsetOf) {
+      const out = new Map();
+      if (!rows) return out;
+      const st = this.style;
+      const boxOpacity = isNaN(styleNum(st.boxopacity)) ? 1 : styleNum(st.boxopacity);
+      const r2 = v => +v.toFixed(2);
+      // the title (chartBoxLayout: first baseline, a font per line, anchor) as SVG text in the box's group —
+      // in the pane with its box, so an opaque box cannot hide it; colour and halo as the deck title layer
+      const textRgb = hexOrNamedToRgb(st.textcolor || '#888888').slice(0, 3).join(',');
+      const titleOf = t => !t ? '' : `<text x="${r2(t.x)}" y="${r2(t.baseline)}" font-family="arial" font-size="${r2(t.f)}" text-anchor="${t.anchor}"`
+        + ` fill="rgb(${textRgb})" stroke="rgba(255,255,255,0.5)" stroke-width="${r2(t.f / 7)}" paint-order="stroke">`
+        + t.lines.map((l, i) => `<tspan x="${r2(t.x)}"${i ? ` dy="${r2(t.f)}"` : ''}>${escapeHtml(l)}</tspan>`).join('') + '</text>';
+      const paint = (c, a) => (isNoneColor(c) ? 'none' : escapeHtml(String(c))) + '" ' + `fill-opacity="${r2(a)}`;
+      if (flatFlag(this.flags, 'CIRCULAR')) {
+        const boxNone = isNoneColor(st.boxcolor), borderNone = isNoneColor(st.bordercolor);
+        const fill = boxNone ? 'none' : escapeHtml(String(st.boxcolor || '#eeeeee'));
+        const stroke = borderNone ? '' : ` stroke="${escapeHtml(String(st.bordercolor || '#dddddd'))}" stroke-width="${r2(unit / 20)}"`;
+        for (const b of rows) {
+          const markup = `<g><circle cx="${r2(b.cx)}" cy="${r2(b.cy)}" r="${r2(b.boxR)}" fill="${fill}" fill-opacity="${r2(boxNone ? 0 : boxOpacity)}"${stroke}/>${titleOf(b.title)}</g>`;
+          out.set(b.d, { d: b.d, chart: { markup, ox: 0, oy: 0, ext: [b.cx - b.boxR, b.cy - b.boxR, b.cx + b.boxR, b.cy + b.boxR], key: 'box|' + markup }, s: 1, off: offsetOf(b), pick: false });
+        }
+        return out;
+      }
+      const { boxLook, borderRadius, strokeOf } = this._rectBoxLook(boxOpacity);
+      for (const b of rows) {
+        const [l, t, r, bt] = b.rect, sw = strokeOf(b);
+        const rx = isNaN(borderRadius) ? 0 : Math.min(borderRadius * Math.min(unit, b.w / 30), (r - l) / 2, (bt - t) / 2);
+        const stroke = boxLook.stroke && !isNoneColor(boxLook.stroke) && sw > 0
+          ? ` stroke="${escapeHtml(String(boxLook.stroke))}" stroke-opacity="${boxLook.strokeOpacity}" stroke-width="${r2(sw)}"` : '';
+        const markup = `<g><rect x="${r2(l)}" y="${r2(t)}" width="${r2(r - l)}" height="${r2(bt - t)}" rx="${r2(rx)}" fill="${paint(boxLook.fill, boxLook.fillOpacity)}"${stroke}/>${titleOf(b.title)}</g>`;
+        out.set(b.d, { d: b.d, chart: { markup, ox: 0, oy: 0, ext: [l, t, r, bt], key: 'box|' + markup }, s: 1, off: offsetOf(b), pick: false });
+      }
+      return out;
+    }
+
     // BOX (see the BOX block in _buildChartLayers): a rectangle icon
     // w×h px, rounded corners rx, stroke sw px; drawn at twice the size
     _buildBoxIcon(w, h, rx, sw, look) {
@@ -17737,7 +18102,8 @@ self.onmessage = e => {
       const W = q(w), H = q(h), R = Math.round(rx * 2) / 2, S = Math.round(sw * 4) / 4;
       const key = `box|${W}|${H}|${R}|${S}|${look.fill}|${look.fillOpacity}|${look.stroke}|${look.strokeOpacity}`;
       if (this._iconCache.has(key)) return this._iconCache.get(key);
-      const k = 2, pad = Math.ceil(S * k / 2) + 1;
+      // raster scale: 2× up to BOX_ICON_RASTER_MAX px a side (see there), the icon's k for its size on screen
+      const k = Math.min(2, (BOX_ICON_RASTER_MAX - 4) / Math.max(W + S, H + S, 1)), pad = Math.ceil(S * k / 2) + 1;
       const canvas = document.createElement('canvas');
       canvas.width = Math.ceil(W * k) + pad * 2; canvas.height = Math.ceil(H * k) + pad * 2;
       const ctx = canvas.getContext('2d');
@@ -17751,7 +18117,7 @@ self.onmessage = e => {
       if (!isNoneColor(look.fill)) { ctx.globalAlpha = look.fillOpacity; ctx.fillStyle = look.fill; ctx.fill(); }
       if (look.stroke && !isNoneColor(look.stroke) && S > 0) { ctx.globalAlpha = look.strokeOpacity; ctx.strokeStyle = look.stroke; ctx.lineWidth = S * k; ctx.stroke(); }
       // getSize is the icon's height: the padding is part of it
-      const icon = { url: canvas.toDataURL(), width: canvas.width, height: canvas.height, anchorX: canvas.width / 2, anchorY: canvas.height / 2, id: key };
+      const icon = { url: canvas.toDataURL(), width: canvas.width, height: canvas.height, anchorX: canvas.width / 2, anchorY: canvas.height / 2, id: key, k };
       return this._cacheIcon(key, icon);
     }
 
@@ -21111,7 +21477,7 @@ self.onmessage = e => {
           getPosition: d => d.geometry.coordinates,
           getIcon: d => d.icon,
           // the icon is drawn at 2× with a stroke padding around the box
-          getSize: d => d.icon.height / 2,
+          getSize: d => d.icon.height / (d.icon.k || 2),   // the box icon's raster scale (_buildBoxIcon)
           getPixelOffset: d => d.pixelOffset,
           getColor: d => [255, 255, 255, this._iconAlpha(d)],
           sizeUnits: 'pixels',
@@ -22181,7 +22547,7 @@ self.onmessage = e => {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, donorFillRgba, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, plotRasterPx, atlasHeightOf, ATLAS_SWAP_HEIGHT_PX, SvgContext2D, svgPlotFits, svgStyleSig, SVG_PLOT_MAX_CHARTS, SVG_PLOT_UNIT, donorFillRgba, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb, heatmapColorRange, heatmapWeight,
     mlHeatmapPoints, mlHeatmapWeightMax, mlHeatmapRadius, mlHeatmapPaint, syncNativeHeatmaps, mlHeatLayerId,

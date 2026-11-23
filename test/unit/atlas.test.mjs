@@ -55,12 +55,34 @@ test('atlas: a load that never finishes does not hold the swap back for more tha
   assert.equal(rt._iconGeneration, 1);
 });
 
-test('atlas: a second cap crossing while a swap waits keeps the first due time', () => {
+test('atlas: half the cap more while a swap waits swaps at once (no atlas past the max texture size)', () => {
   const rt = runtime();
   ['a', 'b', 'c'].forEach(k => rt._cacheIcon(k, bigIcon()));
   const since = rt._atlasSwapPendingSince;
-  ['d', 'e', 'f'].forEach(k => rt._cacheIcon(k, bigIcon()));
+  assert.ok(since > 0);
+  rt._cacheIcon('d', bigIcon());
+  assert.equal(rt._iconGeneration, 0, 'under the cap again: still waiting');
   assert.equal(rt._atlasSwapPendingSince, since);
-  rt._commitAtlasSwap(true, since + 10);
-  assert.equal(rt._iconGeneration, 1, 'one swap, not one per crossing');
+  ['e', 'f'].forEach(k => rt._cacheIcon(k, bigIcon()));
+  assert.equal(rt._iconGeneration, 1, '1.5× the limit: swapped without waiting for the loads');
+  assert.equal(rt._atlasSwapPendingSince, 0, 'nothing left due');
+  assert.equal(rt._commitAtlasSwap(true, since + 10), false, 'one swap, not two');
+  assert.equal(rt._iconGeneration, 1);
+});
+
+test('atlas: the height deck.gl actually holds (atlasHeightOf) and the swap made at once past it', () => {
+  const G = win.__ixmapsGlInternals;
+  assert.equal(G.ATLAS_SWAP_HEIGHT_PX, 4096, 'half the smallest max texture size in use (8192)');
+  assert.equal(G.atlasHeightOf({ state: { iconManager: { _canvasHeight: 16384 } } }), 16384);
+  assert.equal(G.atlasHeightOf({ state: { iconManager: { _texture: { height: 2048 } } } }), 2048, 'else the texture');
+  assert.equal(G.atlasHeightOf({ state: {} }), 0, 'no icon manager: unknown');
+  assert.equal(G.atlasHeightOf(null), 0);
+  const rt = runtime();
+  ['a', 'b', 'c'].forEach(k => rt._cacheIcon(k, bigIcon()));
+  assert.ok(rt._atlasSwapPendingSince > 0);
+  rt._forceAtlasSwap();
+  assert.equal(rt._iconGeneration, 1);
+  assert.equal(rt._atlasSwapPendingSince, 0);
+  assert.equal(rt._iconAreaSinceAtlasReset, 0);
+  assert.equal(rt._iconsSinceAtlasReset, 0);
 });
