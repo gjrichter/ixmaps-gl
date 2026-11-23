@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World GDP per Capita — Interactive Classification Map (ixmaps-gl)</title>
+    <!-- same map as ixmap_interactive_legend.html, drawn by the WebGL engine ixmaps-gl -->
+    <script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+    <link rel="stylesheet" href="ixmap_interactive_legend.css">
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Map title -->
+    <div id="map-title">
+        World GDP per Capita 2023
+        <span id="map-subtitle">USD thousands · Switch classification and pan to explore</span>
+    </div>
+
+    <!-- Active method badge (top-right) -->
+    <div id="method-badge">QUANTILE</div>
+
+    <!-- Control Panel (left) -->
+    <div id="ctrl-panel">
+        <div class="mob-handle"></div>
+        <details class="card"><summary><span>Classification Method</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+            <div class="card-body">
+        <div class="btn-col" id="method-btns">
+            <button class="map-btn active" onclick="setMethod('QUANTILE','Quantile',this)">Quantile (equal count)</button>
+            <button class="map-btn" onclick="setMethod('EQUIDISTANT','Equal Interval',this)">Equal Interval</button>
+            <button class="map-btn" onclick="setMethod('HEADTAIL','Head / Tail',this)">Head / Tail</button>
+            <button class="map-btn" onclick="setMethod('NATURAL','Natural Breaks',this)">Natural Breaks</button>
+            <button class="map-btn" onclick="setMethod('LOG','Logarithmic',this)">Logarithmic</button>
+        </div></div></details>
+        <details class="card" open><summary><span>Color Scheme</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+            <div class="card-body">
+        <div class="btn-col" id="color-btns">
+            <button class="map-btn active" onclick="setColors('blues',this)">
+                <span class="swatch">
+                    <span style="background:#deeaf5"></span>
+                    <span style="background:#74b3d8"></span>
+                    <span style="background:#3182bd"></span>
+                    <span style="background:#08519c"></span>
+                </span>Blues
+            </button>
+            <button class="map-btn" onclick="setColors('reds',this)">
+                <span class="swatch">
+                    <span style="background:#fee8d7"></span>
+                    <span style="background:#fc8d59"></span>
+                    <span style="background:#e84d1c"></span>
+                    <span style="background:#b30000"></span>
+                </span>Reds
+            </button>
+            <button class="map-btn" onclick="setColors('greens',this)">
+                <span class="swatch">
+                    <span style="background:#e5f5e0"></span>
+                    <span style="background:#74c476"></span>
+                    <span style="background:#238b45"></span>
+                    <span style="background:#006d2c"></span>
+                </span>Greens
+            </button>
+            <button class="map-btn" onclick="setColors('diverging',this)">
+                <span class="swatch">
+                    <span style="background:#d73027"></span>
+                    <span style="background:#ffffbf"></span>
+                    <span style="background:#91cf60"></span>
+                    <span style="background:#1a9850"></span>
+                </span>Diverging
+            </button>
+        </div></div></details>
+        <details class="card"><summary><span>Projection</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+            <div class="card-body">
+        <div class="btn-col" id="proj-btns">
+            <button class="map-btn active" onclick="setProjection('mercator',this)">Mercator</button>
+            <button class="map-btn" onclick="setProjection('orthographic',this)">Globe</button>
+            <button class="map-btn" onclick="setProjection('equalearth',this)">Equal Earth</button>
+        </div></div></details>
+        <details class="card"><summary><span>World copies</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+            <div class="card-body">
+        <div class="btn-col" id="copies-btns">
+            <button class="map-btn active" onclick="setWorldCopies(false,this)">Single world</button>
+            <button class="map-btn" onclick="setWorldCopies(true,this)">Repeat left and right</button>
+        </div></div></details>
+    </div>
+
+    <!-- Live Stats Panel (right, updated on zoom/pan) -->
+    <div id="stats-panel" class="panel">
+        <div class="mob-handle"></div>
+        <div class="panel-title">Visible Countries</div>
+        <div class="stat-row">
+            <span class="stat-label">With data</span>
+            <span class="stat-value" id="s-count">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Min GDP/cap</span>
+            <span class="stat-value" id="s-min">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Max GDP/cap</span>
+            <span class="stat-value" id="s-max">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Median</span>
+            <span class="stat-value" id="s-median">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Average</span>
+            <span class="stat-value" id="s-avg">—</span>
+        </div>
+        <div id="dist-bar"></div>
+        <div id="dist-bar-labels">
+            <span id="dist-min">—</span>
+            <span id="dist-max">—</span>
+        </div>
+        <!-- Mobile-only legend section (desktop shows #legend-panel instead) -->
+        <div id="mob-legend" class="mob-only">
+            <hr class="panel-sep">
+            <div class="panel-title">Class Breaks <span id="mob-legend-n" style="font-weight:400;color:#ccc;letter-spacing:0"></span></div>
+            <div id="mob-legend-rows"></div>
+        </div>
+    </div>
+
+    <!-- Legend Panel (right side, below stats) -->
+    <div id="legend-panel" class="panel" style="position:absolute;">
+        <div class="panel-title">Class Breaks <span id="legend-n" style="font-weight:400;color:#ccc;letter-spacing:0"></span></div>
+        <div id="legend-rows"></div>
+    </div>
+
+    <!-- Zoom badge (bottom-right) -->
+    <div id="zoom-badge">zoom: <span id="zoom-val">—</span></div>
+
+    <!-- Mobile overlay (tap to close sheets) -->
+    <div id="mob-overlay"></div>
+
+    <!-- Mobile FABs (controls + info) -->
+    <button id="mob-ctrl-btn" class="mob-fab" onclick="toggleMobilePanel('ctrl')" aria-label="Toggle controls">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+    <button id="mob-info-btn" class="mob-fab" onclick="toggleMobilePanel('info')" aria-label="Toggle stats and legend">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="12" width="5" height="9" rx="1"/><rect x="9.5" y="7" width="5" height="14" rx="1"/><rect x="16" y="3" width="5" height="18" rx="1"/>
+        </svg>
+    </button>
+
+    <script>
+    // ── URLS ───────────────────────────────────────────────────────────────
+    var GEO_URL  = "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json";
+    var DATA_URL = "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/world-gdp-2023/world_gdp_2023_data.csv";
+
+    // ── COLOR SCHEMES ──────────────────────────────────────────────────────
+    var SCHEMES = {
+        blues:     ["#deeaf5","#b3cde3","#74b3d8","#3182bd","#08519c"],
+        reds:      ["#fee8d7","#fdb38f","#fc8d59","#e84d1c","#b30000"],
+        greens:    ["#e5f5e0","#c7e9c0","#74c476","#238b45","#006d2c"],
+        diverging: ["#d73027","#fc8d59","#ffffbf","#91cf60","#1a9850"]
+    };
+
+    // ── STATE ──────────────────────────────────────────────────────────────
+    var currentMethod     = "QUANTILE";
+    var currentMethodLabel = "Quantile";
+    var currentScheme     = "blues";
+    var currentProjection = "mercator";
+    var currentCopies     = false;
+    var _sortedVals       = null;   // filled by getFacets on first layerdraw
+    var choroplethDrawn = false;
+    var myMap;                      // top-level so applyChoropleth/setProjection can reach it
+
+    // ── CHOROPLETH BUILDER ─────────────────────────────────────────────────
+    function applyChoropleth() {
+        var theme = ixmaps.layer("countries")
+            .data({ url: DATA_URL, type: "csv" })
+            .binding({ lookup: "id", value: "gdp", title: "name" })
+            .type("CHOROPLETH|" + currentMethod + "|NOLEGEND")
+            .style({
+                colorscheme: SCHEMES[currentScheme],
+                fillopacity: 0.82,
+                showdata: "true"
+            })
+            .meta({ name: "countries_gdp", tooltip: "<div style='min-width:160px'><div style='font-weight:700;font-size:1.15em;color:#1a1a2e;margin-bottom:3px'>{{name}}</div><div style='color:#bbb;font-size:0.70em;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px'>GDP per capita · 2023</div><div style='font-size:2em;font-weight:800;color:#1a5fc9;letter-spacing:-0.02em;line-height:1'>${{gdp}}k</div><div style='color:#ccc;font-size:0.68em;margin-top:3px'>USD thousands</div></div>" })
+            .title("GDP per Capita (USD k)")
+            .define();
+        // ixmaps-gl ignores a second layer with the same name: swap the theme by its id
+        if (choroplethDrawn) ixmaps.map().replace("countries_gdp", theme);
+        else { myMap.layer(theme, "direct"); choroplethDrawn = true; }
+    }
+
+    // ── UI HANDLERS ────────────────────────────────────────────────────────
+    function setMethod(method, label, btn) {
+        currentMethod = method;
+        currentMethodLabel = label;
+        document.querySelectorAll("#method-btns .map-btn").forEach(function(b) {
+            b.classList.remove("active");
+        });
+        btn.classList.add("active");
+        document.getElementById("method-badge").textContent = label.toUpperCase();
+        applyChoropleth();
+        updateLegend();
+    }
+
+    function setColors(scheme, btn) {
+        currentScheme = scheme;
+        document.querySelectorAll("#color-btns .map-btn").forEach(function(b) {
+            b.classList.remove("active");
+        });
+        btn.classList.add("active");
+        var cols = SCHEMES[scheme];
+        document.getElementById("dist-bar").style.background =
+            "linear-gradient(to right, " + cols.join(", ") + ")";
+        applyChoropleth();
+        updateLegend();
+    }
+
+    // the themes are drawn once by default (empty space beside the world); themecopies:true repeats them
+    function setWorldCopies(on, btn) {
+        document.querySelectorAll("#copies-btns .map-btn").forEach(function(b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        currentCopies = on;
+        myMap.options({ themecopies: on });
+    }
+
+    function setProjection(proj, btn) {
+        if (proj === currentProjection) return;
+        var prev = currentProjection;
+        currentProjection = proj;
+        document.querySelectorAll("#proj-btns .map-btn").forEach(function(b) {
+            b.classList.remove("active");
+        });
+        btn.classList.add("active");
+        // Equal Earth is a plane map: ixmaps-gl maps the geometry onto it while
+        // loading, so it is chosen when the map is built (mapProjection), not
+        // switched on a running map — to and from it the map is built again
+        // in the same div, at the current view
+        if (proj === "equalearth" || prev === "equalearth") {
+            var c = ixmaps.getCenter();
+            var z = ixmaps.getZoom() || 1.7;
+            if (proj === "orthographic" && z < 2) z = 2;
+            buildMap({ center: c ? { lat: c.lat, lng: c.lng } : { lat: 25, lng: 10 }, zoom: z });
+            return;
+        }
+        var project = JSON.parse(ixmaps.getProjectString());
+        project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/" + proj + ".svg";
+        project.map.basemap = "white";
+        // the globe needs some zoom to read as a globe
+        if (proj === "orthographic" && (project.map.zoom || 0) < 2) project.map.zoom = 2;
+        ixmaps.setProjectJSON(project);
+    }
+
+    // ── STATS via getFacets ────────────────────────────────────────────────
+    function updateStats(szId) {
+        ixmaps.data.fShowFacetValues = false;
+        var facetsA = ixmaps.data.getFacets("", "stats_gdp", ["gdp"], szId, "map");
+        if (!facetsA || !facetsA.length) return;
+
+        var facet = facetsA[0];
+        var vals;
+
+        // numeric with >50 unique values → facet.data (unsorted array)
+        if (facet.data) {
+            vals = facet.data.slice().sort(function(a, b) { return a - b; });
+        } else if (facet.valuesCount) {
+            vals = [];
+            Object.keys(facet.valuesCount).forEach(function(k) {
+                var v = parseFloat(k);
+                if (!isNaN(v)) {
+                    for (var n = 0; n < facet.valuesCount[k]; n++) vals.push(v);
+                }
+            });
+            vals.sort(function(a, b) { return a - b; });
+        } else {
+            return;
+        }
+
+        if (!vals.length) {
+            ["s-count","s-min","s-max","s-median","s-avg"].forEach(function(id) {
+                document.getElementById(id).textContent = "—";
+            });
+            document.getElementById("dist-min").textContent = "—";
+            document.getElementById("dist-max").textContent = "—";
+            return;
+        }
+
+        _sortedVals = vals;
+
+        var count = vals.length;
+        var minV  = vals[0];
+        var maxV  = vals[count - 1];
+        var sum   = vals.reduce(function(a, b) { return a + b; }, 0);
+        var avg   = sum / count;
+        var mid   = Math.floor(count / 2);
+        var med   = count % 2 ? vals[mid] : (vals[mid - 1] + vals[mid]) / 2;
+
+        document.getElementById("s-count").textContent  = count;
+        document.getElementById("s-min").textContent    = "$" + minV.toFixed(1) + "k";
+        document.getElementById("s-max").textContent    = "$" + maxV.toFixed(1) + "k";
+        document.getElementById("s-median").textContent = "$" + med.toFixed(1) + "k";
+        document.getElementById("s-avg").textContent    = "$" + avg.toFixed(1) + "k";
+        document.getElementById("dist-min").textContent = "$" + minV.toFixed(0) + "k";
+        document.getElementById("dist-max").textContent = "$" + maxV.toFixed(0) + "k";
+
+        updateLegend();
+    }
+
+    // ── LEGEND: BREAK COMPUTATION ──────────────────────────────────────────
+    function computeBreaks(method, n) {
+        var vals = _sortedVals;
+        if (!vals || !vals.length) return [0, 1];
+        var len = vals.length, min = vals[0], max = vals[len - 1];
+
+        if (method === "EQUIDISTANT") {
+            var step = (max - min) / n;
+            return Array.from({length: n + 1}, function(_, i) { return min + i * step; });
+        }
+        if (method === "QUANTILE") {
+            return Array.from({length: n + 1}, function(_, i) {
+                return vals[Math.round(i * (len - 1) / n)];
+            });
+        }
+        if (method === "LOG") {
+            var logMin = Math.log(Math.max(min, 0.01)), logMax = Math.log(max);
+            var logStep = (logMax - logMin) / n;
+            return Array.from({length: n + 1}, function(_, i) {
+                return Math.exp(logMin + i * logStep);
+            });
+        }
+        if (method === "HEADTAIL") {
+            var breaks = [min], rem = vals.slice();
+            for (var i = 0; i < n - 1 && rem.length > 1; i++) {
+                var mean = rem.reduce(function(a, b) { return a + b; }, 0) / rem.length;
+                breaks.push(mean);
+                rem = rem.filter(function(v) { return v > mean; });
+            }
+            breaks.push(max);
+            while (breaks.length < n + 1) {
+                breaks.splice(breaks.length - 1, 0, breaks[breaks.length - 2]);
+            }
+            return breaks;
+        }
+        if (method === "NATURAL") {
+            return jenksBreaks(vals, n);
+        }
+        return [min, max];
+    }
+
+    // Jenks natural breaks — classic DP implementation
+    function jenksBreaks(data, numClasses) {
+        var n = data.length;
+        if (n <= numClasses) {
+            var fb = [data[0]];
+            for (var fi = 0; fi < n; fi++) fb.push(data[fi]);
+            return fb;
+        }
+        var lcl = [], vc = [];
+        for (var i = 0; i <= n; i++) {
+            var lr = [], vr = [];
+            for (var j = 0; j <= numClasses; j++) { lr.push(0); vr.push(Infinity); }
+            lcl.push(lr); vc.push(vr);
+        }
+        for (var k = 1; k <= numClasses; k++) { lcl[1][k] = 1; vc[1][k] = 0; }
+
+        for (var l = 2; l <= n; l++) {
+            var sum = 0, ssq = 0, w = 0;
+            for (var m = 1; m <= l; m++) {
+                var idx = l - m + 1, val = data[idx - 1];
+                w++; sum += val; ssq += val * val;
+                var v = w > 1 ? ssq - (sum * sum) / w : 0;
+                if (idx > 1) {
+                    for (var j2 = 2; j2 <= numClasses; j2++) {
+                        if (vc[l][j2] >= v + vc[idx - 1][j2 - 1]) {
+                            lcl[l][j2] = idx;
+                            vc[l][j2] = v + vc[idx - 1][j2 - 1];
+                        }
+                    }
+                }
+            }
+            lcl[l][1] = 1;
+            vc[l][1] = ssq - (sum * sum) / w;
+        }
+
+        var kclass = new Array(numClasses + 1);
+        kclass[0] = data[0]; kclass[numClasses] = data[n - 1];
+        var kk = n, cnt = numClasses;
+        while (cnt >= 2) {
+            var bid = lcl[kk][cnt] - 2;
+            kclass[cnt - 1] = data[Math.max(bid, 0)];
+            kk = lcl[kk][cnt] - 1;
+            cnt--;
+        }
+        return kclass;
+    }
+
+    function classOf(v, breaks, n) {
+        for (var i = 0; i < n - 1; i++) {
+            if (v <= breaks[i + 1]) return i;
+        }
+        return n - 1;
+    }
+
+    function fmtK(v) {
+        return v >= 10 ? v.toFixed(0) : v.toFixed(1);
+    }
+
+    // ── LEGEND: RENDER ─────────────────────────────────────────────────────
+    function updateLegend() {
+        if (!_sortedVals) return;
+        var cols   = SCHEMES[currentScheme];
+        var n      = cols.length;
+        var breaks = computeBreaks(currentMethod, n);
+
+        var counts = new Array(n).fill(0);
+        _sortedVals.forEach(function(v) {
+            counts[classOf(v, breaks, n)]++;
+        });
+
+        var rows = "";
+        for (var i = 0; i < n; i++) {
+            var lo    = breaks[i], hi = breaks[i + 1];
+            var label = "$" + fmtK(lo) + " – $" + fmtK(hi) + "k";
+            rows +=
+                '<div class="legend-row">' +
+                    '<span class="legend-swatch" style="background:' + cols[i] + '"></span>' +
+                    '<span class="legend-range">' + label + '</span>' +
+                    '<span class="legend-count">' + counts[i] + '</span>' +
+                '</div>';
+        }
+        document.getElementById("legend-rows").innerHTML = rows;
+        document.getElementById("legend-n").textContent = "· " + n + " classes";
+
+        var mobRows = document.getElementById("mob-legend-rows");
+        if (mobRows) mobRows.innerHTML = rows;
+        var mobN = document.getElementById("mob-legend-n");
+        if (mobN) mobN.textContent = "· " + n + " classes";
+
+        if (window.innerWidth > 640) {
+            var statsEl  = document.getElementById("stats-panel");
+            var legendEl = document.getElementById("legend-panel");
+            legendEl.style.top = (statsEl.getBoundingClientRect().bottom + 10) + "px";
+        }
+    }
+
+    // ── MOBILE PANEL TOGGLE ────────────────────────────────────────────────
+    function toggleMobilePanel(which) {
+        var overlay = document.getElementById("mob-overlay");
+        var ctrl    = document.getElementById("ctrl-panel");
+        var stats   = document.getElementById("stats-panel");
+        var btnCtrl = document.getElementById("mob-ctrl-btn");
+        var btnInfo = document.getElementById("mob-info-btn");
+        var target  = which === "ctrl" ? ctrl : stats;
+        var wasOpen = target.classList.contains("mob-open");
+
+        ctrl.classList.remove("mob-open");
+        stats.classList.remove("mob-open");
+        btnCtrl.classList.remove("active");
+        btnInfo.classList.remove("active");
+        overlay.classList.remove("visible");
+
+        if (!wasOpen) {
+            target.classList.add("mob-open");
+            overlay.classList.add("visible");
+            (which === "ctrl" ? btnCtrl : btnInfo).classList.add("active");
+        }
+    }
+
+    document.getElementById("mob-overlay").addEventListener("click", function() {
+        document.getElementById("ctrl-panel").classList.remove("mob-open");
+        document.getElementById("stats-panel").classList.remove("mob-open");
+        document.getElementById("mob-ctrl-btn").classList.remove("active");
+        document.getElementById("mob-info-btn").classList.remove("active");
+        this.classList.remove("visible");
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ixmaps — layers load directly from URLs, no manual fetch
+    // ════════════════════════════════════════════════════════════════════════
+
+    function buildMap(view) {
+    choroplethDrawn = false;
+    myMap = ixmaps.Map("map", {
+        mapType: "white",
+        mapProjection: currentProjection,
+        mode: "pan",
+        legend: "closed",
+        tools: false
+    })
+    .view(view)
+    .options({
+        basemapopacity: 0,
+        flushChartDraw: 1000000,
+        themecopies: currentCopies
+    });
+
+    // Country borders (geometry only — choropleth binds data on top)
+    myMap.layer("countries")
+        .data({ url: GEO_URL, type: "topojson" })
+        .binding({ geo: "geometry", id: "CNTR_ID", title: "NAME_ENGL" })
+        .type("FEATURE")
+        .style({
+            colorscheme: ["#e8e8e8"],
+            fillopacity: 0.1,
+            linecolor: "#7a9ab0",
+            linewidth: 0.4,
+            showdata: "true"
+        })
+        .define();
+
+    // Choropleth — data loaded from CDN CSV
+    applyChoropleth();
+
+    myMap.then(function() {
+        document.getElementById("zoom-val").textContent = (ixmaps.getZoom() || 2).toFixed(1);
+    });
+    }
+    buildMap({ center: { lat: 25, lng: 10 }, zoom: 1.7 });
+
+    // ixmaps-gl fires the page hooks of the flat engine (map.on("viewchange"/"layerdraw") are not wired in a chain after creation)
+    ixmaps.htmlgui_onZoomAndPan = function() {
+        document.getElementById("zoom-val").textContent = ixmaps.getZoom().toFixed(1);
+    };
+
+    ixmaps.htmlgui_onDrawTheme = function(szId) {
+        var themeObj = ixmaps.getThemeObj(szId);
+        if (!themeObj || themeObj.szId !== "countries_gdp") return;
+        updateStats(szId);
+    };
+
+    // Seed the distribution bar gradient
+    document.getElementById("dist-bar").style.background =
+        "linear-gradient(to right, " + SCHEMES[currentScheme].join(", ") + ")";
+
+    </script>
+</body>
+</html>

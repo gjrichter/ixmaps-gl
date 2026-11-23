@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+index_only_map_embed.html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2017/06/22 $
+$Author: guenter richter $
+$Id:index_only_map_embed.html 1 2021-10-17 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps</title>
+
+</head>
+
+<body style="max-width: 1024px;margin:auto;font-family:open sans;font-size:22px">
+
+	<div id="map"></div>
+
+	<h1>di questa mappa</h1>
+
+	<!--========================================================================= -->
+
+	<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+		
+		ixmaps.htmlgui_onZoomAndPan = function(nZoom){
+			var nOpacity = (ixmaps.getZoom() - 6) / 3;
+			ixmaps.setBasemapOpacity(null, nOpacity, "absolute");
+		};
+		
+		query_data = function(theme, options) {
+			var broker = new Data.Broker()
+
+				.addSource("https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ISTAT/pendolari_2011_in_out_self_sum.csv.gz", "csv")
+				.addSource("https://raw.githubusercontent.com/ondata/liberiamoli-tutti/main/ries/data/comuni_dimensioni.csv", "csv")
+
+				.realize(function(dataA) {
+
+					var data = dataA[0];
+					dataA[1].column("PRO_COM_T").map(function(value){
+						return Number(value);
+					});
+					var nameLookupA = dataA[1].lookupArray({
+						key: "PRO_COM_T",
+						value: "istat_comune_nome"
+					});
+					data.addColumn({
+						source: "procom",
+						destination: "nome"
+					}, function(value) {
+						return (nameLookupA[value]);
+					});
+					options.type = "jsonDB", ixmaps.setExternalData(data, options);
+				});
+		};
+		
+		// ---------------------------------------------------
+		// t h e   m a p   l a y e r 
+		// ---------------------------------------------------
+
+		/**
+		 ** define static layer with reference shapes (comuni, province, regioni ) 
+		 **/
+
+		/* 1. centroids of 2011, by curtesy of Andrea Borruso */
+		var __georef_urban =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://raw.githubusercontent.com/aborruso/centroidiurbanfabric/master/output/ElencoUnitaAmministrative2011.geojson",
+					type: "geojson"
+				})
+				.binding({
+					id: "PRO_COM",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["none"],
+					linecolor: "none",
+					linewidth: "1",
+					scale: "0.0001"
+				})
+			);
+
+		/* 2. last istat data (2022), for changes since 2011 */
+		var __georef =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/comuni_2022/Com01012022_s_WGS84.topojson.gz",
+					type: "topojson"
+				})
+				.binding({
+					id: "PRO_COM",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["none"],
+					linecolor: "white",
+					linewidth: "0.3",
+					sizefield: "Shape_Area"
+				})
+			);
+
+
+		/* 3. last istat data (2022), province */
+		var __georef_prov =
+			ixmaps.layer("ITALIA_Province_2022", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/province_2022/Prov01012022_g_WGS84.topojson.gz",
+					type: "topojson"
+				})
+				.binding({
+					id: "COD_PROV",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["none"],
+					linecolor: "black",
+					linewidth: "0.1",
+					sizefield: "Shape_Area"
+				})
+			);
+
+		/* 4. last istat data (2022), regioni */
+		var __georef_reg =
+			ixmaps.layer("ITALIA_Regioni_2022", layer => layer
+				.data({
+					url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/Istat/regioni_2022/Reg01012022_s_WGS84.topojson.gz",
+					type: "topojson"
+				})
+				.binding({
+					id: "COD_REG",
+					position: "geometry"
+				})
+				.type("FEATURES|NOLEGEND")
+				.style({
+					colorscheme: ["rgba(255,255,255,0.5)"],
+					linecolor: "black",
+					linewidth: "0.3",
+					sizefield: "Shape_Area"
+				})
+			);
+
+		
+		// ---------------------------------------------------
+		// t h e   t h e m e s  
+		// ---------------------------------------------------
+		
+		/* arc theme */
+		var __arcs =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					name: "pendolari_matrix",
+					url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/ISTAT/pendo2011_S_aggregato.csv.gz",
+					type: "csv"
+				})
+				.binding({
+					lookupfield: "procom_residenza",
+					lookupfield2: "procom_lavoro",
+					value: "procom_lavoro"
+				})
+				.type("CHART|CATEGORICAL|VECTOR|BEZIER|GRADIENT||DASH|SIZE|AGGREGATE|FAST|SUM")
+				.style({
+					colorscheme: [
+						"#000000"],
+					fillopacity: 0.9,
+					units: "persone",
+					normalsizevalue: 8000,
+					scale: 1,
+					rangescale: 2,
+					sizepow: 1.5,
+					sizefield: "Numero_di_individui",
+					minvalue: 20,
+					linecolor: [
+						"#444444"],
+					valuescale: 1,
+					maxcharts: 1000,
+					name: "pendolari_flussi"
+				})
+				.meta({		 
+					"title": "Pendolari 2011",
+					"snippet": "<b>Flusso</b> degli spostamenti casa lavoro/studi per destinazione",
+					"splash":"... analizzando più di 500 000 righe ..."
+				})
+			);
+		
+		
+		/* bubble themes */
+		
+		var __self =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					name: "pendolari",
+					query: query_data.toString()
+				})
+				.binding({
+					lookupfield: "procom",
+					value: "self",
+					title: "nome"
+				})
+				.type("CHART|BUBBLE|SIZE|SUM|CIRCULARBOX|BOTTOMTITLE|NOLEGEND")
+				.style({
+					colorscheme: [
+						"rgba(255,255,255,0)"],
+					units: "persone",
+					normalsizevalue: 10000,
+					scale: 1,
+					linecolor: [
+						"#444444"],
+					linewidth: 2,
+					valuescale: 1,
+					textscale: 3,
+					boxopacity: 0.1,
+					boxupper: "1:500000",
+					name: "pendolari_self"
+				})
+				.meta({		 
+					title: "Pendolari <b>intra comunali</b> 2011",
+					snippet: "Movimenti complessivi sul territorio del comune",
+					splash: "... caricando la tabella con i spostamenti, ci sono più di 500000 righe. Datemi un po' di tempo ... ",
+					tooltip: "<div style='white-space:nowrap'>{{theme.title}}<hr><h3><big>{{nome}}<br><b>{{theme.item.value}}</b></big> persone</h3></div>"
+				})
+			);
+
+		var __saldo =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					name: "pendolari",
+					query: query_data.toString()
+				})
+				.binding({
+					lookupfield: "procom",
+					value: "saldo",
+					title: "nome"
+				})
+				.type("CHART|BUBBLE|SIZE|FAST|NEGATIVEISVALUE|NOLEGEND")
+				.style({
+					colorscheme: [
+						"red",
+						"#33aa00"],
+					rangecentervalue: 0,
+					fillopacity: 0.5,
+					units: "persone",
+					normalsizevalue: 10000,
+					scale: 1,
+					linewidth: 2,
+				})
+				.meta({		 
+					name: "pendolari_saldo",
+					title: "<b>Saldo</b> pendolari 2011",
+					snippet: "Saldo di entrate e uscite per motivi di lavoro o studio",
+					splash: "... caricando la tabella con i spostamenti, ci sono più di 500000 righe. Datemi un po' di tempo ... ",
+					tooltip: "<div style='white-space:nowrap'>{{theme.title}}<hr><h3>{{nome}}<br><big><b>{{theme.item.value}}</b></big> persone</h3></div>"
+				})
+			);
+
+		var __saldo_choro =
+			ixmaps.layer("ITALIA_Comuni_2022", layer => layer
+				.data({
+					name: "pendolari",
+					query: query_data.toString()
+				})
+				.binding({
+					lookupfield: "procom",
+					value: "saldo",
+					value100: "inout"
+				})
+				.type("CHOROPLETH|QUANTILE|DOPACITYMINMAX|NOLEGEND")
+				.style({
+					colorscheme: [
+						"7",
+						"red",
+						"#33aa00"],
+					dopacitypow: 3,
+					dopacityscale: 0.2,
+					units: "persone"
+				})
+				.meta({		 
+					name: "pendolari_saldo_choro",
+					title: "Pendolari 2011",
+					snippet: "Saldo di entrate e uscite per motivi di lavoro o studio",
+					splash: "... caricando la tabella con i spostamenti, ci sono più di 500000 righe. Datemi un po' di tempo ... "
+				})
+			);
+
+		
+		var attribution = '<div style="padding:0.5em;background:rgba(255,255,255,0.2);width:70%">dati: <a class="ref" href="https://www.istat.it/it/archivio/139381" target="_blank">ISTAT</a></b> rilevati al 15° Censimento generale della popolazione (9 ottobre 2011)</div>&nbsp;&nbsp;powered by <a href="http://ixmaps.com" target="_blank">iXMaps</a></div>';
+
+		// ----------------------------------------
+		// create the map
+		// ----------------------------------------
+
+		var map = ixmaps.Map(
+			"map", {
+				mapCdn: "https://gjrichter.github.io/ixmaps",
+				//map: "../../maps/svg/maps/generic/winkel.svg",
+				mapService: "leaflet_vt",
+				mapType: "VT_DATAVIZ",
+				mode: "pan",
+				tools: true,
+				width: "100%",
+				height: "800px",
+				legend: true
+			},
+			(map) =>
+			map
+			.view([40.1172827592777, 18.225505976759827], 9)
+			.require("../../ui/js/tools/tooltip_mustache.js")
+			.options({
+				objectscaling: "dynamic", // grafici crescono leggermente con lo zoom
+				seaturescaling: "true", // grafici crescono leggermente con lo zoom
+				normalSizeScale: "200000", // grandezza 'normale' al livello 1:5.000.000
+				dynamicScalePow: "1.8", // dynamica, 1 crescita lineare, valori > 1 meno crescita
+				panhidden: "false", // grafici visibile durante lo spostamento della mappa
+				basemapopacity: 0.4 // opacity of the 'leaflet' basemap
+			})
+			.attribution(attribution)
+			.legend("../../pages/ISTAT_pendolari_2011/legend_inoutselfsum.html")
+			
+			// -----------------------------		 
+			// the geo reference layer 
+			// -----------------------------
+
+			.layer(__georef_reg)
+			.layer(__georef_urban)
+			.layer(__georef)
+			.layer(__georef_prov)
+			
+			// -----------------------------		 
+			// the theme layer 
+			// -----------------------------
+			
+			.layer(__saldo_choro)
+			.layer(__self)
+			.layer(__saldo)
+			.layer(__arcs)
+		);
+
+	</script>
+</body>
+
+</html>

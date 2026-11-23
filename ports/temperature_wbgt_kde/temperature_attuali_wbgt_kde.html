@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mappa interattiva dello stress termico WBGT in tempo reale in Italia con interpolazione KDE e fasce di rischio ISO 7243">
+    <meta name="author" content="Data Viz Italia">
+    <meta name="keywords" content="WBGT, stress termico, calore, KDE, interpolazione, Italia, meteo, mappa interattiva, ISO 7243">
+
+    <title>Data Viz Italia - WBGT Stress Termico + KDE</title>
+
+    <!-- Preconnect per performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://gjrichter.github.io">
+    <link rel="preconnect" href="https://meteohub.mistralportal.it">
+
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+
+    <!-- Turf.js per KDE -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+    <!-- CSS Site -->
+    <link rel="stylesheet" href="./css/site_wbgt.css">
+
+    <style>
+        /* Info Button — inline next to sidebar title */
+        .info-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            color: #666;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid #bbb;
+            font-family: Georgia, serif;
+            transition: color 0.15s, border-color 0.15s;
+            user-select: none;
+            vertical-align: middle;
+            margin-left: 7px;
+            position: relative;
+            top: -2px;
+            flex-shrink: 0;
+        }
+
+        .info-button:hover {
+            color: #111;
+            border-color: #888;
+        }
+
+        /* Overlay backdrop */
+        .info-popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 10000;
+        }
+
+        .info-popup-overlay.active {
+            display: block;
+        }
+
+        /* Panel */
+        .info-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 34px rgba(0, 0, 0, 0.12);
+            z-index: 100001;
+            width: min(620px, 94vw);
+            max-height: 88vh;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .info-popup.active {
+            display: flex;
+        }
+
+        /* Header */
+        .info-popup-header {
+            padding: 16px 20px 14px;
+            border-bottom: 1px solid #eef0f2;
+            position: sticky;
+            top: 0;
+            background: #f7f8f9;
+            z-index: 10;
+        }
+
+        .info-popup-header h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #222;
+            letter-spacing: 0.01em;
+        }
+
+        .info-popup-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: color 0.15s;
+        }
+
+        .info-popup-close:hover {
+            color: #222;
+        }
+
+        /* Scrollable body */
+        .info-popup-content {
+            padding: 18px 20px;
+            color: #333;
+            font-size: 13.5px;
+            line-height: 1.65;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .info-popup-content h3 {
+            color: #0b0d0f;
+            margin: 22px 0 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            border-bottom: 1px solid #e9ebef;
+            padding-bottom: 5px;
+        }
+
+        .info-popup-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .info-popup-content p {
+            margin: 6px 0;
+        }
+
+        .info-popup-content ul,
+        .info-popup-content ol {
+            margin: 6px 0;
+            padding-left: 22px;
+        }
+
+        .info-popup-content li {
+            margin: 5px 0;
+        }
+
+        .info-popup-content strong {
+            color: #0b0d0f;
+            font-weight: 600;
+        }
+
+        .info-popup-content code {
+            background: #e8f1fb;
+            padding: 1px 6px;
+            border-radius: 5px;
+            font-family: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.86em;
+            color: #0f4c81;
+        }
+
+        .info-section {
+            background: #f4f8fd;
+            padding: 11px 14px;
+            border-radius: 9px;
+            margin: 10px 0;
+            border-left: 3px solid #3182bd;
+        }
+
+        /* Colour scale */
+        .temp-scale {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+
+        .temp-scale-item {
+            display: inline-block;
+            width: 26px;
+            height: 14px;
+            border: 1px solid #ddd;
+        }
+
+        .temp-scale span {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Footer */
+        .info-popup-footer {
+            padding: 11px 20px;
+            background: #f6f7f9;
+            border-top: 1px solid #e9ebef;
+            font-size: 12px;
+            color: #5b6470;
+        }
+
+        .info-popup-footer a {
+            color: #08519c;
+            text-decoration: none;
+        }
+
+        .info-popup-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Mode tag */
+        .mode-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            background: #efefef;
+            border-radius: 3px;
+            padding: 1px 6px;
+            margin-right: 3px;
+        }
+
+        /* Mobile bars */
+        .mobile-top-bar,
+        .mobile-bottom-bar {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+
+            /* Shrink map to fit between top (36px) and bottom (46px) bars */
+            #map_div {
+                margin-top: 36px;
+                height: calc(100vh - 36px - 46px) !important;
+            }
+
+            /* Top bar — title + observation time */
+            .mobile-top-bar {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 36px;
+                background: rgba(255, 255, 255, 0.97);
+                border-bottom: 1px solid #d4d4d4;
+                z-index: 99999;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 0 12px;
+                font-size: 12.5px;
+            }
+
+            .mtb-title {
+                font-weight: 600;
+                color: #222;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mtb-sep {
+                color: #ccc;
+            }
+
+            .mtb-period {
+                color: #777;
+                white-space: nowrap;
+                font-variant-numeric: tabular-nums;
+            }
+
+            /* Keep logo above the mobile bottom bar */
+            .logo {
+                bottom: 56px;
+            }
+
+            .mobile-bottom-bar {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 46px;
+                background: rgba(255, 255, 255, 0.97);
+                border-top: 1px solid #d4d4d4;
+                z-index: 99999;
+                align-items: stretch;
+            }
+
+            .mbb-btn {
+                flex: 1;
+                background: none;
+                border: none;
+                border-right: 1px solid #e2e2e2;
+                font-size: 12.5px;
+                color: #555;
+                cursor: pointer;
+                font-family: inherit;
+                padding: 0 6px;
+                transition: background 0.12s, color 0.12s;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .mbb-btn:last-child {
+                border-right: none;
+            }
+
+            .mbb-btn.active {
+                background: #e4f1fb;
+                color: #15598a;
+                font-weight: 600;
+            }
+
+            .mbb-btn:active {
+                background: #e6e6e6;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Info Popup Overlay -->
+    <div class="info-popup-overlay" id="infoOverlay" onclick="toggleInfoPopup()"></div>
+
+    <!-- Info Popup -->
+    <div class="info-popup" id="infoPopup">
+        <div class="info-popup-header">
+            <h2>WBGT — Stress Termico Italia</h2>
+            <button class="info-popup-close" onclick="toggleInfoPopup()" aria-label="Chiudi">&times;</button>
+        </div>
+        <div class="info-popup-content">
+
+            <h3>Descrizione</h3>
+            <p>
+                Mappa delle <strong>temperature rilevate in tempo reale</strong> dalle stazioni meteorologiche
+                distribuite sul territorio italiano. I dati provengono da <strong>MeteoHub</strong> (ItaliaMeteo)
+                e coprono le 3 ore precedenti all'orario corrente.
+                La modalità <em>temperatura percepita</em> combina temperatura, umidità relativa e velocità
+                del vento per restituire la sensazione termica effettiva.
+            </p>
+
+            <h3>Modalità di visualizzazione</h3>
+            <ul>
+                <li><span class="mode-tag">Misurate</span> Grafici a colonna con la temperatura dell'aria</li>
+                <li><span class="mode-tag">Percepite</span> Temperatura apparente (vento + umidità)</li>
+                <li><span class="mode-tag">Umidità</span> Umidità relativa per cella aggregata</li>
+                <li><span class="mode-tag">WBGT</span> Stress termico outdoor — combina bulbo umido, globo e aria</li>
+            </ul>
+
+            <h3>Scala cromatica</h3>
+            <div class="temp-scale">
+                <span>−28°C</span>
+                <div class="temp-scale-item" style="background:#88229A"></div>
+                <div class="temp-scale-item" style="background:#1E418E"></div>
+                <div class="temp-scale-item" style="background:#1E90F0"></div>
+                <div class="temp-scale-item" style="background:#C3FEE5"></div>
+                <div class="temp-scale-item" style="background:#1DA63B"></div>
+                <div class="temp-scale-item" style="background:#F4FB1F"></div>
+                <div class="temp-scale-item" style="background:#F59628"></div>
+                <div class="temp-scale-item" style="background:#E64B23"></div>
+                <div class="temp-scale-item" style="background:#871B1B"></div>
+                <div class="temp-scale-item" style="background:#721B1B"></div>
+                <span>+44°C</span>
+            </div>
+
+            <h3>Temperatura percepita — formula</h3>
+            <div class="info-section">
+                <code>AT = T + 0.33·e − 0.70·v − 4</code>
+                <p style="margin-top:8px">
+                    <strong>T</strong> temperatura aria (°C) &nbsp;·&nbsp;
+                    <strong>e</strong> pressione di vapore (hPa) &nbsp;·&nbsp;
+                    <strong>v</strong> velocità vento (m/s)
+                </p>
+                <p>Formula BOM/Steadman (versione semplificata), valida sia per caldo che per freddo.</p>
+            </div>
+
+            <h3>Variabili usate</h3>
+            <ul>
+                <li><strong>B12101</strong> — Temperatura aria a 2 m (°C)</li>
+                <li><strong>B13003</strong> — Umidità relativa a 2 m (%)</li>
+                <li><strong>B11002</strong> — Velocità vento a 10 m (m/s)</li>
+                <li><strong>B14198</strong> — Irradiazione solare (W/m²) — usata per il calcolo WBGT</li>
+            </ul>
+
+            <h3>Filtro valori non plausibili (outlier)</h3>
+            <p>
+                I dati grezzi delle stazioni possono contenere <strong>valori non plausibili</strong>
+                per malfunzionamenti del sensore o errori di trasmissione.
+                Prima della visualizzazione viene applicato un algoritmo a due fasi:
+            </p>
+            <div class="info-section">
+                <strong>Fase 1 — Filtro statistico globale (IQR)</strong>
+                <p style="margin-top:6px">
+                    Calcola i quartili Q1 e Q3 di tutte le temperature e definisce la fascia di accettabilità:<br>
+                    <code>min = Q1 − 3 × IQR</code> &nbsp;·&nbsp; <code>max = Q3 + 3 × IQR</code><br>
+                    dove <strong>IQR = Q3 − Q1</strong>. Valori fuori fascia vengono esclusi.
+                </p>
+            </div>
+            <div class="info-section">
+                <strong>Fase 2 — Filtro spaziale (confronto con le stazioni vicine)</strong>
+                <p style="margin-top:6px">
+                    Per ogni stazione vengono cercate le stazioni entro <strong>80 km</strong>;
+                    se la sua temperatura si discosta di più di <strong>8°C</strong> dalla mediana
+                    locale, la stazione è esclusa come outlier spaziale.
+                </p>
+                <p style="margin-top:4px;font-size:0.92em;color:#555">
+                    Esempio: una stazione a +33°C circondata da stazioni a ~20°C
+                    viene automaticamente esclusa, anche se 33°C sarebbe plausibile altrove in Italia.
+                </p>
+            </div>
+            <p>Il numero di stazioni escluse è indicato nel pannello laterale accanto a <strong>Stazioni
+                    attive</strong>.</p>
+
+            <h3>WBGT (Wet Bulb Globe Temperature) — stress termico</h3>
+            <div class="info-section">
+                <code>WBGT = 0.7·Tnw + 0.2·Tg + 0.1·Ta</code>
+                <p style="margin-top:8px">
+                    <strong>Tnw</strong> bulbo umido naturale (formula Stull 2011) &nbsp;·&nbsp;
+                    <strong>Tg</strong> temperatura globo (stimata da irradiazione solare B14198) &nbsp;·&nbsp;
+                    <strong>Ta</strong> temperatura aria secca
+                </p>
+                <p>Standard UNI EN ISO 7243:2017 per la valutazione dello stress da calore in ambienti di lavoro e sport outdoor.</p>
+            </div>
+            <p><strong>Fasce di rischio ISO 7243:</strong></p>
+            <ul>
+                <li style="color:#4575b4"><strong>&lt; 18°C</strong> — nessun rischio termico</li>
+                <li style="color:#66bd63"><strong>18–25°C</strong> — rischio basso</li>
+                <li style="color:#fdae61"><strong>25–28°C</strong> — rischio moderato</li>
+                <li style="color:#a50026"><strong>28–30°C</strong> — rischio alto</li>
+                <li style="color:#2d0026"><strong>&gt; 30°C</strong> — rischio molto alto / pericoloso</li>
+            </ul>
+            <p style="font-size:0.9em;color:#666;margin-top:8px">
+                <strong>Nota:</strong> questa è una stima calcolata da dati di stazioni meteo (temperatura,
+                umidità, vento, irradiazione solare B14198 in W/m²). Non sostituisce la misura con
+                strumenti fisici certificati (globo nero, psicrometro ventilato) prevista dalla norma.
+                ~350 stazioni dispongono di dati di irradiazione solare; di notte S≈0 e il risultato
+                rappresenta automaticamente il WBGT in condizioni di ombra.
+            </p>
+
+            <h3>Note sull'interazione</h3>
+            <ul>
+                <li>Rotellina o pinch per lo zoom · trascina per spostarti</li>
+                <li>Hover sulle stazioni per il tooltip con i valori esatti</li>
+                <li>Lo slider nel menu laterale non scala direttamente l'altezza dei grafici,
+                    ma riduce l'amplificazione dei valori alti, rendendo più leggibili
+                    le stazioni con valori bassi</li>
+            </ul>
+
+        </div>
+        <div class="info-popup-footer">
+            Dati: <a href="https://meteohub.mistralportal.it/app/maps/observations" target="_blank"
+                rel="noopener">MeteoHub — ItaliaMeteo</a>
+            &nbsp;·&nbsp; Licenza CC-BY &nbsp;·&nbsp;
+            Visualizzazione: <a href="https://ixmaps.com" target="_blank" rel="noopener">iXMaps</a> / Data Viz Italia
+            &nbsp;·&nbsp; Sviluppato con <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a>
+        </div>
+    </div>
+
+    <!-- Logo -->
+    <div class="logo" onclick="toggleCodeView()" role="button" tabindex="0" aria-label="Mostra codice HTML">
+        <div class="logo-text">
+            Data<br>
+            <span style="padding-left: 2px;">Viz</span>
+            <em style="font-style: italic;"> i</em>
+        </div>
+    </div>
+
+    <!-- Contenitore principale -->
+    <main>
+        <!-- Mappa -->
+        <div id="map_div" role="application" aria-label="Mappa interattiva delle temperature in Italia">
+            <div style="position:absolute;top:45%;left:35%">connecting to Internet ...</div>
+        </div>
+
+        <!-- Sidebar toggle (mobile) -->
+        <div class="sidebar" id="sidebar_toggle" style="background: none; box-shadow: none;">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Apri menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Sidebar principale -->
+        <aside class="sidebar" id="main_sidebar">
+            <div class="sidebar-content" style="width:100%;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;z-index:99999">
+                <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Chiudi menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm8.5 9.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z" />
+                    </svg>
+                </button>
+
+                <header>
+                    <h1>Temperature e Stress Termico<span class="info-button" onclick="toggleInfoPopup()"
+                            title="Informazioni sulla mappa" aria-label="Informazioni" role="button"
+                            tabindex="0">i</span></h1>
+                    <p style="margin: 0; font-size: 0.9em; color: var(--secondary-color);">
+                        Fonte dati: <a href="https://meteohub.mistralportal.it/app/maps/observations" target="_blank"
+                            rel="noopener" class="source-link">Meteohub</a> di ItaliaMeteo
+                    </p>
+                </header>
+
+                <nav class="seg" role="tablist" aria-label="Menu visualizzazione">
+                    <button class="seg-btn" role="tab" data-mode="peaks"
+                        onclick="setVisualizationMode('peaks')">Misurate</button>
+                    <button class="seg-btn" role="tab" data-mode="peaks_apparent"
+                        onclick="setVisualizationMode('peaks_apparent')">Percepite</button>
+                    <button class="seg-btn" role="tab" data-mode="humidity"
+                        onclick="setVisualizationMode('humidity')">Umidità</button>
+                    <button class="seg-btn active" role="tab" data-mode="wbgt"
+                        onclick="setVisualizationMode('wbgt')">WBGT</button>
+                </nav>
+
+                <div class="controls">
+                    <label for="chart_size_slider" class="control-label">evidenzia valori alti</label>
+                    <input type="range" id="chart_size_slider" class="slider" min="0.1" max="5" step="0.01" value="1"
+                        aria-label="Regola grandezza grafici">
+                </div>
+
+                <!-- KDE controls -->
+                <div class="controls" id="kde_group">
+                    <label class="control-label">
+                        <span id="kde_label_text">zone rischio WBGT (KDE)</span>
+                        <span id="kde_swatch" style="display:inline-block;width:36px;height:10px;border-radius:3px;vertical-align:middle;margin-left:6px;background:linear-gradient(to right,#4575b4,#66bd63,#d9ef8b,#fee08b,#fdae61,#f46d43,#d73027,#a50026,#4d0026);"></span>
+                        <span id="kde_busy" style="display:none;font-weight:normal;font-size:11px;color:#888;margin-left:6px" title="calcolo KDE in corso…">⏳</span>
+                    </label>
+                    <p id="kde_desc" style="font-size:11px;color:#666;margin:0 0 10px 0;line-height:1.4">
+                        Interpolazione spaziale del WBGT — le fasce di colore corrispondono alle zone di rischio ISO 7243
+                    </p>
+                    <label class="control-label">
+                        opacità <span id="kde_opacity_val">0.10</span>
+                    </label>
+                    <input type="range" id="kde_opacity_slider" class="slider" min="0" max="1" step="0.05" value="0.1"
+                        oninput="document.getElementById('kde_opacity_val').textContent=parseFloat(this.value).toFixed(2);
+                                 try{ixmaps.map().changeThemeStyle('kde_wbgt','fillopacity:'+this.value,'set');}catch(e){}
+                                 try{ixmaps.map().changeThemeStyle('kde_temp','fillopacity:'+this.value,'set');}catch(e){}
+                                 persistSliders();"
+                        aria-label="Opacità KDE">
+                    <label class="control-label" style="margin-top:14px">
+                        smoothing ×<span id="kde_bw_val">0.5</span>
+                    </label>
+                    <input type="range" id="kde_bw_slider" class="slider" min="0.3" max="3.0" step="0.1" value="0.5"
+                        oninput="document.getElementById('kde_bw_val').textContent=parseFloat(this.value).toFixed(1);
+                                 clearTimeout(__kdeTimer);__kdeTimer=setTimeout(__updateKDE,300);
+                                 persistSliders();"
+                        aria-label="Bandwidth KDE">
+                </div>
+
+                <div class="statistics" id="statistics" aria-live="polite">
+                    <div class="loading"></div>
+                    <span class="sr-only">Caricamento statistiche...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Overlay codice -->
+        <div class="code-overlay" id="code_overlay" style="display:none">
+            <div class="code-container">
+                <div class="code-header">
+                    <h2 style="margin: 0;">Codice HTML della Mappa</h2>
+                    <div class="code-actions">
+                        <a href="#" onclick="copyToClipboard()" title="Copia negli appunti">
+                            <i class="bi bi-clipboard"></i> Copia
+                        </a>
+                        <a href="#" onclick="saveAsFile()" title="Salva come file">
+                            <i class="bi bi-download"></i> Salva
+                        </a>
+                        <a href="#" onclick="closeCodeView()" title="Chiudi">
+                            <i class="bi bi-x-circle"></i> Chiudi
+                        </a>
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre id="code_display" class="hljs"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile top bar -->
+        <div class="mobile-top-bar" id="mobile_top_bar">
+            <span class="mtb-title" id="mtb_title">WBGT (stress termico)</span>
+            <span class="mtb-sep">·</span>
+            <span class="mtb-period" id="mtb_period">—</span>
+        </div>
+
+        <!-- Mobile bottom bar -->
+        <nav class="mobile-bottom-bar" aria-label="Selezione visualizzazione">
+            <button class="mbb-btn" data-mode="peaks" onclick="setVisualizationMode('peaks')">Misurate</button>
+            <button class="mbb-btn" data-mode="peaks_apparent"
+                onclick="setVisualizationMode('peaks_apparent')">Percepite</button>
+            <button class="mbb-btn" data-mode="humidity" onclick="setVisualizationMode('humidity')">Umidità</button>
+            <button class="mbb-btn active" data-mode="wbgt" onclick="setVisualizationMode('wbgt')">WBGT</button>
+        </nav>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+    <!-- gl engine port: the flat engine script is swapped for ixmaps-gl.js;
+         everything else (facet.js, data.js, usercharts, page code) is unchanged -->
+    <script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/facet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/json_config.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/json_config_html.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+
+    <script>
+
+        // Variabili globali
+        let currentVisualizationMode = 'wbgt';
+        let sidebarOpen = window.innerWidth > 768;
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function () {
+            initializePage();
+            loadTemperatureData();
+            loadDataMetadata();
+            setupEventListeners();
+        });
+
+        // Ora dell'ultimo aggiornamento dati (GitHub Action), da metadata.json
+        window.__dataLastUpdate = null;
+        function loadDataMetadata() {
+            fetch("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/metadata.json", { cache: "no-store" })
+                .then(function (r) { return r.json(); })
+                .then(function (meta) {
+                    window.__dataLastUpdate = meta.lastUpdate || null;
+                    try {
+                        if (ixmaps.getThemeObj("chart")) ixmaps.statistics("chart");
+                    } catch (e) {}
+                })
+                .catch(function (e) { console.warn("[meta] metadata.json non disponibile:", e); });
+        }
+
+        function initializePage() {
+            if (window.innerWidth <= 768) {
+                document.getElementById('main_sidebar').style.display = 'none';
+                setTimeout(() => {
+                    if (typeof ixmaps !== 'undefined') {
+                        ixmaps.map().resize();
+                    }
+                }, 300);
+            }
+            window.addEventListener('resize', debounce(handleResize, 250));
+        }
+
+        function setupEventListeners() {
+            const slider = document.getElementById('chart_size_slider');
+            slider.addEventListener('input', debounce((event) => {
+                updateChartSize(event.target.value);
+            }, 100));
+        }
+
+        function handleResize() {
+            const sidebar = document.getElementById('main_sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.style.display = 'none';
+                sidebarOpen = false;
+            } else {
+                sidebar.style.display = 'block';
+                sidebarOpen = true;
+            }
+            if (typeof ixmaps !== 'undefined') {
+                ixmaps.map().resize();
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('main_sidebar');
+            sidebarOpen = !sidebarOpen;
+            sidebar.style.display = sidebarOpen ? 'block' : 'none';
+            setTimeout(() => {
+                if (typeof ixmaps !== 'undefined') {
+                    ixmaps.map().resize();
+                }
+            }, 300);
+        }
+
+        const _modeLabels = {
+            peaks: 'Temperatura misurata',
+            peaks_apparent: 'Temperatura percepita',
+            humidity: 'Umidità',
+            wbgt: 'WBGT (stress termico)'
+        };
+
+        // Aggiorna la legenda KDE del sidebar in base al tema attivo
+        function updateKdeLegend(mode) {
+            var grp = document.getElementById('kde_group');
+            var lbl = document.getElementById('kde_label_text');
+            var sw  = document.getElementById('kde_swatch');
+            var dsc = document.getElementById('kde_desc');
+            if (mode === 'humidity') {
+                if (grp) grp.style.display = 'none';
+                return;
+            }
+            if (grp) grp.style.display = '';
+            if (mode === 'wbgt') {
+                if (lbl) lbl.textContent = 'zone rischio WBGT (KDE)';
+                if (sw)  sw.style.background = 'linear-gradient(to right,#4575b4,#66bd63,#d9ef8b,#fee08b,#fdae61,#f46d43,#d73027,#a50026,#4d0026)';
+                if (dsc) dsc.textContent = 'Interpolazione spaziale del WBGT — le fasce di colore corrispondono alle zone di rischio ISO 7243';
+            } else {
+                if (lbl) lbl.textContent = 'campo temperatura (KDE)';
+                if (sw)  sw.style.background = 'linear-gradient(to right,rgba(204,0,0,0.05),#cc0000)';
+                if (dsc) dsc.textContent = 'Stima delle zone con temperature sopra la media — interpolazione kernel delle anomalie termiche';
+            }
+        }
+
+        function setVisualizationMode(mode) {
+            currentVisualizationMode = mode;
+            document.querySelectorAll('[data-mode]').forEach(el => {
+                el.classList.toggle('active', el.dataset.mode === mode);
+            });
+            const mtbTitle = document.getElementById('mtb_title');
+            if (mtbTitle) mtbTitle.textContent = _modeLabels[mode] || 'Temperature in Italia';
+            updateKdeLegend(mode);
+            switch (mode) {
+                case 'peaks':
+                    loadPeaksVisualization();
+                    break;
+                case 'peaks_apparent':
+                    loadPeaksVisualization_apparent();
+                    break;
+                case 'humidity':
+                    loadHumidityVisualization();
+                    break;
+                case 'wbgt':
+                    loadWBGTVisualization();
+                    break;
+            }
+        }
+
+        function updateChartSize(value) {
+            var v = 5.1 - parseFloat(value);
+            if (typeof ixmaps !== 'undefined') {
+                ixmaps.map().changeThemeStyle('chart', 'minvaluesize:' + (20 - v * 10), 'set');
+                ixmaps.map().changeThemeStyle('chart', 'sizepow:' + (v / 10), 'set');
+            }
+            persistSliders();
+        }
+
+        function loadTemperatureData() {
+            const statsDiv = document.getElementById('statistics');
+            statsDiv.innerHTML = '<div class="loading"></div><span>Caricamento dati temperatura...</span>';
+        }
+
+        function _applySlider() {
+            updateChartSize(document.getElementById('chart_size_slider').value);
+        }
+
+        // ===================================
+        // KDE — WBGT stress termico
+        // Nadaraya-Watson kernel smoother su valori WBGT assoluti.
+        // Isobande colorate con le fasce di rischio ISO 7243.
+        // ===================================
+
+        var __kdeTimer = null;
+        var __kdeRunTimer = null;
+
+        var __showKdeBusy = function(on) {
+            var el = document.getElementById("kde_busy");
+            if (el) el.style.display = on ? "inline" : "none";
+        };
+
+        var __updateKDE = function() {
+            if (typeof turf === "undefined") { console.warn("[KDE] turf not loaded"); return; }
+            __showKdeBusy(true);
+            clearTimeout(__kdeRunTimer);
+            __kdeRunTimer = setTimeout(function() {
+                try {
+                    if (currentVisualizationMode === 'wbgt') { __computeWBGTKDE(); }
+                    else { __computeTemperatureKDE(); }
+                }
+                catch(e) { console.warn("[KDE] compute error:", e); }
+                finally { __showKdeBusy(false); }
+            }, 30);
+        };
+
+        // Colori ISO 7243 per le fasce KDE — una voce per intervallo
+        var __kdeWbgtColors = [
+            "#4575b4", // < 18  nessun rischio
+            "#66bd63", // 18-25 rischio basso
+            "#d9ef8b", // 25-26
+            "#fee08b", // 26-27 rischio moderato
+            "#fdae61", // 27-28
+            "#f46d43", // 28-29 rischio alto
+            "#d73027", // 29-30
+            "#a50026", // 30-32 rischio molto alto
+            "#4d0026"  // 32-34 pericoloso
+        ];
+        var __kdeWbgtRanges = "18,25,26,27,28,29,30,32,34";
+
+        var __computeWBGTKDE = function() {
+            var objTheme = ixmaps.getThemeObj("chart");
+            if (!objTheme || !objTheme.objTheme || !objTheme.indexA) { return; }
+
+            var dbRecords = objTheme.objTheme.dbRecords;
+            var dbFields  = objTheme.objTheme.dbFields;
+            if (!dbRecords || !dbFields || !dbRecords.length) { return; }
+
+            var iLat  = dbFields.findIndex(function(f) { return f.id === "stat.lat"; });
+            var iLng  = dbFields.findIndex(function(f) { return f.id === "stat.lon"; });
+            var iVal  = dbFields.findIndex(function(f) { return f.id === "wbgt"; });
+
+            if (iLat < 0 || iLng < 0 || iVal < 0) {
+                console.warn("[KDE-WBGT] fields not found:", dbFields.map(function(f){ return f.id; }));
+                return;
+            }
+
+            var zoom = ixmaps.getZoom() || 6;
+
+            var pts = [];
+            for (var ii = 0; ii < objTheme.indexA.length; ii++) {
+                var item = objTheme.itemA[objTheme.indexA[ii]];
+                if (!item) continue;
+                // gl engine port: flat's items are aggregate grid cells (one
+                // record each); the gl engine's item carries every record of
+                // the view in dbIndexA — collect them all
+                var recIdxA = [];
+                if (item.dbIndex != null) recIdxA.push(item.dbIndex);
+                if (Array.isArray(item.dbIndexA)) {
+                    for (var jj = 0; jj < item.dbIndexA.length; jj++) recIdxA.push(item.dbIndexA[jj]);
+                }
+                for (var jj = 0; jj < recIdxA.length; jj++) {
+                    var rec = dbRecords[recIdxA[jj]];
+                    if (!rec) continue;
+                    var la = parseFloat(rec[iLat]);
+                    var ln = parseFloat(rec[iLng]);
+                    var wv = parseFloat(rec[iVal]);
+                    if (isNaN(la) || isNaN(ln) || isNaN(wv)) continue;
+                    pts.push([la, ln, wv]);
+                }
+            }
+
+            console.log("[KDE-WBGT] zoom:", zoom, " stazioni visibili:", pts.length);
+            if (pts.length < 5) { console.log("[KDE-WBGT] troppo pochi punti — saltato"); return; }
+
+            // Zoom-adaptive bandwidth
+            var bwKm;
+            if      (zoom >= 11) { bwKm =  3; }
+            else if (zoom >=  9) { bwKm =  8; }
+            else if (zoom >=  7) { bwKm = 14; }
+            else                 { bwKm = 25; }
+
+            var bwMult = parseFloat(document.getElementById("kde_bw_slider").value) || 1.0;
+            bwKm *= bwMult;
+
+            var pS = Infinity, pW = Infinity, pN = -Infinity, pE = -Infinity;
+            pts.forEach(function(p) {
+                if (p[0] < pS) pS = p[0]; if (p[0] > pN) pN = p[0];
+                if (p[1] < pW) pW = p[1]; if (p[1] > pE) pE = p[1];
+            });
+            var midLat  = (pS + pN) / 2;
+            var kmLat   = 111.3;
+            var kmLng   = 111.3 * Math.cos(midLat * Math.PI / 180);
+            var padLat  = bwKm / kmLat * 1.5;
+            var padLng  = bwKm / kmLng * 1.5;
+            var bS = pS - padLat, bN = pN + padLat;
+            var bW = pW - padLng, bE = pE + padLng;
+            var BW2 = 2 * bwKm * bwKm;
+
+            var maxCells = zoom >= 9 ? 30000 : 18000;
+            var aspect   = (bE - bW) / Math.max(bN - bS, 0.001);
+            var nLng     = Math.round(Math.sqrt(maxCells * aspect));
+            var nLat     = Math.round(maxCells / Math.max(nLng, 1));
+            nLat = Math.max(nLat, 10); nLng = Math.max(nLng, 10);
+            var stepLat  = (bN - bS) / nLat;
+            var stepLng  = (bE - bW) / nLng;
+
+            // Nadaraya-Watson su valori WBGT assoluti (nessuna normalizzazione)
+            var minWeight = 0.05;
+            var gridPts = [];
+            for (var ilat = 0; ilat <= nLat; ilat++) {
+                for (var ilng = 0; ilng <= nLng; ilng++) {
+                    var glat = bS + ilat * stepLat;
+                    var glng = bW + ilng * stepLng;
+                    var sumWT = 0, sumW = 0;
+                    for (var k = 0; k < pts.length; k++) {
+                        var dy = (pts[k][0] - glat) * kmLat;
+                        var dx = (pts[k][1] - glng) * kmLng;
+                        var w  = Math.exp(-(dx*dx + dy*dy) / BW2);
+                        sumWT += w * pts[k][2];
+                        sumW  += w;
+                    }
+                    // Celle sparse → sentinella fuori dai breaks → nessuna isobanda
+                    var _v = sumW >= minWeight ? sumWT / sumW : -999;
+                    gridPts.push(turf.point([glng, glat], { v: _v }));
+                }
+            }
+
+            if (gridPts.length < 10) { return; }
+
+            var breaks = __kdeWbgtRanges.split(",").map(Number);
+            // Aggiungi sentinella iniziale per catturare anche le zone < 18°C
+            var allBreaks = [-999].concat(breaks);
+
+            var iso;
+            try {
+                iso = turf.isobands(turf.featureCollection(gridPts), allBreaks, { zProperty: "v" });
+            } catch(err) {
+                console.warn("[KDE-WBGT] isobands error:", err); return;
+            }
+
+            // Aggiungi wbgtLower per il binding colore; filtra la banda sentinella
+            iso.features = iso.features.filter(function(feat) {
+                if (!feat || !feat.properties) return false;
+                var s = String(feat.properties.v || "");
+                return !s.startsWith("-999");
+            });
+
+            iso.features.forEach(function(feat) {
+                if (!feat || !feat.properties) return;
+                var s = String(feat.properties.v || "");
+                var m = s.match(/^(-?\d+\.?\d*)/);
+                feat.properties.wbgtLower = m ? parseFloat(m[1]) : 0;
+                if (!feat.geometry) return;
+                var g = feat.geometry;
+                if (g.type === "Polygon") {
+                    g.coordinates = g.coordinates.length ? [g.coordinates[0]] : [];
+                } else if (g.type === "MultiPolygon") {
+                    g.coordinates = g.coordinates.map(function(poly) {
+                        return poly.length ? [poly[0]] : [];
+                    });
+                }
+            });
+
+            var kdeOpacity = parseFloat(document.getElementById("kde_opacity_slider").value) || 0.6;
+
+            var _kdeDef = ixmaps.layer("wbgt-kde")
+                .data({ obj: iso, type: "geojson" })
+                .binding({ geo: "geometry", value: "wbgtLower" })
+                .type("FEATURE|CHOROPLETH|SILENT|NOLEGEND")
+                .style({
+                    colorscheme: __kdeWbgtColors,
+                    ranges: __kdeWbgtRanges,
+                    fillopacity: kdeOpacity,
+                    linewidth: "0"
+                })
+                .meta({ name: "kde_wbgt", title: "Zone rischio WBGT (KDE)" })
+                .define();
+
+            ixmaps.map().layer(_kdeDef);
+            console.log("[KDE-WBGT] layer inviato, features:", iso.features.length);
+        };
+
+        // ===================================
+        // KDE — temperatura (misurate / percepite)
+        // Nadaraya-Watson sulle % di deviazione dalla media — anomalie termiche.
+        // ===================================
+        var __computeTemperatureKDE = function() {
+            var objTheme = ixmaps.getThemeObj("chart");
+            if (!objTheme || !objTheme.objTheme || !objTheme.indexA) { return; }
+
+            var dbRecords = objTheme.objTheme.dbRecords;
+            var dbFields  = objTheme.objTheme.dbFields;
+            if (!dbRecords || !dbFields || !dbRecords.length) { return; }
+
+            var iLat  = dbFields.findIndex(function(f) { return f.id === "stat.lat"; });
+            var iLng  = dbFields.findIndex(function(f) { return f.id === "stat.lon"; });
+            var iTemp = dbFields.findIndex(function(f) {
+                return f.id === "apparent_temperature" || f.id === "temperature_ok";
+            });
+
+            if (iLat < 0 || iLng < 0 || iTemp < 0) {
+                console.warn("[KDE] fields not found:", dbFields.map(function(f){ return f.id; }));
+                return;
+            }
+
+            var zoom = ixmaps.getZoom() || 6;
+
+            var pts = [];
+            for (var ii = 0; ii < objTheme.indexA.length; ii++) {
+                var item = objTheme.itemA[objTheme.indexA[ii]];
+                if (!item) continue;
+                // gl engine port: same as the WBGT KDE — collect every record
+                // of the item (the gl engine's item carries the whole view)
+                var recIdxA = [];
+                if (item.dbIndex != null) recIdxA.push(item.dbIndex);
+                if (Array.isArray(item.dbIndexA)) {
+                    for (var jj = 0; jj < item.dbIndexA.length; jj++) recIdxA.push(item.dbIndexA[jj]);
+                }
+                for (var jj = 0; jj < recIdxA.length; jj++) {
+                    var rec = dbRecords[recIdxA[jj]];
+                    if (!rec) continue;
+                    var la = parseFloat(rec[iLat]);
+                    var ln = parseFloat(rec[iLng]);
+                    var tv = parseFloat(rec[iTemp]);
+                    if (isNaN(la) || isNaN(ln) || isNaN(tv)) continue;
+                    pts.push([la, ln, tv]);
+                }
+            }
+
+            console.log("[KDE] zoom:", zoom, " visible stations:", pts.length);
+            if (pts.length < 5) { console.log("[KDE] too few points — skipped"); return; }
+
+            // Inviluppo assoluto: il KDE evidenzia le anomalie (% deviazione dalla media),
+            // ma l'intensità viene modulata dalla temperatura reale locale: sotto KDE_T_LO
+            // il campo si spegne, sopra KDE_T_HI è pieno. Evita rossi allarmanti quando fa fresco.
+            var KDE_T_LO = 24, KDE_T_HI = 33;
+            // pts[k][2] = deviazione % (forma) · pts[k][3] = temperatura assoluta (inviluppo)
+            var meanTemp = 0;
+            for (var k = 0; k < pts.length; k++) { meanTemp += pts[k][2]; }
+            meanTemp /= pts.length;
+            for (var k = 0; k < pts.length; k++) {
+                pts[k][3] = pts[k][2];
+                pts[k][2] = (pts[k][2] - meanTemp) / Math.abs(meanTemp) * 100;
+            }
+
+            var bwKm;
+            if      (zoom >= 11) { bwKm =  3; }
+            else if (zoom >=  9) { bwKm =  8; }
+            else if (zoom >=  7) { bwKm = 14; }
+            else                 { bwKm = 25; }
+
+            var bwMult = parseFloat(document.getElementById("kde_bw_slider").value) || 1.0;
+            bwKm *= bwMult;
+
+            var pS = Infinity, pW = Infinity, pN = -Infinity, pE = -Infinity;
+            pts.forEach(function(p) {
+                if (p[0] < pS) pS = p[0]; if (p[0] > pN) pN = p[0];
+                if (p[1] < pW) pW = p[1]; if (p[1] > pE) pE = p[1];
+            });
+            var midLat = (pS + pN) / 2;
+            var kmLat  = 111.3;
+            var kmLng  = 111.3 * Math.cos(midLat * Math.PI / 180);
+            var padLat = bwKm / kmLat * 1.5;
+            var padLng = bwKm / kmLng * 1.5;
+            var bS = pS - padLat, bN = pN + padLat;
+            var bW = pW - padLng, bE = pE + padLng;
+            var BW2 = 2 * bwKm * bwKm;
+
+            var maxCells = zoom >= 9 ? 30000 : 18000;
+            var aspect   = (bE - bW) / Math.max(bN - bS, 0.001);
+            var nLng     = Math.round(Math.sqrt(maxCells * aspect));
+            var nLat     = Math.round(maxCells / Math.max(nLng, 1));
+            nLat = Math.max(nLat, 10); nLng = Math.max(nLng, 10);
+            var stepLat  = (bN - bS) / nLat;
+            var stepLng  = (bE - bW) / nLng;
+
+            var minWeight = 0.05;
+            var gridPts = [];
+            for (var ilat = 0; ilat <= nLat; ilat++) {
+                for (var ilng = 0; ilng <= nLng; ilng++) {
+                    var glat = bS + ilat * stepLat;
+                    var glng = bW + ilng * stepLng;
+                    var sumWT = 0, sumWAbs = 0, sumW = 0;
+                    for (var k = 0; k < pts.length; k++) {
+                        var dy = (pts[k][0] - glat) * kmLat;
+                        var dx = (pts[k][1] - glng) * kmLng;
+                        var w  = Math.exp(-(dx*dx + dy*dy) / BW2);
+                        sumWT   += w * pts[k][2];
+                        sumWAbs += w * pts[k][3];
+                        sumW    += w;
+                    }
+                    // Celle sparse o sotto la media → sentinella (nessuna isobanda)
+                    var _v = -999;
+                    if (sumW >= minWeight) {
+                        var localDev = sumWT / sumW;
+                        var localAbs = sumWAbs / sumW;
+                        var env = (localAbs - KDE_T_LO) / (KDE_T_HI - KDE_T_LO);
+                        env = env < 0 ? 0 : (env > 1 ? 1 : env);
+                        _v = (localDev >= 0 && env > 0) ? localDev * env : -999;
+                    }
+                    gridPts.push(turf.point([glng, glat], { v: _v }));
+                }
+            }
+
+            if (gridPts.length < 10) { return; }
+
+            var kdeRanges = "0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30";
+            var breaks = kdeRanges.split(",").map(Number);
+
+            var iso;
+            try {
+                iso = turf.isobands(turf.featureCollection(gridPts), breaks, { zProperty: "v" });
+            } catch(err) {
+                console.warn("[KDE] isobands error:", err); return;
+            }
+
+            iso.features.forEach(function(feat) {
+                if (!feat) return;
+                if (feat.properties) {
+                    var s = String(feat.properties.v || "");
+                    var m = s.match(/^(-?\d+\.?\d*)/);
+                    feat.properties.tempLower = m ? parseFloat(m[1]) : 0;
+                }
+                if (!feat.geometry) return;
+                var g = feat.geometry;
+                if (g.type === "Polygon") {
+                    g.coordinates = g.coordinates.length ? [g.coordinates[0]] : [];
+                } else if (g.type === "MultiPolygon") {
+                    g.coordinates = g.coordinates.map(function(poly) {
+                        return poly.length ? [poly[0]] : [];
+                    });
+                }
+            });
+
+            var kdeOpacity = parseFloat(document.getElementById("kde_opacity_slider").value) || 0.6;
+
+            var _kdeDef = ixmaps.layer("temperature-kde")
+                .data({ obj: iso, type: "geojson" })
+                .binding({ geo: "geometry", value: "tempLower" })
+                .type("FEATURE|CHOROPLETH|SILENT|NOLEGEND")
+                .style({
+                    colorscheme: ["7", "#cc0000", "#cc0000"],
+                    ranges: kdeRanges,
+                    fillopacity: kdeOpacity,
+                    linewidth: "0"
+                })
+                .meta({ name: "kde_temp", title: "Campo temperatura (KDE)" })
+                .define();
+
+            ixmaps.map().layer(_kdeDef);
+            console.log("[KDE] layer sent, features:", iso.features.length);
+        };
+
+        function loadPeaksVisualization() {
+            ixmaps.map().remove('kde_wbgt');
+            ixmaps.map().message("...");
+            setTimeout(() => {
+                ixmaps.map().replace('chart', makeTemperatureLolli(), 'silent');
+                ixmaps.map().remove('chart_bg');
+            }, 10);
+            ixmaps.htmlgui_onZoomAndPan();
+            clearTimeout(__kdeTimer);
+            __kdeTimer = setTimeout(__updateKDE, 1200);
+        }
+
+        function loadPeaksVisualization_apparent() {
+            ixmaps.map().remove('kde_wbgt');
+            ixmaps.map().remove('chart_bg');
+            ixmaps.map().message("...");
+            setTimeout(() => {
+                ixmaps.map().replace('chart', makeTemperatureLolliApparent(), 'silent|direct');
+            }, 10);
+            ixmaps.htmlgui_onZoomAndPan();
+            clearTimeout(__kdeTimer);
+            __kdeTimer = setTimeout(__updateKDE, 1200);
+        }
+
+        function loadWBGTVisualization() {
+            ixmaps.map().remove('kde_temp');
+            ixmaps.map().remove('chart_bg');
+            ixmaps.map().message("...");
+            setTimeout(() => {
+                ixmaps.map().replace('chart', makeTemperatureWBGT(), 'silent|direct');
+            }, 10);
+            ixmaps.htmlgui_onZoomAndPan();
+            clearTimeout(__kdeTimer);
+            __kdeTimer = setTimeout(__updateKDE, 1200);
+        }
+
+        function loadHumidityVisualization() {
+            ixmaps.map().remove('kde_wbgt');
+            ixmaps.map().remove('kde_temp');
+            ixmaps.map().message("...");
+            setTimeout(() => {
+                ixmaps.map().replace('chart', makeTemperatureHumidity(), 'silent');
+                ixmaps.map().remove('chart_bg');
+            }, 10);
+        }
+
+        function toggleCodeView() {
+            const overlay = document.getElementById('code_overlay');
+            overlay.style.display = (overlay.style.display === 'none' ? 'block' : 'none');
+            if (overlay.style.display === 'block') {
+                generateHtmlCode();
+            }
+        }
+
+        function closeCodeView() {
+            document.getElementById('code_overlay').style.display = 'none';
+            document.getElementById('code_display').textContent = "";
+        }
+
+        function generateHtmlCode() {
+            // gl engine port: getProjectString() returns the map view only, not
+            // flat's full project (options/themes) — the code view stays
+            // optional, degraded gracefully as in the other gl ports
+            try {
+                const codeDisplay = document.getElementById('code_display');
+                const projectCode = ixmaps.map().getProjectString();
+                const htmlCode = new Config(projectCode).getProjectHTML();
+                codeDisplay.textContent = htmlCode;
+                delete codeDisplay.dataset.highlighted;
+                hljs.highlightElement(codeDisplay);
+            } catch (e) { console.warn("[code view] non disponibile:", e); }
+        }
+
+        function copyToClipboard() {
+            const codeText = document.getElementById('code_display').textContent;
+            navigator.clipboard.writeText(codeText).then(() => {
+                alert('Codice HTML copiato negli appunti!');
+            }).catch(err => {
+                console.error('Errore nella copia:', err);
+            });
+        }
+
+        function saveAsFile() {
+            const codeText = document.getElementById('code_display').textContent;
+            const blob = new Blob([codeText], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mappa_temperature.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Unified keyboard handler
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeCodeView();
+                const popup = document.getElementById('infoPopup');
+                const overlay = document.getElementById('infoOverlay');
+                if (popup.classList.contains('active')) {
+                    popup.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            }
+        });
+
+        // ---------------------------------------------------
+        // t h e   m a p
+        // ---------------------------------------------------
+
+        ixmaps.statistics = function (szId) {
+            var themeObj = ixmaps.getThemeObj(szId);
+            var lastFilter = themeObj.szFilter || "";
+            var szFieldsA = ["prod.0.val.0.ref", "prod.0.val.0.val"];
+            var facetsA = ixmaps.data.getFacets(lastFilter, 'user_legend', szFieldsA, szId);
+            var isWbgt = (currentVisualizationMode === 'wbgt');
+            var srcLU = isWbgt ? (window.__last_wbgtLU || {}) : (window.__last_filteredTempLU || {});
+            var tempVals = Object.values(srcLU).filter(function (v) { return v !== null && !isNaN(v); });
+            var tempCount = tempVals.length;
+            var tempSum = 0, tempMin = Infinity, tempMax = -Infinity;
+            tempVals.forEach(function (v) { tempSum += v; if (v < tempMin) tempMin = v; if (v > tempMax) tempMax = v; });
+            var nOutliers = facetsA[1] ? (facetsA[1].values.length - tempCount) : 0;
+            // In modalità WBGT le stazioni mancanti non sono outlier: non hanno il dato di radiazione solare
+            var label = isWbgt ? 'WBGT medio' : 'Temperatura media';
+            var excludedNote = (nOutliers > 0)
+                ? (isWbgt
+                    ? ' <span style="color:#888;font-size:0.9em">(' + nOutliers + ' senza dato solare)</span>'
+                    : ' <span style="color:#e64b23;font-size:0.9em">(' + nOutliers + ' outlier esclusi)</span>')
+                : '';
+            // I timestamp MeteoHub sono in UTC — convertili in ora italiana (Europe/Rome, DST-aware)
+            var __refToRome = function (ref) {
+                var d = new Date(String(ref).replace(' ', 'T') + 'Z');
+                if (isNaN(d)) return String(ref).split('T')[1] || ref;
+                return d.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+            };
+            // Ultimo aggiornamento dati (da metadata.json, UTC) → ora italiana; fallback all'ora corrente
+            var aggiornati;
+            if (window.__dataLastUpdate) {
+                aggiornati = new Date(window.__dataLastUpdate).toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+            } else {
+                aggiornati = new Date().toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+            }
+            // Periodo dei dati: min/max dei reftime effettivi (ISO UTC) → ora italiana
+            var refTimes = (facetsA[0] && facetsA[0].values) ? facetsA[0].values.slice().sort() : [];
+            var periodo = refTimes.length
+                ? __refToRome(refTimes[0]) + " - " + __refToRome(refTimes[refTimes.length - 1])
+                : __periodo;
+            const statsDiv = document.getElementById('statistics');
+            statsDiv.innerHTML = `
+                <div class="stat-row"><span>${label}</span><span class="v big">${tempCount ? (tempSum / tempCount).toFixed(1) : '-'}°</span></div>
+                <div class="stat-row"><span>Min / Max</span><span class="v">${tempCount ? tempMin.toFixed(1) : '-'}° / ${tempCount ? tempMax.toFixed(1) : '-'}°</span></div>
+                <div class="stat-row"><span>Stazioni attive</span><span class="v">${tempCount}${excludedNote}</span></div>
+                <div class="stat-row"><span>Periodo dati</span><span class="v">${periodo}</span></div>
+                <div class="stat-row"><span>Aggiornato <em>ora it.</em></span><span class="v">${aggiornati}</span></div>
+            `;
+            var szHtml = '<div class="times"><span class="th">trasmissioni (ora italiana)</span>';
+            // gl engine port: getFacets fires before the broker data is in —
+            // guard the transmission histogram (flat never called statistics that early)
+            if (facetsA[0] && facetsA[0].values) {
+                for (var i in facetsA[0].values) {
+                    szHtml += "<div class='stat-row'><span>" + __refToRome(facetsA[0].values[i]) + "</span><span class='v'>" + facetsA[0].valuesCount[facetsA[0].values[i]] + "</span></div>";
+                }
+            }
+            szHtml += "</div>";
+            $("#statistics").append(szHtml);
+        };
+
+        ixmaps.htmlgui_onDrawTheme = function (szId) {
+            if (szId == "chart_bg" || szId == "chart") {
+                ixmaps.statistics(szId);
+            }
+            // KDE in tutte le modalità tranne umidità (WBGT → fasce ISO, altre → anomalie)
+            if (szId == "chart" && currentVisualizationMode !== 'humidity') {
+                clearTimeout(__kdeTimer);
+                __kdeTimer = setTimeout(__updateKDE, 400);
+            }
+        };
+
+        ixmaps.htmlgui_onZoomAndPan = function () {
+            var nOpacity = (ixmaps.getZoom() - 7) / 2;
+            ixmaps.map().setBasemapOpacity(nOpacity, "absolute");
+            persistView();
+        };
+
+        // ===================================
+        // Persistenza stato in URL (view, slider) — history.replaceState,
+        // nessun reload, nessuna nuova voce di history.
+        // ===================================
+        function updateURLParams(paramsObj) {
+            var url = new URL(window.location.href);
+            Object.keys(paramsObj).forEach(function (k) {
+                url.searchParams.set(k, paramsObj[k]);
+            });
+            window.history.replaceState({}, '', url);
+        }
+
+        var __viewPersistTimer = null;
+        function persistView() {
+            clearTimeout(__viewPersistTimer);
+            __viewPersistTimer = setTimeout(function () {
+                try {
+                    var c = ixmaps.getCenter();
+                    var z = ixmaps.getZoom();
+                    updateURLParams({ view: '[' + c.lat.toFixed(6) + ',' + c.lng.toFixed(6) + ',' + z.toFixed(6) + ']' });
+                } catch (e) { /* mappa non ancora pronta */ }
+            }, 500);
+        }
+
+        var __sliderPersistTimer = null;
+        function persistSliders() {
+            clearTimeout(__sliderPersistTimer);
+            __sliderPersistTimer = setTimeout(function () {
+                updateURLParams({
+                    size: document.getElementById('chart_size_slider').value,
+                    kdeop: document.getElementById('kde_opacity_slider').value,
+                    kdebw: document.getElementById('kde_bw_slider').value
+                });
+            }, 300);
+        }
+
+        var __filter = "";
+        var __lat = null;
+        var __lon = null;
+        var __zoom = null;
+        var __scale_chart = 1;
+        var __legend = true;
+        var __periodo = "";
+
+        // ===================================
+        // Rilevamento outlier
+        // ===================================
+        var __outlier_enabled = true;
+        var __outlier_IQR_mult = 3.0;
+        var __outlier_spatial_km = 80;
+        var __outlier_spatial_k = 8;
+        var __outlier_spatial_delta = 8;
+
+        function _median(arr) {
+            var s = arr.slice().sort(function (a, b) { return a - b; });
+            var m = Math.floor(s.length / 2);
+            return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+        }
+
+        function computeFilteredLookup(tempLU, latLU, lonLU) {
+            if (!__outlier_enabled) return tempLU;
+            var ids = Object.keys(tempLU);
+            var validVals = ids.map(function (id) { return tempLU[id]; })
+                .filter(function (v) { return v !== null && !isNaN(v); });
+            if (validVals.length < 8) return tempLU;
+
+            var sorted = validVals.slice().sort(function (a, b) { return a - b; });
+            var n = sorted.length;
+            var q1 = sorted[Math.floor(n * 0.25)];
+            var q3 = sorted[Math.floor(n * 0.75)];
+            var iqr = q3 - q1;
+            var lo = q1 - __outlier_IQR_mult * iqr;
+            var hi = q3 + __outlier_IQR_mult * iqr;
+
+            var stations = [];
+            ids.forEach(function (id) {
+                var v = tempLU[id];
+                var lat = parseFloat(latLU ? latLU[id] : NaN);
+                var lon = parseFloat(lonLU ? lonLU[id] : NaN);
+                if (v !== null && !isNaN(v) && v >= lo && v <= hi && !isNaN(lat) && !isNaN(lon)) {
+                    stations.push({ id: id, v: v, lat: lat, lon: lon });
+                }
+            });
+
+            var grid = {};
+            stations.forEach(function (st) {
+                var gk = Math.floor(st.lat) + ',' + Math.floor(st.lon);
+                if (!grid[gk]) grid[gk] = [];
+                grid[gk].push(st);
+            });
+
+            var spatialOutliers = new Set();
+            stations.forEach(function (st) {
+                var neighbors = [];
+                var gLat = Math.floor(st.lat), gLon = Math.floor(st.lon);
+                for (var dlat = -2; dlat <= 2; dlat++) {
+                    for (var dlon = -2; dlon <= 2; dlon++) {
+                        var cell = grid[(gLat + dlat) + ',' + (gLon + dlon)];
+                        if (!cell) continue;
+                        cell.forEach(function (other) {
+                            if (other.id === st.id) return;
+                            var dLt = (other.lat - st.lat) * Math.PI / 180;
+                            var dLn = (other.lon - st.lon) * Math.PI / 180;
+                            var a = Math.sin(dLt / 2) * Math.sin(dLt / 2) +
+                                Math.cos(st.lat * Math.PI / 180) * Math.cos(other.lat * Math.PI / 180) *
+                                Math.sin(dLn / 2) * Math.sin(dLn / 2);
+                            var dist = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                            if (dist <= __outlier_spatial_km) neighbors.push({ d: dist, v: other.v });
+                        });
+                    }
+                }
+                if (neighbors.length < 3) return;
+                neighbors.sort(function (a, b) { return a.d - b.d; });
+                var nearVals = neighbors.slice(0, __outlier_spatial_k).map(function (x) { return x.v; });
+                var med = _median(nearVals);
+                if (Math.abs(st.v - med) > __outlier_spatial_delta) spatialOutliers.add(st.id);
+            });
+
+            var result = {}, nRemoved = 0;
+            ids.forEach(function (id) {
+                var v = tempLU[id];
+                if (v === null || isNaN(v) || v < lo || v > hi || spatialOutliers.has(id)) {
+                    result[id] = null; nRemoved++;
+                } else {
+                    result[id] = v;
+                }
+            });
+            console.log('Outlier: IQR [' + lo.toFixed(1) + ',' + hi.toFixed(1) +
+                '] spaziali:' + spatialOutliers.size + ' totale:' + nRemoved + '/' + ids.length);
+            return result;
+        }
+
+        attribution =
+            "powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a> |&nbsp; <a href=\"javascript:toggleCodeView()\" > html</a>";
+
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+
+        if (params.filter) { __filter = params.filter; }
+        if (params.view) {
+            var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+            __lat = latlonA[0];
+            __lon = latlonA[1];
+            __zoom = parseFloat(params.view.split(',')[2]);
+        }
+        if (params.scale) { __scale_chart = params.scale; }
+        if (params.legend) { __legend = params.legend; }
+
+        // Slider persistiti in URL — applicati prima della costruzione dei layer
+        if (params.size) {
+            document.getElementById('chart_size_slider').value = params.size;
+        }
+        if (params.kdeop) {
+            document.getElementById('kde_opacity_slider').value = params.kdeop;
+            document.getElementById('kde_opacity_val').textContent = parseFloat(params.kdeop).toFixed(2);
+        }
+        if (params.kdebw) {
+            document.getElementById('kde_bw_slider').value = params.kdebw;
+            document.getElementById('kde_bw_val').textContent = parseFloat(params.kdebw).toFixed(1);
+        }
+
+        // ---------------------------------------------------
+        // e m b e d   t h e   m a p
+        // ---------------------------------------------------
+
+        function buildTimeRange() {
+            var now = new Date();
+            var past = new Date(now.getTime() - 1000 * 60 * 60 * 3);
+            var pad2 = function (n) { return String('0' + n).slice(-2); };
+            var fmtDate = function (d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
+            return {
+                startDate: fmtDate(past),
+                startTime: past.getHours() + ':00',
+                endDate: fmtDate(now),
+                endTime: now.getHours() + ':' + pad2(now.getMinutes())
+            };
+        }
+
+        const nuts2 =
+            ixmaps.layer("nuts2", layer => layer
+                .type("FEATURES|SILENT|LOCKED|NOLEGEND")
+                .data({
+                    url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2021_4326_LEVL_2.geojson",
+                    type: "geojson"
+                })
+                .binding({
+                    id: "NUTS_ID"
+                })
+                .filter("WHERE CNTR_CODE = IT")
+                .style({
+                    colorscheme: [
+                        "white"
+                    ],
+                    fillopacity: "1",
+                    linecolor: "#999999",
+                    linewidth: "2",
+                    shadow: true,
+                    showdata: true,
+                    featurelower: "1:3000000",
+                    titlefield: "NUTS_NAME",
+                    name: "nuts2"
+                })
+            );
+
+        query_data = function (theme, options) {
+            var tr = buildTimeRange();
+            __periodo = tr.startTime + " - " + tr.endTime;
+            new Data.Broker()
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/temperature_B12101.json", "json")
+                .realize(
+                    function (dataA) {
+                        console.log(dataA);
+                        var data = dataA[0];
+                        data.column("prod.0.val.0.val").map(function (value) {
+                            return value - 273.15;
+                        });
+                        var _tLU = data.lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+                        var _laLU = data.lookupArray({ key: "stat.details.0.val", value: "stat.lat" });
+                        var _loLU = data.lookupArray({ key: "stat.details.0.val", value: "stat.lon" });
+                        var _fLU = computeFilteredLookup(_tLU, _laLU, _loLU);
+                        window.__last_filteredTempLU = _fLU;
+                        data.addColumn({ source: "stat.details.0.val", destination: "temperature_ok" }, function (id) {
+                            var v = _fLU[id];
+                            return (v !== undefined) ? v : null;
+                        });
+                        ixmaps.setExternalData(data, {
+                            type: "dbtable",
+                            name: options.name
+                        });
+                    });
+        };
+
+        query_data_humidity = function (theme, options) {
+            var tr = buildTimeRange();
+            __periodo = tr.startTime + " - " + tr.endTime;
+            new Data.Broker()
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/humidity_B13003.json", "json")
+                .realize(
+                    function (dataA) {
+                        var data = dataA[0];
+                        ixmaps.setExternalData(data, {
+                            type: "dbtable",
+                            name: options.name
+                        });
+                    });
+        };
+
+        query_data_apparent = function (theme, options) {
+
+            var date = new Date();
+            var uTime = date.getTime();
+
+            /* 2 hours to the past */
+            uTime -= 1000 * 60 * 60 * 3;
+
+            var sdate = new Date(uTime);
+
+            var year = sdate.getFullYear();
+            var month = sdate.getMonth() + 1;
+            var day = sdate.getDate();
+            var szStartDate = year + "-" + String("0" + month).slice(-2) + "-" + String("0" + day).slice(-2);
+            var hours = sdate.getHours();
+            var minutes = sdate.getMinutes();
+            var szStartTime = hours + ":00";
+
+            year = date.getFullYear();
+            month = date.getMonth() + 1;
+            day = date.getDate();
+            var szEndDate = year + "-" + String("0" + month).slice(-2) + "-" + String("0" + day).slice(-2);
+            hours = date.getHours();
+            minutes = date.getMinutes();
+            var szEndTime = hours + ":" + minutes;
+
+            new Data.Broker()
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/temperature_B12101.json", "json")
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/humidity_B13003.json", "json")
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/wind_B11002.json", "json")
+                .realize(
+                    function (dataA) {
+
+                        var temperature = dataA[0];
+                        temperature.column("prod.0.val.0.val").map(function (value) {
+                            return value - 273.15;
+                        });
+                        var _tLU_raw = temperature.lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+                        var _laLU_ap = temperature.lookupArray({ key: "stat.details.0.val", value: "stat.lat" });
+                        var _loLU_ap = temperature.lookupArray({ key: "stat.details.0.val", value: "stat.lon" });
+                        var tempLookUp = computeFilteredLookup(_tLU_raw, _laLU_ap, _loLU_ap);
+
+                        var humidity = dataA[1];
+                        var humidLookUp = humidity.lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+
+                        var wind = dataA[2];
+                        var windLookUp = wind.lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+
+                        temperature.addColumn({ source: "stat.details.0.val", destination: "humidity" }, (value) => {
+                            return humidLookUp[value];
+                        });
+                        temperature.addColumn({ source: "stat.details.0.val", destination: "wind" }, (value) => {
+                            return windLookUp[value];
+                        });
+                        temperature.addColumn({ source: "stat.details.0.val", destination: "stress_temperature" }, (value) => {
+                            var T = tempLookUp[value];
+                            var RH = humidLookUp[value];
+                            var v = windLookUp[value];
+                            var e = (RH / 100) * 6.105 * Math.exp((17.27 * T) / (237.7 + T));
+                            var ST = 0.33 * e - 0.70 * v - 4;
+                            return ST || null;
+                        });
+                        temperature.addColumn({ source: "stat.details.0.val", destination: "apparent_temperature" }, (value) => {
+                            var T = tempLookUp[value];
+                            var RH = humidLookUp[value];
+                            var v = windLookUp[value];
+                            var e = (RH / 100) * 6.105 * Math.exp((17.27 * T) / (237.7 + T));
+                            var AT = T + 0.33 * e - 0.70 * v - 4;
+                            return AT || null;
+                        });
+
+                        ixmaps.setExternalData(temperature, {
+                            type: "dbtable",
+                            name: options.name
+                        });
+                    });
+        };
+
+        query_data_wbgt = function (theme, options) {
+            new Data.Broker()
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/temperature_B12101.json", "json")
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/humidity_B13003.json", "json")
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/wind_B11002.json", "json")
+                .addSource("https://raw.githubusercontent.com/gjrichter/data/refs/heads/master/meteohub/solar_B14198.json", "json")
+                .realize(function (dataA) {
+                    var temperature = dataA[0];
+                    temperature.column("prod.0.val.0.val").map(function (value) { return value - 273.15; });
+                    var _tLU_raw = temperature.lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+                    var _laLU = temperature.lookupArray({ key: "stat.details.0.val", value: "stat.lat" });
+                    var _loLU = temperature.lookupArray({ key: "stat.details.0.val", value: "stat.lon" });
+                    var tempLU = computeFilteredLookup(_tLU_raw, _laLU, _loLU);
+
+                    var humidLU = dataA[1].lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+                    var windLU  = dataA[2].lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+                    var solarLU = dataA[3].lookupArray({ key: "stat.details.0.val", value: "prod.0.val.0.val" });
+
+                    temperature.addColumn({ source: "stat.details.0.val", destination: "wbgt" }, function (id) {
+                        var T  = tempLU[id];
+                        var RH = humidLU[id];
+                        var v  = windLU[id];
+                        var S  = solarLU[id];
+                        if (T == null || isNaN(T) || RH == null || isNaN(RH) || RH > 105 || RH < 0) return null;
+                        if (S == null || isNaN(S)) return null;
+                        var vSafe = (!v || isNaN(v)) ? 0.5 : Math.max(v, 0.5);
+                        var SSafe = S;
+                        // Bulbo umido naturale — formula Stull (2011), accuratezza ±0.3°C
+                        var Tw = T * Math.atan(0.151977 * Math.pow(RH + 8.313659, 0.5))
+                               + Math.atan(T + RH)
+                               - Math.atan(RH - 1.676331)
+                               + 0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH)
+                               - 4.686035;
+                        // Temperatura globo — approssimazione Liljegren (2008)
+                        var Tg = T + 0.0146 * SSafe - 0.70 * vSafe;
+                        // WBGT outdoor (ISO 7243)
+                        return 0.7 * Tw + 0.2 * Tg + 0.1 * T;
+                    });
+
+                    // Lookup dei valori WBGT validi per il pannello statistiche
+                    window.__last_wbgtLU = temperature.lookupArray({ key: "stat.details.0.val", value: "wbgt" });
+
+                    ixmaps.setExternalData(temperature, { type: "dbtable", name: options.name });
+                });
+        };
+
+        // WBGT schema colori — fasce rischio ISO 7243
+        let __wbgt_colorscheme = [
+            "#4575b4", // < 12
+            "#74add1", // 12-14
+            "#abd9e9", // 14-16
+            "#e0f3f8", // 16-18  (soglia ISO: nessun rischio)
+            "#66bd63", // 18-20
+            "#a6d96a", // 20-22
+            "#d9ef8b", // 22-24  (soglia ISO: rischio basso)
+            "#fee08b", // 24-25
+            "#fdae61", // 25-26  (soglia ISO: rischio moderato)
+            "#f46d43", // 26-27
+            "#d73027", // 27-28
+            "#a50026", // 28-29  (soglia ISO: rischio alto)
+            "#7a0026", // 29-30
+            "#4d0026", // 30-32  (soglia ISO: rischio molto alto)
+            "#2d0026", // 32-34
+            "#1a0016"  // > 34   (soglia ISO: pericoloso)
+        ];
+        let __wbgt_ranges = "12,14,16,18,20,22,24,25,26,27,28,29,30,32,34,36";
+
+        let __colorscheme = [
+            "#88229A",
+            "#9525A4",
+            "#BC30C1",
+            "#D938D6",
+            "#F640ED",
+            "#6B1E8E",
+            "#551E8E",
+            "#1E418E",
+            "#1E538E",
+            "#1E5C8E",
+            "#1E669C",
+            "#1E74B8",
+            "#1E90F0",
+            "#3FA6FE",
+            "#6EBCFE",
+            "#B3F1EA",
+            "#B4F5D7",
+            "#A1E5C3",
+            "#8DD0AD",
+            "#70B792",
+            "#29A948",
+            "#79CF2B",
+            "#BCEA22",
+            "#DCF420",
+            "#F4F820",
+            "#F3DE25",
+            "#F4CB27",
+            "#F5AC28",
+            "#F48D27",
+            "#EF7425",
+            "#E74D23",
+            "#CE3824",
+            "#BC2C29",
+            "#A32326",
+            "#831B1B",
+            "#721B1B"
+        ];
+        let __ranges = "-28,-26,-24,-22,-20,-18,-16,-14,-12,-10,-8,-6,-4,-2,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44";
+
+        function _sliderValues() {
+            var v = 5.1 - parseFloat(document.getElementById('chart_size_slider').value);
+            return { sizepow: String(v / 10), minvaluesize: String(20 - v * 10) };
+        }
+
+        var __temperature_dots_bg =
+            ixmaps.layer("World Mercator", layer => layer
+                .data({
+                    query: query_data.toString(),
+                    name: "actual_temperature_data",
+                    cache: "true"
+                })
+                .binding({
+                    geo: "stat.lat|stat.lon",
+                    value: "temperature_ok"
+                })
+                .type("CHART|BUBBLE|GLOW|NOSIZE|RANGES|NOLEGEND")
+                .style({
+                    colorscheme: __colorscheme,
+                    ranges: __ranges,
+                    opacity: "0.2",
+                    fillopacity: "0.001",
+                    linecolor: "none",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    xxchartlower: "1:1000000",
+                    units: "",
+                    scale: "0.35",
+                })
+                .meta({
+                    title: "[title]",
+                    snippet: "",
+                    description: "",
+                    name: "chart_bg",
+                    tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+                })
+            );
+
+        var __stress_temperature_dots_bg =
+            ixmaps.layer("World Mercator", layer => layer
+                .data({
+                    query: query_data_apparent.toString(),
+                    name: "actual_temperature_data_apparent",
+                    cache: "true"
+                })
+                .binding({
+                    geo: "stat.lat|stat.lon",
+                    value: "stress_temperature"
+                })
+                .type("CHART|BUBBLE|GLOW|NOSIZE|QUANTILE")
+                .style({
+                    "colorscheme": [
+                        "7",
+                        "#ffffff",
+                        "#88229A"],
+                    opacity: "0.5",
+                    fillopacity: "0.001",
+                    linecolor: "none",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    xxchartlower: "1:1000000",
+                    units: "°C",
+                    scale: "0.35",
+                })
+                .meta({
+                    title: "<div style='font-size:0.8em;line-height:1em'><b>fondo: </b>Variazione della temperatura misurata a causa del peso di humidità e bassa ventilazione</div>",
+                    snippet: "",
+                    description: "",
+                    name: "chart_bg",
+                    tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+                })
+            );
+
+        function makeTemperatureHumidity() {
+            var sv = _sliderValues();
+            return ixmaps.layer("World Mercator", layer => layer
+                .data({
+                    "type": "ext",
+                    "name": "actual_humidity_data",
+                    "query": query_data_humidity.toString()
+                })
+                .binding({
+                    "geo": "stat.lat|stat.lon",
+                    "value": "prod.0.val.0.val"
+                })
+                .type("CHART|SYMBOL|GRIDSIZE|SORT|UP|QUANTILE|VALUES|AGGREGATE|RECT|MEAN|BOX|BOTTOMTITLE")
+                .style({
+                    "colorscheme": [
+                        "7",
+                        "#ffffff",
+                        "#88229A"],
+                    "fillopacity": "0.6",
+                    "shadow": "false",
+                    "visible": "true",
+                    "datacache": "true",
+                    "showdata": "true",
+                    "symbols": [
+                        "roundrect"],
+                    "units": "%",
+                    "refreshtimeout": "0",
+                    "scale": "0.9",
+                    "sizepow": sv.sizepow,
+                    "minvaluesize": sv.minvaluesize,
+                    "textscale": "0.8",
+                    "linecolor": [
+                        "black"],
+                    "bordercolor": "none",
+                    "boxcolor": "none",
+                    "titlefield": "stat.details.0.val",
+                    "boxupper": "1:1000000",
+                    "shadowlower": "1:1000000",
+                    "valuescale": "1",
+                    "valuedecimals": "0",
+                    "gridwidthpx": "30",
+                    "name": "chart",
+                    "title": "Umidità",
+                    "snippet": "",
+                    "description": "",
+                    "tooltip": "{{theme.item.chart}}{{theme.item.data}}"
+                })
+            );
+        }
+
+        function makeTemperatureLolli() {
+            var sv = _sliderValues();
+            return ixmaps.layer("World Mercator", layer => layer
+                .data({
+                    query: query_data.toString(),
+                    name: "actual_temperature_data",
+                    cache: "true"
+                })
+                .binding({
+                    geo: "stat.lat|stat.lon",
+                    value: "temperature_ok",
+                    title: "stat.details.0.val"
+                })
+                .filter("WHERE temperature_ok <= 50")
+                .type("CHART|USER|3D|SHADOW|SIZE|RANGES|VALUES|AGGREGATE|RELOCATE|MAX")
+                .style({
+                    userdraw: "lolliChart",
+                    colorscheme: __colorscheme,
+                    ranges: __ranges,
+                    fillopacity: "1",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    units: "°",
+                    legendunits: "°C",
+                    scale: "0.7",
+                    rangescale: "1",
+                    sizepow: sv.sizepow,
+                    minvaluesize: sv.minvaluesize,
+                    valuescale: "1.2",
+                    valuedecimals: "1",
+                    rangecentervalue: "0",
+                    linecolor: "white",
+                    linewidth: "0.2",
+                    valuecolor: "#DC0000",
+                    gridwidth: "25px"
+                })
+                .meta({
+                    title: "Temperatura",
+                    snippet: "",
+                    description: "",
+                    name: "chart",
+                    tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+                })
+            );
+        }
+
+        function makeTemperatureLolliApparent() {
+            var sv = _sliderValues();
+            return ixmaps.layer("World Mercator", layer => layer
+                .data({
+                    query: query_data_apparent.toString(),
+                    name: "actual_temperature_data_apparent",
+                    cache: "true"
+                })
+                .binding({
+                    geo: "stat.lat|stat.lon",
+                    value: "apparent_temperature",
+                    title: "stat.details.0.val"
+                })
+                .filter("WHERE apparent_temperature <= 50")
+                .type("CHART|USER|3D|SHADOW|SIZE|RANGES|VALUES|AGGREGATE|RELOCATE|MAX|UNDEFINEDISNOTVALUE|NOLEGEND")
+                .style({
+                    userdraw: "lolliChart",
+                    colorscheme: __colorscheme,
+                    ranges: __ranges,
+                    fillopacity: "1",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    units: "°",
+                    scale: "0.5",
+                    rangescale: "1.5",
+                    sizepow: sv.sizepow,
+                    minvaluesize: sv.minvaluesize,
+                    valuescale: "1.2",
+                    valuedecimals: "1",
+                    rangecentervalue: "0",
+                    linecolor: "white",
+                    linewidth: "0.2",
+                    valuecolor: "#DC0000",
+                    gridwidth: "25px"
+                })
+                .meta({
+                    title: "Temperatura sentita",
+                    snippet: "",
+                    description: "",
+                    name: "chart",
+                    tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+                })
+            );
+        }
+
+        function makeTemperatureWBGT() {
+            var sv = _sliderValues();
+            return ixmaps.layer("World Mercator", layer => layer
+                .data({
+                    query: query_data_wbgt.toString(),
+                    name: "actual_wbgt_data",
+                    cache: "true"
+                })
+                .binding({
+                    geo: "stat.lat|stat.lon",
+                    value: "wbgt",
+                    title: "stat.details.0.val"
+                })
+                .filter("WHERE wbgt <= 50")
+                .type("CHART|USER|3D|SHADOW|SIZE|RANGES|VALUES|AGGREGATE|RELOCATE|MAX|UNDEFINEDISNOTVALUE|TEXTLEGEND")
+                .style({
+                    userdraw: "lolliChart",
+                    colorscheme: __wbgt_colorscheme,
+                    ranges: __wbgt_ranges,
+                    fillopacity: "1",
+                    shadow: "false",
+                    visible: "true",
+                    showdata: "true",
+                    units: "°",
+                    scale: "0.5",
+                    rangescale: "1.5",
+                    sizepow: sv.sizepow,
+                    minvaluesize: sv.minvaluesize,
+                    valuescale: "1.2",
+                    valuedecimals: "1",
+                    linecolor: "white",
+                    linewidth: "0.2",
+                    valuecolor: "#DC0000",
+                    gridwidth: "25px"
+                })
+                .meta({
+                    title: "WBGT — Stress termico (ISO 7243)",
+                    snippet: "<div style='font-size:0.85em;line-height:1.45em'>"
+                        + "Wet Bulb Globe Temperature: indice di stress da calore per ambienti outdoor."
+                        + "<br><b>WBGT = 0.7·Tnw + 0.2·Tg + 0.1·Ta</b>"
+                        + "<br><span style='color:#666'>Tnw bulbo umido naturale (Stull 2011) · "
+                        + "Tg globo da irradiazione solare B14198 · Ta aria secca</span>"
+                        + "<br><br><b>Fasce di rischio:</b>"
+                        + "<br><span style='color:#4575b4'>■</span> &lt; 18°C — nessun rischio"
+                        + "<br><span style='color:#66bd63'>■</span> 18–25°C — rischio basso"
+                        + "<br><span style='color:#fdae61'>■</span> 25–28°C — rischio moderato"
+                        + "<br><span style='color:#a50026'>■</span> 28–30°C — rischio alto"
+                        + "<br><span style='color:#4d0026'>■</span> &gt; 30°C — molto alto / pericoloso"
+                        + "<br><br><span style='color:#888;font-size:0.92em'>Calcolato solo per le stazioni che "
+                        + "forniscono la radiazione solare (B14198), necessaria per la temperatura del globo.</span>"
+                        + "</div>",
+                    description: "",
+                    name: "chart",
+                    tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+                })
+            );
+        }
+
+        /**
+         **
+         ** create the interactive map an append it to the document
+         **
+         **/
+        ixmaps.Map("map_div", {
+            mapService: "leaflet_vt",
+            mapType: "ArcGIS - Topo",
+            map: "../../maps/svg/maps/generic/mercator.svg",
+            legend: ((__legend == true) ? "true" : 0),
+            legendbackground: "rgba(255,255,255,0.1)",
+            align: "left",
+            mode: "pan",
+            about: "test",
+            search: "Italy"
+        },
+            map => map
+
+                .view({
+                    "center": {
+                        "lat": __lat || "42.30234655149951",
+                        "lng": __lon || "13.987399620595363"
+                    },
+                    "zoom": __zoom || "6.27681771091248"
+                })
+                .options({
+                    featurescaling: "true",
+                    objectscaling: "dynamic",
+                    normalSizeScale: "5000000",
+                    dynamicSizePow: "10",
+                    flushChartDraw: "1000000",
+                    flushPaintShape: "1000000",
+                    basemapopacity: "0.5",
+                    worksilent: "false",
+                    loadsilent: "false",
+                    hideOnPan: "false",
+                    freezeOnPan: "false",
+                })
+                .local("aggregated", "")
+                .local("... creating theme ...", "...")
+                .local("working ...", "")
+                .local("loading data ...", "scaricando dati ...")
+                .require("https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/ui/js/tools/tooltip_mustache.js")
+                .require("https://d3js.org/d3.v3.min.js")
+                .require("https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/usercharts/d3/chart.js")
+                .require("https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/usercharts/d3/arrow_chart.js")
+                .require("https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@master/usercharts/d3/lolli_chart.js")
+                .attribution(attribution)
+
+                .layer(nuts2)
+                .layer(makeTemperatureWBGT())
+
+        );
+
+        // ----------------------------
+        // I N F O   P O P U P
+        // ----------------------------
+
+        function toggleInfoPopup() {
+            const popup = document.getElementById('infoPopup');
+            const overlay = document.getElementById('infoOverlay');
+            if (popup.classList.contains('active')) {
+                popup.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                popup.classList.add('active');
+                overlay.classList.add('active');
+            }
+        }
+
+    </script>
+</body>
+
+</html>

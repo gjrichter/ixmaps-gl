@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+ixmaps map embed html
+
+$Comment: port of the "OSM Overpass City Info" map (Rome) - a set of 9
+switchable layers, all sourced live from the OSM Overpass API: cycling
+stress (LTS, BikeOttawa model), speed limits, street surface, cycle lanes,
+bus stops, waste/recycling bins, trees, housenumbers and "women's places"
+(childcare/healthcare/recreation/shopping amenities relevant to caregivers).
+
+Source: /Users/gjrichter/Sites/ixmaps/dev/flat_multi/ixmaps/pages/OSM Overpass
+(already fluent-API JS, but split across 2 external provider files
++ a project-code-viewer widget carried over from a generic template).
+
+Changes made while porting:
+
+1) OVERPASS SERVER - the original mixed 3 different endpoints inconsistently
+   (overpass-api.de, overpass.kumi.systems, and a dead corsme.herokuapp.com
+   CORS-proxy in front of overpass.fr for the "women" layer). From this
+   network TODAY, overpass-api.de and overpass.kumi.systems both refuse the
+   TCP connection outright (confirmed via curl -v: instant "connection
+   refused" on every resolved IP, not a slow/rate-limited response - i.e.
+   blocked, not busy). Tested alternatives:
+     - overpass.osm.ch          reachable, but a CH-REGIONAL extract only
+                                 (0 results for any Rome-area query) - a
+                                 silent-failure trap, not usable here.
+     - overpass.openstreetmap.fr reachable, global data, fresh
+                                 (timestamp_osm_base = live), returned real
+                                 results for Rome test queries (178 bus
+                                 stops, 32k ways). Used for ALL 9 layers
+                                 below, and the corsme.herokuapp.com proxy
+                                 hack is dropped entirely - this mirror
+                                 needs no proxy.
+
+2) SELF-CONTAINED - inlined the two external provider files
+   (dataprovider_overpass.js, dataprovider_stressmap.js, including the full
+   BikeOttawa LTS stress model) plus the query functions directly into this
+   page, using `.data({query: fn.toString()})` per layer (evaluated onto
+   `ixmaps.<autoname>` at theme-creation time - see ixmaps.js themeConstruct
+   and htmlgui.js newTheme) instead of the original's `.data({type:"ext",
+   name:"..."})` + separately-loaded-script convention. Same net effect,
+   no extra script files to host.
+
+3) DROPPED the generic "DataViz i" project-code-viewer widget (Config
+   class, __showProjectHTML/__toggleProjectHTML/__copyToClipboard/
+   __saveTextAsFile) - it exports the OLD ixmaps.embed()/project-JSON
+   format, unrelated to this page's actual fluent-API map, and isn't part
+   of what this map does for a viewer.
+
+4) FIXED a copy-paste bug: theme_11 ("Women's places") was a byte-identical
+   copy of theme_10 (Housenumber) - same title, same tooltip
+   (addr:housenumber), same binding/valuefield - so it only ever showed
+   "Housenumber" text over the women's-places query's own housenumber tags
+   (almost none of which exist on childcare/healthcare/playground points).
+   Replaced with a real categorical breakdown (childcare, healthcare, baby
+   care, recreation, food, shopping, community) derived from which Overpass
+   clause matched, styled like the existing categorical layers (theme_1,
+   theme_9).
+
+licensed under CC-BY
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps</title>
+	<meta name="description" content="La mappa interattiva per esplorare dati OpenStreetMap via Overpass API: stress ciclistico, limiti di velocità, superficie stradale e servizi urbani">
+
+	<style>
+		a {
+			text-decoration: none;
+			color: #444444;
+		}
+
+		a:hover {
+			color: cornflowerblue;
+		}
+
+		li.active a {
+			color: white;
+			background-color: #24A2AF;
+		}
+
+		.sidebar {
+			position: absolute;
+			right: 80px;
+			top: 150px;
+			text-align: left;
+			font-family: Georgia;
+			font-size: 1.1em;
+			line-height: 1.2em;
+			max-width: 420px;
+			background-color: rgba(247, 246, 239, 0.9)
+		}
+
+		/* Info Icon Button */
+		.info-icon {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			width: 40px;
+			height: 40px;
+			background: #24A2AF;
+			color: white;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 24px;
+			font-weight: bold;
+			cursor: pointer;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+			z-index: 999999;
+			transition: all 0.3s ease;
+			font-family: Georgia, serif;
+		}
+
+		.info-icon:hover {
+			background: #1C8895;
+			transform: scale(1.1);
+			box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+		}
+
+		/* Info Popup */
+		.info-popup {
+			display: none;
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background: white;
+			padding: 0;
+			border-radius: 12px;
+			box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+			z-index: 1000000;
+			max-width: 650px;
+			max-height: 85vh;
+			overflow-y: auto;
+			animation: fadeIn 0.3s ease;
+		}
+
+		.info-popup.active {
+			display: block;
+		}
+
+		.info-popup-header {
+			background: linear-gradient(135deg, #24A2AF 0%, #1C8895 100%);
+			color: white;
+			padding: 20px 25px;
+			border-radius: 12px 12px 0 0;
+			position: relative;
+		}
+
+		.info-popup-header h2 {
+			margin: 0;
+			font-size: 22px;
+			font-weight: 600;
+		}
+
+		.info-popup-close {
+			position: absolute;
+			top: 15px;
+			right: 20px;
+			background: none;
+			border: none;
+			color: white;
+			font-size: 28px;
+			cursor: pointer;
+			line-height: 1;
+			padding: 0;
+			width: 30px;
+			height: 30px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 50%;
+			transition: background 0.2s;
+		}
+
+		.info-popup-close:hover {
+			background: rgba(255,255,255,0.2);
+		}
+
+		.info-popup-content {
+			padding: 25px;
+			color: #333;
+			line-height: 1.6;
+			text-align: left;
+		}
+
+		.info-popup-content h3 {
+			color: #24A2AF;
+			margin: 20px 0 10px 0;
+			font-size: 18px;
+		}
+
+		.info-popup-content h3:first-child {
+			margin-top: 0;
+		}
+
+		.info-popup-content p {
+			margin: 10px 0;
+		}
+
+		.info-popup-content ul {
+			margin: 10px 0;
+			padding-left: 20px;
+		}
+
+		.info-popup-content li {
+			margin: 8px 0;
+		}
+
+		.info-popup-content strong {
+			color: #24A2AF;
+		}
+
+		.info-popup-footer {
+			padding: 15px 25px;
+			background: #f8f9fa;
+			border-radius: 0 0 12px 12px;
+			font-size: 12px;
+			color: #666;
+			border-top: 1px solid #e0e0e0;
+			text-align: left;
+		}
+
+		.info-popup-overlay {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0,0,0,0.5);
+			z-index: 999998;
+		}
+
+		.info-popup-overlay.active {
+			display: block;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translate(-50%, -45%);
+			}
+			to {
+				opacity: 1;
+				transform: translate(-50%, -50%);
+			}
+		}
+
+		.color-indicator {
+			display: inline-block;
+			width: 20px;
+			height: 3px;
+			margin-right: 5px;
+			vertical-align: middle;
+		}
+
+	</style>
+
+</head>
+
+<body style='text-align:center;background:#F7F6EF;margin:0;padding:0'>
+
+	<!-- Info Icon -->
+	<div class="info-icon" onclick="toggleInfoPopup()" title="Informazioni sulla mappa">
+		i
+	</div>
+
+	<!-- Info Popup Overlay -->
+	<div class="info-popup-overlay" id="infoOverlay" onclick="toggleInfoPopup()"></div>
+
+	<!-- Info Popup -->
+	<div class="info-popup" id="infoPopup">
+		<div class="info-popup-header">
+			<h2>🗺️ City Info - OpenStreetMap Data</h2>
+			<button class="info-popup-close" onclick="toggleInfoPopup()">&times;</button>
+		</div>
+		<div class="info-popup-content">
+			<h3>📍 Descrizione</h3>
+			<p>
+				Questa mappa interattiva visualizza <strong>dati di infrastrutture urbane</strong> provenienti da
+				<strong>OpenStreetMap (OSM)</strong> attraverso l'<strong>Overpass API</strong>.
+				Esplora diverse caratteristiche della mobilità sostenibile e dei servizi urbani.
+			</p>
+
+			<h3>🚴 Layer Disponibili</h3>
+
+			<p><strong>Mobilità Ciclabile:</strong></p>
+			<ul>
+				<li><strong>Cycling Stress Map</strong> - Livelli di stress per i ciclisti (LTS):
+					<ul>
+						<li><span class="color-indicator" style="background:#0099CC"></span>LTS 1 - Adatto ai bambini</li>
+						<li><span class="color-indicator" style="background:#1C9C54"></span>LTS 2 - Basso stress</li>
+						<li><span class="color-indicator" style="background:#F0C808"></span>LTS 3 - Stress moderato</li>
+						<li><span class="color-indicator" style="background:#DD5454"></span>LTS 4 - Stress alto</li>
+					</ul>
+				</li>
+				<li><strong>Speed Limits</strong> - Limiti di velocità delle strade (km/h)</li>
+				<li><strong>Street Surface</strong> - Tipo di superficie stradale (asfalto, pavé, etc.)</li>
+				<li><strong>Cycle Lanes by Surface</strong> - Piste ciclabili classificate per superficie</li>
+			</ul>
+
+			<p><strong>Trasporto Pubblico e Servizi:</strong></p>
+			<ul>
+				<li><strong>Bus Stops</strong> - Fermate autobus con accessibilità per sedie a rotelle</li>
+				<li><strong>Waste and Recycle Bins</strong> - Cestini e raccolta differenziata</li>
+				<li><strong>Trees</strong> - Alberi mappati per genere botanico</li>
+				<li><strong>Housenumbers</strong> - Numeri civici</li>
+				<li><strong>Women's places</strong> - Servizi utili a genitori e caregiver (asili, sanità, parchi giochi, negozi)</li>
+			</ul>
+
+			<h3>🔍 Come Usare la Mappa</h3>
+			<ul>
+				<li><strong>Seleziona un layer:</strong> Usa il menu laterale per scegliere quale layer visualizzare</li>
+				<li><strong>Naviga:</strong> Trascina la mappa per spostarti, usa zoom per ingrandire/rimpicciolire (min. zoom 14)</li>
+				<li><strong>Analizza:</strong> I colori delle linee/punti indicano diverse caratteristiche</li>
+			</ul>
+
+			<h3>📊 Cycling Stress Map (LTS)</h3>
+			<p>Il <strong>Level of Traffic Stress (LTS)</strong> misura quanto una strada sia confortevole per ciclisti di diverso livello:</p>
+			<ul>
+				<li><strong>LTS 1:</strong> Adatto a bambini - strade molto sicure, traffico minimo</li>
+				<li><strong>LTS 2:</strong> Adatto a ciclisti occasionali - infrastrutture protette</li>
+				<li><strong>LTS 3:</strong> Richiede confidenza - traffico moderato</li>
+				<li><strong>LTS 4:</strong> Solo ciclisti esperti - traffico intenso, alta velocità</li>
+			</ul>
+
+			<h3>🌍 Fonte Dati</h3>
+			<p>
+				I dati provengono da <strong>OpenStreetMap</strong>, un progetto di mappatura collaborativa mondiale.
+				Le informazioni sono aggiornate in tempo reale tramite l'<strong>Overpass API</strong>, che interroga il database OSM.
+			</p>
+		</div>
+		<div class="info-popup-footer">
+			<strong>Fonte dati:</strong> <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> © Contributors |
+			<strong>API:</strong> <a href="https://overpass-api.de/" target="_blank">Overpass API</a> |
+			<strong>Licenza:</strong> ODbL |
+			<strong>Realizzato con:</strong> <a href="https://ixmaps.com" target="_blank">iXMaps</a>
+		</div>
+	</div>
+
+	<div>
+
+		<div id="map_div" style="max-width:1024px;margin:auto"></div>
+
+		<div id="sidebar_div" class="sidebar" style="z-index:999999">
+			<ul>
+				<li class="select" style="font-family:helvetica;font-size:1.3em;line-height:1.2em;list-style-type: none">
+					<b>City Info</b> - <b>OSM Data</b>
+				</li>
+				<hr>
+				<p>Open street map data via Overpass API:</p>
+				<ol>
+					<li class="select active">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_2)">Speed limits</a>
+					</li>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_1)">Cycling stress</a>
+					</li>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_3)">Street surface</a>
+					</li>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_4)">Cycle lanes by surface</a>
+					</li>
+					<hr>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_7)">Bus stops and wheelchair flag</a>
+					</li>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_8)">Waste and recycle bins</a>
+					</li>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_9)">Trees</a>
+					</li>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_10)">Housenumbers</a>
+					</li>
+					<li class="select">
+						<a href="javascript:ixmaps.map().remove('features').add(__theme_11)">Women's places</a>
+					</li>
+
+					<div style="margin-top:0.5em;color:#888888"></div>
+				</ol>
+			</ul>
+		</div>
+
+	</div>
+
+	<!-- ------------------------------------- -->
+	<!--                                       -->
+	<!-- c o d e                         -->
+	<!--                                       -->
+	<!-- ------------------------------------- -->
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+		/**
+		 ** change background color on select
+		 **/
+
+		__select = (el) => {
+			$(".select").removeClass("active");
+			el.addClass("active");
+		};
+		$(".select").attr("onclick", "__select($(this))");
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// o v e r p a s s   s e r v e r
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		// GR 17.08.2026 was 3 inconsistent endpoints (overpass-api.de,
+		// overpass.kumi.systems, and a corsme.herokuapp.com proxy in front of
+		// overpass.fr) - see file header comment for the connectivity test
+		// that ruled the first two out on this network and ruled out
+		// overpass.osm.ch too (reachable, but Switzerland-only data).
+		var OVERPASS_URL = "https://overpass.openstreetmap.fr/api/interpreter";
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// s t r e s s   l e v e l   m o d e l   ( B i k e O t t a w a )
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		// unchanged from the original - 'Cycling Level of Traffic Stress Model'
+		// from https://github.com/BikeOttawa/stressmodel
+
+		window.stresslevel = window.stresslevel || {};
+
+		(function (exports) {
+			exports.evaluateLTS = function (way) {
+				const bp = bikingPermitted(way)
+				if (!bp.permitted) {
+					return bp.result
+				}
+				const isp = isSeparatedPath(way)
+				if (isp.isSeparatedPath) {
+					return isp.result
+				}
+				const ibl = isBikeLane(way)
+				if (ibl.isBikeLane) {
+					return ibl.result
+				}
+				const imt = isMixedTraffic(way)
+				if (imt.isMixedTraffic) {
+					return imt.result
+				}
+
+				return { lts: 0, message: ['Error: This way does not match any of the analysis criteria.'] }
+			}
+
+			exports.isBikingPermitted = function (way) {
+				return bikingPermitted(way).permitted
+			}
+
+			exports.name = 'default'
+			exports.description = 'Standard daylight model. This model looks at roads as a single unit and does not take travel direction or intersection approaches into account.'
+			exports.version = '1.0.1'
+			exports.levels = 4
+			exports.tags = ['access', 'bicycle', 'construction', 'cycleway', 'footway', 'highway', 'lanes', 'maxspeed', 'motor_vehicle', 'parking', 'service', 'shoulder']
+			exports.usesTag = function (tag) {
+				for (let i = 0; i < this.tags.length; i++) {
+					if (tag.startsWith(this.tags[i])) {
+						return true
+					}
+				}
+				return false
+			}
+
+			function HasTag (way, tag) {
+				return (typeof way.tags[tag] !== 'undefined')
+			}
+
+			function HasTagValue (way, tag, tagvalue) {
+				let x = way.tags[tag]
+				if (typeof x === 'undefined') return false
+				return x === tagvalue
+			}
+
+			function TagStartsWith (way, tag) {
+				for (let t in way.tags) {
+					if (t.startsWith(tag)) return true
+				}
+				return false
+			}
+
+			function TagStartsWithValue (way, tag, tagvalue) {
+				for (let t in way.tags) {
+					if (t.startsWith(tag)) {
+						if (way.tags[t] === tagvalue) return true
+					}
+				}
+				return false
+			}
+
+			function getLanes (way) {
+				let lanes
+				let defaultLanes = 2
+				if (HasTag(way, 'lanes')) {
+					let l = way.tags['lanes']
+					if (l.indexOf(';') === -1) {
+						lanes = parseInt(l)
+						if (isNaN(lanes)) {
+							return { 'lanes': defaultLanes, message: ['Error: Unknown \'lanes\' tag: \'' + l + '\'. Assuming default of ' + defaultLanes.toString() + '.'] }
+						} else {
+							return { 'lanes': lanes, message: [] }
+						}
+					} else {
+						let list = l.split(';')
+						let ltot = 0
+						for (let s in list) {
+							lanes = parseInt(s)
+							if (isNaN(lanes)) {
+								return { 'lanes': defaultLanes, message: ['Error: Unknown \'lanes\' tag in split value: \'' + l + '\'. Assuming default of ' + defaultLanes.toString() + '.'] }
+							} else {
+								ltot += lanes
+							}
+						}
+						return { 'lanes': ltot, message: ['Split \'lanes\' tag. Using total of all elements.'] }
+					}
+				} else {
+					return { 'lanes': defaultLanes, message: ['No \'lanes\' tag. Assuming default of ' + defaultLanes.toString() + '.'] }
+				}
+			}
+
+			function getMaxSpeed (way) {
+				let result
+				if (HasTag(way, 'maxspeed')) {
+					const maxspeed = way.tags['maxspeed']
+					if (maxspeed === 'national') {
+						return { maxspeed: 40, message: ['Error: Unknown \'maxspeed\' tag value \'national\'. Assuming a value of \'40\'.'] }
+					} else {
+						result = parseInt(maxspeed)
+						if (isNaN(result)) {
+							return { maxspeed: 50, message: ['Error: Unknown \'maxspeed\' tag value \'' + maxspeed + '\'. Assuming a value of \'50\'.'] }
+						} else {
+							return { maxspeed: maxspeed, message: [] }
+						}
+					}
+				} else {
+					if (HasTagValue(way, 'highway', 'motorway')) {
+						return { maxspeed: 100, message: ['No maxspeed tag. Using default value of 100 when highway=motorway.'] }
+					} else if (HasTagValue(way, 'highway', 'primary') || HasTagValue(way, 'highway', 'secondary')) {
+						return { maxspeed: 80, message: ['No maxspeed tag. Using default value of 80 when highway=\'' + way.tags['highway'] + '\'.'] }
+					} else {
+						return { maxspeed: 50, message: ['No maxspeed tag. Using default value of 50 when highway=\'' + way.tags['highway'] + '\'.'] }
+					}
+				}
+			}
+
+			function parkingPresent (way) {
+				if (HasTagValue(way, 'parking', 'yes')) {
+					return { parking: true, message: ['Found tag \'parking\'=\'yes\'. Parking is present.'] }
+				}
+				if (TagStartsWith(way, 'parking:')) {
+					for (let tag in way.tags) {
+						if (tag.startsWith('parking:lane')) {
+							const v = way.tags[tag]
+							if (v === 'parallel' || v === 'perpendicular' || v === 'diagonal' || v === 'yes' || v === 'marked') {
+								return { parking: true, message: ['Found tag \'' + tag + '\'=\'' + v + '\'. Parking is present.'] }
+							}
+						}
+					}
+				}
+				return { parking: false, message: ['Parking is not present.'] }
+			}
+
+			function hasSeparatingMedian (way) {
+				return false
+			}
+
+			function bikeAndParkingWidth (way) {
+				return 99999.9
+			}
+
+			function bikingPermitted (way) {
+				if (HasTag(way, 'highway') || HasTag(way, 'bicycle')) {
+					if (HasTagValue(way, 'bicycle', 'no')) {
+						return { permitted: false, result: { lts: 0, message: ['Cycling not permitted due to bicycle=\'no\' tag.'], rule: 'p2' } }
+					}
+					if (HasTagValue(way, 'access', 'no')) {
+						return { permitted: false, result: { lts: 0, message: ['Cycling not permitted due to access=\'no\' tag.'], rule: 'p6' } }
+					}
+					if (HasTagValue(way, 'highway', 'motorway')) {
+						return { permitted: false, result: { lts: 0, message: ['Cycling not permitted due to highway=\'motorway\' tag.'], rule: 'p3' } }
+					} else if (HasTagValue(way, 'highway', 'motorway_link')) {
+						return { permitted: false, result: { lts: 0, message: ['Cycling not permitted due to highway=\'motorway_link\' tag.'], rule: 'p4' } }
+					} else if (HasTagValue(way, 'highway', 'proposed')) {
+						return { permitted: false, result: { lts: 0, message: ['Cycling not permitted due to highway=\'proposed\' tag.'], rule: 'p7' } }
+					}
+					if (HasTagValue(way, 'footway', 'sidewalk')) {
+						if (!HasTagValue(way, 'bicycle', 'yes')) {
+							if (HasTagValue(way, 'highway', 'footway') || HasTagValue(way, 'highway', 'path')) {
+								return { permitted: false, result: { lts: 0, message: ['Cycling not permitted. When footway=\'sidewalk\' is present, there must be a bicycle=\'yes\' when the highway is \'footway\' or \'path\'.'], rule: 'p5' } }
+							}
+						}
+					}
+				} else {
+					return { permitted: false, result: { lts: 0, message: ['Way has neither a highway tag nor a bicycle=yes tag. The way is not a highway.'], rule: 'p1' } }
+				}
+
+				return { permitted: true, message: [] }
+			}
+
+			function isSeparatedPath (way) {
+				let rule = ''
+				let message = []
+				if (HasTagValue(way, 'highway', 'path')) {
+					rule = 's1'
+					message.push('This way is a separated path because highway=\'path\'.')
+				} else if (HasTagValue(way, 'highway', 'footway') && !HasTagValue(way, 'footway', 'crossing')) {
+					rule = 's2'
+					message.push('This way is a separated path because highway=\'footway\' but it is not a crossing.')
+				} else if (HasTagValue(way, 'highway', 'cycleway')) {
+					rule = 's3'
+					message.push('This way is a separated path because highway=\'cycleway\'.')
+				} else if (HasTagValue(way, 'highway', 'construction')) {
+					if (HasTagValue(way, 'construction', 'path')) {
+						rule = 's4'
+						message.push('This way is a separated path because highway=\'construction\' and construction=\'path\'.')
+					} else if (HasTagValue(way, 'construction', 'footway')) {
+						rule = 's5'
+						message.push('This way is a separated path because highway=\'construction\' and construction=\'footway\'.')
+					} else if (HasTagValue(way, 'construction', 'cycleway')) {
+						rule = 's6'
+						message.push('This way is a separated path because highway=\'construction\' and construction=\'cycleway\'.')
+					}
+				} else if (TagStartsWithValue(way, 'cycleway', 'track')) {
+					rule = 's7'
+					message.push('This way is a separated path because cycleway* is defined as \'track\'.')
+				} else if (TagStartsWithValue(way, 'cycleway', 'opposite_track')) {
+					rule = 's8'
+					message.push('This way is a separated path because cycleway* is defined as \'opposite_track\'.')
+				}
+				if (rule) {
+					message.push('Separated paths are always LTS=1.')
+					return { isSeparatedPath: true, result: { lts: 1, message: message, rule: rule } }
+				}
+
+				return { isSeparatedPath: false }
+			}
+
+			function bikeLaneAnalysisParkingPresent (way, message) {
+				let rule = ''
+				const isResidential = HasTagValue(way, 'highway', 'residential')
+				const width = bikeAndParkingWidth(way)
+
+				const gl = getLanes(way)
+				const lanes = gl.lanes
+				if (gl.message.length > 0) {
+					message.push(gl.message)
+				}
+
+				const gm = getMaxSpeed(way)
+				const maxspeed = gm.maxspeed
+				if (gm.message.length > 0) {
+					message.push(gm.message)
+				}
+
+				let lts = 1
+				if (lanes >= 3) {
+					if (lts < 3) {
+						rule = 'b2'
+						message.push('Increasing LTS to 3 because there are 3 or more lanes and parking present.')
+						lts = 3
+					}
+				}
+
+				if (width <= 4.1) {
+					if (lts < 3) {
+						rule = 'b3'
+						message.push('Increasing LTS to 3 because the bike lane width is less than 4.1m and parking present.')
+						lts = 3
+					}
+				} else if (width <= 4.25) {
+					if (lts < 2) {
+						rule = 'b4'
+						message.push('Increasing LTS to 2 because the bike lane width is less than 4.25m and parking present.')
+						lts = 2
+					}
+				} else if (width < 4.5 && (maxspeed < 40 || isResidential)) {
+					if (lts < 2) {
+						rule = 'b5'
+						message.push('Increasing LTS to 2 because the bike lane width is less than 4.5m. maxspeed is less than 40 on a residential street and parking present.')
+						lts = 2
+					}
+				}
+
+				if (maxspeed > 40) {
+					if (maxspeed <= 50) {
+						if (lts < 2) {
+							rule = 'b6'
+							message.push('Increasing LTS to 2 because the maxspeed is between 41-50 km/h and parking present.')
+							lts = 2
+						}
+					} else if (maxspeed < 65) {
+						if (lts < 3) {
+							rule = 'b7'
+							message.push('Increasing LTS to 3 because the maxspeed is between 51-54 km/h and parking present.')
+							lts = 3
+						}
+					} else {
+						if (lts < 4) {
+							rule = 'b8'
+							message.push('Increasing LTS to 4 because the maxspeed is over 55 km/h and parking present.')
+							lts = 4
+						}
+					}
+				}
+				if (!isResidential) {
+					if (lts < 3) {
+						rule = 'b9'
+						message.push('Increasing LTS to 3 because highway is not \'residential\'.')
+						lts = 3
+					}
+				}
+				if (lts === 1) {
+					rule = 'b1'
+					message.push('LTS is 1 because there is parking present, the maxspeed is less than or equal to 40, highway=\'residential\', and there are 2 lanes or less.')
+				}
+
+				return { lts: lts, message: message, rule: rule }
+			}
+
+			function bikeLaneAnalysisNoParking (way, message) {
+				let rule = ''
+				const isResidential = HasTagValue(way, 'highway', 'residential')
+				const width = bikeAndParkingWidth(way)
+
+				const gl = getLanes(way)
+				const lanes = gl.lanes
+				if (gl.message.length > 0) {
+					message.push(gl.message)
+				}
+
+				const gm = getMaxSpeed(way)
+				const maxspeed = gm.maxspeed
+				if (gm.message.length > 0) {
+					message.push(gm.message)
+				}
+
+				let lts = 1
+				if (lanes === 3 && hasSeparatingMedian(way)) {
+					if (lts < 2) {
+						rule = 'c2'
+						message.push('Increasing LTS to 2 because there are 3 lanes with a separating median and no parking.')
+						lts = 2
+					}
+				} else if (lanes >= 3) {
+					if (lts < 3) {
+						rule = 'c3'
+						message.push('Increasing LTS to 3 because there are 3 or more lanes and no parking.')
+						lts = 3
+					}
+				}
+
+				if (width <= 1.7) {
+					if (lts < 2) {
+						rule = 'c4'
+						message.push('Increasing LTS to 2 because the bike lane width is less than 1.7 metres and no parking.')
+						lts = 2
+					}
+				}
+				if (maxspeed > 50) {
+					if (maxspeed < 65) {
+						if (lts < 3) {
+							rule = 'c5'
+							message.push('Increasing LTS to 3 because the maxspeed is between 51-64 km/h and no parking.')
+							lts = 3
+						}
+					} else {
+						if (lts < 4) {
+							rule = 'c6'
+							message.push('Increasing LTS to 4 because the maxspeed is over 65 km/h and no parking.')
+							lts = 4
+						}
+					}
+				}
+				if (!isResidential) {
+					if (lts < 3) {
+						rule = 'c7'
+						message.push('Increasing LTS to 3 because highway with bike lane is not \'residential\' and no parking.')
+						lts = 3
+					}
+				}
+				if (lts === 1) {
+					rule = 'c1'
+					message.push('LTS is 1 because there is no parking, maxspeed is less than or equal to 50, highway=\'residential\', and there are 2 lanes or less.')
+				}
+
+				return { lts: lts, message: message, rule: rule }
+			}
+
+			function isBikeLane (way) {
+				let result
+				let analyze = false
+				let message = []
+				if (TagStartsWithValue(way, 'cycleway', 'crossing') ||
+					TagStartsWithValue(way, 'cycleway', 'lane') ||
+					TagStartsWithValue(way, 'cycleway', 'left') ||
+					TagStartsWithValue(way, 'cycleway', 'opposite') ||
+					TagStartsWithValue(way, 'cycleway', 'opposite_lane') ||
+					TagStartsWithValue(way, 'cycleway', 'right') ||
+					TagStartsWithValue(way, 'cycleway', 'yes')
+				) {
+					analyze = true
+					for (let t in way.tags) {
+						if (t.startsWith('cycleway')) {
+							message.push('Way has a bike lane because \'' + t + '\'=\'' + way.tags[t] + '\'.')
+						}
+					}
+				}
+				if (HasTagValue(way, 'shoulder:access:bicycle', 'yes')) {
+					analyze = true
+					message.push('Way has a bike lane because shoulder:access:bicycle=\'' + way.tags['shoulder:access:bicycle'] + '\'.')
+				}
+				if (analyze) {
+					const pp = parkingPresent(way)
+					if (pp.message.length > 0) message.push(pp.message)
+					if (pp.parking) {
+						result = bikeLaneAnalysisParkingPresent(way, message)
+						return { isBikeLane: true, result: result }
+					} else {
+						result = bikeLaneAnalysisNoParking(way, message)
+						return { isBikeLane: true, result: result }
+					}
+				}
+
+				return { isBikeLane: false }
+			}
+
+			function isMixedTraffic (way) {
+				let message = ['Does not meet criteria for Separated Path or Bike Lane. Treating as Mixed Traffic.']
+
+				const isResidential = HasTagValue(way, 'highway', 'residential')
+
+				const gl = getLanes(way)
+				const lanes = gl.lanes
+				if (gl.message.length > 0) {
+					message.push(gl.message)
+				}
+
+				const gm = getMaxSpeed(way)
+				let maxspeed = gm.maxspeed
+				if (gm.message.length > 0) {
+					message.push(gm.message)
+				}
+
+				if (HasTagValue(way, 'motor_vehicle', 'no')) {
+					message.push('Setting LTS to 1 because motor_vehicle=\'no\'.')
+					return { isMixedTraffic: true, result: { lts: 1, message: message, rule: 'm17' } }
+				}
+				if (HasTagValue(way, 'highway', 'steps')) {
+					message.push('Setting LTS to 1 because highway=\'steps\'.')
+					return { isMixedTraffic: true, result: { lts: 1, message: message, rule: 'm1' } }
+				}
+				if (HasTagValue(way, 'highway', 'pedestrian')) {
+					message.push('Setting LTS to 1 because highway=\'pedestrian\'.')
+					return { isMixedTraffic: true, result: { lts: 1, message: message, rule: 'm13' } }
+				}
+				if (HasTagValue(way, 'highway', 'footway') && HasTagValue(way, 'footway', 'crossing')) {
+					message.push('Setting LTS to 2 because highway=\'footway\' and footway=\'crossing\'.')
+					return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm14' } }
+				}
+				if (HasTagValue(way, 'highway', 'service') && HasTagValue(way, 'service', 'alley')) {
+					message.push('Setting LTS to 2 because highway=\'service\' and service=\'alley\'.')
+					return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm2' } }
+				}
+				if (HasTagValue(way, 'highway', 'track')) {
+					message.push('Setting LTS to 2 because highway=\'track\'.')
+					return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm15' } }
+				}
+				if (maxspeed <= 50) {
+					if (HasTagValue(way, 'highway', 'service')) {
+						if (HasTagValue(way, 'service', 'parking_aisle')) {
+							message.push('Setting LTS to 2 because maxspeed is 50 km/h or less and service is \'parking_aisle\'.')
+							return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm3' } }
+						}
+						if (HasTagValue(way, 'service', 'driveway')) {
+							message.push('Setting LTS to 2 because maxspeed is 50 km/h or less and service is \'driveway\'.')
+							return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm4' } }
+						}
+						if (maxspeed < 35) {
+							message.push('Setting LTS to 2 because maxspeed is less than 35 km/h and highway=\'service\'.')
+							return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm16' } }
+						}
+					}
+					if (maxspeed <= 40) {
+						if (lanes <= 3 && isResidential) {
+							message.push('Setting LTS to 2 because maxspeed is up to 40 km/h, 3 or fewer lanes and highway=\'residential\'.')
+							return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm5' } }
+						} else if (lanes <= 3) {
+							message.push('Setting LTS to 3 because maxspeed is up to 40 km/h and 3 or fewer lanes on non-residential highway.')
+							return { isMixedTraffic: true, result: { lts: 3, message: message, rule: 'm6' } }
+						} else if (lanes <= 5) {
+							message.push('Setting LTS to 3 because maxspeed is up to 40 km/h and 4 or 5 lanes.')
+							return { isMixedTraffic: true, result: { lts: 3, message: message, rule: 'm7' } }
+						} else {
+							message.push('Setting LTS to 4 because maxspeed is up to 40 km/h and the number of lanes is greater than 5.')
+							return { isMixedTraffic: true, result: { lts: 4, message: message, rule: 'm8' } }
+						}
+					} else {
+						if (lanes < 3 && isResidential) {
+							message.push('Setting LTS to 2 because maxspeed is up to 50 km/h and lanes are 2 or less and highway=\'residential\'.')
+							return { isMixedTraffic: true, result: { lts: 2, message: message, rule: 'm9' } }
+						} else if (lanes <= 3) {
+							message.push('Setting LTS to 3 because maxspeed is up to 50 km/h and lanes are 3 or less on non-residential highway.')
+							return { isMixedTraffic: true, result: { lts: 3, message: message, rule: 'm10' } }
+						} else {
+							message.push('Setting LTS to 4 because the number of lanes is greater than 3.')
+							return { isMixedTraffic: true, result: { lts: 4, message: message, rule: 'm11' } }
+						}
+					}
+				} else {
+					message.push('Setting LTS to 4 because maxspeed is greater than 50 km/h.')
+					return { isMixedTraffic: true, result: { lts: 4, message: message, rule: 'm12' } }
+				}
+			}
+		})(window.stresslevel);
+
+		ixmaps.addStressLevel = function (data) {
+			for (var i in data.elements) {
+				if (data.elements[i].type == "way") {
+					data.elements[i].tags = data.elements[i].tags || {};
+					data.elements[i].tags.level = stresslevel.evaluateLTS(data.elements[i]).lts;
+				}
+			}
+		};
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// h e l p e r s   /   c o l o r s c h e m e s
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		ixmaps.setTitleBox = function (szTitle, szColor) {
+			ixmaps.setTitle("<span style='padding: 0.3em 1em;border:solid #ddd 1px;border-radius:0.2em;font-family:courier new,Raleway,arial,helvetica;background:" + (szColor || "rgba(255,255,255,0.9)") + ";color:" + (szColor ? "#fff" : "#888") + "'>" + szTitle + "</span>");
+		};
+
+		ixmaps.colorScheme_speedmap = function (objTheme) {
+			for (var i = 0; i < objTheme.szLabelA.length; i++) {
+				if (objTheme.szLabelA[i].match(/45 mph|50 mph|55 mph|60 mph|65 mph|70 mph|75 mph/i)) {
+					objTheme.colorScheme[i] = "#CE517F";
+				} else if (objTheme.szLabelA[i].match(/40 mph/i)) {
+					objTheme.colorScheme[i] = "#CC6166";
+				} else if (objTheme.szLabelA[i].match(/35 mph/i)) {
+					objTheme.colorScheme[i] = "#CF8C55";
+				} else if (objTheme.szLabelA[i].match(/30 mph/i)) {
+					objTheme.colorScheme[i] = "#D0A148";
+				} else if (objTheme.szLabelA[i].match(/25 mph/i)) {
+					objTheme.colorScheme[i] = "#D1B63A";
+				} else if (objTheme.szLabelA[i].match(/20 mph/i)) {
+					objTheme.colorScheme[i] = "#D0D623";
+				} else if (objTheme.szLabelA[i].match(/10 mph/i)) {
+					objTheme.colorScheme[i] = "#E1EA15";
+				} else if (objTheme.szLabelA[i].match(/5 mph/i)) {
+					objTheme.colorScheme[i] = "#D2F111";
+				} else if (objTheme.szLabelA[i].match(/2 mph/i)) {
+					objTheme.colorScheme[i] = "#D2F111";
+				} else if (objTheme.szLabelA[i].match(/130/i)) {
+					objTheme.colorScheme[i] = "#aa4488";
+				} else if (objTheme.szLabelA[i].match(/110/i)) {
+					objTheme.colorScheme[i] = "#aa4488";
+				} else if (objTheme.szLabelA[i].match(/100/i)) {
+					objTheme.colorScheme[i] = "#aa4488";
+				} else if (objTheme.szLabelA[i].match(/90/i)) {
+					objTheme.colorScheme[i] = "#aa4488";
+				} else if (objTheme.szLabelA[i].match(/80/i)) {
+					objTheme.colorScheme[i] = "#dd4488";
+				} else if (objTheme.szLabelA[i].match(/70/i)) {
+					objTheme.colorScheme[i] = "#dd4488";
+				} else if (objTheme.szLabelA[i].match(/60/i)) {
+					objTheme.colorScheme[i] = "#dd4400";
+				} else if (objTheme.szLabelA[i].match(/50/i)) {
+					objTheme.colorScheme[i] = "#dd8800";
+				} else if (objTheme.szLabelA[i].match(/40/i)) {
+					objTheme.colorScheme[i] = "#eecc22";
+				} else if (objTheme.szLabelA[i].match(/30/i)) {
+					objTheme.colorScheme[i] = "#ddcc00";
+				} else if (objTheme.szLabelA[i].match(/20/i)) {
+					objTheme.colorScheme[i] = "#ccdd66";
+				} else if (objTheme.szLabelA[i].match(/10/i)) {
+					objTheme.colorScheme[i] = "#88dd00";
+				} else if (objTheme.szLabelA[i].match(/5/i)) {
+					objTheme.colorScheme[i] = "#88dd00";
+				}
+			}
+		};
+
+		ixmaps.colorScheme_surfacemap = function (objTheme) {
+			var defaultColor = ColorScheme.createColorScheme("tableau10", "", "100");
+			for (var i = 0; i < objTheme.szLabelA.length; i++) {
+				if (objTheme.szLabelA[i].match(/cycleway/i)) {
+					objTheme.colorScheme[i] = "#2233dd";
+				} else if (objTheme.szLabelA[i].match(/primary/i)) {
+					objTheme.colorScheme[i] = "#dd0000";
+				} else if (objTheme.szLabelA[i].match(/asphalt/i)) {
+					objTheme.colorScheme[i] = "#888888";
+				} else if (objTheme.szLabelA[i].match(/walk/i)) {
+					objTheme.colorScheme[i] = "#0088dd";
+				} else {
+					objTheme.colorScheme[i] = defaultColor[i];
+				}
+			}
+		};
+
+		ixmaps.colorScheme_trees = function (objTheme) {
+			for (var i = 0; i < objTheme.szExactA.length; i++) {
+				if (objTheme.szLabelA[i].match(/Platanus/i)) {
+					objTheme.colorScheme[i] = "#EDC640";
+				} else if (objTheme.szLabelA[i].match(/Prunus/i)) {
+					objTheme.colorScheme[i] = "#712A3E";
+				} else if (objTheme.szLabelA[i].match(/Sophora/i)) {
+					objTheme.colorScheme[i] = "#C7AA25";
+				} else if (objTheme.szLabelA[i].match(/Tilia/i)) {
+					objTheme.colorScheme[i] = "#CDAD25";
+				} else if (objTheme.szLabelA[i].match(/Celtis/i)) {
+					objTheme.colorScheme[i] = "#B59F44";
+				} else if (objTheme.szLabelA[i].match(/Ulmus/i)) {
+					objTheme.colorScheme[i] = "rgb(0, 128, 95)";
+				} else if (objTheme.szLabelA[i].match(/Pyrus/i)) {
+					objTheme.colorScheme[i] = "#D42804";
+				} else if (objTheme.szLabelA[i].match(/Robinia/i)) {
+					objTheme.colorScheme[i] = "#DDA424";
+				} else if (objTheme.szLabelA[i].match(/Populus/i)) {
+					objTheme.colorScheme[i] = "#AB5521";
+				} else if (objTheme.szLabelA[i].match(/Gleditsia/i)) {
+					objTheme.colorScheme[i] = "#C7B902";
+				} else if (objTheme.szLabelA[i].match(/Taxus/i)) {
+					objTheme.colorScheme[i] = "#5F8476";
+				} else if (objTheme.szLabelA[i].match(/Malus/i)) {
+					objTheme.colorScheme[i] = "#B2B124";
+				} else if (objTheme.szLabelA[i].match(/Ailanthus/i)) {
+					objTheme.colorScheme[i] = "#6C9BAB";
+				} else if (objTheme.szLabelA[i].match(/Fraxinus/i)) {
+					objTheme.colorScheme[i] = "#C33334";
+				} else if (objTheme.szLabelA[i].match(/Koelreuteria/i)) {
+					objTheme.colorScheme[i] = "#D75004";
+				} else if (objTheme.szLabelA[i].match(/Cornus/i)) {
+					objTheme.colorScheme[i] = "#A10A2C";
+				} else if (objTheme.szLabelA[i].match(/Pterocarya/i)) {
+					objTheme.colorScheme[i] = "#D59D14";
+				} else if (objTheme.szLabelA[i].match(/Fagus/i)) {
+					objTheme.colorScheme[i] = "#D5762B";
+				} else if (objTheme.szLabelA[i].match(/Betula/i)) {
+					objTheme.colorScheme[i] = "#F7DD76";
+				} else if (objTheme.szLabelA[i].match(/Corylus/i)) {
+					objTheme.colorScheme[i] = "#B9A843";
+				} else if (objTheme.szLabelA[i].match(/Magnolia/i)) {
+					objTheme.colorScheme[i] = "#B9A843";
+				} else if (objTheme.szLabelA[i].match(/Juglans/i)) {
+					objTheme.colorScheme[i] = "#EDAA0F";
+				} else if (objTheme.szLabelA[i].match(/Paulownia/i)) {
+					objTheme.colorScheme[i] = "#97512A";
+				} else if (objTheme.szLabelA[i].match(/Liquidambar/i)) {
+					objTheme.colorScheme[i] = "#B81221";
+				} else if (objTheme.szLabelA[i].match(/Zelkova/i)) {
+					objTheme.colorScheme[i] = "#EE9F21";
+				} else if (objTheme.szLabelA[i].match(/Morus/i)) {
+					objTheme.colorScheme[i] = "#D8C20F";
+				} else if (objTheme.szLabelA[i].match(/Toona/i)) {
+					objTheme.colorScheme[i] = "#C07A57";
+				} else if (objTheme.szLabelA[i].match(/Cercis/i)) {
+					objTheme.colorScheme[i] = "#A30007";
+				} else if (objTheme.szLabelA[i].match(/Quercus/i)) {
+					objTheme.colorScheme[i] = "#F3D165";
+				} else if (objTheme.szLabelA[i].match(/Salix/i)) {
+					objTheme.colorScheme[i] = "#ECD314";
+				} else if (objTheme.szLabelA[i].match(/Cedrus/i)) {
+					objTheme.colorScheme[i] = "#5C6F44";
+				} else if (objTheme.szLabelA[i].match(/Aesculus/i)) {
+					objTheme.colorScheme[i] = "#902B00";
+				} else if (objTheme.szLabelA[i].match(/Pinus/i)) {
+					objTheme.colorScheme[i] = "rgb(150, 165, 108)";
+				} else if (objTheme.szLabelA[i].match(/Ginkgo/i)) {
+					objTheme.colorScheme[i] = "rgb(250, 220, 12)";
+				} else if (objTheme.szLabelA[i].match(/acacia/i)) {
+					objTheme.colorScheme[i] = "rgb(139, 124, 21)";
+				} else if (objTheme.szLabelA[i].match(/undefined/i)) {
+					objTheme.colorScheme[i] = "rgb(130, 155, 30)";
+				} else {
+					objTheme.colorScheme[i] = "rgb(130, 155, 30)";
+				}
+			}
+		};
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// z o o m / p a n   a u t o - r e f r e s h
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		// GR 17.08.2026 the original defined this override TWICE (once per
+		// provider file), so the map ran a double-wrapped chain of the same
+		// logic. One definition here, consolidated.
+		ixmaps.in_query = false;
+		ixmaps.oldBounds = null;
+		ixmaps.refreshTimeout = null;
+		ixmaps.htmlgui_onZoomAndPan_old = ixmaps.htmlgui_onZoomAndPan;
+		ixmaps.htmlgui_onZoomAndPan = function (nZoom) {
+
+			if (ixmaps.getZoom() < 14) {
+				ixmaps.setTitleBox("OSM: please zoom in or ask for <a style='pointer-events:all' href='javascript:ixmaps.refreshTheme(\"features\")'>refresh</a>");
+				ixmaps.htmlgui_onZoomAndPan_old(nZoom);
+				return;
+			}
+
+			if (ixmaps.in_query) {
+				ixmaps.setTitleBox("theme busy ...");
+				ixmaps.htmlgui_onZoomAndPan_old(nZoom);
+				return;
+			}
+
+			ixmaps.setTitleBox("query overpass ...", "RGBA(95, 185, 135,0.5)");
+
+			var bounds = ixmaps.getBoundingBox();
+			if (ixmaps.oldBounds) {
+				if ((bounds[0].lat >= ixmaps.oldBounds[0].lat) &&
+					(bounds[0].lng >= ixmaps.oldBounds[0].lng) &&
+					(bounds[1].lat <= ixmaps.oldBounds[1].lat) &&
+					(bounds[1].lng <= ixmaps.oldBounds[1].lng)
+				) {
+					ixmaps.htmlgui_onZoomAndPan_old(nZoom);
+					ixmaps.setTitle("");
+					return;
+				}
+			} else {
+				// GR 17.08.2026 no baseline yet - the active theme's own initial
+				// query (still in flight) is what will set oldBounds. Without this
+				// guard, every htmlgui_onZoomAndPan firing during map init (there
+				// are several, all with ~identical bounds) falls through and
+				// schedules a redundant refreshTheme("features") 250ms later,
+				// duplicating the very query that's already loading. Confirmed
+				// live: the initial layer's Overpass query fired twice back-to-back
+				// and both got rejected (looked like a CORS failure in the console,
+				// but was really the mirror's rate-limiter reacting to duplicate
+				// near-simultaneous requests for the same heavy query).
+				ixmaps.htmlgui_onZoomAndPan_old(nZoom);
+				return;
+			}
+
+			if (ixmaps.refreshTimeout) {
+				clearTimeout(ixmaps.refreshTimeout);
+				ixmaps.refreshTimeout = null;
+			}
+			ixmaps.refreshTimeout = setTimeout(function () { ixmaps.refreshTheme("features"); }, 250);
+
+			ixmaps.oldBounds = bounds;
+			ixmaps.htmlgui_onZoomAndPan_old(nZoom);
+		};
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// o v e r p a s s   q u e r y   f u n c t i o n s
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		var OSM_dataquery_stress = function (data, option) {
+
+			ixmaps.setTitleBox("Overpass API &#8644;", "RGBA(95, 185, 135,0.5)");
+			ixmaps.in_query = true;
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:json][timeout:100][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				'way["barrier"];' +
+				'(way["highway"]; - way[footway="sidewalk"];);' +
+				'(way[footway="sidewalk"][bicycle]; - way[footway="sidewalk"][bicycle="no"];);' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "json" }).load(function (mydata) {
+				if (myfeed.data.elements) {
+					ixmaps.addStressLevel(myfeed.data);
+					var geo = osmtogeojson(myfeed.data);
+					var xgeo = { type: "featurecollection", features: [] };
+					for (var i in geo.features) {
+						if (!geo.features[i].geometry.type.match(/Point/)) {
+							xgeo.features.push(geo.features[i]);
+						}
+					}
+					ixmaps.in_query = false;
+					ixmaps.setTitle("");
+					ixmaps.setExternalData(xgeo, { type: "geojson", name: option.name });
+				}
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { type: "geojson", name: option.name });
+				ixmaps.in_query = false;
+			});
+		};
+
+		var OSM_dataquery_stress_cycleway = function (data, option) {
+
+			ixmaps.setTitleBox("Overpass API &#8644;", "RGBA(95, 185, 135,0.5)");
+			ixmaps.in_query = true;
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:json][timeout:100][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				'way["barrier"];' +
+				'(way["highway"="cycleway"]; - way[footway="sidewalk"];);' +
+				'(way[footway="sidewalk"][bicycle]; - way[footway="sidewalk"][bicycle="no"];);' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "json" }).load(function (mydata) {
+				if (myfeed.data.elements) {
+					ixmaps.addStressLevel(myfeed.data);
+					var geo = osmtogeojson(myfeed.data);
+					var xgeo = { type: "featurecollection", features: [] };
+					for (var i in geo.features) {
+						if (!geo.features[i].geometry.type.match(/Point/)) {
+							xgeo.features.push(geo.features[i]);
+						}
+					}
+					ixmaps.in_query = false;
+					ixmaps.setTitle("");
+					ixmaps.setExternalData(xgeo, { type: "geojson", name: option.name });
+				}
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { type: "geojson", name: option.name });
+				ixmaps.in_query = false;
+			});
+		};
+
+		var OSM_dataquery_streetmap = function (data, option) {
+
+			ixmaps.setTitleBox("Overpass API &#8644;", "RGBA(95, 185, 135,0.5)");
+			ixmaps.in_query = true;
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:json][timeout:250][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				'way["barrier"];' +
+				'(way["highway"];);' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "json" }).load(function (mydata) {
+				if (myfeed.data.elements) {
+					var geo = osmtogeojson(myfeed.data);
+					var xgeo = { type: "featurecollection", features: [] };
+					for (var i in geo.features) {
+						if (!geo.features[i].geometry.type.match(/Point/)) {
+							xgeo.features.push(geo.features[i]);
+						}
+					}
+					ixmaps.in_query = false;
+					ixmaps.setTitle("");
+					ixmaps.setExternalData(xgeo, { type: "geojson", name: option.name });
+				}
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { name: option.name });
+				ixmaps.in_query = false;
+			});
+		};
+
+		var OSM_dataquery_bus_stop = function (data, option) {
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:json][timeout:100][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				' node["highway"="bus_stop"];' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "json" }).load(function (mydata) {
+				ixmaps.setTitle("");
+				if (myfeed.data.elements) {
+					var geo = osmtogeojson(myfeed.data);
+					var table = Data.import({ source: geo, type: "geojson" });
+					if (!table.column('wheelchair')) {
+						table.addColumn({ destination: "wheelchair" }, function (row) { return "undefined"; });
+					}
+					ixmaps.setExternalData(table, { type: "jsonDB", name: option.name });
+				}
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { name: option.name });
+			});
+		};
+
+		var OSM_dataquery_recycling = function (data, option) {
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:json][timeout:100][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				' node["amenity"="waste_basket"];' +
+				' node["amenity"="recycling"];' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "json" }).load(function (mydata) {
+				ixmaps.setTitle("");
+				if (myfeed.data.elements && myfeed.data.elements.length) {
+					var geo = osmtogeojson(myfeed.data);
+					ixmaps.setExternalData(geo, { type: "geojson", name: option.name });
+				} else {
+					ixmaps.setTitleBox("no points in map view");
+					ixmaps.setExternalData();
+				}
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { name: option.name });
+			});
+		};
+
+		var OSM_dataquery_trees = function (data, option) {
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:json][timeout:100][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				' node["amenity"="tree"];' +
+				' node["natural"="tree"];' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "json" }).load(function (mydata) {
+				ixmaps.setTitle("");
+				if (myfeed.data.elements && myfeed.data.elements.length) {
+					var geo = osmtogeojson(myfeed.data);
+					var table = Data.import({ "source": geo, "type": "geojson" });
+					if (!table.column("genus")) {
+						table.addColumn({ destination: "genus" }, function (row) { return ""; });
+					}
+					if (table.column("circumference")) {
+						table.column("circumference").map(function (value) { return value || 20; });
+					}
+					ixmaps.setExternalData(table, { type: "dbtable", name: option.name });
+				} else {
+					ixmaps.setTitleBox("no points in map view");
+					ixmaps.setExternalData();
+				}
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { name: option.name });
+			});
+		};
+
+		var OSM_dataquery_housenumbers = function (data, option) {
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:csv(::type,::id,"addr:street","addr:housenumber",::lat,::lon)][timeout:100][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				' node["addr:housenumber"];' +
+				' way["addr:housenumber"];' +
+				' relation["addr:housenumber"];' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "csv" }).load(function (mydata) {
+				ixmaps.setTitle("");
+				ixmaps.setExternalData(mydata, { type: "dbtable", name: option.name });
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { name: option.name });
+			});
+		};
+
+		// GR 17.08.2026 new - see file header comment: replaces the original's
+		// copy-pasted "Housenumber" theme_11 with a real categorical
+		// breakdown of which clause matched (childcare, healthcare, baby
+		// care, recreation, food, shopping, community).
+		var __WOMEN_CATEGORY_RULES = [
+			{ match: function (t) { return t.amenity == "childcare" || t.amenity == "kindergarten" || t.amenity == "toy_library" || t.amenity == "baby_hatch"; }, category: "Childcare & Early Education" },
+			{ match: function (t) { return t.amenity == "clinic" || t.amenity == "doctors" || t.amenity == "pharmacy" || (t.healthcare && ["midwife", "birthing_centre", "postpartum_care"].indexOf(t.healthcare) >= 0); }, category: "Healthcare" },
+			{ match: function (t) { return t.amenity == "nursing_room" || (t.amenity == "toilets" && t.changing_table == "yes"); }, category: "Baby Care Facilities" },
+			{ match: function (t) { return t.leisure == "playground" || t.leisure == "indoor_play"; }, category: "Recreation & Play" },
+			{ match: function (t) { return t.amenity == "cafe" || t.amenity == "restaurant" || t.amenity == "ice_cream"; }, category: "Food & Dining" },
+			{ match: function (t) { return t.shop == "toys" || t.shop == "baby_goods" || (t.shop == "supermarket" && t.changing_table == "yes"); }, category: "Shopping" },
+			{ match: function (t) { return t.amenity == "library" || t.amenity == "community_centre"; }, category: "Libraries & Community" }
+		];
+
+		var __classifyWomensPlace = function (tags) {
+			tags = tags || {};
+			for (var i = 0; i < __WOMEN_CATEGORY_RULES.length; i++) {
+				if (__WOMEN_CATEGORY_RULES[i].match(tags)) {
+					return __WOMEN_CATEGORY_RULES[i].category;
+				}
+			}
+			return "Other";
+		};
+
+		var OSM_dataquery_women = function (data, option) {
+
+			var bounds = ixmaps.oldBounds = ixmaps.getBoundingBox();
+			var query =
+				'[out:json][timeout:100][bbox:' +
+				bounds[0].lat + ',' + bounds[0].lng + ',' + bounds[1].lat + ',' + bounds[1].lng + '];' +
+				'(' +
+				' node["amenity"="childcare"]; way["amenity"="childcare"];' +
+				' node["amenity"="kindergarten"]; way["amenity"="kindergarten"];' +
+				' node["amenity"="toy_library"];' +
+				' node["amenity"="baby_hatch"];' +
+				' node["amenity"="clinic"]; way["amenity"="clinic"];' +
+				' node["amenity"="doctors"]; way["amenity"="doctors"];' +
+				' node["amenity"="pharmacy"]; way["amenity"="pharmacy"];' +
+				' node["healthcare"="midwife"];' +
+				' node["healthcare"="birthing_centre"];' +
+				' node["healthcare"="postpartum_care"];' +
+				' node["amenity"="nursing_room"]; way["amenity"="nursing_room"];' +
+				' node["amenity"="toilets"]["changing_table"="yes"]; way["amenity"="toilets"]["changing_table"="yes"];' +
+				' node["leisure"="playground"]; way["leisure"="playground"];' +
+				' node["leisure"="indoor_play"]; way["leisure"="indoor_play"];' +
+				' node["amenity"="cafe"]; way["amenity"="cafe"];' +
+				' node["amenity"="restaurant"]; way["amenity"="restaurant"];' +
+				' node["amenity"="ice_cream"]; way["amenity"="ice_cream"];' +
+				' node["shop"="toys"]; way["shop"="toys"];' +
+				' node["shop"="baby_goods"]; way["shop"="baby_goods"];' +
+				' node["shop"="supermarket"]["changing_table"="yes"]; way["shop"="supermarket"]["changing_table"="yes"];' +
+				' node["amenity"="library"]; way["amenity"="library"];' +
+				' node["amenity"="community_centre"]; way["amenity"="community_centre"];' +
+				');' +
+				'out body center qt;' +
+				'>;' +
+				'out skel qt;';
+
+			var szUrl = OVERPASS_URL + "?data=" + query;
+			var myfeed = Data.feed({ "source": szUrl, "type": "json" }).load(function (mydata) {
+				ixmaps.setTitle("");
+				if (myfeed.data.elements && myfeed.data.elements.length) {
+					var geo = osmtogeojson(myfeed.data);
+					var table = Data.import({ source: geo, type: "geojson" });
+					table.addColumn({ destination: "category" }, function (row) { return __classifyWomensPlace(row); });
+					ixmaps.setExternalData(table, { type: "dbtable", name: option.name });
+				} else {
+					ixmaps.setTitleBox("no points in map view");
+					ixmaps.setExternalData();
+				}
+			}).error(function (e) {
+				ixmaps.setTitleBox("error while loading OSM data", "RGBA(128,0,0,0.5)");
+				ixmaps.setExternalData(null, { name: option.name });
+			});
+		};
+
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+		//
+		// t h e   m a p
+		//
+		// ---------------------------------------------------
+		// ---------------------------------------------------
+
+		var __lat = 41.91385469323496;
+		var __lon = 12.49173402786255;
+		var __zoom = 15;
+
+		attribution =
+			"powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a>";
+
+		const params = new Proxy(new URLSearchParams(window.location.search), {
+			get: (searchParams, prop) => searchParams.get(prop),
+		});
+
+		if (params.view) {
+			var latlonA = params.view.split('[')[1].split(']')[0].split(',');
+			__lat = latlonA[0];
+			__lon = latlonA[1];
+			__zoom = parseFloat(params.view.split(',')[2]);
+		}
+
+		// ---------------------------------------------------
+		// visualization themes
+		// ---------------------------------------------------
+
+		var __theme_1 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_stress.toString() })
+				.binding({
+					position: "geometry",
+					id: "id",
+					value: "level"
+				})
+				.type("CHART|FEATURES|CATEGORICAL|LINES|COMPACTLEGEND")
+				.style({
+					colorscheme: [
+						"#0099CC",
+						"#1C9C54",
+						"#F0C808",
+						"#DD5454"],
+					values: [
+						"1",
+						"2",
+						"3",
+						"4"],
+					label: [
+						"LTS 1 - Adatto ai bambini ",
+						"LTS 2 - Basso Stress",
+						"LTS 3 - Stress Moderato",
+						"LTS 4 - Stress Alto"],
+					units: "",
+					linecolor: [
+						"none"],
+					linewidth: "3",
+					name: "features"
+				})
+				.meta({
+					title: "Cycling Stress Map"
+				})
+			);
+
+		var __theme_2 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_streetmap.toString() })
+				.binding({
+					position: "geometry",
+					id: "id",
+					value: "maxspeed"
+				})
+				.type("CHART|FEATURES|CATEGORICAL|LINES|COMPACTLEGEND")
+				.style({
+					colorscheme: "ixmaps.colorScheme_speedmap",
+					linecolor: [
+						"none"],
+					linewidth: "3",
+					name: "features"
+				})
+				.meta({
+					"title": "Speed limits <small>(in km/h if no unit is specified explicitly)</small>",
+					"splash": "loading OSM data ..."
+				})
+			);
+
+		var __theme_3 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_streetmap.toString() })
+				.binding({
+					position: "geometry",
+					id: "id",
+					value: "surface"
+				})
+				.type("CHART|FEATURES|CATEGORICAL|LINES|SIMPLELEGEND")
+				.style({
+					colorscheme: "ixmaps.colorScheme_surfacemap",
+					linecolor: [
+						"none"],
+					linewidth: "3",
+					name: "features"
+				})
+				.meta({
+					"title": "Street Surface",
+					"splash": "loading OSM data ..."
+				})
+			);
+
+		var __theme_4 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_streetmap.toString() })
+				.binding({
+					position: "geometry",
+					id: "id",
+					value: "surface"
+				})
+				.filter("WHERE highway = cycleway")
+				.type("CHART|FEATURES|CATEGORICAL|LINES|SIMPLELEGEND")
+				.style({
+					colorscheme: "ixmaps.colorScheme_surfacemap",
+					linecolor: [
+						"none"],
+					linewidth: "3",
+					name: "features"
+				})
+				.meta({
+					"title": "Cycle ways and surface",
+					"splash": "loading OSM data ..."
+				})
+			);
+
+		var __theme_7 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_bus_stop.toString(), cache: false })
+				.binding({
+					position: "geometry",
+					value: "wheelchair"
+				})
+				.type("CHART|GLOW|SYMBOL|SEQUENCE|STAR|SORT|RANDOM|DOPACITY|UNDEFINEDISVALUE|AGGREGATE|RECT|RELOCATE|CATEGORICAL|SUM|COMPACTLEGEND")
+				.style({
+					colorscheme: [
+						"green",
+						"#aaaaaa",
+						"red",
+						"orange"],
+					symbols: [
+						"circle"],
+					values: [
+						"yes",
+						"undefined",
+						"no",
+						"limited"],
+					scale: "0.3",
+					textcolor: [
+						"#ffffff"],
+					linecolor: [
+						"none"],
+					clipparts: "10",
+					gridwidthpx: "5",
+					name: "features",
+					showdata: true
+				})
+				.meta({
+					"title": "OSM Bus Stops and wheelchair flag",
+					"splash": "awaiting Overpass response",
+					"tooltip": "<div style='white-space:nowrap'><h3>{{name}}</h3> {{operator}}<br> wheelchair: <b>{{wheelchair}}</b></div>"
+				})
+			);
+
+		var __theme_8 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_recycling.toString(), cache: false })
+				.binding({
+					position: "geometry",
+					value: "amenity"
+				})
+				.type("CHART|SYMBOL|SEQUENCE|CATEGORICAL|AGGREGATE|RELOCATE|SIZE|VALUES|ZEROISVALUE|COMPACTLEGEND|SUM")
+				.style({
+					colorscheme: [
+						"#4EA779",
+						"#4E79A7"],
+					values: [
+						"recycling",
+						"waste_basket"],
+					label: [
+						"Recycling container",
+						"Waste basket"],
+					symbols: [
+						"circle"],
+					scale: "1",
+					normalsizevalue: 10,
+					textcolor: [
+						"#ffffff"],
+					linecolor: [
+						"none"],
+					gridwidthpx: 20,
+					name: "features"
+				})
+				.meta({
+					"title": "Waste and recycling bins",
+					"splash": "awaiting Overpass response"
+				})
+			);
+
+		var __theme_9 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_trees.toString(), cache: false })
+				.binding({
+					position: "geometry",
+					value: "genus"
+				})
+				.type("CHART|SYMBOL|SEQUENCE|CATEGORICAL|UNDEFINEDISVALUE|AGGREGATE|RELOCATE|SIZE|ZEROISVALUE|LEGEND|SUM|COUNT|SIMPLELEGEND")
+				.style({
+					colorscheme: "ixmaps.colorScheme_trees",
+					symbols: [
+						"circle"],
+					scale: 1,
+					normalsizevalue: 100,
+					textcolor: [
+						"#ffffff"],
+					linecolor: [
+						"none"],
+					gridwidthpx: 1,
+					showdata: true,
+					name: "features"
+				})
+				.meta({
+					"title": "Trees",
+					"splash": "awaiting Overpass response",
+					"tooltip": "{{genus}}{{theme.item.data}}"
+				})
+			);
+
+		var __theme_10 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_housenumbers.toString(), cache: false })
+				.binding({
+					position: "@lat|@lon"
+				})
+				.type("CHART|SYMBOL|VALUES|SEQUENCE|CATEGORICAL|UNDEFINEDISVALUE|AGGREGATE|RELOCATE|SIZE|ZEROISVALUE|LEGEND|SUM|COUNT|SIMPLELEGEND")
+				.style({
+					colorscheme: [
+						"#3377dd"],
+					symbols: [
+						"circle"],
+					scale: 1,
+					normalsizevalue: 200,
+					textcolor: [
+						"#ffffff"],
+					linecolor: [
+						"none"],
+					gridwidthpx: 1,
+					showdata: true,
+					valuefield: "addr:housenumber",
+					valuesupper: "1:2500",
+					name: "features"
+				})
+				.meta({
+					"title": "Housenumber",
+					"splash": "awaiting Overpass response",
+					"tooltip": "<span style='font-size:1.2em;font-weight:bold;white-space:nowrap'>{{addr:street}} {{addr:housenumber}}</span>"
+				})
+			);
+
+		var __theme_11 =
+			ixmaps.layer("osm", layer => layer
+				.data({ query: OSM_dataquery_women.toString(), cache: false })
+				.binding({
+					position: "geometry",
+					value: "category"
+				})
+				.type("CHART|SYMBOL|SEQUENCE|CATEGORICAL|UNDEFINEDISVALUE|AGGREGATE|RELOCATE|SIZE|ZEROISVALUE|LEGEND|SUM|COUNT|SIMPLELEGEND")
+				.style({
+					colorscheme: [
+						"#C2185B",
+						"#7B1FA2",
+						"#0288D1",
+						"#388E3C",
+						"#F57C00",
+						"#5D4037",
+						"#455A64"],
+					values: [
+						"Childcare & Early Education",
+						"Healthcare",
+						"Baby Care Facilities",
+						"Recreation & Play",
+						"Food & Dining",
+						"Shopping",
+						"Libraries & Community"],
+					symbols: [
+						"circle"],
+					scale: 1,
+					normalsizevalue: 50,
+					textcolor: [
+						"#ffffff"],
+					linecolor: [
+						"none"],
+					gridwidthpx: 1,
+					showdata: true,
+					name: "features"
+				})
+				.meta({
+					"title": "Women's places",
+					"splash": "awaiting Overpass response",
+					"tooltip": "<span style='font-size:1.1em;font-weight:bold'>{{name}}</span><br>{{category}}"
+				})
+			);
+
+		// ---------------------------------------------------
+		// embed the map
+		// ---------------------------------------------------
+
+		ixmaps.Map("map_div", {
+				mapService: "leaflet_vt",
+				mapType: "VT_TONER_LITE",
+				map: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/maps/svg/maps/generic/mercator.svg",
+				legend: "true",
+				align: "100px left",
+				mode: "map",
+				search: "world",
+				tools: "true",
+				about: "test"
+			})
+			.view([__lat, __lon], __zoom)
+			.options({
+				featurescaling: "true",
+				objectscaling: "dynamic",
+				normalSizeScale: "50000",
+				flushChartDraw: "1000000",
+				flushPaintShape: "1000000",
+				hideOnPan: "false",
+				freezeOnPan: "false",
+				basemapopacity: "1"
+			})
+			.local("aggregated", "")
+			.local("... creating theme ...", "...")
+			.local("loading data ...", "scaricando dati ...")
+			.require("https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/tooltip_mustache.js")
+			.require("https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/ui/js/tools/colorscheme.js")
+			.require("https://unpkg.com/osmtogeojson@3.0.0-beta.4/osmtogeojson.js")
+			.attribution(attribution)
+
+			// -----------------------------
+			// the data visualization layer
+			// -----------------------------
+
+			.layer(__theme_2);
+
+
+		/**
+		 **
+		 ** window size handling
+		 **
+		 **/
+
+		$(window).resize(function () {
+			$("#map_div").css("height", (window.innerHeight - 5) + "px");
+		});
+
+		// ----------------------------
+		// I N F O   P O P U P
+		// ----------------------------
+
+		function toggleInfoPopup() {
+			const popup = document.getElementById('infoPopup');
+			const overlay = document.getElementById('infoOverlay');
+
+			if (popup.classList.contains('active')) {
+				popup.classList.remove('active');
+				overlay.classList.remove('active');
+			} else {
+				popup.classList.add('active');
+				overlay.classList.add('active');
+			}
+		}
+
+		// Close popup with Escape key
+		document.addEventListener('keydown', function (event) {
+			if (event.key === 'Escape') {
+				const popup = document.getElementById('infoPopup');
+				const overlay = document.getElementById('infoOverlay');
+				if (popup.classList.contains('active')) {
+					popup.classList.remove('active');
+					overlay.classList.remove('active');
+				}
+			}
+		});
+
+	</script>
+
+</body>
+
+</html>

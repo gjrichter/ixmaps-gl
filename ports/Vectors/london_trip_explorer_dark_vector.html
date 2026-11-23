@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- **********************************************************************
+
+Bike Sharing London — trip explorer (dark map, animated flow vectors)
+ported to ixmaps-gl (MapLibre + deck.gl engine); same data, same UI
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2019/09/07 $
+
+licensed under CC-BY
+
+********************************************************************** -->
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+    <title>iXmaps · BikeSharing London</title>
+
+    <!-- Bootstrap core CSS (page chrome only) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <style>
+        html, body { height: 100%; background: black; }
+        #map_div { width: 100%; height: 100vh; }
+
+        select.form-control,
+        select.form-control:active,
+        select.form-control:focus {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #ddd;
+            font-size: 1.2em;
+            border-radius: 1px;
+            border-top: 0px;
+            border-left: 0px;
+            border-right: 0px;
+            padding: 0.4em;
+            margin-left: 1em;
+            pointer-events: all;
+            outline: none;
+        }
+
+        select.form-control>option {
+            background-color: black;
+        }
+
+        .button {
+            border: #888 solid 1px;
+            padding: 0em 0.6em 0.3em 0.6em;
+            border-radius: 20px;
+            width: 1em;
+            color: #888;
+            text-decoration: none;
+        }
+
+        /* legend overlays (the old page's two CDN legends, inlined) */
+        .legend-panel {
+            position: absolute;
+            top: 70px;
+            right: 12px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.93);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+            padding: 13px 16px;
+            max-width: 260px;
+            font-size: 0.78rem;
+            color: #334;
+        }
+
+        .legend-panel h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+        .legend-panel p { margin-bottom: 6px; }
+        .legend-panel hr { margin: 8px 0; }
+        .legend-panel a { color: #23527c; }
+        .legend-panel .button { color: #556; border-color: #99a; display: inline-block; text-align: center; }
+        .legend-panel .footer { font-size: 0.7rem; color: #889; }
+
+        #status {
+            position: absolute;
+            top: 70px;
+            left: 12px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            color: #ffdd66;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            display: none;
+        }
+    </style>
+</head>
+
+<body style="background:black">
+
+    <!-- the nav bar -->
+
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top" style="pointer-events: none">
+        <a class="navbar-brand" href="#" style="pointer-events: all">BikeSharing</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation" style="pointer-events: all">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <ul class="navbar-nav mr-auto">
+                <li>
+                    <select class="form-control" id="day-select" onchange="__setDataSource(this.value)">
+                        <option value="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/201807-london-tripdata_18.csv.gz">
+                            18. July 2018 - Wednesday
+                        </option>
+                        <option value="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/201807-london-tripdata_19.csv.gz">
+                            19. July 2018 - Thursday
+                        </option>
+                        <option value="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/201807-london-tripdata_20.csv.gz">
+                            20. July 2018 - Friday
+                        </option>
+                        <option value="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/201807-london-tripdata_21.csv.gz">
+                            21. July 2018 - Saturday
+                        </option>
+                        <option value="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/201807-london-tripdata_22.csv.gz">
+                            22. July 2018 - Sunday
+                        </option>
+                        <option value="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/201807-london-tripdata_23.csv.gz">
+                            23. July 2018 - Monday
+                        </option>
+                        <option value="https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/201807-london-tripdata_24.csv.gz">
+                            24. July 2018 - Tuesday
+                        </option>
+                    </select>
+                </li>
+                &nbsp;&nbsp;
+                <li>
+                    <select class="form-control" id="type-select" onchange="__setType(this.value)">
+                        <option value="morning" selected>morning rush</option>
+                        <option value="evening">evening rush</option>
+                        <option value="am">AM</option>
+                        <option value="pm">PM</option>
+                        <option value="noon">noon</option>
+                        <option value="night">night</option>
+                        <option value="day">whole day</option>
+                        <option disabled>───────</option>
+                        <option value="8">8:00</option>
+                        <option value="18">18:00</option>
+                        <option disabled>───────</option>
+                        <option value="curves">24 h curves</option>
+                    </select>
+                </li>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <li style="margin-top:10px">
+                    <a href="javascript:ixmaps.changeThemeStyle('vector','minvalue:+1','add')" class="button" style="pointer-events:all">-</a>
+                    <span style="color:white">&nbsp;vectors&nbsp;</span>
+                    <a href="javascript:ixmaps.changeThemeStyle('vector','minvalue:-1','add')" class="button" style="pointer-events:all">+</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- the map -->
+
+    <main role="main">
+        <div id="map_div"></div>
+    </main>
+
+    <!-- the legends (the old page's two CDN legends, inlined) -->
+
+    <div id="legend-vectors" class="legend-panel">
+        <h3>Bike Sharing Trip Visualization</h3>
+        <p>The visualization shows the main bike trips of a <b>period of a day</b>.
+            You can change the period or the day with the selection boxes in the upper left.</p>
+        <p><b style="color: yellow;">Yellow arrows</b> represent the <b>accumulated trip count</b> between 2 stations.
+            Arrows are shown <b>only</b> if we have at least <b>3 trips</b>.</p>
+        <p><b><span style="color: yellow;">Circles</span></b> show trips with the same start and end station.</p>
+        <p>change graphic here:</p>
+        <p style="margin-top:10px">
+            <a href="javascript:ixmaps.changeThemeStyle('vector','maxcharts:0.5','factor')" class="button" style="pointer-events:all">-</a>&nbsp;number of vectors&nbsp;
+            <a href="javascript:ixmaps.changeThemeStyle('vector','maxcharts:2','factor')" class="button" style="pointer-events:all">+</a>
+            &nbsp;
+            <a href="javascript:ixmaps.changeThemeStyle('vector','sizepow:0.1','add')" class="button" style="pointer-events:all">-</a>&nbsp;contrast&nbsp;
+            <a href="javascript:ixmaps.changeThemeStyle('vector','sizepow:-0.1','add')" class="button" style="pointer-events:all">+</a>
+        </p>
+        <p>Data from: <a href="https://cycling.data.tfl.gov.uk/" target="_blank">cycling.data.tfl.gov.uk</a></p>
+        <hr>
+        <div class="footer"> © 2019 <a href="http://ixmaps.com" target="_blank">iXmaps</a></div>
+    </div>
+
+    <div id="legend-curves" class="legend-panel" style="display:none">
+        <h3>Bike Sharing Trip Visualization</h3>
+        <p>Curves with the <span style="color: #e80018;">starts</span> and
+            <span style="color: #81d8d0;">returns</span> of every hour aggregated over a rectangular grid.</p>
+        <p>Data from: <a href="https://cycling.data.tfl.gov.uk/" target="_blank">cycling.data.tfl.gov.uk</a></p>
+        <hr>
+        <div class="footer"> © 2019 <a href="http://ixmaps.com" target="_blank">iXmaps</a></div>
+    </div>
+
+    <div id="status">loading trip data ...</div>
+
+    <!-- ixmaps GL engine -->
+    <script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js" type="text/javascript"></script>
+
+    <script charset="utf-8" type="text/javascript">
+
+        // -----------------------------------------------------------------
+        // state — driven by the two selects
+        // -----------------------------------------------------------------
+
+        var STATIONS_URL = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/BikeSharing/London/stations.csv.gz";
+
+        var state = {
+            dayUrl: document.getElementById("day-select").value,
+            type: "morning"
+        };
+
+        // the hours of the day a theme type looks at (null = whole day)
+        function hoursFor(type) {
+            switch (type) {
+                case "8": return [8];
+                case "18": return [18];
+                case "morning": return [7, 8, 9];
+                case "evening": return [17, 18, 19];
+                case "am": return [7, 8, 9, 10, 11, 12];
+                case "pm": return [13, 14, 15, 16, 17, 18];
+                case "noon": return [11, 12, 13, 14];
+                case "night": return [20, 21, 22, 23, 24];
+                default: return null;
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // data — the old page's databroker_119.js (add Start/End Hour,
+        // join the station positions) done in the page: fetch + gunzip +
+        // CSV parse, one join per day file, cached
+        // -----------------------------------------------------------------
+
+        // quote-aware CSV → array of row objects
+        function parseCsv(text) {
+            var rows = [], row = [], field = '', inQ = false;
+            for (var i = 0; i < text.length; i++) {
+                var c = text[i];
+                if (inQ) {
+                    if (c === '"') {
+                        if (text[i + 1] === '"') { field += '"'; i++; } else { inQ = false; }
+                    } else { field += c; }
+                } else if (c === '"') {
+                    inQ = true;
+                } else if (c === ',') {
+                    row.push(field); field = '';
+                } else if (c === '\n' || c === '\r') {
+                    if (c === '\r' && text[i + 1] === '\n') i++;
+                    row.push(field); field = '';
+                    if (row.length > 1 || row[0] !== '') rows.push(row);
+                    row = [];
+                } else {
+                    field += c;
+                }
+            }
+            if (field !== '' || row.length) { row.push(field); rows.push(row); }
+            var head = rows.shift();
+            return rows.map(function (r) {
+                var o = {};
+                for (var i = 0; i < head.length; i++) o[head[i]] = r[i];
+                return o;
+            });
+        }
+
+        function fetchCsv(url) {
+            return fetch(url).then(function (r) {
+                if (!r.ok) throw new Error("HTTP " + r.status + " loading " + url);
+                // the S3 server sends Content-Encoding: x-gzip — the browser
+                // decompresses the body itself; only if it did not (the gzip
+                // magic still there) decompress in the browser
+                return r.arrayBuffer();
+            }).then(function (buf) {
+                var b = new Uint8Array(buf);
+                if (b[0] === 0x1f && b[1] === 0x8b) {
+                    return new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+                }
+                return new TextDecoder().decode(b);
+            }).then(parseCsv);
+        }
+
+        // station table, keyed by Station ID (cached once)
+        var stationsById = null;
+        function getStations() {
+            if (!stationsById) {
+                stationsById = fetchCsv(STATIONS_URL).then(function (rows) {
+                    var byId = {};
+                    rows.forEach(function (s) {
+                        var id = String(s["Station ID"]).trim();
+                        byId[id] = { id: id, name: s["Station Name"], lat: +s["Latitude"], lon: +s["Longitude"] };
+                    });
+                    return byId;
+                });
+            }
+            return stationsById;
+        }
+
+        // one day of trips, station coordinates and Start/End Hour joined (cached per day file)
+        var dayCache = {};
+        function getTrips(dayUrl) {
+            if (!dayCache[dayUrl]) {
+                dayCache[dayUrl] = Promise.all([getStations(), fetchCsv(dayUrl)]).then(function (res) {
+                    var stations = res[0];
+                    var out = [];
+                    res[1].forEach(function (t) {
+                        var s = stations[String(t["StartStation Id"]).trim()];
+                        var e = stations[String(t["EndStation Id"]).trim()];
+                        if (!s || !e) return;
+                        var sd = String(t["Start Date"]), ed = String(t["End Date"]);
+                        out.push({
+                            s: s.id, e: e.id,
+                            sname: s.name, ename: e.name,
+                            olat: s.lat, olon: s.lon, dlat: e.lat, dlon: e.lon,
+                            startHour: parseInt(sd.split(" ")[1].split(":")[0], 10),
+                            endHour: parseInt(ed.split(" ")[1].split(":")[0], 10)
+                        });
+                    });
+                    return out;
+                });
+            }
+            return dayCache[dayUrl];
+        }
+
+        // trips between different stations, aggregated (start,end) → count
+        function tripPairs(trips, hours) {
+            var m = new Map();
+            trips.forEach(function (t) {
+                if (hours && hours.indexOf(t.startHour) < 0) return;
+                if (t.s === t.e) return;
+                var k = t.s + ">" + t.e;
+                var rec = m.get(k);
+                if (!rec) {
+                    rec = { name: t.sname + " → " + t.ename,
+                            olat: t.olat, olon: t.olon, dlat: t.dlat, dlon: t.dlon, value: 0 };
+                    m.set(k, rec);
+                }
+                rec.value++;
+            });
+            return Array.from(m.values());
+        }
+
+        // trips with same start and end station, aggregated per station → count
+        function selfCounts(trips, hours) {
+            var m = new Map();
+            trips.forEach(function (t) {
+                if (hours && hours.indexOf(t.startHour) < 0) return;
+                if (t.s !== t.e) return;
+                var rec = m.get(t.s);
+                if (!rec) {
+                    rec = { name: t.sname, lat: t.olat, lon: t.olon, value: 0 };
+                    m.set(t.s, rec);
+                }
+                rec.value++;
+            });
+            return Array.from(m.values());
+        }
+
+        // per-station 24-hour counts (which: "startHour" | "endHour") — the 24 h curves
+        function hourlyPerStation(trips, which) {
+            var m = new Map();
+            function recOf(t) {
+                var rec = m.get(t.s);
+                if (!rec) {
+                    rec = { name: t.sname, lat: t.olat, lon: t.olon };
+                    for (var h = 0; h < 24; h++) rec["h" + h] = 0;
+                    m.set(t.s, rec);
+                }
+                return rec;
+            }
+            trips.forEach(function (t) {
+                var h = t[which];
+                if (h >= 0 && h < 24) recOf(t)["h" + h]++;
+            });
+            return Array.from(m.values());
+        }
+
+        // -----------------------------------------------------------------
+        // the map
+        // -----------------------------------------------------------------
+
+        var myMap = ixmaps.Map("map_div", {
+            mapType: "VT_DATAVIZ_DARK",   // the dark CARTO basemap, keyless
+            mode: "info",
+            legend: false,
+            tools: true,
+            width: "100%",
+            height: "100%"
+        })
+        .view([51.50155667863213, -0.11289596906868837], 13)
+        .options({
+            flushChartDraw: "50000",
+            objectscaling: "dynamic",
+            normalSizeScale: "5000",
+            basemapopacity: "0.3"
+        })
+        .attribution('data: <a href="https://cycling.data.tfl.gov.uk/" target="_blank">cycling.data.tfl.gov.uk</a>');
+
+        var HOURS = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"];
+        var HOUR_LABELS = HOURS.map(function(h){ return h + ":00"; });
+        var HOUR_FIELDS = HOURS.map(function(h){ return "h" + h; });
+
+        // -----------------------------------------------------------------
+        // the themes — rebuilt on every state change (as the old page's
+        // clearAll + newTheme sequence)
+        // -----------------------------------------------------------------
+
+        function defineStations() {
+            return getStations().then(function (stations) {
+                var pts = Object.keys(stations).map(function (k) {
+                    var s = stations[k];
+                    return { name: s.name, lat: s.lat, lon: s.lon };
+                });
+                myMap.layer("stations")
+                    .data({ obj: pts, type: "json" })
+                    .binding({ geo: "lat|lon", title: "name" })
+                    .type("CHART|DOT|NOLEGEND")
+                    .style({
+                        colorscheme: ["#2244aa"],
+                        fillopacity: 0.025,
+                        linecolor: "none",
+                        scale: 0.4,
+                        showdata: "true"
+                    })
+                    .meta({ name: "stations", tooltip: "<b>{{name}}</b>" })
+                    .title("bike station positions")
+                    .define();
+            });
+        }
+
+        function defineVectors(pairs, normalsizevalue) {
+            myMap.layer("trips")
+                .data({ obj: pairs, type: "json" })
+                .binding({
+                    position: "olat|olon",
+                    position2: "dlat|dlon",
+                    title: "name"
+                })
+                .type("CHART|VECTOR|BEZIER|DASH|POINTER|GRADIENT|NOSCALE|EXACT|FAST")
+                .style({
+                    colorscheme: ["#ffff00"],
+                    fillopacity: "1",
+                    linecolor: "#ffff00",
+                    sizefield: "value",
+                    scale: "0.7",
+                    sizepow: "1",
+                    minvalue: "2",
+                    normalsizevalue: String(normalsizevalue),
+                    markersize: "1.2",
+                    maxcharts: "1000",
+                    showdata: "true"
+                })
+                .meta({
+                    name: "vector",
+                    tooltip: "<div style='padding:6px 8px'><b>{{name}}</b><br>{{value}} trips</div>",
+                    splash: "loading and aggregating data ..."
+                })
+                .title("Trips from start to end-station")
+                .define();
+        }
+
+        function defineSelf(selfs, normalsizevalue) {
+            myMap.layer("selftrips")
+                .data({ obj: selfs, type: "json" })
+                .binding({ geo: "lat|lon", value: "value", title: "name" })
+                .type("CHART|BUBBLE|SIZE|EXACT|FAST|ZEROISVALUE")
+                .style({
+                    colorscheme: ["#ffff00"],
+                    fillopacity: "0.1",
+                    linecolor: "#ffff00",
+                    linewidth: "2",
+                    minvalue: "5",
+                    normalsizevalue: String(normalsizevalue),
+                    scale: "1",
+                    showdata: "true"
+                })
+                .meta({
+                    name: "self",
+                    tooltip: "<div style='padding:6px 8px'><b>{{name}}</b><br>{{value}} trips with same start and end station</div>",
+                    splash: "loading and aggregating data ..."
+                })
+                .title("Trips with same start and end-station")
+                .define();
+        }
+
+        function defineCurves(records, color, name, title) {
+            myMap.layer(name)
+                .data({ obj: records, type: "json" })
+                .binding({ geo: "lat|lon", value: HOUR_FIELDS.join("|"), title: "name" })
+                .type("CHART|SYMBOL|SEQUENCE|FIXSIZE|PLOT|LINES|AREA|BOX|GRIDSIZE|EXACT|FAST|RECT|ZEROISVALUE")
+                .style({
+                    colorscheme: [color],
+                    fillopacity: name === "curves_end" ? "0.2" : "0.4",
+                    values: HOURS,
+                    label: HOUR_LABELS,
+                    xaxis: HOURS,
+                    units: "",
+                    normalsizevalue: "20",
+                    scale: "0.93",
+                    rangescale: "0.75",
+                    minvalue: "0",
+                    linewidth: "5",
+                    bordercolor: "black",
+                    boxopacity: "0.01",
+                    gridwidthpx: "100",
+                    valuescale: "1"
+                })
+                .meta({
+                    name: name,
+                    tooltip: "<div style='padding:6px 8px'><b>{{name}}</b><br>{{value}}</div>",
+                    splash: "loading and aggregating data ..."
+                })
+                .title(title)
+                .define();
+        }
+
+        // -----------------------------------------------------------------
+        // render — the old page's __makeTheme
+        // -----------------------------------------------------------------
+
+        var THEMES = ["stations", "vector", "self", "curves_start", "curves_end"];
+
+        function showStatus(on) {
+            document.getElementById("status").style.display = on ? "block" : "none";
+        }
+
+        function render() {
+            var isCurves = (state.type === "curves");
+            document.getElementById("legend-vectors").style.display = isCurves ? "none" : "block";
+            document.getElementById("legend-curves").style.display = isCurves ? "block" : "none";
+
+            showStatus(true);
+            getTrips(state.dayUrl).then(function (trips) {
+                myMap.then(function (api) {
+                    THEMES.forEach(function (n) { try { api.removeTheme(n); } catch (e) { } });
+
+                    defineStations().then(function () {
+                        if (isCurves) {
+                            // the 24 h curves: starts (red) and returns (teal) per station
+                            defineCurves(hourlyPerStation(trips, "startHour"), "#E80018", "curves_start", "Starts per hour and station");
+                            defineCurves(hourlyPerStation(trips, "endHour"), "#81D8D0", "curves_end", "Returns per hour and station");
+                        } else {
+                            // the flow arrows and the same-station circles
+                            var hours = hoursFor(state.type);
+                            var normalsizevalue = 10 * (hours ? hours.length : 8);
+                            defineVectors(tripPairs(trips, hours), normalsizevalue);
+                            defineSelf(selfCounts(trips, hours), normalsizevalue);
+                        }
+                        showStatus(false);
+                    });
+                });
+            }).catch(function (e) {
+                showStatus(false);
+                console.error(e);
+                alert(String(e));
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // the selects
+        // -----------------------------------------------------------------
+
+        function __setDataSource(dayUrl) {
+            state.dayUrl = dayUrl;
+            render();
+        }
+
+        function __setType(type) {
+            state.type = type;
+            render();
+        }
+
+        render();
+
+    </script>
+</body>
+
+</html>

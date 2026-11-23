@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+index_only_map_embed.html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2017/06/22 $
+$Author: guenter richter $
+$Id:index_only_map_embed.html 1 2021-10-17 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ixmaps embed example">
+    <meta name="author" content="guenter richter">
+    <link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+    <title>iXMaps really simple embed</title>
+
+    <style>
+        #myRange1,
+        #myRange2 {
+            vertical-align: 2px;
+            width: 200px;
+            accent-color: #888888;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            background: #eeeeee;
+            border-radius: 1em;
+        }
+
+    </style>
+
+</head>
+
+<body style='text-align:center;height:100%;'>
+
+    <div id="header">
+
+        <h1 style='font-family:open sans;color:#888888;margin-top:0'>TELRAAM - traffic-snapshot</br>
+            <span style="font-size:0.6em">grandezza grafici:
+                <input type='range' min='0.1' max='2' step="0.01" value='1' class='slider' id='myRange1'></span>&nbsp;&nbsp;
+            <span style="font-size:0.6em">aggregazione: da 5
+                <input type='range' min='5' max='100' step="5" value='100' class='slider' id='myRange2'> a 100 pixel</span>
+        </h1>
+
+    </div>
+
+    <div id="mymap"></div>
+
+    <!--========================================================================= -->
+
+    <script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>x
+
+    <!--========================================================================= -->
+
+    <script type="text/javascript" charset="utf-8">
+        var setChartSize = function(nValue) {
+            ixmaps.map().changeThemeStyle('chart', 'scale:' + nValue, 'set');
+        }
+        var setGrid = function(nValue) {
+            ixmaps.map().changeThemeStyle('chart', 'gridwidthpx:' + nValue, 'set');
+            //ixmaps.changeThemeStyle(null, 'chart', 'gridwidthpx:' + nValue, 'set');
+
+        }
+        var slider = document.getElementById("myRange1");
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function() {
+            if (ixmaps.sliderT1) {
+                clearTimeout(ixmaps.sliderT1);
+            }
+            ixmaps.value = this.value;
+            ixmaps.sliderT1 = setTimeout(function() {
+                setChartSize(ixmaps.value)
+            }, 10);
+        }
+        slider = document.getElementById("myRange2");
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function() {
+            if (ixmaps.sliderT2) {
+                clearTimeout(ixmaps.sliderT2);
+            }
+            ixmaps.value = this.value;
+            ixmaps.sliderT2 = setTimeout(function() {
+                setGrid(ixmaps.value)
+            }, 250);
+        }
+
+
+        query = function(data, options) {};
+
+        legend = "";
+
+        attribution =
+            "data source: Telraam<br>powered by iXMaps";
+
+        let mapHeight = window.innerHeight - document.getElementById("header").clientHeight - 40;
+
+        ixmaps.Map("mymap", {
+                mapService: "leaflet_vt",
+                mapType: "VT_OPENSTREETMAP",
+                mode: "pan",
+                height: mapHeight + "px",
+                legend: true,
+                tools: true
+            },
+            map => map
+            .view([46.392411189814645, 16.479492187500004], 5)
+            .options({
+                featurescaling: "dynamic",
+                objectscaling: "dynamic",
+                dynamicScalePow: "3",
+                normalSizeScale: "500000",
+                flushChartDraw: "10000",
+                panhidden: "false"
+            })
+            .attribution(attribution)
+            //.require("../../ui/js/tools/tooltip_mustache.js")
+            //.localize("...", "")
+            //.localize("loading data ...", " &#x2B73; data")
+
+            // show geometries
+            .layer(
+                ixmaps.layer("Telraam_segments_visible")
+                .data({
+                    name: "TELRAAM_snapshot",
+                    url: "https://telraam.net/api/segments/snapshot/traffic",
+                    type: "geojson"
+                })
+                .binding({
+                    id: "segment_id",
+                    geo: "geometry",
+                    value: "v85"
+                })
+                .style({
+                    type: "FEATURES|NOLEGEND",
+                    colorscheme: [
+                        "7",
+                        "#27cE63",
+                        "#AA0321",
+                        "3high",
+                        "#FBF7B6"
+                    ],
+                    fillopacity: "0.7",
+                    linecolor: ["black"],
+                    linewidth: "2",
+                    featureupper: "1:15000",
+                    title: "Telraam segments"
+                })
+                .json()
+            )
+
+            // show traffic numbers
+
+            .layer(
+                ixmaps.layer("Telraam_segments")
+                .data({
+                    name: "TELRAAM_snapshot_r",
+                    url: "https://telraam.net/api/segments/snapshot/traffic",
+                    type: "geojson"
+                })
+                .binding({
+                    lookup: "geometry",
+                    value: "heavy|car|bike|pedestrian",
+                    title: "v85"
+                })
+                .style({
+                    type: "CHART|SYMBOL|SEQUENCE|STAR|SORT|DOWN|SIZE|VALUES|VALUEBACKGROUND|AGGREGATE|RECT|RELOCATE|SUM|CIRCULARBOX|BOTTOMTITLE|COMPACTLEGEND",
+                    colorscheme: [
+                        "black",
+                        "red",
+                        "#0088dd",
+                        "#88dd00"
+                    ],
+                    label: [
+                        "heavy",
+                        "car",
+                        "bike",
+                        "pedestrian"
+                    ],
+                    fillopacity: "0.5",
+                    cache: "false",
+                    shadow: "true",
+                    symbols: [
+                        "https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/heavy-transport-svgrepo-com.svg",
+                        "https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/car-svgrepo-com.svg",
+                        "https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/cycling-pictogram-3-svgrepo-com-blue.svg",
+                        "https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/walking-svgrepo-com.svg"
+                    ],
+                    units: "",
+                    normalsizevalue: "5000",
+                    scale: "1",
+                    sizepow: "3",
+                    boxcolor: "#ffffff",
+                    bordercolor: "#444444",
+                    boxmargin: "0",
+                    boxopacity: "0.8",
+                    textscale: "0.8",
+                    textcolor: "#000000",
+                    titleupper: "1:50000",
+                    valuesupper: "1:50000",
+                    valuescale: "1",
+                    valuedecimals: "0",
+                    fadenegative: "1",
+                    gridwidth: "10px",
+                    centerpart: "max",
+                    titleunits: "km/h",
+                    xxrefreshtimeout: "10000",
+                    showdata: "true",
+                    name: "chart",
+                    tooltip: "{{theme.title}}{{theme.item.data}}",
+                    title: "Telraam - last hour measurements",
+                    description: "<h3>fonte dati: <a href='https://telraam.net/#5/49.354/12.876' target='_blank'>Telraam</a></h3><p>\"Telraam is a citizen-powered solution for collecting multi-modal traffic data with a purpose-built, affordable, and user-friendly device.\"</p>"
+                })
+                .json()
+            )
+        );
+
+    </script>
+</body>
+
+</html>

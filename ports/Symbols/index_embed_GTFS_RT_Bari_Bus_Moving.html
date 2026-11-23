@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+index_embed_GTFS_RT_Bari_Bus_Moving.html
+
+live moving bus icons from AMTAB GTFS-RT (Bari)
+
+$Comment: ixmaps map template; embedded version
+$InitialAuthor: guenter richter
+
+licensed under CC-BY
+
+********************************************************************** -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ixmaps embed example">
+    <meta name="author" content="guenter richter">
+    <link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+    <title>iXMaps - Bari bus in movimento</title>
+
+    <style>
+        #myRange1 {
+            vertical-align: 2px;
+            width: 200px;
+            accent-color: #888888;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            background: #eeeeee;
+            border-radius: 1em;
+        }
+
+        #status {
+            font-size: 0.55em;
+            color: #999999;
+            font-weight: normal;
+        }
+
+    </style>
+
+</head>
+
+<body style='text-align:center;height:100%;'>
+
+    <div id="header">
+
+        <h1 style='font-family:open sans;color:#888888;margin-top:0'>BARI - autobus AMTAB in movimento</br>
+            <span style="font-size:0.6em">grandezza icone:
+                <input type='range' min='0.5' max='3' step="0.05" value='1.5' class='slider' id='myRange1'></span>&nbsp;&nbsp;
+            <span id="status">connessione a AMTAB ...</span>
+        </h1>
+
+    </div>
+
+    <div id="mymap"></div>
+
+    <!-- make a digital clock -->
+
+    <div id="txt" style="font-family:open sans;font-size:1.35em;font-weight:bold;color:#666666;position:absolute;top:25px;left:20px;z-index:999999"></div>
+
+    <!--========================================================================= -->
+
+    <script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+    <!--========================================================================= -->
+
+    <script type="text/javascript" charset="utf-8">
+
+        // ------------------------------------------------------------
+        // broker: poll the AMTAB GTFS-RT feeds (JSON via the corsme proxy)
+        // and hand over interpolated positions, so the bus icons glide
+        // from their previous to their new fix between two polls
+        // ------------------------------------------------------------
+
+        query = function (data, options) {
+
+            var S = ixmaps.busState = ixmaps.busState || {
+                prev: {},       // id -> {lat,lon} position of the previous fix (glide start)
+                now: {},        // id -> {lat,lon} position of the latest fix (glide target)
+                meta: {},       // id -> {RouteId,TripId,Speed,Delay}
+                delays: {},     // TripId -> delay (seconds)
+                fix: 0,         // wallclock (ms) of the latest fix
+                lastPoll: 0,    // wallclock (ms) of the latest real fetch
+                fetching: false
+            };
+
+            var PROXY = "https://corsme.herokuapp.com/";
+            var BASE = "https://avl.amtab.it/WSExportGTFS_RT/api/gtfs/";
+            var POLL_MS = 10000;   // real fetch cadence (the feed updates ~15s)
+            var GLIDE_MS = 10000;  // glide duration from the old to the new fix
+
+            function status(txt) {
+                var el = document.getElementById("status");
+                if (el) el.innerHTML = txt;
+            }
+
+            // rows for the actual moment: linear interpolation between the
+            // previous and the latest fix, u = progress of the glide
+            function handover() {
+                var u = S.fix ? Math.min(1, (Date.now() - S.fix) / GLIDE_MS) : 1;
+                var rows = [];
+                for (var id in S.now) {
+                    var a = S.prev[id] || S.now[id];
+                    var b = S.now[id];
+                    rows.push({
+                        Id: id,
+                        RouteId: S.meta[id].RouteId,
+                        TripId: S.meta[id].TripId,
+                        Latitude: a.lat + (b.lat - a.lat) * u,
+                        Longitude: a.lon + (b.lon - a.lon) * u,
+                        Speed: S.meta[id].Speed,
+                        Delay: S.meta[id].Delay
+                    });
+                }
+                options.type = "json";
+                ixmaps.setExternalData(rows, options);
+            }
+
+            function parseDelays(json) {
+                S.delays = {};
+                ((json && json.Entities) || []).forEach(function (e) {
+                    var u = e.TripUpdate;
+                    if (!u || !u.Trip) return;
+                    var d = 0;
+                    (u.StopTimeUpdates || []).some(function (s) {
+                        if (s.Arrival && s.Arrival.Delay != null) { d = s.Arrival.Delay; return true; }
+                        if (s.Departure && s.Departure.Delay != null) { d = s.Departure.Delay; return true; }
+                        return false;
+                    });
+                    S.delays[String(u.Trip.TripId)] = d;
+                });
+            }
+
+            function parseVehicles(json) {
+                var seen = {};
+                ((json && json.Entities) || []).forEach(function (e) {
+                    var v = e.Vehicle;
+                    if (!v || !v.Position) return;
+                    var id = String((v.Vehicle && v.Vehicle.Id) || e.Id);
+                    var lat = Number(v.Position.Latitude);
+                    var lon = Number(v.Position.Longitude);
+                    if (!isFinite(lat) || !isFinite(lon)) return;
+                    seen[id] = true;
+                    var prev = S.now[id];
+                    S.prev[id] = prev ? { lat: prev.lat, lon: prev.lon } : { lat: lat, lon: lon };
+                    S.now[id] = { lat: lat, lon: lon };
+                    var tripId = v.Trip ? String(v.Trip.TripId) : "";
+                    S.meta[id] = {
+                        RouteId: v.Trip ? String(v.Trip.RouteId) : "",
+                        TripId: tripId,
+                        Speed: Number(v.Position.Speed) || 0,
+                        Delay: S.delays[tripId] || 0
+                    };
+                });
+                for (var id in S.now) {
+                    if (!seen[id]) { delete S.now[id]; delete S.prev[id]; delete S.meta[id]; }
+                }
+                S.fix = Date.now();
+            }
+
+            function fetchFeed(path) {
+                var ctrl = new AbortController();
+                var timer = setTimeout(function () { ctrl.abort(); }, 15000);
+                // the timestamp keeps the proxy from serving a cached body
+                var url = PROXY + BASE + path + (path.indexOf("?") < 0 ? "?" : "&") + "_=" + Date.now();
+                return fetch(url, { signal: ctrl.signal })
+                    .then(function (r) {
+                        clearTimeout(timer);
+                        if (!r.ok) throw new Error("HTTP " + r.status);
+                        return r.json();
+                    });
+            }
+
+            function poll() {
+                S.fetching = true;
+                S.lastPoll = Date.now();
+                fetchFeed("TripUpdates")
+                    .catch(function () { return {}; })
+                    .then(parseDelays)
+                    .then(function () { return fetchFeed("VechiclePosition"); })
+                    .then(parseVehicles)
+                    .then(function () {
+                        status("veicoli: " + Object.keys(S.now).length + " - aggiornato alle " +
+                            new Date(S.fix).toLocaleTimeString("it-IT"));
+                    })
+                    .catch(function (e) {
+                        status("errore: " + (e.message || e));
+                    })
+                    .then(function () {
+                        S.fetching = false;
+                    });
+            }
+
+            // a real fetch when the data is stale, then hand over the
+            // interpolated frame (the running fetch hands over on its own
+            // when it completes and resolves all pending waits)
+            if (!S.fetching && Date.now() - S.lastPoll >= POLL_MS) {
+                poll();
+            }
+            if (S.fix) {
+                handover();
+            }
+        };
+
+        // ------------------------------------------------------------
+
+        var setIconSize = function (nValue) {
+            ixmaps.map().changeThemeStyle('buses', 'scale:' + nValue, 'set');
+        }
+        var slider = document.getElementById("myRange1");
+        slider.oninput = function () {
+            if (ixmaps.sliderT1) {
+                clearTimeout(ixmaps.sliderT1);
+            }
+            ixmaps.value = this.value;
+            ixmaps.sliderT1 = setTimeout(function () {
+                setIconSize(ixmaps.value)
+            }, 10);
+        }
+
+        attribution =
+            "data: <a href='https://www.amtab.it/it/openmobilitydata' target='_blank'>GTFS-RT AMTAB Bari</a><br>powered by iXMaps";
+
+        let mapHeight = window.innerHeight - document.getElementById("header").clientHeight - 40;
+
+        ixmaps.Map("mymap", {
+                mapService: "leaflet_vt",
+                mapType: "VT_TONER_LITE",
+                mode: "pan",
+                height: mapHeight + "px",
+                legend: true,
+                tools: true
+            },
+            map => map
+            .view([41.10548442658741, 16.840496063232425], 14)
+            .options({
+                objectscaling: "dynamic",
+                normalSizeScale: "20000",
+                basemapopacity: "0.4",
+                panhidden: "false"
+            })
+            .attribution(attribution)
+            .legend("<h1>Bari - Status TPL AMTAB</h1><h4 style='margin-top:-1em'>posizioni degli autobus in tempo reale<br>dati: <a href='https://www.amtab.it/it/openmobilitydata' target='_blank'>GTFS-RT Bari</a></h4>")
+
+            // bus lines
+
+            .layer(
+                ixmaps.layer("Bari_lines")
+                .data({
+                    type: "topojson",
+                    url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Bari/Linee.topojson"
+                })
+                .binding({
+                    id: "shape_id"
+                })
+                .style({
+                    type: "FEATURES|CHOROPLETH|CATEGORICAL|NOLEGEND",
+                    colorscheme: ["#88aadd"],
+                    linewidth: "5",
+                    opacity: "0.5"
+                })
+                .json()
+            )
+
+            // bus stops
+
+            .layer(
+                ixmaps.layer("Bari_stops")
+                .data({
+                    type: "csv",
+                    url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Bari/stops.csv"
+                })
+                .binding({
+                    position: "stop_lat|stop_lon",
+                    title: "stop_name"
+                })
+                .style({
+                    type: "CHART|BUBBLE|BOX|TITLE|NOLEGEND",
+                    colorscheme: ["#88aadd"],
+                    scale: "0.2",
+                    chartupper: "1:14000",
+                    titlefield: "stop_name",
+                    textscale: "10",
+                    textcolor: "#6688bb",
+                    boxopacity: "0"
+                })
+                .json()
+            )
+
+            // live bus icons - defines the 'TripData' broker
+            // colored disc under the pictogram: delay class color
+
+            .layer(
+                ixmaps.layer("Bari_buses")
+                .data({
+                    name: "TripData",
+                    type: "ext",
+                    query: query.toString()
+                })
+                .binding({
+                    position: "Latitude|Longitude",
+                    value: "Delay"
+                })
+                .style({
+                    type: "CHART|SYMBOL|RANGES|NOSIZE|FAST|NOLEGEND",
+                    colorscheme: [
+                        "#4488cc",
+                        "#22aa44",
+                        "#ffcc00",
+                        "#dd2222"
+                    ],
+                    ranges: "-120,0.1,120",
+                    fillopacity: "0.9",
+                    linecolor: "white",
+                    linewidth: "1",
+                    scale: "1.5",
+                    showdata: "true",
+                    datafields: ["Id", "RouteId", "TripId", "Speed", "Delay"],
+                    name: "buses",
+                    tooltip: "{{theme.title}}{{theme.item.data}}",
+                    title: "Autobus AMTAB",
+                    description: "<h3>fonte dati: <a href='https://www.amtab.it/it/openmobilitydata' target='_blank'>GTFS-RT AMTAB Bari</a></h3><p>posizioni degli autobus in tempo reale; le icone si muovono dall'ultima posizione rilevata alla nuova</p>"
+                })
+                .json()
+            )
+
+            // bus pictogram on top of the disc
+
+            .layer(
+                ixmaps.layer("Bari_bus_icons")
+                .data({
+                    name: "TripData"
+                })
+                .binding({
+                    position: "Latitude|Longitude",
+                    value: "RouteId"
+                })
+                .style({
+                    type: "CHART|SYMBOL|SEQUENCE|CATEGORICAL|AGGREGATE|NOSIZE|FAST|NOLEGEND",
+                    colorscheme: [
+                        "#333333"
+                    ],
+                    symbols: [
+                        "https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/public-transport-bus-svgrepo-com.svg"
+                    ],
+                    fillopacity: "1",
+                    scale: "1.1",
+                    name: "bus_icons"
+                })
+                .json()
+            )
+
+            // route number above the bus icon
+            // value gives the label box its (fixed) size, the text is the
+            // raw RouteId via valuefield '$title$'
+
+            .layer(
+                ixmaps.layer("Bari_bus_route")
+                .data({
+                    name: "TripData"
+                })
+                .binding({
+                    position: "Latitude|Longitude",
+                    value: "Speed",
+                    title: "RouteId"
+                })
+                .style({
+                    type: "CHART|LABEL|NOSIZE|VALUES|INLINETEXT|ZEROISVALUE|FAST|NOLEGEND",
+                    colorscheme: [
+                        "#333333"
+                    ],
+                    align: "above",
+                    valuefield: "$title$",
+                    fillopacity: "0.3",
+                    textcolor: "#333333",
+                    linecolor: "none",
+                    scale: "1.4",
+                    valuedecimals: "0",
+                    chartupper: "1:60000",
+                    name: "bus_route"
+                })
+                .json()
+            )
+
+        );
+
+        // redraw the live themes twice a second; the broker serves
+        // interpolated frames and only fetches when the data is stale
+        // (calls before the map is ready wait for it)
+
+        ixmaps.busTimer = setInterval(function () {
+            ixmaps.map().refreshTheme("buses");
+        }, 500);
+
+    </script>
+
+    <!-- digital clock -->
+
+    <script>
+        function startTime() {
+            const today = new Date();
+            let h = today.getHours();
+            let m = today.getMinutes();
+            let s = today.getSeconds();
+            m = checkTime(m);
+            s = checkTime(s);
+            document.getElementById('txt').innerHTML = h + ":" + m + ":" + s;
+            setTimeout(startTime, 1000);
+        }
+
+        function checkTime(i) {
+            if (i < 10) {
+                i = "0" + i
+            };
+            return i;
+        }
+        startTime();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Copernicus Urban Atlas — WMS overlay (Milano)</title>
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: sans-serif; }
+  #map { width: 100%; height: 100%; }
+
+  #ua-attribution {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    z-index: 500;
+    background: rgba(255,255,255,0.85);
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #333;
+    border-radius: 3px;
+    pointer-events: none;
+  }
+  #ua-hint {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    z-index: 500;
+    background: rgba(255,255,255,0.9);
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #333;
+    border-radius: 4px;
+    max-width: 260px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="ua-hint">Copernicus riparian zones / land cover (WMS)</div>
+<div id="ua-attribution">Contains modified Copernicus Land Monitoring Service information 2018; © European Environment Agency (EEA)</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script>
+
+// EEA ArcGIS Server hosting the Copernicus Urban Atlas 2018 dataset as an
+// Esri REST Map/Image Service export endpoint (the native ixMaps "WMS" theme
+// speaks this export convention, not literal OGC WMS GetMap).
+var urbanAtlas =
+    ixmaps.layer("urban_atlas")
+        .type("WMS|IMAGE|NOLEGEND")
+        .data({ server: "https://image.discomap.eea.europa.eu/arcgis/rest/services/RiparianZones/LCLU/MapServer/export" })
+        .style({
+            opacity:    "0.8"   
+        })
+        .define();
+
+ixmaps.Map("map", {
+        mapType: "VT_TONER_LITE",
+        mode:    "pan",
+        width:   window.innerWidth + "px",
+        height:  window.innerHeight + "px",
+        legend:  "closed",
+        align:   "center"
+    },
+    map => map
+        .view([45.4642, 9.1900], 6)   // Milano
+        .options({
+            basemapopacity: "0.6",
+            flushChartDraw: "1000000"
+        })
+        .layer(urbanAtlas)
+);
+
+</script>
+</body>
+</html>

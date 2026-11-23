@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Population exposed to hazards</title>
+<!-- GHS_2024: update of ports/GHS/hazard_risks.html on the GHS Urban Centre Database R2024A
+     (shared setup: ghs2024_common.js)
+     (changed: the 2015 database had hazard risk indices (heat wave, earthquake, flood, storm); R2024A has population EXPOSURE to these hazards, so the themes show exposed population instead. No heat wave theme: not in the exposure table) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs2024_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [15.453, 19.160],
+    layers: [
+      GHS.centres("flood", "exposure", ["EX_100_POP_2025"], { value: "EX_100_POP_2025" }, "CHART|BUBBLE|SIZE",
+        { colorscheme: ["#0044dd"], fillopacity: "0.5", scale: "1", valuescale: "1", linewidth: "1", valuedecimals: "0" },
+        { title: "People exposed to floods (100 years return period)" }),
+      GHS.centres("coastal", "exposure", ["EX_L05_POP_2025"], { value: "EX_L05_POP_2025" }, "CHART|BUBBLE|SIZE",
+        { colorscheme: ["#88eeff"], fillopacity: "0.3", scale: "1", valuescale: "1", linewidth: "1", valuedecimals: "0" },
+        { title: "Population living below 5 m above sea level (LECZ)" }),
+      GHS.centres("cyclone", "exposure", ["EX_400_S3P_2025"], { value: "EX_400_S3P_2025" }, "CHART|BUBBLE|SIZE|GLOW",
+        { colorscheme: ["#F7C025"], fillopacity: "0.7", scale: "1", valuescale: "1", valuedecimals: "0" },
+        { title: "Population exposed to cyclone wind (400 yrp, wind speed classes 3-5)" }),
+      GHS.centres("earthquake", "exposure", ["EX_SHA_POP_2025"], { value: "EX_SHA_POP_2025" }, "CHART|BUBBLE|SIZE",
+        { colorscheme: ["#bb2233"], fillopacity: "0.7", scale: "0.2", valuescale: "1", valuedecimals: "0", units: "%" },
+        { title: "Share of population exposed to earthquakes (class 6 MMI or greater)" })
+    ]
+  });
+</script>
+</body>
+</html>

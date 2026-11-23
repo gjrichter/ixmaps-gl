@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colorscheme by function — street-lamp technology</title>
+  <style>html,body{width:100%;height:100%;margin:0;background:#111}#map{width:100%;height:100%}</style>
+</head>
+
+<body>
+<div id="map" style="background-color: #000;"></div>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+<script>
+  // Comune di Lecce public-lighting open data (~20,600 poles). The raw field
+  // is a single string like "Sodio AP 150" — light-source technology, then
+  // wattage. We split it once client-side into TIPO (text) and CONSUMO
+  // (trailing number), same as an earlier version of this map did server-side
+  // via a data-broker preprocessing step and a global colorscheme:["user"]
+  // hook. Here the whole thing collapses into one per-value color function.
+  var DATA_URL = "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Lecce/Pali_18_02.csv.gz";
+
+  var myMap = ixmaps.Map('map', { mapType: 'CartoDB - Dark matter', mode: 'info', legend: 'open', tools: false })
+    .view({ center: { lat: 40.352, lng: 18.17 }, zoom: 13 })
+    .options({ objectscaling: 'dynamic', normalSizeScale: '100000', basemapopacity: 0.3 });
+
+  Data.feed({ source: DATA_URL, type: "csv" }).load(function (table) {
+    var cols = table.columnNames();
+    var iLampada = cols.indexOf("LAMPADA"), iX = cols.indexOf("X"), iY = cols.indexOf("Y"),
+        iAddr = cols.indexOf("indirizzo");
+    var rows = table.getArray().slice(1);
+
+    var out = [];
+    rows.forEach(function (r) {
+      var lampada = r[iLampada] || "";
+      var parts = lampada.split(" ");
+      var consumo = parseInt(parts[parts.length - 1], 10);
+      var tipo = isNaN(consumo) ? lampada : parts.slice(0, -1).join(" ");
+      var lat = parseFloat(r[iY]), lon = parseFloat(r[iX]);
+      if (!lat || !lon || !tipo) return;
+      out.push({ tipo: tipo, consumo: isNaN(consumo) ? 100 : consumo, lat: lat, lon: lon, indirizzo: r[iAddr] || "" });
+    });
+
+    myMap.layer("lampioni")
+      .data({ obj: out, type: "json" })
+      .binding({ geo: "lat|lon", value: "tipo", size: "consumo", title: "indirizzo" })
+      .type("CHART|BUBBLE|GLOW|CENTER|CATEGORICAL")
+      .style({
+        // Deduce each lamp's glow color from the light-source technology
+        // named in its own category label — not from a hand-picked table of
+        // ~200 distinct labels (impossible to maintain: most are fixture/
+        // brand names like "Morfomatic" or "Guzzini - Delphi" that carry no
+        // color info at all and fall through to a neutral default).
+        colorscheme: ["byvalue", function (value) {
+          if (/LED/i.test(value))            return "#bcd2ff";  // cool white-blue
+          if (/sodio/i.test(value))          return "#ff9900";  // sodium vapor: warm orange
+          if (/mercurio/i.test(value))       return "#ffeeaa";  // mercury vapor: pale yellow
+          if (/joduri|ioduri/i.test(value))  return "#ffffff";  // metal halide: white
+          if (/halo/i.test(value))           return "#ffffff";  // halogen: white
+          return "#8a8a78";                                     // fixture/brand name, not a light medium
+        }],
+        normalsizevalue: "200000",
+        scale: 1,
+        fillopacity: 0.75,
+        showdata: "true"
+      })
+      .meta({ name: "lampioni", tooltip: "<b>{{tipo}}</b><br>{{indirizzo}}<br>{{consumo}} W" })
+      .title("Public lighting — color deduced from lamp technology")
+      .define();
+  });
+</script>
+</body>
+
+</html>

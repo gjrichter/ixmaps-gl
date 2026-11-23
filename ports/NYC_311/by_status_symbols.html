@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC 311 complaints by status (symbols)</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/NYC_311/ixmaps_project_NYC_311_last_10000_by_status_symbols.json
+     Same theme definition and live Socrata source (last 10,000 calls), same start view. Differences:
+     lat|lon lookup instead of the 'location' WKT column, and the legacy CartoDB Positron raster is
+     replaced by the engine's vector light basemap. -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  var __layer = ixmaps.layer("311_status", layer => layer
+    .data({ url: "https://data.cityofnewyork.us/resource/erm2-nwe9.csv?$select=status,latitude,longitude&$where=latitude%20IS%20NOT%20NULL&$order=created_date%20DESC&$limit=10000", type: "csv", name: "nyc311_status", cache: "true" })
+    .binding({ lookupfield: "latitude|longitude", value: "status" })
+    .type("CHART|SYMBOL|SEQUENCE|STAR|GLOW|SIZE|AGGREGATE|FAST|RECT|CATEGORICAL|SUM|VALUES")
+    .style({
+      colorscheme: ["#FF0015","#2080ff","#2BBA00","#F4FC00","#FFB01C","#FF1C42"],
+      fillopacity: "1",
+      shadow: "false",
+      symbols: ["circle"],
+      values: ["Open", "In Progress", "Closed", "Assigned", "Started", "Pending"],
+      label: ["Open", "In Progress", "Closed", "Assigned", "Started", "Pending"],
+      scale: "0.5",
+      valuescale: "1",
+      valuedecimals: "0",
+      gridwidthpx: "1"
+    })
+    .meta({
+      title: "311 complaints status",
+      snippet: "last 10,000 calls · NYC Open Data",
+      tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}"
+    })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "true" },
+    map => map.view([40.74361546275168, -73.87275695800783], 12)
+      .options({ objectscaling: "dynamic", normalSizeScale: "108133" })
+      .layer(__layer)
+  );
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Italy — Inter-regional migration flows 2025</title>
+<style>
+  html, body { width:100%; height:100%; margin:0; overflow:hidden; font-family:"Helvetica Neue",Arial,sans-serif; }
+  #map { width:100%; height:100%; }
+  .panel { position:absolute; background:rgba(255,255,255,0.94); border-radius:8px;
+           box-shadow:0 2px 10px rgba(0,0,0,0.15); z-index:1000; }
+  #title-bar { top:12px; left:12px; padding:10px 16px; max-width:330px; }
+  #title-bar h2 { font-size:15px; color:#1a2a3a; margin:0; }
+  #title-bar p  { font-size:11px; color:#667788; margin:3px 0 0; }
+  #controls { top:108px; left:12px; padding:12px 16px; width:250px; }
+  #controls label { display:block; font-size:10px; font-weight:700; text-transform:uppercase;
+                    letter-spacing:.05em; color:#556; margin:0 0 4px; }
+  #controls select { width:100%; padding:6px 8px; font-size:13px; border:1px solid #ccd5dd;
+                     border-radius:5px; margin-bottom:12px; background:#fff; }
+  #controls input[type=range] { width:100%; margin:2px 0 2px; accent-color:#0b6fb8; }
+  #controls .readout { font-size:10px; color:#778; margin:0 0 10px; }
+  #controls .hint { font-size:10px; color:#889; line-height:1.4; margin-top:2px; }
+  .legend-panel { top:12px; right:12px; padding:10px 14px; width:218px; max-height:80vh; overflow:auto; }
+  .legend-panel h4 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+                     color:#556; margin:0 0 2px; }
+  .legend-cap { font-size:9px; color:#9aa3ad; margin:0 0 8px; }
+  .ol-row { display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:12px; color:#334; }
+  .ol-sw  { width:14px; height:14px; border-radius:3px; flex-shrink:0; border:1px solid rgba(0,0,0,.18); }
+  .ol-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ol-row b { font-variant-numeric:tabular-nums; color:#445; }
+  #origin-legend { width:252px; }
+  .ol-out { min-width:46px; text-align:right; }
+  .ol-net { min-width:54px; text-align:right; }
+  #source-bar { bottom:6px; left:12px; padding:4px 12px; font-size:10px; color:#778899; }
+
+  /* panel show/hide toggle (phone) */
+  #ui-toggle { display:none; position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
+               z-index:1100; padding:7px 15px; border-radius:18px; background:rgba(255,255,255,0.95);
+               box-shadow:0 2px 8px rgba(0,0,0,.18); border:1px solid #ccd5dd; color:#334;
+               font-size:11px; font-weight:600; cursor:pointer; }
+  body.panels-off .panel { display:none !important; }
+
+  /* tablet */
+  @media (max-width: 900px) {
+    #controls { width:206px; }
+    .legend-panel { width:208px; }
+    #origin-legend { width:230px; }
+    #title-bar { max-width:300px; }
+  }
+  /* phone */
+  @media (max-width: 600px) {
+    #title-bar { top:8px; left:8px; right:8px; max-width:none; padding:8px 12px; }
+    #title-bar h2 { font-size:13px; }
+    #title-bar p { display:none; }
+    #controls { top:auto; bottom:8px; left:8px; width:calc(50% - 12px); padding:9px 10px; }
+    #controls label { font-size:9px; margin-bottom:3px; }
+    #controls select { font-size:12px; padding:5px 6px; margin-bottom:9px; }
+    #controls .hint { display:none; }
+    .legend-panel { top:auto; bottom:8px; right:8px; left:auto; width:calc(50% - 12px);
+                    max-height:58vh; padding:8px 10px; font-size:10.5px; }
+    #origin-legend { width:calc(50% - 12px); }
+    .legend-panel h4 { font-size:10px; }
+    .legend-cap { font-size:8px; }
+    .ol-row { font-size:10px; gap:5px; margin-bottom:3px; }
+    .ol-sw { width:11px; height:11px; }
+    .ol-out { min-width:38px; } .ol-net { min-width:44px; }
+    #source-bar { display:none; }
+    #ui-toggle { display:block; }
+    #onmapbuttondivzoom { display:none !important; }   /* pinch-zoom on touch; frees the bottom-left corner */
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="title-bar" class="panel">
+  <h2>Inter-regional migration flows · Italy 2025</h2>
+  <p>Changes of residence between regions. Arrow width ∝ number of transfers; in the overview, arrow color = origin region (provisional 2025).</p>
+</div>
+<div id="controls" class="panel">
+  <label for="origin-select">Region</label>
+  <select id="origin-select"></select>
+  <label for="dir-select">Direction</label>
+  <select id="dir-select">
+    <option value="out">Outflows — from this region →</option>
+    <option value="in">Inflows — → into this region</option>
+    <option value="both">Both — in &amp; out</option>
+  </select>
+  <label for="size-slider">Arrow thickness</label>
+  <input id="size-slider" type="range" min="0" max="100" step="1" value="68">
+  <div class="readout" id="size-readout">size reference ≈ 10,000</div>
+  <div class="hint">Pick a region to trace its flows, or choose <b>All major flows</b> for the national overview (arrows colored by origin).</div>
+</div>
+<div id="origin-legend" class="panel legend-panel" style="display:none">
+  <h4>Origin region</h4>
+  <div class="legend-cap">out&nbsp;·&nbsp;saldo (in − out) · 2025</div>
+  <div id="origin-legend-items"></div>
+</div>
+<div id="dir-legend" class="panel legend-panel" style="display:none">
+  <h4 id="dir-legend-title">Direction</h4>
+  <div class="ol-row"><span class="ol-sw" style="background:#0b6fb8"></span>Outflows&nbsp;<b id="dir-out-sum"></b></div>
+  <div class="ol-row"><span class="ol-sw" style="background:#d2691e"></span>Inflows&nbsp;<b id="dir-in-sum"></b></div>
+  <div id="dir-net" style="font-size:11px; color:#667; margin-top:7px; padding-top:6px; border-top:1px solid #e6eaee;"></div>
+  <div style="font-size:9px; color:#9aa3ad; margin-top:5px;">inter-regional transfers · 2025</div>
+</div>
+<div id="source-bar" class="panel">Source: ISTAT — DCIS_MIGRAZIONI (28_185_DF_DCIS_MIGRAZIONI_1), 2025 (provisional)</div>
+<button id="ui-toggle" type="button">Hide panels</button>
+
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="regions_migration_data.js"></script>
+<script>
+// REGIONS loaded from data.js
+// FLOWS loaded from data.js
+// ORDER_NAMES loaded from data.js
+// PALETTE loaded from data.js
+
+var OUT_COLOR = "#0b6fb8";   // outflows
+var IN_COLOR  = "#d2691e";   // inflows
+var ALL_MIN   = 3000;        // threshold for "All major flows" overview
+var NSV       = 10000;       // vector normalsizevalue (driven by the slider)
+var FLOW_TIP  = "<div style='padding:7px 9px'><b>{{origin}}</b> &rarr; <b>{{dest}}</b>"
+              + "<br>{{value}} residence transfers (2025)</div>";
+
+var NSV_MIN = 3000, NSV_MAX = 25000;
+function nsvFromSlider(t){ return Math.round(NSV_MAX - (t/100) * (NSV_MAX - NSV_MIN)); }
+function debounce(fn, ms){ var t; return function(){ clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+// touch devices (coarse pointer) start in pan mode; mouse/desktop in info mode
+var MAP_MODE = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ? "pan" : "info";
+
+var myIXMap = ixmaps.Map("map", {
+    mapType: "white", mode: MAP_MODE, legend: "closed", tools: true
+})
+.view({ center: { lat: 41.9, lng: 12.4 }, zoom: 6 })
+.options({ objectscaling: "dynamic", normalSizeScale: "8000000",
+           basemapopacity: 0.55, flushChartDraw: 1000000 });
+
+myIXMap.layer("regions")
+    .data({ url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/topojson/NUTS_RG_20M_2021_4326_LEVL_2.json", type: "topojson" })
+    .filter('WHERE CNTR_CODE == "IT"')
+    .binding({ geo: "geometry" })
+    .type("FEATURE|SILENT")
+    .style({ colorscheme: ["#e9eef2"], fillopacity: 0.45, linecolor: "#9fb0bc", linewidth: 0.5 })
+    .define();
+
+// define one vector flow theme; opts = {categorical} OR {color, bow}
+function defineFlow(name, data, opts){
+    var type = "CHART|VECTOR|3D|BEZIER|POINTER" + (opts.categorical ? "|CATEGORICAL" : "") + "|FADEIN|DASH";
+    var binding = { position: "olat|olon", position2: "dlat|dlon", title: "dest" };
+    var style = { fillopacity: 0.9, sizefield: "value", scale: 1.0, sizepow: 1, archeight: 0.2,
+                  normalsizevalue: String(NSV), rangescale: (opts.bow != null ? opts.bow : -7), showdata: "true" };
+    if (opts.categorical) { style.colorscheme = PALETTE; style.values = ORDER_NAMES; binding.value = "origin"; }
+    else { style.colorscheme = [opts.color]; }
+    myIXMap.layer("flowlayer")
+        .data({ obj: data, type: "json" })
+        .binding(binding)
+        .type(type)
+        .style(style)
+        .meta({ name: name, tooltip: FLOW_TIP })
+        .title(opts.categorical ? "Origin region" : "Flows")
+        .define();
+}
+
+function defineBubbles(data, color){
+    myIXMap.layer("bublayer")
+        .data({ obj: data, type: "json" })
+        .binding({ geo: "lat|lon", value: "value", title: "name" })
+        .type("CHART|BUBBLE|SIZE|VALUES|NOLEGEND")
+        .style({ colorscheme: [color], fillopacity: 0.55, linecolor: color, linewidth: 1.2,
+                 scale: 2.4, sizepow: 1, normalsizevalue: "30000", showdata: "true", units: " transfers" })
+        .meta({ name: "regionBubbles", tooltip: "<div style='padding:7px 9px'><b>{{name}}</b><br>{{value}} transfers</div>" })
+        .title("Volume")
+        .define();
+}
+
+var THEMES = ["regionFlows", "regionFlowsOut", "regionFlowsIn", "regionBubbles"];
+
+function render(regionName, dir, animate){
+    var isAll = (regionName === "__ALL__");
+
+    myIXMap.then(function(api){
+        THEMES.forEach(function(n){ try { api.removeTheme(n); } catch(e){} });
+
+        if (isAll){
+            defineFlow("regionFlows", FLOWS.filter(function(f){ return f.value >= ALL_MIN; }), { categorical: true });
+        } else if (dir === "both"){
+            var outF = FLOWS.filter(function(f){ return f.origin === regionName; });
+            var inF  = FLOWS.filter(function(f){ return f.dest   === regionName; });
+            defineFlow("regionFlowsOut", outF, { color: OUT_COLOR, bow: -7 });   // out: curve one way
+            defineFlow("regionFlowsIn",  inF,  { color: IN_COLOR,  bow: -7 });   // in: same sign -> opposite side (reversed travel direction)
+            // totals into the Direction legend
+            var outSum = outF.reduce(function(a,f){ return a + f.value; }, 0);
+            var inSum  = inF.reduce(function(a,f){ return a + f.value; }, 0);
+            var net    = inSum - outSum;
+            document.getElementById("dir-legend-title").textContent = regionName;
+            document.getElementById("dir-out-sum").textContent = outSum.toLocaleString();
+            document.getElementById("dir-in-sum").textContent  = inSum.toLocaleString();
+            document.getElementById("dir-net").innerHTML =
+                "Net balance: <b style='color:" + (net >= 0 ? "#2e7d32" : "#c62828") + "'>"
+                + (net >= 0 ? "+" : "") + net.toLocaleString() + "</b>";
+        } else {
+            var color = (dir === "out") ? OUT_COLOR : IN_COLOR;
+            var sel = (dir === "out")
+                ? FLOWS.filter(function(f){ return f.origin === regionName; })
+                : FLOWS.filter(function(f){ return f.dest   === regionName; });
+            var bub = sel.map(function(f){
+                return (dir === "out") ? { name: f.dest, lat: f.dlat, lon: f.dlon, value: f.value }
+                                       : { name: f.origin, lat: f.olat, lon: f.olon, value: f.value };
+            });
+            defineFlow("regionFlows", sel, { color: color, bow: -7 });
+            defineBubbles(bub, color);
+        }
+    });
+
+    document.getElementById("origin-legend").style.display = isAll ? "block" : "none";
+    document.getElementById("dir-legend").style.display    = (!isAll && dir === "both") ? "block" : "none";
+}
+
+// region selector
+var sel = document.getElementById("origin-select");
+var dirSel = document.getElementById("dir-select");
+var optAll = document.createElement("option");
+optAll.value = "__ALL__"; optAll.textContent = "— All major flows (≥ " + ALL_MIN.toLocaleString() + ") —";
+sel.appendChild(optAll);
+REGIONS.forEach(function(r){
+    var o = document.createElement("option");
+    o.value = r.name; o.textContent = r.name; sel.appendChild(o);
+});
+
+// origin-color legend
+var olItems = document.getElementById("origin-legend-items");
+ORDER_NAMES.forEach(function(nm, i){
+    var outSum = FLOWS.reduce(function(a, f){ return f.origin === nm ? a + f.value : a; }, 0);
+    var inSum  = FLOWS.reduce(function(a, f){ return f.dest   === nm ? a + f.value : a; }, 0);
+    var net = inSum - outSum;
+    var netCol = net >= 0 ? "#2e7d32" : "#c62828";
+    var row = document.createElement("div"); row.className = "ol-row";
+    row.innerHTML = '<span class="ol-sw" style="background:' + PALETTE[i] + '"></span>'
+                  + '<span class="ol-name" title="' + nm + '">' + nm + '</span>'
+                  + '<b class="ol-out">' + outSum.toLocaleString() + '</b>'
+                  + '<b class="ol-net" style="color:' + netCol + '">' + (net >= 0 ? "+" : "") + net.toLocaleString() + '</b>';
+    olItems.appendChild(row);
+});
+
+function update(animate){ render(sel.value, dirSel.value, animate); syncURL(); }
+sel.addEventListener("change", function(){ update(true); });
+dirSel.addEventListener("change", function(){ update(true); });
+
+// arrow-thickness slider -> vector normalsizevalue
+var slider  = document.getElementById("size-slider");
+var readout = document.getElementById("size-readout");
+function refreshReadout(){ readout.textContent = "size reference ≈ " + NSV.toLocaleString() + "  (drag right = thicker)"; }
+slider.addEventListener("input", debounce(function(){
+    NSV = nsvFromSlider(+slider.value);
+    refreshReadout();
+    update(false);
+}, 130));
+
+// phone-only panel toggle
+var uiToggle = document.getElementById("ui-toggle");
+uiToggle.addEventListener("click", function(){
+    var off = document.body.classList.toggle("panels-off");
+    uiToggle.textContent = off ? "Show panels" : "Hide panels";
+});
+
+// ---- URL state (region · direction · thickness) ----
+function syncURL(){
+    var p = new URLSearchParams();
+    p.set("r", sel.value === "__ALL__" ? "all" : sel.value);
+    p.set("d", dirSel.value);
+    p.set("t", slider.value);
+    history.replaceState(null, "", location.pathname + "?" + p.toString());
+}
+function readState(){
+    var p = new URLSearchParams(location.search);
+    var r = p.get("r"), d = p.get("d"), t = parseInt(p.get("t"), 10);
+    var region = "__ALL__";
+    if (r && r !== "all" && REGIONS.some(function(x){ return x.name === r; })) region = r;
+    var dir = (d === "in" || d === "both") ? d : "out";
+    if (!isFinite(t) || t < 0 || t > 100) t = +slider.value;   // default slider position
+    return { region: region, dir: dir, t: t };
+}
+
+// init from URL (or defaults)
+var st = readState();
+sel.value    = st.region;
+dirSel.value = st.dir;
+slider.value = st.t;
+NSV = nsvFromSlider(+slider.value);
+refreshReadout();
+syncURL();
+render(sel.value, dirSel.value, true);
+</script>
+</body>
+</html>

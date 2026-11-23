@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hazard risks in urban centres</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/EuroStat/GHS/final/ixmaps_project_Harard_Risks_Equal_Earth.json
+     in the style of where_people_live_equal_earth.html (shared setup: ghs_common.js) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [15.453, 19.160],
+    layers: [
+      GHS.urbanCentres("heat", { value: "EX_HW_IDX" }, "CHART|BUBBLE|SIZE|GLOW",
+        { colorscheme: ["#F7C025"], fillopacity: "0.7", scale: "0.3276800000000002", valuescale: "1", valuedecimals: "2" },
+        { title: "Heat Wave Risk Index" }),
+      GHS.urbanCentres("earthquake", { value: "EX_EQ19PGA" }, "CHART|BUBBLE|SIZE",
+        { colorscheme: ["#bb2233"], fillopacity: "0.7", scale: "0.2097152000000001", valuescale: "1", valuedecimals: "2" },
+        { title: "Earth Quake Risk Index" }),
+      GHS.urbanCentres("flood", { value: "EX_FD_P15" }, "CHART|BUBBLE|SIZE",
+        { colorscheme: ["#0044dd"], fillopacity: "0.5", scale: "1", valuescale: "1", linewidth: "1", valuedecimals: "0" },
+        { title: "Population exposed to flooding" }),
+      GHS.urbanCentres("storm", { value: "EX_SS_P15" }, "CHART|BUBBLE|SIZE",
+        { colorscheme: ["#88eeff"], fillopacity: "0.3", scale: "1", valuescale: "1", linewidth: "1", valuedecimals: "0" },
+        { title: "Population exposed to storm hazards", splash: "... loading 8 Mb data ..." })
+    ]
+  });
+</script>
+</body>
+</html>

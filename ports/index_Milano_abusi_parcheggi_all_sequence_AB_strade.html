@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+index_only_map_embed.html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2017/06/22 $
+$Author: guenter richter $
+$Id:index_only_map_embed.html 1 2021-10-17 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps really simple embed</title>
+
+</head>
+
+<body style='text-align:center'>
+
+    <div id="mymap"></div>
+    
+	<!--========================================================================= -->
+
+	<div id="onmap-buttons" style="position:absolute;top:1em;right:2em;font-family:open sans;z-index:99999">
+		<div style="float:left;margin:0.3em 1em;">
+			<input id="sizeFieldCheckBox" type="checkbox" checked="checked" style="accent-color:#0066dd;vertical-align:middle" onclick="__toggleStrade(this)"></input>
+			strade
+			<input id="sizeFieldCheckBox" type="checkbox" checked="checked" style="accent-color:#0066dd;vertical-align:middle" onclick="__toggleMin100(this)"></input>
+			filtro: strada > 50 m
+		</div>
+		<table>
+			<tr>
+				<td>
+					<button onclick="sizeCharts(0.90)">-</button>
+				</td>
+				<td>
+					<span style="font-size:0.8em"> &nbsp; grandezza grafici &nbsp;</span>
+				</td>
+				<td>
+					<button onclick="sizeCharts(1.1)">+</button>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3">
+					<input type='range' min='0.1' max='2' step="0.01" value='1' class='slider' id='myRange1'>
+				</td>
+			</tr>
+
+		</table>
+
+	</div>
+
+	<div id="onmap-info" style="position:absolute;top:0.5em;left:2em;font-family:open sans">
+		<p style='margin-bottom:1em'>dati: <a href='http://saichepuoi.it/wp-content/uploads/2024/05/ViaLibera_DATI-GREZZI.pdf' target='_blank'>ViaLibera</a> (estratti &rarr; .csv da A.Borruso)</p>
+	</div>
+
+	<!--========================================================================= -->
+
+	<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+		attribution =
+			"<p style='margin-bottom:1em'>data: <a href='http://saichepuoi.it/wp-content/uploads/2024/05/ViaLibera_DATI-GREZZI.pdf' target='_blank'>ViaLibera</a> (estratti &rarr; .csv da A.Borruso)</br>powered by iXMaps</p>";
+
+		make_street_name_upper = function(data, options) {
+			data.addColumn({
+				source: "name_via",
+				destination: "name_via_upper"
+			}, (value) => {
+				value = value.replace("Piazza ", "");
+				value = value.replace("Largo ", "");
+				value = value.replace("Corso ", "");
+				value = value.replace("Privata ", "");
+				value = value.replace("Strada ", "");
+				value = value.replace("Sottopasso ", "");
+				value = value.replace("Via ", "");
+				value = value.replace("Viale ", "");
+				value = value.replace("Piazzale ", "");
+				value = value.replace("Piazzetta ", "");
+				value = value.replace("privata ", "");
+				return (value.toUpperCase());
+			});
+			return data;
+		};
+
+		query_streets = function(theme, options) {
+			var broker = new Data.Broker()
+
+				.addSource("https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Milano/strade.topojson.gz", "topojson")
+				.addSource("https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Milano/VIARIO_20231002_CENTROIDI.csv", "csv")
+
+				.realize(function(dataA) {
+
+					var data = dataA[0];
+					var nameLookupA = dataA[1].lookupArray({
+						key: "CODICE_VIA",
+						value: "DESCRITTIVO"
+					});
+
+					data.addColumn({
+						source: "COD_VIA",
+						destination: "DESCRITTIVO"
+					}, function(value) {
+						return (nameLookupA[Number(value)]);
+					});
+
+					options.type = "jsonDB", ixmaps.setExternalData(data, options);
+				});
+		};
+
+		/** ========================================================================= **/
+
+			ixmaps.Map("mymap", {
+					mapService: "leaflet_vt",
+					mapType: "VT_DATAVIZ",
+					width: "100%",
+					height: window.innerHeight+"px",
+					align: "top",
+					legend: true,
+					footer: true,
+					mode: "pan",
+					tools: true
+				})
+				.view([45.46604929476052, 9.196151114165195], 12.5)
+				.options({
+					featurescaling: "normal",
+					objectscaling: "dynamic",
+					dynamicScalePow: "3",
+					normalSizeScale: "100000",
+					flushChartDraw: "10000",
+					hideOnPan: "false",
+					freezeOnPan: "false",
+					basemapopacity: 0.6
+				})
+				.attribution(attribution)
+				.require("../../ui/js/tools/tooltip_mustache.js")
+
+				.layer(
+					ixmaps.layer("STREETS", layer => layer
+						.type("POSITION|NOLEGEND")
+						.data({
+							name: "Stradaio",
+							url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Milano/VIARIO_20231002_CENTROIDI.csv",
+							type: "csv",
+							cache: "true"
+						})
+						.binding({
+							id: "DESCRITTIVO",
+							lookupfield: "LAT_WGS84|LONG_WGS84"
+						})
+						.style({
+							colorscheme: ["red"]
+						})
+						.meta({
+							name: "street_centroids"
+						})
+					))
+
+				.layer(
+					ixmaps.layer("STREETS_lines", layer => layer
+						.type("FEATURE|NOLEGEND")
+						.data({
+							name: "Stradaio_linee",
+							query: query_streets.toString()
+						})
+						.binding({
+							id: "DESCRITTIVO",
+							lookupfield: "geometry"
+						})
+						.style({
+							colorscheme: ["none"],
+							linecolor: "#dddddd",
+							opacity: 1,
+							linewidth: 3,
+							featureupper: "1:50000"
+						})
+						.meta({
+							name: "street_lines"
+						})
+					))
+
+				.layer(
+					ixmaps.layer("STREETS", layer => layer
+						.data({
+							name: "ViaLibera",
+							url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Milano/AB_ViaLibera_DATI-GREZZI.csv",
+							type: "csv",
+							process: make_street_name_upper.toString(),
+							cache: "true"
+						})
+						.binding({
+							value: "auto_su_carreggiata|auto_su_marciapiede|auto_su_verde",
+							value100: "length_km_tot_street",
+							lookupfield: "name_via_upper"
+						})
+						.filter("WHERE length_km_tot_street >= 0.05")
+						.type("CHART|SYMBOL|GLOW|SEQUENCE|CENTER|RINGS|SORT|UP|FRACTION|SIMPLELEGEND")
+						.style({
+							colorscheme: [3, "tableau10"],
+							label: "su carreggiata|su marciapiede|su verde",
+							weights: "0.1",
+							valuedecimals: "1",
+							normalsizevalue: "250",
+							valuescale: "1.2",
+							sizepow: "1.5",
+							name: "chart",
+							chartlower: "1:10000",
+							"tooltip": "<span style='white-space:nowrap'>{{name_via}} - lunghezza: {{length_km_tot_street}} km<hr></span>{{theme.item.chart}}* valori calcolati su 100 m di strada"
+						})
+						.meta({
+							"title": "Auto in sosta irregolare per 100 m"
+						})
+					))
+
+				.layer(
+					ixmaps.layer("STREETS", layer => layer
+						.data({
+							name: "ViaLibera",
+							url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Milano/AB_ViaLibera_DATI-GREZZI.csv",
+							type: "csv",
+							process: make_street_name_upper.toString(),
+							cache: "true"
+						})
+						.binding({
+							value: "auto_su_carreggiata|auto_su_marciapiede|auto_su_verde",
+							value100: "length_km_tot_street",
+							lookupfield: "name_via_upper",
+							title: "name_via"
+						})
+						.filter("WHERE length_km_tot_street >= 0.05")
+						.type("CHART|SYMBOL|SEQUENCE|STAR|SORT|DOWN|VALUES|FRACTION|SIMPLELEGEND|CIRCULARBOX|BOTTOMTITLE")
+						.style({
+							colorscheme: [3, "tableau10"],
+							shadow: false,
+							label: "su carreggiata|su marciapiede|su verde",
+							weights: "0.1",
+							valuedecimals: "1",
+							normalsizevalue: "150",
+							textscale: 0.7,
+							valuescale: "1.1",
+							sizepow: "1.5",
+							name: "chart2",
+							chartupper: "1:10000",
+							tooltip: "<span style='white-space:nowrap'>{{name_via}} (lunghezza: {{length_km_tot_street}} km)</span>{{theme.item.chart}})* valore calcolato su 100 m di strada"
+						})
+						.meta({
+							title: "Auto in sosta irregolare per 100 m"
+						})
+					))
+				.layer(
+					ixmaps.layer("STREETS_lines", layer => layer
+						.data({
+							name: "ViaLibera",
+							url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/Milano/AB_ViaLibera_DATI-GREZZI.csv",
+							type: "csv",
+							process: make_street_name_upper.toString(),
+							cache: "true"
+						})
+						.binding({
+							value: "auto_su_carreggiata|auto_su_marciapiede|auto_su_verde",
+							value100: "length_km_tot_street",
+							lookupfield: "name_via_upper",
+							title: "name_via"
+						})
+						.type("CHOROPLETH|COMPOSECOLOR|SUBTRACTIVE|DOPACITYMAX|NOLEGEND")
+						.style({
+							colorscheme: [3, "tableau10"],
+							opacity: 1,
+							nodatacolor: "#aaaaaa",
+							weights: 0.001,
+							shadow: false,
+							label: "su carreggiata|su marciapiede|su verde",
+							name: "chart3",
+							dopacitypow: 3,
+							dopcityscale: 3,
+							chartupper: "1:50000",
+							tooltip: "<span style='white-space:nowrap'>{{name_via}} (lunghezza: {{length_km_tot_street}} km)</span>{{theme.item.chart}})* numero di macchine"
+						})
+						.meta({
+							title: "Auto in sosta irregolare per 100 m"
+						})
+					))
+
+		/** ========================================================================= **/
+
+		var sizeCharts = function(nFactor) {
+			ixmaps.map().changeThemeStyle('chart', 'scale:' + nFactor, 'factor|silent');
+			ixmaps.map().changeThemeStyle('chart2', 'scale:' + nFactor, 'factor|silent');
+		}
+
+		var setChartSize = function(nValue) {
+			ixmaps.map().changeThemeStyle('chart', 'scale:' + nValue, 'set|silent');
+			ixmaps.map().changeThemeStyle('chart2', 'scale:' + nValue, 'set|silent');
+		}
+
+		var slider = document.getElementById("myRange1");
+		// Update the current slider value (each time you drag the slider handle)
+		slider.oninput = function() {
+			if (ixmaps.sliderT1) {
+				clearTimeout(ixmaps.sliderT1);
+			}
+			ixmaps.value = this.value;
+			ixmaps.sliderT1 = setTimeout(function() {
+				setChartSize(ixmaps.value)
+			}, 10);
+		}
+		var __toggleMin100 = function(el) {
+			if (el.checked) {
+				ixmaps.map().changeThemeStyle('chart', 'filter:WHERE length_km_tot_street >= 0.05', 'set|silent');
+				ixmaps.map().changeThemeStyle('chart2', 'filter:WHERE length_km_tot_street >= 0.05', 'set|silent');
+			} else {
+				ixmaps.map().changeThemeStyle('chart', 'filter:', 'set|silent');
+				ixmaps.map().changeThemeStyle('chart2', 'filter:', 'set|silent');
+			}
+		};
+		var __toggleStrade = function(el) {
+			if (el.checked) {
+				ixmaps.map().switchLayer("STREETS_lines",true);
+			} else {
+				ixmaps.map().switchLayer("STREETS_lines",false);
+			}
+		};
+
+	</script>
+
+</body>
+
+</html>

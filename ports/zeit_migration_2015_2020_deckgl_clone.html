@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Migration 2015-2020 - MapLibre + deck.gl (no ixmaps)</title>
+	<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
+	<style>
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+			background: #000000;
+			overflow: hidden;
+			font-family: sans-serif;
+		}
+
+		#map_div {
+			width: 100%;
+			height: 100%;
+		}
+
+		#legend {
+			position: absolute;
+			top: 11em;
+			right: 2em;
+			color: #eeeeee;
+			background: rgba(0, 0, 0, 0.5);
+			padding: 0.6em 1em;
+			border-radius: 0.3em;
+			text-align: left;
+			z-index: 5;
+			pointer-events: none;
+			max-width: 26em;
+		}
+
+		#legend h1 {
+			font-size: 1.2em;
+			margin: 0.2em 0;
+		}
+
+		#legend h5 {
+			font-weight: 300;
+			margin: 0.4em 0 0.2em 0;
+			color: #bbbbbb;
+		}
+
+		#legend a {
+			color: #9fb8cc;
+		}
+
+		#filter {
+			position: absolute;
+			top: 0.6em;
+			left: 2em;
+			z-index: 5;
+			color: #dddddd;
+		}
+
+		#filter span {
+			font-size: 12px;
+			display: block;
+			margin-bottom: 4px;
+		}
+
+		#filter select {
+			background: #111111;
+			color: #ffffff;
+			border: 1px solid #333333;
+			padding: 0.4em 0.6em;
+			font-size: 14px;
+			border-radius: 0.2em;
+			cursor: pointer;
+		}
+
+		#toggles {
+			position: absolute;
+			top: 6em;
+			right: 2em;
+			color: #eeeeee;
+			z-index: 5;
+		}
+
+		#toggles button {
+			background: black;
+			color: #dddddd;
+			border-radius: 0em;
+			border: rgb(206, 222, 239) solid 0px;
+			padding: 0.4em 0.8em;
+			cursor: pointer;
+			margin-left: 0.4em;
+		}
+
+		#toggles button:hover {
+			color: #ffffff;
+		}
+
+		#attribution {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			color: #777777;
+			font-size: 11px;
+			background: rgba(0, 0, 0, 0.5);
+			padding: 0.2em 0.5em;
+			z-index: 5;
+		}
+
+		#attribution a {
+			color: #999999;
+		}
+
+		#selection {
+			position: absolute;
+			bottom: 0.6em;
+			left: 2em;
+			color: #FBEBAC;
+			font-size: 13px;
+			z-index: 5;
+			display: none;
+		}
+
+		#selection a {
+			color: #dd3300;
+		}
+
+		.deck-tooltip {
+			font-family: sans-serif !important;
+			background: rgba(0, 0, 0, 0.85) !important;
+			border: none !important;
+			color: #ffffff !important;
+			padding: 0.5em 0.8em !important;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="map_div"></div>
+
+	<div id="filter">
+		<span>Migration</span>
+		<select id="region_filter">
+			<option value="*" selected>all regions</option>
+			<option value="from:africa">from Africa</option>
+			<option value="from:asia">from Asia</option>
+			<option value="from:america">from America</option>
+			<option value="from:europe">from Europe</option>
+			<option value="to:europe">to Europe</option>
+			<option value="to:america">to America</option>
+			<option value="to:asia">to Asia</option>
+			<option value="to:africa">to Africa</option>
+		</select>
+	</div>
+
+	<div id="toggles">
+		charts on / off
+		<table>
+			<tr>
+				<td><button onclick="toggleVectors();">vectors</button></td>
+				<td><button onclick="toggleNumbers();">numbers</button></td>
+			</tr>
+		</table>
+	</div>
+
+	<div id="legend">
+		<h1>Migration from 2015 to 2020</h1>
+		<h5>data and inspiration from: <a href='https://www.zeit.de/politik/2023-12/migration-weltweit-entwicklung-daten' target='_blank'>Zeit
+				Online</a></br>(Asylantragsteller sind in den Zahlen nicht mitgerechnet)</h5>
+		<h5 style="margin-top:0.6em">
+			<span style="color:#FBEB7C">&#9608;</span>&rarr;<span style="color:#dd3300">&#9608;</span> migration flows
+			&nbsp;&nbsp;
+			<span style="color:#ff4400">&#9679;</span> emigration &nbsp;&nbsp;
+			<span style="color:#FBEBAC">&#9679;</span> immigration
+		</h5>
+	</div>
+
+	<div id="selection"></div>
+
+	<div id="attribution">
+		data and inspiration from:
+		<a href='https://www.zeit.de/politik/2023-12/migration-weltweit-entwicklung-daten' target='_blank'>Zeit Online</a>,
+		country codes:
+		<a href='https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/World/world_country_iso_codes.csv' target='_blank'>data.ixmaps.com</a>
+	</div>
+
+	<script src="https://unpkg.com/deck.gl@9.4.0/dist.min.js"></script>
+	<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+
+	<script>
+		// MapLibre 6 starts its vector-tile worker as a module worker wrapped in
+		// a blob URL importing the CDN's maplibre-gl-worker.mjs; on a file:// page
+		// Chrome refuses it ("Refused to cross-origin redirects of the top-level
+		// worker script"). The same import from a data: URL works — rewritten here
+		// for file:// only (same fix as the engine's installFileWorkerShim).
+		(function () {
+			if (location.protocol !== 'file:' || !window.Worker || Worker.__fileShim) return;
+			var NativeBlob = window.Blob, NativeWorker = window.Worker;
+			var workerImports = new WeakMap(), blobUrls = new Map();
+			function isMaplibreWorkerImport(t) {
+				return typeof t === 'string' && /^import "https?:[^"]*\/maplibre-gl-worker(-dev)?\.mjs"$/.test(t);
+			}
+			window.Blob = function (parts, opts) {
+				var b = new NativeBlob(parts, opts);
+				if (Array.isArray(parts) && parts.length === 1 && isMaplibreWorkerImport(parts[0])) workerImports.set(b, parts[0]);
+				return b;
+			};
+			window.Blob.prototype = NativeBlob.prototype;
+			var nativeCreate = URL.createObjectURL;
+			URL.createObjectURL = function (obj) {
+				var u = nativeCreate.call(this, obj);
+				if (workerImports.has(obj)) blobUrls.set(String(u), workerImports.get(obj));
+				return u;
+			};
+			window.Worker = function (url, opts) {
+				var imp = blobUrls.get(String(url));
+				if (imp && opts && opts.type === 'module') return new NativeWorker('data:text/javascript,' + encodeURIComponent(imp), opts);
+				return new NativeWorker(url, opts);
+			};
+			window.Worker.prototype = NativeWorker.prototype;
+			window.Worker.__fileShim = true;
+		})();
+	</script>
+
+	<!-- MapLibre 6 ships as an ES module with named exports only (no default) -->
+	<script type="module">
+		import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs';
+		window.maplibregl = maplibregl;
+		if (window.__bootClone) window.__bootClone();
+	</script>
+
+	<script type="text/javascript">
+		const FLOWS_URL = 'https://raw.githubusercontent.com/gjrichter/ixmaps-data/refs/heads/main/by-project/zeit-migration-2015-2020/migration_2015.topo-e0VsE90A.json';
+		const WORLD_URL = 'https://raw.githubusercontent.com/gjrichter/geo/main/world/ne_10m_admin_0_countries_xs.json';
+		const ISO_URL = 'https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/World/world_country_iso_codes.csv';
+
+		// state
+		let map = null;
+		let overlay = null;
+		let allFlows = [];
+		let countryNames = new Map();
+		let regionFilter = '*';
+		let selection = null;
+		let showVectors = true;
+		let showNumbers = true;
+		let layerGen = 0;
+
+		function countryName(code) {
+			return countryNames.get(code) || code;
+		}
+
+		function activeFlows() {
+			return allFlows.filter(f => {
+				if (regionFilter !== '*') {
+					const dir = regionFilter.split(':')[0];
+					const region = regionFilter.split(':')[1];
+					if (dir === 'from' ? f.fromRegion !== region : f.toRegion !== region) return false;
+				}
+				if (selection) {
+					if (selection.type === 'from' && f.from !== selection.code) return false;
+					if (selection.type === 'to' && f.to !== selection.code) return false;
+				}
+				return true;
+			});
+		}
+
+		// deck.gl 9.4's interleaved globe does NOT cull far-side content (a big
+		// bubble on the back of the globe paints through its front, confirmed
+		// live) — the engine culls explicitly (isOnVisibleHemisphere); same
+		// here: dot product of the position's and view center's unit vectors
+		function onVisibleHemisphere(pos) {
+			const r = Math.PI / 180;
+			const c = map.getCenter();
+			const cLat = c.lat * r, cLng = c.lng * r;
+			const pLat = pos[1] * r, pLng = pos[0] * r;
+			return Math.sin(cLat) * Math.sin(pLat) + Math.cos(cLat) * Math.cos(pLat) * Math.cos(pLng - cLng) > 0;
+		}
+
+		// flat's flow width: 10 * (value/normalsizevalue)^(1/sizepow), the
+		// engine's dynamic object zoom at this view (~0.62) and its
+		// orthographic flow-width factor (1.604) folded in
+		function flowWidth(value) {
+			return Math.min(40, Math.max(1, Math.pow(Math.max(value, 0) / 1e6, 1 / 1.5) * 10));
+		}
+
+		// flat's bubble sizing: area-proportional sqrt(value/nsv), the engine's
+		// NORMAL_RADIUS_PX (15) x its dynamic zoom factor (~0.62) = ~9.3
+		function bubbleRadius(value) {
+			return Math.min(60, 9.3 * Math.sqrt(Math.max(value, 0) / 1e6));
+		}
+
+		function formatValue(v) {
+			if (v >= 1e6) return (v / 1e6).toFixed(1) + 'm';
+			if (v >= 1e3) return (v / 1e3).toFixed(0) + 'k';
+			return String(Math.round(v));
+		}
+
+		function aggregate(flows, keyField, posField) {
+			const m = new Map();
+			for (const f of flows) {
+				const code = f[keyField];
+				let a = m.get(code);
+				if (!a) { a = { code, name: countryName(code), pos: f[posField], value: 0 }; m.set(code, a); }
+				a.value += f.value;
+			}
+			return [...m.values()].sort((a, b) => a.value - b.value);
+		}
+
+		// final great-circle bearing into the target: the arrowhead's screen angle
+		function bearingInto(from, to) {
+			const r = Math.PI / 180;
+			const [lng1, lat1] = from, [lng2, lat2] = to;
+			const y = Math.sin((lng2 - lng1) * r) * Math.cos(lat2 * r);
+			const x = Math.cos(lat1 * r) * Math.sin(lat2 * r) - Math.sin(lat1 * r) * Math.cos(lat2 * r) * Math.cos((lng2 - lng1) * r);
+			return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+		}
+
+		function buildLayers() {
+			const flows = activeFlows();
+			const sorted = [...flows]
+				.filter(f => onVisibleHemisphere(f.fromPos) || onVisibleHemisphere(f.toPos))
+				.sort((a, b) => a.value - b.value);
+			const layers = [];
+			const gen = layerGen++;
+
+			if (showVectors && sorted.length) {
+				layers.push(new deck.ArcLayer({
+					id: 'flows-g' + gen,
+					data: sorted,
+					pickable: true,
+					autoHighlight: true,
+					highlightColor: [255, 255, 255, 80],
+					getSourcePosition: d => d.fromPos,
+					getTargetPosition: d => d.toPos,
+					// FADEIN: faded yellow at the origin, full orange at the target
+					getSourceColor: d => [251, 235, 124, 60],
+					getTargetColor: d => [221, 51, 0, 230],
+					getWidth: d => flowWidth(d.value),
+					widthUnits: 'pixels',
+					widthMinPixels: 1,
+					getHeight: 0.4,          // BEZIER|3D: gentle great-circle bow
+				}));
+				layers.push(new deck.IconLayer({
+					id: 'flow-heads-g' + gen,
+					data: sorted,
+					pickable: false,
+					getIcon: d => ({
+						url: 'data:image/svg+xml;base64,' + btoa(
+							'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M16 2 L30 30 L16 22 L2 30 Z" fill="#dd3300"/></svg>'),
+						width: 32, height: 32, anchorY: 16, anchorX: 16, mask: true
+					}),
+					getPosition: d => d.toPos,
+					getColor: d => [221, 51, 0, 230],
+					getSize: d => Math.max(6, (flowWidth(d.value) + 3) * 1.6),   // markersize 0.7 feel
+					sizeUnits: 'pixels',
+					getAngle: d => bearingInto(d.fromPos, d.toPos)
+				}));
+			}
+
+			if (showNumbers) {
+				const departures = aggregate(flows, 'from', 'fromPos').filter(d => onVisibleHemisphere(d.pos));
+				const arrivals = aggregate(flows, 'to', 'toPos').filter(d => onVisibleHemisphere(d.pos));
+				const bubble = (id, data, color, textColor) => [
+					new deck.ScatterplotLayer({
+						id: id + '-g' + gen,
+						data,
+						getPosition: d => d.pos,
+						pickable: true,
+						autoHighlight: true,
+						highlightColor: [255, 255, 255, 60],
+						radiusUnits: 'pixels',
+						getRadius: d => bubbleRadius(d.value),
+						radiusMinPixels: 2,
+						getFillColor: d => [...color, 77],       // fillopacity 0.3
+						getLineColor: d => [...color, 230],
+						stroked: true,
+						lineWidthUnits: 'pixels',
+						getLineWidth: 1
+					}),
+					new deck.TextLayer({
+						id: id + '-text-g' + gen,
+						data,
+						pickable: false,
+						getPosition: d => d.pos,
+						getText: d => formatValue(d.value),
+						getColor: d => [...textColor, 230],
+						getSize: 13,
+						sizeUnits: 'pixels',
+						getTextAnchor: 'middle',
+						characterSet: 'auto'
+					})
+				];
+				layers.push(...bubble('departures', departures, [255, 68, 0], [255, 136, 68]));
+				layers.push(...bubble('arrivals', arrivals, [251, 235, 172], [251, 235, 172]));
+			}
+
+			overlay.setProps({ layers });
+			updateSelectionBox();
+		}
+
+		function select(type, code) {
+			selection = (selection && selection.type === type && selection.code === code) ? null : { type, code };
+			buildLayers();
+		}
+
+		function updateSelectionBox() {
+			const el = document.getElementById('selection');
+			if (selection) {
+				el.style.display = 'block';
+				el.innerHTML = `selection: ${selection.type === 'from' ? 'emigration from' : 'immigration to'} <b>${countryName(selection.code)}</b> &nbsp;(<a href="#" onclick="clearSelection();return false;">clear</a>)`;
+			} else {
+				el.style.display = 'none';
+			}
+		}
+
+		window.clearSelection = () => { selection = null; buildLayers(); };
+		window.toggleVectors = () => { showVectors = !showVectors; buildLayers(); };
+		window.toggleNumbers = () => { showNumbers = !showNumbers; buildLayers(); };
+		document.getElementById('region_filter').addEventListener('change', (e) => {
+			regionFilter = e.target.value;
+			selection = null;
+			buildLayers();
+		});
+
+		function tooltipHtml(object, baseId) {
+			const num = (object.value || 0).toLocaleString('en-US');
+			if (baseId === 'flows') {
+				return `<div style="line-height:1.5">
+					<div style="font-size:11px;color:#bbbbbb">migration 2015-2020:</div>
+					<div><b>${countryName(object.from)} &rarr; ${countryName(object.to)}</b></div>
+					<div style="font-size:1.3em;margin:0.1em 0"><b>${num}</b></div></div>`;
+			}
+			const dir = baseId === 'departures' ? 'emigration from' : 'immigration to';
+			return `<div style="line-height:1.5">
+				<div style="font-size:11px;color:#bbbbbb">${dir}:</div>
+				<div><b>${object.name}</b></div>
+				<div style="font-size:1.3em;margin:0.1em 0"><b>${num}</b></div>
+				<div style="font-size:11px;color:#888888">click to select &middot; click on the map background to undo</div></div>`;
+		}
+
+		async function fetchJson(url) {
+			const r = await fetch(url);
+			if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+			return r.json();
+		}
+
+		function parseIsoCsv(text) {
+			const lines = text.split(/\r?\n/).filter(l => l.trim());
+			const header = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+			const iCode = header.indexOf('alpha-3');
+			const iName = header.indexOf('name');
+			const names = new Map();
+			for (let i = 1; i < lines.length; i++) {
+				const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+				if (cols[iCode]) names.set(cols[iCode], cols[iName] || cols[iCode]);
+			}
+			return names;
+		}
+
+		async function main() {
+			const [flowTopo, worldTopo, isoText] = await Promise.all([
+				fetchJson(FLOWS_URL), fetchJson(WORLD_URL), (await fetch(ISO_URL)).text()
+			]);
+
+			countryNames = parseIsoCsv(isoText);
+
+			// world countries fill (#222222, no outline)
+			const worldKey = Object.keys(worldTopo.objects)[0];
+			const world = topojson.feature(worldTopo, worldTopo.objects[worldKey]);
+			map.addSource('countries', { type: 'geojson', data: world });
+			map.addLayer({
+				id: 'countries-fill', type: 'fill', source: 'countries',
+				paint: { 'fill-color': '#222222', 'fill-opacity': 1 }
+			});
+
+			// country centroids by BRK_A3; degenerate geometries yield NaN — kept out
+			const centroids = new Map();
+			for (const f of world.features) {
+				const code = f.properties && f.properties.BRK_A3;
+				if (code && !centroids.has(code)) {
+					try {
+						const c = d3.geoCentroid(f);
+						if (isFinite(c[0]) && isFinite(c[1])) centroids.set(code, c);
+					} catch (e) { }
+				}
+			}
+
+			// flows joined to the country centroids; unmatched codes draw nothing
+			const edges = topojson.feature(flowTopo, flowTopo.objects.edges);
+			for (const f of edges.features) {
+				const p = f.properties;
+				const fromPos = centroids.get(p.from);
+				const toPos = centroids.get(p.to);
+				if (!fromPos || !toPos) continue;
+				allFlows.push({
+					from: p.from, to: p.to, value: Number(p.value) || 0,
+					fromRegion: p.fromRegion, toRegion: p.toRegion,
+					fromPos, toPos
+				});
+			}
+			console.log(`[clone] ${allFlows.length} flows joined of ${edges.features.length}`);
+
+			overlay = new deck.MapLibreOverlay({
+				interleaved: true,
+				layers: [],
+				getCursor: ({ isDragging, isHovering }) =>
+					isDragging ? 'grabbing' : (isHovering ? 'pointer' : 'grab'),
+				getTooltip: info => {
+					const baseId = info.layer && String(info.layer.id).replace(/-g\d+$/, '') || '';
+					if (info.object && ['flows', 'departures', 'arrivals'].includes(baseId)) {
+						return { html: tooltipHtml(info.object, baseId), style: { maxWidth: '24em' } };
+					}
+					return null;
+				}
+			});
+			map.addControl(overlay);
+			window.__clone = { map, overlay, flows: () => allFlows };
+
+			// click handling: deck's EVENT picking is asynchronous and races any
+			// map-click handler, so the click is resolved SYNCHRONOUSLY here —
+			// a picked bubble selects its country, anything else clears
+			map.on('click', (e) => setTimeout(() => {
+				try {
+					const picked = overlay._deck.pickObject({ x: e.point.x, y: e.point.y });
+					if (picked && picked.object) {
+						const baseId = String(picked.layer.id).replace(/-g\d+$/, '');
+						if (baseId === 'departures') { select('from', picked.object.code); return; }
+						if (baseId === 'arrivals') { select('to', picked.object.code); return; }
+						return;   // a flow (or head) — leave any selection alone
+					}
+				} catch (err) { }
+				if (selection) { selection = null; buildLayers(); }
+			}, 0));
+
+			// far-side culling depends on the view center — rebuild as it moves,
+			// throttled like the engine's own 150ms move handler
+			let moveTimer = 0;
+			map.on('move', () => {
+				if (moveTimer) return;
+				moveTimer = setTimeout(() => { moveTimer = 0; buildLayers(); }, 150);
+			});
+			map.on('moveend', buildLayers);
+
+			buildLayers();
+		}
+
+		function boot() {
+			map = new window.maplibregl.Map({
+				container: 'map_div',
+				style: {
+					version: 8,
+					sources: {},
+					layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#111111' } }]
+				},
+				center: [10, 12],
+				zoom: 2,
+				attributionControl: false
+			});
+			map.on('load', () => {
+				try { map.setProjection({ type: 'globe' }); } catch (e) { }
+				map.addControl(new window.maplibregl.NavigationControl(), 'top-left');
+				main().catch(err => console.error('[clone] init failed:', err));
+			});
+		}
+
+		if (window.maplibregl) boot();
+		else window.__bootClone = boot;
+	</script>
+
+</body>
+
+</html>

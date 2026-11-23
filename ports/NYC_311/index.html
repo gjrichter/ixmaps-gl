@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC 311 calls by complaint type</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/NYC_311/ixmaps_project_311_calls_last_100000_by_complaint_type.json
+     Same theme definition (CHART|SYMBOL|SEQUENCE|CATEGORICAL|AGGREGATE|SUM, lat|lon lookup, mineral
+     colorscheme over the complaint types), same live Socrata source, same start view. Only the basemap
+     differs: the legacy CartoDB Positron raster is replaced by the engine's vector light basemap. -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+  var __layer = ixmaps.layer("311_calls", layer => layer
+    .data({ url: "https://data.cityofnewyork.us/resource/erm2-nwe9.csv?$select=complaint_type,latitude,longitude&$where=latitude%20IS%20NOT%20NULL&$order=created_date%20DESC&$limit=100000", type: "csv" })
+    .binding({ lookupfield: "latitude|longitude", value: "complaint_type" })
+    .type("CHART|SYMBOL|SEQUENCE|CENTER|SORT|DOWN|GLOW|CATEGORICAL|AGGREGATE|FAST|RELOCATE|SUM|SIZE|FORCE|VALUES")
+    .style({
+      colorscheme: ["147", "tableau"],
+      fillopacity: "0.65",
+      shadow: "false",
+      symbols: ["circle"],
+      normalsizevalue: "100",
+      scale: "0.7450580596923828",
+      valuescale: "1",
+      gridwidthpx: "2",
+      valuedecimals: "0"
+    })
+    .meta({
+      title: "311 calls by complaint type",
+      snippet: "last 100,000 calls · NYC Open Data",
+      tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}"
+    })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend:"true" },
+    map => map.view([40.72755146730012, -73.97210597991945], 14)
+      .options({ objectscaling: "dynamic", normalSizeScale: "70000" })
+      .layer(__layer)
+  );
+</script>
+</body>
+</html>

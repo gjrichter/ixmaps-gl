@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+index_only_map_embed.html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2017/06/22 $
+$Author: guenter richter $
+$Id:index_only_map_embed.html 1 2021-10-17 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps</title>
+
+</head>
+
+<body style="max-width: 1280px;margin:auto;font-family:open sans;font-size:22px">
+
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+
+		var attribution = "dati: <a href='https://github.com/rafaelprietocuriel/ModalShare' target='_blank'>Rafael Prieto-Curiel</a>, <a href='https://github.com/rafaelprietocuriel/ModalShare/blob/main/CITATION.cff' target='_blank'>citation</a>"
+
+		document.activeElement.appendChild(
+
+			ixmaps.Map("map2", {
+					mapCdn: "https://gjrichter.github.io/ixmaps",
+					mapService: "leaflet_vt",
+					mapType: "VT_TONER_LITE",
+					map: "../../maps/svg/maps/generic/mercator.svg",
+					width: "1280px",
+					height: "720px",
+					legend: "true",
+					align: "center",
+					tools: "true",
+					mode: "pan"
+				},
+				map => map
+				.view([8.792253570362446, 12.304687500000002], 2.5)
+				.attribution(attribution)
+				//.legend(legend)
+				//.require("../../ui/js/tools/tooltip_mustache.js")
+				.options({
+					scrollSafeSilent: "true",
+					objectscaling: "dynamic",
+					normalSizeScale: "100000000", // grandezza 'normale' al livello 1:5.000.000
+					dynamicScalePow: "2.5", // dynamica, 1 crescita lineare, valori > 1 meno crescita
+					flushChartDraw: "5000",
+					panhidden: "false",
+					basemapopacity: "0.3"
+				})
+				.layer(ixmaps.layer("World_countries")
+					.data({
+						url: "https://raw.githubusercontent.com/rafaelprietocuriel/ModalShare/main/ModalShare.csv",
+						type: "csv"
+					})
+					.binding({
+						value: "Active|Bus|Car",
+						size: "population",
+						position: "latitude|longitude",
+						title: "City",
+					})
+					.filter("WHERE LastObservation = YES")
+					.type("CHART|SYMBOL|SIZE|SEQUENCE|STAR|SORT|DOWN|AUTO100|SIMPLELEGEND|AGGREGATE|RECT|RELOCATE|MAX|CIRCULARBOX|BOTTOMTITLE|DTEXT")
+					.style({
+						colorscheme: [
+							"#FFC107",
+							"#7AD8D6",
+							"#E8686D"
+						],
+						label: [
+							"walking&cycling",
+							"public transport",
+							"car"
+						],
+						symbols: [
+							"https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/cycling-pictogram-3-svgrepo-com.svg",
+							"https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/public-transport-bus-svgrepo-com.svg",
+							"https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/car-svgrepo-com.svg"],
+						units: "%",
+						align: "center",
+						fillopacity: "1",
+						scale: "2",
+						valuescale: "2.5",
+						valuecolor: "white",
+						textscale: "1",
+						textcolor: "black",
+						xshowdata: "true",
+						boxcolor: "#ffffff",
+						bordercolor: "#444444",
+						boxmargin: "2",
+						boxopacity: "0.8",
+						aggregationscale: [
+							"1:1", "1",
+							"1:1000000","50px"
+						],
+						titleupper: "1:200000000",
+					})
+					.meta({
+						title: "Urban mobility by different modes of transport: <span style='color:#FFC107'>walking&cycling</span>, <span style='color:#7A98D6'>public transport</span> and <span style='color:#E8686D'>cars</span>",
+					})
+					.define()
+				)
+			)
+		);
+
+	</script>
+</body>
+
+</html>

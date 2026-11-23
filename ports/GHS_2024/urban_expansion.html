@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Urban expansion 1975–2025</title>
+<!-- GHS_2024: update of ports/GHS/urban_expansion.html on the GHS Urban Centre Database R2024A
+     (shared setup: ghs2024_common.js) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs2024_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [26.902, 3.4277],
+    layers: [
+      GHS.centres("urban_centres", "ghsl", ["GH_BUS_TOT_1975", "GH_BUS_TOT_2025", "GC_UCN_MAI_2025"],
+        { value: "GH_BUS_TOT_2025", value100: "GH_BUS_TOT_1975", title: "GC_UCN_MAI_2025" },
+        "CHART|LOG|DIFFERENCE|RELATIVE|BUBBLE|GLOW",
+        { colorscheme: ["5", "RGB(207,255,51)", "RGB(221,0,0)", "3colors", "RGB(148,204,200)"], opacity: "0.9",
+          normalsizevalue: "100000", scale: "1", valuescale: "1", valuedecimals: "1" },
+        { title: "Urban expansion", snippet: "Growth of the built-up surface 1975 - 2025" })
+    ]
+  });
+</script>
+</body>
+</html>

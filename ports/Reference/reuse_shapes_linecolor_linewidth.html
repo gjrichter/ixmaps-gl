@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empty HTML</title>
+</head>
+
+<body>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+  <script>
+    var GEO_URL = "https://gisco-services.ec.europa.eu/distribution/v2/countries/topojson/CNTR_RG_60M_2020_4326.json";
+    var DATA_URL = "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/world-gdp-2023/world_gdp_2023_data.csv";
+    var myMap = ixmaps.Map('map', {
+      mapType: 'white',
+      mapProjection: 'orthographic',
+      mode: 'pan', legend: 'open', align: 'center', tools: false
+    })
+      .view([0, 0], 1);
+    // country borders — GISCO/Eurostat
+    myMap.layer('countries')
+      .data({ url: GEO_URL, type: 'topojson' })
+      .binding({ geo: 'geometry', id: 'CNTR_ID', title: 'NAME_ENGL' })
+      .type('FEATURE')
+      .style({ colorscheme: ['none'], linecolor: '#7a9ab0', linewidth: 0.4 })
+      .define();
+    // GDP choropleth — World Bank 2023
+    myMap.layer('countries')
+      .data({ url: DATA_URL, type: 'csv' })
+      .binding({ lookup: 'id', value: 'gdp', title: 'name' })
+      .type('CHOROPLETH|QUANTILE')
+      .style({
+        colorscheme: ['#deeaf5', '#b3cde3', '#74b3d8', '#3182bd', '#08519c'],
+        fillopacity: 0.82
+      })
+      .meta({
+        name: 'countries_gdp',
+        tooltip: "<b>{{name}}</b><br>GDP <b>${{gdp}}k</b>"
+      })
+      .title('GDP per Capita (USD k)')
+      .define();
+  </script>
+</body>
+
+</html>

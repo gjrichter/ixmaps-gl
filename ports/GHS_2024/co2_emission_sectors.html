@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CO2 emissions by sector 1975–2024</title>
+<!-- GHS_2024: update of ports/GHS/co2_emission_sectors.html on the GHS Urban Centre Database R2024A
+     (shared setup: ghs2024_common.js)
+     (changed: the last year is 2024 (was 2012); the 1975 / 1990 / 2000 columns are the same years) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs2024_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [27.215, 20],
+    layers: [
+      GHS.centres("sectors", "emissions", ["EM_CO2_IND_1975", "EM_CO2_TRA_1975", "EM_CO2_RES_1975", "EM_CO2_ENE_1975", "EM_CO2_IND_1990", "EM_CO2_TRA_1990", "EM_CO2_RES_1990", "EM_CO2_ENE_1990", "EM_CO2_IND_2000", "EM_CO2_TRA_2000", "EM_CO2_RES_2000", "EM_CO2_ENE_2000", "EM_CO2_IND_2024", "EM_CO2_TRA_2024", "EM_CO2_RES_2024", "EM_CO2_ENE_2024"],
+        { value: "EM_CO2_IND_1975|EM_CO2_TRA_1975|EM_CO2_RES_1975|EM_CO2_ENE_1975|EM_CO2_IND_1990|EM_CO2_TRA_1990|EM_CO2_RES_1990|EM_CO2_ENE_1990|EM_CO2_IND_2000|EM_CO2_TRA_2000|EM_CO2_RES_2000|EM_CO2_ENE_2000|EM_CO2_IND_2024|EM_CO2_TRA_2024|EM_CO2_RES_2024|EM_CO2_ENE_2024" },
+        "CHART|BAR|STACKED|SIZE|BOX|AGGREGATE|RELOCATE|FIXSIZE|SUM|SIMPLELEGEND|XAXIS",
+        { colorscheme: ["#444444", "#2266ee", "#dd4422", "#eebb22", "#444444", "#2266ee", "#dd4422", "#eebb22", "#444444", "#2266ee", "#dd4422", "#eebb22", "#444444", "#2266ee", "#dd4422", "#eebb22"], fillopacity: "0.8", symbols: ["circle"],
+          label: ["Industry 1975", "Transport 1975", "Residential 1975", "Energy 1975", "Industry 1990", "Transport 1990", "Residential 1990", "Energy 1990", "Industry 2000", "Transport 2000", "Residential 2000", "Energy 2000", "Industry 2024", "Transport 2024", "Residential 2024", "Energy 2024"],
+          xaxis: ["1975", "1990", "2000", "2024"], scale: "2", rangescale: "3",
+          linecolor: ["none"], linewidth: "0.3", valuescale: "1", gridx: "4", boxcolor: "rgba(255,255,255,0.2)", boxopacity: "0.2", boxmargin: "5" },
+        { title: "CO2 emissions by sector 1975–2024", snippet: "Industry, Transport, Residential, Energy — 1975, 1990, 2000, 2024" })
+    ]
+  });
+</script>
+</body>
+</html>

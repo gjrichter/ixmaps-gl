@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta content="en-us" http-equiv="Content-Language">
+
+	<title>ISTAT &mdash; Previsioni Demografiche Comunali 2020/2030</title>
+	<meta name="author" content="Guenter Richter" />
+	<meta name="description" content="ixmaps interactive map &mdash; ISTAT previsioni demografiche comunali 2020/2030 (flat framework port)" />
+	<meta name="keywords" content="ixmaps,istat,previsioni,demografiche,map,chart,interactive,SVG" />
+
+	<!-- original story styles, referenced by absolute URL so this file is portable -->
+	<link href="https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/assets/css/bootstrap.css" rel="stylesheet" />
+	<link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic' rel='stylesheet' type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=Raleway:400,300,700' rel='stylesheet' type='text/css'>
+	<link href="https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/assets/css/icomoon.css" rel="stylesheet" />
+	<link href="https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/assets/css/main.css" rel="stylesheet" />
+	<link href="https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/inline_legend.css" rel="stylesheet" />
+	<link rel="stylesheet" type="text/css" href="https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/assets/css/jquery.fullPage.css" />
+
+	<!-- (1) page jQuery + fullPage FIRST, then detach into a private handle -->
+	<script type="text/javascript" src="https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/assets/plugins/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/assets/plugins/jquery.fullPage.min.js"></script>
+	<script type="text/javascript">
+		var jq = jQuery.noConflict(true);
+	</script>
+
+	<!-- (2) ixMaps FLAT framework -->
+	<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+	<style type="text/css">
+		#map {
+			position: fixed;
+			top: 0; left: 0;
+			width: 100%; height: 100%;
+			z-index: 0;
+			background: #ffffff;
+		}
+		#fullpage { position: relative; z-index: 2; pointer-events: none; }
+		#header   { z-index: 3; pointer-events: auto; }
+
+		.fp-section, .fp-slide, .fp-tableCell, .section, .slide { background: transparent !important; pointer-events: none; }
+		#fp-nav { pointer-events: auto; }
+
+		/* Bootstrap 3 / flat tooltip fix — see reference_ixmaps_flat_bootstrap_tooltip */
+		.hidden[style*="display: block"],  .hidden[style*="display:block"]  { display: block  !important; visibility: visible !important; }
+		.hidden[style*="display: flex"],   .hidden[style*="display:flex"]   { display: flex   !important; visibility: visible !important; }
+		.hidden[style*="display: inline"], .hidden[style*="display:inline"] { display: inline !important; visibility: visible !important; }
+
+		.container { margin-left: 1em; }
+		.title { margin-top: 3em; margin-bottom: 0em; }
+		.fp-tooltip { color: #AAA; }
+		#fp-nav span, .fp-slidesNav span { border-color: #AAA; }
+		#fp-nav li .active span, .fp-slidesNav .active span { background: #AAA; }
+		.shareIcon { font-size: 32px; }
+		.active a { color: inherit; }
+		body { -webkit-user-select: none; -moz-user-select: none; user-select: none; }
+		h3 { margin-right: 2em; }
+		p { font-family: Lato,Helvetica; font-size: 1em; font-weight: normal; }
+		p.note { padding-left:1em; border-left:dotted 3px; font-style:italic; }
+
+		.intro, .blog-content {
+			pointer-events: auto;
+			width: 38%;
+			max-width: 460px;
+			margin-left: auto;
+			margin-right: 2.5%;
+			background: rgba(255,255,255,0.82);
+			border-radius: 0.5em;
+			padding: 0.8em 1.1em;
+			box-shadow: 0 1px 14px rgba(0,0,0,0.13);
+			backdrop-filter: blur(2px);
+			overflow-wrap: break-word;
+		}
+		.intro h1 { font-size: clamp(1.5rem, 2.2vw, 2.4rem) !important; line-height: 1.1; margin-top: 0.4em !important; }
+		.intro h2 { font-size: 1.05em !important; }
+
+		#section2 .intro { background: rgba(179,228,66,0.92) !important; }
+		#section3 .intro { background: rgba(78,128,203,0.94) !important; }
+		#section4.intro { background: transparent !important; box-shadow: none !important; }
+		#section4 .blog-content { background: rgba(102,102,102,0.93) !important; }
+		#section4 .blog-content,
+		#section4 .blog-content p,
+		#section4 .title { color: #fff !important; }
+		#section4 .blog-content a { color: #cfe3ff !important; }
+	</style>
+</head>
+
+<body style="background:none">
+
+	<div id="map"></div>
+
+	<div id="fullpage" style="margin-top:0px;font-weight:500;display:none">
+
+		<div id="section1" class="section">
+			<div class="slide container" style="color:#888888">
+				<div class="intro">
+					<h1 style="font-size:3em;font-weight:100;margin-top:1em;margin-bottom:0.2em">PREVISIONI DEMOGRAFICHE</h1>
+					<h2 style="font-size:1.2em;font-weight:400;margin-bottom:0em">Visualizzazioni del dataset 'PREVISIONI DEMOGRAFICHE COMUNALI - 1&deg; GENNAIO 2020/1&deg; GENNAIO 2030' rilasciato dall' <img src="https://www.istat.it/img/logo.png" style="display:inline;height:24px"> <a href="https://www.istat.it/it/archivio/273725" target="_blank">qui</a></h2>
+					<h3>I. Tasso di Mortalit&agrave;</h3>
+					<p>Persone deceduti per 1000 abitanti stimati dall'ISTAT per gli anni dal 2021 al 2030.</p>
+					<p>I grafici visualizzano i valori stimati per i comuni come lunghezza degli petali di un fiore, in senso orario partendo da mezzogiorno.</p>
+					<p>Il tasso (per 1000 abitanti) varia da 7.2 a 17.2. La media nazionale (2019) &egrave; di 10.6 per mille, rappresentato nei grafici da un cerchio bianco in fondo.</p>
+					<p><b>scrolla gi&ugrave;</b> per altri visualizzazioni</p>
+					<br>
+					<p>vai a:</p>
+					<a href="javascript:mymap.view([45.02792105147572,7.626914978027345],11)">Torino</a> |
+					<a href="javascript:mymap.view([45.49672163945861,9.163970947265627],11)">Milano e Brianza</a> |
+					<a href="javascript:mymap.view([44.536653425107495,11.523284912109375],9)">Emilia-Romagna</a> |
+					<a href="javascript:mymap.view([43.49178653083377,10.763854980468752],9)">Toscana</a> |
+					<a href="javascript:mymap.view([43.04279812270172,13.0078125],9)">Centro</a> |
+					<a href="javascript:mymap.view([41.7508241355329,12.357559204101564],10)">Roma</a> |
+					<a href="javascript:mymap.view([40.900279369669875,14.371490478515627],11)">Napoli</a> |
+					<a href="javascript:mymap.view([40.629587853312174,17.14004516601563],9)">Puglia</a> |
+					<a href="javascript:mymap.view([38.14103736644331,14.820556640625002],8)">Sicilia e Calabria</a>
+				</div>
+			</div>
+		</div>
+
+		<div id="section2" class="section">
+			<div class="slide container" style="color:#008800">
+				<div class="intro">
+					<h3 class="title"><b>ISTAT - Previsioni Demografiche</b></h3>
+					<h3>II. Tasso di Natalit&agrave;</h3><br>
+					<p>Il <b><span style="color:#ffffff;font-size:1em;">tasso di mortalit&agrave;</span></b> viene compensato dal <b><span style="color:#43C412;font-size:1.1em;">tasso di natalit&agrave;</span></b>, misurato in nascite per 1000 abitanti.</p>
+					<p>Solo in poche citt&agrave; la natalit&agrave; compensa o anche supera la mortalit&agrave; e crea un bilancio demografico naturale positivo.</p>
+					<br>
+					<p>vai a:</p>
+					<a href="javascript:mymap.view([45.02792105147572,7.626914978027345],11)">Torino</a> |
+					<a href="javascript:mymap.view([45.49672163945861,9.163970947265627],11)">Milano e Brianza</a> |
+					<a href="javascript:mymap.view([44.536653425107495,11.523284912109375],9)">Emilia-Romagna</a> |
+					<a href="javascript:mymap.view([43.49178653083377,10.763854980468752],9)">Toscana</a> |
+					<a href="javascript:mymap.view([43.04279812270172,13.0078125],9)">Centro</a> |
+					<a href="javascript:mymap.view([41.7508241355329,12.357559204101564],10)">Roma</a> |
+					<a href="javascript:mymap.view([40.900279369669875,14.371490478515627],11)">Napoli</a> |
+					<a href="javascript:mymap.view([40.629587853312174,17.14004516601563],9)">Puglia</a> |
+					<a href="javascript:mymap.view([38.14103736644331,14.820556640625002],8)">Sicilia e Calabria</a>
+				</div>
+			</div>
+		</div>
+
+		<div id="section3" class="section">
+			<div class="slide container" style="color:#ffffff">
+				<div class="intro">
+					<h3 class="title"><b>ISTAT - Previsioni Demografiche</b></h3>
+					<h3>III. Migrazione</h3><br>
+					<p>Al bilancio demografico naturale si aggiunge il <b><span style='color:#0044a9'>Tasso migratorio netto</span></b>, il quale pu&ograve; essere positivo o negativo. In generale il tasso migratorio incide di pi&ugrave; sulla crescita di un luogo che il bilancio naturale.</p>
+					<p class="note">Se il bilancio migratorio &egrave; <b>negativo, non</b> appare direttamente come colore <b>'blu'</b> nella grafica, ma <b>diminuisce la parte 'verde'</b>, il tasso di natalit&agrave;.</p>
+					<p>Un bilancio migratorio negativo contribuisce a 'svuotare' il luogo. Complessivamente la parte 'bianca' del grafico da una misura per la decrescita demografica del comune.</p>
+					<br>
+					<p>vai a:</p>
+					<a href="javascript:mymap.view([45.02792105147572,7.626914978027345],11)">Torino</a> |
+					<a href="javascript:mymap.view([45.49672163945861,9.163970947265627],11)">Milano e Brianza</a> |
+					<a href="javascript:mymap.view([44.536653425107495,11.523284912109375],9)">Emilia-Romagna</a> |
+					<a href="javascript:mymap.view([43.49178653083377,10.763854980468752],9)">Toscana</a> |
+					<a href="javascript:mymap.view([43.04279812270172,13.0078125],9)">Centro</a> |
+					<a href="javascript:mymap.view([41.7508241355329,12.357559204101564],10)">Roma</a> |
+					<a href="javascript:mymap.view([40.900279369669875,14.371490478515627],11)">Napoli</a> |
+					<a href="javascript:mymap.view([40.629587853312174,17.14004516601563],9)">Puglia</a> |
+					<a href="javascript:mymap.view([38.14103736644331,14.820556640625002],8)">Sicilia e Calabria</a>
+				</div>
+			</div>
+		</div>
+
+		<div id="section4" class="section intro" style="color:#888888">
+			<div class="container" id="contact" name="contact">
+				<div class="row">
+					<div class="col-lg-8 blog-content">
+						<h3 class="title">Attribuzioni</h3>
+						<br>
+						<p>Fonte: ISTAT</p>
+						<p>Link ai dati: <a href="https://www.istat.it/it/archivio/263355" target="_blank">Visualizzazioni del dataset 'PREVISIONI DEMOGRAFICHE COMUNALI - 1&deg; GENNAIO 2020/1&deg; GENNAIO 2030'</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<div id="header" style="position:fixed;top:0;left:0;width:90%;height:40px;">
+		<div class="container" style="margin-top:11px">
+			<div class="row">
+				<div class="col-lg-8 col-lg-offset-2">
+					<div class="header" aria-hidden="true">
+						<div class="linkSocialContainer" style="float:left">
+							<span class="linkContainer"></span>
+							<span class="shareBtns" style="font-size:24px">
+								<a href="javascript:__shareDialog()">
+									<i class="shareIcon blackHover icon-share" title="Copy link" tabindex="-1"></i></a>
+								<a href="javascript:__aboutDialog()">
+									<i class="shareIcon blackHover icon-info" title="Info" tabindex="-1" style="margin-left:0.2em"></i></a>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+
+		var mymap = null;
+
+		var _CSV = 'https://raw.githubusercontent.com/gjrichter/data/master/ISTAT/Statistiche_sperimentali/Tassi_generici_del_movimento_anagrafico.csv';
+		var _GEO = 'https://gjrichter.github.io/viz/Amministratori/comuni_2019_U.geojson';
+
+		// Adds nettoMigNat = natalità + migratorio netto to the shared CSV data object.
+		// Guard prevents re-adding if the layer is removed and re-added later.
+		var _addNettoMigNat = function(data) {
+			if (data.columnIndex('nettoMigNat') !== null) { return data; }
+			data.addColumn(
+				{ source: ['Tasso di natalità', 'Tasso migratorio netto'], destination: 'nettoMigNat' },
+				function(natalita, migratorio) {
+					var n = parseFloat(String(natalita).replace(',', '.'));
+					var m = parseFloat(String(migratorio).replace(',', '.'));
+					return (isNaN(n) ? 0 : n) + (isNaN(m) ? 0 : m);
+				}
+			);
+			return data;
+		};
+
+		// Shared CSV config — name:'istat_csv' makes all chart layers reuse one fetch.
+		var _csvData = { url: _CSV, type: 'csv', name: 'istat_csv', process: _addNettoMigNat.toString() };
+		var _csvFilter  = 'WHERE Anno != 2020';
+		var _csvBinding = { lookup: 'Codice comune', value: 'Anno', title: 'Comune' };
+		var _baseStyle  = { showdata: 'false', normalsizevalue: '75', scale: '1', rangescale: '1',
+		                    maxvalue: '10.6', textscale: '1.0', valuescale: '1', valuedecimals: '1', fadenegative: '0.1' };
+		var _TYPE_STAR        = 'CHART|PIE|STARBURST|POLAR|SIZE|XLRAYS|AGGREGATE|CATEGORICAL|GRID|BOX|TITLE|NEGATIVEISVALUE|ZEROISVALUE|MEAN|FORCE';
+		var _TYPE_STAR_NOTITLE = 'CHART|PIE|STARBURST|POLAR|SIZE|XLRAYS|AGGREGATE|CATEGORICAL|GRID|BOX|NEGATIVEISVALUE|ZEROISVALUE|MEAN|FORCE';
+		var _TYPE_FLOWER      = 'CHART|PIE|STARBURST|SIZE|XLRAYS|AGGREGATE|CATEGORICAL|NEGATIVEISVALUE|ZEROISVALUE|MEAN|FORCE';
+
+		// Pre-defined layers for sections 2 and 3 — added/removed via mymap.layer() / mymap.remove()
+		var _layerBirthRate = ixmaps.layer('Com2019_pro_com')
+			.data(_csvData)
+			.filter(_csvFilter)
+			.binding(_csvBinding)
+			.type(_TYPE_FLOWER)
+			.style(Object.assign({}, _baseStyle, {
+				colorscheme: ['#c9eF08'], fillopacity: '0.7',
+				sizefield: 'Tasso di natalità',
+				linecolor: ['green'], linewidth: '0.3'
+			}))
+			.meta({ name: 'birthRate', tooltip: '<b>Tasso di natalità</b><br><i>{{Comune}}</i><br>{{theme.item.chart}}{{theme.item.data}}<p class="note" style="margin:0.3em 0 0">per mille abitanti</p>' })
+			.define();
+
+		var _layerBirthMigration = ixmaps.layer('Com2019_pro_com')
+			.data(_csvData)
+			.filter(_csvFilter)
+			.binding(_csvBinding)
+			.type(_TYPE_FLOWER)
+			.style(Object.assign({}, _baseStyle, {
+				colorscheme: ['#c9eF08'], fillopacity: '0.7',
+				sizefield: 'nettoMigNat',
+				linecolor: ['green'], linewidth: '0.3'
+			}))
+			.meta({ name: 'birthMigration', tooltip: '<b>Natalità + migrazione netta</b><br><i>{{Comune}}</i><br>{{theme.item.chart}}{{theme.item.data}}<p class="note" style="margin:0.3em 0 0">per mille abitanti</p>' })
+			.define();
+
+		var _layerMigration = ixmaps.layer('Com2019_pro_com')
+			.data(_csvData)
+			.filter(_csvFilter)
+			.binding(_csvBinding)
+			.type(_TYPE_STAR_NOTITLE)
+			.style(Object.assign({}, _baseStyle, {
+				colorscheme: ['#3366ff'], fillopacity: '0.7',
+				sizefield: 'Tasso migratorio netto',
+				linecolor: ['black'], linewidth: '0.1',
+				boxopacity: '0.001', boxmargin: '2'
+			}))
+			.meta({ name: 'migration', tooltip: '<b>Tasso migratorio netto</b><br><i>{{Comune}}</i><br>{{theme.item.chart}}{{theme.item.data}}<p class="note" style="margin:0.3em 0 0">per mille abitanti</p>' })
+			.define();
+
+		// Section layout — which pre-defined layers are active per section
+		var _SECTIONS = [
+			[],                                 // 0: Mortalità — base layers only
+			['birthRate'],                      // 1: +Natalità
+			['birthMigration', 'migration']     // 2: +Migrazione
+		];
+		var _LAYER_DEFS = {
+			birthRate:       _layerBirthRate,
+			birthMigration:  _layerBirthMigration,
+			migration:       _layerMigration
+		};
+		var _currentSection = 0;
+
+		function _switchSection(newIndex) {
+			if (newIndex === _currentSection) { return; }
+			var from = _SECTIONS[_currentSection];
+			var to   = _SECTIONS[newIndex];
+			from.forEach(function(name) {
+				if (to.indexOf(name) === -1) { mymap.remove(name); }
+			});
+			to.forEach(function(name) {
+				if (from.indexOf(name) === -1) { mymap.layer(_LAYER_DEFS[name]); }
+			});
+			_currentSection = newIndex;
+		}
+
+		// =====================================================================
+
+		jq(document).ready(function () {
+			jq('#fullpage').fullpage({
+				'verticalCentered': false,
+				'css3': true,
+				'normalScrollElements': '#map',
+				'navigation': true,
+				'navigationPosition': 'right',
+				'navigationTooltips': ['Mortalità', '+Natalità', '+Migrazione', 'Attribuzioni'],
+				'afterLoad': function (a, index) {
+					var sceneIndex = index - 1;
+					if (!mymap || sceneIndex < 0 || sceneIndex > 2) { return; }
+					_switchSection(sceneIndex);
+				}
+			});
+			jq('#fullpage').fadeIn('slow');
+		});
+
+		function __shareDialog() {
+			var url = window.location.href;
+			if (navigator.clipboard) {
+				navigator.clipboard.writeText(url).then(function () { alert('Link copiato:\n' + url); });
+			} else {
+				window.prompt('Link a questa mappa:', url);
+			}
+		}
+		function __aboutDialog() {
+			window.open('https://gjrichter.github.io/viz/ISTAT/stories/Demografia_Previsioni/about.html', 'about', 'width=600,height=600');
+		}
+
+		ixmaps.Map('map', { mapType: 'VT_DATAVIZ_LIGHT', mapProjection: 'mercator', mode: 'info' })
+			.options({
+				featurescaling: 'true',
+				objectscaling:  'dynamic',
+				normalSizeScale: '5000000',
+				flushChartDraw: 100000,
+				basemapopacity: 0.8
+			})
+			.view([43.71156424665853, 12.914428710937502], 7)
+			.then(function (api) {
+				mymap = api;
+
+				// Base geometry — comuni 2019 outlines (invisible fill, grey border)
+				api.layer('Com2019_pro_com')
+					.data({ url: _GEO, type: 'geojson', name: 'comuni_geo' })
+					.binding({ geo: 'geometry', id: 'PRO_COM' })
+					.type('FEATURE')
+					.style({ colorscheme: ['none'], linecolor: '#aaaaaa', linewidth: 0.3, scale: 0 })
+					.define();
+
+				// Section 1: mortality (white STARBURST — always visible)
+				api.layer('Com2019_pro_com')
+					.data(_csvData)
+					.filter(_csvFilter)
+					.binding(_csvBinding)
+					.type(_TYPE_STAR)
+					.style(Object.assign({}, _baseStyle, {
+						colorscheme: ['white'], fillopacity: 0.8,
+						sizefield: 'Tasso di mortalità',
+						linecolor: 'black', linewidth: 0.3,
+						boxopacity: 0.001, boxmargin: 2,
+						boxupper: "1:1000000"
+					}))
+					.meta({ name: 'mortality', tooltip: '<b>Tasso di mortalità</b><br><i>{{Comune}}</i><br>{{theme.item.chart}}{{theme.item.data}}<p class="note" style="margin:0.3em 0 0">per mille abitanti</p>' })
+					.define();
+			});
+
+	
+	</script>
+
+</body>
+
+</html>

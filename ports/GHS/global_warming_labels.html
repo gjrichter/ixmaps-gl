@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Warming — temperature labels</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/EuroStat/GHS/final/ixmaps_project_Global_Warming_Label_max1000.json
+     in the style of where_people_live_equal_earth.html (shared setup: ghs_common.js) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [27.683, 11.074],
+    layers: [
+      GHS.urbanCentres("urban_centres", { value: "E_WR_T_14", value100: "E_WR_T_90", size: "P15" },
+        "CHART|DIFFERENCE|LABEL|TEXTONLY|SIZE|GLOW|VALUES",
+        { colorscheme: ["#3288BD", "#a9cfae", "#fee08b", "#fdae61", "#f46d43", "#D53E4F"], opacity: "0.9",
+          normalsizevalue: "10000000", scale: "1.279202783203125", valuescale: "1", valuedecimals: "1", maxcharts: "500" },
+        { title: "Global Warming", snippet: "Average temperature change 1990 - 2015" })
+    ]
+  });
+</script>
+</body>
+</html>

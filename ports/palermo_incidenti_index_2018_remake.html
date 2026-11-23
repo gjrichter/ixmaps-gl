@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Palermo Incidenti 2018</title>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<style>
+    :root {
+        --bg: #eef2f4;
+        --panel: rgba(255, 255, 255, 0.86);
+        --panel-strong: rgba(255, 255, 255, 0.94);
+        --panel-border: rgba(31, 41, 55, 0.12);
+        --text: #17212b;
+        --muted: #607080;
+        --accent: #0f6d8f;
+        --accent-strong: #0b5974;
+        --shadow: 0 18px 48px rgba(19, 33, 48, 0.16);
+        --radius: 18px;
+        --radius-sm: 12px;
+    }
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: Inter, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        background:
+            radial-gradient(circle at top left, rgba(15,109,143,0.18), transparent 30%),
+            radial-gradient(circle at bottom right, rgba(245,158,11,0.15), transparent 25%),
+            var(--bg);
+        color: var(--text);
+    }
+    body { position: relative; }
+    #map-shell,
+    #map {
+        position: absolute;
+        inset: 0;
+    }
+    #map-shell {
+        z-index: 0;
+        overflow: hidden;
+    }
+    #map-scrim {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 24%, rgba(255,255,255,0.10) 100%);
+    }
+    #nav-dots {
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        transform: translateY(-50%);
+        z-index: 900;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .nav-dot {
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid rgba(23, 33, 43, 0.45);
+        border-radius: 50%;
+        background: rgba(255,255,255,0.35);
+        cursor: pointer;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .nav-dot.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: scale(1.15);
+    }
+    .nav-dot:hover {
+        border-color: var(--accent);
+        transform: scale(1.08);
+    }
+    .nav-dot .nav-label {
+        position: absolute;
+        right: 24px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(23, 33, 43, 0.92);
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    .nav-dot:hover .nav-label { opacity: 1; }
+    #slide-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 500;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 8px 16px 0;
+        pointer-events: none;
+    }
+    .slide-card {
+        background: var(--panel);
+        backdrop-filter: blur(14px);
+        border-radius: calc(var(--radius) + 2px);
+        border: 1px solid var(--panel-border);
+        padding: 1rem 1.3rem 1.1rem;
+        max-width: 560px;
+        text-align: center;
+        color: var(--text);
+        box-shadow: var(--shadow);
+        pointer-events: all;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.35s, transform 0.35s;
+    }
+    .slide-card.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .slide-card h1 {
+        margin: 0;
+        font-size: clamp(1.7rem, 3vw, 2.2rem);
+        font-weight: 650;
+        letter-spacing: -0.03em;
+    }
+    .slide-card hr {
+        border: none;
+        border-top: 1px solid rgba(23, 33, 43, 0.12);
+        margin: 0.8rem auto;
+        width: 72%;
+    }
+    .slide-card h2 {
+        margin: 0.15rem 0 0;
+        font-size: 1.08rem;
+        font-weight: 500;
+        color: var(--muted);
+    }
+    .slide-card p {
+        margin: 0.8rem 0 0;
+        font-size: 0.95rem;
+        color: #44515e;
+        line-height: 1.55;
+    }
+    .slide-card .roman {
+        font-size: 0.84rem;
+        color: var(--accent);
+        letter-spacing: 0.32em;
+        margin: 0.2rem 0;
+        text-transform: uppercase;
+    }
+    .slide-card button {
+        background: rgba(255,255,255,0.88);
+        border: 1px solid rgba(15,109,143,0.16);
+        padding: 0.75rem 1rem;
+        margin: 0.3rem;
+        font-size: 0.88rem;
+        cursor: pointer;
+        border-radius: 999px;
+        color: var(--accent-strong);
+        font-weight: 600;
+        transition: background 0.2s, transform 0.2s, border-color 0.2s;
+    }
+    .slide-card button:hover {
+        background: #fff;
+        border-color: rgba(15,109,143,0.36);
+        transform: translateY(-1px);
+    }
+    #slide-pills {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 900;
+        display: flex;
+        gap: 6px;
+        background: var(--panel-strong);
+        border: 1px solid var(--panel-border);
+        padding: 7px 10px;
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+    }
+    .pill-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .pill-divider {
+        width: 1px;
+        height: 22px;
+        margin: 0 2px;
+        background: rgba(31, 41, 55, 0.12);
+    }
+    .pill {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 10px;
+        border-radius: 14px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        transition: background 0.2s, color 0.2s;
+    }
+    .pill:hover { background: rgba(15,109,143,0.08); }
+    .pill.active { background: var(--accent); color: #fff; }
+    .nav-pill {
+        min-width: 30px;
+        padding: 0;
+        font-size: 1rem;
+        line-height: 1;
+    }
+    #scroll-hint {
+        position: absolute;
+        bottom: 74px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 800;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        color: var(--accent-strong);
+        font-size: 24px;
+        cursor: pointer;
+        background: var(--panel-strong);
+        border: 1px solid var(--panel-border);
+        border-radius: 50%;
+        box-shadow: var(--shadow);
+        animation: bob 2s infinite ease-in-out;
+        opacity: 0.7;
+    }
+    @keyframes bob {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50%      { transform: translateX(-50%) translateY(4px); }
+    }
+    #section-title {
+        position: absolute;
+        top: 92px;
+        left: 16px;
+        z-index: 700;
+        color: var(--accent-strong);
+        background: var(--panel-strong);
+        border: 1px solid var(--panel-border);
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(8px);
+    }
+    #visible-analysis {
+        position: absolute;
+        top: 132px;
+        left: 16px;
+        z-index: 780;
+        width: min(280px, calc(100vw - 84px));
+        background: var(--panel-strong);
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+        padding: 0.95rem 1rem;
+        color: var(--text);
+    }
+    .analysis-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+    }
+    #visible-analysis h3 {
+        margin: 0;
+        font-size: 0.92rem;
+        letter-spacing: 0.02em;
+    }
+    .analysis-caret {
+        color: #9ca3af;
+        font-size: 1.45rem;
+        font-family: monospace;
+        transform: translateY(-6px);
+        transition: transform 0.2s ease;
+    }
+    #visible-analysis.is-collapsed .analysis-caret {
+        transform: translateY(-6px) rotate(-90deg);
+    }
+    .analysis-content {
+        margin-top: 0.45rem;
+    }
+    #visible-analysis.is-collapsed .analysis-content {
+        display: none;
+    }
+    #visible-analysis p {
+        margin: 0.5rem 0 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+    .analysis-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+    }
+    .analysis-metric {
+        padding: 0.65rem 0.7rem;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(31, 41, 55, 0.08);
+    }
+    .analysis-metric strong {
+        display: block;
+        font-size: 1rem;
+        color: var(--accent-strong);
+    }
+    .analysis-metric span {
+        display: block;
+        margin-top: 0.18rem;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+    .analysis-breakdown {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.75rem;
+    }
+    .analysis-sparklines {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+        margin-top: 0.75rem;
+    }
+    .analysis-sparkline {
+        padding: 0.6rem 0.7rem 0.55rem;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(31, 41, 55, 0.08);
+    }
+    .analysis-sparkline-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+        margin-bottom: 0.35rem;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+    .analysis-sparkline svg {
+        display: block;
+        width: 100%;
+        height: 34px;
+        overflow: visible;
+    }
+    .analysis-sparkline rect {
+        fill: rgba(15,109,143,0.24);
+    }
+    .analysis-sparkline rect.sparkline-bar {
+        fill: var(--accent);
+        cursor: pointer;
+    }
+    .analysis-sparkline-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.2rem;
+        color: var(--muted);
+        font-size: 0.64rem;
+    }
+    .analysis-chip {
+        padding: 0.36rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.74);
+        border: 1px solid rgba(31, 41, 55, 0.08);
+        font-size: 0.74rem;
+        color: #44515e;
+    }
+    #chart-tooltip {
+        position: fixed;
+        z-index: 2500;
+        display: none;
+        pointer-events: none;
+        background: rgba(23, 33, 43, 0.94);
+        color: #fff;
+        padding: 0.38rem 0.52rem;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        line-height: 1.2;
+        white-space: nowrap;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    }
+    #app-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2000;
+        color: var(--muted);
+        background: var(--panel-strong);
+        border: 1px solid var(--panel-border);
+        padding: 1rem 1.4rem;
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow);
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+    }
+    .attrib-card { text-align: left; }
+    .attrib-card p { margin: 0.4em 0; }
+    .attrib-card a { color: var(--accent); text-decoration: none; }
+    .attrib-card a:hover { text-decoration: underline; }
+    #chat-toggle {
+        position: absolute;
+        bottom: 20px;
+        right: 16px;
+        z-index: 950;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: #fff;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+    }
+    #chat-panel {
+        position: absolute;
+        bottom: 78px;
+        right: 16px;
+        z-index: 950;
+        width: 340px;
+        max-height: 60vh;
+        background: var(--panel-strong);
+        border: 1px solid var(--panel-border);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+        display: none;
+        flex-direction: column;
+        font-size: 0.85rem;
+        overflow: hidden;
+    }
+    #chat-panel.open { display: flex; }
+    #chat-header {
+        padding: 12px 14px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: #fff;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    #chat-close {
+        cursor: pointer;
+        font-size: 1.2em;
+        line-height: 1;
+        color: inherit;
+        background: transparent;
+        border: none;
+    }
+    #chat-log {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 14px;
+        background: rgba(248, 250, 252, 0.82);
+    }
+    .chat-msg {
+        margin-bottom: 8px;
+        line-height: 1.35;
+    }
+    .chat-msg.user {
+        color: var(--accent-strong);
+        font-weight: 600;
+    }
+    .chat-msg.bot  { color: var(--text); }
+    .chat-msg.bot p            { margin: 0.3em 0; }
+    .chat-msg.bot ul,
+    .chat-msg.bot ol           { margin: 0.3em 0 0.3em 1.2em; padding: 0; }
+    .chat-msg.bot li           { margin: 0.15em 0; }
+    .chat-msg.bot h1,
+    .chat-msg.bot h2,
+    .chat-msg.bot h3           { margin: 0.4em 0 0.2em; font-size: 1em; font-weight: 600; }
+    .chat-msg.bot code         { background: #eee; padding: 0 3px; border-radius: 3px; font-size: 0.95em; }
+    .chat-msg.bot pre          { background: #eee; padding: 6px 8px; border-radius: 4px; overflow-x: auto; margin: 0.4em 0; }
+    .chat-msg.bot pre code     { background: transparent; padding: 0; }
+    .chat-msg.bot table        { border-collapse: collapse; margin: 0.4em 0; font-size: 0.95em; }
+    .chat-msg.bot th,
+    .chat-msg.bot td           { border: 1px solid #ddd; padding: 2px 6px; }
+    .chat-msg.bot a            { color: var(--accent); }
+    .chat-msg.sys  { color: #7b8794; font-style: italic; font-size: 0.9em; }
+    #chat-form {
+        display: flex;
+        border-top: 1px solid rgba(31, 41, 55, 0.08);
+    }
+    #chat-input {
+        flex: 1;
+        border: none;
+        outline: none;
+        padding: 12px 14px;
+        font-size: 1em;
+        background: transparent;
+    }
+    #chat-send {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 0 14px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    #chat-send:disabled { background: #aaa; cursor: default; }
+    @media (max-width: 860px) {
+    }
+    @media (max-width: 640px) {
+        #slide-overlay { padding-top: 6px; }
+        .slide-card {
+            max-width: calc(100vw - 24px);
+            padding: 1rem 1rem 1.1rem;
+        }
+        #section-title { top: 84px; }
+        #visible-analysis {
+            top: 122px;
+            left: 12px;
+            width: min(280px, calc(100vw - 84px));
+        }
+        #nav-dots {
+            right: 10px;
+            gap: 10px;
+        }
+        #slide-pills {
+            bottom: 16px;
+            max-width: calc(100vw - 108px);
+            overflow-x: auto;
+        }
+        #chat-panel {
+            right: 12px;
+            left: 12px;
+            width: auto;
+            max-height: 52vh;
+        }
+        #chat-toggle {
+            right: 12px;
+            bottom: 16px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div id="app-loading">… caricando …</div>
+
+<div id="map-shell">
+    <div id="map"></div>
+    <div id="map-scrim"></div>
+</div>
+
+<div id="section-title">Incidenti</div>
+<aside id="visible-analysis" aria-live="polite"></aside>
+
+<nav id="nav-dots" aria-label="Sezioni della storia"></nav>
+
+<div id="slide-overlay"><article class="slide-card" id="slide-card"></article></div>
+
+<button id="scroll-hint" type="button" aria-label="Slide successiva">&#8595;</button>
+
+<div id="slide-pills"></div>
+
+<button id="chat-toggle" type="button" title="Chiedi ai dati" aria-controls="chat-panel" aria-expanded="false">💬</button>
+<div id="chat-panel">
+    <div id="chat-header">
+        <span>Chiedi ai dati</span>
+        <button id="chat-close" type="button" aria-label="Chiudi chat">×</button>
+    </div>
+    <div id="chat-log"></div>
+    <form id="chat-form">
+        <input id="chat-input" type="text" placeholder="es. quando ci sono più mortali?" autocomplete="off">
+        <button id="chat-send" type="submit">Invia</button>
+    </form>
+</div>
+<div id="chart-tooltip" role="tooltip"></div>
+
+<script>
+// =========================================================================
+// Sections + slides — mirrors the original story structure
+// =========================================================================
+var DATA_URL = "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/palermo-accidents-2018/accidents.csv";
+// Populated by processData() the first time ixmaps loads the CSV. Reused by chat / analytics.
+var PROCESSED_DATA = null;
+
+var SECTIONS = [
+    {
+        label: "Incidenti",
+        slides: [
+            {
+                title: "Palermo Incidenti",
+                roman: "2018",
+                subtitle: "",
+                theme: "num_totale",
+                intro: true
+            },
+            { title: "Incidenti stradali", roman: "II", theme: "num_totale_glow" },
+            { title: "Incidenti stradali", roman: "III", theme: "num_totale_multibubble_center_glow" },
+            { title: "Incidenti stradali", roman: "IV", theme: "num_totale_multibubble_center_linear_glow" },
+            { title: "Incidenti stradali", roman: "V",  theme: "num_totale_pie_centervalue" },
+            { title: "Incidenti stradali", roman: "VI", theme: "num_totale_multibubble" }
+        ]
+    },
+    {
+        label: "Analisi temporali",
+        slides: [
+            { title: "Palermo Incidenti", subtitle: "per giorno della settimana", theme: "giorno_curve" },
+            { title: "Incidenti stradali", subtitle: "per fascia oraria",          theme: "fascia_curve" },
+            { title: "Incidenti stradali", subtitle: "per mese",                   theme: "mese_curve" },
+            { title: "Incidenti stradali", subtitle: "per fascia oraria e tipo",   theme: "fascia_curve_all" }
+        ]
+    },
+    {
+        label: "Pericolosità",
+        slides: [
+            { title: "Palermo Incidenti", subtitle: "Incidentalità", theme: "feriti_mono" },
+            { title: "Palermo Incidenti", subtitle: "Pericolosità I", theme: "feriti_rel_mono" },
+            { title: "Incidenti stradali", subtitle: "Pericolosità II", theme: "fraction" },
+            { title: "Incidenti stradali", subtitle: "Pericolosità III",
+              text: "indice della pericolosità relativa — numero feriti per griglia dinamica normalizzato",
+              theme: "circlebin" },
+            { title: "Incidenti stradali", subtitle: "Pericolosità IV",
+              text: "indice della pericolosità relativa — visibile meglio su mappa di base scura",
+              theme: "hexbin_heat" }
+        ]
+    },
+    {
+        label: "Attribuzioni",
+        slides: [
+            {
+                title: "Attribuzioni",
+                attribution: true
+            }
+        ]
+    }
+];
+
+// =========================================================================
+// Theme definitions — modern ixmaps API equivalents of the original themes
+// =========================================================================
+var INCIDENT_COLORS = ["#4DB849", "#FF5C5C", "#030303", "#993366"];   // C, F, M, R
+var INCIDENT_VALUES = ["C", "F", "M", "R"];
+var INCIDENT_LABELS = ["cose", "feriti", "mortale", "riserva"];
+
+// ------------------------------------------------------------
+// Tooltip templates — shared across themes for consistent look
+// ------------------------------------------------------------
+var TIP_CSS =
+    "font:13px/1.45 -apple-system,'Helvetica Neue',Arial,sans-serif;" +
+    "color:#222;min-width:180px;max-width:280px;" +
+    "padding:8px 10px;";
+
+// Per-point themes (raw incident = one row). Shows street, date, time, type.
+var POINT_TOOLTIP =
+    "<div style=\"" + TIP_CSS + "\">" +
+      "<div style=\"font-weight:600;font-size:13px;color:#111;margin-bottom:4px;\">{{Luogo}}</div>" +
+      "<div style=\"color:#666;font-size:12px;margin-bottom:6px;\">{{Data}} · ore {{Ora}}</div>" +
+      "<div style=\"margin-top:4px;\">{{theme.item.chart}}</div>" +
+    "</div>";
+
+// Aggregated themes (hex grid, bubble aggregate, time series). Chart is self-explanatory.
+var AGG_TOOLTIP =
+    "<div style=\"" + TIP_CSS + "\">" +
+      "<div style=\"font-weight:600;font-size:12px;color:#555;margin-bottom:6px;letter-spacing:0.02em;text-transform:uppercase;\">Incidenti</div>" +
+      "<div>{{theme.item.chart}}</div>" +
+      "<div style=\"margin-top:4px;color:#666;font-size:11.5px;\"></div>" +
+    "</div>";
+
+var POINT_DATAFIELDS = ["Luogo", "Data", "Ora"];
+
+var STREET_FILTER = null;   // { pattern: string, regex: RegExp, count: int }
+
+function applyStreetFilter(pattern) {
+    if (!pattern) {
+        STREET_FILTER = null;
+        return { count: PROCESSED_DATA.length, total: PROCESSED_DATA.length };
+    }
+    var re = new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    var keys = Object.keys(PROCESSED_DATA[0] || {});
+    var streetKeys = keys.filter(function (k) {
+        return /(strad|via|viale|corso|piazza|indiriz|localizz|luogo|ubicaz|denominaz|nome|toponim)/i.test(k)
+            && k !== "Y" && k !== "X";
+    });
+    var cnt = 0;
+    for (var i = 0; i < PROCESSED_DATA.length; i++) {
+        for (var j = 0; j < streetKeys.length; j++) {
+            var v = PROCESSED_DATA[i][streetKeys[j]];
+            if (v && re.test(String(v))) { cnt++; break; }
+        }
+    }
+    STREET_FILTER = { pattern: pattern, regex: re, count: cnt };
+    return { count: cnt, total: PROCESSED_DATA.length, fields: streetKeys };
+}
+
+// ixmaps-native loading + processing: url + process callback.
+// process() runs inside ixmaps' data pipeline (data.js),
+// adds computed columns and applies the active street filter.
+// process: only augmentation — adds computed columns, no filtering.
+function processData(data) {
+    var fields = data.fields;
+    var records = data.records;
+    function idOf(n) {
+        for (var i = 0; i < fields.length; i++) {
+            var id = fields[i].id || fields[i].name;
+            if (id === n) return i;
+        }
+        return -1;
+    }
+    function ensure(n) {
+        var i = idOf(n);
+        if (i === -1) { fields.push({ id: n, type: "string" }); return fields.length - 1; }
+        return i;
+    }
+    var iInc  = idOf("Incidenti");
+    var iData = idOf("Data");
+    var iOra  = idOf("Ora");
+    var iFer  = ensure("Feriti");
+    var iIll  = ensure("Illesi");
+    var iMese = ensure("Mese");
+    var iGds  = ensure("GiornoDellaSettimana");
+    var iFo   = ensure("FasciaOraria");
+    for (var r = 0; r < records.length; r++) {
+        var row = records[r];
+        while (row.length < fields.length) row.push("");
+        var inc = row[iInc];
+        row[iFer] = (inc === "M" || inc === "R") ? 2 : (inc === "F" ? 1 : 0);
+        row[iIll] = inc === "C" ? 1 : 0;
+        var mese = "", gds = "";
+        var d = row[iData];
+        if (d) {
+            var ds = String(d), dt;
+            if (ds.indexOf("/") >= 0) { var p = ds.split("/"); dt = new Date(+p[2], +p[1] - 1, +p[0]); }
+            else dt = new Date(ds);
+            if (!isNaN(+dt)) { mese = String(dt.getMonth() + 1); gds = String(dt.getDay()); }
+        }
+        row[iMese] = mese; row[iGds] = gds;
+        var oraStr = String(row[iOra] || "");
+        var h = parseInt(oraStr.split(":")[0], 10);
+        if (isNaN(h)) h = parseInt(oraStr, 10) || 0;
+        row[iFo] = h < 3 ? "0-3" : h < 6 ? "3-6" : h < 9 ? "6-9" : h < 12 ? "9-12"
+                 : h < 15 ? "12-15" : h < 18 ? "15-18" : h < 21 ? "18-21" : "21-24";
+    }
+
+    // Composite I/F/R/M × FasciaOraria columns (32 fields) — for fascia_curve_all stacked plot.
+    var BANDS = ["0-3","3-6","6-9","9-12","12-15","15-18","18-21","21-24"];
+    var TYPES = ["F","R","M","I"];   // feriti, riserva, morti, illesi
+    var compIdx = {};
+    TYPES.forEach(function (t) {
+        BANDS.forEach(function (b) { compIdx[t + b] = ensure(t + b); });
+    });
+    for (var rr = 0; rr < records.length; rr++) {
+        var rw = records[rr];
+        while (rw.length < fields.length) rw.push(0);
+        var band = rw[iFo];
+        var tp = rw[iInc];  // "C" (cose=illesi), "F", "R", "M"
+        var mapped = tp === "C" ? "I" : tp;
+        for (var tI = 0; tI < TYPES.length; tI++) {
+            for (var bI = 0; bI < BANDS.length; bI++) {
+                var key = TYPES[tI] + BANDS[bI];
+                rw[compIdx[key]] = (TYPES[tI] === mapped && BANDS[bI] === band) ? 1 : 0;
+            }
+        }
+    }
+    // Mirror processed table as an array of row-objects for chat/analytics.
+    // Keep only rows with valid coordinates.
+    var iY = idOf("Y"), iX = idOf("X");
+    var rowsObj = [];
+    for (var k = 0; k < records.length; k++) {
+        var rec = records[k];
+        var y = parseFloat(String(rec[iY] || "").replace(",", "."));
+        var x = parseFloat(String(rec[iX] || "").replace(",", "."));
+        if (isNaN(y) || isNaN(x) || y === 0 || x === 0) continue;
+        var obj = {};
+        for (var f = 0; f < fields.length; f++) obj[fields[f].id || fields[f].name] = rec[f];
+        rowsObj.push(obj);
+    }
+    PROCESSED_DATA = rowsObj;
+    console.log("processed incidents:", PROCESSED_DATA.length);
+    return data;
+}
+
+function commonData() {
+    // name is stable — filtering now lives on the theme (.filter WHERE ...),
+    // so the parsed/augmented table can be cached across theme switches.
+    return { url: DATA_URL, type: "csv", name: "palermo2018", process: processData };
+}
+
+// Build a SQL-WHERE clause for the active street filter (matches on 'Luogo')
+function commonFilter() {
+    if (!STREET_FILTER || !STREET_FILTER.pattern) return null;
+    var p = STREET_FILTER.pattern.replace(/"/g, '\\"');
+    return 'WHERE Luogo LIKE "' + p + '"';
+}
+
+function refreshCurrentTheme() {
+    currentThemeName = null;   // force re-define with new data
+    renderSlide();
+}
+
+var THEMES = {
+    // --------------------- Section 1: per tipo ---------------------
+    num_totale: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Incidenti", title: "Incidenti" })
+            .filter(commonFilter() || "")
+            .type("CHART|BUBBLE|CATEGORICAL")
+            .style({
+                colorscheme: INCIDENT_COLORS,
+                values:      INCIDENT_VALUES,
+                label:       INCIDENT_LABELS,
+                datafields:  POINT_DATAFIELDS,
+                fillopacity: 0.75,
+                scale:       1.0,
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: POINT_TOOLTIP })
+            .title("Incidenti Palermo 2018")
+            .define();
+    },
+    num_totale_glow: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Incidenti", title: "Incidenti" })
+            .filter(commonFilter() || "")
+            .type("CHART|BUBBLE|CATEGORICAL|GLOW")
+            .style({
+                colorscheme: INCIDENT_COLORS,
+                values:      INCIDENT_VALUES,
+                label:       INCIDENT_LABELS,
+                datafields:  POINT_DATAFIELDS,
+                fillopacity: 0.6,
+                scale:       0.5,
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: POINT_TOOLTIP })
+            .title("Incidenti Palermo 2018")
+            .define();
+    },
+    num_totale_multibubble_center_glow: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Incidenti", title: "Incidenti" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|SEQUENCE|CENTER|SORT|UP|RINGS|GLOW|CATEGORICAL|AGGREGATE|RECT|SUM|COUNT|SIZE")
+            .style({
+                colorscheme: INCIDENT_COLORS,
+                values:      INCIDENT_VALUES,
+                label:       INCIDENT_LABELS,
+                symbols:     ["circle"],
+                fillopacity: 1,
+                scale:       0.7,
+                centerpart:  "max",
+                gridwidth:   "10px",
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti Palermo 2018")
+            .define();
+    },
+    num_totale_multibubble_center_linear_glow: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Incidenti", title: "Incidenti" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|GLOW|SEQUENCE|CENTER|SORT|UP|LINEAR|RINGS|CATEGORICAL|AGGREGATE|RECT|RELOCATE|SUM|COUNT|SIZE")
+            .style({
+                colorscheme:     INCIDENT_COLORS,
+                values:          INCIDENT_VALUES,
+                label:           INCIDENT_LABELS,
+                symbols:         ["circle"],
+                fillopacity:     1,
+                scale:           0.92,
+                normalsizevalue: "6",
+                centerpart:      "max",
+                gridwidth:       "10",
+                showdata:        "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti Palermo 2018")
+            .define();
+    },
+    num_totale_pie_centervalue: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Incidenti", title: "Incidenti" })
+            .filter(commonFilter() || "")
+            .type("CHART|PIE|CENTERVALUE|CATEGORICAL|AGGREGATE|RECT|RELOCATE|SIZE|SUM|COUNT")
+            .style({
+                colorscheme: INCIDENT_COLORS,
+                values:      INCIDENT_VALUES,
+                label:       INCIDENT_LABELS,
+                scale:       2,
+                centerpart:  "max",
+                gridwidth:   "15px",
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti Palermo 2018")
+            .define();
+    },
+    num_totale_multibubble: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Incidenti", title: "Incidenti" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|SEQUENCE|STAR|SORT|RANDOM|CATEGORICAL|AGGREGATE|RELOCATE|SUM|COUNT")
+            .style({
+                colorscheme: INCIDENT_COLORS,
+                values:      INCIDENT_VALUES,
+                label:       INCIDENT_LABELS,
+                symbols:     ["circle"],
+                fillopacity: 0.65,
+                scale:       1.5,
+                centerpart:  "max",
+                gridwidthpx: "15",
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti Palermo 2018")
+            .define();
+    },
+
+    // --------------------- Section 2: analisi temporali ---------------------
+    giorno_curve: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "GiornoDellaSettimana" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|SEQUENCE|PLOT|LINES|BOX|GRID|AREA|FIXSIZE|GRIDSIZE|ZEROISVALUE|CATEGORICAL|AGGREGATE|RECT|SUM|COUNT|FORCE")
+            .style({
+                colorscheme: ["#0079C6","#0079C6","#0079C6","#0079C6","#0079C6","#ED7C89","#ED7C89"],
+                values:      ["1","2","3","4","5","6","0"],
+                label:       ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"],
+                xaxis:       ["L","M","M","G","V","S","D"],
+                symbols:     ["circle"],
+                normalsizevalue: "20",
+                scale:       0.95,
+                rangescale:  0.8,
+                minvalue:    0,
+                boxopacity:  0.1,
+                gridwidthpx: "100",
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti per giorno della settimana")
+            .define();
+    },
+    fascia_curve: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "FasciaOraria" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|SEQUENCE|PLOT|LINES|BOX|GRID|AREA|FIXSIZE|GRIDSIZE|ZEROISVALUE|CATEGORICAL|AGGREGATE|RECT|SUM|COUNT|FORCE")
+            .style({
+                colorscheme: ["#5566dd","#5566dd","#5566dd","#bbccff","#bbccff","#bbccff","#5566dd","#5566dd"],
+                values:      ["0-3","3-6","6-9","9-12","12-15","15-18","18-21","21-24"],
+                xaxis:       ["0-3","3-6","6-9","9-12","12-15","15-18","18-21","21-24"],
+                symbols:     ["circle"],
+                normalsizevalue: "256",
+                scale:       0.9,
+                rangescale:  1,
+                minvalue:    0,
+                boxopacity:  0.1,
+                gridwidthpx: "100",
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti per fascia oraria")
+            .define();
+    },
+    mese_curve: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Mese" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|SEQUENCE|PLOT|LINES|BOX|GRID|AREA|FIXSIZE|GRIDSIZE|ZEROISVALUE|CATEGORICAL|AGGREGATE|RECT|SUM|COUNT|FORCE")
+            .style({
+                colorscheme: [
+                    "#C1DAE7","#C1DAE7","#C1DAE7",
+                    "#B8D961","#B8D961","#B8D961",
+                    "#D95461","#D95461","#D95461",
+                    "#D9B861","#D9B861","#D9B861"
+                ],
+                values: ["1","2","3","4","5","6","7","8","9","10","11","12"],
+                label:  ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"],
+                xaxis:  ["G","F","M","A","M","G","L","A","S","O","N","D"],
+                symbols: ["circle"],
+                normalsizevalue: "20",
+                scale:       0.95,
+                rangescale:  0.8,
+                minvalue:    0,
+                boxopacity:  0.1,
+                gridwidthpx: "100",
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti per mese")
+            .define();
+    },
+    fascia_curve_all: function () {
+        // Per fascia oraria e tipo — 4 series (Illesi, Feriti, Riserva, Mortale) interleaved per band.
+        var bands = ["0-3","3-6","6-9","9-12","12-15","15-18","18-21","21-24"];
+        var fieldStr = bands.map(function (b) {
+            return ["I" + b, "F" + b, "R" + b, "M" + b].join("|");
+        }).join("|");
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: fieldStr })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|SEQUENCE|PLOT|RAW|LINES|AREA|FADE|NOSORT|BOX|GRID|FIXSIZE|TITLE|AGGREGATE|RECT|AUTOSIZE|SUM|CLEAR|ZEROISNOTVALUE|FORCE")
+            .style({
+                colorscheme: ["#4DB849", "#FF5C5C", "#993366", "#030303"],
+                fillopacity: 0.5,
+                gridx:       "4",
+                xaxis:       bands,
+                symbols:     ["circle"],
+                normalsizevalue: "2",
+                scale:       0.95,
+                rangescale:  1.3,
+                minvalue:    0,
+                boxcolor:    "#000000",
+                boxopacity:  0.02,
+                gridwidthpx: "100",
+                showdata:    "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidenti per fascia oraria e tipo")
+            .define();
+    },
+
+    // --------------------- Section 3: pericolosità ---------------------
+    feriti_mono: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "$item$" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|QUANTILE|ZEROISVALUE|NEGATIVEISVALUE|SUM|AGGREGATE|DOPACITY|GRIDSIZE|VALUES|DTEXT|VALUEBACKGROUND")
+            .style({
+                colorscheme:     ["1","#ffeeee","#dd0000","dynamic","cold"],
+                symbols:         ["hexagon"],
+                fillopacity:     0.5,
+                normalsizevalue: "0.1",
+                scale:           0.98,
+                dopacitypow:     "0.8",
+                dopacityscale:   "1.3",
+                linecolor:       "black",
+                valuedecimals:   "0",
+                gridwidthpx:     "50",
+                textcolor:       "black",
+                valuescale:      "0.5",
+                minaggregation:  "auto",
+                showdata:        "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Incidentalità — n° incidenti per cella")
+            .define();
+    },
+    feriti_rel_mono: function () {
+        // Feriti / total incidents ratio
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Feriti", alpha: "$item$" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|QUANTILE|ZEROISVALUE|NEGATIVEISVALUE|SUM|AGGREGATE|GAP|DOPACITY|GRIDSIZE|NORMALIZE|VALUES|DTEXT|VALUEBACKGROUND")
+            .style({
+                colorscheme:     ["1","#ffeeee","#dd0000","dynamic","cold"],
+                symbols:         ["hexagon"],
+                fillopacity:     0.49,
+                normalsizevalue: "0.1",
+                scale:           0.98,
+                dopacitypow:     "0.8",
+                dopacityscale:   "1",
+                linecolor:       "none",
+                valuedecimals:   "2",
+                gridwidthpx:     "50",
+                textcolor:       "black",
+                minaggregation:  "auto",
+                showdata:        "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Pericolosità relativa — feriti/incidenti")
+            .define();
+    },
+    fraction: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Feriti" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOL|ZEROISVALUE|QUANTILE|NEGATIVEISVALUE|SUM|AGGREGATE|RECT|RELOCATE|NORMALIZE|VALUES|DTEXT|VALUEBACKGROUND")
+            .style({
+                colorscheme:     ["10","green","red","warm"],
+                symbols:         ["circle"],
+                fillopacity:     0.5,
+                normalsizevalue: "0.1",
+                scale:           1,
+                linecolor:       "none",
+                valuedecimals:   "2",
+                aggregationscale: ["1:100","100px","1:10000","50px","1:100000","25"],
+                minaggregation:  "auto",
+                showdata:        "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Indice sintetico di pericolosità")
+            .define();
+    },
+    circlebin: function () {
+        // Pericolosità III — style ported from Bolzano pericolosità map
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Feriti" })
+            .filter(commonFilter() || "")
+            .type("CHART|SYMBOLS|SIZE|GLOW|NORMALIZE|ZEROISVALUE|CLEAR|AGGREGATE|RELOCATE|SUM|RECT|VALUES")
+            .style({
+                colorscheme:     ["7", "#36A6B1", "#b94023", "3colors", "#DDA729"],
+                symbols:         ["circle"],
+                fillopacity:     0.6,
+                shadow:          "false",
+                units:           "",
+                scale:           "1",
+                normalsizevalue: "0.5",
+                sizepow:        "1",
+                valuescale:      "1",
+                valuedecimals:   "1",
+                gridwidth:      "25",
+                minaggregation:  "auto",
+                showdata:        "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Indice sintetico di pericolosità")
+            .define();
+    },
+    hexbin_heat: function () {
+        return ixmaps.layer("incidenti")
+            .data(commonData())
+            .binding({ geo: "Y|X", value: "Feriti" })
+            .filter(commonFilter() || "")
+            .type("CHART|BUBBLE|GLOW||ZEROISVALUE|NEGATIVEISVALUE|AGGREGATE|NORMALIZE|DTEXT|GRIDSIZE|GAP|VALUEBACKGROUND")
+            .style({
+                colorscheme:     ["10","#6E4AF6","#F9FA84","3colors","#F52926"],
+                fillopacity:     0.85,
+                normalsizevalue: "1.11",
+                scale:           1,
+                dopacitypow:     "0.5",
+                dopacityscale:   "170",
+                linecolor:       "none",
+                valuedecimals:   "2",
+                gridwidthpx:     "8",
+                minaggregation:  "auto",
+                showdata:        "true"
+            })
+            .meta({ name: "theme", tooltip: AGG_TOOLTIP })
+            .title("Numero feriti per incidente — heatmap")
+            .define();
+    }
+};
+
+// =========================================================================
+// State + navigation
+// =========================================================================
+var currentSection = 0;
+var currentSlide   = 0;
+var currentThemeName = null;
+var visibleAnalysisCollapsed = false;
+var DOM = {
+    sectionTitle: document.getElementById("section-title"),
+    visibleAnalysis: document.getElementById("visible-analysis"),
+    navDots: document.getElementById("nav-dots"),
+    slideCard: document.getElementById("slide-card"),
+    slidePills: document.getElementById("slide-pills"),
+    scrollHint: document.getElementById("scroll-hint"),
+    appLoading: document.getElementById("app-loading"),
+    chatToggle: document.getElementById("chat-toggle"),
+    chatPanel: document.getElementById("chat-panel"),
+    chatClose: document.getElementById("chat-close"),
+    chatLog: document.getElementById("chat-log"),
+    chatForm: document.getElementById("chat-form"),
+    chatInput: document.getElementById("chat-input"),
+    chatSend: document.getElementById("chat-send"),
+    map: document.getElementById("map"),
+    chartTooltip: document.getElementById("chart-tooltip")
+};
+
+var myMap = ixmaps.Map("map", {
+    mapType: "CartoDB - Positron",
+    mode:    "pan",
+    legend:  "open",
+    tools:   true
+})
+.view({ center: { lat: 38.12192568956057, lng: 13.368816375732422 }, zoom: 14 })
+.options({
+    objectscaling:   "dynamic",
+    normalSizeScale: "5000",
+    basemapopacity:  0.85,
+    flushChartDraw:  1000000,
+    flushPaintShape: 5000,
+    featurescaling:  "dynamic",
+    labelscaling:    "dynamic",
+    labelspace:      2.0,
+    loadsilent:      true
+});
+
+function renderNavDots() {
+    DOM.navDots.innerHTML = SECTIONS.map(function (section, index) {
+        var active = index === currentSection ? " active" : "";
+        return "<button class=\"nav-dot" + active + "\" type=\"button\" data-section=\"" + index +
+            "\" aria-label=\"" + section.label + "\"><span class=\"nav-label\">" + section.label + "</span></button>";
+    }).join("");
+}
+
+function getFilteredRows() {
+    if (!PROCESSED_DATA) return [];
+    if (!(STREET_FILTER && STREET_FILTER.regex)) return PROCESSED_DATA;
+    var streetRx = /(strad|via|viale|corso|piazza|indiriz|localizz|luogo|ubicaz|denominaz|nome|toponim)/i;
+    return PROCESSED_DATA.filter(function (r) {
+        return Object.keys(r).some(function (k) {
+            return streetRx.test(k) && r[k] && STREET_FILTER.regex.test(String(r[k]));
+        });
+    });
+}
+
+function topKey(obj) {
+    return Object.keys(obj || {})
+        .map(function (k) { return { k: k, v: obj[k] }; })
+        .sort(function (a, b) { return b.v - a.v; })[0] || null;
+}
+
+function labelForTipo(key) {
+    return ({ C: "cose", F: "feriti", M: "mortali", R: "riserva" })[key] || key;
+}
+
+function labelForMese(key) {
+    return ({ "1":"Gen", "2":"Feb", "3":"Mar", "4":"Apr", "5":"Mag", "6":"Giu", "7":"Lug", "8":"Ago", "9":"Set", "10":"Ott", "11":"Nov", "12":"Dic" })[String(key)] || key;
+}
+
+function buildSparkline(values, labels, valueLabel) {
+    var width = 120;
+    var height = 34;
+    var max = Math.max.apply(null, values.concat([0]));
+    var slot = width / Math.max(values.length, 1);
+    var barWidth = Math.max(6, slot - 3);
+    var bars = values.map(function (v, i) {
+        var barHeight = max ? Math.max(2, (v / max) * (height - 4)) : 2;
+        var x = i * slot + (slot - barWidth) / 2;
+        var y = height - barHeight;
+        var label = labels[i] || String(i + 1);
+        return "<rect class='sparkline-bar' data-label='" + label + "' data-value='" + v + "' x='" + x.toFixed(1) + "' y='" + y.toFixed(1) + "' width='" + barWidth.toFixed(1) + "' height='" + barHeight.toFixed(1) + "' rx='1.5'></rect>";
+    }).join("");
+    return (
+        "<div class='analysis-sparkline'>" +
+            "<div class='analysis-sparkline-header'><strong>" + valueLabel + "</strong><span>max " + max + "</span></div>" +
+            "<svg viewBox='0 0 " + width + " " + height + "' aria-hidden='true'>" +
+                "<rect x='0' y='" + (height - 1) + "' width='" + width + "' height='1' fill='rgba(31,41,55,0.1)'></rect>" +
+                bars +
+            "</svg>" +
+            "<div class='analysis-sparkline-labels'><span>" + labels[0] + "</span><span>" + labels[labels.length - 1] + "</span></div>" +
+        "</div>"
+    );
+}
+
+function showChartTooltip(text, x, y) {
+    DOM.chartTooltip.textContent = text;
+    DOM.chartTooltip.style.display = "block";
+    DOM.chartTooltip.style.left = (x + 12) + "px";
+    DOM.chartTooltip.style.top = (y - 28) + "px";
+}
+
+function hideChartTooltip() {
+    DOM.chartTooltip.style.display = "none";
+}
+
+function syncVisibleAnalysisState() {
+    DOM.visibleAnalysis.classList.toggle("is-collapsed", visibleAnalysisCollapsed);
+    var toggle = DOM.visibleAnalysis.querySelector(".analysis-toggle");
+    if (toggle) {
+        toggle.setAttribute("aria-expanded", visibleAnalysisCollapsed ? "false" : "true");
+    }
+}
+
+function toggleVisibleAnalysis() {
+    visibleAnalysisCollapsed = !visibleAnalysisCollapsed;
+    syncVisibleAnalysisState();
+    hideChartTooltip();
+}
+
+function renderVisibleAnalysis() {
+    if (!PROCESSED_DATA) {
+        DOM.visibleAnalysis.innerHTML =
+            "<button class='analysis-toggle' type='button' aria-expanded='true'>" +
+                "<h3>Incidenti visibili</h3><span class='analysis-caret'>⌄</span>" +
+            "</button>" +
+            "<div class='analysis-content'><p>Caricamento dati in corso…</p></div>";
+        syncVisibleAnalysisState();
+        return;
+    }
+    var visibleRows = rowsInView(getFilteredRows()).rows;
+    var summary = computeDataSummary(visibleRows);
+    var topTipo = topKey(summary.per_tipo);
+    var topFascia = topKey(summary.per_fascia_oraria);
+    var topMese = topKey(summary.per_mese);
+    var hourBands = ["0-3", "3-6", "6-9", "9-12", "12-15", "15-18", "18-21", "21-24"];
+    var monthBands = ["1","2","3","4","5","6","7","8","9","10","11","12"];
+    var monthLabels = monthBands.map(labelForMese);
+    var hourSpark = buildSparkline(hourBands.map(function (k) { return summary.per_fascia_oraria[k] || 0; }), hourBands, "Hour");
+    var monthSpark = buildSparkline(monthBands.map(function (k) { return summary.per_mese[k] || 0; }), monthLabels, "Month");
+    var chips = Object.keys(summary.per_tipo || {}).sort().map(function (k) {
+        return "<span class='analysis-chip'>" + labelForTipo(k) + ": <strong>" + summary.per_tipo[k] + "</strong></span>";
+    }).join("");
+    if (!chips) {
+        chips = "<span class='analysis-chip'>Nessun incidente visibile</span>";
+    }
+    DOM.visibleAnalysis.innerHTML =
+        "<button class='analysis-toggle' type='button' aria-expanded='true'>" +
+            "<h3>Incidenti visibili</h3><span class='analysis-caret'>⌄</span>" +
+        "</button>" +
+        "<div class='analysis-content'>" +
+            "<p>Analisi della vista corrente" + (STREET_FILTER ? " con filtro <strong>" + STREET_FILTER.pattern + "</strong>" : "") + ".</p>" +
+            "<div class='analysis-metrics'>" +
+                "<div class='analysis-metric'><strong>" + summary.totale_incidenti + "</strong><span>Totale</span></div>" +
+                "<div class='analysis-metric'><strong>" + (topTipo ? labelForTipo(topTipo.k) : "n/d") + "</strong><span>Tipo prevalente</span></div>" +
+                "<div class='analysis-metric'><strong>" + (topFascia ? topFascia.k : "n/d") + "</strong><span>Fascia oraria</span></div>" +
+                "<div class='analysis-metric'><strong>" + (topMese ? labelForMese(topMese.k) : "n/d") + "</strong><span>Mese prevalente</span></div>" +
+            "</div>" +
+            "<div class='analysis-sparklines'>" + hourSpark + monthSpark + "</div>" +
+            "<div class='analysis-breakdown'>" + chips + "</div>" +
+        "</div>";
+    syncVisibleAnalysisState();
+}
+
+function renderSlideCard(slide) {
+    var html = "";
+    if (slide.attribution) {
+        DOM.slideCard.classList.add("attrib-card");
+        html += "<h1>Attribuzioni</h1><hr>";
+        html += "<p><strong>Dati:</strong><br>";
+        html += "<a href='https://www.comune.palermo.it/opendata_dld.php?id=523' target='_blank'>Polizia Municipale di Palermo — Open Data Palermo</a> — CC BY 4.0</p>";
+        html += "<p><strong>Visualizzazione:</strong><br>";
+        html += "creato da <a href='http://ixmaps.com' target='_blank'>iXmaps</a> — CC BY</p>";
+        html += "<p style='margin-top:1em'>✉️ info@ixmaps.com<br>🐦 @grichter</p>";
+    } else {
+        DOM.slideCard.classList.remove("attrib-card");
+        html += "<h1>" + slide.title + "</h1>";
+        if (slide.roman) {
+            html += "<hr><div class='roman'>" + slide.roman + "</div>";
+        }
+        if (slide.subtitle) {
+            html += "<h2>" + slide.subtitle + "</h2>";
+        }
+        if (slide.text) {
+            html += "<p>" + slide.text + "</p>";
+        }
+        if (slide.intro) {
+            html += "<p style='margin-top:1em'>";
+            html += "<button type='button' data-goto-section='1'>Analisi temporali</button>";
+            html += "<button type='button' data-goto-section='2'>Indice di pericolosità</button>";
+            html += "</p>";
+        }
+    }
+    DOM.slideCard.innerHTML = html;
+}
+
+// -----------------------------
+function renderSlide() {
+    var section = SECTIONS[currentSection];
+    var slide   = section.slides[currentSlide];
+
+    renderNavDots();
+
+    DOM.sectionTitle.textContent = section.label;
+
+    renderSlideCard(slide);
+
+    DOM.slideCard.classList.remove("show");
+    setTimeout(function () { DOM.slideCard.classList.add("show"); }, 30);
+
+    if (slide.theme && slide.theme !== currentThemeName) {
+        var theme = THEMES[slide.theme]();
+        myMap.layer(theme, "direct");
+        currentThemeName = slide.theme;
+    }
+
+    renderPills();
+    var isLastSlide = currentSection === SECTIONS.length - 1 && currentSlide === section.slides.length - 1;
+    DOM.scrollHint.style.display = isLastSlide ? "none" : "";
+
+    if (typeof updateUrl === "function") updateUrl();
+}
+
+function renderPills() {
+    var section = SECTIONS[currentSection];
+    var pills = [
+        "<div class='pill-group'>",
+            "<button class='pill nav-pill' type='button' data-nav='up' aria-label='Sezione precedente' title='Sezione precedente'>↑</button>",
+            "<button class='pill nav-pill' type='button' data-nav='prev' aria-label='Slide precedente' title='Slide precedente'>‹</button>",
+        "</div>"
+    ].join("");
+    if (section.slides.length > 1) {
+        pills += "<div class='pill-divider' aria-hidden='true'></div><div class='pill-group'>";
+        for (var i = 0; i < section.slides.length; i++) {
+            var cls = "pill" + (i === currentSlide ? " active" : "");
+            var label = romanize(i + 1);
+            pills += "<button class='" + cls + "' type='button' data-slide='" + i + "'>" + label + "</button>";
+        }
+        pills += "</div><div class='pill-divider' aria-hidden='true'></div>";
+    } else {
+        pills += "<div class='pill-divider' aria-hidden='true'></div>";
+    }
+    pills += [
+        "<div class='pill-group'>",
+            "<button class='pill nav-pill' type='button' data-nav='next' aria-label='Slide successiva' title='Slide successiva'>›</button>",
+            "<button class='pill nav-pill' type='button' data-nav='down' aria-label='Sezione successiva' title='Sezione successiva'>↓</button>",
+        "</div>"
+    ].join("");
+    DOM.slidePills.innerHTML = pills;
+    DOM.slidePills.style.display = "";
+}
+
+function romanize(n) {
+    var R = ["I","II","III","IV","V","VI","VII","VIII","IX","X"];
+    return R[n - 1] || String(n);
+}
+
+function goToSection(i) {
+    if (i < 0 || i >= SECTIONS.length) return;
+    currentSection = i;
+    currentSlide = 0;
+    renderSlide();
+}
+function goToSlide(i) {
+    currentSlide = i;
+    renderSlide();
+}
+function prevSection() {
+    if (currentSection <= 0) return;
+    currentSection--;
+    currentSlide = 0;
+    renderSlide();
+}
+function nextSection() {
+    if (currentSection >= SECTIONS.length - 1) return;
+    currentSection++;
+    currentSlide = 0;
+    renderSlide();
+}
+function nextSlide() {
+    var section = SECTIONS[currentSection];
+    if (currentSlide < section.slides.length - 1) {
+        currentSlide++;
+    } else if (currentSection < SECTIONS.length - 1) {
+        currentSection++;
+        currentSlide = 0;
+    } else { return; }
+    renderSlide();
+}
+function prevSlide() {
+    if (currentSlide > 0) {
+        currentSlide--;
+    } else if (currentSection > 0) {
+        currentSection--;
+        currentSlide = SECTIONS[currentSection].slides.length - 1;
+    } else { return; }
+    renderSlide();
+}
+
+// keyboard / wheel navigation
+var scrollLock = false;
+window.addEventListener("wheel", function (e) {
+    if (scrollLock) return;
+    if (Math.abs(e.deltaY) < 30) return;
+    scrollLock = true;
+    setTimeout(function () { scrollLock = false; }, 750);
+    if (e.deltaY > 0) nextSlide(); else prevSlide();
+}, { passive: true });
+
+window.addEventListener("keydown", function (e) {
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") { nextSlide(); e.preventDefault(); }
+    else if (e.key === "ArrowUp" || e.key === "PageUp")                  { prevSlide(); e.preventDefault(); }
+    else if (e.key === "ArrowRight")                                     { nextSlide(); }
+    else if (e.key === "ArrowLeft")                                      { prevSlide(); }
+});
+
+// swipe support
+var touchStartY = null;
+window.addEventListener("touchstart", function (e) { touchStartY = e.touches[0].clientY; });
+window.addEventListener("touchend", function (e) {
+    if (touchStartY === null) return;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dy) > 40) { if (dy < 0) nextSlide(); else prevSlide(); }
+    touchStartY = null;
+});
+
+DOM.navDots.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-section]");
+    if (!btn) return;
+    goToSection(parseInt(btn.getAttribute("data-section"), 10));
+});
+
+DOM.slideCard.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-goto-section]");
+    if (btn) {
+        goToSection(parseInt(btn.getAttribute("data-goto-section"), 10));
+        return;
+    }
+});
+
+DOM.slidePills.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-nav], [data-slide]");
+    if (!btn) return;
+    if (btn.hasAttribute("data-slide")) {
+        goToSlide(parseInt(btn.getAttribute("data-slide"), 10));
+        return;
+    }
+    var action = btn.getAttribute("data-nav");
+    if (action === "prev") prevSlide();
+    else if (action === "next") nextSlide();
+    else if (action === "up") prevSection();
+    else if (action === "down") nextSection();
+});
+
+DOM.visibleAnalysis.addEventListener("pointermove", function (e) {
+    if (visibleAnalysisCollapsed) {
+        hideChartTooltip();
+        return;
+    }
+    var bar = e.target.closest(".sparkline-bar");
+    if (!bar) {
+        hideChartTooltip();
+        return;
+    }
+    showChartTooltip(bar.getAttribute("data-label") + ": " + bar.getAttribute("data-value"), e.clientX, e.clientY);
+});
+
+DOM.visibleAnalysis.addEventListener("pointerleave", hideChartTooltip);
+DOM.visibleAnalysis.addEventListener("click", function (e) {
+    var toggle = e.target.closest(".analysis-toggle");
+    if (!toggle) return;
+    toggleVisibleAnalysis();
+});
+
+DOM.scrollHint.addEventListener("click", nextSlide);
+DOM.chatToggle.addEventListener("click", toggleChat);
+DOM.chatClose.addEventListener("click", toggleChat);
+DOM.chatForm.addEventListener("submit", sendChat);
+
+// -----------------------------
+// Chat with the map data
+// -----------------------------
+var CHAT_HISTORY = [];
+var DATA_SUMMARY = null;
+
+function getVisibleBounds() {
+    try {
+        // 1) try direct ixmaps / underlying leaflet bounds
+        if (typeof ixmaps.getBounds === "function") {
+            var b = ixmaps.getBounds();
+            if (b) {
+                if (b.getNorth) return { north: b.getNorth(), south: b.getSouth(), east: b.getEast(), west: b.getWest() };
+                if (b.north != null) return b;
+            }
+        }
+        var lmap = null;
+        if (ixmaps.getMapObject) lmap = ixmaps.getMapObject();
+        else if (ixmaps.getMap)  lmap = ixmaps.getMap();
+        else if (ixmaps.htmlgui_getMap) lmap = ixmaps.htmlgui_getMap();
+        if (lmap && lmap.getBounds) {
+            var lb = lmap.getBounds();
+            return { north: lb.getNorth(), south: lb.getSouth(), east: lb.getEast(), west: lb.getWest() };
+        }
+    } catch (e) {}
+    // 2) fallback — derive from current center + zoom + map viewport
+    try {
+        var c = ixmaps.getCenter();
+        var z = ixmaps.getZoom();
+        if (!c || z == null) return null;
+        var lat = c.lat, lng = (c.lng != null ? c.lng : c.lon);
+        var mapDiv = DOM.map;
+        var w = mapDiv.clientWidth, h = mapDiv.clientHeight;
+        var metersPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
+        var halfLatDeg  = (h / 2) * metersPerPx / 111320;
+        var halfLngDeg  = (w / 2) * metersPerPx / (111320 * Math.cos(lat * Math.PI / 180));
+        return {
+            north: lat + halfLatDeg,
+            south: lat - halfLatDeg,
+            east:  lng + halfLngDeg,
+            west:  lng - halfLngDeg
+        };
+    } catch (e) { return null; }
+}
+
+function num(v) {
+    if (v == null) return NaN;
+    return parseFloat(String(v).replace(",", "."));
+}
+
+function rowsInView(rows) {
+    var b = getVisibleBounds();
+    if (!b) return { rows: rows, bounds: null };
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+        var y = num(rows[i].Y);
+        var x = num(rows[i].X);
+        if (y >= b.south && y <= b.north && x >= b.west && x <= b.east) out.push(rows[i]);
+    }
+    return { rows: out, bounds: b };
+}
+
+function computeDataSummary(rows) {
+    var byTipo = {}, byMese = {}, byGiorno = {}, byFascia = {}, byTipoMese = {};
+    var giorni = ["dom","lun","mar","mer","gio","ven","sab"];
+
+    // detect street / location fields
+    var streetFields = [];
+    if (rows.length) {
+        var keys = Object.keys(rows[0]);
+        var re = /(strad|via|viale|corso|piazza|indiriz|localizz|luogo|ubicaz|denominaz|nome|toponim)/i;
+        for (var k = 0; k < keys.length; k++) {
+            if (re.test(keys[k]) && keys[k] !== "Y" && keys[k] !== "X") streetFields.push(keys[k]);
+        }
+    }
+    var byStreet = {};
+
+    // density grid ~3 decimals ≈ 110 m
+    var byCell = {};
+
+    for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        byTipo[r.Incidenti]    = (byTipo[r.Incidenti]    || 0) + 1;
+        byMese[r.Mese]         = (byMese[r.Mese]         || 0) + 1;
+        byGiorno[r.GiornoDellaSettimana] = (byGiorno[r.GiornoDellaSettimana] || 0) + 1;
+        byFascia[r.FasciaOraria] = (byFascia[r.FasciaOraria] || 0) + 1;
+        byTipoMese[r.Incidenti + "|" + r.Mese] = (byTipoMese[r.Incidenti + "|" + r.Mese] || 0) + 1;
+
+        // street
+        var streetName = "";
+        for (var s = 0; s < streetFields.length; s++) {
+            var v = (r[streetFields[s]] || "").toString().trim();
+            if (v) { streetName = (streetName ? streetName + " " : "") + v; }
+        }
+        if (streetName) byStreet[streetName] = (byStreet[streetName] || 0) + 1;
+
+        // density
+        var y = parseFloat(r.Y), x = parseFloat(r.X);
+        if (!isNaN(y) && !isNaN(x)) {
+            var cy = Math.round(y * 1000) / 1000;
+            var cx = Math.round(x * 1000) / 1000;
+            var ck = cy + "," + cx;
+            byCell[ck] = (byCell[ck] || 0) + 1;
+        }
+    }
+
+    function topN(obj, n) {
+        return Object.keys(obj)
+            .map(function(k){ return { k:k, v:obj[k] }; })
+            .sort(function(a,b){ return b.v - a.v; })
+            .slice(0, n)
+            .reduce(function(acc,e){ acc[e.k] = e.v; return acc; }, {});
+    }
+
+    var giornoNamed = {};
+    Object.keys(byGiorno).forEach(function(g){ giornoNamed[giorni[+g] || g] = byGiorno[g]; });
+
+    var summary = {
+        totale_incidenti: rows.length,
+        legenda_tipo: { C: "danni a cose", F: "feriti", M: "mortale", R: "riserva" },
+        per_tipo: byTipo,
+        per_mese: byMese,
+        per_giorno_settimana: giornoNamed,
+        per_fascia_oraria: byFascia,
+        per_tipo_e_mese: byTipoMese,
+        top_celle_densita_110m: topN(byCell, 20),
+        nota_celle: "chiavi = 'lat,lon' arrotondati a 3 decimali (~110m); valori = numero incidenti nella cella"
+    };
+    if (streetFields.length) {
+        summary.campi_strada_rilevati = streetFields;
+        summary.top_strade = topN(byStreet, 30);
+    } else {
+        summary.top_strade = "nessun campo strada/indirizzo trovato nel CSV";
+    }
+    return summary;
+}
+
+function toggleChat() {
+    var p = DOM.chatPanel;
+    p.classList.toggle("open");
+    DOM.chatToggle.setAttribute("aria-expanded", p.classList.contains("open") ? "true" : "false");
+    if (p.classList.contains("open")) {
+        if (!CHAT_HISTORY.length) {
+            appendMsg("sys",
+                "Puoi fare domande sui dati degli incidenti 2018. " +
+                "Esempi: \"quanti mortali?\", \"qual è il mese peggiore?\", \"confronto tra weekend e feriali\".");
+        }
+        setTimeout(function(){ DOM.chatInput.focus(); }, 50);
+    }
+}
+
+function appendMsg(role, text) {
+    var log = DOM.chatLog;
+    var div = document.createElement("div");
+    div.className = "chat-msg " + role;
+    if (role === "bot" && window.marked && window.DOMPurify) {
+        div.innerHTML = DOMPurify.sanitize(marked.parse(text));
+    } else {
+        div.textContent = (role === "user" ? "Tu: " : "") + text;
+    }
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+}
+
+function getApiKey() {
+    var key = localStorage.getItem("mistral_api_key");
+    if (!key) {
+        key = prompt("Inserisci la tua Mistral API key (sarà salvata solo nel browser):");
+        if (key) localStorage.setItem("mistral_api_key", key.trim());
+    }
+    return key;
+}
+
+function sendChat(e) {
+    e.preventDefault();
+    var input = DOM.chatInput;
+    var q = input.value.trim();
+    if (!q) return false;
+    var key = getApiKey();
+    if (!key) return false;
+
+    if (!PROCESSED_DATA) {
+        appendMsg("sys", "Dati non ancora caricati — riprova tra un istante.");
+        return false;
+    }
+    // Apply active street filter (chat-side), then clip to visible map bounds.
+    var baseRows = getFilteredRows();
+    var vis = rowsInView(baseRows);
+    // Debug info — sample row + bounds so we can see if clipping matched
+    var sampleY = PROCESSED_DATA[0] && PROCESSED_DATA[0].Y;
+    var sampleX = PROCESSED_DATA[0] && PROCESSED_DATA[0].X;
+    console.log("chat analysis ->", {
+        bounds: vis.bounds,
+        visibleRows: vis.rows.length,
+        totalRows: baseRows.length,
+        sampleY: sampleY,
+        sampleX: sampleX,
+        parsedY: parseFloat(sampleY),
+        parsedX: parseFloat(sampleX)
+    });
+    DATA_SUMMARY = computeDataSummary(vis.rows);
+    if (vis.bounds) {
+        DATA_SUMMARY.vista_attuale = {
+            bounds: vis.bounds,
+            righe_visibili: vis.rows.length,
+            righe_totali: PROCESSED_DATA.length,
+            filtro_strada: STREET_FILTER ? STREET_FILTER.pattern : null
+        };
+    }
+
+    appendMsg("user", q);
+    input.value = "";
+
+    // --- map save / load commands ---
+    var reSave   = /^\s*(save(?:\s+map)?(?:\s+as)?|salva(?:\s+mappa)?(?:\s+come)?)\s+(.+)$/i;
+    var reLoad   = /^\s*(load(?:\s+map)?|carica(?:\s+mappa)?)\s+(.+)$/i;
+    var reList   = /^\s*(list\s+maps|elenco\s+mappe|saved\s+maps|le\s+mie\s+mappe)\s*$/i;
+    var reDelete = /^\s*(delete(?:\s+map)?|cancella(?:\s+mappa)?|elimina(?:\s+mappa)?)\s+(.+)$/i;
+
+    function loadSaved() {
+        try { return JSON.parse(localStorage.getItem("saved_maps") || "{}"); }
+        catch (e) { return {}; }
+    }
+    function writeSaved(o) { localStorage.setItem("saved_maps", JSON.stringify(o)); }
+
+    var mm;
+    if ((mm = q.match(reSave))) {
+        var name = mm[2].trim().replace(/^["']|["']$/g, "");
+        var saved = loadSaved();
+        var c = null, z = null;
+        try { c = ixmaps.getCenter(); z = ixmaps.getZoom(); } catch (e) {}
+        saved[name] = {
+            section: currentSection,
+            slide:   currentSlide,
+            theme:   currentThemeName,
+            filter:  STREET_FILTER ? STREET_FILTER.pattern : null,
+            center:  c ? { lat: c.lat, lng: (c.lng != null ? c.lng : c.lon) } : null,
+            zoom:    z,
+            savedAt: new Date().toISOString()
+        };
+        writeSaved(saved);
+        appendMsg("bot", "Mappa salvata come **" + name + "** — sezione " + currentSection + ", slide " + (currentSlide+1) +
+            (STREET_FILTER ? ", filtro \"" + STREET_FILTER.pattern + "\"" : "") +
+            (c ? ", view " + c.lat.toFixed(4) + "," + (c.lng!=null?c.lng:c.lon).toFixed(4) + " z" + z : ""));
+        return false;
+    }
+    if ((mm = q.match(reLoad))) {
+        var lname = mm[2].trim().replace(/^["']|["']$/g, "");
+        var s = loadSaved()[lname];
+        if (!s) { appendMsg("bot", "Nessuna mappa salvata con nome **" + lname + "**."); return false; }
+        applyStreetFilter(s.filter || null);
+        currentSection = s.section || 0;
+        currentSlide   = s.slide   || 0;
+        currentThemeName = null;   // force re-define
+        renderSlide();
+        if (s.center && s.zoom != null) {
+            myMap.then(function (m) { m.view({ center: s.center, zoom: s.zoom }); });
+        }
+        appendMsg("bot", "Caricata **" + lname + "**" +
+            (s.filter ? " — filtro \"" + s.filter + "\"" : "") +
+            (s.center ? " — view ripristinata" : "") + ".");
+        return false;
+    }
+    if (reList.test(q)) {
+        var keys = Object.keys(loadSaved());
+        if (!keys.length) { appendMsg("bot", "Nessuna mappa salvata."); return false; }
+        var all = loadSaved();
+        var lines = keys.map(function (k) {
+            var s = all[k];
+            return "- **" + k + "** — sez " + s.section + ", slide " + (s.slide+1) +
+                (s.filter ? ", filtro \"" + s.filter + "\"" : "");
+        });
+        appendMsg("bot", "Mappe salvate:\n" + lines.join("\n"));
+        return false;
+    }
+    if ((mm = q.match(reDelete))) {
+        var dname = mm[2].trim().replace(/^["']|["']$/g, "");
+        var savedD = loadSaved();
+        if (!(dname in savedD)) { appendMsg("bot", "Nessuna mappa **" + dname + "**."); return false; }
+        delete savedD[dname];
+        writeSaved(savedD);
+        appendMsg("bot", "Eliminata **" + dname + "**.");
+        return false;
+    }
+
+    // --- map-filter commands ---
+    var reShow  = /^\s*(show only|mostra solo|solo|filtra(?:\s+per)?|filter(?:\s+by)?)\s+(.+)$/i;
+    var reReset = /^\s*(reset|clear|mostra tutto|show all|togli filtro|rimuovi filtro)\s*$/i;
+    var m;
+    if (reReset.test(q)) {
+        applyStreetFilter(null);
+        refreshCurrentTheme();
+        appendMsg("bot", "Filtro rimosso — mostro tutti gli incidenti.");
+        return false;
+    }
+    if ((m = q.match(reShow))) {
+        var pattern = m[2].trim().replace(/^["']|["']$/g, "");
+        var res = applyStreetFilter(pattern);
+        if (!res.fields || !res.fields.length) {
+            applyStreetFilter(null);
+            appendMsg("bot", "Nessun campo strada/indirizzo nel CSV — filtro non applicabile.");
+            return false;
+        }
+        if (res.count === 0) {
+            applyStreetFilter(null);
+            appendMsg("bot", "Nessun incidente trovato per \"" + pattern + "\".");
+            return false;
+        }
+        refreshCurrentTheme();
+        appendMsg("bot", "Filtro \"" + pattern + "\": " + res.count + " incidenti (su " + res.total + ").");
+        return false;
+    }
+
+    CHAT_HISTORY.push({ role: "user", content: q });
+
+    var sendBtn = DOM.chatSend;
+    sendBtn.disabled = true;
+    appendMsg("sys", "…");
+    var thinkingEl = DOM.chatLog.lastChild;
+
+    var systemPrompt =
+        "Sei un assistente che risponde a domande sugli incidenti stradali di Palermo nel 2018, " +
+        "in base ai dati aggregati forniti. Rispondi in italiano, breve e concreto. " +
+        "Se la domanda esce dal dataset, dillo. Dati aggregati:\n" +
+        JSON.stringify(DATA_SUMMARY, null, 2);
+
+    var msgs = [{ role: "system", content: systemPrompt }].concat(CHAT_HISTORY);
+    fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + key
+        },
+        body: JSON.stringify({
+            model: "mistral-small-latest",
+            max_tokens: 512,
+            messages: msgs
+        })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(resp){
+        thinkingEl.remove();
+        if (resp.error || resp.message && !resp.choices) {
+            var msg = (resp.error && resp.error.message) || resp.message || "errore sconosciuto";
+            appendMsg("sys", "Errore: " + msg);
+            if (/invalid|unauthor|401/i.test(msg)) localStorage.removeItem("mistral_api_key");
+            return;
+        }
+        var text = (resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content) || "(nessuna risposta)";
+        CHAT_HISTORY.push({ role: "assistant", content: text });
+        appendMsg("bot", text);
+    })
+    .catch(function(err){
+        thinkingEl.remove();
+        appendMsg("sys", "Errore di rete: " + err.message);
+    })
+    .finally(function(){ sendBtn.disabled = false; });
+
+    return false;
+}
+
+// -----------------------------
+// URL routing — section/slide/filter/view round-trip
+// -----------------------------
+var URL_SUPPRESS = false;   // set true while restoring from URL to avoid feedback
+
+function parseUrlState() {
+    var p = new URLSearchParams(window.location.search);
+    var state = {};
+    if (p.has("s"))   state.section = parseInt(p.get("s"), 10);
+    if (p.has("p"))   state.slide   = parseInt(p.get("p"), 10);
+    if (p.has("f"))   state.filter  = p.get("f");
+    if (p.has("lat") && p.has("lng")) {
+        state.lat = parseFloat(p.get("lat"));
+        state.lng = parseFloat(p.get("lng"));
+    }
+    if (p.has("z"))   state.zoom    = parseFloat(p.get("z"));
+    return state;
+}
+
+function updateUrl() {
+    if (URL_SUPPRESS) return;
+    var p = new URLSearchParams();
+    p.set("s", currentSection);
+    p.set("p", currentSlide);
+    if (STREET_FILTER && STREET_FILTER.pattern) p.set("f", STREET_FILTER.pattern);
+    try {
+        var c = ixmaps.getCenter && ixmaps.getCenter();
+        var z = ixmaps.getZoom   && ixmaps.getZoom();
+        if (c && typeof c.lat === "number") {
+            p.set("lat", c.lat.toFixed(6));
+            p.set("lng", c.lng.toFixed(6));
+        }
+        if (typeof z === "number") p.set("z", z.toFixed(2));
+    } catch (e) { /* map not ready yet */ }
+    history.replaceState(null, "", "?" + p.toString());
+}
+
+// Hook into navigation functions
+var __origGoToSection = goToSection;
+goToSection = function (i) { __origGoToSection(i); updateUrl(); };
+var __origGoToSlide   = goToSlide;
+goToSlide   = function (i) { __origGoToSlide(i);   updateUrl(); };
+var __origApplyStreetFilter = applyStreetFilter;
+applyStreetFilter = function (pattern) {
+    var r = __origApplyStreetFilter(pattern);
+    updateUrl();
+    return r;
+};
+
+// -----------------------------
+// Initialise — load data, then render first slide
+// -----------------------------
+myMap.then(function () {
+    DOM.appLoading.style.display = "none";
+
+    // Restore from URL
+    var st = parseUrlState();
+    URL_SUPPRESS = true;
+    if (typeof st.section === "number" && st.section >= 0 && st.section < SECTIONS.length) {
+        currentSection = st.section;
+    }
+    if (typeof st.slide === "number" &&
+        st.slide >= 0 && st.slide < SECTIONS[currentSection].slides.length) {
+        currentSlide = st.slide;
+    }
+    if (st.filter) applyStreetFilter(st.filter);
+    if (typeof st.lat === "number" && typeof st.lng === "number") {
+        myMap.view({ center: { lat: st.lat, lng: st.lng }, zoom: st.zoom || 14 });
+    }
+    URL_SUPPRESS = false;
+
+    var didInitVisibleAnalysis = false;
+    myMap.on && myMap.on("layerdraw drawtheme", function () {
+        if (didInitVisibleAnalysis) return;
+        didInitVisibleAnalysis = true;
+        renderVisibleAnalysis();
+    });
+
+    renderSlide();
+    updateUrl();
+
+    // Track view changes (debounced)
+    var viewTimer = null;
+    myMap.on && myMap.on("zoomend moveend", function () {
+        clearTimeout(viewTimer);
+        viewTimer = setTimeout(function () {
+            updateUrl();
+            renderVisibleAnalysis();
+        }, 200);
+    });
+});
+</script>
+
+</body>
+</html>

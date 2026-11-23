@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GHS Urban Centres 2024 — thematic explorer</title>
+  <!-- GHS_2024: all the themes of ports/GHS_2024/*.html in one page with the sidebar cards of
+       viz/censimenti_sisma_2016/sisma_2016_rischi_comuni_sidebar.html; a click on a theme button swaps the theme
+       in place (remove + add through the map handle). Setup and layers: ghs2024_common.js -->
+  <style>
+    /* sidebar design as on sisma_2016_rischi_comuni_sidebar.html (cards, hairlines), as semi transparent "aqua" glass:
+       a tinted, blurred pane with a bright top edge; it follows the Light/Dark switch (body.ghs-light is set by ghs2024_common.js) */
+    * { box-sizing: border-box; }
+    /* the glass colors are variables on body: the cards (#panel) and the map's legend (outside the panel) share them */
+    body {
+      /* dark glass (the dark look) */
+      --card-bg: linear-gradient(160deg, rgba(52,66,78,.58), rgba(18,26,34,.50)); --card-line: rgba(255,255,255,.16);
+      --card-ink: #f2f6f8; --card-muted: #aab6bd; --card-faint: #7f8d95; --card-item: #d3dde2; --card-hover: rgba(255,255,255,.09);
+      --card-active: rgba(120,215,235,.20); --card-btn: rgba(255,255,255,.10); --card-edge: rgba(255,255,255,.16);
+      --card-shadow: 0 6px 20px rgba(0,0,0,.40), 0 1px 3px rgba(0,0,0,.30);
+    }
+    #panel {
+      position: absolute; right: 5%; top: 14px; z-index: 1000; width: 30%; max-width: 360px; min-width: 310px;
+      max-height: calc(100vh - 28px); display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding: 4px 8px 10px; margin: -4px -8px 0 -8px; color: var(--card-ink); font-size: 13px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased;
+    }
+    /* light glass (the light look) */
+    body.ghs-light {
+      --card-bg: linear-gradient(160deg, rgba(255,255,255,.66), rgba(206,238,246,.46)); --card-line: rgba(255,255,255,.75);
+      --card-ink: #17262d; --card-muted: #5d6f78; --card-faint: #8a9aa2; --card-item: #2c3d45; --card-hover: rgba(255,255,255,.55);
+      --card-active: rgba(60,170,200,.20); --card-btn: rgba(255,255,255,.60); --card-edge: rgba(255,255,255,.9);
+      --card-shadow: 0 6px 20px rgba(30,70,90,.18), 0 1px 3px rgba(30,70,90,.12);
+    }
+    /* the map's legend: the engine sets background and text color inline on its panels (.ix-native-legend, one per theme,
+       in .ix-legend-stack), so these need !important; the colors of the legend bars and symbols are left to the engine */
+    .ix-legend-stack { background: var(--card-bg) !important; border: 1px solid var(--card-line); border-radius: 14px !important;
+      -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+      box-shadow: var(--card-shadow), inset 0 1px 0 var(--card-edge) !important; }
+    /* a theme's own combined legend: same place (left, next to the zoom buttons) and glass as the engine's legend */
+    .own-legend { position: absolute; left: 50px; top: 10px; z-index: 6; width: 280px; padding: 10px 12px 12px; background: var(--card-bg); color: var(--card-ink);
+      border: 1px solid var(--card-line); border-radius: 14px; -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+      box-shadow: var(--card-shadow), inset 0 1px 0 var(--card-edge); font: 12px/1.4 -apple-system, Arial, sans-serif; }
+    /* shown while the 2015 table loads (body.loading2015), same glass */
+    #data-loading { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1500; padding: 8px 16px;
+      background: var(--card-bg); color: var(--card-ink); border: 1px solid var(--card-line); border-radius: 16px; font-size: 13px; pointer-events: none;
+      -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%); box-shadow: var(--card-shadow); }
+    body.loading2015 #data-loading { display: block; }
+    .own-legend h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+    .own-legend-row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+    .own-legend-row i { width: 11px; height: 11px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+    .own-legend p { margin: 8px 0 0; color: var(--card-muted); }
+    .own-legend a { color: var(--card-ink); text-decoration-color: var(--card-faint); }
+    .ix-legend-stack .ix-native-legend { background: transparent !important; color: var(--card-ink) !important; }
+    .ix-legend-stack .ix-native-legend a { color: var(--card-ink) !important; text-decoration-color: var(--card-faint); }
+    #panel::-webkit-scrollbar { width: 6px; }
+    .card { background: var(--card-bg); border: 1px solid var(--card-line); border-radius: 14px; flex: none;
+      -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+      box-shadow: var(--card-shadow), inset 0 1px 0 var(--card-edge); }
+    .card-title { position: relative; padding: 16px 52px 14px 16px; cursor: pointer; }
+    .card-title h1 { margin: 0 0 6px; font-size: 17px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em; }
+    .card-title p { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--card-muted); }
+    .card-title a, .card-note a { color: var(--card-ink); font-weight: 500; text-decoration: underline; text-decoration-color: var(--card-faint); text-underline-offset: 2px; }
+    #panel-toggle { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; padding: 0; border: 1px solid var(--card-line); border-radius: 7px; background: var(--card-btn); color: var(--card-muted); font-size: 13px; line-height: 1; cursor: pointer; }
+    #panel.collapsed .card:not(.card-title) { display: none; }
+    details.card > summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; user-select: none; font-size: 14px; font-weight: 500; }
+    details.card > summary::-webkit-details-marker { display: none; }
+    .chev { flex: none; margin-left: auto; color: var(--card-faint); transition: transform .15s ease; }
+    details.card[open] > summary .chev { transform: rotate(180deg); }
+    .card-body { padding: 0 8px 12px; }
+    .theme-item {
+      display: block; width: 100%; margin: 1px 0; padding: 7px 10px; text-align: left; background: none; border: none; border-radius: 8px;
+      font: inherit; font-size: 12.5px; color: var(--card-item); cursor: pointer; line-height: 1.3;
+    }
+    .theme-item:hover { background: var(--card-hover); }
+    .theme-item.active { background: var(--card-active); color: var(--card-ink); font-weight: 600; }
+    .theme-item .badge-source { display: inline-block; margin-left: 0.4em; font-size: 0.82em; font-weight: 500; color: var(--card-muted); background: var(--card-active); border-radius: 999px; padding: 0.05em 0.55em; vertical-align: 0.05em; }
+    .card-note { margin: 0; padding: 0 8px; font-size: 11.5px; line-height: 1.45; color: var(--card-muted); }
+    @media (max-width: 700px) {
+      #panel { left: 8px; right: 8px; top: auto; bottom: 52px; width: auto; max-width: none; min-width: 0; max-height: 60%; }
+    }
+  </style>
+</head>
+<body>
+<div id="map_div"></div>
+<!-- the combined legend of the hazard theme (the old project's own legend text), in the place and glass of the map legend -->
+<div id="hazard-legend" class="own-legend" style="display:none">
+  <h4>Exposure to hazard risks</h4>
+  <div class="own-legend-row"><i style="background:#bb2233"></i>Earth quake</div>
+  <div class="own-legend-row"><i style="background:#F7C025"></i>Heat wave</div>
+  <div class="own-legend-row"><i style="background:#0044dd"></i>Flood</div>
+  <div class="own-legend-row"><i style="background:#88eeff"></i>Storm</div>
+  <p>data: <a href="https://ghsl.jrc.ec.europa.eu/ucdb2018Overview.php" target="_blank">GHS Urban Centre Database 2015</a></p>
+</div>
+<div id="data-loading">loading the 2015 data (8 MB) ...</div>
+<div id="panel">
+  <header class="card card-title" id="panel-head">
+    <h1>Urban Centres of the World</h1>
+    <p>11,422 urban centres &mdash; <a href="https://human-settlement.emergency.copernicus.eu/ucdb2024Overview.php" target="_blank">GHS Urban Centre Database R2024A</a></p>
+    <button id="panel-toggle" type="button" aria-label="Open/close panel" aria-expanded="true" title="Open/close">&#9662;</button>
+  </header>
+  <details class="card" data-themes open><summary><span>Air quality &mdash; PM2.5</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+    <div class="card-body" id="group-pm25"></div></details>
+  <details class="card" data-themes><summary><span>Climate &amp; hazards</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+    <div class="card-body" id="group-climate"></div></details>
+  <details class="card" data-themes><summary><span>Urban settlement</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+    <div class="card-body" id="group-urban"></div></details>
+  <details class="card">
+    <summary><span>Source and notes</span><svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg></summary>
+    <div class="card-body"><p class="card-note">
+      Copernicus GHSL &mdash; <a href="https://human-settlement.emergency.copernicus.eu/ucdb2024Overview.php" target="_blank">GHS Urban Centre Database R2024A</a>,
+      read as Parquet with column projection (only the columns of the active theme are downloaded). Hazard themes show the population
+      <i>exposed</i> to each hazard (2025); PM2.5 concentration is population weighted (&micro;g/m&sup3;); premature deaths are modelled from it with WHO mortality rates.
+    </p></div>
+  </details>
+</div>
+
+<script>
+  // the panel opens and closes by its caret; on a narrow (mobile) screen it starts closed so the map is free
+  (function () {
+    var panel = document.getElementById("panel"), btn = document.getElementById("panel-toggle");
+    function set(collapsed) { panel.classList.toggle("collapsed", collapsed); btn.setAttribute("aria-expanded", String(!collapsed)); btn.innerHTML = collapsed ? "&#9656;" : "&#9662;"; }
+    document.getElementById("panel-head").addEventListener("click", function () { set(!panel.classList.contains("collapsed")); });
+    if (window.matchMedia("(max-width: 700px)").matches) set(true);
+  })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs2024_common.js"></script>
+<script>
+
+  // ===================================================================
+  // THEMES: key, label, group, the layer names it adds (to remove on the next switch), and a builder
+  // (the layers are the ones of the ports/GHS_2024 pages; a theme is rebuilt each time it is selected)
+  // ===================================================================
+  // the page starts light; the Light/Dark switch (ghs2024_common.js) rebuilds the backdrop and the active theme,
+  // so colors that only work on one background are picked per look at build time
+  function pick(dark, light) { return GHS.look() === "dark" ? dark : light; }
+
+  // glow (aggregated mean) + quantile-coloured labels of the biggest centres, on one column
+  function glowLabels(name, col, title, snippet, labelExtra) {
+    // light look: the style of ports/demo_blurr_and_text_GHS_orthographic.html (plain glow cloud of every centre,
+    // 15 color classes; black values of the 50 biggest centres, 1 decimal)
+    if (GHS.look() === "light") {
+      return [
+        GHS.centres(name + "_glow", "emissions", [col], { value: col }, "GLOW|CHART|BUBBLE",
+          { colorscheme: ["15", "#F2F226", "#100050", "3colors", "#CC4878"], opacity: "0.4", fillopacity: "0.00001", textcolor: "black",
+            scale: "0.5", linecolor: ["none"], gridwidthpx: "3" },
+          { title: title, snippet: snippet }),
+        GHS.centres(name + "_labels", "emissions", [col, "GC_POP_TOT_2025"], { value: col }, "CHART|LABEL|QUANTILE|VALUES|LEGEND",
+          Object.assign({ colorscheme: ["5", "#F2F226", "#000000", "3colors", "#D2E216"], fillopacity: "0.00001", linecolor: "rgba(0,0,0,0)", textcolor: "black",
+            units100: "", refreshtimeout: "0", normalsizevalue: "10000000", scale: "1", sizefield: "GC_POP_TOT_2025", showdata: "true",
+            valuescale: "1", valuedecimals: "1", maxcharts: "50" }, labelExtra),
+          { title: title, snippet: "<b>Note:</b> text size = total population of the urban centre (2025)" })
+      ];
+    }
+    return [
+      GHS.centres(name + "_glow", "emissions", [col], { value: col }, "GLOW|CHART|BUBBLE|SIZE|AGGREGATE|MEAN",
+        { colorscheme: ["7", pick("#F2F226", "#F0A000"), "#100050", "3colors", "#CC4878"], opacity: pick("0.5", "0.7"), fillopacity: "0.0001",
+          scale: "0.5", linecolor: ["none"], valuescale: "1", valuedecimals: "0", gridwidthpx: "5" },
+        { title: title, snippet: snippet }),
+      GHS.centres(name + "_labels", "emissions", [col, "GC_POP_TOT_2025"], { value: col }, "CHART|LABEL|QUANTILE|VALUES",
+        Object.assign({ colorscheme: ["5", pick("#F2F226", "#F0A000"), "#100050", "3colors", "#CC4878"], fillopacity: "0.00001", sizefield: "GC_POP_TOT_2025", textcolor: pick("white", "#222222"),
+          rangecentervalue: "0", normalsizevalue: "10000000", scale: "1", valuescale: "1", valuedecimals: "0", maxcharts: "100" }, labelExtra),
+        { title: title, snippet: "<b>Note:</b> text size = total population of the urban centre (2025)" })
+    ];
+  }
+
+  // the 2015 database (old ports/GHS data: heat wave, earthquake, storm, biome, temperature are not in R2024A), loaded once,
+  // on the first theme that needs it. The CSV writes decimals with a comma ("0,0637"); the engine's bubble size path reads those
+  // as integers (every index below 1 counts as 0), so the numeric columns are converted here to <name>_n columns (NAN -> 0)
+  var UCDB2015 = null, ucdb2015Waiters = null;
+  var UCDB2015_NUM = ["EX_EQ19PGA", "EX_HW_IDX", "EX_FD_P15", "EX_SS_P15", "E_WR_T_14", "E_WR_T_90", "P15"];
+  function loadUcdb2015(done) {
+    if (UCDB2015) { done(); return; }
+    if (ucdb2015Waiters) { ucdb2015Waiters.push(done); return; }
+    ucdb2015Waiters = [done];
+    document.body.classList.add("loading2015");
+    Data.feed({ source: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/EuroStat/GHS_STAT_UCDB2015MT_GLOBE_R2019A_V1_1.csv.gz", type: "csv" }).load(function (table) {
+      UCDB2015_NUM.forEach(function (c) {
+        table.addColumn({ source: [c], destination: c + "_n" }, function (v) { var n = parseFloat(String(v).replace(",", ".")); return isNaN(n) ? 0 : n; });
+      });
+      UCDB2015 = table;
+      document.body.classList.remove("loading2015");
+      var w = ucdb2015Waiters; ucdb2015Waiters = null;
+      w.forEach(function (f) { f(); });
+    });
+  }
+
+  // a layer on the 2015 table (call only once it is loaded: themes with needs2015 are built after loadUcdb2015)
+  function ucdb2015(name, binding, type, style, meta) {
+    return ixmaps.layer(name, function (layer) {
+      return layer
+        .data({ obj: UCDB2015, type: "jsondb" })
+        .binding(Object.assign({ lookupfield: "GCPNT_LAT|GCPNT_LON" }, binding))
+        .type(type)
+        .style(Object.assign({ shadow: "false", scale: "1", valuescale: "1" }, style))
+        .meta(Object.assign({ name: name, description: "data: <a href='https://ghsl.jrc.ec.europa.eu/ucdb2018Overview.php' target='_blank'>GHS Urban Centre Database 2015</a>",
+          tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}" }, meta));
+    });
+  }
+
+  function exposure(name, col, color, type, style, title) {
+    return [GHS.centres(name, "exposure", [col], { value: col }, type,
+      Object.assign({ colorscheme: [color], scale: "1", valuescale: "1", valuedecimals: "0" }, style), { title: title })];
+  }
+
+  // the biomes of the 2015 database (E_BM_NM_LST), in the order of the old ports/GHS page
+  var BIOMES = [
+    "Tropical and Subtropical Dry Broadleaf Forests",
+    "Tropical and Subtropical Moist Broadleaf Forests",
+    "Mediterranean Forests, Woodlands, and Scrub",
+    "Temperate Grasslands, Savannas, and Shrublands",
+    "Deserts and Xeric Shrublands",
+    "Temperate Coniferous Forests",
+    "Tropical and Subtropical Coniferous Forests",
+    "Temperate Broadleaf and Mixed Forests",
+    "Boreal Forests/Taiga",
+    "Mangroves",
+    "Tropical and subtropical grasslands, savannas, and shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Tropical and Subtropical Coniferous Forests",
+    "Tropical and Subtropical Dry Broadleaf Forests;Tropical and Subtropical Coniferous Forests",
+    "Flooded Grasslands and Savannas",
+    "Tropical and Subtropical Moist Broadleaf Forests;Mangroves",
+    "Montane Grasslands and Shrublands",
+    "Tropical and Subtropical Dry Broadleaf Forests;Mangroves",
+    "NAN",
+    "Tundra",
+    "Tropical and subtropical grasslands, savannas, and shrublands;Deserts and Xeric Shrublands",
+    "Tropical and subtropical grasslands, savannas, and shrublands;Montane Grasslands and Shrublands",
+    "Tropical and subtropical grasslands, savannas, and shrublands;Flooded Grasslands and Savannas",
+    "Lakes",
+    "Tropical and Subtropical Moist Broadleaf Forests;Montane Grasslands and Shrublands",
+    "Temperate Coniferous Forests;Deserts and Xeric Shrublands",
+    "Tropical and Subtropical Dry Broadleaf Forests;Deserts and Xeric Shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Deserts and Xeric Shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Tropical and subtropical grasslands, savannas, and shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Tropical and Subtropical Dry Broadleaf Forests"
+  ];
+
+  var THEMES = [
+    { key: "pm25-concentration", group: "group-pm25", label: "PM2.5 concentration 2020", names: ["pm25_conc_glow", "pm25_conc_labels"],
+      build: function () { return glowLabels("pm25_conc", "EM_PM2_CON_2020", "PM2.5 concentration in 2020", "population weighted average, µg/m3", { units: pick("µg/m3", "μg") }); } },
+    // premature deaths due to PM2.5 (WHO mortality rates x modelled concentration x city population, FASST; the field is text with "-" for none)
+    { key: "pm25-mortality", group: "group-pm25", label: "Premature deaths due to PM2.5 (2020)", names: ["pm25_mortality"],
+      build: function () {
+        return [GHS.centres("pm25_mortality", "emissions", ["EM_PM2_MOR_2020"], { value: "EM_PM2_MOR_2020" }, "CHART|BUBBLE|SIZE",
+          { colorscheme: [pick("#ff5c86", "#c2185b")], fillopacity: "0.55", linecolor: [pick("#ffd0dc", "#ffffff")], linewidth: "0.5", scale: "0.3", valuescale: "1", valuedecimals: "0", units: "deaths" },
+          { title: "Premature deaths due to PM2.5 in 2020", snippet: "number of premature deaths per urban centre" })];
+      } },
+
+    // the four hazards on one map, as the old project final/ixmaps_project_Harard_Risks_Equal_Earth.json: the 2015 database
+    // (heat wave index, earthquake index, people exposed to flood and storm), same layers, order, colors and scales, one shared
+    // legend (#hazard-legend, as the project's own legend text) instead of one legend per layer
+    { key: "hazards", group: "group-climate", label: "Exposure to hazard risks (2015)", names: ["haz_heat", "haz_earthquake", "haz_flood", "haz_storm"], legend: "hazard-legend", needs2015: true,
+      build: function () {
+        return [
+          ucdb2015("haz_heat", { value: "EX_HW_IDX_n" }, "CHART|BUBBLE|SIZE|GLOW|NOLEGEND",
+            { colorscheme: ["#F7C025"], fillopacity: "0.7", scale: "0.3", valuedecimals: "2" }, { title: "Heat Wave Risk Index" }),
+          ucdb2015("haz_earthquake", { value: "EX_EQ19PGA_n" }, "CHART|BUBBLE|SIZEP1|NOLEGEND",
+            { colorscheme: ["#bb2233"], fillopacity: "0.7", scale: "0.3", valuedecimals: "2" }, { title: "Earth Quake Risk Index" }),
+          ucdb2015("haz_flood", { value: "EX_FD_P15_n" }, "CHART|BUBBLE|SIZE|NOLEGEND",
+            { colorscheme: ["#0044dd"], fillopacity: "0.5", linewidth: "1", valuedecimals: "0" }, { title: "Population exposed to flooding" }),
+          ucdb2015("haz_storm", { value: "EX_SS_P15_n" }, "CHART|BUBBLE|SIZE|NOLEGEND",
+            { colorscheme: ["#88eeff"], fillopacity: "0.3", linewidth: "1", valuedecimals: "0" }, { title: "Population exposed to storm hazards" })
+        ];
+      } },
+    { key: "flood", group: "group-climate", label: "People exposed to floods", names: ["flood"],
+      build: function () { return exposure("flood", "EX_100_POP_2025", "#0044dd", "CHART|BUBBLE|SIZE", { fillopacity: "0.5", linewidth: "1" },
+        "People exposed to floods (100 years return period)"); } },
+    { key: "coastal", group: "group-climate", label: "Population below 5 m above sea level", names: ["coastal"],
+      build: function () { return exposure("coastal", "EX_L05_POP_2025", pick("#88eeff", "#1aa3c8"), "CHART|BUBBLE|SIZE", { fillopacity: "0.3", linewidth: "1" },
+        "Population living below 5 m above sea level (LECZ)"); } },
+    { key: "cyclone", group: "group-climate", label: "Population exposed to cyclone wind", names: ["cyclone"],
+      build: function () { return exposure("cyclone", "EX_400_S3P_2025", pick("#F7C025", "#e08a00"), "CHART|BUBBLE|SIZE|GLOW", { fillopacity: "0.7" },
+        "Population exposed to cyclone wind (400 yrp, wind speed classes 3-5)"); } },
+    // the same layer as the earthquake in the combined hazard theme (2015 index, same style and size law)
+    { key: "earthquake", group: "group-climate", label: "Earthquake risk index (2015)", names: ["earthquake"], needs2015: true,
+      build: function () {
+        return [ucdb2015("earthquake", { value: "EX_EQ19PGA_n" }, "CHART|BUBBLE|SIZEP1",
+          { colorscheme: ["#bb2233"], fillopacity: "0.7", scale: "0.3", valuedecimals: "2" }, { title: "Earth Quake Risk Index" })];
+      } },
+    // temperature change is not in the R2024A tables: this theme reads the 2015 database (as ports/GHS/climate_temp_change.html)
+    { key: "temp-change", group: "group-climate", label: "Temperature change 1990–2015", names: ["temp_change"], needs2015: true,
+      build: function () {
+        return [ucdb2015("temp_change", { value: "E_WR_T_14_n", value100: "E_WR_T_90_n", size: "H00_AREA" }, "CHART|QUANTILE|BUBBLE|RAW|FAST|GLOW",
+          { colorscheme: ["7", "#0BB1FF", "#FF0038", "3colors", "#FEB18A"], opacity: "0.9", normalsizevalue: "1000", scale: "0.25", valuedecimals: "0" },
+          { title: "Temperature change<br>(urban centres)", snippet: "Average temperature change 1990 - 2015, sized by built-up area" })];
+      } },
+
+    { key: "urban-expansion", group: "group-urban", label: "Urban expansion 1975–2025", names: ["urban_expansion"],
+      build: function () {
+        return [GHS.centres("urban_expansion", "ghsl", ["GH_BUS_TOT_1975", "GH_BUS_TOT_2025", "GC_UCN_MAI_2025"],
+          { value: "GH_BUS_TOT_2025", value100: "GH_BUS_TOT_1975", title: "GC_UCN_MAI_2025" },
+          "CHART|LOG|DIFFERENCE|RELATIVE|BUBBLE|GLOW",
+          { colorscheme: pick(["5", "RGB(207,255,51)", "RGB(221,0,0)", "3colors", "RGB(148,204,200)"], ["5", "RGB(110,170,0)", "RGB(221,0,0)", "3colors", "RGB(120,170,170)"]), opacity: "0.9",
+            normalsizevalue: "100000", scale: "1", valuescale: "1", valuedecimals: "1" },
+          { title: "Urban expansion", snippet: "Growth of the built-up surface 1975 - 2025" })];
+      } },
+    { key: "where-people-live", group: "group-urban", label: "Where people live (2025)", names: ["where_people_live"],
+      build: function () {
+        return [GHS.centres("where_people_live", "ghsl", ["GC_POP_TOT_2025", "GC_DEV_USR_2025", "GC_UCN_MAI_2025"],
+          { value: "GC_DEV_USR_2025", size: "GC_POP_TOT_2025", title: "GC_UCN_MAI_2025" },
+          "CHART|BUBBLE|RAW|FAST|CATEGORICAL|GLOW|SUM",
+          { colorscheme: ["9", "fruit"], values: ["Eastern and South-Eastern Asia", "Central and Southern Asia", "Sub-Saharan Africa", "Europe", "Latin America and the Caribbean", "Northern Africa and Western Asia", "Northern America", "Australia and New Zealand", "Oceania"], opacity: "0.9",
+            normalsizevalue: "100000000", scale: "1", valuescale: "1", valuedecimals: "0" },
+          { title: "Where People Live<br>(in urban areas)", snippet: "Urban Centres colored by UN SDG region and sized by Population (2025)" })];
+      } },
+    // the biome (climate / vegetation zone) is not in the R2024A tables: this theme reads the 2015 database
+    // (GHS_STAT_UCDB2015MT_GLOBE_R2019A, as ports/GHS/where_people_live_equal_earth.html), its own 13,135 centres
+    { key: "where-people-live-biome", group: "group-urban", label: "Where people live by biome (2015)", names: ["where_people_live_biome"], needs2015: true,
+      build: function () {
+        return [ucdb2015("where_people_live_biome", { value: "E_BM_NM_LST", size: "P15_n" }, "CHART|BUBBLE|RAW|FAST|CATEGORICAL|GLOW|SUM",
+          { colorscheme: ["29", "fruit"], values: BIOMES, opacity: "0.9", normalsizevalue: "100000000", scale: "1", valuedecimals: "0" },
+          { title: "Where People Live<br>(in urban areas)", snippet: "Urban Centres colored by biome (climate / vegetation zone) and sized by Population (2015)" })];
+      } }
+  ];
+
+  var THEME_BY_KEY = {}, currentKey = null, pendingKey = null;
+  THEMES.forEach(function (t) {
+    THEME_BY_KEY[t.key] = t;
+    var b = document.createElement("button");
+    b.className = "theme-item"; b.setAttribute("data-key", t.key); b.textContent = t.label;
+    b.addEventListener("click", function () { setTheme(t.key); });
+    document.getElementById(t.group).appendChild(b);
+  });
+
+  // the active theme button is marked and, accordion style, only its card stays open (the legend is the map's own, on the left)
+  function markActive(key) {
+    currentKey = key;
+    Array.prototype.forEach.call(document.querySelectorAll(".theme-item"), function (el) {
+      el.classList.toggle("active", el.getAttribute("data-key") === key);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("details.card[data-themes]"), function (d) {
+      d.open = !!d.querySelector(".theme-item.active");
+    });
+    // a theme with its own legend (a combined one for several layers) shows it; the others use the engine's legend panels
+    Array.prototype.forEach.call(document.querySelectorAll(".own-legend"), function (el) {
+      el.style.display = THEME_BY_KEY[key].legend === el.id ? "" : "none";
+    });
+  }
+
+  // click a theme button: swap the layers in place (remove the old theme's, add the new one's, through the map handle)
+  function setTheme(key) {
+    if (key === currentKey || !THEME_BY_KEY[key]) { return; }
+    // a theme on the 2015 table waits for it (loaded once, on the first such theme)
+    if (THEME_BY_KEY[key].needs2015 && !UCDB2015) {
+      pendingKey = key;
+      loadUcdb2015(function () { if (pendingKey === key) { setTheme(key); } });
+      return;
+    }
+    pendingKey = null;
+    var map = ixmaps.map();
+    if (currentKey) { THEME_BY_KEY[currentKey].names.forEach(function (n) { try { map.remove(n); } catch (e) {} }); }
+    THEME_BY_KEY[key].build().forEach(function (l) { map.add(l, "silent"); });
+    markActive(key);
+  }
+
+  // Light/Dark switch: the sea colour is set by ghs2024_common.js; here the backdrop and the active theme are
+  // rebuilt in the new look (the backdrop first, so it stays at the bottom)
+  function onLook() {
+    var map = ixmaps.map(), t = THEME_BY_KEY[currentKey];
+    ["countries"].concat(t.names).forEach(function (n) { try { map.remove(n); } catch (e) {} });
+    var back = GHS.countries();   // none in the light look (basemap only)
+    if (back) map.add(back, "silent");
+    t.build().forEach(function (l) { map.add(l, "silent"); });
+  }
+
+  // the first theme is part of the initial map (built after the look is set, hence the function)
+  // view and map options of ports/demo_blurr_and_text_GHS_orthographic.html (it asks for zoom 3.5 on its live
+  // map handle and ends at 2.5: the globe fits the map's height, which is what comes up there)
+  GHS.start({ view: [12.211180191503997, 58.99414062500001], zoom: 2.5, options: { scrollsafesilent: "true", panhidden: "false", basemapopacity: "0.5" }, look: "light", lookToggle: true, tiles: true, lightMapType: "ArcGIS - Topo", mapOptions: { align: "left" }, onLook: onLook,
+    layers: function () { return THEMES[0].build(); } });
+  markActive(THEMES[0].key);
+</script>
+</body>
+</html>

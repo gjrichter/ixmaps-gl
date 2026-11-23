@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM2.5 emissions by sector 1975–2012</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/EuroStat/GHS/final/ixmaps_project_PM2.5_Production_1975_2012_Concenrtration_2014.json
+     in the style of where_people_live_equal_earth.html (shared setup: ghs_common.js) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [24.766, 10.898],
+    layers: [
+      GHS.urbanCentres("sectors", { value: "E_EPM2_I75|E_EPM2_T75|E_EPM2_R75|E_EPM2_E75|E_EPM2_I90|E_EPM2_T90|E_EPM2_R90|E_EPM2_E90|E_EPM2_I00|E_EPM2_T00|E_EPM2_R00|E_EPM2_E00|E_EPM2_I12|E_EPM2_T12|E_EPM2_R12|E_EPM2_E12" },
+        "CHART|BAR|STACKED|SIZE|BOX|AGGREGATE|RELOCATE|FIXSIZE|SUM|SIMPLELEGEND|XAXIS",
+        { colorscheme: ["#442288", "#2266ee", "#dd4422", "#eebb22", "#442288", "#2266ee", "#dd4422", "#eebb22", "#442288", "#2266ee", "#dd4422", "#eebb22", "#442288", "#2266ee", "#dd4422", "#eebb22"], fillopacity: "0.8", symbols: ["circle"],
+          label: ["Industry 1975", "Transport 1975", "Residential 1975", "Energy 1975", "Industry 1990", "Transport 1990", "Residential 1990", "Energy 1990", "Industry 2000", "Transport 2000", "Residential 2000", "Energy 2000", "Industry 2012", "Transport 2012", "Residential 2012", "Energy 2012"],
+          xaxis: ["1975", "1990", "2000", "2012"], scale: "2", rangescale: "3",
+          linecolor: ["none"], linewidth: "0.3", valuescale: "1" },
+        { title: "PM2.5 emissions by sector", snippet: "Industry, Transport, Residential, Energy — 1975, 1990, 2000, 2012" })
+    ]
+  });
+</script>
+</body>
+</html>

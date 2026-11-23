@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM2.5 concentration — glow and labels</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/EuroStat/GHS/final/ixmaps_project_PM2.5_glow_label_population_II_Equal_Earth.json
+     in the style of where_people_live_equal_earth.html (shared setup: ghs_common.js)
+     (basemap: the legacy white/Equal Earth version is shown dark like the rest of the set; label text white) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [13.068, 21.796],
+    layers: [
+      GHS.urbanCentres("pm25_glow", { value: "E_CPM2_T14" }, "GLOW|CHART|BUBBLE|SIZE|AGGREGATE|MEAN",
+        { colorscheme: ["7", "#F2F226", "#100050", "3colors", "#CC4878"], opacity: "0.5", fillopacity: "0.0001",
+          scale: "0.5", linecolor: ["none"], valuescale: "1", valuedecimals: "0", gridwidthpx: "5" },
+        { title: "Concentration of PM2.5 in 2014" }),
+      GHS.urbanCentres("pm25_labels", { value: "E_CPM2_T14", size: "P15" }, "CHART|BUBBLE|QUANTILE|VALUES",
+        { colorscheme: ["5", "#F2F226", "#100050", "3colors", "#CC4878"], fillopacity: "0.001", textcolor: "white",
+          rangecentervalue: "0", normalsizevalue: "10000000", scale: "1", valuescale: "1", valuedecimals: "1", maxcharts: "100" },
+        { title: "Concentration of PM2.5 in 2014" })
+    ]
+  });
+</script>
+</body>
+</html>

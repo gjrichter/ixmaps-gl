@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC 311 calls by complaint type — facets</title>
+<!-- gl port of the ixmaps legacy project
+     iframes/ixmaps/projects/NYC_311/ixmaps_project_311_calls_last_100000_by_complaint_type.json
+     (same theme as index.html) with a facet sidebar on ixmaps' standard facet API
+     (ixmaps.data.getFacets / showFacets, same pattern as stage/roma_incidenti_pericolosita_sidebar_gl.html).
+     Facets are viewport-scoped: they count the calls currently visible and refresh on every redraw;
+     clicking a facet value filters the map. -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: -apple-system, "Open Sans", sans-serif; background: #F5F5F4; }
+  #map_div { position: absolute; top: 0; bottom: 0; left: 0; width: 66%; }
+  #sidebar {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 34%;
+    box-sizing: border-box; padding: 1em 1em 1em 1.2em; overflow: auto;
+    background: #F5F5F4; border-left: 1px solid #ddd; text-align: left;
+  }
+  #status {
+    position: absolute; top: 1em; left: 1em; z-index: 10;
+    background: rgba(255,255,255,0.9); padding: 0.4em 0.8em; border-radius: 4px; font-size: 0.85em;
+    display: flex; align-items: center; gap: 0.6em;
+  }
+  #status .spinner {
+    width: 14px; height: 14px; flex: none;
+    border: 2px solid rgba(0,0,0,0.15); border-top-color: #0088dd;
+    border-radius: 50%; animation: status-spin 0.8s linear infinite;
+  }
+  @keyframes status-spin { to { transform: rotate(360deg); } }
+  h1 { font-size: 1.5em; margin: 0 0 0.3em 0; color: #222; font-weight: 600; }
+  #sidebar p { font-size: 0.95em; color: #333; margin: 0.5em 0; }
+  #sidebar a { color: #0088dd; }
+  #stats-line { font-size: 0.95em; color: #333; margin: 0.6em 0; }
+  #filter-div {
+    margin: 0.6em 0; padding: 0.35em 0.6em; font-size: 0.85em;
+    background: #F7F6EF; border: 1px solid #ddd; border-radius: 4px;
+    display: none; align-items: flex-start; justify-content: space-between; gap: 0.5em;
+  }
+  #filter-div span { word-break: break-word; }
+  #filter-div button {
+    flex: none; border: 1px solid #ccc; background: #fff; border-radius: 3px;
+    cursor: pointer; font-size: 0.85em; padding: 0 0.5em;
+  }
+  hr { border: none; border-top: 1px solid #ddd; margin: 1em 0; }
+  footer { font-size: 0.8em; color: #888; margin-top: 1.5em; }
+
+  /* overrides ixmaps.data.showFacets' own injected dark default
+     (.ix-facet-* classes) with this page's light theme — see
+     ixmaps-gl.js's ensureFacetStyles comment for why a page's own
+     same-specificity rule reliably wins here. */
+  #show-facets-div { margin-top: 0.5em; }
+  .ix-facet { margin-bottom: 0.9em; }
+  .ix-facet-header {
+    font-size: 1em; padding: 0.45em 0.6em; border-radius: 5px; background: #888;
+    color: #fff; margin-bottom: 0.4em;
+  }
+  .ix-facet-active .ix-facet-header { background: #884444; cursor: pointer; }
+  .ix-facet-active .ix-facet-header::after { content: " \00d7"; float: right; }
+  .ix-facet-search { display: flex; gap: 0.3em; margin-bottom: 0.4em; }
+  .ix-facet-search input {
+    flex: 1; font-size: 0.85em; border: 1px solid #ddd; border-radius: 3px;
+    padding: 0.25em 0.5em; background: #fff;
+  }
+  .ix-facet-search button {
+    border: 1px solid #ddd; background: #fff; border-radius: 3px; cursor: pointer; font-size: 0.85em;
+  }
+  .ix-facet-bar {
+    cursor: pointer; padding: 0.3em 0.1em; border-bottom: 1px solid rgba(128,128,128,0.15);
+  }
+  .ix-facet-bar:hover { background: rgba(0,136,221,0.06); }
+  .ix-facet-bar-selected { background: rgba(136,68,68,0.08); }
+  .ix-facet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5em; font-size: 0.95em; }
+  .ix-facet-label { color: #333; }
+  .ix-facet-count { flex: none; color: #333; font-weight: 600; white-space: nowrap; }
+  .ix-facet-underline { height: 4px; border-radius: 2px; margin-top: 0.2em; background: #ccc; }
+  .ix-facet-more {
+    margin: 0.2em 0 0.4em 0; font-size: 0.8em; padding: 0.2em 0.6em;
+    border: 1px solid #ccc; background: #fff; border-radius: 3px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="map_div"></div>
+<div id="status"><span class="spinner"></span>loading 100,000 calls ...</div>
+
+<div id="sidebar">
+  <h1>NYC 311 calls</h1>
+  <p>The last 100,000 service requests to New York City's 311 line, by <b>complaint type</b>. Pan and zoom: the facets count the calls in view. Click a value to filter the map.</p>
+
+  <div id="stats-line"><b id="no_calls">—</b> calls in view</div>
+
+  <div id="filter-div">
+    <span id="filter-text"></span>
+    <button id="clear-filter-btn">&times;</button>
+  </div>
+
+  <hr>
+  <div id="show-facets-div"></div>
+  <hr>
+
+  <p>Data: <a href="https://data.cityofnewyork.us/resource/erm2-nwe9" target="_blank">NYC Open Data — 311 Service Requests</a></p>
+  <footer>ixmaps-gl port of the legacy NYC_311 project.</footer>
+</div>
+
+<script>
+  var THEME_ID = "311_calls";
+  var FACET_FIELDS = ["complaint_type", "status", "borough", "agency_name", "open_data_channel_type", "location_type"];
+
+  var __layer = ixmaps.layer("311_calls", layer => layer
+    .data({ url: "https://data.cityofnewyork.us/resource/erm2-nwe9.csv?$select=complaint_type,status,borough,agency_name,open_data_channel_type,location_type,latitude,longitude&$where=latitude%20IS%20NOT%20NULL&$order=created_date%20DESC&$limit=100000", type: "csv", name: "nyc311", cache: "true" })
+    .binding({ lookupfield: "latitude|longitude", value: "complaint_type" })
+    .type("CHART|SYMBOL|SEQUENCE|CENTER|SORT|DOWN|GLOW|CATEGORICAL|AGGREGATE|FAST|RELOCATE|SUM|SIZE|FORCE|VALUES")
+    .style({
+      colorscheme: ["147", "tableau"],
+      fillopacity: "0.65",
+      shadow: "false",
+      symbols: ["circle"],
+      normalsizevalue: "100",
+      scale: "0.7450580596923828",
+      valuescale: "1",
+      gridwidthpx: "2",
+      valuedecimals: "0"
+    })
+    .meta({
+      name: THEME_ID,
+      title: "311 calls by complaint type",
+      snippet: "last 100,000 calls · NYC Open Data",
+      tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}"
+    })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapService: "leaflet_vt", mapType: "VT_BRIGHT_LIGHT", legend: "closed", tools: "true" },
+    map => map.view([40.72755146730012, -73.97210597991945], 14)
+      .options({ objectscaling: "dynamic", normalSizeScale: "70000" })
+      .layer(__layer)
+  );
+
+  function fmt(n) { return (n || 0).toLocaleString("en-US"); }
+
+  function renderFilterDisplay(api) {
+    var active = api.getActiveFacetFilters(THEME_ID);
+    var parts = Object.entries(active).map(function (e) {
+      var clause = e[1];
+      if (clause && typeof clause === "object" && "like" in clause) return '"' + e[0] + '" LIKE "' + clause.like + '"';
+      return '"' + e[0] + '" = "' + clause + '"';
+    });
+    var div = document.getElementById("filter-div");
+    if (parts.length) {
+      document.getElementById("filter-text").textContent = "WHERE " + parts.join(" AND ");
+      div.style.display = "flex";
+    } else {
+      div.style.display = "none";
+    }
+  }
+
+  function renderFacets(api) {
+    var facetsA = ixmaps.data.getFacets(null, null, FACET_FIELDS, THEME_ID, null, null);
+    ixmaps.data.showFacets(null, "show-facets-div", facetsA, THEME_ID);
+    document.getElementById("no_calls").textContent = fmt(facetsA && facetsA[0] ? facetsA[0].nCount : 0);
+    renderFilterDisplay(api);
+  }
+
+  _mapPromise
+    .then(function (api) {
+      var s = document.getElementById("status"); if (s) s.remove();
+      renderFacets(api);
+      api.onRedraw(function () { renderFacets(api); });
+      document.getElementById("clear-filter-btn").addEventListener("click", function () {
+        api.clearAllFacetFilters(THEME_ID);
+      });
+    })
+    .catch(function (err) { document.getElementById("status").textContent = "error: " + err.message; console.error(err); });
+</script>
+
+</body>
+</html>

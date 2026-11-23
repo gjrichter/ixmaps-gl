@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>San Francisco Street Trees</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: system-ui, sans-serif; background-color:black}
+  #map { width: 100%; height: 100%; }
+  #status {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(20,20,20,.85); color: #fff; padding: 8px 16px;
+    border-radius: 6px; font-size: 13px; z-index: 2000; pointer-events: none;
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<div id="status">Loading San Francisco street tree data…</div>
+<script>
+var CSV_URL = "https://raw.githubusercontent.com/keplergl/kepler.gl-data/refs/heads/master/sftrees/data.csv";
+
+// San Francisco proper bounding box — the source data has a small number of
+// bad geocodes far outside SF (e.g. lat ~47) that would otherwise force the
+// view to an unusable extent.
+var SF_LAT_MIN = 37.6, SF_LAT_MAX = 37.85, SF_LON_MIN = -122.55, SF_LON_MAX = -122.33;
+var DBH_FALLBACK = 8;     // ~ median DBH, used when a row's DBH is missing/zero/a sentinel outlier
+var DBH_MAX_VALID = 200;  // rows above this are data-entry sentinels (e.g. 9999), not real diameters
+
+var statusEl = document.getElementById("status");
+
+// Semantic color per genus — grounded in each genus's real, well-known flower
+// color, foliage color, or plant-form (conifer/palm/etc.), not an auto-palette.
+// Covers the 60 genera that make up 96% of all trees in this dataset.
+var GENUS_COLOR = {
+  "Prunus":        "#d6499e", // cherry / plum — pink blossom
+  "Platanus":      "#a97c50", // sycamore / plane — bark tan-brown
+  "Ficus":         "#1b5e20", // fig — glossy dark green
+  "Pittosporum":   "#7cb342", // Victorian box — light green foliage
+  "Tristaniopsis": "#9c8a4e", // swamp myrtle — coppery bark / bronze-olive
+  "Metrosideros":  "#d32f2f", // NZ Christmas tree — brilliant red flowers
+  "Magnolia":      "#e8dcc3", // southern magnolia — cream/white flowers
+  "Lophostemon":   "#33691e", // Brisbane box — deep green canopy
+  "Pyrus":         "#dcd6e8", // ornamental pear — white spring blossom
+  "Arbutus":       "#a83232", // strawberry tree — red bark / red fruit
+  "Acacia":        "#fbc02d", // wattle — yellow puffball flowers
+  "Callistemon":   "#8e0000", // bottlebrush — crimson flowers
+  "Olea":          "#8f9779", // olive — silvery-gray foliage
+  "Ulmus":         "#558b2f", // elm — classic green canopy
+  "Maytenus":      "#7f9f6e", // mayten — soft weeping green
+  "Corymbia":      "#e65100", // red flowering gum
+  "Ginkgo":        "#f9a825", // maidenhair tree — golden fall color
+  "Eucalyptus":    "#6f8f7c", // dusty blue-green foliage
+  "Pinus":         "#1a3c1a", // pine — dark conifer green
+  "Ligustrum":     "#43793a", // privet — plain hedge green
+  "Acer":          "#d84315", // red maple — red-orange
+  "Melaleuca":     "#9fb8ad", // paperbark — soft gray-green
+  "Tristania":     "#a68c5a", // Brisbane box relative — tan-olive
+  "Eriobotrya":    "#a0522d", // bronze loquat
+  "Cupressus":     "#2e4d3a", // Monterey cypress — dark blue-green conifer
+  "Cordyline":     "#7a8450", // dracaena — olive rosette
+  "Liquidambar":   "#bf360c", // sweet gum — fall red-orange
+  "Myoporum":      "#5a7a4a", // plain green shrub-tree
+  "Juniperus":     "#3d5c45", // juniper — blue-green conifer
+  "Schinus":       "#b5654a", // Brazilian pepper — red peppercorns
+  "Fraxinus":      "#4a7042", // ash — plain green
+  "Lagunaria":     "#e6d17a", // primrose tree — pale yellow flowers
+  "Washingtonia":  "#b8a06a", // Mexican fan palm — warm khaki
+  "Quercus":       "#6b5335", // oak — brown/olive
+  "Phoenix":       "#c2a662", // date palm — sandy khaki
+  "Crataegus":     "#b23a48", // hawthorn — red berries
+  "Syagrus":       "#cbb273", // queen palm — light khaki-gold
+  "Leptospermum":  "#6b8e6b", // NZ tea tree — muted green
+  "Jacaranda":     "#7e57c2", // famous purple flowers
+  "Ceratonia":     "#2f4f2f", // carob — dark glossy green
+  "Agonis":        "#8fa998", // peppermint willow — weeping gray-green
+  "Laurus":        "#2e5e33", // bay laurel — deep green
+  "Syzygium":      "#375c3a", // eugenia — deep green hedge
+  "Afrocarpus":    "#4f6b4f", // fern pine (podocarp) — soft green
+  "Rhaphiolepis":  "#d98ca3", // Indian hawthorn — pink flowers
+  "Lyonothamnus":  "#4a6b4a", // Santa Cruz ironwood — fern-like green
+  "Dodonaea":      "#6b4a5a", // hopbush — dusky purple-bronze cultivar
+  "Podocarpus":    "#3f5f45", // fern pine — conifer green
+  "Rhamnus":       "#4a6b3a", // buckthorn — plain green
+  "Taxus":         "#1f3b1f", // yew — near-black conifer green
+  "Geijera":       "#6a8a5a", // Australian willow — weeping green
+  "Ceanothus":     "#5c6bc0", // California lilac — blue-violet flowers
+  "Yucca":         "#7a8f6a", // spiky succulent gray-green
+  "Robinia":       "#6faa4a", // locust — light green + white flowers
+  "Pistacia":      "#d2691e", // Chinese pistache — brilliant fall orange
+  "Populus":       "#8bc34a", // Lombardy poplar — bright green/gold
+  "Photinia":      "#b33a3a", // red-tipped new growth (its signature trait)
+  "Koelreuteria":  "#fdd835", // golden rain tree — yellow flowers
+  "Sequoia":       "#16321a", // coast redwood — iconic deep green conifer
+  "Unknown":       "#9e9e9e"  // no species data at all
+};
+
+// Fallback for the ~120 rarer genera (3.8% of trees) not in the curated table
+// above — matched by keyword against the common name, so even these get a
+// botanically-grounded color instead of an arbitrary one. Order matters:
+// first match wins.
+var FALLBACK_RULES = [
+  [/palm/i,                                        "#b8a06a"],
+  [/pine|cedar|cypress|\bfir\b|spruce|redwood|yew/i,"#2e4d3a"],
+  [/oak/i,                                          "#6b5335"],
+  [/maple/i,                                        "#d84315"],
+  [/elm/i,                                          "#558b2f"],
+  [/cherry|plum|blossom/i,                          "#d6499e"],
+  [/ash\b/i,                                         "#4a7042"]
+];
+var UNCLASSIFIED_COLOR = "#a89a86"; // warm neutral — a real species, just not individually classified
+
+// ---- data processing by function --------------------------------------
+// Loaded and run BY ixMaps itself: .data({url, type, process: fn.toString()})
+// hands the raw CSV to the engine, which fetches, parses, calls this function
+// on the resulting Data.Table, and binds whatever it returns. Because the
+// function travels as serialized source (not a closure), it must be fully
+// self-sufficient — every constant it needs is declared inside it.
+//
+// It also stashes a species -> genus lookup on `window` as a side effect.
+// That bridge is the only way the colorscheme function below (an ordinary
+// closure, defined in this same script, NOT serialized) can reach genus data:
+// it is only ever handed the bound categorical VALUE (species / common name),
+// which — unlike the Lecce lamp labels — doesn't itself contain the genus.
+window.sfTreeSpeciesGenus = {};
+
+var preprocessTrees = function (data) {
+  var SF_LAT_MIN = 37.6, SF_LAT_MAX = 37.85, SF_LON_MIN = -122.55, SF_LON_MAX = -122.33;
+  var DBH_FALLBACK = 8;     // ~ median DBH, used when a row's DBH is missing/zero/a sentinel outlier
+  var DBH_MAX_VALID = 200;  // rows above this are data-entry sentinels (e.g. 9999), not real diameters
+
+  // "Eriobotrya deflexa :: Bronze Loquat" -> species (common name) + genus
+  // (first word of the scientific name) + a cleaned display string.
+  data.addColumn({ source: "qSpecies", destination: "species" }, function (v) {
+    var parts = (v || "").split("::");
+    var common = (parts.length > 1 ? parts[1] : parts[0]).trim();
+    return common || "Unknown";
+  });
+  data.addColumn({ source: "qSpecies", destination: "genus" }, function (v, row) {
+    var sci = (v || "").split("::")[0].trim();
+    var g = sci ? sci.split(" ")[0].trim() : "";
+    g = (!g || /^tree\(s\)$/i.test(g)) ? "Unknown" : g;
+    window.sfTreeSpeciesGenus[row[data.columnIndex("species")]] = g;
+    return g;
+  });
+  data.addColumn({ source: "qSpecies", destination: "speciesFull" }, function (v) {
+    return (v || "").replace("::", " — ").trim() || "Unknown";
+  });
+
+  // Clean DBH in place (missing/zero/sentinel outliers -> fallback).
+  data.column("DBH").map(function (value) {
+    var dbh = parseFloat(value);
+    return (!dbh || dbh <= 0 || dbh > DBH_MAX_VALID) ? DBH_FALLBACK : dbh;
+  });
+
+  // Drop bad geocodes: a handful of rows sit far outside SF (e.g. lat ~47)
+  // and would otherwise force the view to an unusable extent.
+  var iLat = data.columnIndex("latitude"), iLon = data.columnIndex("longitude");
+  data = data.filter(function (row) {
+    var lat = parseFloat(row[iLat]), lon = parseFloat(row[iLon]);
+    return !!(lat && lon && lat >= SF_LAT_MIN && lat <= SF_LAT_MAX && lon >= SF_LON_MIN && lon <= SF_LON_MAX);
+  });
+
+  return data;
+};
+
+var myMap = ixmaps.Map("map", {
+    mapType: "CartoDB - Dark matter",
+    mode:    "info",
+    legend:  "open",
+    tools:   true
+})
+.view({ center: { lat: 37.7625, lng: -122.445 }, zoom: 13 })
+.options({
+    objectscaling:   "dynamic",
+    normalSizeScale: "100000",
+    basemapopacity:  0.55,
+    flushChartDraw:  1000000
+});
+
+myMap.layer("sf_trees")
+    .data({ url: CSV_URL, type: "csv", process: preprocessTrees.toString() })
+    .binding({ geo: "latitude|longitude", value: "species", title: "qAddress", size: "DBH" })
+    .type("CHART|BUBBLE|CATEGORICAL|GLOW")
+    .style({
+        // ---- color define by function --------------------------------
+        // 423 distinct species share ~60 curated genus colors plus a keyword
+        // fallback for rarer genera — a hand-authored 423-entry array isn't
+        // maintainable, so the color is deduced per species at render time:
+        // look up which genus it belongs to (via the bridge populated above),
+        // resolve that genus's real flower/foliage color, or fall back to a
+        // keyword match / neutral default.
+        colorscheme: ["byvalue", function (species) {
+            var genus = window.sfTreeSpeciesGenus[species] || "Unknown";
+            if (GENUS_COLOR[genus]) return GENUS_COLOR[genus];
+            for (var i = 0; i < FALLBACK_RULES.length; i++) {
+                if (FALLBACK_RULES[i][0].test(species)) return FALLBACK_RULES[i][1];
+            }
+            return UNCLASSIFIED_COLOR;
+        }],
+        normalsizevalue: "10000",
+        scale:           1,
+        fillopacity:     1,
+        showdata:        "true"
+    })
+    .meta({
+        name: "sf_trees",
+        tooltip: "<b>{{speciesFull}}</b><br>{{qAddress}}<br>DBH: {{DBH}} in<br>{{qSiteInfo}}"
+    })
+    .title("Species — colored by genus, via function")
+    .define();
+
+myMap.then(function () {
+  statusEl.style.display = "none";
+});
+</script>
+</body>
+</html>

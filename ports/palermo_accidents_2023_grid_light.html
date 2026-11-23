@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinistri stradali Palermo 2023</title>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-flat@1/plugins/facet.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/data.js@master/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Helvetica Neue', sans-serif; }
+  #map { width: 100%; height: 100%; }
+
+  #panel {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: rgba(255,255,255,0.92);
+    color: #e0e0f0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    width: 240px;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  #panel h2 { margin: 0 0 4px; font-size: 15px; color: #222; letter-spacing: 0.5px; }
+  #panel p  { margin: 0 0 12px; font-size: 11px; color: #666; line-height: 1.4; }
+
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #333; }
+  .legend-dot  { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  #stats { margin-top: 12px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px; font-size: 11px; color: #666; }
+  #stats b { color: #222; }
+
+  #controls { margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px; }
+  .sl-row { margin-bottom: 7px; }
+  .sl-row label { display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-bottom: 2px; }
+  .sl-row label span { color: #222; font-weight: bold; min-width: 30px; text-align: right; }
+  .sl-row input[type=range] { width: 100%; accent-color: #888; cursor: pointer; }
+
+  #app-loading {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.92);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 2000; color: #333;
+    font-size: 14px; gap: 14px;
+    padding: 20px; box-sizing: border-box;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(0,0,0,0.08);
+    border-top-color: #888;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #load-msg { color: #666; text-align: center; max-width: 500px; line-height: 1.5; word-break: break-word; }
+
+  .yr-row { display: flex; gap: 4px; margin: 8px 0 10px; }
+  .yr-btn {
+    flex: 1; padding: 4px 2px;
+    border: 1px solid #ccc; border-radius: 10px;
+    background: #f5f5f5; color: #888; font-size: 11px;
+    cursor: pointer; text-align: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .yr-btn:hover { background: #e0e0e0; color: #333; }
+  .yr-btn.yr-active { background: #333; color: #fff; border-color: #333; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div id="app-loading">
+  <div class="spinner"></div>
+  <div id="load-msg">Caricamento dati sinistri 2023…</div>
+</div>
+
+<div id="map"></div>
+
+<div id="panel">
+  <h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 13" width="32" height="14" style="vertical-align:-2px;margin-right:6px"><g fill="currentColor"><path d="M0,8 L0,5 L1,5 L3,3 L5,1.5 L9.5,1.5 L11,3 L13,5 L14,5 L14,8 L12,8 A2,2 0 0,0 8,8 L6,8 A2,2 0 0,0 2,8 Z"/><circle cx="4" cy="9.5" r="1.8"/><circle cx="10" cy="9.5" r="1.8"/></g><g fill="currentColor"><path d="M30,8 L30,5 L29,5 L27,3 L25,1.5 L20.5,1.5 L19,3 L17,5 L16,5 L16,8 L18,8 A2,2 0 0,1 22,8 L24,8 A2,2 0 0,1 28,8 Z"/><circle cx="20" cy="9.5" r="1.8"/><circle cx="26" cy="9.5" r="1.8"/></g><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"><line x1="15" y1="0.8" x2="15" y2="5.2"/><line x1="12.8" y1="1.8" x2="17.2" y2="4.2"/><line x1="17.2" y1="1.8" x2="12.8" y2="4.2"/><line x1="12" y1="3" x2="18" y2="3"/></g></svg>Sinistri Palermo <span id="title-year">2023</span></h2>
+  <p>Fonte: Comune di Palermo / Polizia Municipale<br>Sinistri con vittime · anno <span id="title-year2"></span></p>
+
+  <div class="yr-row">
+    <button class="yr-btn" data-year="2023" onclick="switchYear(2023)">2023</button>
+    <button class="yr-btn" data-year="2022" onclick="switchYear(2022)">2022</button>
+    <button class="yr-btn" data-year="2021" onclick="switchYear(2021)">2021</button>
+    <button class="yr-btn" data-year="2020" onclick="switchYear(2020)">2020</button>
+  </div>
+
+  <div class="legend-item"><div class="legend-dot" style="background:#000000"></div> Mortale</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff4444"></div> Con riserva (grave)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(255,153,0,0.5)"></div> Con feriti</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(60,120,90,0.2);border:1px solid #3c7859"></div> Solo danni materiali</div>
+
+  <div class="legend-item" style="margin-top:8px;border-top:1px solid rgba(0,0,0,0.08);padding-top:8px">
+    <div class="legend-dot" style="background:#cc2200;opacity:0.5;border-radius:2px"></div>
+    <span style="font-size:11px;color:#666;line-height:1.3">Densità sinistri gravi (KDE)</span>
+  </div>
+
+  <div id="stats">
+    <div>Totale sinistri: <b id="cnt-total">—</b></div>
+    <div>Mortali: <b id="cnt-fatal">—</b></div>
+    <div>Con riserva: <b id="cnt-hosp">—</b></div>
+    <div>Con feriti: <b id="cnt-light">—</b></div>
+    <div>Solo danni: <b id="cnt-prop">—</b></div>
+  </div>
+
+  <div id="controls">
+    <div class="sl-row">
+      <label>Taglia singoli incidenti <span id="val-scale">1</span></label>
+      <input type="range" id="sl-scale" min="0.1" max="5" step="0.1" value="1" disabled>
+    </div>
+    <div class="sl-row">
+      <label>Griglia aggregazione <span id="val-grid">3</span> px</label>
+      <input type="range" id="sl-grid" min="1" max="30" step="1" value="3" disabled>
+    </div>
+    <div class="sl-row">
+      <label>Evidenziazione numeri incidenti <span id="val-sizepow">1.2</span></label>
+      <input type="range" id="sl-sizepow" min="0.5" max="3" step="0.1" value="1.2" disabled>
+    </div>
+    <div class="sl-row">
+      <label>KDE opacità <span id="val-kde">0.20</span></label>
+      <input type="range" id="sl-kde" min="0" max="0.6" step="0.01" value="0.2">
+    </div>
+    <div class="sl-row">
+      <label>KDE bandwidth <span id="val-bw">×3.50</span></label>
+      <input type="range" id="sl-bw" min="0.25" max="6" step="0.05" value="3.5" disabled>
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.1)">
+      <button id="btn-basemap" onclick="toggleBasemap()" style="width:100%;padding:5px 0;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;color:#666;font-size:11px;cursor:pointer">🌙 Scuro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+var CSV_URLS = {
+  2023: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/palermo-accidents-2023/accidents.csv",
+  2022: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/palermo-accidents-2022/accidents.csv",
+  2021: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/palermo-accidents-2021/accidents.csv",
+  2020: "https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-data@main/by-project/palermo-accidents-2020/accidents.csv"
+};
+
+var _urlP      = new URLSearchParams(location.search);
+var _initLat   = parseFloat(_urlP.get("lat"))     || 38.115;
+var _initLng   = parseFloat(_urlP.get("lng"))     || 13.360;
+var _initZ     = parseFloat(_urlP.get("zoom"))    || 13;
+var _initScale = parseFloat(_urlP.get("scale"))   || 1;
+var _initGrid  = parseFloat(_urlP.get("grid"))    || 3;
+var _initPow   = parseFloat(_urlP.get("sizepow")) || 1.2;
+var _initKde     = parseFloat(_urlP.get("kde"))     || 0.2;
+var _initBwMult  = parseFloat(_urlP.get("bwmult")) || 3.5;
+var _currentYear = parseInt(_urlP.get("year"))     || 2023;
+
+// Init year buttons and title to match URL-restored year
+document.querySelectorAll(".yr-btn").forEach(function(b) {
+  b.classList.toggle("yr-active", +b.dataset.year === _currentYear);
+});
+document.getElementById("title-year").textContent  = _currentYear;
+document.getElementById("title-year2").textContent = _currentYear;
+
+var _urlTimer = null;
+
+function syncURL() {
+  try {
+    var c = ixmaps.getCenter(), z = ixmaps.getZoom();
+    if (!c || z == null) return;
+    var p = new URLSearchParams(location.search);
+    p.set("lat",     c.lat.toFixed(6));
+    p.set("lng",     c.lng.toFixed(6));
+    p.set("zoom",    z.toFixed(4));
+    p.set("scale",   document.getElementById("sl-scale").value);
+    p.set("grid",    document.getElementById("sl-grid").value);
+    p.set("sizepow", document.getElementById("sl-sizepow").value);
+    p.set("kde",     document.getElementById("sl-kde").value);
+    p.set("bwmult",  document.getElementById("sl-bw").value);
+    p.set("year",    _currentYear);
+    history.replaceState(null, "", "?" + p.toString());
+  } catch(e) {}
+}
+
+function applyStyle(prop, value) {
+  myMap.then(function(api) { api.changeThemeStyle("accidents", prop + ":" + value, "set"); });
+}
+
+const myMap = ixmaps.Map("map", {
+  mapType: "VT_DATAVIZ_LIGHT",
+  mode:    "pan",
+  legend:  "closed",
+  tools:   true
+})
+.view({ center: { lat: _initLat, lng: _initLng }, zoom: _initZ })
+.options({
+  objectscaling:   "dynamic",
+  normalSizeScale: 100000,
+  basemapopacity:  0.8,
+  flushChartDraw:  1000000
+});
+
+myMap.on("viewchange", function() {
+  clearTimeout(_urlTimer);
+  _urlTimer = setTimeout(syncURL, 400);
+});
+
+var _slidersReady = false;
+
+myMap.on("layerdraw", function(e) {
+  document.getElementById("app-loading").style.display = "none";
+  var themeObj = ixmaps.getThemeObj(e.id);
+  if (themeObj && themeObj.fVisible && !(themeObj.szFlag && themeObj.szFlag.match(/SILENT|NOLEGEND/))) {
+    var facets = ixmaps.data.getFacets(themeObj.szFilter || "", "user_legend", ["tipo_num"], e.id, "map", "NONUMERIC");
+    if (facets && facets.length) {
+      var vc = facets[0].valuesCount || {};
+      document.getElementById("cnt-total").textContent = (facets[0].nValuesSum || 0).toLocaleString("it-IT");
+      document.getElementById("cnt-fatal").textContent = (vc["2"] || 0).toLocaleString("it-IT");
+      document.getElementById("cnt-hosp").textContent  = (vc["3"] || 0).toLocaleString("it-IT");
+      document.getElementById("cnt-light").textContent = (vc["4"] || 0).toLocaleString("it-IT");
+      document.getElementById("cnt-prop").textContent  = (vc["1"] || 0).toLocaleString("it-IT");
+    }
+  }
+
+  // Trigger view-aware KDE update after accidents layer is drawn
+  if (e.id === "accidents") {
+    clearTimeout(__kdeTimer);
+    __kdeTimer = setTimeout(__updateKDE, 300);
+  }
+
+  if (_slidersReady) return;
+  _slidersReady = true;
+
+  document.getElementById("sl-scale").value          = _initScale;
+  document.getElementById("sl-grid").value           = _initGrid;
+  document.getElementById("sl-sizepow").value        = _initPow;
+  document.getElementById("sl-bw").value             = _initBwMult;
+  document.getElementById("val-scale").textContent   = _initScale;
+  document.getElementById("val-grid").textContent    = _initGrid;
+  document.getElementById("val-sizepow").textContent = _initPow;
+  document.getElementById("val-bw").textContent      = "×" + parseFloat(_initBwMult).toFixed(2);
+
+  document.querySelectorAll("#controls input[type=range]").forEach(function(sl) {
+    sl.disabled = false;
+  });
+
+  document.getElementById("sl-scale").addEventListener("input", function() {
+    document.getElementById("val-scale").textContent = this.value;
+    applyStyle("scale", this.value);
+    syncURL();
+  });
+  document.getElementById("sl-grid").addEventListener("input", function() {
+    document.getElementById("val-grid").textContent = this.value;
+    applyStyle("gridwidthpx", this.value);
+    syncURL();
+  });
+  document.getElementById("sl-sizepow").addEventListener("input", function() {
+    document.getElementById("val-sizepow").textContent = this.value;
+    applyStyle("sizepow", this.value);
+    syncURL();
+  });
+  document.getElementById("sl-bw").addEventListener("input", function() {
+    document.getElementById("val-bw").textContent = "×" + parseFloat(this.value).toFixed(2);
+    clearTimeout(__kdeTimer);
+    __kdeTimer = setTimeout(__updateKDE, 300);
+    syncURL();
+  });
+
+  syncURL();
+
+  setTimeout(function() {
+    ["tooltip","contextmenu"].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.classList.remove("hidden");
+        el.classList.remove("visibility-hidden");
+        el.style.display = "none";
+      }
+    });
+  }, 500);
+});
+
+var TIPO = {
+  C: { num: "1", label: "Solo danni materiali" },
+  M: { num: "2", label: "Mortale" },
+  R: { num: "3", label: "Con riserva (grave)" },
+  F: { num: "4", label: "Con feriti" }
+};
+
+var __yearCache = {};
+
+// Build the accidents theme from an already-processed Data.Table
+function buildAccidents(table) {
+  var layerDef = ixmaps.layer("accidents")
+    .data({ obj: table, type: "jsondb" })
+    .binding({ geo: "lat|lng", value: "tipo_num", title: "tipo_label" })
+    .type("CHART|SYMBOL|VALUES|GLOW|SEQUENCE|STAR|SORT|DOWN|CATEGORICAL|AGGREGATE|RECT|RELOCATE")
+    .style({
+      colorscheme:     ["rgba(60,120,90,0.2)","#000000","#ff4444","rgba(255,153,0,0.5)"],
+      values:          ["1","2","3","4"],
+      scale:           _slidersReady ? parseFloat(document.getElementById("sl-scale").value) : _initScale,
+      normalsizevalue: 10,
+      fillopacity:     1,
+      strokewidth:     "0",
+      sizepow:         _slidersReady ? parseFloat(document.getElementById("sl-sizepow").value) : _initPow,
+      textcolor:       "#000000",
+      showdata:        "true",
+      gridwidth:       (_slidersReady ? parseFloat(document.getElementById("sl-grid").value) : _initGrid) + "px"
+    })
+    .meta({ name: "accidents", tooltip: "{{theme.item.chart}}<b>{{tipo_label}}</b><br>{{Luogo}}<br>{{Data}} {{Ora}}" })
+    .title("Gravità")
+    .define();
+  myMap.then(function(api) { api.layer(layerDef); });
+}
+
+function loadYear(year) {
+  // Cache processed tables per year — switching back avoids the ~1s refetch
+  if (__yearCache[year]) { buildAccidents(__yearCache[year]); return; }
+
+  document.getElementById("load-msg").textContent = "Caricamento dati sinistri " + year + "…";
+
+  Data.feed({ source: CSV_URLS[year], type: "csv" })
+    .load(function(table) {
+      // The severity column is named differently each year ("Tipo", "Tipo Sinistro",
+      // "Tipo Incidente", or blank) and sometimes sits in a different position — detect
+      // it by content: the column whose values are the C/M/R/F severity codes.
+      var names = table.columnNames(), tipoCol = names[0];
+      for (var ci = 0; ci < names.length; ci++) {
+        var vals = table.column(names[ci]).values(), hit = 0, tot = 0;
+        for (var vi = 0; vi < vals.length && vi < 300; vi++) {
+          var s = String(vals[vi]).trim().toUpperCase();
+          if (!s) continue; tot++; if (TIPO[s]) hit++;
+        }
+        if (tot && hit / tot > 0.8) { tipoCol = names[ci]; break; }
+      }
+      // Rename to a stable source: addColumn can't resolve a blank column name (2021),
+      // even though it's detectable and readable.
+      table.column(tipoCol).rename("tipo_src");
+
+      // Derive numeric coords (comma→dot) and category fields data.js can't infer
+      table.addColumn({ source: "Latitudine",  destination: "lat" },        function(v) { return parseFloat(String(v).replace(",", ".")); });
+      table.addColumn({ source: "Longitudine", destination: "lng" },        function(v) { return parseFloat(String(v).replace(",", ".")); });
+      table.addColumn({ source: "tipo_src",     destination: "tipo_num" },   function(v) { var t = TIPO[String(v).trim().toUpperCase()]; return t ? t.num   : ""; });
+      table.addColumn({ source: "tipo_src",     destination: "tipo_label" }, function(v) { var t = TIPO[String(v).trim().toUpperCase()]; return t ? t.label : ""; });
+
+      // Parity with old filter: keep valid severity types with parseable coords
+      var iTN = table.columnIndex("tipo_num"), iLa = table.columnIndex("lat"), iLn = table.columnIndex("lng");
+      table = table.filter(function(row) { return row[iTN] && !isNaN(row[iLa]) && !isNaN(row[iLn]); });
+
+      __yearCache[year] = table;
+      buildAccidents(table);
+    })
+    .error(function(err) {
+      document.getElementById("load-msg").textContent =
+        "Errore caricamento dati " + year + ": " + (err && err.message ? err.message : err);
+    });
+}
+
+function switchYear(year) {
+  if (year === _currentYear) return;
+  _currentYear = year;
+
+  // Update buttons + title
+  document.querySelectorAll(".yr-btn").forEach(function(b) {
+    b.classList.toggle("yr-active", +b.dataset.year === year);
+  });
+  document.getElementById("title-year").textContent  = year;
+  document.getElementById("title-year2").textContent = year;
+
+  // Clear stale KDE
+  myMap.then(function(api) { try { api.removeTheme("kde"); } catch(e) {} });
+
+  // Show loading overlay
+  document.getElementById("app-loading").style.display = "flex";
+
+  loadYear(year);
+  syncURL();
+}
+
+loadYear(_currentYear);
+
+// KDE — view-aware, zoom-adaptive Gaussian KDE
+// Mortale (tipo_num=2, w=3) + Con riserva (tipo_num=3, w=1)
+// Recomputed on every accidents layer redraw / zoom change
+
+var __kdeTimer = null;
+
+var __updateKDE = function() {
+  var _t0 = performance.now();
+  console.log("[KDE] --- start ---");
+
+  if (typeof turf === "undefined") { console.warn("[KDE] turf not loaded"); return; }
+
+  var objTheme = ixmaps.getThemeObj("accidents");
+  if (!objTheme || !objTheme.indexA || !objTheme.itemA || !objTheme.objTheme) {
+    console.warn("[KDE] theme 'accidents' not ready"); return;
+  }
+
+  var dbRecords = objTheme.objTheme.dbRecords;
+  var dbFields  = objTheme.objTheme.dbFields;
+  if (!dbRecords || !dbFields) { console.warn("[KDE] no dbRecords/dbFields"); return; }
+
+  var iTN  = dbFields.findIndex(function(f){ return f.id === "tipo_num"; });
+  var iLat = dbFields.findIndex(function(f){ return f.id === "lat"; });
+  var iLng = dbFields.findIndex(function(f){ return f.id === "lng"; });
+  if (iTN < 0 || iLat < 0 || iLng < 0) {
+    console.warn("[KDE] required fields not found in", dbFields.map(function(f){ return f.id; })); return;
+  }
+
+  // Collect visible severe points: Mortale (tipo_num=2, w=3) + Con riserva (tipo_num=3, w=1)
+  var pts = [];
+  for (var _i = 0; _i < objTheme.indexA.length; _i++) {
+    var item = objTheme.itemA[objTheme.indexA[_i]];
+    if (!item) continue;
+
+    var _push = function(rec) {
+      if (!rec) return;
+      var tn = rec[iTN];
+      if (tn !== "2" && tn !== "3") return;
+      var la = parseFloat(rec[iLat]);
+      var ln = parseFloat(rec[iLng]);
+      if (!isNaN(la) && !isNaN(ln)) {
+        pts.push([la, ln, tn === "2" ? 3 : 1]);
+      }
+    };
+
+    if (item.dbIndex != null)         { _push(dbRecords[item.dbIndex]); }
+    if (Array.isArray(item.dbIndexA)) { item.dbIndexA.forEach(function(di){ _push(dbRecords[di]); }); }
+  }
+
+  var zoom = ixmaps.getZoom() || 13;
+  console.log("[KDE] zoom:", zoom, " visible severe pts:", pts.length);
+
+  if (pts.length < 5) { console.log("[KDE] too few points — skipped"); return; }
+  if (zoom < 8)       { console.log("[KDE] zoom < 8 — skipped"); return; }
+
+  // Zoom-adaptive bandwidth (km) and max grid cells
+  var bwKm, maxCells;
+  if      (zoom >= 16) { bwKm = 0.02; maxCells = 1000000; }
+  else if (zoom >= 15) { bwKm = 0.04; maxCells =  800000; }
+  else if (zoom >= 14) { bwKm = 0.06; maxCells =  600000; }
+  else if (zoom >= 13) { bwKm = 0.15; maxCells =  300000; }
+  else if (zoom >= 12) { bwKm = 0.4;  maxCells =  100000; }
+  else if (zoom >= 11) { bwKm = 1.0;  maxCells =   40000; }
+  else if (zoom >= 10) { bwKm = 2.5;  maxCells =   25000; }
+  else if (zoom >= 9)  { bwKm = 5.0;  maxCells =   20000; }
+  else                 { bwKm = 12.0; maxCells =   15000; }
+  var bwMult = parseFloat(document.getElementById("sl-bw").value) || 1.0;
+  bwKm = bwKm * bwMult;
+  console.log("[KDE] bandwidth:", bwKm.toFixed(3), "km (×" + bwMult.toFixed(2) + ")  maxCells:", maxCells);
+
+  // Bounding box of visible points + padding
+  var s = Infinity, w = Infinity, n = -Infinity, e = -Infinity;
+  pts.forEach(function(p) {
+    if (p[0] < s) s = p[0]; if (p[0] > n) n = p[0];
+    if (p[1] < w) w = p[1]; if (p[1] > e) e = p[1];
+  });
+  var midLat = (s + n) / 2;
+  var kmLat  = 111.3;
+  var kmLng  = 111.3 * Math.cos(midLat * Math.PI / 180);
+  var padLat = bwKm / kmLat * 1.5;
+  var padLng = bwKm / kmLng * 1.5;
+  s -= padLat; n += padLat; w -= padLng; e += padLng;
+  var BW2 = 2 * bwKm * bwKm;
+
+  // Zoom-adaptive point cap
+  var ptCap = zoom >= 16 ? 800 : zoom >= 14 ? 2000 : zoom >= 13 ? 4000 : 6000;
+  if (pts.length > ptCap) {
+    var step = Math.ceil(pts.length / ptCap);
+    pts = pts.filter(function(_, i) { return i % step === 0; });
+    console.log("[KDE] subsampled to:", pts.length);
+  }
+
+  // Build adaptive grid over bbox
+  var aspect = (e - w) / Math.max(n - s, 0.001);
+  var nLng   = Math.round(Math.sqrt(maxCells * aspect));
+  var nLat   = Math.round(maxCells / Math.max(nLng, 1));
+  nLat = Math.max(nLat, 5); nLng = Math.max(nLng, 5);
+  var stepLat = (n - s) / nLat;
+  var stepLng = (e - w) / nLng;
+
+  // Compute Gaussian KDE at every grid node
+  var gridPts = [];
+  for (var ilat = 0; ilat <= nLat; ilat++) {
+    for (var ilng = 0; ilng <= nLng; ilng++) {
+      var glat = s + ilat * stepLat;
+      var glng = w + ilng * stepLng;
+      var v = 0;
+      for (var k = 0; k < pts.length; k++) {
+        var dy = (pts[k][0] - glat) * kmLat;
+        var dx = (pts[k][1] - glng) * kmLng;
+        v += pts[k][2] * Math.exp(-(dx * dx + dy * dy) / BW2);
+      }
+      gridPts.push(turf.point([glng, glat], { v: v }));
+    }
+  }
+
+  var maxV = 0;
+  gridPts.forEach(function(p) { if (p.properties.v > maxV) maxV = p.properties.v; });
+  if (maxV <= 0) { console.warn("[KDE] maxV = 0, nothing to render"); return; }
+
+  var breaks = [0.15, 0.30, 0.50, 0.70].map(function(r) { return r * maxV; });
+
+  var iso;
+  try {
+    iso = turf.isobands(turf.featureCollection(gridPts), breaks, { zProperty: "v" });
+  } catch(err) {
+    console.warn("[KDE] isobands error:", err); return;
+  }
+
+  // Strip interior rings (holes)
+  var nHoles = 0, nParts = 0;
+  iso.features.forEach(function(feat) {
+    if (!feat || !feat.geometry) return;
+    var g = feat.geometry;
+    if (g.type === "Polygon") {
+      nParts++;
+      nHoles += Math.max(0, g.coordinates.length - 1);
+      g.coordinates = g.coordinates.length ? [g.coordinates[0]] : [];
+    } else if (g.type === "MultiPolygon") {
+      g.coordinates = g.coordinates.map(function(poly) {
+        nParts++;
+        nHoles += Math.max(0, poly.length - 1);
+        return poly.length ? [poly[0]] : [];
+      });
+    }
+  });
+  console.log("[KDE] hole stripping — parts:", nParts, " holes removed:", nHoles);
+
+  var kdeOpacity = parseFloat(document.getElementById("sl-kde").value) || 0.2;
+
+  var _kdeDef = ixmaps.layer("density")
+    .data({ obj: iso, type: "geojson" })
+    .binding({ geo: "geometry" })
+    .type("FEATURE|CHOROPLETH|SILENT")
+    .style({ colorscheme: "#cc2200", fillopacity: kdeOpacity, linewidth: 0.01 })
+    .meta({ name: "kde" })
+    .define();
+
+  myMap.then(function(api) { api.layer(_kdeDef); });
+  console.log("[KDE] layer sent to map  total: " + (performance.now() - _t0).toFixed(0) + " ms");
+};
+
+document.getElementById("sl-kde").value = _initKde;
+document.getElementById("val-kde").textContent = _initKde;
+
+document.getElementById("sl-kde").addEventListener("input", function() {
+  document.getElementById("val-kde").textContent = this.value;
+  myMap.then(function(api) { api.changeThemeStyle("kde", "fillopacity:" + document.getElementById("sl-kde").value, "set"); });
+  syncURL();
+});
+var _isDark = false;
+var _lightBasemap = "VT_DATAVIZ_LIGHT";
+function toggleBasemap() {
+  _isDark = !_isDark;
+  try { ixmaps.setMapTypeId(_isDark ? "VT_DATAVIZ_DARK" : _lightBasemap); } catch(e) {}
+  if (!_isDark) {
+    setTimeout(function() {
+      document.querySelectorAll(".leaflet-control-attribution, .leaflet-control-attribution a")
+        .forEach(function(el) { el.style.color = ""; el.style.background = ""; });
+      document.querySelectorAll(".leaflet-bar a")
+        .forEach(function(el) { el.style.backgroundColor = ""; el.style.color = ""; el.style.border = ""; });
+      var ixmapEl = document.getElementById("ixmap");
+      if (ixmapEl) ixmapEl.classList.remove("dark-controls");
+    document.body.style.background = "";
+    document.body.style.backgroundColor = "";
+    }, 200);
+  }
+  document.getElementById("btn-basemap").textContent = _isDark ? "☀ Chiaro" : "🌙 Scuro";
+}
+</script>
+</body>
+</html>

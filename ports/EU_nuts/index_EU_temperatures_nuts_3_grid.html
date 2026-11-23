@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+
+<!-- **********************************************************************
+
+index_only_map_embed.html
+
+$Comment: ixmaps map template; embedded version
+$Source : index_only_map_embed.html,v $
+
+$InitialAuthor: guenter richter $
+$InitialDate: 2017/06/22 $
+$Author: guenter richter $
+$Id:index_only_map_embed.html 1 2021-10-17 00:00:00Z Guenter Richter $
+
+licensed under CC-BY
+$Log:index_only_map_embed.html,v $
+
+********************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps</title>
+
+</head>
+
+<body style="max-width: 1024px;margin:auto;font-family:open sans;font-size:22px">
+
+	<div id="map"></div>
+
+	<h1>di questa mappa</h1>
+
+	<!--========================================================================= -->
+
+	<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+	<!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+		
+		ixmaps.htmlgui_onZoomAndPan = function(nZoom){
+			var nOpacity = (ixmaps.getZoom() - 2) / 3;
+			ixmaps.setBasemapOpacity(null, nOpacity, "absolute");
+		}
+		
+		var query_data = function(theme, options) {
+			var broker = new Data.Broker()
+				.addSource("https://s3.fr-par.scw.cloud/ixmaps.data/test%20only/nuts3_lvl_data_temperatures.csv", "csv")
+				.realize(function(dataA) {
+
+					pivot = dataA[0].pivot({
+						lead: "NUTS_3_ID",
+						columns: "year",
+						value: "variation_year",
+						keep: "NUTS_3_NAME"
+					});
+					options.type = "jsonDB";
+					ixmaps.setExternalData(pivot, options);
+				});
+		};
+
+		var nuts_0 = ixmaps
+			.layer("nuts_0")
+			.data({
+				url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2016_4326_LEVL_0.geojson",
+				type: "geojson"
+			})
+			.binding({
+				id: "NUTS_ID"
+			})
+			.type("FEATURES|SILENT")
+			.style({
+				colorscheme: ["#e8e8e8"],
+                fillopacity: 0.2,
+				linecolor: ["white"],
+				linewidth: "1",
+				featurelower: "1:5000000"
+			})
+			.define();
+
+		var nuts_0_lines = ixmaps
+			.layer("nuts_0_lines")
+			.data({
+				url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2016_4326_LEVL_0.geojson",
+				type: "geojson"
+			})
+			.binding({
+				id: "NUTS_ID"
+			})
+			.type("FEATURES|SILENT")
+			.style({
+				colorscheme: ["none"],
+				linecolor: ["#ffffff"],
+				linewidth: "1"
+			})
+			.define();
+
+		var nuts_3 = ixmaps
+			.layer("nuts_3")
+			.data({
+				url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2016_4326_LEVL_3.geojson",
+				type: "geojson"
+			})
+			.binding({
+				id: "NUTS_ID"
+			})
+			.style({
+				colorscheme: ["none"],
+				linecolor: ["none"],
+				tooltip: "{{NUTS_NAME}}"
+			})
+			.define();
+
+		var nuts_3_lines = ixmaps
+			.layer("nuts_3_lines")
+			.data({
+				url: "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_10M_2016_4326_LEVL_3.geojson",
+				type: "geojson"
+			})
+			.binding({
+				id: "NUTS_ID"
+			})
+			.style({
+				colorscheme: ["none"],
+				linecolor: ["white"],
+				linewidth: "1",
+				tooltip: "{{NUTS_NAME}}",
+				featureupper: "1:3000000"
+			})
+			.define();
+
+		var choropleth = ixmaps
+			.layer("nuts_3")
+			.data({
+				name: "themeDataObj",
+				query: query_data.toString()
+			})
+			.binding({
+				geo: "NUTS_3_ID",
+				value: "2018",
+				title: "NUTS_3_NAME"
+			})
+			.type("CHOROPLETH|RANGES|QUANTILE|ZEROISNOTVALUE|NOLEGEND")
+			.style({
+				colorscheme: [
+					"none"
+				],
+				ranges: ["-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5"],
+				opacity: "1",
+				units: "°C",
+				textcolor: "white",
+				nodatacolor: "RGB(221,221,221)",
+				valueupper: "1:10000000",
+				valuescale: "1",
+				valuedecimals: "1",
+				clipframes: "48",
+				clipframerate: "6",
+				title: "<span style='font-family:Open sans;font-size:1.5em;font-weight:100;line-height:1em'>Climate change</span>",
+				snippet: "Temperature changes between 1960s and 1970+ years, by EU regions",
+				tooltip: "<h3 style='white-space:nowrap'>{{NUTS_3_NAME}}, <small>{{NUTS_3_ID}}</small> <br><big><b>+{{theme.item.value}}°C </b></big> (2018)</h3><br>{{theme.item.chart}}"
+			})
+			.define();
+
+		// last percentage as text (aggregated)
+
+		var texts = ixmaps
+			.layer("nuts_2")
+			.data({
+				name: "themeDataObj",
+				url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/EuroStat/tertiary_education_age_25_34_NUTS2_2000_2022.csv",
+				type: "csv",
+				cache: "true"
+			})
+			.filter("WHERE 2021 > 0")
+			.type("CHART|LABEL|VALUES|TEXTONLY|FIXSIZE|NOLEGEND")
+			.binding({
+				geo: "GEO_CODE",
+				value: "2021"
+			})
+			.style({
+				colorscheme: [
+					"RGBA(255,255,255,0.5)"
+				],
+				scale: "1.5",
+				textcolor: "#000000",
+				titlefield: "GEO_NAME",
+				units: "%",
+				chartupper: "1:5000000",
+				valuedecimals: "1",
+				offsety: "-1"
+			})
+			.meta({
+				title: "<span style='font-family:MV boli;font-size:1.5em;font-weight:700'>Tertiary education 2021 age 25-35</span>"
+			})
+			.define()
+
+		// from 2010 to 2021 as curves (zoom dependent)
+
+		var curves = ixmaps
+			.layer("nuts_3")
+			.data({
+				name: "themeDataObj",
+				query: query_data.toString()
+			})
+			.binding({
+				geo: "NUTS_3_ID",
+				value: "1971|1972|1973|1974|1975|1976|1977|1978|1979|1980|1981|1982|1983|1984|1985|1986|1987|1988|1989|1990|1991|1992|1993|1994|1995|1996|1997|1998|1999|2000|2001|2002|2003|2004|2005|2006|2007|2008|2009|2010|2011|2012|2013|2014|2015|2016|2017|2018",
+				title: "NUTS_3_NAME"
+			})
+			.type("CHART|SYMBOL|PLOT|LINES|AREA|SMOOTH|FADE|LASTPOP|NOCLIP|MAX|GRID|BOX|TITLE|SIMPLELEGEND|AGGREGATE|RECT|GRIDSIZE")
+			.style({
+				colorscheme: [
+					"10",
+					"#04A3F4",
+					"#FF8506",
+					"3colors",
+					"#C4C4B0"
+				],
+				ranges: ["-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5"],
+				symbols: ["none"],
+				xaxis: ["1971", "", "", "", ".", "", "", "", "", "1980", "", "", "", "", ".", "", "", "", "", "1990", "", "", "", "", ".", "", "", "", "", "2000", "", "", "", "", ".", "", "", "", "", "2010", "", "", "", "", ".", "", "", "2018"],
+				opacity: "1",
+				fillopacity: "0.3",
+				units: "°C",
+				boxcolor: "none",
+				offsetx: -20,
+				scale: "0.85",
+				rangescale: "0.8",
+				linewidth: "20",
+				maxvalue: "4",
+				minvalue: "-2",
+				valuescale: 0,
+				valuedecimals: "1",
+				markersize: 1.2,
+				boxcolor: "white",
+				boxopacity: "0.05",
+				boxmargin: "50",
+				bordercolor: "none",
+				textscale: 0.85,
+				gridwidth: "150px",
+				titleupper: "1:2000000",
+				tooltip: "<h2 style='margin:0 0 0.5em 0.2em'>{{theme.item.title}}</h2>{{theme.item.chart}}<p style='margin-bottom:0;'>Estimated <b><span style='font-size:1.3em'>temperature variations</span></b> at two meters from the ground</p>"
+			})
+			.meta({
+				title: "<span style='font-family:Open sans;font-size:1.5em;font-weight:100'>Climate change",
+				snippet: "Temprerature changes by EU NUTS3 regions",
+				description: "aggregated (max) by grid"
+			})
+			.define();		
+		
+
+		var attribution = '<div style="padding:0.5em;background:rgba(255,255,255,0.2);width:70%"><span style="margin-bottom:-2em">data: <a href="https://climatechange.europeandatajournalism.eu/en/about/" target="_blank">climatechange.europeandatajournalism.eu</a></span><br><div style="margin:0.5em">citation from the site: \"The data analysis is based on data produced by UERRA regional reanalysis for Europe on single levels from 1961 to 2018, which was created by Copernicus and by the European Centre for Medium-Range Weather Forecasts (ECMWF). The data provides estimated temperatures values at two meters from the ground and it covers a cell grid, with cells 5,5x5,5 km large.\" </div>&nbsp;&nbsp;powered by <a href="http://ixmaps.com" target="_blank">iXMaps</a></div>';
+
+		var legend = '<div style="margin-left:3em;padding:0.5em;background:rgba(255,255,255,0.2)"><h1 style="margin-top:0.2em">40 years of Climate Change</h1><p style="margin-top:-1em">data: <a href="https://climatechange.europeandatajournalism.eu/en/about/" target="_blank">climatechange.europeandatajournalism.eu</a><br><div style="margin:0.5em 0em;width:70%;font-size:1.4em">Estimated <b><span style="font-size:1.3em">temperature variations</span></b> at two meters from the ground aggregated by NUTS 3 level</div><p><p>The <b>curve grid</b> shows the european locations with the <b>highest values in that area</b>. Please zoom in to see more.</p></div>';
+
+		// ----------------------------------------
+		// create the map
+		// ----------------------------------------
+
+		var map = ixmaps.Map(
+			"map", {
+				mapService: "leaflet_vt",
+				mapType: "VT_DATAVIZ",
+				mode: "pan",
+				tools: true,
+				width: "100%",
+				height: "800px",
+				legend: true
+			},
+			(map) =>
+			map
+			.view([49.48804553605622, 15.608398437500004], 4)
+			.options({
+				objectscaling: "dynamic", // grafici crescono leggermente con lo zoom
+				normalSizeScale: "5000000", // grandezza 'normale' al livello 1:5.000.000
+				dynamicScalePow: "1.8", // dynamica, 1 crescita lineare, valori > 1 meno crescita
+				panhidden: "false", // grafici visibile durante lo spostamento della mappa
+				basemapopacity: 0.7, // opacity of the 'leaflet' basemap
+			})
+			.attribution(attribution)
+			.legend(legend)
+			.layer(nuts_0)
+			.layer(nuts_3)
+			.layer(curves)
+		);
+
+	</script>
+</body>
+
+</html>

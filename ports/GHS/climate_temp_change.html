@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temperature change in urban centres</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/EuroStat/GHS/final/ixmaps_project_Climate_temp_diff_percent_Equal_Earth.json
+     in the style of where_people_live_equal_earth.html (shared setup: ghs_common.js) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [19.973348786110613, 33.22265625000001],
+    layers: [
+      GHS.urbanCentres("urban_centres", { value: "E_WR_T_14", value100: "E_WR_T_90", size: "H00_AREA" },
+        "CHART|QUANTILE|BUBBLE|RAW|FAST|GLOW",
+        { colorscheme: ["7", "#0BB1FF", "#FF0038", "3colors", "#FEB18A"], opacity: "0.9",
+          normalsizevalue: "1000", scale: "0.25", valuescale: "1", valuedecimals: "0" },
+        { title: "Temperature change<br>(urban centres)", snippet: "Average temperature change 1990 - 2015, sized by built-up area" })
+    ]
+  });
+</script>
+</body>
+</html>

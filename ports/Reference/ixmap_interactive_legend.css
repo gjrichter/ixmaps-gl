@@ -1,0 +1,339 @@
+html, body {
+    width: 100%; height: 100%;
+    margin: 0; padding: 0;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+#map { width: 100%; height: 100%; }
+
+/* ── Shared panel ─────────────────────────────────────── */
+.panel {
+    position: absolute;
+    z-index: 1000;
+    background: var(--card-bg); border: 1px solid var(--card-line);
+    -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow), inset 0 1px 0 var(--card-edge);
+    color: var(--card-ink);
+    padding: 14px 16px;
+}
+.panel-title {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--card-faint);
+    margin: 0 0 7px;
+    font-weight: 700;
+}
+.panel-sep { margin: 10px 0 12px; border: none; border-top: 1px solid #eee; }
+
+/* ── Control panel: one glass card per group (as ixmaps-gl ghs2024_sidebar) ── */
+/* glass card tokens, shared by the sidebar cards and the map title */
+:root {
+    --card-bg: linear-gradient(160deg, rgba(255,255,255,.72), rgba(240,240,242,.52));
+    --card-line: rgba(255,255,255,.8); --card-edge: rgba(255,255,255,.95);
+    --card-ink: #1d1d1f; --card-faint: #8e8e93; --card-item: #3a3a3c;
+    --card-hover: rgba(255,255,255,.6); --card-active: rgba(0,0,0,.08);
+    --card-shadow: 0 4px 14px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+}
+#ctrl-panel {
+    position: absolute; z-index: 1000; top: 18px; left: 18px; width: 220px; box-sizing: content-box;
+    max-height: calc(100vh - 90px); overflow-y: auto; padding: 10px 28px 32px; margin: -10px -28px 0;
+    display: flex; flex-direction: column; gap: 10px; color: var(--card-ink);
+}
+#ctrl-panel::-webkit-scrollbar { width: 6px; }
+.card {
+    background: var(--card-bg); border: 1px solid var(--card-line); border-radius: 14px; flex: none;
+    -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+    box-shadow: var(--card-shadow), inset 0 1px 0 var(--card-edge);
+}
+details.card > summary {
+    list-style: none; display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; cursor: pointer; user-select: none; font-size: 0.82rem; font-weight: 600;
+}
+details.card > summary::-webkit-details-marker { display: none; }
+.chev { flex: none; margin-left: auto; color: var(--card-faint); transition: transform .15s ease; }
+details.card[open] > summary .chev { transform: rotate(180deg); }
+.card-body { padding: 0 8px 10px; }
+
+.btn-col { display: flex; flex-direction: column; gap: 1px; margin-bottom: 0; }
+
+.map-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.79rem;
+    color: var(--card-item);
+    text-align: left;
+    line-height: 1.3;
+    transition: background 0.1s;
+}
+.map-btn:hover:not(.active) { background: var(--card-hover); }
+.map-btn.active { background: var(--card-active); color: var(--card-ink); font-weight: 600; }
+
+.swatch { display: inline-flex; gap: 2px; flex-shrink: 0; }
+.swatch span {
+    width: 9px; height: 9px; border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.1);
+    display: inline-block;
+}
+
+/* ── Map title ────────────────────────────────────────── */
+#map-title {
+    position: absolute; top: 18px;
+    left: 50%; transform: translateX(-50%);
+    z-index: 999;
+    background: var(--card-bg); border: 1px solid var(--card-line);
+    -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+    border-radius: 14px;
+    padding: 9px 22px;
+    font-size: 0.88rem; font-weight: 600;
+    color: var(--card-ink);
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: var(--card-shadow), inset 0 1px 0 var(--card-edge);
+}
+#map-subtitle {
+    font-size: 0.72rem; font-weight: 400; color: var(--card-faint);
+    display: block; margin-top: 1px; text-align: center;
+}
+
+/* ── Stats panel ──────────────────────────────────────── */
+#stats-panel { top: 62px; right: 18px; width: 200px; }
+
+.stat-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 0.79rem; padding: 4px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.stat-row:last-of-type { border-bottom: none; }
+.stat-label { color: var(--card-faint); }
+.stat-value { font-weight: 700; color: var(--card-ink); font-variant-numeric: tabular-nums; }
+
+#dist-bar {
+    margin-top: 10px; height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #deeaf5, #74b3d8, #3182bd, #08519c);
+}
+#dist-bar-labels {
+    display: flex; justify-content: space-between;
+    font-size: 0.67rem; color: #bbb; margin-top: 3px;
+}
+
+/* ── Move ixmaps zoom control to right side ──────────── */
+#onmapbuttondivzoom { left: auto !important; right: 10px !important; }
+
+/* ── Zoom badge ───────────────────────────────────────── */
+#zoom-badge {
+    position: absolute; bottom: 8px; left: 18px;
+    z-index: 999;
+    background: rgba(255,255,255,0.88);
+    border-radius: 5px; padding: 4px 9px;
+    font-size: 0.71rem; color: #aaa;
+    pointer-events: none;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+}
+
+/* ── Classification method label ─────────────────────── */
+#method-badge {
+    position: absolute; top: 18px; right: 18px;
+    z-index: 999;
+    background: rgba(26,95,201,0.9);
+    border-radius: 6px; padding: 6px 14px;
+    font-size: 0.75rem; color: #fff; font-weight: 600;
+    pointer-events: none;
+    letter-spacing: 0.04em;
+}
+
+/* ── Legend panel ─────────────────────────────────────── */
+#legend-panel { right: 18px; width: 200px; }
+
+.legend-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 3px 2px; border-radius: 4px;
+    cursor: default; transition: background 0.12s;
+    position: relative;
+}
+.legend-row:hover { background: var(--card-hover); }
+.legend-swatch {
+    width: 14px; height: 14px; border-radius: 3px;
+    flex-shrink: 0; border: 1px solid rgba(0,0,0,0.10);
+}
+.legend-range {
+    font-size: 0.75rem; color: var(--card-item); flex: 1;
+    font-variant-numeric: tabular-nums;
+}
+.legend-count {
+    font-size: 0.70rem; color: #bbb;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── ixmaps tooltip container overrides ──────────────── */
+#tooltipDiv {
+    border-radius: 10px !important;
+    border: 1px solid rgba(0,0,0,0.07) !important;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.13) !important;
+    padding: 10px 12px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+    background: #fff !important;
+}
+#tooltipDiv > div { margin: 0 !important; }
+
+/* ── Legend class tooltip card ────────────────────── */
+.legend-tip {
+    display: none;
+    position: absolute; right: 210px; top: -4px;
+    background: #fff; color: #333;
+    border: 1px solid #e8eaf0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    width: 215px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    z-index: 2000; pointer-events: none;
+}
+.legend-row:hover .legend-tip { display: block; }
+.legend-tip-hdr {
+    display: flex; align-items: center; gap: 7px;
+    font-weight: 700; font-size: 0.76rem; color: #1a1a2e;
+    padding-bottom: 7px; margin-bottom: 7px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.legend-tip-swatch {
+    width: 11px; height: 11px; border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.10); flex-shrink: 0;
+}
+.legend-tip-count {
+    margin-left: auto; font-weight: 400;
+    font-size: 0.70rem; color: #aaa;
+    white-space: nowrap;
+}
+.legend-tip-tags {
+    display: flex; flex-wrap: wrap; gap: 3px;
+}
+.legend-tip-tag {
+    background: #f3f5f9; color: #555;
+    border-radius: 3px; padding: 2px 5px;
+    font-size: 0.68rem; line-height: 1.4;
+}
+
+/* ── Mobile responsive ──────────────────────────────────────────── */
+
+/* Drag handle visual cue — shown only inside mobile sheets */
+.mob-handle {
+    display: none;
+    width: 36px; height: 4px;
+    background: #ddd; border-radius: 2px;
+    margin: 0 auto 14px;
+}
+
+/* Sections that only appear inside mobile sheets */
+.mob-only { display: none; }
+
+/* Floating action buttons — shown only on mobile */
+.mob-fab {
+    display: none;
+    position: absolute;
+    z-index: 2150;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.97);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.18);
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    color: #444;
+    padding: 0;
+    transition: transform 0.1s, background 0.15s, color 0.15s;
+}
+.mob-fab:active { transform: scale(0.91); }
+.mob-fab.active { background: #1a5fc9; color: #fff; box-shadow: 0 2px 14px rgba(26,95,201,0.4); }
+
+/* Full-screen overlay to close sheets */
+#mob-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.38);
+    z-index: 2050;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+#mob-overlay.visible { display: block; }
+
+@media (max-width: 640px) {
+    .mob-handle { display: block; }
+    .mob-only   { display: block; }
+    .mob-fab    { display: flex; }
+
+    /* FAB positions */
+    #mob-ctrl-btn { bottom: 68px; left: 16px; }
+    #mob-info-btn { bottom: 68px; right: 16px; }
+
+    /* Compact map title — subtitle hidden */
+    #map-title {
+        font-size: 0.80rem !important;
+        padding: 6px 14px !important;
+        top: 12px !important;
+        max-width: calc(100% - 32px);
+        box-sizing: border-box;
+    }
+    #map-subtitle { display: none; }
+
+    /* Hide badge on mobile (method shown in control sheet) */
+    #method-badge { display: none !important; }
+
+    /* Hide desktop legend — it renders inside stats sheet on mobile */
+    #legend-panel { display: none !important; }
+
+    /* Hide ixmaps zoom control — pinch-to-zoom replaces it on mobile */
+    #onmapbuttondivzoom { display: none !important; }
+
+    /* Control panel → bottom sheet */
+    #ctrl-panel {
+        top: auto !important;
+        left: 0 !important; right: 0 !important; bottom: 0 !important;
+        width: 100% !important; box-sizing: border-box !important;
+        max-height: 85vh !important;
+        border-radius: 16px 16px 0 0 !important;
+        transform: translateY(120vh) !important;
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        z-index: 2100 !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+        background: rgba(244,244,246,0.97) !important;
+        margin: 0 !important; padding: 14px 16px 0 !important;
+    }
+    #ctrl-panel.mob-open { transform: translateY(0) !important; }
+
+    /* Stats panel → bottom sheet (includes legend) */
+    #stats-panel {
+        top: auto !important;
+        left: 0 !important; right: 0 !important; bottom: 0 !important;
+        width: 100% !important; box-sizing: border-box !important;
+        max-height: 85vh !important;
+        border-radius: 16px 16px 0 0 !important;
+        transform: translateY(120vh) !important;
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        z-index: 2100 !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+    }
+    #stats-panel { background: rgba(244,244,246,0.97) !important; }
+    #stats-panel.mob-open { transform: translateY(0) !important; }
+
+    /* Touch-friendlier buttons */
+    .map-btn { padding: 10px 12px !important; font-size: 0.85rem !important; }
+
+    /* Pad sheet content so FABs (bottom: 68px, 46px tall) don't obscure rows */
+    #ctrl-panel, #stats-panel { padding-bottom: 120px !important; }
+
+    /* Zoom badge — centre-bottom on mobile */
+    #zoom-badge {
+        left: 50% !important; right: auto !important;
+        transform: translateX(-50%);
+        bottom: 18px !important;
+    }
+}

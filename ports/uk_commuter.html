@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example - UK commuter flows">
+	<meta name="author" content="guenter richter">
+	<title>UK Commuters</title>
+	<style>
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			height: 100%;
+			font-family: -apple-system, "Open Sans", sans-serif;
+			background: #F5F5F4;
+		}
+
+		#map-div {
+			width: 100%;
+			height: 100%;
+		}
+
+		#status {
+			position: absolute;
+			top: 1em;
+			left: 1em;
+			z-index: 10;
+			background: rgba(255, 255, 255, 0.9);
+			padding: 0.4em 0.8em;
+			border-radius: 4px;
+			font-size: 0.85em;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="map-div"></div>
+	<div id="status">loading UK commuter flows (680k records) ...</div>
+
+	<!-- include the ixmaps API -->
+	<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+
+		// create and embed the map
+		// ported from the ixmaps-flat Composer export uk_commuter.html
+		// (Downloads, Aug 2025) - config kept verbatim where portable:
+		// same type string, binding, style values; the flat SVG basemap
+		// ("../../maps/svg/maps/generic/mercator.svg") has no gl engine
+		// equivalent, "ArcGIS - Topo" resolves to the engine's light
+		// basemap style.
+
+		ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "ArcGIS - Topo",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			search: "Europe",
+			about: "test"
+		},
+			map => map
+				.options({
+					featurescaling: "true",
+					objectscaling: "true",
+					normalSizeScale: "20000000",
+					flushChartDraw: "1000000",
+					flushPaintShape: "1000000",
+					basemapopacity: "0.5",
+					panhidden: "false"
+				})
+				.attribution("data: kepler.gl ukcommute sample")
+				.view([51.98627908013043, -0.9309501229410612], 7.850886752957681)
+				.layer(ixmaps.layer("data", layer => layer
+					.data({
+						type: "csv",
+						name: "data_1786602858304",
+						url: "https://raw.githubusercontent.com/keplergl/kepler.gl-data/refs/heads/master/ukcommute/data.csv"
+					})
+					.binding({
+						geo: "residence_lat|residence_lng",
+						value: "$item$"
+					})
+					.type("CHART|VECTOR|BEZIER|POINTER|GRADIENT|AGGREGATE|RELOCATE|SUM|COUNT|CATEGORICAL|TEXTLEGEND")
+					.style({
+						colorscheme: [
+							1,
+							"white",
+							"blue"
+						],
+						shadow: false,
+						visible: true,
+						datacache: true,
+						lookupfield2: "workplace_lat|workplace_lng",
+						units: "",
+						refreshtimeout: 0,
+						normalsizevalue: "2000",
+						scale: 1,
+						rangescale: "3",
+						sizepow: "0.7",
+						sizefield: "all_flows",
+						minvalue: "1",
+						linecolor: [
+							"rgba(255,150,0,1)",
+							"rgba(0,155,100,1)"
+						],
+						markersize: "0.3",
+						valuescale: 1,
+						maxcharts: 5000,
+						archeight: "0.5",
+						name: "data",
+						title: "data",
+						tooltip: "{{theme.item.chart}}{{theme.item.data}}"
+					})
+				))
+		).then(() => {
+			document.getElementById('status').remove();
+		});
+
+	</script>
+</body>
+
+</html>

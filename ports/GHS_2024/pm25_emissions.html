@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM2.5 emissions 2024 — glow and labels</title>
+<!-- GHS_2024: update of ports/GHS/pm25_glow_labels_aggregated.html on the GHS Urban Centre Database R2024A
+     (shared setup: ghs2024_common.js)
+     (changed: labels show PM2.5 emissions 2024, the concentration is in pm25_concentration.html; the legacy aggregated-label variant is dropped — see ports/demo_blurr_and_text_GHS_orthographic.html for the same text layer) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs2024_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [36.949, 84.990],
+    layers: [
+      GHS.centres("pm25_glow", "emissions", ["EM_PM2_TOT_2024"], { value: "EM_PM2_TOT_2024" },
+        "GLOW|CHART|BUBBLE|SIZE|AGGREGATE|MEAN",
+        { colorscheme: ["7", "#F2F226", "#100050", "3colors", "#CC4878"], opacity: "0.5", fillopacity: "0.0001",
+          scale: "0.5", linecolor: ["none"], valuescale: "1", valuedecimals: "0", gridwidthpx: "5" },
+        { title: "PM2.5 emissions in 2024", snippet: "ton/year, all sectors" }),
+      GHS.centres("pm25_labels", "emissions", ["EM_PM2_TOT_2024", "GC_POP_TOT_2025"],
+        { value: "EM_PM2_TOT_2024" },
+        "CHART|LABEL|QUANTILE|VALUES",
+        { colorscheme: ["5", "#F2F226", "#100050", "3colors", "#CC4878"], fillopacity: "0.00001", sizefield: "GC_POP_TOT_2025", textcolor: "white",
+          rangecentervalue: "0", normalsizevalue: "10000000", scale: "1", valuescale: "1", valuedecimals: "0",
+          maxcharts: "100" },
+        { title: "PM2.5 emissions in 2024" })
+    ]
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<!-- ************************************************************************
+
+index_multi_variant_flowers_sized_grid_IV — GL port of the World Dataviz
+Prize 2023 original: ixmaps flat (htmlgui_api.js), equalearth SVG projection
+
+ported to the GL engine:
+  - mapType "white" (the GL engine's blank background), mercator projection
+  - the aggregated, gridded STARBURST theme (AGGREGATE|RECT|MEAN,
+    50px grid cells) draws with the GL engine's starburst pie
+    implementation — flat's XSBOW petal bowing is not ported
+
+************************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps really simple embed</title>
+</head>
+
+<body style='text-align:center'>
+
+    <!--========================================================================= -->
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+    <!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+
+		attribution =
+			"<h3 style=\"margin-bottom:-2em\">powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a></h3>";
+		legend = "<h1 style='font-size:3em;font-weight:50;'>Freedom Scores and Happy Planet Index</h1><h3 style='margin-top:-1.4em;font-size:1.5em;'><i class='icon icon-radio-checked2' style='color:#A4B9D0'/><i class='icon icon-radio-checked2' style='color:#CFE4F3'/><i class='icon icon-radio-checked2' style='color:#F8C695'/><i class='icon icon-radio-checked2' style='color:#FFDEBE'/> freedom scores 2018 <a href='https://freedomhouse.org' target='_blank'>https://freedomhouse.org</a> <i class='icon icon-radio-checked2' style='color:#ffdd22'/>  Happy Planet Index 2019 <a href='https://happyplanetindex.org/' target='_blank'>https://happyplanetindex.org/</a><h3>";
+
+		ixmaps.Map("mymap",
+				{
+					mapService: "leaflet_vt",
+					mapType:	"white",
+					mode:		"pan",
+					width:    	"100%",
+					legend:     true,
+					align:      "center"
+				},
+				map => map
+				.view([13.239945499286312,23.203125000000004],2)
+				.options({
+						objectscaling: "dynamic",
+						normalSizeScale: "13841043",
+						panhidden: "false"
+					})
+				.attribution(attribution)
+				.legend(legend)
+
+				.layer(
+					ixmaps.layer("World_countries")
+					.data({
+						url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/topojson/CNTR_RG_10M_2020_4326.json",
+						type: "topojson"
+					})
+					.binding({ id: "ISO3_CODE" })
+					.type("FEATURE")
+					.style({
+						colorscheme: ["#eeeeee"],
+						fillopacity: "0.7",
+						linecolor: ["#888888"],
+						linewidth: "0.3"
+					})
+					.define()
+				)
+
+				.layer(
+					ixmaps.layer("World_countries")
+					.data({
+						name: "themeDataObj",
+						url: "https://raw.githubusercontent.com/gjrichter/viz/master/World%20Dataviz%20Prize%202023/data/Dashboard_of_the_present_future.csv",
+						type: "csv",
+						cache: "true"
+					})
+					.binding({
+						lookup: "ISO Country code",
+						value: "political rights score 2022|civil liberties score 2022|government integrity score 2022|financial freedom score 2022",
+						title: "Country"
+					})
+					.type("CHART|PIE|XLRAYS|XSBOW|STARBURST|POLAR|SIZE|BOX|TITLE|NOLEGEND|AGGREGATE|RECT|MEAN")
+					.style({
+						colorscheme: ["10", "tableau"],
+						fillopacity: "0.5",
+						shadow: "false",
+						label: [
+							"political rights score 2018",
+							"civil liberties score 2018",
+							"government integrity score 2018",
+							"financial freedom score 2018"],
+						units: "",
+						refreshtimeout: "0",
+						normalsizevalue: "100",
+						scale: "0.8",
+						maxvalue: "100",
+						linecolor: ["#668800"],
+						linewidth: "0.5",
+						valuescale: "1",
+						valuedecimals: "0",
+						fadenegative: "1",
+						centerpart: "max",
+						boxopacity: "0",
+						bordercolor: "none",
+						evidence: "isolate_gray",
+						gridwidthpx: "50",
+						title: "Freedom scores 2018"
+					})
+					.meta({ title: "Freedom scores 2018" })
+					.define()
+				)
+
+				.layer(
+					ixmaps.layer("World_countries")
+					.data({
+						name: "themeDataObj",
+						url: "https://raw.githubusercontent.com/gjrichter/viz/master/World%20Dataviz%20Prize%202023/data/Dashboard_of_the_present_future.csv",
+						type: "csv",
+						cache: "true"
+					})
+					.binding({
+						lookup: "ISO Country code",
+						value: "happy planet index 2019",
+						title: "Country"
+					})
+					.type("CHART|SYMBOL|LINEAR|AGGREGATE|RECT|MEAN|VALUES")
+					.style({
+						colorscheme: ["7", "#FFFFFF", "#FFDF2D"],
+						fillopacity: "1",
+						shadow: "false",
+						units: "",
+						textcolor: "#000000",
+						linecolor: "#444444",
+						linewidth: "1",
+						scale: "1.2",
+						valuedecimals: "0",
+						showdata: "true",
+						dopacityscale: "1",
+						gridwidthpx: "50",
+						title: "World population 2018"
+					})
+					.meta({ title: "World population 2018" })
+					.define()
+				)
+		);
+
+	</script>
+  </body>
+</html>

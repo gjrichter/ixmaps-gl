@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where People Live (in urban areas) — Equal Earth</title>
+<!-- gl port of ixmaps legacy project
+     iframes/ixmaps/projects/EuroStat/GHS/final/ixmaps_project_Where_People_Live_Equal_Earth.json
+     Same two themes (dark country backdrop; urban centres CHART|BUBBLE|CATEGORICAL|GLOW|SUM, coloured by
+     biome class, sized by population P15), same data (GHS Urban Centre Database 2015), same Equal Earth
+     projection and start view. -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; font-family: -apple-system, sans-serif; }
+  #map_div { position: absolute; inset: 0; }
+  #projection-toggle {
+    position: absolute; left: 12px; bottom: 28px; z-index: 10;
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(20,20,20,0.85); color: #888; padding: 6px 12px; border-radius: 16px;
+    font-size: 12px; user-select: none;
+  }
+  #projection-toggle .pt-label.active { color: #fff; font-weight: 600; }
+  #projection-toggle .pt-switch {
+    position: relative; width: 40px; height: 20px; border-radius: 10px; background: #555; cursor: pointer; flex: none;
+  }
+  #projection-toggle .pt-switch.globe { background: #ff9800; }
+  #projection-toggle .pt-knob {
+    position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; transition: left 0.2s ease;
+  }
+  #projection-toggle .pt-switch.globe .pt-knob { left: 22px; }
+</style>
+</head>
+<body>
+<div id="map_div"></div>
+<div id="projection-toggle">
+  <span class="pt-label" id="pt-label-flat">Mercator</span>
+  <div class="pt-switch globe" id="pt-switch"><div class="pt-knob"></div></div>
+  <span class="pt-label active" id="pt-label-globe">Globe</span>
+</div>
+<script>
+  var BIOMES = [
+    "Tropical and Subtropical Dry Broadleaf Forests",
+    "Tropical and Subtropical Moist Broadleaf Forests",
+    "Mediterranean Forests, Woodlands, and Scrub",
+    "Temperate Grasslands, Savannas, and Shrublands",
+    "Deserts and Xeric Shrublands",
+    "Temperate Coniferous Forests",
+    "Tropical and Subtropical Coniferous Forests",
+    "Temperate Broadleaf and Mixed Forests",
+    "Boreal Forests/Taiga",
+    "Mangroves",
+    "Tropical and subtropical grasslands, savannas, and shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Tropical and Subtropical Coniferous Forests",
+    "Tropical and Subtropical Dry Broadleaf Forests;Tropical and Subtropical Coniferous Forests",
+    "Flooded Grasslands and Savannas",
+    "Tropical and Subtropical Moist Broadleaf Forests;Mangroves",
+    "Montane Grasslands and Shrublands",
+    "Tropical and Subtropical Dry Broadleaf Forests;Mangroves",
+    "NAN",
+    "Tundra",
+    "Tropical and subtropical grasslands, savannas, and shrublands;Deserts and Xeric Shrublands",
+    "Tropical and subtropical grasslands, savannas, and shrublands;Montane Grasslands and Shrublands",
+    "Tropical and subtropical grasslands, savannas, and shrublands;Flooded Grasslands and Savannas",
+    "Lakes",
+    "Tropical and Subtropical Moist Broadleaf Forests;Montane Grasslands and Shrublands",
+    "Temperate Coniferous Forests;Deserts and Xeric Shrublands",
+    "Tropical and Subtropical Dry Broadleaf Forests;Deserts and Xeric Shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Deserts and Xeric Shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Tropical and subtropical grasslands, savannas, and shrublands",
+    "Tropical and Subtropical Moist Broadleaf Forests;Tropical and Subtropical Dry Broadleaf Forests"
+  ];
+
+  var world = ixmaps.layer("World_countries", layer => layer
+    .data({ url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/topojson/CNTR_RG_10M_2020_4326.json", type: "topojson", cache: "true" })
+    .binding({ geo: "geometry", id: "ISO3_CODE" })
+    .type("FEATURE|NOLEGEND")
+    .style({
+      colorscheme: ["#444444"],
+      opacity: "1",
+      shadow: "false",
+      linecolor: ["#000000"],
+      linewidth: "0.5"
+    })
+    .meta({ name: "countries", tooltip: "{{}}" })
+  );
+
+  var cities = ixmaps.layer("urban_centres", layer => layer
+    .data({ url: "https://s3.eu-west-1.amazonaws.com/data.ixmaps.com/EuroStat/GHS_STAT_UCDB2015MT_GLOBE_R2019A_V1_1.csv.gz", type: "csv", name: "ghs_ucdb", cache: "true" })
+    .binding({ lookupfield: "GCPNT_LAT|GCPNT_LON", value: "E_BM_NM_LST", size: "P15" })
+    .type("CHART|BUBBLE|RAW|FAST|CATEGORICAL|GLOW|SUM")
+    .style({
+      colorscheme: ["29", "fruit"],
+      values: BIOMES,
+      opacity: "0.9",
+      shadow: "false",
+      normalsizevalue: "100000000",
+      scale: "1",
+      valuescale: "1",
+      valuedecimals: "0"
+    })
+    .meta({
+      name: "urban_centres",
+      title: "Where People Live<br>(in urban areas)",
+      snippet: "Urban Centres colored by Climate Class and sized by Population",
+      description: "data: <a href='https://ghsl.jrc.ec.europa.eu/ucdb2018Overview.php' target='_blank'>GHS Urban Centre Database 2015</a>",
+      splash: "... loading 8 Mb data to show where people live on this planet ...",
+      tooltip: "<b>{{theme.title}}</b><br>{{theme.item.chart}}"
+    })
+  );
+
+  window._mapPromise = ixmaps.Map("map_div", { mapType: "black", mapProjection: "orthographic", legend: "true" },
+    map => map.view([19.973348786110613, 33.22265625000001], 2)
+      .options({ objectscaling: "dynamic", normalSizeScale: "55364168", flushChartDraw: "1000000" })
+      .layer(world)
+      .layer(cities)
+  );
+
+  // --- Projection toggle: Mercator <-> Globe ---
+  // swap the projection, keep the current view (same call as ports/DSMW_Globe_colors.html)
+  var switchEl = document.getElementById("pt-switch");
+  var labelFlat = document.getElementById("pt-label-flat");
+  var labelGlobe = document.getElementById("pt-label-globe");
+  var isGlobe = true;   // the map starts as a globe (mapProjection: "orthographic" above)
+
+  function setProjection(toGlobe) {
+    var project = JSON.parse(ixmaps.getProjectString());
+    project.map.map = ixmaps.szResourceBase + "maps/svg/maps/generic/" + (toGlobe ? "orthographic" : "mercator") + ".svg";
+    ixmaps.setProjectJSON(project, "keepview");
+    isGlobe = toGlobe;
+    switchEl.classList.toggle("globe", toGlobe);
+    labelFlat.classList.toggle("active", !toGlobe);
+    labelGlobe.classList.toggle("active", toGlobe);
+  }
+
+  switchEl.addEventListener("click", function () { setProjection(!isGlobe); });
+</script>
+</body>
+</html>

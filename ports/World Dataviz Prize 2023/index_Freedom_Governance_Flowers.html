@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<!-- ************************************************************************
+
+index_Freedom_Governance_Flowers — GL port of the World Dataviz Prize 2023
+original: ixmaps flat (htmlgui_api.js), winkel SVG projection
+
+ported to the GL engine:
+  - mapType "white" (the GL engine's blank background), mercator projection
+  - the two multi-field STARBURST themes (POLAR circles, BOX/TITLE on the
+    freedom theme) draw with the GL engine's starburst pie implementation
+
+************************************************************************** -->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+
+	<title>iXMaps really simple embed</title>
+</head>
+
+<body style='text-align:center'>
+
+    <!--========================================================================= -->
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+    <!--========================================================================= -->
+
+	<script type="text/javascript" charset="utf-8">
+
+		attribution =
+			"<h3 style=\"margin-bottom:-2em\">powered by <a href=\"http://ixmaps.com\" target=\"_blank\">iXMaps</a></h3>";
+		legend = "<h1 style='font-size:3em;'>Freedom and governance</h1><h3 style='margin-top:-1.4em;font-size:1.5em;'><i class='icon icon-radio-checked2' style='color:#B4dd00'/> freedom scores 2022 <a href='https://freedomhouse.org' target='_blank'>https://freedomhouse.org</a> <i class='icon icon-radio-checked2' style='color:#ffdd22'/>  Worldwide Governance Indicators 2021 <a href='https://databank.worldbank.org/source/worldwide-governance-indicators' target='_blank'>https://databank.worldbank.org</a><h3>";
+
+		ixmaps.Map("mymap",
+				{
+					mapService: "leaflet_vt",
+					mapType:	"white",
+					mode:		"pan",
+					width:    	"100%",
+					height:		"800px",
+					legend:     true,
+					align:      "center"
+				},
+				map => map
+				.view([13.239945499286312,23.203125000000004],2)
+				.options({
+						objectscaling: "dynamic",
+						normalSizeScale: "13841043",
+						panhidden: "false"
+					})
+				.attribution(attribution)
+				.legend(legend)
+
+				.layer(
+					ixmaps.layer("World_countries")
+					.data({
+						url: "https://s3.eu-central-1.amazonaws.com/maps.ixmaps.com/topojson/CNTR_RG_10M_2020_4326.json",
+						type: "topojson"
+					})
+					.binding({ id: "ISO3_CODE" })
+					.type("FEATURE")
+					.style({
+						colorscheme: ["#dddddd"],
+						fillopacity: "0.7",
+						linecolor: ["#888888"],
+						linewidth: "0.3"
+					})
+					.define()
+				)
+
+				.layer(
+					ixmaps.layer("World_countries")
+					.data({
+						name: "themeDataObj",
+						url: "https://raw.githubusercontent.com/gjrichter/viz/master/World%20Dataviz%20Prize%202023/data/Dashboard_of_the_present_future.csv",
+						type: "csv",
+						cache: "true"
+					})
+					.binding({
+						lookup: "ISO Country code",
+						value: "political rights score 2022|civil liberties score 2022|judicial effectiveness score 2022|government integrity score 2022|overall economic freedom score 2022|financial freedom score 2022",
+						title: "Country"
+					})
+					.type("CHART|PIE|XLRAYS|STARBURST|POLAR|SIZE|BOX|TITLE|NOLEGEND")
+					.style({
+						colorscheme: ["#B4dd00"],
+						fillopacity: "0.4",
+						shadow: "false",
+						label: [
+							"political rights score 2022",
+							"civil liberties score 2022",
+							"judicial effectiveness score 2022",
+							"government integrity score 2022",
+							"overall economic freedom score 2022",
+							"financial freedom score 2022"],
+						units: "",
+						refreshtimeout: "0",
+						normalsizevalue: "300",
+						scale: "1",
+						maxvalue: "100",
+						linecolor: ["#668800"],
+						linewidth: "1",
+						valuescale: "1",
+						valuedecimals: "0",
+						fadenegative: "1",
+						centerpart: "max",
+						boxopacity: "0",
+						bordercolor: "none",
+						evidence: "isolate_gray"
+					})
+					.meta({ title: "Freedom scores 2022" })
+					.define()
+				)
+
+				.layer(
+					ixmaps.layer("World_countries")
+					.data({
+						name: "themeDataObj",
+						url: "https://raw.githubusercontent.com/gjrichter/viz/master/World%20Dataviz%20Prize%202023/data/Dashboard_of_the_present_future.csv",
+						type: "csv",
+						cache: "true"
+					})
+					.binding({
+						lookup: "ISO Country code",
+						value: "political stability & absence of violence 2021|government effectiveness 2021|regulatory quality 2021|rule of law 2021|control of corruption 2021",
+						title: "Country"
+					})
+					.type("CHART|PIE|XLRAYS|STARBURST|SIZE|NOLEGEND")
+					.style({
+						colorscheme: ["#ffdd22"],
+						fillopacity: "0.6",
+						shadow: "false",
+						label: [
+							"political stability & absence of violence 2021",
+							"government effectiveness 2021",
+							"regulatory quality 2021",
+							"rule of law 2021",
+							"control of corruption 2021"],
+						units: "",
+						refreshtimeout: "0",
+						normalsizevalue: "10",
+						scale: "1",
+						maxvalue: "2",
+						linecolor: ["#882200"],
+						linewidth: "1",
+						titlefield: "country",
+						valuescale: "1",
+						valuedecimals: "2",
+						fadenegative: "1",
+						centerpart: "max",
+						evidence: "isolate_gray"
+					})
+					.meta({ title: "Worldwide Governance Indicators 2021" })
+					.define()
+				)
+		);
+
+	</script>
+  </body>
+</html>

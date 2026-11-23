@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where People Live (in urban areas) — 2025</title>
+<!-- GHS_2024: update of ports/GHS/where_people_live_equal_earth.html on the GHS Urban Centre Database R2024A
+     (shared setup: ghs2024_common.js)
+     (changed: the 2015 database coloured by climate class; R2024A has no climate class, so the centres are coloured by UN SDG region) -->
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script src="ghs2024_common.js"></script>
+</head>
+<body>
+<div id="map_div"></div>
+<script>
+
+  GHS.start({
+    view: [19.973348786110613, 33.22265625000001],
+    layers: [
+      GHS.centres("urban_centres", "ghsl", ["GC_POP_TOT_2025", "GC_DEV_USR_2025", "GC_UCN_MAI_2025"],
+        { value: "GC_DEV_USR_2025", size: "GC_POP_TOT_2025", title: "GC_UCN_MAI_2025" },
+        "CHART|BUBBLE|RAW|FAST|CATEGORICAL|GLOW|SUM",
+        { colorscheme: ["9", "fruit"], values: ["Eastern and South-Eastern Asia", "Central and Southern Asia", "Sub-Saharan Africa", "Europe", "Latin America and the Caribbean", "Northern Africa and Western Asia", "Northern America", "Australia and New Zealand", "Oceania"], opacity: "0.9",
+          normalsizevalue: "100000000", scale: "1", valuescale: "1", valuedecimals: "0" },
+        { title: "Where People Live<br>(in urban areas)", snippet: "Urban Centres colored by UN SDG region and sized by Population (2025)",
+          splash: "... loading data to show where people live on this planet ..." })
+    ]
+  });
+</script>
+</body>
+</html>

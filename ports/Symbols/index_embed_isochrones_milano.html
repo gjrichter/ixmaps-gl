@@ -1,0 +1,19 @@
+<!doctype html><html><body style="margin:0"><div id="map2"></div>
+<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+<script>
+const SYM="https://raw.githubusercontent.com/gjrichter/pages/main/City/symbols/walking-svgrepo-com.svg";
+document.activeElement.appendChild(ixmaps.Map("map2",{mapService:"leaflet_vt",mapType:"VT_TONER_LITE",width:"1000px",height:"640px",mode:"pan",legend:"true"},
+ map=>map.view([45.4641,9.1919],12.3)
+ .layer(ixmaps.layer("isochrones").data({url:"isochrones_milano.json",type:"geojson"})
+  .binding({geo:"geometry",value:"contour"})
+  .style({type:"FEATURES|CHOROPLETH|CATEGORICAL",colorscheme:["#2b8cbe","#7bccc4","#ccebc5"],fillopacity:"0.55",linecolor:"white",linewidth:"1",
+          title:"Walking time from Duomo (min)",name:"isochrones"}).json())
+ .layer(ixmaps.layer("hospitals").data({url:"isochrones_milano_hospitals.csv",type:"csv"})
+  .binding({position:"lat|lon",value:"name",title:"name"})
+  .style({type:"CHART|SYMBOL|NOSIZE|NOLEGEND",colorscheme:["#d62828"],symbols:["symbols/hospital.svg"],scale:"0.8",
+          tooltip:"{{name}}",name:"hospitals"}).json())
+ .layer(ixmaps.layer("origin").data({url:"isochrones_milano_origin.csv",type:"csv"})
+  .binding({position:"lat|lon",value:"name"})
+  .style({type:"CHART|SYMBOL|NOSIZE|NOLEGEND",colorscheme:["#222"],symbols:[SYM],scale:"0.7",name:"origin"}).json())
+));
+</script></body></html>

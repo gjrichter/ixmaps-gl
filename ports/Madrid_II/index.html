@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+	<title>Madrid Trees (ixmaps-gl)</title>
+
+	<!-- Port of the ixmaps Viewer story "Madrid_II_dyn" to the gl engine.
+
+	     The flat Viewer (app/Viewer) embeds the engine with a story sidebar. ixmaps-gl has no
+	     story host, so this page is the host: the gl map on the left, the unchanged story
+	     (story/index.html) in an iframe on the right. The story reads its API from
+	     parent.window.ixmaps, which is the gl engine's ixmaps object here — plus the few
+	     host functions the flat Viewer provided (waitForMap, loadStoryTool, showLoading ...),
+	     defined below. -->
+
+	<style>
+		html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
+		#map   { position: absolute; top: 0; left: 0; bottom: 0; width: 62%; }
+		#story { position: absolute; top: 0; right: 0; height: 100%; width: 38%; border: 0; border-left: 1px solid #ddd; }
+
+		/* floating story tool (filter, layer, about, menu, table ...) */
+		#storytool { display: none; position: absolute; top: 56px; left: 16px; width: 380px; height: 72%;
+			background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 14px rgba(0,0,0,.25);
+			z-index: 20; flex-direction: column; overflow: hidden; }
+		#storytool .bar { height: 26px; background: #f2f2f2; border-bottom: 1px solid #ddd; font: 12px/26px system-ui, sans-serif;
+			padding: 0 10px; display: flex; justify-content: space-between; cursor: default; }
+		#storytool .bar a { color: #666; text-decoration: none; cursor: pointer; }
+		#storytool iframe { flex: 1; width: 100%; border: 0; }
+		#loading { display: none; position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 30;
+			background: rgba(255,255,255,.9); padding: 4px 14px; border-radius: 12px; font: 13px system-ui, sans-serif; color: #555; }
+	</style>
+</head>
+
+<body>
+	<div id="map"></div>
+	<iframe id="story" src="story/Madrid_II_dyn/index.html"></iframe>
+
+	<div id="storytool"><div class="bar"><span id="storytool-title"></span><a id="storytool-close">&times;</a></div><iframe></iframe></div>
+	<div id="loading"></div>
+
+	<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+
+	<script>
+		// ------------------------------------------------------------
+		// host functions of the flat Viewer, used by the story
+		// ------------------------------------------------------------
+
+		var mapReady = [];
+		var theMap = null;
+
+		ixmaps.waitForMap = function (id, fCallback) {
+			if (theMap) { fCallback(theMap); } else { mapReady.push(fCallback); }
+		};
+
+		ixmaps.setSyncMultiMaps = function () { };
+
+		var loadingEl = document.getElementById("loading");
+		ixmaps.showLoading = function (szMessage) {
+			loadingEl.innerHTML = szMessage || "";
+			loadingEl.style.display = szMessage ? "block" : "none";
+		};
+		ixmaps.hideLoading = function () { loadingEl.style.display = "none"; };
+
+		// the story's tools (filter.html, layer.html, ...) are pages that read parent.window.ixmaps
+		var tool = document.getElementById("storytool");
+		var toolFrame = tool.querySelector("iframe");
+		ixmaps.loadStoryTool = function (szUrl, opt) {
+			toolFrame.src = new URL(szUrl, document.getElementById("story").contentWindow.location.href).href;
+			document.getElementById("storytool-title").textContent = szUrl.replace(/^.*\//, "").replace(/\.html.*$/, "");
+			tool.style.display = "flex";
+		};
+		ixmaps.hideStoryTool = function () {
+			tool.style.display = "none";
+			toolFrame.src = "about:blank";
+			if (ixmaps.htmlgui_onHideStoryTool) { ixmaps.htmlgui_onHideStoryTool(); }
+		};
+		ixmaps.resizeStoryToolFrame = function () { };
+		document.getElementById("storytool-close").onclick = function () { ixmaps.hideStoryTool(); };
+
+		// flat's htmlgui name of the basemap type query (selection.html)
+		ixmaps.htmlgui_getMapTypeId = function () { return ixmaps.getMapTypeId(); };
+
+		ixmaps.popupShare =function () { window.prompt("link to this map", location.href); };
+		ixmaps.fullScreen = function () { };
+
+		// ------------------------------------------------------------
+		// the map
+		// ------------------------------------------------------------
+
+		ixmaps.Map("map", { mapType: "white", mapProjection: "mercator" })
+			// the story's data providers (project data.ext scripts) run only when the page trusts them
+			.options({ trustedscripts: [
+				"https://raw.githubusercontent.com/gjrichter/viz/",
+				"https://gjrichter.github.io/viz/",
+				location.origin + "/"
+			] })
+			.then(function (api) {
+				// flat's map.setLocalString(orig, local) is the page-wide ixmaps.setLocalString here
+				if (!api.setLocalString) { api.setLocalString = function (a, b) { ixmaps.setLocalString(a, b); }; }
+				theMap = api;
+				mapReady.splice(0).forEach(function (f) { f(api); });
+			});
+	</script>
+</body>
+
+</html>

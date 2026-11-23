@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ixmaps embed example">
+	<meta name="author" content="guenter richter">
+	<link rel="shortcut icon" href="https://gjrichter.github.io/ixmaps/ui/resources/images/ixmaps_logo.png">
+ 
+	<title>Created by Composer</title>
+</head>
+ 
+<body style="margin:0;padding:0;">
+ 
+	<!-- here goes the map -->
+	<div id="map-div"></div>
+ 
+	<!-- include the ixmaps API -->
+	<script src="https://cdn.jsdelivr.net/npm/ixmaps-gl@0/ixmaps-gl.js"></script>
+ 
+	<script type="text/javascript" charset="utf-8">
+ 
+		// create and embed the map
+		// ! reference to "map-div", the hosting html div
+
+		ixmaps.Map("map-div", {
+			mapService: "leaflet_vt",
+			mapType: "VT_BASIC_LIGHT",
+			map: "../../maps/svg/maps/generic/mercator.svg",
+			name: "map_1",
+			mode: "pan",
+			legend: "true",
+			tools: "true",
+			search: "Europe",
+			about: "test"
+		},
+		map => map
+		.options({
+			featurescaling: "true",
+			objectscaling: "true",
+			normalSizeScale: "20000000",
+			flushChartDraw: "1000000",
+			flushPaintShape: "1000000",
+			basemapopacity: "0.5",
+			worksilent: "false",
+			loadsilent: "false",
+			hideOnPan:  "false",
+			freezeOnPan:"false",
+		})
+		.attribution("")
+		.view({
+			"center": {
+				"lat": 42.18457324270603,
+				"lng": 10.988196919075449
+			},
+			"zoom": 6.085533806682715
+		})
+		.layer(ixmaps.layer("alberiMonumentali", layer => layer
+			.data({
+				"type": "csv",
+				"name": "data_1792346731049",
+				"url": "https://raw.githubusercontent.com/ondata/alberimonumentaliitalia/master/alberiMonumentali.csv"
+			})
+			.binding({
+				"geo": "latitude|longitude",
+				"value": "NOME VOLGARE"
+			})
+			.type("CHART|SYMBOL|GRIDSIZE|FAST|AGGREGATE|SUM|DOPACITYMAX|CATEGORICAL|CENTER|DOMINANT")
+			.style({
+				"colorscheme": [
+					215,
+					"tableau"
+				],
+				"fillopacity": 0.7,
+				"shadow": false,
+				"visible": true,
+				"datacache": true,
+				"showdata": true,
+				"symbols": [
+					"hexagon"
+				],
+				"units": "",
+				"refreshtimeout": 0,
+				"scale": 1,
+				"sizepow": 2,
+				"dopacitypow": "2",
+				"dopacityscale": "2",
+				"valuescale": 1,
+				"gridwidthpx": 15,
+				"dominantfilter": "min",
+				"dominantdfilter": 0,
+				"name": "alberiMonumentali",
+				"title": "alberiMonumentali",
+				"tooltip": "{{theme.item.chart}}{{theme.item.data}}"
+			})
+		))
+	);
+	</script>
+</body>
+</html>
