@@ -1,1 +1,13 @@
 .DS_Store
+
+# working copies and local data not used by any page (2026-11-23)
+stage-dev/
+/js/
+/data/
+ports/PNRR/data/
+
+# duplicate copies
+* copy.*
+* - Copy.*
+ports/js/facet_copy.js
+ports/alberiMonumentali_ixmaps (4).html
