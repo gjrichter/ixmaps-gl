@@ -123,6 +123,16 @@ page. It currently implements:
   `RANGES` flag needed); `LASTPOP` puts a dot on each cell's last point (`linewidth` × `markersize`).
   `BOX` + `GRID` draw flat's coordinate grid: y lines and labels on the axis' rounded steps (the zero
   line solid), plus x ticks and labels from `style.xaxis`
+  · `gridx` draws several curves in one chart, as flat: the value fields come x-major (all curves' first
+  values, then all second ones …), value i on curve i % gridx at x ⌊i / gridx⌋, each curve in its own
+  colorscheme color; `STACKED` stacks them (with `AREA` a band per curve), the legend lists `style.label`
+  (one row per curve; a stacked area top to bottom). `field100` (`FRACTION`, `PERMILLE` …) on an
+  `AGGREGATE` chart is applied to each item's sums, as in flat
+  · `PLOTVAR` (flat's plot of variation) adds the theme's mean ± standard deviation of every value field
+  (the records' mean, or with `MEDIAN` the items' median; σ over the items): with `LINES` a grey band and
+  the means as a dotted line (band opacity 0.4, flat 0.2), else a bar with ticks at every x
+  · the tooltip's `{{theme.item.chart}}` is the chart enlarged, on flat's coordinate grid over its own
+  value range, in the shape it has on the map
   · PLOT charts (per item and per grid cell) are drawn from their SVG drawing in the chart pane over the
   map (see `CHART|USER` below), as flat draws them — sharp at every zoom, line widths as set — while at
   most 2000 are in view; with more, as WebGL icons
@@ -192,7 +202,9 @@ together), and every frame draws the bitmaps with `drawImage` — smooth while t
 rotates or tilts, with no DOM element per chart and no shared WebGL icon atlas. While the camera
 moves a chart shows the nearest raster it has; when it stops, the charts are rasterized again at
 their settled size, so they are sharp at rest. On a tilted camera farther charts are smaller, as
-deck.gl's billboards. Picking/tooltips run on a transparent deck layer at the same positions.
+deck.gl's billboards. Picking/tooltips run on a transparent deck layer at the same positions; on a
+tilted map or one with 3D terrain (where that ground layer no longer lies under the upright charts,
+or lies under the terrain) the chart under the pointer is taken from the charts' screen rectangles.
 `.options({chartcanvas: false})` (or `window.ixmapsGlChartCanvas = false`, or `?ixgl-chartsvg` in
 the page URL) keeps the charts as live SVG elements instead — vector at every frame, but a rotation
 or tilt re-styles every chart element per frame. SVG drawn as an image cannot load external images:
@@ -482,6 +494,11 @@ uncompressed (a server's gzip is undone on download), so preload only what most 
 3. `gridwidth: "Npx"`: the same, as a string
 4. `gridwidth: N` (a bare number): meters, the same cells at every zoom
 5. none of them: no grid, items stay at their positions
+
+`aggregationfield` groups the records by that field's value instead (one item per value, drawn at its records'
+center), unless a matching `aggregation` pair sets a width or another field for the scale; `aggregation:
+"sum"` / `"mean"` is the aggregation mode, not a field. `aggregationupper` / `aggregationlower` (`"1:N"`)
+switch the aggregation off outside that scale range: each record is its own item.
 
 With `CATEGORICAL|COUNT` and no size field the size of a symbol follows the number of records in its cell:
 radius = `15 px × scale × (count / normalsizevalue)^(1/sizepow)`, scaled with the zoom (`objectscaling`) and

@@ -2802,13 +2802,13 @@ self.onmessage = e => {
   // fraction), and clamped to 0-255. The named palettes are
   // flatPaletteScheme's; spectrum/spectral (flat's colour-wheel generator)
   // is not ported: null, the caller's fallback.
-  const FLAT_PALETTE_SCHEMES = /^(spectrum|spectral|office|mineral|minaral|pastel|harvest|fruit|kmeansp?|pimp|intense|fluo|tableau(10|20)?|viridis|plasma|magma)$/i;
+  const FLAT_PALETTE_SCHEMES = /^(spectrum|spectral|office|mineral|minaral|pastel|harvest|fruit|kmeansp?|pimp|intense|fluo|tableau(10|20)?|viridis|plasma|magma|batlow)$/i;
   const FLAT_SWEEP_MODES = ['auto', 'linear', 'dynamic', '2colors', '2wide', '2narrow', '2low', '2high', '3colors', '3wide', '3narrow', '3low', '3high'];
 
   // flat's named palettes (colorscheme.js 832-1177, 1197-1268), the tables
   // copied from flat's source: ["N", "tableau", offset] takes N colors of the
   // palette from offset on, repeating it cyclically
-  // (_circ_createPaletteColorScheme); viridis / plasma / magma are 32-stop
+  // (_circ_createPaletteColorScheme); viridis / plasma / magma / batlow are 32-stop
   // sequential maps resampled to N stops with linear interpolation
   // (_circ_createSequentialPaletteColorScheme). flat matches each name in
   // three spellings only — lower, UPPER, Title ("Minaral" for mineral).
@@ -2897,6 +2897,14 @@ self.onmessage = e => {
       '#54137D', '#601880', '#6D1D81', '#792282', '#882781', '#942C80', '#A1307E', '#AE347B',
       '#BD3977', '#CA3E72', '#D6456C', '#E24D66', '#EC5860', '#F3655C', '#F8745C', '#FB835F',
       '#FD9266', '#FEA36F', '#FEB27A', '#FEC185', '#FECF92', '#FDE0A1', '#FCEEB0', '#FCFDBF'
+    ],
+    // Fabio Crameri's scientific colour map batlow (https://www.fabiocrameri.ch/colourmaps/, MIT, via
+    // cmcrameri), 32 stops resampled evenly from its 256-stop table, as flat's colorscheme.js has it
+    batlow: [
+      '#011959', '#08265B', '#0D315D', '#0F3B5F', '#114460', '#144C62', '#175362', '#1C5B62',
+      '#246160', '#2D675D', '#386C58', '#457051', '#51744A', '#5E7843', '#6C7C3C', '#7A8035',
+      '#89842F', '#99882C', '#A98C2C', '#B98F32', '#C9923C', '#D79448', '#E49756', '#EF9C67',
+      '#F7A17A', '#FBA78D', '#FDADA0', '#FDB3B2', '#FDB9C3', '#FCBFD5', '#FBC6E7', '#FACCFA'
     ]
   };
   const FLAT_PALETTE_NAMES = (() => {
@@ -3384,29 +3392,31 @@ self.onmessage = e => {
   let _chartPaneSeq = 0;   // the themes' ids in the canvas pane's bitmap cache
   // A tilted camera's depth scale for screen-sized charts, as deck.gl sizes its pixel billboards (icons):
   // their px are clip-space px times the focal distance, so after the perspective divide a chart shrinks
-  // with its depth w — focalDistance / w, 1 at the map's center, under 1 towards the horizon. The SVG
-  // chart pane draws on screen, so it measures that factor: a screen row of a tilted camera is a line of
-  // one depth on the ground, the ground length one px spans there grows with w, and the ratio of the
-  // center's to the chart's is the factor. Ground length in Mercator units (the camera renders the
-  // Mercator plane), on the globe in meters. Returns null without a tilt (every factor 1).
+  // with its depth w — focalDistance / w, 1 at the map's center, under 1 towards the horizon. For a point
+  // of the ground plane at screen row y that is, from the camera alone,
+  //   focalDistance / w = 1 + tan(pitch) · (y − cy) / f
+  // (cy: the camera's center row — the canvas middle shifted by the padding; f: the focal length in px,
+  // (height / 2) / tan(fov / 2)). Taken from the camera, not by unprojecting screen points: with 3D terrain
+  // MapLibre unprojects onto the terrain, whose elevation it freezes while the camera moves, so measured
+  // ground spans jumped from frame to frame during a pan (factors 1.24 … 1.85 for one point) and the charts
+  // flickered in size; deck.gl's billboards stand on the plane, not on the terrain. On the globe the plane
+  // is the tangent plane at the center (close enough at the zooms a tilt is used). Returns null without a
+  // tilt (every factor 1).
   function chartDepthScaler(map) {
-    if (!(map.getPitch() > 0.5)) return null;
-    const proj = (typeof map.getProjection === 'function' && map.getProjection()) || {};
-    const globe = proj.type === 'globe';
-    const r = Math.PI / 180;
-    const merc = ll => [ll.lng * r, Math.log(Math.tan(Math.PI / 4 + Math.max(-85.06, Math.min(85.06, ll.lat)) * r / 2))];
-    const perPx = (x, y) => {
-      const a = map.unproject([x, y]), b = map.unproject([x + 1, y]);
-      if (globe) return greatCircleMeters([a.lng, a.lat], [b.lng, b.lat]);
-      const [ax, ay] = merc(a), [bx, by] = merc(b);
-      return Math.hypot(bx - ax, by - ay);
-    };
-    const c = map.project(map.getCenter());
-    const ref = perPx(c.x, c.y);
-    if (!(ref > 0)) return null;
+    const pitch = map.getPitch();
+    if (!(pitch > 0.5)) return null;
+    const canvas = typeof map.getCanvas === 'function' ? map.getCanvas() : null;
+    const H = canvas ? canvas.clientHeight : 0;
+    if (!(H > 0)) return null;
+    const fov = typeof map.getVerticalFieldOfView === 'function' ? map.getVerticalFieldOfView()
+      : (map.transform && isFinite(map.transform.fov) ? map.transform.fov : 36.87);
+    const f = (H / 2) / Math.tan(fov * Math.PI / 360);
+    const pad = typeof map.getPadding === 'function' ? (map.getPadding() || {}) : {};
+    const cy = H / 2 + ((pad.top || 0) - (pad.bottom || 0)) / 2;
+    const t = Math.tan(pitch * Math.PI / 180);
     return p => {
-      const k = ref / perPx(p.x, p.y);
-      return k > 0 && isFinite(k) ? Math.min(8, Math.max(0.02, k)) : 1;
+      const k = 1 + t * (p.y - cy) / f;
+      return isFinite(k) ? Math.min(8, Math.max(0.02, k)) : 1;
     };
   }
   // ---- the canvas chart pane (the default chart pane) ----
@@ -3608,6 +3618,7 @@ self.onmessage = e => {
     const zoom = map.getZoom();
     cache.frame++;
     let drawn = 0, waiting = 0;
+    const hits = [];
     for (const rt of host.runtimes) {
       const items = rt._chartItems;
       if (!items) continue;
@@ -3634,12 +3645,32 @@ self.onmessage = e => {
         nowByPos.set(posKey, bm);
         ctx.drawImage(bm.bitmap, bm.sx, bm.sy, bm.sw, bm.sh, x, y, dw, dh);
         drawn++;
+        if (it.pick !== false && it.d) hits.push(Object.assign(chartHitRect(it, p, g), { rt, d: it.d }));
       }
       rt._chartCanvasLast = nowByPos;
     }
+    host.hits = _lastChartHits = hits;
     if (glDebug() && !moving) console.info(`[ixmaps-gl debug] chart canvas: ${drawn} drawn, ${waiting} waiting, ${cache.recs.size} drawings, ${(cache.px / 1e6).toFixed(1)} Mpx`);
   }
 
+  // a mounted chart's screen rectangle (its measured extent it.ext, px at scale it.s) at screen point p,
+  // grown by g — what a hover on a tilted or terrain map is tested against (chartHitAt)
+  function chartHitRect(it, p, g) {
+    const o = it.off || [0, 0], e = it.ext || [0, 0, 0, 0];
+    return { x: p.x + (o[0] + e[0]) * g, y: p.y + (o[1] + e[1]) * g, w: (e[2] - e[0]) * g, h: (e[3] - e[1]) * g };
+  }
+  // the topmost chart of a chart pane at screen px (x, y): its runtime and item (host.hits, recorded in draw
+  // order by every frame of the pane), or null
+  function chartHitAt(host, x, y) {
+    const hits = host && host.hits;
+    if (!hits) return null;
+    for (let i = hits.length - 1; i >= 0; i--) {
+      const h = hits[i];
+      if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return h;
+    }
+    return null;
+  }
+  let _lastChartHits = null;   // the last drawn frame's hits, for the tests (__ixmapsGlInternals.lastChartHits)
   function chartHostFor(mapOptions, map, el) {
     let host = _chartHosts.get(mapOptions);
     if (host) return host;
@@ -3665,6 +3696,7 @@ self.onmessage = e => {
       const w = el.clientWidth, h = el.clientHeight, margin = 256;
       // a tilted camera: farther charts smaller, as deck.gl's icons (chartDepthScaler)
       const depth = chartDepthScaler(map);
+      const hits = [];
       for (const rt of host.runtimes) {
         const items = rt._chartItems;
         if (!items) continue;
@@ -3679,8 +3711,10 @@ self.onmessage = e => {
           // a grid PLOT with the map (its cells), a per-item PLOT with the object scaling
           const g = (it.grow ? it.grow(map.getZoom()) : 1) * (depth ? depth(p) : 1);
           it.el.setAttribute('transform', `translate(${p.x + o[0] * g} ${p.y + o[1] * g}) scale(${it.s * g}) translate(${-it.ox} ${-it.oy})`);
+          if (it.pick !== false && it.d) hits.push(Object.assign(chartHitRect(it, p, g), { rt, d: it.d }));
         }
       }
+      host.hits = _lastChartHits = hits;
     };
     map.on('move', host.requestUpdate);
     map.on('resize', host.requestUpdate);
@@ -3728,9 +3762,9 @@ self.onmessage = e => {
     const [l, t, r, b] = chart.tipExt || chart.ext, m = 0.04 * Math.max(r - l, b - t);
     const vw = r - l + 2 * m, vh = b - t + 2 * m;
     const k = tipW / Math.max(vw, 1e-9);                       // tooltip px per drawing unit
-    if (mapPxPerUnit == null) mapPxPerUnit = k;                // null: the enlarged widths, kept within 1.2 … 3 px
+    if (mapPxPerUnit == null) mapPxPerUnit = k;                // null: the enlarged widths, kept within 1.2 … 4 px
     const markup = chart.markup.replace(/stroke-width="([\d.]+)"/g, (_, w) => {
-      const px = Math.min(3, Math.max(1.2, +w * mapPxPerUnit));
+      const px = Math.min(4, Math.max(1.2, +w * mapPxPerUnit));
       return `stroke-width="${+(px / k).toFixed(3)}"`;
     });
     return `<svg class="ix-tip-chart" width="${tipW}" height="${Math.round(vh * k)}" viewBox="${+(l - m).toFixed(2)} ${+(t - m).toFixed(2)} ${+vw.toFixed(2)} ${+vh.toFixed(2)}"`
@@ -4364,9 +4398,14 @@ self.onmessage = e => {
     if (flags.has('BUBBLE')) flags.add('SYMBOL');
     // .data({type:"pmtiles"}): MapLibre draws the theme from the archive (syncNativePmtiles) — an internal flag
     if (def.data && String(def.data.type).toLowerCase() === 'pmtiles') flags.add('MLPMTILES');
-    // flat tests its base type as a substring (szFlag.match(/CHOROPLETH/)),
-    // so "CHOROPLETHE" is a choropleth there too
-    if (!flags.has('CHOROPLETH') && [...flags].some(f => f.includes('CHOROPLETH'))) flags.add('CHOROPLETH');
+    // flat realizes a theme with CHART as charts whatever else its type says (MapTheme.realize: the
+    // CHART branch → chartMap comes before paintMap): "CHART|SYMBOL|SIZE|CHOROPLETHE|…" is symbols in
+    // the value's class colors, not a choropleth. Without CHART flat tests its base type as a substring
+    // (szFlag.match(/CHOROPLETH/)), so "CHOROPLETHE" is a choropleth there too
+    if (flags.has('CHART')) flags.delete('CHOROPLETH');
+    else if (!flags.has('CHOROPLETH') && [...flags].some(f => f.includes('CHOROPLETH'))) flags.add('CHOROPLETH');
+    // flat draws PLOTVAR in its PLOT branch (drawChart tests /PLOT/ as a substring, maptheme.js 22417)
+    if (flags.has('PLOTVAR')) flags.add('PLOT');
     // flat's word tests (\bCHOROPLETH\b, e.g. the legend sliders) read
     // the type as written
     Object.defineProperty(flags, 'typeString', { value: typeStr });
@@ -5214,7 +5253,7 @@ self.onmessage = e => {
     // flat's info popup, so a click still shows the permanent tooltip.
     const isPanMode = () => /^\s*pan\s*$/i.test(String(builder.mapOptions.mode || ''));
 
-    function tooltipFor({ object: picked, layer }) {
+    function tooltipFor({ object: picked, layer, rt: pickedRt }) {
         if (isPanMode()) return null;
         const object = pickedFeature(picked);
         if (!object || !layer) return null;
@@ -5223,7 +5262,7 @@ self.onmessage = e => {
         // every OTHER item still gets its normal hover preview even
         // while something else stays pinned
         if (pinned && isSameAsPinned(layer.id, object)) return null;
-        const rt = findRuntimeForLayerId(layer.id);
+        const rt = pickedRt || findRuntimeForLayerId(layer.id);
         if (!rt) return null;
         const html = rt.buildTooltipHtml(object, tooltipIsDark());
         // same layout as the pinned tooltip: the content in flat's scroll
@@ -5266,7 +5305,7 @@ self.onmessage = e => {
     function clickFor(picked) {
         const info = picked && Object.assign({}, picked, { object: pickedFeature(picked.object) });
         if (info && info.object && info.layer) {
-          const rt = findRuntimeForLayerId(info.layer.id);
+          const rt = info.rt || findRuntimeForLayerId(info.layer.id);
           if (rt) {
             callItemAction(rt, info.object, info);
             // Only a Point geometry's own coordinates ARE an
@@ -5309,7 +5348,30 @@ self.onmessage = e => {
     // interaction state broken — the map stopped showing new layers
     // after zooms and pans (a USER chart's hover threw on every frame
     // the mouse was over an arrow, see pickedFeature). Both are guarded.
+    // Charts of the chart pane (USER, SVG PLOT) answer to hover and click through flat pick outlines on the
+    // ground (deck.gl, z 0). On a tilted map the upright charts no longer cover those outlines, and with 3D
+    // terrain the outlines lie under the terrain surface, hidden from picking — there the pane's own screen
+    // rectangles of this frame decide (chartHitAt): the topmost chart under the pointer. A flat map keeps
+    // deck.gl's precise outlines.
+    const chartPane = () => _chartHosts.get(builder._engineOptions);
+    function withScreenChartPick(info) {
+      if (!info || !isFinite(info.x) || !isFinite(info.y)) return info;
+      const tilted = map.getPitch() > 0.5 || (typeof map.getTerrain === 'function' && !!map.getTerrain());
+      if (!tilted) return info;
+      const hit = chartHitAt(chartPane(), info.x, info.y);
+      if (!hit) {
+        // a pick outline under the pointer that no chart covers on screen: not this chart's place any more
+        return info.object && info.layer && chartPaneLayer(info.layer.id) ? Object.assign({}, info, { object: null, layer: null }) : info;
+      }
+      return Object.assign({}, info, { object: hit.d, layer: { id: 'ix-chartpane-' + themeIdOf(hit.rt) }, rt: hit.rt });
+    }
+    // a deck.gl layer that is a chart pane's pick outlines (the pane draws the charts)
+    function chartPaneLayer(id) {
+      const rt = findRuntimeForLayerId(id);
+      return !!(rt && rt._chartItems && rt._chartItems.length);
+    }
     function getTooltip(info) {
+      info = withScreenChartPick(info);
       try { return tooltipFor(info); } catch (err) {
         if (!tooltipErrorLogged) { tooltipErrorLogged = true; console.error('[ixmaps-gl] tooltip failed:', err); }
         return null;
@@ -5321,6 +5383,7 @@ self.onmessage = e => {
     function onClick(info, event) {
       // the context click opens the theme tools menu (and right-drag rotates): it neither pins nor unpins, nor is an item click
       if (contextClick || (event && (event.rightButton || (event.srcEvent && event.srcEvent.button > 0)))) return false;
+      info = withScreenChartPick(info);
       try { return clickFor(info); } catch (err) {
         console.error('[ixmaps-gl] click failed:', err);
         return false;
@@ -6135,7 +6198,7 @@ self.onmessage = e => {
                 rt._multiFields.forEach((k, i) => { totals[i] += scanValue(f.properties[k]) || 0; });
               });
               maxTotal = Math.max(0, ...totals);
-              order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
+              order = rowOrder();
               return;
             }
             // _activeFeatures (set by setFacetFilter/clearFacetFilter,
@@ -6156,7 +6219,20 @@ self.onmessage = e => {
               totals[idx] += useSum ? (scanValue(f.properties[valueField]) || 0) : 1;
             });
             maxTotal = Math.max(0, ...totals);
-            order = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
+            order = rowOrder();
+          }
+          // the rows' order: the biggest total first — for a theme of several value fields flat's own rule
+          // (legend.js 720-727): a stacked area top to bottom (the last field first), NOSORT the fields'
+          // order; and with fewer labels than fields only as many rows (_legendRowCount, legend.js 645)
+          function rowOrder() {
+            const byTotal = totals.map((v, i) => i).sort((a, b) => totals[b] - totals[a]);
+            if (!rt._multiFields) return byTotal;
+            const tt = rt.flags.typeString != null ? rt.flags.typeString : [...rt.flags].join('|');
+            let o = totals.map((v, i) => i);
+            if (/AREA/.test(tt) && /STACKED/.test(tt) && !rt.style.showparts) o.sort((a, b) => b - a);
+            else if (!/NOSORT/.test(tt)) o = byTotal;
+            if (rt._legendRowCount != null) o = o.filter(i => i < rt._legendRowCount);
+            return o;
           }
           computeTotals();
 
@@ -10463,6 +10539,9 @@ self.onmessage = e => {
   // per grid cell — is this one geometry; the size flags only scale it (_plotSizing).
   function itemPlotGeometry(values, range, style, flags, sizeMax, opts = {}) {
     const n = values.length;
+    // gridx: several curves in one chart (flat 22441-22447, 22759-22760)
+    const gx = Math.trunc(styleNum(style.gridx)) || 0;
+    if (gx > 1 && n > gx && !flags.has('PLOTVAR') && !flags.has('ZOOM')) return gridxPlotGeometry(values, range, style, flags, sizeMax, opts, gx);
     if (flags.has('SMOOTH') && n >= 3) {
       const raw = values;
       const ok = v => v != null && !isNaN(v);
@@ -10529,6 +10608,29 @@ self.onmessage = e => {
         for (const [x, y] of lastArrow) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0b = Math.min(y0b, y); y1b = Math.max(y1b, y); }
       }
     }
+    // PLOTVAR: the theme's mean ± standard deviation of each value field, at its x. With LINES (flat's lines
+    // branch, maptheme.js 22946-22972) a band from mean − σ to mean + σ (#d8d8dd, under the curve; opacity 0.4 — flat's 0.2 read too faint)
+    // and the means as a dotted line (#888, 2 units, round caps, dashes 10 / gaps 80 raw); without LINES (23065-
+    // 23113) at every x a bar from mean − σ to mean + σ (1 unit), a tick at the mean (±40 raw, 2 units), ticks at
+    // mean ± σ (±80 raw, 1 unit), a light vertical line over the plot and the means joined (#888, 1 unit). A unit
+    // is flat's normalX(1), 1/30 of a step; one step is 600 raw
+    let plotVar = null;
+    if (opts.plotVar && opts.plotVar.mean && opts.plotVar.mean.length) {
+      const pv = opts.plotVar, bars = [];
+      for (let i = 0; i < n; i++) {
+        const m = pv.mean[i], d = pv.dev[i] || 0;
+        if (m == null || !isFinite(m)) continue;
+        bars.push({ x: i, yMean: yOf(m), yLo: yOf(m - d), yHi: yOf(m + d) });
+      }
+      const lines = flags.has('LINES');
+      plotVar = { lines, bars, gridY0: yOf(base), gridY1: h + h / 20, w1: 1 / 30, w2: 2 / 30, tickMean: 40 / 600, tickDev: lines ? 0 : 80 / 600,
+        dash: [10 / 600, 80 / 600],
+        band: lines && bars.length > 1 ? bars.map(b => [b.x, b.yHi]).concat(bars.slice().reverse().map(b => [b.x, b.yLo])) : null };
+      for (const b of bars) {
+        x0 = Math.min(x0, b.x - plotVar.tickDev); x1 = Math.max(x1, b.x + plotVar.tickDev);
+        y0b = Math.min(y0b, b.yLo); y1b = Math.max(y1b, b.yHi);
+      }
+    }
     // ink: the extent of what is drawn — line, markers, area down to its base, LASTPOP, LASTARROW.
     // bbox above spans the whole value range (flat's chart box frames it); the icon only needs the
     // ink, which for a series using a small part of a shared range is far smaller
@@ -10540,6 +10642,7 @@ self.onmessage = e => {
       if (lastPop) add(lastPop.x, lastPop.y, lastPop.r + pad);
       if (area) for (const [x, y] of area) add(x, y, 0);
       if (lastArrow) for (const [x, y] of lastArrow) add(x, y, 0);
+      if (plotVar) for (const b of plotVar.bars) { add(b.x - plotVar.tickDev, b.yLo, 0); add(b.x + plotVar.tickDev, b.yHi, 0); }
       ink = { x0: ix0 - pad, x1: ix1 + pad, y0: iy0 - pad, y1: iy1 + pad };
     }
     const bbox = { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad };
@@ -10547,33 +10650,129 @@ self.onmessage = e => {
     // units: y lines on the axis' steps from 120 raw left of the first point to the last, solid at 0; their
     // labels 132 raw left, a font of max(n, 3) × 20 raw; x ticks (style.xaxis: the labelled ones, first and last)
     // from 100 raw below the base to the axis top, labels 1.5 fonts below the base
-    let axes = null, axesExt = null;
-    if (yAxis) {
-      const u = 1 / 600, fs = Math.max(n, 3) * 20 * u;
-      const left = -120 * u, right = Math.max(0, n - 1), labelX = -132 * u;
-      const yLines = yAxis.ticks.map(t => ({ y: yOf(t.v), label: t.label, zero: Math.abs(t.v) < 1e-9 }));
-      const xs = opts.xaxis || [];
-      const xTicks = xs.map((lab, i) => ({ x: i, label: lab && lab !== ' ' ? lab : '' }))
-        .filter((t, i) => t.label || i === 0 || i === xs.length - 1);
-      const top = yOf(yAxis.max), bottom = yOf(yAxis.min);
-      axes = { yLines, left, right, labelX, fs, lineWidth: n * u, dash: [6 * n * u, 3 * n * u], top,
-        xTicks, xBottom: bottom - 100 * u, xLabelY: bottom - 1.5 * fs, xLineWidth: xs.length * u, xDash: [6 * xs.length * u, 3 * xs.length * u] };
-      // the frame's extent: lines, y labels (text boxes .905 / .212 of the font) and x labels
-      let e = { x0: left, x1: right, y0: bottom, y1: top };
-      const grow = (ax0, ay0, ax1, ay1) => { e = { x0: Math.min(e.x0, ax0), x1: Math.max(e.x1, ax1), y0: Math.min(e.y0, ay0), y1: Math.max(e.y1, ay1) }; };
-      yLines.forEach(t => { const w = titleTextWidth(t.label, fs); grow(labelX - w, t.y - 0.3 * fs - 0.212 * fs, labelX, t.y - 0.3 * fs + 0.905 * fs); });
-      xTicks.forEach(t => {
-        grow(t.x, axes.xBottom, t.x, top);
-        if (t.label) { const w = titleTextWidth(t.label, fs); grow(t.x - w / 2, axes.xLabelY - 0.212 * fs, t.x + w / 2, axes.xLabelY + 0.905 * fs); }
-      });
-      axesExt = e;
-    }
+    const { axes, axesExt } = yAxis ? plotAxesGeometry(yAxis, yOf, n, opts.xaxis || []) : { axes: null, axesExt: null };
     // the curve's own extent (points, area, markers): what answers hover; ink adds the axes
     const curveExt = ink;
     const inkAll = ink && axesExt ? { x0: Math.min(ink.x0, axesExt.x0), x1: Math.max(ink.x1, axesExt.x1), y0: Math.min(ink.y0, axesExt.y0), y1: Math.max(ink.y1, axesExt.y1) }
       : (ink || axesExt);
-    return { points, area, lineWidth, lastPop, lastArrow, baseY: areaBaseY, bbox, ink: inkAll || bbox, curveExt, axes, axesExt };
+    return { points, area, lineWidth, lastPop, lastArrow, baseY: areaBaseY, bbox, ink: inkAll || bbox, curveExt, axes, axesExt, plotVar };
   }
+  // PLOTVAR (flat's "plot of variation", maptheme.js 13112-13190): per value field i the theme's mean — the data
+  // records' mean (recordMeans, flat's nSumA[i] / nCount; with a field100 the pooled ratio, computeDominantStats)
+  // or with MEDIAN the items' median (their non-zero values sorted, the element at round(n / 2)) — and the
+  // standard deviation of the items' non-zero values (getDeviationOfArray: population, divided by n).
+  // itemValues: every item's values (with AGGREGATE the cells, as flat's itemA). → { mean: [], dev: [] }
+  function plotVarStats(itemValues, recordMeans, median) {
+    const n = itemValues.reduce((m, v) => Math.max(m, v.length), 0);
+    const mean = [], dev = [];
+    for (let i = 0; i < n; i++) {
+      const pop = [];
+      for (const v of itemValues) { const x = v[i]; if (x && isFinite(x)) pop.push(x); }
+      if (median) { const q = pop.slice().sort((a, b) => a - b); mean[i] = q.length ? q[Math.min(q.length - 1, Math.round(q.length / 2))] : 0; }
+      else mean[i] = recordMeans && isFinite(recordMeans[i]) ? recordMeans[i] : (pop.length ? pop.reduce((a, x) => a + x, 0) / pop.length : 0);
+      if (!pop.length) { dev[i] = 0; continue; }
+      const m = pop.reduce((a, x) => a + x, 0) / pop.length;
+      dev[i] = Math.sqrt(pop.reduce((a, x) => a + (x - m) * (x - m), 0) / pop.length);
+    }
+    return { mean, dev };
+  }
+
+  // flat's coordinate grid of a PLOT chart (BOX + GRID, maptheme.js 22657-22740) in chart units — one step is
+  // 600 of flat's raw units: y lines on the axis' steps from 120 raw left of the first point to the last (n
+  // points along x), solid at 0; their labels 132 raw left, a font of max(n, 3) × 20 raw; x ticks (xs: the
+  // labelled ones, first and last) from 100 raw below the base to the axis top, labels 1.5 fonts below the base.
+  // → { axes, axesExt (the frame's extent: lines, y labels as text boxes .905 / .212 of the font, x labels) }
+  function plotAxesGeometry(yAxis, yOf, n, xs) {
+    const u = 1 / 600, fs = Math.max(n, 3) * 20 * u;
+    const left = -120 * u, right = Math.max(0, n - 1), labelX = -132 * u;
+    const yLines = yAxis.ticks.map(t => ({ y: yOf(t.v), label: t.label, zero: Math.abs(t.v) < 1e-9 }));
+    const xTicks = xs.map((lab, i) => ({ x: i, label: lab && lab !== ' ' ? lab : '' }))
+      .filter((t, i) => t.label || i === 0 || i === xs.length - 1);
+    const top = yOf(yAxis.max), bottom = yOf(yAxis.min);
+    const axes = { yLines, left, right, labelX, fs, lineWidth: n * u, dash: [6 * n * u, 3 * n * u], top,
+      xTicks, xBottom: bottom - 100 * u, xLabelY: bottom - 1.5 * fs, xLineWidth: xs.length * u, xDash: [6 * xs.length * u, 3 * xs.length * u] };
+    let e = { x0: left, x1: right, y0: bottom, y1: top };
+    const grow = (ax0, ay0, ax1, ay1) => { e = { x0: Math.min(e.x0, ax0), x1: Math.max(e.x1, ax1), y0: Math.min(e.y0, ay0), y1: Math.max(e.y1, ay1) }; };
+    yLines.forEach(t => { const w = titleTextWidth(t.label, fs); grow(labelX - w, t.y - 0.3 * fs - 0.212 * fs, labelX, t.y - 0.3 * fs + 0.905 * fs); });
+    xTicks.forEach(t => {
+      grow(t.x, axes.xBottom, t.x, top);
+      if (t.label) { const w = titleTextWidth(t.label, fs); grow(t.x - w / 2, axes.xLabelY - 0.212 * fs, t.x + w / 2, axes.xLabelY + 0.905 * fs); }
+    });
+    return { axes, axesExt: e };
+  }
+
+  // A PLOT chart of several curves (style.gridx = gx, flat's PLOT branch, maptheme.js 22441-22447 and 22759-22900):
+  // value i is on curve i % gx at x = ⌊i / gx⌋ — the value fields come x-major (all curves' first values, then
+  // all second ones …). The y scale takes gx where one curve takes n − 1 (flat's nScale = step / (max − min) ·
+  // gridx · rangescale). STACKED: each curve stands on the running sum of the curves before it at its x (flat's
+  // plot_last_stacked_value), AREA filling the band between the two, lines one raw unit wide (flat normalX(1));
+  // without STACKED, AREA fills each curve to the value-0 level. Markers, ZEROISVALUE and FIXSIZE as for one
+  // curve; no LASTPOP / LASTARROW. → itemPlotGeometry's shape, the curves in
+  //   curves: [{ c (its index: the color), points: [{x, y, v, r} | null], band: [[x, y]…] | null }]
+  function gridxPlotGeometry(values, range, style, flags, sizeMax, opts, gx) {
+    const n = values.length, nx = Math.ceil(n / gx);
+    const stacked = flags.has('STACKED');
+    const noMarkers = [].concat(style.symbols == null ? [] : style.symbols).some(s => String(s) === 'none');
+    const rs = styleNum(style.rangescale) || 1;
+    const span = (range.max - range.min) || 1;
+    const k = gx / span * rs;
+    const h = span * k;
+    const yAxis = opts.axes ? plotYAxis(range.min, range.max) : null;
+    const base = yAxis ? yAxis.min : range.min;
+    const yOf = v => (v - base) * k + h / 20;
+    const normal = styleNum(style.normalsizevalue) || 1;
+    const pow = resolveSizePow(style, flags);
+    const zeroIsValue = flags.has('ZEROISVALUE') && !flags.has('ZEROISNOTVALUE');
+    const lineWidth = (stacked ? 1 : (styleNum(style.linewidth) || 1)) / 30;
+    const sum = new Array(nx).fill(0);   // STACKED: the curves' running sum per x
+    const curves = [];
+    for (let c = 0; c < gx; c++) curves.push({ c, points: new Array(nx).fill(null), lower: new Array(nx).fill(null) });
+    for (let i = 0; i < n; i++) {
+      const c = i % gx, x = Math.floor(i / gx), v = values[i];
+      const ok = v != null && !isNaN(v);
+      const below = stacked ? sum[x] : 0;
+      if (stacked && ok) sum[x] += v;
+      if (!ok || (v === 0 && !zeroIsValue && !stacked)) continue;
+      let r = 0;
+      if (!noMarkers && !(v === 0 && !stacked)) r = flags.has('FIXSIZE') ? 1 / 3 / normal : 0.5 * Math.pow(Math.abs(v) / (sizeMax || 1), 1 / pow);
+      curves[c].points[x] = { x, y: yOf(below + v), v, r, c: opts.classOf ? opts.classOf(v) : null };
+      curves[c].lower[x] = stacked ? yOf(below) : null;
+    }
+    const baseY = yOf(0);
+    for (const cv of curves) {
+      const def = cv.points.map((p, x) => (p ? { p, lo: cv.lower[x] } : null)).filter(Boolean);
+      cv.band = null;
+      if (flags.has('AREA') && def.length > 1) {
+        cv.band = stacked
+          ? def.map(d => [d.p.x, d.p.y]).concat(def.slice().reverse().map(d => [d.p.x, d.lo]))
+          : [[def[0].p.x, baseY]].concat(def.map(d => [d.p.x, d.p.y]), [[def[def.length - 1].p.x, baseY]]);
+      }
+      delete cv.lower;
+    }
+    const pad = lineWidth / 2 + 1 / 75;
+    let x0 = 0, x1 = Math.max(0, nx - 1), y0b = 0, y1b = h + h / 20;
+    let ink = null;
+    const addInk = (x, y, r) => {
+      if (!ink) ink = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+      ink.x0 = Math.min(ink.x0, x - r); ink.x1 = Math.max(ink.x1, x + r); ink.y0 = Math.min(ink.y0, y - r); ink.y1 = Math.max(ink.y1, y + r);
+    };
+    for (const cv of curves) {
+      for (const p of cv.points) {
+        if (!p) continue;
+        x0 = Math.min(x0, p.x - p.r - pad); x1 = Math.max(x1, p.x + p.r + pad);
+        y0b = Math.min(y0b, p.y - p.r - pad); y1b = Math.max(y1b, p.y + p.r + pad);
+        addInk(p.x, p.y, p.r + pad);
+      }
+      if (cv.band) for (const [x, y] of cv.band) { y0b = Math.min(y0b, y); y1b = Math.max(y1b, y); addInk(x, y, 0); }
+    }
+    if (ink) ink = { x0: ink.x0 - pad, x1: ink.x1 + pad, y0: ink.y0 - pad, y1: ink.y1 + pad };
+    const bbox = { x0: x0 - pad, x1: x1 + pad, y0: y0b - pad, y1: y1b + pad };
+    const { axes, axesExt } = yAxis ? plotAxesGeometry(yAxis, yOf, nx, opts.xaxis || []) : { axes: null, axesExt: null };
+    const inkAll = ink && axesExt ? { x0: Math.min(ink.x0, axesExt.x0), x1: Math.max(ink.x1, axesExt.x1), y0: Math.min(ink.y0, axesExt.y0), y1: Math.max(ink.y1, axesExt.y1) }
+      : (ink || axesExt);
+    return { points: [], curves, area: null, lineWidth, lastPop: null, lastArrow: null, baseY, bbox, ink: inkAll || bbox, curveExt: ink, axes, axesExt };
+  }
+
   // raster px per chart unit for a PLOT icon (_buildPlotChart): the step's on-screen size in device
   // px, rounded to the nearest power of 2 (so zooming rebuilds the icons only when it crosses one), between 2 and
   // 24. A fixed 24 drew 270 small sparklines of a shared range into far more icon atlas than WebGL allows, and
@@ -12443,6 +12642,12 @@ self.onmessage = e => {
       if (v < 0 && !r.negativeOk) return null;
       parts[k] = v;
     }
+    // field100 (o.fields100: a field per part, the last repeated): each part's 100-value, added up
+    // per item like the parts and applied to the sums (flatPartsItemValues), as flat's nValue100A
+    if (o.fields100 && o.fields100.length) {
+      const parts100 = o.fields.map((_, k) => { const v = flatScanValue(raw[o.fields100[Math.min(k, o.fields100.length - 1)]]); return isNaN(v) ? 0 : v; });
+      return { parts, zeroNot, size, parts100 };
+    }
     return { parts, zeroNot, size };
   }
 
@@ -12464,9 +12669,13 @@ self.onmessage = e => {
         if (rec.cat >= 0) { parts[rec.cat] = rec.size; counts[rec.cat] = 1; }
         return { parts, counts, size: Math.abs(rec.size), n: 1 };
       }
-      return { parts: rec.parts.slice(), counts: rec.zeroNot.map(z => (z ? 0 : 1)), size: Math.abs(rec.size), n: 1 };
+      const first = { parts: rec.parts.slice(), counts: rec.zeroNot.map(z => (z ? 0 : 1)), size: Math.abs(rec.size), n: 1 };
+      if (rec.parts100) first.parts100 = rec.parts100.slice();
+      return first;
     }
     const comb = (a, v) => (max ? Math.max(a || 0, v) : min ? Math.min(a || 0, v) : (a || 0) + v);
+    // the parts' 100-values: summed (MAX / MIN: their maximum / minimum), maptheme.js 10901
+    if (rec.parts100 && item.parts100) for (let k = 0; k < rec.parts100.length; k++) item.parts100[k] = comb(item.parts100[k], rec.parts100[k]);
     if (rec.cat !== undefined) {
       if (rec.cat >= 0) {
         item.parts[rec.cat] = comb(item.parts[rec.cat], rec.size);
@@ -12498,7 +12707,25 @@ self.onmessage = e => {
     let parts = [];
     for (let k = 0; k < n; k++) parts[k] = item.parts[k] || 0;
     let size = item.size;
-    if (/MEAN/.test(t)) {
+    // field100: on the aggregated sums (maptheme.js 10999-11054) — and then no MEAN (flat's else-if)
+    if (item.parts100) {
+      const p100 = k => item.parts100[Math.min(k, item.parts100.length - 1)] || 0;
+      const fractionScale = o.fractionScale || 1, field100Min = o.field100Min || 0;
+      if (/DIFFERENCE/.test(t) && n === 1 && !/RELATIVE/.test(t)) parts = parts.map((v, k) => v - p100(k));
+      else if (/FRACTION/.test(t)) parts = parts.map((v, k) => (p100(k) > 0 ? v / p100(k) * fractionScale : 0));
+      else if (/PRODUCT/.test(t)) parts = parts.map((v, k) => v * p100(k));
+      else if (/CALCVAL/.test(t)) parts = parts.map((v, k) => Math.round(v * p100(k) / 100));
+      else if (/PERMILLE/.test(t)) parts = parts.map((v, k) => v * (1000 / p100(k)));
+      else {
+        parts = parts.map((v, k) => {
+          if (!(p100(k) > field100Min)) return 0;
+          let x = v * (100 / p100(k));
+          if (x > 0 && /RELATIVE/.test(t)) x -= 100;
+          else if (x > 0 && /INVERT/.test(t)) x = 100 - x;
+          return x;
+        });
+      }
+    } else if (/MEAN/.test(t)) {
       const perPart = o.categorical || /ZEROISNOTVALUE/.test(t);
       parts = parts.map((v, k) => (perPart ? (item.counts[k] > 0 ? v / item.counts[k] : 0) : v / item.n));
       if (!/SIZESUM/.test(t)) size /= item.n;
@@ -13151,6 +13378,13 @@ self.onmessage = e => {
     // 600-640; extra labels are dropped)
     const label = Array.isArray(style.label) && style.label.length >= fields.length ? style.label.slice(0, fields.length).map(String) : null;
     out.categoryDisplayLabels = label || explicit;
+    out._legendRowCount = null;
+    // fewer labels than fields (a gridx PLOT: a label per curve, the fields per curve and x): flat's legend has
+    // as many rows as the shortest of classes, colors and labels (legend.js 645), the labels naming them
+    if (!label && Array.isArray(style.label) && style.label.length) {
+      out.categoryDisplayLabels = explicit.map((f, i) => (style.label[i] != null ? String(style.label[i]) : f));
+      out._legendRowCount = style.label.length;
+    }
     out.categoryColorsRgb = resolveClassColors(style.colorscheme, out.categoryLabels, style.classes);
     
     return out;
@@ -13431,14 +13665,16 @@ self.onmessage = e => {
     }
     return bins;
   }
-  // Explicit class breaks: .style({ranges}) with the RANGES flag (flat,
-  // maptheme.js 2324 / 12905-12960). n+1 break values (a comma or "|"
-  // separated string, or an array) are n classes [r_i, r_i+1] — a class
-  // max is nudged by 1e-9 as flat does, so a break value belongs to the class
-  // below it. Not for CATEGORICAL (there the values are exact categories).
-  // null when the theme has no usable explicit ranges.
+  // Explicit class breaks: .style({ranges}) (flat, maptheme.js 12905-12960). flat takes them from the
+  // style when it creates the theme (newTheme, maptheme.js 1413: szRangesA = style.ranges), whatever the
+  // type flags — only refreshTheme (2324) drops them again unless the type has RANGES, so a page's first
+  // drawing is classed by its ranges with or without the flag (the Sicilia "% RD · pallini" theme:
+  // CHART|SYMBOL|SIZE|…|EQUIDISTANT with 0…100 ranges). n+1 break values (a comma or "|" separated
+  // string, or an array) are n classes [r_i, r_i+1] — a class max is nudged by 1e-9 as flat does, so a
+  // break value belongs to the class below it. Not for CATEGORICAL (there the values are exact
+  // categories). null when the theme has no usable explicit ranges.
   function explicitRangeBreaks(style, flags) {
-    if (!flags || !flags.has('RANGES') || flags.has('CATEGORICAL')) return null;
+    if (!flags || flags.has('CATEGORICAL')) return null;
     let r = style && style.ranges;
     if (typeof r === 'string') r = r.split(r.includes('|') ? '|' : ',');
     if (!Array.isArray(r)) return null;
@@ -14757,6 +14993,8 @@ self.onmessage = e => {
         // flat's per-field weights (maptheme.js 10506-10508), applied to
         // every record's parts inside flatPieRecord
         const pieWeightOf = fieldWeightOf(this.style, fields ? fields.length : 1, true);
+        // field100 of the value fields: applied to each item's sums (flatPartsItemValues)
+        const pieFields100 = fields && this.binding.field100 ? String(this.binding.field100).split('|') : null;
         for (const f of sourceFeatures) {
           const p = f.properties || {};
           let cat;
@@ -14765,7 +15003,7 @@ self.onmessage = e => {
             const i = k == null ? undefined : this._pieCategoryIndex.get(k);
             cat = i == null ? -1 : i;
           }
-          const pie = flatPieRecord(p, { rules, sizeField, cat, fields, weights: pieWeightOf });
+          const pie = flatPieRecord(p, { rules, sizeField, cat, fields, weights: pieWeightOf, fields100: pieFields100 });
           if (!pie) continue;
           feats.push({ type: 'Feature', geometry: f.geometry, properties: { value: pie.size, agg: pie, raw: p } });
         }
@@ -15264,6 +15502,21 @@ self.onmessage = e => {
         radiusPx = null;
         this._clusterUsesFixedZoom = false;
       }
+      // flat's style.aggregationfield (szAggregationField, maptheme.js 1920): the records are grouped by
+      // that field's value (10742-10757), each group drawn at its records' center (11141) — unless a
+      // matching aggregationscale bracket set the field or a grid for this scale (7990-8006)
+      if (!scaled.matched && this.style.aggregationfield != null && this.style.aggregationfield !== '') {
+        aggField = String(this.style.aggregationfield);
+        radiusPx = null;
+      }
+      // aggregationupper / aggregationlower (maptheme.js 10270-10273): outside that scale range flat does
+      // not aggregate at all — each record is its own item
+      if (this.style.aggregationupper || this.style.aggregationlower) {
+        const scale = scaleDenominatorAt(zoom);
+        const scaleOf = v => { const m = /^\s*1\s*:\s*([\d.]+)\s*$/.exec(String(v)); return m ? parseFloat(m[1]) : parseFloat(v); };
+        const upper = scaleOf(this.style.aggregationupper), lower = scaleOf(this.style.aggregationlower);
+        if ((upper > 0 && scale > upper) || (lower > 0 && scale < lower)) { aggField = null; radiusPx = null; }
+      }
       if (this._clusterIndices && this._clusterRadiusPx === radiusPx && this._clusterField === aggField) return;
       // new cells (e.g. a runtime gridwidth): the zoom-keyed stats of the
       // old ones (breaks, NORMALIZE, NOOUTLIER, sizeMax) no longer apply
@@ -15751,28 +16004,52 @@ self.onmessage = e => {
     // chart's labels along x. SVG_PLOT_TIP_WIDTH
     // px wide (svgPlotTipMarkup); well under 1 ms per hover. '' before the theme's first drawing or for a chart
     // that draws nothing
+    // style.gridx when this PLOT draws several curves (gridxPlotGeometry), else 0
+    _plotGridX(n) {
+      const gx = Math.trunc(styleNum(this.style.gridx)) || 0;
+      return gx > 1 && n > gx && !this.flags.has('PLOTVAR') && !this.flags.has('ZOOM') ? gx : 0;
+    }
     _plotTipChartHtml(values) {
       const tip = this._plotTip;
       if (!tip || !values || !values.some(v => v != null && !isNaN(v))) return '';
       try {
         this._svgChartCacheMap();   // the tooltip view below shares this cache
         const src = tip.axis || tip.labels;
-        const labels = values.map((v, i) => String(src && src[i] != null ? src[i] : i + 1));
+        // gridx: several curves, value i at x ⌊i / gx⌋ (gridxPlotGeometry) — one x label per x
+        const gx = this._plotGridX(values.length);
+        const nx = gx ? Math.ceil(values.length / gx) : values.length;
+        const xs = Array.isArray(this.style.xaxis) && this.style.xaxis.length === nx ? this.style.xaxis : null;
+        const labels = gx
+          ? new Array(nx).fill(0).map((_, i) => String(xs ? xs[i] : i + 1))
+          : values.map((v, i) => String(src && src[i] != null ? src[i] : i + 1));
         const view = Object.create(this);
         view.flags = new Set([...this.flags, 'BOX', 'GRID']);
-        // the tooltip shows the item's own detail: its own value range (the axis labels give the values), and as
-        // tall as wide — the map's rangescale and its shared range are for comparing charts side by side
+        // the tooltip shows the item's own detail: its own value range (the axis labels give the values), the curve
+        // in the shape it has on the map (the map's vertical scale per value, below)
         view.style = Object.assign({}, this.style, { xaxis: labels });
-        delete view.style.rangescale;
-        // a 2 px line at the tooltip's size (about SVG_PLOT_TIP_WIDTH over the n − 1 steps): the map's linewidth is
+        // a 3 px line at the tooltip's size (about SVG_PLOT_TIP_WIDTH over the n − 1 steps): the map's linewidth is
         // tuned to the map's chart size, and LASTPOP / LASTARROW are sized by it
-        view.style.linewidth = 30 * 2 / (SVG_PLOT_TIP_WIDTH / (Math.max(1, values.length - 1) + 0.5));
-        const own = values.filter(v => v != null && !isNaN(v));
+        view.style.linewidth = 30 * 3 / (SVG_PLOT_TIP_WIDTH / (Math.max(1, nx - 1) + 0.5));
+        let own = values.filter(v => v != null && !isNaN(v));
+        // STACKED curves reach the sum of the values at their x
+        if (gx && this.flags.has('STACKED')) {
+          own = new Array(nx).fill(0);
+          values.forEach((v, i) => { if (v != null && !isNaN(v)) own[Math.floor(i / gx)] += v; });
+          own.push(0);
+        }
         let range = { min: Math.min(...own), max: Math.max(...own) };
         if (!(range.max > range.min)) range = tip.rangeFor(values);
+        // the map's aspect: over its own range the curve keeps the map's height per value (rangescale × own span /
+        // the map's span) — a uniform enlargement of the map's curve; between 0.2 and 1.5 × its width, so a nearly
+        // flat or a very steep curve stays readable. Height = rangescale × (gridx, else n − 1) steps, width nx − 1
+        const mapRange = tip.rangeFor(values);
+        const mapSpan = (mapRange.max - mapRange.min) || 1, ownSpan = (range.max - range.min) || 1;
+        const wSteps = Math.max(1, nx - 1), hSteps = gx || wSteps;
+        const rsTip = (styleNum(this.style.rangescale) || 1) * ownSpan / mapSpan;
+        view.style.rangescale = Math.min(1.5 * wSteps / hSteps, Math.max(0.2 * wSteps / hSteps, rsTip));
         const chart = view._buildPlotChart(values, range, tip.sizeMax, Object.assign(view._plotLook(labels), { areaToAxis: true }), SVG_PLOT_UNIT,
           svgStyleSig(view.style, view.flags) + '|tip');
-        // lines at their enlarged width, 1.2 … 3 px
+        // lines at their enlarged width, 1.2 … 4 px
         return chart && chart.markup ? svgPlotTipMarkup(chart, null) : '';
       } catch (e) { return ''; }
     }
@@ -15806,6 +16083,20 @@ self.onmessage = e => {
         const categories = this._plotTip && this._plotTip.labels ? this._plotTip.labels
           : this._isItemPlot() ? this._itemPlotLabels() : this._plotCategories();
         const labels = categories;
+        // gridx: a row per curve, its value at the last x (in its color) — not every value of every curve
+        const gx = this._plotGridX(props.values.length);
+        if (gx) {
+          const last = props.values.length - gx;
+          const cs = Array.isArray(this.style.colorscheme) ? this.style.colorscheme : [];
+          const fields = String(this.binding.value || '').split('|');
+          return curve + tooltipTable(props.values.slice(last).map((v, c) => {
+            if (v == null || isNaN(v)) return null;
+            const rgb = parseCssColor(cs[c]);
+            // the value's own field (the curve at its last x, e.g. "Umido 2024")
+            const name = fields[last + c] || labels[last + c] || c + 1;
+            return { rgb: rgb ? rgb.slice(0, 3) : null, label: name, value: this._formatTooltipValue(v) + unit };
+          }).filter(Boolean)[this.flags.has('STACKED') && this.flags.has('AREA') ? 'reverse' : 'slice']());
+        }
         return curve + tooltipTable(props.values.map((v, i) => {
           if (v == null || isNaN(v)) return null;
           return { rgb: null, label: labels[i] || categories[i] || i, value: this._formatTooltipValue(v) + unit };
@@ -16961,6 +17252,18 @@ self.onmessage = e => {
     }
 
     // the drawing context of a PLOT chart: geometry options, line colour, fill opacity, colour by value
+    // PLOTVAR's statistics (plotVarStats) over these items, cached while they stay the same; null without PLOTVAR
+    // or with gridx (flat's gridx PLOTVAR is a layout of its own, not ported)
+    _plotVarOf(items) {
+      if (!this.flags.has('PLOTVAR') || (Math.trunc(styleNum(this.style.gridx)) || 0) > 1) return null;
+      if (this._plotVarCache && this._plotVarCache.items === items) return this._plotVarCache.stats;
+      const fields = String(this.binding.value || '').split('|');
+      const recordMeans = fields.length > 1 ? computeDominantStats(this.features || [], this.binding, this.style, this.flags)._dominantMeans : null;
+      const stats = plotVarStats(items.map(d => d.properties.values), recordMeans, flatFlag(this.flags, 'MEDIAN'));
+      stats.sig = svgHash(stats.mean.concat(stats.dev).map(v => (+v).toFixed(4)).join(','));
+      this._plotVarCache = { items, stats };
+      return stats;
+    }
     _plotLook(labels) {
       const byValue = this._plotValueClasses();
       const xaxis = Array.isArray(this.style.xaxis) && this.style.xaxis.length ? this.style.xaxis.map(String) : null;
@@ -16970,7 +17273,11 @@ self.onmessage = e => {
         classOf: byValue ? v => byValue.classOf(v) : null,
         classRgb: byValue ? byValue.colors : null,
         rgb: (parseCssColor(Array.isArray(this.style.colorscheme) ? this.style.colorscheme[0] : this.style.colorscheme) || [0, 102, 204]).slice(0, 3),
+        // gridx curves: curve c in the colorscheme's c-th color (flat colors each value i by its own entry; the
+        // value fields repeat the curves' order at every x)
+        seriesRgb: Array.isArray(this.style.colorscheme) ? this.style.colorscheme.map(c => { const rgb = parseCssColor(c); return rgb ? rgb.slice(0, 3) : null; }) : null,
         fillOpacity: (() => { const fo = styleNum(this.style.fillopacity); return isNaN(fo) ? 0.15 : fo; })(),
+        plotVar: this._plotVar || null,
       };
     }
 
@@ -16983,6 +17290,8 @@ self.onmessage = e => {
       const rangeFor = this._plotRangeOf(dMin, dMax);
       const sizeMax = styleNum(this.style.normalsizevalue) || Math.max(Math.abs(dMin), Math.abs(dMax)) || 1;
       const { step, off, grid } = this._plotSizing(zoom, n);
+      // PLOTVAR: the theme's mean ± deviation per value field, over every item (not only those in view)
+      this._plotVar = this._plotVarOf(items);
       const look = this._plotLook(labels);
       const geomOf = d => itemPlotGeometry(d.properties.values, rangeFor(d.properties.values), this.style, this.flags, sizeMax, look);
       // the tooltip's {{theme.item.chart}}: the same chart with flat's coordinate grid (_plotTipChartHtml)
@@ -17040,7 +17349,7 @@ self.onmessage = e => {
     _buildPlotChart(values, range, sizeMax, look, raster, svg = '') {
       const RASTER = raster || 24;
       const key = (svg ? 'svg|' + svg + '|' : '') + 'plot|' + values.join(',') + '|' + range.min + ':' + range.max + '|' + sizeMax
-        + '|r' + RASTER + (look.axes ? '|axes:' + (look.xaxis || []).join(',') : '');
+        + '|r' + RASTER + (look.axes ? '|axes:' + (look.xaxis || []).join(',') : '') + (look.plotVar ? '|pv:' + look.plotVar.sig : '');
       const cache = svg ? this._svgChartCacheMap() : this._iconCache;
       if (cache.has(key)) return cache.get(key);
       const g = itemPlotGeometry(values, range, this.style, this.flags, sizeMax, look);
@@ -17068,6 +17377,83 @@ self.onmessage = e => {
     // point markers; LASTPOP; LASTARROW. A 0 without ZEROISVALUE breaks the curve (22815).
     // px / py: chart units → canvas px; R: px per chart unit; raster: canvas (stroke calibration) vs SVG
     _drawPlotChart(ctx, g, px, py, R, look, raster) {
+      // the coordinate grid, under the curves
+      if (g.axes) this._drawPlotAxes(ctx, g.axes, px, py, R);
+      if (g.curves) {
+        // gridx: each curve in its own color (gridxPlotGeometry)
+        for (const cv of g.curves) {
+          const rgb = (look.seriesRgb && look.seriesRgb[cv.c]) || look.rgb;
+          this._drawPlotCurve(ctx, { points: cv.points, area: null, band: cv.band, baseY: g.baseY, lineWidth: g.lineWidth, lastPop: null, lastArrow: null },
+            px, py, R, Object.assign({}, look, { rgb }), raster);
+        }
+        return;
+      }
+      // PLOTVAR with LINES: the deviation band under the curve
+      if (g.plotVar && g.plotVar.band) {
+        ctx.fillStyle = 'rgba(216,216,221,0.4)';
+        ctx.beginPath();
+        g.plotVar.band.forEach(([x, y], i) => (i ? ctx.lineTo(px(x), py(y)) : ctx.moveTo(px(x), py(y))));
+        ctx.closePath(); ctx.fill();
+      }
+      this._drawPlotCurve(ctx, g, px, py, R, look, raster);
+      // … and the means, dotted, over it
+      if (g.plotVar && g.plotVar.lines && g.plotVar.bars.length > 1) {
+        const pv = g.plotVar;
+        ctx.save();
+        ctx.strokeStyle = '#888888'; ctx.lineWidth = pv.w2 * R; ctx.lineCap = 'round';
+        ctx.setLineDash([pv.dash[0] * R, pv.dash[1] * R]);
+        ctx.beginPath();
+        pv.bars.forEach((b, i) => (i ? ctx.lineTo(px(b.x), py(b.yMean)) : ctx.moveTo(px(b.x), py(b.yMean))));
+        ctx.stroke();
+        ctx.restore();
+      }
+      if (g.plotVar && !g.plotVar.lines) this._drawPlotVar(ctx, g.plotVar, px, py, R);
+    }
+    // PLOTVAR's mean ± deviation marks (itemPlotGeometry().plotVar), flat's colors and widths
+    _drawPlotVar(ctx, pv, px, py, R) {
+      ctx.save();
+      ctx.lineCap = 'butt';
+      const line = (x0, y0, x1, y1, color, w) => {
+        ctx.strokeStyle = color; ctx.lineWidth = w * R;
+        ctx.beginPath(); ctx.moveTo(px(x0), py(y0)); ctx.lineTo(px(x1), py(y1)); ctx.stroke();
+      };
+      for (const b of pv.bars) line(b.x, pv.gridY0, b.x, pv.gridY1, '#dddddd', pv.w1 / 4);
+      for (let i = 1; i < pv.bars.length; i++) line(pv.bars[i - 1].x, pv.bars[i - 1].yMean, pv.bars[i].x, pv.bars[i].yMean, '#888888', pv.w1);
+      for (const b of pv.bars) {
+        line(b.x, b.yLo, b.x, b.yHi, '#444444', pv.w1);
+        line(b.x - pv.tickMean, b.yMean, b.x + pv.tickMean, b.yMean, '#444444', pv.w2);
+        line(b.x - pv.tickDev, b.yLo, b.x + pv.tickDev, b.yLo, '#444444', pv.w1);
+        line(b.x - pv.tickDev, b.yHi, b.x + pv.tickDev, b.yHi, '#444444', pv.w1);
+      }
+      ctx.restore();
+    }
+    _drawPlotAxes(ctx, a, px, py, R) {
+      ctx.save();
+      ctx.lineWidth = a.lineWidth * R;
+      a.yLines.forEach(t => {
+        if (t.zero) { ctx.strokeStyle = '#444444'; ctx.setLineDash([]); }
+        else { ctx.strokeStyle = 'rgba(136,136,136,0.4)'; ctx.setLineDash([a.dash[0] * R, a.dash[1] * R]); }
+        ctx.beginPath(); ctx.moveTo(px(a.left), py(t.y)); ctx.lineTo(px(a.right), py(t.y)); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#888888';
+      ctx.font = `${a.fs * R}px arial`;
+      ctx.textAlign = 'right';
+      a.yLines.forEach(t => ctx.fillText(t.label, px(a.labelX), py(t.y - 0.3 * a.fs)));
+      if (a.xTicks.length) {
+        ctx.strokeStyle = 'rgba(136,136,136,0.4)';
+        ctx.lineWidth = a.xLineWidth * R;
+        ctx.textAlign = 'center';
+        a.xTicks.forEach(t => {
+          ctx.setLineDash([a.xDash[0] * R, a.xDash[1] * R]);
+          ctx.beginPath(); ctx.moveTo(px(t.x), py(a.xBottom)); ctx.lineTo(px(t.x), py(a.top)); ctx.stroke();
+          if (t.label) ctx.fillText(t.label, px(t.x), py(a.xLabelY));
+        });
+      }
+      ctx.restore();
+    }
+    // one curve of a PLOT chart: AREA (or a STACKED band), LINES, markers, LASTPOP, LASTARROW
+    _drawPlotCurve(ctx, g, px, py, R, look, raster) {
       const rgbStr = look.rgb.join(',');
       const segColor = p => (look.classRgb && p && p.c != null && look.classRgb[p.c] ? look.classRgb[p.c].join(',') : rgbStr);
       const runs = [];
@@ -17082,32 +17468,12 @@ self.onmessage = e => {
           }
         } else for (let i = 1; i < run.length; i++) ctx.lineTo(px(run[i].x), py(run[i].y));
       };
-      // the coordinate grid, under the curve
-      if (g.axes) {
-        const a = g.axes;
-        ctx.save();
-        ctx.lineWidth = a.lineWidth * R;
-        a.yLines.forEach(t => {
-          if (t.zero) { ctx.strokeStyle = '#444444'; ctx.setLineDash([]); }
-          else { ctx.strokeStyle = 'rgba(136,136,136,0.4)'; ctx.setLineDash([a.dash[0] * R, a.dash[1] * R]); }
-          ctx.beginPath(); ctx.moveTo(px(a.left), py(t.y)); ctx.lineTo(px(a.right), py(t.y)); ctx.stroke();
-        });
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#888888';
-        ctx.font = `${a.fs * R}px arial`;
-        ctx.textAlign = 'right';
-        a.yLines.forEach(t => ctx.fillText(t.label, px(a.labelX), py(t.y - 0.3 * a.fs)));
-        if (a.xTicks.length) {
-          ctx.strokeStyle = 'rgba(136,136,136,0.4)';
-          ctx.lineWidth = a.xLineWidth * R;
-          ctx.textAlign = 'center';
-          a.xTicks.forEach(t => {
-            ctx.setLineDash([a.xDash[0] * R, a.xDash[1] * R]);
-            ctx.beginPath(); ctx.moveTo(px(t.x), py(a.xBottom)); ctx.lineTo(px(t.x), py(a.top)); ctx.stroke();
-            if (t.label) ctx.fillText(t.label, px(t.x), py(a.xLabelY));
-          });
-        }
-        ctx.restore();
+      // a STACKED band (gridx curves): between this curve and the one below
+      if (g.band) {
+        ctx.fillStyle = `rgba(${rgbStr},${look.fillOpacity})`;
+        ctx.beginPath();
+        g.band.forEach(([x, y], i) => (i ? ctx.lineTo(px(x), py(y)) : ctx.moveTo(px(x), py(y))));
+        ctx.closePath(); ctx.fill();
       }
       // AREA
       if (g.area && runs.length) {
@@ -20147,7 +20513,8 @@ self.onmessage = e => {
     _partsOf(pie) {
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
       const nParts = this._partsCategorical ? (this._partsExplicitValues ? this.categoryLabels.length : null) : (this._partsFields || []).length;
-      return flatPartsItemValues(pie, t, { categorical: !!this._partsCategorical, nParts });
+      return flatPartsItemValues(pie, t, { categorical: !!this._partsCategorical, nParts,
+        fractionScale: styleNum(this.style.fractionscale) || 1, field100Min: styleNum(this.style.field100min) || 0 });
     }
 
     // flat's statistics of an aggregated pie theme (maptheme.js
@@ -22449,7 +22816,7 @@ self.onmessage = e => {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, plotRasterPx, svgPlotTipMarkup, SVG_PLOT_TIP_WIDTH, atlasHeightOf, ATLAS_SWAP_HEIGHT_PX, SvgContext2D, chartDepthScaler, svgPlotFits, svgStyleSig, SVG_PLOT_MAX_CHARTS, SVG_PLOT_UNIT, donorFillRgba, itemAnchor, objectZoomFactor, defaultNormalSizeValue,
+    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, plotRasterPx, svgPlotTipMarkup, SVG_PLOT_TIP_WIDTH, atlasHeightOf, ATLAS_SWAP_HEIGHT_PX, SvgContext2D, chartDepthScaler, chartHitRect, chartHitAt, lastChartHits: () => _lastChartHits, plotVarStats, svgPlotFits, svgStyleSig, SVG_PLOT_MAX_CHARTS, SVG_PLOT_UNIT, donorFillRgba, itemAnchor, objectZoomFactor, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb, heatmapColorRange, heatmapWeight,
     mlHeatmapPoints, mlHeatmapWeightMax, mlHeatmapRadius, mlHeatmapPaint, syncNativeHeatmaps, mlHeatLayerId,

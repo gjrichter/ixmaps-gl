@@ -13,6 +13,34 @@
     "pitch": 0,
     "projection": "mercator"
    },
+   "panes": [
+    {
+     "theme": "comuni",
+     "count": 4568,
+     "digest": "1de2f509be49c4aa",
+     "setDigest": "a8c26d6f42a10d72",
+     "transforms": [
+      "translate(322.9 239.1) scale(28.3e-3) origin(0 0)",
+      "translate(310.4 253.4) scale(28.3e-3) origin(0 0)",
+      "translate(328.9 160.3) scale(28.3e-3) origin(0 0)",
+      "translate(365 211.6) scale(28.3e-3) origin(0 0)",
+      "translate(362.8 255.2) scale(28.3e-3) origin(0 0)"
+     ]
+    },
+    {
+     "theme": "comuni",
+     "count": 3346,
+     "digest": "d4959d6cf0f305b1",
+     "setDigest": "c54229bb5b8ddd43",
+     "transforms": [
+      "translate(322.9 239.1) scale(28.3e-3) origin(0 0)",
+      "translate(310.4 253.4) scale(28.3e-3) origin(0 0)",
+      "translate(328.9 160.3) scale(28.3e-3) origin(0 0)",
+      "translate(365 211.6) scale(28.3e-3) origin(0 0)",
+      "translate(362.8 255.2) scale(28.3e-3) origin(0 0)"
+     ]
+    }
+   ],
    "layers": [
     {
      "id": "ix-choropleth-comuni-d2",
@@ -372,7 +400,7 @@
     {
      "id": "ix-bubbles-comuni",
      "type": "GeoJsonLayer",
-     "count": 4571,
+     "count": 4568,
      "constants": {
       "filled": true,
       "getFillColor": [
@@ -396,10 +424,10 @@
      "columns": [
       "~geometry"
      ],
-     "digest": "aed36cded0fcb696",
-     "setDigest": "2832be726d3c13fa",
+     "digest": "4fbfbc383d0b9d04",
+     "setDigest": "8232b8d197f54dff",
      "columnDigests": {
-      "~geometry": "9e78b5e572a24ab2"
+      "~geometry": "c2658b528f0075f2"
      },
      "stats": {},
      "sample": [
@@ -608,7 +636,7 @@
     {
      "id": "ix-bubbles-comuni~2",
      "type": "GeoJsonLayer",
-     "count": 3348,
+     "count": 3346,
      "constants": {
       "filled": true,
       "getFillColor": [
@@ -632,10 +660,10 @@
      "columns": [
       "~geometry"
      ],
-     "digest": "b1639e94225ac64b",
-     "setDigest": "6fb8132f87ba6bf9",
+     "digest": "a9962a061c7d155c",
+     "setDigest": "ad8a62c150ee74b3",
      "columnDigests": {
-      "~geometry": "fc74404f662b3147"
+      "~geometry": "7f0bb3252746244b"
      },
      "stats": {},
      "sample": [
@@ -1121,12 +1149,12 @@
      ],
      "partsA": [
       {
-       "max": 255.169263,
+       "max": 255.331008,
        "min": -5512
       },
       {
        "max": 2329.551673,
-       "min": 255.169264
+       "min": 255.331009
       },
       {
        "max": 9951.69264,
@@ -1177,6 +1205,34 @@
     "pitch": 0,
     "projection": "mercator"
    },
+   "panes": [
+    {
+     "theme": "comuni",
+     "count": 2656,
+     "digest": "8d14fa07d0a8b802",
+     "setDigest": "f4ac01dcceaab262",
+     "transforms": [
+      "translate(133.8 94.2) scale(35.6e-3) origin(0 0)",
+      "translate(108.9 122.9) scale(35.6e-3) origin(0 0)",
+      "translate(218 39.3) scale(35.6e-3) origin(0 0)",
+      "translate(213.6 126.3) scale(35.6e-3) origin(0 0)",
+      "translate(78.1 208.1) scale(35.6e-3) origin(0 0)"
+     ]
+    },
+    {
+     "theme": "comuni",
+     "count": 2462,
+     "digest": "a764fc0c64788953",
+     "setDigest": "ecf54d1d209427bc",
+     "transforms": [
+      "translate(133.8 94.2) scale(35.6e-3) origin(0 0)",
+      "translate(108.9 122.9) scale(35.6e-3) origin(0 0)",
+      "translate(218 39.3) scale(35.6e-3) origin(0 0)",
+      "translate(213.6 126.3) scale(35.6e-3) origin(0 0)",
+      "translate(78.1 208.1) scale(35.6e-3) origin(0 0)"
+     ]
+    }
+   ],
    "layers": [
     {
      "id": "ix-choropleth-comuni-d2",
@@ -1796,10 +1852,10 @@
      "columns": [
       "~geometry"
      ],
-     "digest": "dfe4e75f166abead",
-     "setDigest": "ba4cb5fab9a6c29f",
+     "digest": "0aa57dc2bdcb1e9f",
+     "setDigest": "c684f0c66bb9c606",
      "columnDigests": {
-      "~geometry": "1b19b052645797a2"
+      "~geometry": "2e8095ea8a8a3ceb"
      },
      "stats": {},
      "sample": [
@@ -2285,12 +2341,12 @@
      ],
      "partsA": [
       {
-       "max": 255.169263,
+       "max": 255.331008,
        "min": -5512
       },
       {
        "max": 2329.551673,
-       "min": 255.169264
+       "min": 255.331009
       },
       {
        "max": 9951.69264,
@@ -2341,6 +2397,34 @@
     "pitch": 0,
     "projection": "mercator"
    },
+   "panes": [
+    {
+     "theme": "comuni",
+     "count": 4569,
+     "digest": "cbe5ad7915dc5208",
+     "setDigest": "fec00999ec54c302",
+     "transforms": [
+      "translate(417.4 311.6) scale(22.4e-3) origin(0 0)",
+      "translate(411.2 318.7) scale(22.4e-3) origin(0 0)",
+      "translate(420.4 272.1) scale(22.4e-3) origin(0 0)",
+      "translate(438.5 297.8) scale(22.4e-3) origin(0 0)",
+      "translate(437.4 319.6) scale(22.4e-3) origin(0 0)"
+     ]
+    },
+    {
+     "theme": "comuni",
+     "count": 3346,
+     "digest": "593bd04b9df04ddb",
+     "setDigest": "8d1d0b7cb528634d",
+     "transforms": [
+      "translate(417.4 311.6) scale(22.4e-3) origin(0 0)",
+      "translate(411.2 318.7) scale(22.4e-3) origin(0 0)",
+      "translate(420.4 272.1) scale(22.4e-3) origin(0 0)",
+      "translate(438.5 297.8) scale(22.4e-3) origin(0 0)",
+      "translate(437.4 319.6) scale(22.4e-3) origin(0 0)"
+     ]
+    }
+   ],
    "layers": [
     {
      "id": "ix-choropleth-comuni-d2",
@@ -2700,7 +2784,7 @@
     {
      "id": "ix-bubbles-comuni",
      "type": "GeoJsonLayer",
-     "count": 4572,
+     "count": 4569,
      "constants": {
       "filled": true,
       "getFillColor": [
@@ -2724,10 +2808,10 @@
      "columns": [
       "~geometry"
      ],
-     "digest": "d0d244524731a373",
-     "setDigest": "b251bfbe5adf1d7d",
+     "digest": "f36b166833b9498b",
+     "setDigest": "8a553e016c9a841c",
      "columnDigests": {
-      "~geometry": "12c3d951f839ba4e"
+      "~geometry": "dbedf8933817ab5c"
      },
      "stats": {},
      "sample": [
@@ -2936,7 +3020,7 @@
     {
      "id": "ix-bubbles-comuni~2",
      "type": "GeoJsonLayer",
-     "count": 3348,
+     "count": 3346,
      "constants": {
       "filled": true,
       "getFillColor": [
@@ -2960,10 +3044,10 @@
      "columns": [
       "~geometry"
      ],
-     "digest": "b1639e94225ac64b",
-     "setDigest": "6fb8132f87ba6bf9",
+     "digest": "a9962a061c7d155c",
+     "setDigest": "ad8a62c150ee74b3",
      "columnDigests": {
-      "~geometry": "fc74404f662b3147"
+      "~geometry": "7f0bb3252746244b"
      },
      "stats": {},
      "sample": [
@@ -3449,12 +3533,12 @@
      ],
      "partsA": [
       {
-       "max": 255.169263,
+       "max": 255.331008,
        "min": -5512
       },
       {
        "max": 2329.551673,
-       "min": 255.169264
+       "min": 255.331009
       },
       {
        "max": 9951.69264,

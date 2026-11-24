@@ -66,6 +66,15 @@ test('named palettes reproduce real colorscheme.js: every palette and spelling, 
   assert.ok(compared > 7000, `compared ${compared} palettes`);
 });
 
+test('batlow (Crameri): 32 stops resampled to N, first #011959, last #FACCFA, three spellings (as flat\'s dev-tree colorscheme.js)', () => {
+  // add 'batlow' to PALETTES once the ixmaps-flat repo has it (the dev tree's colorscheme.js gives the same)
+  for (const sp of ['batlow', 'BATLOW', 'Batlow']) {
+    assert.deepEqual(Array.from(G.flatColorSweep(sp, '', 5), c => hex(Array.from(c))), ['#011959', '#226061', '#828232', '#f19d6c', '#faccfa'], sp);
+  }
+  assert.deepEqual(Array.from(G.flatColorSweep('batlow', '', 32), c => hex(Array.from(c)))[16], '#89842f', 'n = 32: the stops themselves');
+  assert.deepEqual(plain(G.flatColorSweep('batlow', '', 1)), [[1, 25, 89]], 'one color: the first stop');
+});
+
 test('named palettes: ["9", "tableau"] are the first 9 Tableau colors; spectrum is not ported → null', () => {
   assert.deepEqual(plain(G.flatColorSweep('tableau', undefined, 3)), [[0x4e, 0x79, 0xa7], [0xa0, 0xcb, 0xe8], [0xf2, 0x8e, 0x2b]]);
   assert.equal(G.flatColorSweep('Spectrum', 'dark', 5), null);

@@ -110,7 +110,7 @@ test('BOX of SVG charts: an SVG rect with its title, under the chart, not pickab
   assert.equal(rt._svgBoxCharts(null, 2, () => [0, 0]).size, 0, 'no box rows: no boxes');
 });
 
-test('tooltip curve: svgPlotTipMarkup enlarges the drawing to 240 px, lines as on the map (1.2 … 3 px)', () => {
+test('tooltip curve: svgPlotTipMarkup enlarges the drawing to 240 px, lines as on the map (1.2 … 4 px)', () => {
   const chart = { markup: '<g><svg><path d="M0 0L10 5" stroke="red" stroke-width="2"/><path d="M0 0" stroke-width="0.01"/></svg></g>', ext: [0, 0, 100, 50] };
   const m = G.svgPlotTipMarkup(chart, 0.5);
   assert.match(m, /^<svg class="ix-tip-chart" width="240" height="\d+" viewBox="-4 -4 108 58"/, '4 % margin around the extent');
@@ -120,7 +120,7 @@ test('tooltip curve: svgPlotTipMarkup enlarges the drawing to 240 px, lines as o
   assert.ok(Math.abs(widths[1] - 1.2) < 0.01, 'a hairline too');
   assert.ok(Math.abs(+(/height="(\d+)"/.exec(m)[1]) - Math.round(58 * k)) <= 1, 'height in proportion');
   const wide = G.svgPlotTipMarkup({ markup: '<path stroke-width="10"/>', ext: [0, 0, 100, 50] }, 1);
-  assert.ok(Math.abs(+/stroke-width="([\d.]+)"/.exec(wide)[1] * k - 3) < 0.01, 'never more than 3 px');
+  assert.ok(Math.abs(+/stroke-width="([\d.]+)"/.exec(wide)[1] * k - 4) < 0.01, 'never more than 4 px');
 });
 
 test('tooltip curve: a PLOT item\'s {{theme.item.chart}} is its chart with flat\'s coordinate grid, over the values table', () => {
@@ -153,40 +153,61 @@ test('SVG gradient ids follow the chart, not the drawing order (stable snapshots
   assert.equal(ma, mb, 'the same chart, the same markup');
 });
 
-test('tooltip curve: the item\'s own range, as tall as wide, a 2 px line, AREA down to the axis only', () => {
-  const def = normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'a|b|c' },
-    style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA|LASTPOP', linewidth: 45, rangescale: 5, colorscheme: ['#336699'] } });
-  const rt = new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
-  rt._plotTip = { rangeFor: () => ({ min: -100, max: 100 }), sizeMax: 600, labels: ['a', 'b', 'c'] };
-  const html = rt._plotTipChartHtml([342, 591, 584]);
+test('tooltip curve: the item\'s own range in the map\'s shape (clamped 0.2 … 1.5), a 3 px line, AREA down to the axis only', () => {
+  const tip = rs => {
+    const def = normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'a|b|c' },
+      style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA|LASTPOP', linewidth: 45, rangescale: rs, colorscheme: ['#336699'] } });
+    const rt = new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
+    rt._plotTip = { rangeFor: () => ({ min: -100, max: 1000 }), sizeMax: 600, labels: ['a', 'b', 'c'] };
+    return rt._plotTipChartHtml([342, 591, 584]);
+  };
+  const box = html => /viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) ([\d.]+)"/.exec(html).slice(1).map(Number);
+  const html = tip(5);
   const labels = [...html.matchAll(/text-anchor="end"[^>]*>([^<]+)</g)].map(m => +m[1]);
-  assert.ok(Math.min(...labels) >= 300 && Math.max(...labels) <= 600, `own range, not the shared −100 … 100: ${labels}`);
-  const [, , vw, vh] = /viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) ([\d.]+)"/.exec(html).slice(1).map(Number);
-  assert.ok(vh / vw < 1.4, `about as tall as wide, rangescale left out: ${vw} × ${vh}`);
+  assert.ok(Math.min(...labels) >= 300 && Math.max(...labels) <= 600, `own range, not the shared −100 … 1000: ${labels}`);
+  // the map draws the curve rangescale × (n − 1) steps over its 1100 span: over its own ~250 the tooltip keeps that
+  // height per value — rangescale 2 → 2 × 250 / 1100 ≈ 0.45 of the width; 5 → 1.1; 20 → clamped to 1.5
+  const ratio = rs => { const [, , vw, vh] = box(tip(rs)); return vh / vw; };
+  assert.ok(ratio(2) < 0.75, `a flat map curve stays flat: ${ratio(2)}`);
+  assert.ok(ratio(5) > ratio(2) * 1.5, `a steeper one is taller: ${ratio(5)} vs ${ratio(2)}`);
+  assert.ok(ratio(20) < 1.9, `a very steep one is clamped: ${ratio(20)}`);
+  const [, , vw, vh] = box(html);
   const w = +/stroke="rgb\(51,102,153\)" stroke-width="([\d.]+)"/.exec(html)[1] * 240 / vw;
-  assert.ok(w > 1.5 && w < 2.5, `a ~2 px line, not the map's linewidth 45: ${w}`);
+  // ~3 px over the curve's own width; measured against the whole box (the axis labels widen it) about 0.75 of that
+  assert.ok(w > 2 && w < 3.5, `a ~3 px line, not the map's linewidth 45: ${w}`);
   const area = /<path d="M([\d.]+) ([\d.]+)L[^"]*Z" fill="rgba\(51,102,153/.exec(html);
   assert.ok(area && +area[2] < vh + 1, 'the area stops at the axis, not at the far value-0 level');
 });
 
 const near = (a, b, msg, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${msg}: ${a} vs ${b}`);
-test('chartDepthScaler: the SVG chart pane shrinks charts with depth as deck.gl billboards (center / item ground span per px)', () => {
-  // a mock tilted camera: one screen px spans (1 + y / 400) × 1e-3 degrees of longitude on row y (Mercator x
-  // is proportional to longitude) — farther rows (smaller y) span less, here the row at y 400 is the center
-  const map = (pitch, globe) => ({
+test('chartDepthScaler: deck.gl\'s billboard depth scale from the camera, 1 + tan(pitch) · (y − cy) / f — no unproject (terrain)', () => {
+  // a 800 px tall canvas, fov 36.87° (MapLibre's default): f = 400 / tan(18.435°) = 1200 px; pitch 45°: tan = 1
+  const map = (pitch, o = {}) => Object.assign({
     getPitch: () => pitch,
-    getProjection: () => ({ type: globe ? 'globe' : 'mercator' }),
-    getCenter: () => ({ lng: 0, lat: 0 }),
-    project: () => ({ x: 500, y: 400 }),
-    unproject: ([x, y]) => ({ lng: x * (1 + y / 400) * 1e-3, lat: 0 })
-  });
+    getCanvas: () => ({ clientHeight: 800 }),
+    getVerticalFieldOfView: () => 36.87,
+    getPadding: () => ({ top: 0, bottom: 0 }),
+    // with 3D terrain the unprojected ground jumps while the camera moves: never read
+    unproject: () => { throw new Error('unproject must not be used'); }
+  }, o);
   assert.equal(G.chartDepthScaler(map(0)), null, 'no tilt: no depth scale');
-  const k = G.chartDepthScaler(map(60));
-  near(k({ x: 500, y: 400 }), 1, 'the center: 1', 1e-9);
-  near(k({ x: 100, y: 1200 }), 2 / 4, 'twice as deep (span 4 vs 2): half the size', 1e-9);
-  near(k({ x: 100, y: 0 }), 2, 'half as deep: twice the size', 1e-9);
-  near(G.chartDepthScaler(map(60, true))({ x: 10, y: 1200 }), 0.5, 'globe: the same from meters', 1e-6);
-  // a point beyond the horizon (no ground under it) keeps its size
-  const sky = Object.assign(map(60), { unproject: ([x, y]) => (y < 0 ? { lng: NaN, lat: NaN } : { lng: x * 1e-3, lat: 0 }) });
-  assert.equal(G.chartDepthScaler(sky)({ x: 5, y: -10 }), 1);
+  const f = 400 / Math.tan(36.87 * Math.PI / 360);
+  const k = G.chartDepthScaler(map(45));
+  near(k({ x: 0, y: 400 }), 1, 'the camera center row: 1');
+  near(k({ x: 900, y: 700 }), 1 + 300 / f, '300 px below the center: nearer, bigger');
+  near(k({ x: 0, y: 100 }), 1 - 300 / f, '300 px above: farther, smaller');
+  near(G.chartDepthScaler(map(45, { getPadding: () => ({ top: 200, bottom: 0 }) }))({ x: 0, y: 500 }), 1, 'padding moves the center row');
+  assert.equal(G.chartDepthScaler(map(80))({ x: 0, y: -5000 }), 0.02, 'beyond the horizon: the floor, not a negative size');
+  assert.equal(G.chartDepthScaler(map(80))({ x: 0, y: 1e6 }), 8, 'capped at 8');
+  assert.equal(G.chartDepthScaler(map(45, { getCanvas: () => ({ clientHeight: 0 }) })), null, 'no canvas size: no depth scale');
+});
+
+test('chartHitRect / chartHitAt: a chart pane chart\'s screen rectangle (extent × growth, offset) and the topmost hit', () => {
+  const it = { ext: [-10, -20, 30, 0], off: [5, 0] };
+  assert.deepEqual(plain(G.chartHitRect(it, { x: 100, y: 200 }, 2)), { x: 90, y: 160, w: 80, h: 40 }, '(off + ext) × g around the point');
+  const host = { hits: [{ x: 0, y: 0, w: 50, h: 50, id: 'below' }, { x: 20, y: 20, w: 50, h: 50, id: 'above' }] };
+  assert.equal(G.chartHitAt(host, 30, 30).id, 'above', 'drawn last = on top');
+  assert.equal(G.chartHitAt(host, 5, 5).id, 'below');
+  assert.equal(G.chartHitAt(host, 200, 200), null);
+  assert.equal(G.chartHitAt({}, 1, 1), null, 'no frame drawn yet');
 });

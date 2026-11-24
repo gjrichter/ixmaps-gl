@@ -236,10 +236,14 @@ test('computeRangeClasses: RANGES + style.ranges → n+1 breaks are n classes, n
   }
 });
 
-test('computeRangeClasses: ranges without the RANGES flag, or with CATEGORICAL, are ignored (flat 2324)', () => {
+test('computeRangeClasses: style.ranges classes without the RANGES flag too (flat newTheme 1413); not with CATEGORICAL', () => {
+  // flat takes style.ranges when it creates the theme, whatever the flags; only refreshTheme (2324) drops
+  // them again without RANGES — a page's first drawing is classed by its ranges (the Sicilia "% RD ·
+  // pallini" theme, CHART|SYMBOL|SIZE|…|EQUIDISTANT with 0…100 ranges, colored by them in flat)
   const fs_ = [5.8, 14, 19.4].map(v => feat({ wbgt: v }));
   const parts = f => G.computeRangeClasses(fs_, { value: 'wbgt' }, { colorscheme: WBGT_COLORS, ranges: WBGT_RANGES }, flags(...f), String).partsA.length;
-  assert.equal(parts(['CHART']), 16, 'no RANGES flag: the colorscheme\'s equal intervals');
+  assert.equal(parts(['CHART']), WBGT_RANGES.split(',').length - 1, 'no RANGES flag: the explicit ranges');
+  assert.equal(parts(['CHART', 'RANGES']), WBGT_RANGES.split(',').length - 1, 'with RANGES: the same');
   assert.equal(G.explicitRangeBreaks({ ranges: WBGT_RANGES }, flags('RANGES', 'CATEGORICAL')), null);
   assert.equal(G.explicitRangeBreaks({ ranges: '5' }, flags('RANGES')), null, 'one value is no class');
   assert.equal(G.explicitRangeBreaks({}, flags('RANGES')), null);
