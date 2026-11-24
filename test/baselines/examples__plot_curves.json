@@ -17,14 +17,14 @@
     {
      "theme": "Mercator",
      "count": 258,
-     "digest": "3057b77850cacc49",
-     "setDigest": "682225e1fa483617",
+     "digest": "6be5d1658de71d05",
+     "setDigest": "609e9eff1b369982",
      "transforms": [
-      "translate(985.8 -46.7) scale(1) translate(0 0)",
-      "translate(985.8 -46.7) scale(1.4) translate(-2.2 -12)",
-      "translate(785.8 -46.7) scale(1) translate(0 0)",
-      "translate(785.8 -46.7) scale(1.4) translate(-2.2 -11.5)",
-      "translate(585.8 353.3) scale(1) translate(0 0)"
+      "translate(985.8 -46.7) scale(1000e-3) origin(0 0)",
+      "translate(985.8 -46.7) scale(1388.9e-3) origin(2.2 12)",
+      "translate(785.8 -46.7) scale(1000e-3) origin(0 0)",
+      "translate(785.8 -46.7) scale(1388.9e-3) origin(2.2 11.5)",
+      "translate(585.8 353.3) scale(1000e-3) origin(0 0)"
      ]
     }
    ],
@@ -735,14 +735,14 @@
     {
      "theme": "Mercator",
      "count": 260,
-     "digest": "0128308d417933bb",
-     "setDigest": "a1b948c66fb6363d",
+     "digest": "e2644e908e40348a",
+     "setDigest": "c0cd3040793c8498",
      "transforms": [
-      "translate(596.3 183.7) scale(1) translate(0 0)",
-      "translate(596.3 183.7) scale(1.4) translate(-2.2 -37.1)",
-      "translate(596.3 283.7) scale(1) translate(0 0)",
-      "translate(596.3 283.7) scale(1.4) translate(-2.2 -46.1)",
-      "translate(396.3 183.7) scale(1) translate(0 0)"
+      "translate(596.3 183.7) scale(1000e-3) origin(0 0)",
+      "translate(596.3 183.7) scale(1388.9e-3) origin(2.2 37.1)",
+      "translate(596.3 283.7) scale(1000e-3) origin(0 0)",
+      "translate(596.3 283.7) scale(1388.9e-3) origin(2.2 46.1)",
+      "translate(396.3 183.7) scale(1000e-3) origin(0 0)"
      ]
     }
    ],
@@ -1453,14 +1453,14 @@
     {
      "theme": "Mercator",
      "count": 260,
-     "digest": "321dbc66818c0c58",
-     "setDigest": "c16313f59874b8f8",
+     "digest": "b60f26d26fb589ac",
+     "setDigest": "a2499d9d9672a904",
      "transforms": [
-      "translate(580.6 -11.9) scale(1) translate(0 0)",
-      "translate(580.6 -11.9) scale(1.4) translate(-2.2 -14)",
-      "translate(680.6 88.1) scale(1) translate(0 0)",
-      "translate(680.6 88.1) scale(1.4) translate(-2.2 -16.9)",
-      "translate(580.6 88.1) scale(1) translate(0 0)"
+      "translate(580.6 -11.9) scale(1000e-3) origin(0 0)",
+      "translate(580.6 -11.9) scale(1388.9e-3) origin(2.2 14)",
+      "translate(680.6 88.1) scale(1000e-3) origin(0 0)",
+      "translate(680.6 88.1) scale(1388.9e-3) origin(2.2 16.9)",
+      "translate(580.6 88.1) scale(1000e-3) origin(0 0)"
      ]
     }
    ],

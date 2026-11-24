@@ -12,6 +12,7 @@ npm run unit                     # only the Node unit tests (pure engine interna
 npm run snapshot                 # re-write baselines/ after an INTENDED output change
 node run.mjs --page choropleth   # only pages whose path contains "choropleth"
 node run.mjs --engine ../x.js    # run the pages against another ixmaps-gl.js build
+node run.mjs --chartpane svg     # USER / PLOT charts in the SVG pane instead of the canvas pane (same snapshot)
 node run.mjs --jobs 4            # pages in parallel (default 2); a full run takes ~3 min
 npm run events                   # live check of map.on/off events (headless Chromium, needs network)
 npm run runtime                  # live check of adding themes to a built map and of runtime filtering

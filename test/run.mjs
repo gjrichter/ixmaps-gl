@@ -5,6 +5,7 @@
 //   npm run snapshot                 (re)write the baselines  (= node run.mjs --update)
 //   node run.mjs --page dot_         only pages whose path contains "dot_"
 //   node run.mjs --engine old.js     run the pages against another ixmaps-gl.js build
+//   node run.mjs --chartpane svg     USER / PLOT charts in the SVG pane instead of the canvas pane
 //                                    (default: this checkout's ixmaps-gl.js — also
 //                                    for pages that load the released one from jsDelivr)
 //   node run.mjs --jobs 3            pages in parallel (default 2)
@@ -42,6 +43,9 @@ const ENGINE = opt('--engine') ? path.resolve(opt('--engine')) : null;
 // the released one from jsDelivr): --engine, else this checkout's own
 const ENGINE_FILE = ENGINE || path.join(REPO, 'ixmaps-gl.js');
 const FILTER = opt('--page');
+// --chartpane svg|canvas: force the chart pane of USER / PLOT charts (default: the engine's own, canvas)
+const CHART_PANE = opt('--chartpane');
+const chartPaneInit = CHART_PANE ? `window.ixmapsGlChartCanvas = ${CHART_PANE === 'canvas'};` : null;
 const JOBS = Number(opt('--jobs', 2));
 const FLAT_ORACLE = flag('--flat-oracle');
 const SETTLE_MS = 1200;       // layers unchanged this long = settled
@@ -162,6 +166,7 @@ const consoleRelevant = m => !/Failed to load resource|net::ERR_|favicon|GL Driv
 async function runPage(browser, localOrigin, pagePath) {
   const context = await browser.newContext({ viewport: { width: 1024, height: 768 }, deviceScaleFactor: 1 });
   await context.addInitScript(browserCode);
+  if (chartPaneInit) await context.addInitScript(chartPaneInit);
   await context.route('**/*', route => handleRoute(route, localOrigin));
   const page = await context.newPage();
   const consoleMsgs = new Set();
@@ -265,6 +270,7 @@ function diffSnapshots(base, act) {
 async function runFlatPage(browser, localOrigin, pagePath) {
   const context = await browser.newContext({ viewport: { width: 1024, height: 768 }, deviceScaleFactor: 1 });
   await context.addInitScript(browserCode);
+  if (chartPaneInit) await context.addInitScript(chartPaneInit);
   await context.route('**/*', route => handleRoute(route, localOrigin));
   const page = await context.newPage();
   try {

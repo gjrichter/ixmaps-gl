@@ -123,8 +123,9 @@ page. It currently implements:
   `RANGES` flag needed); `LASTPOP` puts a dot on each cell's last point (`linewidth` × `markersize`).
   `BOX` + `GRID` draw flat's coordinate grid: y lines and labels on the axis' rounded steps (the zero
   line solid), plus x ticks and labels from `style.xaxis`
-  · PLOT charts (per item and per grid cell) are drawn as live SVG over the map, as flat draws them — sharp
-  at every zoom, line widths as set — while at most 2000 are in view; with more, as WebGL icons
+  · PLOT charts (per item and per grid cell) are drawn from their SVG drawing in the chart pane over the
+  map (see `CHART|USER` below), as flat draws them — sharp at every zoom, line widths as set — while at
+  most 2000 are in view; with more, as WebGL icons
 - A native interactive legend (default bars, `SIMPLELEGEND`, `COMPACTLEGEND`,
   `NOLEGEND`, `TEXTLEGEND`; light/dark color themes; corner or flat `align` option;
   collapsible, collapsed by default on narrow/mobile screens). As flat's `#map-legend` it is one box:
@@ -184,10 +185,18 @@ its MapLibre map and WebGL context, window listeners, animation loop, timers and
 so a page may rebuild its map to switch data without piling up hidden maps. `map().destroy()` does
 the same on request (e.g. before removing the map's div from the page).
 
-`CHART|USER` themes (a page's own `userdraw` chart function) render as live SVG in a pane over
-the map, as flat renders them — vector-crisp at every zoom, labels as real text, following every
-pan via transform-only updates (≈3ms for 8,000 charts). Picking/tooltips run on a transparent
-deck layer at the same positions.
+`CHART|USER` themes (a page's own `userdraw` chart function) and SVG PLOT charts are drawn as flat
+draws them, as SVG, and shown in a chart pane over the map. By default that pane is one 2D canvas:
+each chart's SVG is rasterized once at its on-screen resolution (many charts per image, decoded
+together), and every frame draws the bitmaps with `drawImage` — smooth while the camera pans,
+rotates or tilts, with no DOM element per chart and no shared WebGL icon atlas. While the camera
+moves a chart shows the nearest raster it has; when it stops, the charts are rasterized again at
+their settled size, so they are sharp at rest. On a tilted camera farther charts are smaller, as
+deck.gl's billboards. Picking/tooltips run on a transparent deck layer at the same positions.
+`.options({chartcanvas: false})` (or `window.ixmapsGlChartCanvas = false`, or `?ixgl-chartsvg` in
+the page URL) keeps the charts as live SVG elements instead — vector at every frame, but a rotation
+or tilt re-styles every chart element per frame. SVG drawn as an image cannot load external images:
+a USER chart that links images by URL needs the SVG pane.
 
 The historic global forms remain as compatibility wrappers and dispatch on arity: the canonical
 theme-first `ixmaps.changeThemeStyle(themeId, "style:value", "set")` and `ixmaps.removeTheme(id)`

@@ -3381,6 +3381,7 @@ self.onmessage = e => {
   // counts. Keyed by the map's options object, so runtimes defined later
   // (loadProject, post-build map.layer) find it too.
   const _chartHosts = new WeakMap();
+  let _chartPaneSeq = 0;   // the themes' ids in the canvas pane's bitmap cache
   // A tilted camera's depth scale for screen-sized charts, as deck.gl sizes its pixel billboards (icons):
   // their px are clip-space px times the focal distance, so after the perspective divide a chart shrinks
   // with its depth w — focalDistance / w, 1 at the map's center, under 1 towards the horizon. The SVG
@@ -3408,6 +3409,237 @@ self.onmessage = e => {
       return k > 0 && isFinite(k) ? Math.min(8, Math.max(0.02, k)) : 1;
     };
   }
+  // ---- the canvas chart pane (the default chart pane) ----
+  // The SVG chart pane moves up to 2000 DOM elements per camera frame, and the browser restyles and
+  // repaints them all: a rotation or tilt stutters. The canvas pane keeps the charts' own SVG drawing
+  // (USER markup, SvgContext2D PLOT markup) but shows it as bitmaps: each chart rasterized once at its
+  // on-screen resolution (half-octave steps of device px per chart unit), drawn per frame with
+  // drawImage on one 2D canvas — no DOM per chart and no shared icon atlas. While the camera moves a
+  // chart takes the nearest bitmap it has (scaled); when it stops, the charts are rasterized at their
+  // settled size again, so they are sharp at rest. Picking stays the deck.gl pick layer.
+  // The default wherever the browser can rasterize SVG (Image, Blob URLs). The SVG pane instead:
+  // .options({chartcanvas: false}), window.ixmapsGlChartCanvas = false, or ?ixgl-chartsvg in the page URL
+  // (?ixgl-chartcanvas forces the canvas pane).
+  function chartCanvasOn(opts) {
+    try {
+      const q = new URLSearchParams(global.location.search);
+      if (q.has('ixgl-chartsvg')) return false;
+      if (q.has('ixgl-chartcanvas')) return true;
+    } catch (e) { /* no location */ }
+    const v = (opts && opts.chartcanvas != null) ? opts.chartcanvas : global.ixmapsGlChartCanvas;
+    if (v != null) return !(v === false || v === 'false' || v === 0 || v === '0');
+    return typeof Image !== 'undefined' && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function';
+  }
+  const CHART_BITMAP_BUDGET_PX = 32e6;   // device px kept as chart bitmaps (~128 MB RGBA)
+  const CHART_BITMAP_MAX_SIDE = 1024;    // a bitmap's longest side, device px
+  const CHART_RASTER_CONCURRENCY = 3;    // chart sheets decoded at a time
+  // a chart's raster level for px per chart unit f: half octaves, log2(f) rounded to .5
+  const chartRasterLevel = f => Math.round(Math.log2(Math.max(1e-6, f)) * 2) / 2;
+  // a mounted chart's box in chart units (its measured extent, it.ext in px at scale it.s), with a margin
+  // for strokes and glyphs outside the measured box
+  function chartUnitBox(it) {
+    const s = it.s || 1, e = it.ext || [0, 0, 0, 0];
+    const x0 = it.ox + e[0] / s, y0 = it.oy + e[1] / s, x1 = it.ox + e[2] / s, y1 = it.oy + e[3] / s;
+    const m = 0.06 * Math.max(x1 - x0, y1 - y0) + 3 / s;
+    return [x0 - m, y0 - m, x1 + m, y1 + m];
+  }
+  // the bitmaps of the canvas pane: per chart drawing (it.ckey) its rasters by level; least recently
+  // used drawings go first once over CHART_BITMAP_BUDGET_PX. Charts are rasterized in batches, many to
+  // one SVG "sheet" (a nested <svg> viewport per chart, shelf-packed): one image decode for a few
+  // hundred charts — one decode per chart was ~4 ms each. A chart's raster is its region of a sheet;
+  // a sheet's bitmap is closed when the last of its charts is dropped.
+  const CHART_SHEET_PX = 2048;          // a sheet's width and greatest height, device px
+  const CHART_SHEET_MAX_CHARTS = 400;
+  class ChartBitmapCache {
+    constructor(onLoad) {
+      this.recs = new Map();
+      this.px = 0;
+      this.queue = [];
+      this.inflight = 0;
+      this.frame = 0;
+      this.onLoad = onLoad;
+      this.failed = 0;
+      this.scheduled = false;
+    }
+    // the raster to draw for item it at level `want` (or the nearest it has); asks for the wanted level
+    // when there is none, or when the camera rests
+    pick(it, want, moving) {
+      let rec = this.recs.get(it.ckey);
+      if (rec) { this.recs.delete(it.ckey); this.recs.set(it.ckey, rec); }
+      else this.recs.set(it.ckey, rec = { levels: new Map() });
+      rec.used = this.frame;
+      const have = rec.levels.get(want);
+      if (have && have.bitmap) return have;
+      let best = null, bestD = Infinity;
+      for (const [lv, e] of rec.levels) {
+        if (!e.bitmap) continue;
+        const d = Math.abs(lv - want) + (lv < want ? 0.01 : 0);   // a tie: the sharper one
+        if (d < bestD) { best = e; bestD = d; }
+      }
+      if (!have && (!best || !moving)) this.request(it, want, rec);
+      return best;
+    }
+    request(it, level, rec) {
+      rec.levels.set(level, { bitmap: null });
+      this.queue.push({ markup: it.markup, defsById: it.defsById || null, box: it.box || (it.box = chartUnitBox(it)), level, rec, ckey: it.ckey });
+      // the frame's asks go out together, after it
+      if (!this.scheduled) { this.scheduled = true; Promise.resolve().then(() => { this.scheduled = false; this.pump(); }); }
+    }
+    pump() {
+      while (this.inflight < CHART_RASTER_CONCURRENCY && this.queue.length) {
+        // the newest asks first (what the view shows now), as many as fill a sheet
+        const jobs = [];
+        while (this.queue.length && jobs.length < CHART_SHEET_MAX_CHARTS) {
+          const job = this.queue.pop();
+          if (this.recs.get(job.ckey) === job.rec) jobs.push(job);   // else evicted meanwhile
+        }
+        if (!jobs.length) break;
+        this.inflight++;
+        this.rasterizeSheet(jobs).then(done => {
+          this.inflight--;
+          for (const { job, entry } of done) {
+            if (this.recs.get(job.ckey) === job.rec && entry.bitmap) {
+              job.rec.levels.set(job.level, entry);
+              this.px += entry.px;
+              // a settled raster: the other levels go (memory)
+              for (const [lv, e] of job.rec.levels) if (lv !== job.level && e.bitmap) { this.drop(e); job.rec.levels.delete(lv); }
+            } else if (entry.bitmap) this.drop(entry);
+            else if (this.recs.get(job.ckey) === job.rec) job.rec.levels.set(job.level, entry);   // failed: not asked again
+          }
+          this.evict();
+          this.onLoad();
+          this.pump();
+        });
+      }
+    }
+    // rasterize jobs into one sheet; jobs that do not fit go back to the queue
+    async rasterizeSheet(jobs) {
+      const cells = [], parts = [], defs = new Map();
+      let x = 0, y = 0, rowH = 0;
+      const PAD = 2;
+      for (let i = 0; i < jobs.length; i++) {
+        const job = jobs[i];
+        const [x0, y0, x1, y1] = job.box;
+        const bw = x1 - x0, bh = y1 - y0;
+        if (!(bw > 0 && bh > 0)) { cells.push({ job, skip: true }); continue; }
+        let res = Math.pow(2, job.level);
+        const side = Math.max(bw, bh) * res;
+        if (side > CHART_BITMAP_MAX_SIDE) res *= CHART_BITMAP_MAX_SIDE / side;
+        const W = Math.max(1, Math.ceil(bw * res)), H = Math.max(1, Math.ceil(bh * res));
+        if (x + W > CHART_SHEET_PX) { x = 0; y += rowH + PAD; rowH = 0; }
+        if (y + H > CHART_SHEET_PX) { for (let j = jobs.length - 1; j >= i; j--) this.queue.push(jobs[j]); break; }
+        cells.push({ job, sx: x, sy: y, sw: W, sh: H });
+        parts.push(`<svg x="${x}" y="${y}" width="${W}" height="${H}" viewBox="${x0} ${y0} ${bw} ${bh}" preserveAspectRatio="none" overflow="hidden">${job.markup}</svg>`);
+        if (job.defsById) for (const id in job.defsById) if (!defs.has(id)) defs.set(id, job.defsById[id]);
+        x += W + PAD;
+        rowH = Math.max(rowH, H);
+      }
+      const drawn = cells.filter(c => !c.skip);
+      const failed = () => cells.map(c => ({ job: c.job, entry: { bitmap: null, px: 0, failed: true } }));
+      if (!drawn.length) return failed();
+      const sheetH = Math.max(1, y + rowH);
+      const svg = `<svg xmlns="${SVG_NS}" xmlns:xlink="http://www.w3.org/1999/xlink" width="${CHART_SHEET_PX}" height="${sheetH}">`
+        + (defs.size ? `<defs>${[...defs.values()].join('')}</defs>` : '') + parts.join('') + '</svg>';
+      const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+      try {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+        await img.decode();
+        let bitmap;
+        try { bitmap = await createImageBitmap(img); }
+        catch (e) {
+          // an SVG image createImageBitmap refuses (some browsers): drawn on a canvas once
+          bitmap = document.createElement('canvas');
+          bitmap.width = CHART_SHEET_PX; bitmap.height = sheetH;
+          bitmap.getContext('2d').drawImage(img, 0, 0);
+        }
+        const sheet = { bitmap, refs: drawn.length };
+        return cells.map(c => ({ job: c.job, entry: c.skip ? { bitmap: null, px: 0, failed: true }
+          : { bitmap, sheet, sx: c.sx, sy: c.sy, sw: c.sw, sh: c.sh, px: c.sw * c.sh } }));
+      } catch (e) {
+        if (this.failed++ < 3) console.warn('[ixmaps-gl] chart canvas: a sheet of charts did not rasterize', e && e.message ? e.message : e);
+        return failed();
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+    drop(e) {
+      this.px -= e.px || 0;
+      if (e.sheet && --e.sheet.refs === 0 && e.sheet.bitmap && e.sheet.bitmap.close) e.sheet.bitmap.close();
+      e.bitmap = null;
+    }
+    // over the budget: the least recently used drawings, never one drawn in this frame
+    evict() {
+      if (this.px <= CHART_BITMAP_BUDGET_PX) return;
+      for (const [key, rec] of this.recs) {
+        if (this.px <= CHART_BITMAP_BUDGET_PX * 0.85) break;
+        if (rec.used === this.frame) continue;
+        for (const e of rec.levels.values()) this.drop(e);
+        this.recs.delete(key);
+      }
+    }
+  }
+  // one frame of the canvas pane: every runtime's mounted charts (rt._chartItems, in draw order) as
+  // their bitmaps, positioned and scaled as the SVG pane's transforms would (translate(p + o·g)
+  // scale(s·g) translate(−ox, −oy)), g the zoom growth (SVG PLOT) times the camera's depth scale
+  function drawChartCanvas(host) {
+    const { map, el } = host;
+    if (!host.canvas) {
+      host.canvas = document.createElement('canvas');
+      host.canvas.className = 'ix-chart-canvas';
+      host.canvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3;';
+      el.appendChild(host.canvas);
+    }
+    if (!host.bitmaps) host.bitmaps = new ChartBitmapCache(() => host.requestUpdate());
+    const cv = host.canvas, cache = host.bitmaps;
+    const dpr = global.devicePixelRatio || 1;
+    const w = el.clientWidth, h = el.clientHeight;
+    const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+    if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    const depth = chartDepthScaler(map);
+    const moving = map.isMoving();
+    const zoom = map.getZoom();
+    cache.frame++;
+    let drawn = 0, waiting = 0;
+    for (const rt of host.runtimes) {
+      const items = rt._chartItems;
+      if (!items) continue;
+      // the bitmap a chart showed last, by position: a redrawn chart (a new drawing key after a zoom)
+      // keeps showing its former bitmap until its own is ready — no blank frames
+      const prevByPos = rt._chartCanvasLast || new Map(), nowByPos = new Map(), atPos = new Map();
+      for (const it of items) {
+        if (!it.markup) continue;
+        const p = map.project(it.coords);
+        const o = it.off || [0, 0];
+        const g = (it.grow ? it.grow(zoom) : 1) * (depth ? depth(p) : 1);
+        const k = it.s * g;
+        const box = it.box || (it.box = chartUnitBox(it));
+        const x = p.x + o[0] * g + k * (box[0] - it.ox), y = p.y + o[1] * g + k * (box[1] - it.oy);
+        const dw = k * (box[2] - box[0]), dh = k * (box[3] - box[1]);
+        if (x > w || y > h || x + dw < 0 || y + dh < 0 || !(dw > 0.5 && dh > 0.5)) continue;
+        // a position's n-th chart (an SVG PLOT's box and its chart share one)
+        const pos = it.coords[0] + ',' + it.coords[1], n = (atPos.get(pos) || 0) + 1;
+        atPos.set(pos, n);
+        const posKey = pos + '#' + n;
+        let bm = cache.pick(it, chartRasterLevel(k * dpr), moving);
+        if (!bm) { bm = prevByPos.get(posKey) || null; waiting++; }
+        if (!bm || !bm.bitmap) continue;
+        nowByPos.set(posKey, bm);
+        ctx.drawImage(bm.bitmap, bm.sx, bm.sy, bm.sw, bm.sh, x, y, dw, dh);
+        drawn++;
+      }
+      rt._chartCanvasLast = nowByPos;
+    }
+    if (glDebug() && !moving) console.info(`[ixmaps-gl debug] chart canvas: ${drawn} drawn, ${waiting} waiting, ${cache.recs.size} drawings, ${(cache.px / 1e6).toFixed(1)} Mpx`);
+  }
+
   function chartHostFor(mapOptions, map, el) {
     let host = _chartHosts.get(mapOptions);
     if (host) return host;
@@ -3417,14 +3649,19 @@ self.onmessage = e => {
     const defs = document.createElementNS(SVG_NS, 'defs');
     pane.appendChild(defs);
     el.appendChild(pane);
-    host = { pane, defs, map, el, runtimes: new Set(), raf: 0 };
+    host = { pane, defs, map, el, runtimes: new Set(), raf: 0, opts: mapOptions };
     host.requestUpdate = () => {
       if (host.raf) return;
       host.raf = global.requestAnimationFrame(() => { host.raf = 0; host.update(); });
     };
+    // the canvas chart pane (chartCanvasOn): the same charts as bitmaps on one 2D canvas
+    host.canvasMode = () => chartCanvasOn(mapOptions);
+    host.bitmaps = null;   // ChartBitmapCache, made on first use
     // transform-only per move: positions follow the map live; the charts'
     // own markup is redrawn on the settled-refresh cadence (freezeOnPan)
     host.update = () => {
+      if (host.canvasMode()) return drawChartCanvas(host);
+      if (host.canvas) { host.canvas.remove(); host.canvas = null; }
       const w = el.clientWidth, h = el.clientHeight, margin = 256;
       // a tilted camera: farther charts smaller, as deck.gl's icons (chartDepthScaler)
       const depth = chartDepthScaler(map);
@@ -3434,6 +3671,7 @@ self.onmessage = e => {
         for (const it of items) {
           const p = map.project(it.coords);
           const off = p.x < -margin || p.y < -margin || p.x > w + margin || p.y > h + margin;
+          if (!it.el) continue;   // mounted for the canvas pane
           if (off) { if (it.el.style.display !== 'none') it.el.style.display = 'none'; continue; }
           if (it.el.style.display === 'none') it.el.style.display = '';
           const o = it.off || [0, 0];   // align / offsetx / offsety (flatChartAlignOffset), px
@@ -3446,6 +3684,8 @@ self.onmessage = e => {
     };
     map.on('move', host.requestUpdate);
     map.on('resize', host.requestUpdate);
+    // the canvas pane re-rasterizes the charts at their settled size once the camera stops
+    map.on('moveend', host.requestUpdate);
     _chartHosts.set(mapOptions, host);
     return host;
   }
@@ -16975,6 +17215,12 @@ self.onmessage = e => {
     // their own) and takes its kept element over (it.key, it.el).
     _paneDrawing() {
       const prevEls = this._chartPaneEls || new Map();
+      const host = _chartHosts.get(this.mapOptions);
+      const canvas = !!(host && host.canvasMode());
+      // the canvas pane's bitmap cache is shared by the map's themes: a drawing is this theme's, of this
+      // version of its look (_paneGen, raised when the theme's look changes)
+      if (!this._paneId) this._paneId = ++_chartPaneSeq;
+      const ns = this._paneId + '.' + (this._paneGen || 0) + ':';
       const keysSeen = new Set(), fresh = [];
       let freshHtml = '';
       return {
@@ -16988,7 +17234,9 @@ self.onmessage = e => {
           const el = prevEls.get(key);
           if (el) prevEls.delete(key);
           it.key = key; it.el = el;
-          if (!el) { fresh.push(it); freshHtml += markup; }
+          // the canvas pane rasterizes it.markup by its drawing (ckey), the SVG pane parses the fresh ones
+          it.ckey = ns + chartKey; it.markup = markup;
+          if (!el && !canvas) { fresh.push(it); freshHtml += markup; }
         }
       };
     }
@@ -16996,6 +17244,17 @@ self.onmessage = e => {
     // one goes in before the first kept chart after it, nothing that stays is moved — and register the
     // runtime with the pane (removeRuntimes takes it out again)
     _mountPaneCharts(chartHost, items, pane) {
+      if (chartHost.canvasMode()) {
+        // the canvas pane draws the items itself (drawChartCanvas): no elements
+        if (this._chartPaneGroup) { this._chartPaneGroup.remove(); this._chartPaneGroup = null; }
+        this._chartPaneEls = null;
+        for (const it of items) it.el = null;
+        this._chartItems = items;
+        chartHost.runtimes.add(this);
+        this._chartHost = chartHost;
+        chartHost.update();
+        return;
+      }
       if (!this._chartPaneGroup) {
         this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
         chartHost.pane.appendChild(this._chartPaneGroup);
@@ -17219,6 +17478,9 @@ self.onmessage = e => {
     // by the page's function; null → no such function (drawn as bubbles)
     _clearUserChartPane() {
       this._svgPlotLast = null;
+      this._chartCanvasLast = null;
+      // the canvas pane draws from _chartItems: one more frame without them
+      if (this._chartHost && this._chartHost.canvas) this._chartHost.requestUpdate();
       if (this._chartPaneGroup) this._chartPaneGroup.remove();
       this._chartPaneGroup = null;
       this._chartPaneEls = null;
@@ -17286,6 +17548,7 @@ self.onmessage = e => {
       const themeKey = JSON.stringify(Object.assign({}, theme, { nMin: undefined, nMax: undefined }));
       const themeChanged = themeKey !== this._userChartThemeKey;
       if (this._userChartSvgs && themeChanged) this._userChartSvgs.clear();
+      if (themeChanged) this._paneGen = (this._paneGen || 0) + 1;   // the canvas pane's bitmaps of the old look go
       this._userChartThemeKey = themeKey;
       // the cache holds at least twice this drawing: smaller, the oldest-first
       // eviction drops, chart by chart, exactly the charts the next drawing
@@ -17361,6 +17624,8 @@ self.onmessage = e => {
           // p + s · (point − origin)
           ext: [(chart.bb.x - chart.ox) * pxPerUnit, (chart.bb.y - chart.oy) * pxPerUnit,
             (chart.bb.x + chart.bb.width - chart.ox) * pxPerUnit, (chart.bb.y + chart.bb.height - chart.oy) * pxPerUnit] };
+        // its gradients etc., for the canvas pane's raster sheets (the SVG pane shares paneDefs)
+        it.defsById = chart.defsById || null;
         pane.add(it, chart.key, chart.markup);
         items.push(it);
       }

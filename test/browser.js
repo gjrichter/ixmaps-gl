@@ -154,21 +154,26 @@
       const picks = [...new Set([0, Math.floor(items.length / 2), items.length - 1])];
       tooltips[rt.name] = picks.map(i => { try { return text(rt.buildTooltipHtml(items[i])); } catch (e) { return `~err:${e.message}`; } });
     }
-    // charts drawn as live SVG in the map's chart pane (USER charts; PLOT up to 2000 in view) are no deck.gl
-    // layers: per theme, how many, a digest of their markup and the first transforms (only when there are any,
-    // so pages without such charts keep their snapshot)
+    // charts in the map's chart pane (USER charts; PLOT up to 2000 in view: a canvas of bitmaps by default,
+    // live SVG with chartcanvas:false) are no deck.gl layers: per theme, how many, a digest of their markup
+    // and where the first ones sit (anchor + offset, scale) — the same for either pane (only when there are
+    // any, so pages without such charts keep their snapshot)
     const panes = [];
+    const r1 = v => String(Math.round(v * 10) / 10);
     for (const rt of runtimes) {
       const items = rt._chartItems;
       if (!items || !items.length) continue;
-      const markup = items.map(it => (it.el ? it.el.outerHTML : '').replace(/\stransform="[^"]*"/, '').replace(/ixpg\w+/g, 'ixpg')
-        .replace(/-?\d+\.\d+/g, v => String(Math.round(+v * 10) / 10)));
+      const markup = items.map(it => String(it.markup || '').replace(/ixpg\w+/g, 'ixpg')
+        .replace(/-?\d+\.\d+/g, v => r1(+v)));
       panes.push({
         theme: rt.name,
         count: items.length,
         digest: await sha(markup.join('\n')),
         setDigest: await sha(markup.slice().sort().join('\n')),
-        transforms: items.slice(0, 5).map(it => String(it.el && it.el.getAttribute('transform') || '').replace(/-?\d+\.\d+/g, v => String(Math.round(+v * 10) / 10))),
+        transforms: items.slice(0, 5).map(it => {
+          const p = map.project(it.coords), o = it.off || [0, 0], g = it.grow ? it.grow(map.getZoom()) : 1;
+          return `translate(${r1(p.x + o[0] * g)} ${r1(p.y + o[1] * g)}) scale(${r1(it.s * g * 1000)}e-3) origin(${r1(it.ox)} ${r1(it.oy)})`;
+        }),
       });
     }
     return {

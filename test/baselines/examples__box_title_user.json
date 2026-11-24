@@ -17,27 +17,27 @@
     {
      "theme": "user-box",
      "count": 6,
-     "digest": "800cf349e95c0988",
-     "setDigest": "63e185bbebb4153a",
+     "digest": "2da3b8f9192778fc",
+     "setDigest": "fbcd93f7405ba493",
      "transforms": [
-      "translate(504.7 280.2) scale(0.1) translate(0 0)",
-      "translate(402.8 280.2) scale(0.1) translate(0 0)",
-      "translate(606.7 280.2) scale(0.1) translate(0 0)",
-      "translate(453.7 280.2) scale(0.1) translate(0 0)",
-      "translate(555.7 280.2) scale(0.1) translate(0 0)"
+      "translate(504.7 280.2) scale(111.4e-3) origin(0 0)",
+      "translate(402.8 280.2) scale(111.4e-3) origin(0 0)",
+      "translate(606.7 280.2) scale(111.4e-3) origin(0 0)",
+      "translate(453.7 280.2) scale(111.4e-3) origin(0 0)",
+      "translate(555.7 280.2) scale(111.4e-3) origin(0 0)"
      ]
     },
     {
      "theme": "user-circular",
      "count": 6,
-     "digest": "ec09236979b41377",
-     "setDigest": "6acc52f062f33f98",
+     "digest": "e80789be77952b86",
+     "setDigest": "eaf6604630e781ae",
      "transforms": [
-      "translate(504.7 435.8) scale(0.1) translate(0 0)",
-      "translate(402.8 435.8) scale(0.1) translate(0 0)",
-      "translate(606.7 435.8) scale(0.1) translate(0 0)",
-      "translate(453.7 435.8) scale(0.1) translate(0 0)",
-      "translate(555.7 435.8) scale(0.1) translate(0 0)"
+      "translate(504.7 435.8) scale(111.4e-3) origin(0 0)",
+      "translate(402.8 435.8) scale(111.4e-3) origin(0 0)",
+      "translate(606.7 435.8) scale(111.4e-3) origin(0 0)",
+      "translate(453.7 435.8) scale(111.4e-3) origin(0 0)",
+      "translate(555.7 435.8) scale(111.4e-3) origin(0 0)"
      ]
     }
    ],
@@ -858,27 +858,27 @@
     {
      "theme": "user-box",
      "count": 6,
-     "digest": "800cf349e95c0988",
-     "setDigest": "63e185bbebb4153a",
+     "digest": "2da3b8f9192778fc",
+     "setDigest": "fbcd93f7405ba493",
      "transforms": [
-      "translate(497.4 176.4) scale(0.1) translate(0 0)",
-      "translate(293.5 176.4) scale(0.1) translate(0 0)",
-      "translate(701.3 176.4) scale(0.1) translate(0 0)",
-      "translate(395.5 176.4) scale(0.1) translate(0 0)",
-      "translate(599.4 176.4) scale(0.1) translate(0 0)"
+      "translate(497.4 176.4) scale(140.4e-3) origin(0 0)",
+      "translate(293.5 176.4) scale(140.4e-3) origin(0 0)",
+      "translate(701.3 176.4) scale(140.4e-3) origin(0 0)",
+      "translate(395.5 176.4) scale(140.4e-3) origin(0 0)",
+      "translate(599.4 176.4) scale(140.4e-3) origin(0 0)"
      ]
     },
     {
      "theme": "user-circular",
      "count": 6,
-     "digest": "ec09236979b41377",
-     "setDigest": "6acc52f062f33f98",
+     "digest": "e80789be77952b86",
+     "setDigest": "eaf6604630e781ae",
      "transforms": [
-      "translate(497.4 487.7) scale(0.1) translate(0 0)",
-      "translate(293.5 487.7) scale(0.1) translate(0 0)",
-      "translate(701.3 487.7) scale(0.1) translate(0 0)",
-      "translate(395.5 487.7) scale(0.1) translate(0 0)",
-      "translate(599.4 487.7) scale(0.1) translate(0 0)"
+      "translate(497.4 487.7) scale(140.4e-3) origin(0 0)",
+      "translate(293.5 487.7) scale(140.4e-3) origin(0 0)",
+      "translate(701.3 487.7) scale(140.4e-3) origin(0 0)",
+      "translate(395.5 487.7) scale(140.4e-3) origin(0 0)",
+      "translate(599.4 487.7) scale(140.4e-3) origin(0 0)"
      ]
     }
    ],
@@ -1699,27 +1699,27 @@
     {
      "theme": "user-box",
      "count": 6,
-     "digest": "800cf349e95c0988",
-     "setDigest": "63e185bbebb4153a",
+     "digest": "2da3b8f9192778fc",
+     "setDigest": "fbcd93f7405ba493",
      "transforms": [
-      "translate(508.4 332.1) scale(0.1) translate(0 0)",
-      "translate(457.4 332.1) scale(0.1) translate(0 0)",
-      "translate(559.3 332.1) scale(0.1) translate(0 0)",
-      "translate(482.9 332.1) scale(0.1) translate(0 0)",
-      "translate(533.8 332.1) scale(0.1) translate(0 0)"
+      "translate(508.4 332.1) scale(88.4e-3) origin(0 0)",
+      "translate(457.4 332.1) scale(88.4e-3) origin(0 0)",
+      "translate(559.3 332.1) scale(88.4e-3) origin(0 0)",
+      "translate(482.9 332.1) scale(88.4e-3) origin(0 0)",
+      "translate(533.8 332.1) scale(88.4e-3) origin(0 0)"
      ]
     },
     {
      "theme": "user-circular",
      "count": 6,
-     "digest": "ec09236979b41377",
-     "setDigest": "6acc52f062f33f98",
+     "digest": "e80789be77952b86",
+     "setDigest": "eaf6604630e781ae",
      "transforms": [
-      "translate(508.4 409.9) scale(0.1) translate(0 0)",
-      "translate(457.4 409.9) scale(0.1) translate(0 0)",
-      "translate(559.3 409.9) scale(0.1) translate(0 0)",
-      "translate(482.9 409.9) scale(0.1) translate(0 0)",
-      "translate(533.8 409.9) scale(0.1) translate(0 0)"
+      "translate(508.4 409.9) scale(88.4e-3) origin(0 0)",
+      "translate(457.4 409.9) scale(88.4e-3) origin(0 0)",
+      "translate(559.3 409.9) scale(88.4e-3) origin(0 0)",
+      "translate(482.9 409.9) scale(88.4e-3) origin(0 0)",
+      "translate(533.8 409.9) scale(88.4e-3) origin(0 0)"
      ]
     }
    ],
