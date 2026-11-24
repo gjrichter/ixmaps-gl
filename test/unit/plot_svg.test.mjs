@@ -168,3 +168,25 @@ test('tooltip curve: the item\'s own range, as tall as wide, a 2 px line, AREA d
   const area = /<path d="M([\d.]+) ([\d.]+)L[^"]*Z" fill="rgba\(51,102,153/.exec(html);
   assert.ok(area && +area[2] < vh + 1, 'the area stops at the axis, not at the far value-0 level');
 });
+
+const near = (a, b, msg, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${msg}: ${a} vs ${b}`);
+test('chartDepthScaler: the SVG chart pane shrinks charts with depth as deck.gl billboards (center / item ground span per px)', () => {
+  // a mock tilted camera: one screen px spans (1 + y / 400) × 1e-3 degrees of longitude on row y (Mercator x
+  // is proportional to longitude) — farther rows (smaller y) span less, here the row at y 400 is the center
+  const map = (pitch, globe) => ({
+    getPitch: () => pitch,
+    getProjection: () => ({ type: globe ? 'globe' : 'mercator' }),
+    getCenter: () => ({ lng: 0, lat: 0 }),
+    project: () => ({ x: 500, y: 400 }),
+    unproject: ([x, y]) => ({ lng: x * (1 + y / 400) * 1e-3, lat: 0 })
+  });
+  assert.equal(G.chartDepthScaler(map(0)), null, 'no tilt: no depth scale');
+  const k = G.chartDepthScaler(map(60));
+  near(k({ x: 500, y: 400 }), 1, 'the center: 1', 1e-9);
+  near(k({ x: 100, y: 1200 }), 2 / 4, 'twice as deep (span 4 vs 2): half the size', 1e-9);
+  near(k({ x: 100, y: 0 }), 2, 'half as deep: twice the size', 1e-9);
+  near(G.chartDepthScaler(map(60, true))({ x: 10, y: 1200 }), 0.5, 'globe: the same from meters', 1e-6);
+  // a point beyond the horizon (no ground under it) keeps its size
+  const sky = Object.assign(map(60), { unproject: ([x, y]) => (y < 0 ? { lng: NaN, lat: NaN } : { lng: x * 1e-3, lat: 0 }) });
+  assert.equal(G.chartDepthScaler(sky)({ x: 5, y: -10 }), 1);
+});

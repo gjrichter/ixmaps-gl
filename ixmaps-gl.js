@@ -3381,6 +3381,33 @@ self.onmessage = e => {
   // counts. Keyed by the map's options object, so runtimes defined later
   // (loadProject, post-build map.layer) find it too.
   const _chartHosts = new WeakMap();
+  // A tilted camera's depth scale for screen-sized charts, as deck.gl sizes its pixel billboards (icons):
+  // their px are clip-space px times the focal distance, so after the perspective divide a chart shrinks
+  // with its depth w — focalDistance / w, 1 at the map's center, under 1 towards the horizon. The SVG
+  // chart pane draws on screen, so it measures that factor: a screen row of a tilted camera is a line of
+  // one depth on the ground, the ground length one px spans there grows with w, and the ratio of the
+  // center's to the chart's is the factor. Ground length in Mercator units (the camera renders the
+  // Mercator plane), on the globe in meters. Returns null without a tilt (every factor 1).
+  function chartDepthScaler(map) {
+    if (!(map.getPitch() > 0.5)) return null;
+    const proj = (typeof map.getProjection === 'function' && map.getProjection()) || {};
+    const globe = proj.type === 'globe';
+    const r = Math.PI / 180;
+    const merc = ll => [ll.lng * r, Math.log(Math.tan(Math.PI / 4 + Math.max(-85.06, Math.min(85.06, ll.lat)) * r / 2))];
+    const perPx = (x, y) => {
+      const a = map.unproject([x, y]), b = map.unproject([x + 1, y]);
+      if (globe) return greatCircleMeters([a.lng, a.lat], [b.lng, b.lat]);
+      const [ax, ay] = merc(a), [bx, by] = merc(b);
+      return Math.hypot(bx - ax, by - ay);
+    };
+    const c = map.project(map.getCenter());
+    const ref = perPx(c.x, c.y);
+    if (!(ref > 0)) return null;
+    return p => {
+      const k = ref / perPx(p.x, p.y);
+      return k > 0 && isFinite(k) ? Math.min(8, Math.max(0.02, k)) : 1;
+    };
+  }
   function chartHostFor(mapOptions, map, el) {
     let host = _chartHosts.get(mapOptions);
     if (host) return host;
@@ -3399,6 +3426,8 @@ self.onmessage = e => {
     // own markup is redrawn on the settled-refresh cadence (freezeOnPan)
     host.update = () => {
       const w = el.clientWidth, h = el.clientHeight, margin = 256;
+      // a tilted camera: farther charts smaller, as deck.gl's icons (chartDepthScaler)
+      const depth = chartDepthScaler(map);
       for (const rt of host.runtimes) {
         const items = rt._chartItems;
         if (!items) continue;
@@ -3410,7 +3439,7 @@ self.onmessage = e => {
           const o = it.off || [0, 0];   // align / offsetx / offsety (flatChartAlignOffset), px
           // SVG PLOT charts (_mountSvgCharts) follow a zoom between drawings as their deck.gl icons would:
           // a grid PLOT with the map (its cells), a per-item PLOT with the object scaling
-          const g = it.grow ? it.grow(map.getZoom()) : 1;
+          const g = (it.grow ? it.grow(map.getZoom()) : 1) * (depth ? depth(p) : 1);
           it.el.setAttribute('transform', `translate(${p.x + o[0] * g} ${p.y + o[1] * g}) scale(${it.s * g}) translate(${-it.ox} ${-it.oy})`);
         }
       }
@@ -22155,7 +22184,7 @@ self.onmessage = e => {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, plotRasterPx, svgPlotTipMarkup, SVG_PLOT_TIP_WIDTH, atlasHeightOf, ATLAS_SWAP_HEIGHT_PX, SvgContext2D, svgPlotFits, svgStyleSig, SVG_PLOT_MAX_CHARTS, SVG_PLOT_UNIT, donorFillRgba, itemAnchor, objectZoomFactor, defaultNormalSizeValue,
+    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, plotRasterPx, svgPlotTipMarkup, SVG_PLOT_TIP_WIDTH, atlasHeightOf, ATLAS_SWAP_HEIGHT_PX, SvgContext2D, chartDepthScaler, svgPlotFits, svgStyleSig, SVG_PLOT_MAX_CHARTS, SVG_PLOT_UNIT, donorFillRgba, itemAnchor, objectZoomFactor, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb, heatmapColorRange, heatmapWeight,
     mlHeatmapPoints, mlHeatmapWeightMax, mlHeatmapRadius, mlHeatmapPaint, syncNativeHeatmaps, mlHeatLayerId,
