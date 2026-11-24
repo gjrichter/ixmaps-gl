@@ -112,7 +112,7 @@
   // ---------------------------------------------------------------
   // this engine's release (= package.json "version", checked by
   // test/unit/version.test.mjs); ixmaps.glVersion, and logged once at start
-  const IXMAPS_GL_VERSION = '0.2.53';
+  const IXMAPS_GL_VERSION = '0.2.54';
 
   const LIB_URLS = {
     // Bumped 3.6.2 -> 5.x (2026-09-21, globe-projection compat fix): native
@@ -673,7 +673,7 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
   // crafted link must not be able to load arbitrary code into the page.
   // ---------------------------------------------------------------
   // v0.1.6: knows this engine's aliases, lookupfield rule, meta↔style, builder methods, project loading
-  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.28/dist/validate.mjs';
+  const VALIDATOR_URL_DEFAULT = 'https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-grammar@v0.1.32/dist/validate.mjs';
   // a page may set ixmaps.validate BEFORE loading this script — the
   // `global.ixmaps = {...}` export below would otherwise overwrite it
   const _preloadValidate = global.ixmaps && global.ixmaps.validate;
