@@ -20,7 +20,7 @@ const near = (a, b, msg, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${msg
 
 test('plot ink: a series high in a shared range draws far less than the range (bbox stays the whole range)', () => {
   // shared range −60 … +60, this series climbs 0 → 10: its ink is a thin band, the bbox the whole 120
-  const g = G.itemPlotGeometry([0, 2, 5, 10], { min: -60, max: 60 }, { linewidth: 3, symbols: 'none' }, flags('PLOT', 'LINES', 'AREA'), 1);
+  const g = G.itemPlotGeometry([0, 2, 5, 10], { min: -60, max: 60 }, { linewidth: 3, symbols: 'none' }, flags('PLOT', 'LINES', 'AREA', 'ZEROISVALUE'), 1);
   const inkH = g.ink.y1 - g.ink.y0, boxH = g.bbox.y1 - g.bbox.y0;
   assert.ok(boxH > 3 * inkH, `bbox ${boxH} vs ink ${inkH}`);
   // the area fills down to the 0 level: the ink reaches the base, not the range's bottom

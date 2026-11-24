@@ -14,6 +14,7 @@ win.window = win; win.globalThis = win;
 vm.runInNewContext(fs.readFileSync(ENGINE, 'utf8'), win, { filename: 'ixmaps-gl.js' });
 const G = win.__ixmapsGlInternals;
 const { SvgContext2D, normalizeTheme, LayerRuntime } = G;
+const plain = v => JSON.parse(JSON.stringify(v));
 const pt = (x, y) => ({ geometry: { type: 'Point', coordinates: [x, y] } });
 
 test('SvgContext2D: paths, a full circle, fill and stroke as SVG', () => {
@@ -60,36 +61,35 @@ test('svgPlotFits: at most SVG_PLOT_MAX_CHARTS charts in the view', () => {
   assert.equal(G.svgPlotFits(inside.concat([pt(1, 1)]), null), false, 'no view: all count');
 });
 
-test('per-item PLOT as SVG: the icon drawing, anchored at the item, in SVG_PLOT_UNIT per chart unit', () => {
+test('PLOT as SVG: the chart drawing, anchored at the item, in SVG_PLOT_UNIT per chart unit', () => {
   const def = normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'a|b|c' },
-    style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA|LASTPOP', linewidth: 6, symbols: 'none', fillopacity: '0.2' } });
+    style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA|LASTPOP', linewidth: 6, symbols: 'none', fillopacity: '0.2', colorscheme: ['#0a141e'] } });
   const rt = new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
   const U = G.SVG_PLOT_UNIT;
-  const chart = rt._buildItemPlotIcon([0, 2, 1], { min: 0, max: 2 }, 2, [10, 20, 30], 0.2, U, 'sig');
-  const g = G.itemPlotGeometry([0, 2, 1], { min: 0, max: 2 }, rt.style, rt.flags, 2);
+  const look = rt._plotLook(['x', 'y', 'z']);
+  const chart = rt._buildPlotChart([1, 2, 1.5], { min: 0, max: 2 }, 2, look, U, 'sig');
+  const g = G.itemPlotGeometry([1, 2, 1.5], { min: 0, max: 2 }, rt.style, rt.flags, 2, look);
   assert.ok(Math.abs(chart.ox - (0 - g.ink.x0) * U) < 1e-9 && Math.abs(chart.oy - g.ink.y1 * U) < 1e-9, 'the origin is the item position');
   assert.match(chart.markup, /fill="rgba\(10,20,30,0.2\)"/, 'AREA in fillopacity');
-  assert.match(chart.markup, new RegExp(`stroke="rgb\\(10,20,30\\)" stroke-width="${+(6 / 30 * U).toFixed(2)}"`), 'LINES: linewidth / 30 of a step');
+  assert.match(chart.markup, new RegExp(`stroke="rgb\\(10,20,30\\)" stroke-width="${+(6 / 30 * U).toFixed(2)}"`), 'LINES: linewidth / 30 of a step, no raster calibration');
   assert.match(chart.markup, /<path d="M[^"]*A[^"]*Z" fill="rgb\(10,20,30\)"\/>/, 'LASTPOP: a filled circle');
-  assert.deepEqual([...chart.ext], [0, 0, Math.max(2, Math.ceil((g.ink.x1 - g.ink.x0) * U)), Math.max(2, Math.ceil((g.ink.y1 - g.ink.y0) * U))]);
   // cached by its style: the same drawing again is the same object, another style another one
-  assert.equal(rt._buildItemPlotIcon([0, 2, 1], { min: 0, max: 2 }, 2, [10, 20, 30], 0.2, U, 'sig'), chart);
-  assert.notEqual(rt._buildItemPlotIcon([0, 2, 1], { min: 0, max: 2 }, 2, [10, 20, 30], 0.2, U, 'other'), chart);
+  assert.equal(rt._buildPlotChart([1, 2, 1.5], { min: 0, max: 2 }, 2, look, U, 'sig'), chart);
+  assert.notEqual(rt._buildPlotChart([1, 2, 1.5], { min: 0, max: 2 }, 2, look, U, 'other'), chart);
 });
 
-test('grid PLOT as SVG: drawn centred in the 100-unit icon, flat\'s stroke width (no raster calibration)', () => {
-  const def = normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'k' },
-    style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA|GRIDSIZE|CATEGORICAL|AGGREGATE', values: ['a', 'b', 'c'], linewidth: 3, colorscheme: ['#336699'] } });
-  const rt = new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
-  const chart = rt._buildPlotIcon([1, 3, 2], ['a', 'b', 'c'], ['a', 'b', 'c'], 3, 3, 0, false, 'sig');
-  assert.equal(chart.ox, 50); assert.equal(chart.oy, 50);
-  assert.match(chart.markup, /^<g><svg x="0" y="0" width="100" height="100" overflow="hidden">/);
-  const stepX = (100 - 2 * 6) / 2;
-  assert.match(chart.markup, new RegExp(`stroke="rgb\\(51,102,153\\)" stroke-width="${+(3 * stepX / 30).toFixed(2)}"`), 'linewidth × step / 30, uncalibrated');
-  const [l, t, r, b] = chart.ext;
-  assert.ok(l >= 0 && t >= 0 && r <= 100 && b <= 100 && r - l > 80 && b > t, 'picking on the curve box, inside the icon');
-  // the raster icon of the same chart is a different cache entry (not drawn here: no canvas in the test)
-  assert.equal(rt._buildPlotIcon([1, 3, 2], ['a', 'b', 'c'], ['a', 'b', 'c'], 3, 3, 0, false, 'sig'), chart);
+test('PLOT is one chart type: with GRIDSIZE the same values draw the same chart (only the size rule differs)', () => {
+  const mk = type => new LayerRuntime(normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'a|b|c' },
+    style: { type, linewidth: 3, colorscheme: ['#336699'], ranges: [0, 1.5, 4], fillopacity: '0.3' } }), { type: 'FeatureCollection', features: [] }, {});
+  const item = mk('CHART|SYMBOL|PLOT|LINES|AREA|FADE|BOX|GRID'), grid = mk('CHART|SYMBOL|PLOT|LINES|AREA|FADE|BOX|GRID|GRIDSIZE|AGGREGATE');
+  const draw = rt => rt._buildPlotChart([1, 3, 2], { min: 0, max: 3 }, 3, rt._plotLook(['a', 'b', 'c']), G.SVG_PLOT_UNIT, 'sig').markup;
+  assert.equal(draw(grid), draw(item), 'geometry, axes, FADE and colour by value: identical');
+  assert.match(draw(item), /<text [^>]*text-anchor="end"[^>]*>0<\/text>/, 'per item too: flat\'s coordinate grid with BOX + GRID');
+  assert.match(draw(item), /stroke="rgb\(/, 'colour by value per segment');
+  const sItem = item._plotSizing(10, 3), sGrid = Object.assign(grid, { _clusterRadiusPx: 90, _clusterUsesFixedZoom: false })._plotSizing(10, 3);
+  assert.deepEqual(plain(sItem.off), [0, 0], 'per item: anchored at the item');
+  assert.deepEqual(plain(sGrid.off), [-45, 45], 'GRIDSIZE: fills its cell');
+  assert.ok(Math.abs(sGrid.step - 30) < 1e-9, 'GRIDSIZE: 3 steps in the 90 px cell');
 });
 
 test('BOX of SVG charts: an SVG rect with its title, under the chart, not pickable', () => {
@@ -108,4 +108,63 @@ test('BOX of SVG charts: an SVG rect with its title, under the chart, not pickab
     'the title, one tspan per line, escaped');
   assert.ok(box.chart.markup.indexOf('<rect') < box.chart.markup.indexOf('<text'), 'title over its box');
   assert.equal(rt._svgBoxCharts(null, 2, () => [0, 0]).size, 0, 'no box rows: no boxes');
+});
+
+test('tooltip curve: svgPlotTipMarkup enlarges the drawing to 240 px, lines as on the map (1.2 … 3 px)', () => {
+  const chart = { markup: '<g><svg><path d="M0 0L10 5" stroke="red" stroke-width="2"/><path d="M0 0" stroke-width="0.01"/></svg></g>', ext: [0, 0, 100, 50] };
+  const m = G.svgPlotTipMarkup(chart, 0.5);
+  assert.match(m, /^<svg class="ix-tip-chart" width="240" height="\d+" viewBox="-4 -4 108 58"/, '4 % margin around the extent');
+  const k = 240 / 108;
+  const widths = [...m.matchAll(/stroke-width="([\d.]+)"/g)].map(x => +x[1] * k);
+  assert.ok(Math.abs(widths[0] - 1.2) < 0.01, `2 units × 0.5 px = 1 px on the map → at least 1.2 px: ${widths[0]}`);
+  assert.ok(Math.abs(widths[1] - 1.2) < 0.01, 'a hairline too');
+  assert.ok(Math.abs(+(/height="(\d+)"/.exec(m)[1]) - Math.round(58 * k)) <= 1, 'height in proportion');
+  const wide = G.svgPlotTipMarkup({ markup: '<path stroke-width="10"/>', ext: [0, 0, 100, 50] }, 1);
+  assert.ok(Math.abs(+/stroke-width="([\d.]+)"/.exec(wide)[1] * k - 3) < 0.01, 'never more than 3 px');
+});
+
+test('tooltip curve: a PLOT item\'s {{theme.item.chart}} is its chart with flat\'s coordinate grid, over the values table', () => {
+  const def = normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'a|b|c' },
+    style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA', linewidth: 6, colorscheme: ['#336699'] } });
+  const rt = new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
+  assert.equal(rt._plotTipChartHtml([1, 2, 3]), '', 'before the first drawing: no curve');
+  rt._plotTip = { rangeFor: () => ({ min: 0, max: 3 }), sizeMax: 3, labels: ['2019', '2020', '2021'] };
+  const html = rt._renderItemChartHtml({ values: [1, 2, 3], raw: {} });
+  assert.match(html, /^<svg class="ix-tip-chart" width="240"/, 'the curve first');
+  assert.match(html, /stroke="rgb\(51,102,153\)"/);
+  assert.match(html, /<text [^>]*>2020<\/text>/, 'the x labels, though the theme has no GRID');
+  assert.match(html, /<text [^>]*text-anchor="end"[^>]*>3.00<\/text>/, 'the y labels (flat: two decimals up to a range of 5)');
+  assert.ok(html.indexOf('</svg>') < html.lastIndexOf('<'), 'then the values table');
+  assert.equal(rt._plotTipChartHtml([NaN, null]), '', 'nothing to draw: no curve');
+});
+
+test('SVG gradient ids follow the chart, not the drawing order (stable snapshots)', () => {
+  const mk = () => {
+    const def = normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'a|b|c' },
+      style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA|FADE', colorscheme: ['#336699'] } });
+    return new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
+  };
+  const a = mk(), b = mk();
+  const draw = (rt, v) => rt._buildPlotChart(v, { min: 0, max: 3 }, 3, rt._plotLook(['a', 'b', 'c']), G.SVG_PLOT_UNIT, 's');
+  draw(b, [3, 1, 2]);   // another chart first
+  const ma = draw(a, [1, 2, 3]).markup;
+  const mb = draw(b, [1, 2, 3]).markup;
+  assert.match(ma, /linearGradient id="g\w+"/, 'FADE gradients');
+  assert.equal(ma, mb, 'the same chart, the same markup');
+});
+
+test('tooltip curve: the item\'s own range, as tall as wide, a 2 px line, AREA down to the axis only', () => {
+  const def = normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'a|b|c' },
+    style: { type: 'CHART|SYMBOL|PLOT|LINES|AREA|LASTPOP', linewidth: 45, rangescale: 5, colorscheme: ['#336699'] } });
+  const rt = new LayerRuntime(def, { type: 'FeatureCollection', features: [] }, {});
+  rt._plotTip = { rangeFor: () => ({ min: -100, max: 100 }), sizeMax: 600, labels: ['a', 'b', 'c'] };
+  const html = rt._plotTipChartHtml([342, 591, 584]);
+  const labels = [...html.matchAll(/text-anchor="end"[^>]*>([^<]+)</g)].map(m => +m[1]);
+  assert.ok(Math.min(...labels) >= 300 && Math.max(...labels) <= 600, `own range, not the shared −100 … 100: ${labels}`);
+  const [, , vw, vh] = /viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) ([\d.]+)"/.exec(html).slice(1).map(Number);
+  assert.ok(vh / vw < 1.4, `about as tall as wide, rangescale left out: ${vw} × ${vh}`);
+  const w = +/stroke="rgb\(51,102,153\)" stroke-width="([\d.]+)"/.exec(html)[1] * 240 / vw;
+  assert.ok(w > 1.5 && w < 2.5, `a ~2 px line, not the map's linewidth 45: ${w}`);
+  const area = /<path d="M([\d.]+) ([\d.]+)L[^"]*Z" fill="rgba\(51,102,153/.exec(html);
+  assert.ok(area && +area[2] < vh + 1, 'the area stops at the axis, not at the far value-0 level');
 });

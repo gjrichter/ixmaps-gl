@@ -66,21 +66,30 @@ test('grid plot: the grid width comes from the processor — gridwidth "150px" l
 });
 
 // ---------------------------------------------------------------- flat's auto-fit of a PLOT into its cell
-const { plotIconSizePx, plotStrokePx, chartBoxLayout, gestureScaleProps } = win.__ixmapsGlInternals;
+const { chartBoxLayout, gestureScaleProps, itemPlotGeometry } = win.__ixmapsGlInternals;
 const near = (a, b, msg, eps = 0.5) => assert.ok(Math.abs(a - b) <= eps, `${msg}: ${a} vs ${b}`);
-// the raster's curve covers 88 of its 100 px, so the curve's X span is iconSize x 0.88
-const curveSpan = (cell, scale, n) => plotIconSizePx(cell, scale, n) * 0.88;
+// a GRIDSIZE PLOT theme's size rule (_plotSizing) on a cell of `cell` px — the only thing GRIDSIZE changes
+const gridPlot = (cell, scale) => {
+  const rt = new LayerRuntime(normalizeTheme({ layer: 'x', binding: { position: 'p', value: 'k' },
+    style: { type: 'CHART|SYMBOL|PLOT|LINES|GRIDSIZE|CATEGORICAL|AGGREGATE', values: ['a', 'b'], scale } }), { type: 'FeatureCollection', features: [] }, {});
+  rt._clusterRadiusPx = cell; rt._clusterUsesFixedZoom = false;
+  return rt;
+};
+const curveSpan = (cell, scale, n) => { const { step } = gridPlot(cell, scale)._plotSizing(10, n); return n > 1 ? (n - 1) * step : step; };
 
 test('plot fit: the curve spans (n-1)/n of cell x scale, as flat measured', () => {
   near(curveSpan(150, 0.85, 48), 124.8, 'EU temperatures: 48 values, 127.5 px cell (flat 125 px)');
   near(curveSpan(100, 1, 3), 66.7, 'plot_curves: 3 values, 100 px cell (flat 67 px)');
   near(curveSpan(100, 1, 2), 50, 'two values: half the cell');
   near(curveSpan(100, 1, 1), 66.7, 'one value falls back to 2/3');
+  const { off } = gridPlot(100, 1)._plotSizing(10, 3);
+  assert.deepEqual(plain(off), [-50, 50], 'the chart moves by half the cell left and down (flat 18564): it fills its cell');
 });
 
 test('plot stroke: linewidth / 30 of one X step, so more values mean a thinner line', () => {
-  const step = n => 88 / (n - 1);                       // the raster's step between points
-  const screenPx = (lw, n, cell, scale) => plotStrokePx(lw, step(n)) / 0.8 * plotIconSizePx(cell, scale, n) / 100;   // / 0.8: PLOT_STROKE_CALIBRATION, so this still checks flat's geometry
+  // the geometry's line width (chart units of one step) × the size rule's px per step
+  const screenPx = (lw, n, cell, scale) => itemPlotGeometry([1, 2], { min: 0, max: 2 }, { linewidth: lw }, new Set(['PLOT', 'LINES']), 2).lineWidth
+    * gridPlot(cell, scale)._plotSizing(10, n).step;
   near(screenPx(1.5, 3, 100, 1), 1.67, 'plot_curves: linewidth 1.5, 3 values (flat 1.67 px)', 0.1);
   near(screenPx(20, 48, 150, 0.85), 1.77, 'EU temperatures: linewidth 20, 48 values (flat 1.77 px)', 0.1);
 });
@@ -130,11 +139,14 @@ test('plot y axis: an empty or invalid range has no axis', () => {
 });
 
 // ---------------------------------------------------------------- flat's AREA baseline: the value-0 level
-const { plotZeroY } = win.__ixmapsGlInternals;
 test('plot area baseline: the value-0 level, as flat — a range from 0 closes at the bottom, a negative minimum lifts it', () => {
-  assert.equal(plotZeroY(94, 88, 0, 10), 94, 'range from 0: the bottom');
-  near(plotZeroY(94, 88, -2, 6), 94 - 88 / 3, "EU -2..4: zero a third up the plot", 1e-9);
-  assert.ok(plotZeroY(94, 88, 3, 5) > 94, 'all-positive range above zero: below the icon, clipped');
+  const g = (vals, min, max) => itemPlotGeometry(vals, { min, max }, {}, new Set(['PLOT', 'AREA', 'ZEROISVALUE']), 1);
+  const from0 = g([0, 10], 0, 10);
+  near(from0.baseY, from0.points[0].y, 'range from 0: the bottom level of the curve', 1e-9);
+  const eu = g([-2, 4], -2, 4);
+  near((eu.baseY - eu.points[0].y) / (eu.points[1].y - eu.points[0].y), 1 / 3, 'EU -2..4: zero a third up the range', 1e-9);
+  const pos = g([3, 5], 3, 5);
+  assert.ok(pos.baseY < pos.points[0].y, 'all-positive range above zero: the area reaches below the curve, as flat');
 });
 
 // ---------------------------------------------------------------- flat's chart position (align / offsetx / offsety)

@@ -563,17 +563,19 @@ test('itemPlotGeometry: flat\'s per-item PLOT layout in chart units (x step 1, y
   const free = G.itemPlotGeometry([1, 5], { min: 1, max: 5 }, {}, flags('PLOT'), 5);
   assert.deepEqual(plain(free.points.map(p => +p.r.toFixed(4))), [+(0.5 / Math.sqrt(5)).toFixed(4), 0.5], 'without FIXSIZE: ½·√(v/max) (flat: 79.1 / 176.8 of 353.7)');
   const zero = G.itemPlotGeometry([0, 2], { min: 0, max: 2 }, {}, flags('PLOT', 'FIXSIZE'), 2);
-  assert.equal(zero.points[0].r, 0, 'no marker for a 0 value');
+  assert.equal(zero.points[0], null, 'a 0 is no point of the curve: no segment to or from it (flat 22815)');
+  const zeroIs = G.itemPlotGeometry([0, 2], { min: 0, max: 2 }, {}, flags('PLOT', 'FIXSIZE', 'ZEROISVALUE'), 2);
+  assert.equal(zeroIs.points[0].r, 0, 'ZEROISVALUE: a point of the curve, still no marker for it');
   const area = G.itemPlotGeometry([2, 3], { min: 2, max: 3 }, {}, flags('PLOT', 'AREA'), 3);
   assert.ok(area.area[0][1] < 0, 'AREA fills down to the value-0 level, below the chart origin when min > 0');
 });
 
 test('itemPlotGeometry: SMOOTH (interior 3-point mean), symbols "none", LASTARROW (flat 21325, 22908)', () => {
-  const sm = G.itemPlotGeometry([0, 6, 0, 6], { min: 0, max: 6 }, {}, flags('PLOT', 'LINES', 'SMOOTH', 'FIXSIZE'), 6);
+  const sm = G.itemPlotGeometry([0, 6, 0, 6], { min: 0, max: 6 }, {}, flags('PLOT', 'LINES', 'SMOOTH', 'FIXSIZE', 'ZEROISVALUE'), 6);
   assert.deepEqual(plain(sm.points.map(p => p.v)), [0, 2, 4, 6], 'first/last raw, interior averaged from the raw neighbours');
   const none = G.itemPlotGeometry([1, 2, 3], { min: 0, max: 3 }, { symbols: 'none' }, flags('PLOT', 'LINES', 'FIXSIZE'), 3);
   assert.ok(none.points.every(p => p.r === 0), 'symbols "none": no point markers');
-  const arr = G.itemPlotGeometry([0, 1], { min: 0, max: 1 }, { linewidth: 3, markersize: 1 }, flags('PLOT', 'LINES', 'LASTARROW'), 1);
+  const arr = G.itemPlotGeometry([0, 1], { min: 0, max: 1 }, { linewidth: 3, markersize: 1 }, flags('PLOT', 'LINES', 'LASTARROW', 'ZEROISVALUE'), 1);
   const s = 5 * 1 * (3 / 30);
   const tip = arr.lastArrow[1];
   const end = arr.points[1];

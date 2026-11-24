@@ -63,7 +63,7 @@ test('filter: a per-item PLOT chart follows the facet and the runtime WHERE filt
   const drawn = () => {
     let got;
     rt._boxRows = items => { got = items; throw 'stop'; };
-    try { rt._buildItemPlotLayers(6); } catch (e) { if (e !== 'stop') throw e; }
+    try { rt._buildPlotLayers(6); } catch (e) { if (e !== 'stop') throw e; }
     return got.map(d => d.properties.raw.r).join(',');
   };
   assert.equal(drawn(), 'Lazio,Puglia,Lazio');
