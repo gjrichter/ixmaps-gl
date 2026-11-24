@@ -4720,6 +4720,17 @@ self.onmessage = e => {
   // overlay's getTooltip / onClick handlers and mount(), which adds the
   // pinned tooltip to the page and keeps it on its place while the map moves.
   // ---------------------------------------------------------------
+  // Is the rendered map dark? — the effective darkness (builder.__effectiveDark, set by createTooltips:
+  // style background vs page background), else the legend's guess from the map type. Shared by the
+  // tooltips and the info bubbles; read when shown, so options set later (basemapopacity) count.
+  function builderMapIsDark(builder) {
+    const o = parseFloat(builder._engineOptions.basemapopacity);
+    const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
+    return typeof builder.__effectiveDark === 'function'
+      ? builder.__effectiveDark(isNaN(o) ? 1 : o, builder.mapOptions.mapType, legendBackground)
+      : flatLegendLook(builder.mapOptions.mapType, isNaN(o) ? 1 : o, legendBackground).dark;
+  }
+
   function createTooltips(ctx) {
     const { builder, map, el, findRuntimeForLayerId, disposers } = ctx;
     // the effective (rendered) dark/light probe for tooltip and legend —
@@ -4744,13 +4755,7 @@ self.onmessage = e => {
     // background, see effectiveMapDark), not the basemap name alone. Read
     // when shown, so options set later (a
     // myMap.then(...).options({basemapopacity})) count.
-    const tooltipIsDark = () => {
-      const o = parseFloat(builder._engineOptions.basemapopacity);
-      const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
-      return typeof builder.__effectiveDark === 'function'
-        ? builder.__effectiveDark(isNaN(o) ? 1 : o, builder.mapOptions.mapType, legendBackground)
-        : flatLegendLook(builder.mapOptions.mapType, isNaN(o) ? 1 : o, legendBackground).dark;
-    };
+    const tooltipIsDark = () => builderMapIsDark(builder);
     // flat's tooltip look (tooltip_mustache.js 118/151-154): arial narrow,
     // the font size clamped to 11..14px; light: white 0.95, #444 text, thin
     // black border; dark: rgba(50,50,50,0.95), #555 border (text light for
@@ -5112,15 +5117,8 @@ self.onmessage = e => {
     // rebuilds the same item must not pop them open again
     const closedKeys = new Set();
 
-    // the effective (rendered) dark/light probe, same as the tooltips' (see
-    // createTooltips' tooltipIsDark — builder.__effectiveDark is set there)
-    const isDark = () => {
-      const o = parseFloat(builder._engineOptions.basemapopacity);
-      const legendBackground = builder.mapOptions.legendBackground || builder.mapOptions.legendbackground;
-      return typeof builder.__effectiveDark === 'function'
-        ? builder.__effectiveDark(isNaN(o) ? 1 : o, builder.mapOptions.mapType, legendBackground)
-        : flatLegendLook(builder.mapOptions.mapType, isNaN(o) ? 1 : o, legendBackground).dark;
-    };
+    // the effective (rendered) dark/light probe, same as the tooltips'
+    const isDark = () => builderMapIsDark(builder);
     // the card's default look — plainly ON the map like the reference
     // mock: background, radius and fonts only, NO border and NO shadow
     // unless a page parametrizes them (.style({bubblecss}) is appended on
@@ -11346,6 +11344,17 @@ self.onmessage = e => {
     return [lngLat[0] + offset[0] * 360 / world, lat];
   }
 
+  // A ring of px points (y down) around a map position as a closed lng/lat ring at MapLibre zoom `zoom`:
+  // a px is 360/(512·2^z) degrees across, times cos(lat) up — the linear form, enough for a chart's
+  // picking outline (the SVG chart pane's pick layers)
+  function pxRingToLngLat(lngLat, ring, zoom) {
+    const [lng, lat] = lngLat;
+    const kx = 360 / (512 * Math.pow(2, zoom)), ky = kx * Math.cos(lat * Math.PI / 180);
+    const out = ring.map(([x, y]) => [lng + x * kx, lat - y * ky]);
+    out.push(out[0]);
+    return out;
+  }
+
   // CHART|BAR / BARS: which flat draws as a bar chart — drawChart's BAR
   // branch (maptheme.js 23283) comes after USER, PIE, WAFFLE, BUBBLE,
   // SYMBOL and BUFFER; flat tests /BAR/ as a substring (BARS too)
@@ -14332,9 +14341,6 @@ self.onmessage = e => {
     // pure: prepareAlphaField → see "Classification — pure functions"
     _prepareAlphaField() { const r = computeAlphaStats(this.features, this.binding); if (r) Object.assign(this, r); }
 
-    // pure: prepareMultiFieldChoropleth → see "Classification — pure functions"
-    _prepareMultiFieldChoropleth() { const r = computeMultiFieldClasses(this.binding, this.style); Object.assign(this, r); return r._multiFields; }
-
     // pure: prepareDominant → see "Classification — pure functions"
     _prepareDominant() { Object.assign(this, computeDominantStats(this.features, this.binding, this.style, this.flags)); }
 
@@ -14443,9 +14449,6 @@ self.onmessage = e => {
     }
 
     // pure versions: see "Classification — pure functions" above the class
-    _evenStrideSample(sortedValues, sampleSize) { return evenStrideSample(sortedValues, sampleSize); }
-    _jenksBreakValues(valuesA, nParts) { return jenksBreakValues(valuesA, nParts); }
-    _partsFromBreakValues(breakValues, nParts, trueMax) { return partsFromBreakValues(breakValues, nParts, trueMax); }
     _resolvePartsClass(value, partsA = this.partsA) { return resolvePartsClass(value, partsA); }
 
     // Single entry point for "which color-class bucket does this feature's
@@ -16939,6 +16942,60 @@ self.onmessage = e => {
       return chart;
     }
 
+    // One drawing of the chart pane (chartHostFor), shared by USER and SVG PLOT charts: the pane is kept
+    // from drawing to drawing — a chart still in the view keeps its element, only the charts coming into
+    // it are parsed (all together) and inserted, the ones leaving it removed. add(it, chartKey, markup)
+    // keys an item by its chart's drawing at its position (two equal charts at one position each get
+    // their own) and takes its kept element over (it.key, it.el).
+    _paneDrawing() {
+      const prevEls = this._chartPaneEls || new Map();
+      const keysSeen = new Set(), fresh = [];
+      let freshHtml = '';
+      return {
+        prevEls, fresh,
+        get freshHtml() { return freshHtml; },
+        add(it, chartKey, markup) {
+          const base = chartKey + '@' + it.coords.join(',');
+          let key = base;
+          for (let n = 1; keysSeen.has(key); n++) key = base + '#' + n;
+          keysSeen.add(key);
+          const el = prevEls.get(key);
+          if (el) prevEls.delete(key);
+          it.key = key; it.el = el;
+          if (!el) { fresh.push(it); freshHtml += markup; }
+        }
+      };
+    }
+    // put a drawing's items into the pane in the given (draw) order — the kept charts already are, a new
+    // one goes in before the first kept chart after it, nothing that stays is moved — and register the
+    // runtime with the pane (removeRuntimes takes it out again)
+    _mountPaneCharts(chartHost, items, pane) {
+      if (!this._chartPaneGroup) {
+        this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
+        chartHost.pane.appendChild(this._chartPaneGroup);
+      }
+      const paneGroup = this._chartPaneGroup;
+      // the charts that left the view
+      for (const el of pane.prevEls.values()) el.remove();
+      // the new ones, parsed together
+      if (pane.fresh.length) {
+        const tmp = document.createElementNS(SVG_NS, 'g');
+        tmp.innerHTML = pane.freshHtml;
+        const els = [...tmp.children];
+        for (let i = 0; i < pane.fresh.length; i++) pane.fresh[i].el = els[i];
+      }
+      let ref = paneGroup.firstChild;
+      for (const it of items) {
+        if (it.el === ref) ref = ref.nextSibling;
+        else paneGroup.insertBefore(it.el, ref);
+      }
+      this._chartPaneEls = new Map(items.map(it => [it.key, it.el]));
+      this._chartItems = items;
+      chartHost.runtimes.add(this);
+      this._chartHost = chartHost;
+      chartHost.update();
+    }
+
     // mount SVG PLOT charts in the map's chart pane (chartHostFor), as _drawUserChartLayers does for
     // USER charts: a chart keeps its element from drawing to drawing (keyed by its markup and position),
     // a map 'move' only updates transforms, and one pick-only deck.gl layer answers hover and click.
@@ -16949,53 +17006,23 @@ self.onmessage = e => {
       const chartHost = _chartHosts.get(this.mapOptions);
       if (!chartHost || typeof document === 'undefined') return null;
       if (this._chartPaneGroup && !this._chartPaneGroup.isConnected) this._clearUserChartPane();
-      const prevEls = this._chartPaneEls || new Map();
-      const items = [], keysSeen = new Set(), fresh = [];
-      let freshHtml = '';
+      const pane = this._paneDrawing();
+      const items = [];
       for (const c of charts) {
-        const base = c.chart.key + '@' + c.d.geometry.coordinates.join(',');
-        let key = base;
-        for (let n = 1; keysSeen.has(key); n++) key = base + '#' + n;
-        keysSeen.add(key);
-        const el = prevEls.get(key);
-        if (el) prevEls.delete(key);
         const e = c.chart.ext;
-        const it = { d: c.d, key, el, coords: c.d.geometry.coordinates, ox: c.chart.ox, oy: c.chart.oy, s: c.s, off: c.off, pick: c.pick !== false,
+        const it = { d: c.d, coords: c.d.geometry.coordinates, ox: c.chart.ox, oy: c.chart.oy, s: c.s, off: c.off, pick: c.pick !== false,
           ext: [(e[0] - c.chart.ox) * c.s, (e[1] - c.chart.oy) * c.s, (e[2] - c.chart.ox) * c.s, (e[3] - c.chart.oy) * c.s] };
+        pane.add(it, c.chart.key, c.chart.markup);
         items.push(it);
-        if (!el) { fresh.push(it); freshHtml += c.chart.markup; }
       }
       if (!items.length) { this._clearUserChartPane(); return null; }
-      if (!this._chartPaneGroup) {
-        this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
-        chartHost.pane.appendChild(this._chartPaneGroup);
-      }
-      for (const el of prevEls.values()) el.remove();
-      if (fresh.length) {
-        const tmp = document.createElementNS(SVG_NS, 'g');
-        tmp.innerHTML = freshHtml;
-        const els = [...tmp.children];
-        for (let i = 0; i < fresh.length; i++) fresh[i].el = els[i];
-      }
-      // in the given order (draw order): kept charts stay where they are, a new one goes in before the next kept one
-      let ref = this._chartPaneGroup.firstChild;
-      for (const it of items) {
-        if (it.el === ref) ref = ref.nextSibling;
-        else this._chartPaneGroup.insertBefore(it.el, ref);
-      }
-      this._chartPaneEls = new Map(items.map(it => [it.key, it.el]));
-      this._chartItems = items;
       if (grow) { const z0 = chartHost.map.getZoom(); const at = z => grow(z - z0); items.forEach(it => { it.grow = at; }); }
-      chartHost.runtimes.add(this);
-      this._chartHost = chartHost;   // removeRuntimes takes it out again
-      chartHost.update();
-      // picking: each chart's box in px around its position, as lng/lat at this zoom (see _drawUserChartLayers)
-      const degPerPx = 360 / (512 * Math.pow(2, liveZoom));
+      this._mountPaneCharts(chartHost, items, pane);
+      // picking: each chart's box in px around its position, as lng/lat at this zoom
       const features = items.filter(it => it.pick).map(it => {
-        const [lng, lat] = it.coords, o = it.off || [0, 0];
-        const kx = degPerPx, ky = degPerPx * Math.cos(lat * Math.PI / 180);
+        const o = it.off || [0, 0];
         const [l, t, r, b] = it.ext;
-        const ring = [[l, t], [r, t], [r, b], [l, b], [l, t]].map(([x, y]) => [lng + (x + o[0]) * kx, lat - (y + o[1]) * ky]);
+        const ring = pxRingToLngLat(it.coords, [[l, t], [r, t], [r, b], [l, b]].map(([x, y]) => [x + o[0], y + o[1]]), liveZoom);
         return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {}, icon: true, d: it.d };
       });
       return new GeoJsonLayer({
@@ -17280,11 +17307,8 @@ self.onmessage = e => {
         this._chartPaneDefIds = new Set();
       }
       const paneDefs = this._chartPaneDefs, paneDefIds = this._chartPaneDefIds;
-      const prevEls = this._chartPaneEls || new Map();
+      const pane = this._paneDrawing();
       const items = [];
-      const keysSeen = new Set();
-      let freshHtml = '';
-      const fresh = [];
       for (const d of combined) {
         const value = valueOf(d);
         // the item's class (range classes set it for groups too — a negative
@@ -17304,55 +17328,23 @@ self.onmessage = e => {
           if (def) paneDefs.appendChild(def.cloneNode(true));
           else if (chart.defsById && chart.defsById[id]) paneDefs.insertAdjacentHTML('beforeend', chart.defsById[id]);
         }
-        // the element's key: the chart's drawing at the item's position
-        // (two equal charts at one position each get their own)
-        const base = chart.key + '@' + d.geometry.coordinates.join(',');
-        let key = base;
-        for (let n = 1; keysSeen.has(key); n++) key = base + '#' + n;
-        keysSeen.add(key);
-        const el = prevEls.get(key);
-        if (el) prevEls.delete(key);
-        items.push({ d, key, el, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit, pick: chart.pick, off: userOff,
+        const it = { d, coords: d.geometry.coordinates, ox: chart.ox, oy: chart.oy, s: pxPerUnit, pick: chart.pick, off: userOff,
           r: Math.max(chart.vw, chart.vh) * pxPerUnit / 2,
           // the chart's measured box (flat's getBox of the chart group) in px
           // around the map position: the pane draws a chart point at
           // p + s · (point − origin)
           ext: [(chart.bb.x - chart.ox) * pxPerUnit, (chart.bb.y - chart.oy) * pxPerUnit,
-            (chart.bb.x + chart.bb.width - chart.ox) * pxPerUnit, (chart.bb.y + chart.bb.height - chart.oy) * pxPerUnit] });
-        if (!el) { fresh.push(items[items.length - 1]); freshHtml += chart.markup; }
+            (chart.bb.x + chart.bb.width - chart.ox) * pxPerUnit, (chart.bb.y + chart.bb.height - chart.oy) * pxPerUnit] };
+        pane.add(it, chart.key, chart.markup);
+        items.push(it);
       }
       if (glDebug()) console.info(`[ixmaps-gl debug] ${themeIdOf(this)}: zoom ${mapLibreToFlatZoom(liveZoom).toFixed(2)}, ${combined.length} charts, ${items.length} drawn${this._viewMoving ? ' (moving)' : ''}`);
       if (!items.length) {
         this._clearUserChartPane();
         return (this._userChartLastLayers = []);
       }
-      if (!this._chartPaneGroup) {
-        this._chartPaneGroup = document.createElementNS(SVG_NS, 'g');
-        chartHost.pane.appendChild(this._chartPaneGroup);
-      }
-      const paneGroup = this._chartPaneGroup;
-      // the charts that left the view
-      for (const el of prevEls.values()) el.remove();
-      // the new ones, parsed together
-      if (fresh.length) {
-        const tmp = document.createElementNS(SVG_NS, 'g');
-        tmp.innerHTML = freshHtml;
-        const els = [...tmp.children];
-        for (let i = 0; i < fresh.length; i++) fresh[i].el = els[i];
-      }
-      // in the theme's draw order (ascending size, see buildDeckLayers): the
-      // kept charts already are, a new one goes in before the first kept
-      // chart after it — nothing that stays is moved
-      let ref = paneGroup.firstChild;
-      for (const it of items) {
-        if (it.el === ref) ref = ref.nextSibling;
-        else paneGroup.insertBefore(it.el, ref);
-      }
-      this._chartPaneEls = new Map(items.map(it => [it.key, it.el]));
-      this._chartItems = items;
-      chartHost.runtimes.add(this);
-      this._chartHost = chartHost; // removeRuntimes takes it out again
-      chartHost.update();
+      // in the theme's draw order (ascending size, see buildDeckLayers)
+      this._mountPaneCharts(chartHost, items, pane);
       // the same charts at the same zoom and style as the last drawing (a
       // camera orbit over a view that shows them all): its picking, box and
       // title layers stand — new ones made deck.gl re-tessellate thousands of
@@ -17376,19 +17368,13 @@ self.onmessage = e => {
         ids: { circle: `ix-user-box-${this.name}`, icon: `ix-user-box-${this.name}`, polygons: `ix-user-box-polygons-${this.name}`, titles: `ix-user-titles-${this.name}` }
       }) : { box: [], titles: [] };
       // each chart answers to its own outline: the polygons sampled from its drawing (else its box), in px
-      // around the map position, here as lng/lat at this zoom (a px is 360/(512·2^z) degrees across,
-      // times cos(lat) up); a few px of transparent stroke keep a thin peak easy to hit
-      const degPerPx = 360 / (512 * Math.pow(2, liveZoom));
+      // around the map position, here as lng/lat at this zoom (pxRingToLngLat); a few px of transparent
+      // stroke keep a thin peak easy to hit
       const pickFeatures = items.map(it => {
-        const [lng, lat] = it.coords;
-        const kx = it.s * degPerPx, ky = it.s * degPerPx * Math.cos(lat * Math.PI / 180);
-        const rings = it.pick && it.pick.length ? it.pick
-          : [[[it.ext[0] / it.s, it.ext[1] / it.s], [it.ext[2] / it.s, it.ext[1] / it.s], [it.ext[2] / it.s, it.ext[3] / it.s], [it.ext[0] / it.s, it.ext[3] / it.s]]];
-        const polys = rings.map(r => {
-          const ring = r.map(([x, y]) => [lng + (x + userOff[0] / it.s) * kx, lat - (y + userOff[1] / it.s) * ky]);
-          ring.push(ring[0]);
-          return [ring];
-        });
+        const [l, t, r, b] = it.ext;
+        const rings = it.pick && it.pick.length ? it.pick.map(ring => ring.map(([x, y]) => [x * it.s, y * it.s]))
+          : [[[l, t], [r, t], [r, b], [l, b]]];
+        const polys = rings.map(ring => [pxRingToLngLat(it.coords, ring.map(([x, y]) => [x + userOff[0], y + userOff[1]]), liveZoom)]);
         // icon + d: what pickedFeature unwraps to the item
         return { type: 'Feature', geometry: { type: 'MultiPolygon', coordinates: polys }, properties: {}, icon: true, d: it.d };
       });
@@ -19525,18 +19511,55 @@ self.onmessage = e => {
     // Known divergence: the leader lines are drawn in map coordinates
     // (pixel offsets converted at the current zoom, Web Mercator), so under
     // the globe projection they are approximate.
-    _buildPieLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+    // what every parts chart (pie, bar, waffle) starts from: the style, the type string (t, has(re)),
+    // AGGREGATE / CATEGORICAL items (agg, cat) or a record's value fields, the items' statistics (sets
+    // _valueMin / _valueMax; their biggest size flat's nMaxSize) and the px per chart unit
+    _partsChartSetup(zoom, liveZoom) {
       const st = this.style;
       const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
-      const has = re => re.test(t);
       const agg = this._hasAggregatedParts();
       const cat = !!this._partsCategorical;
-      const fields = cat ? null : (this._partsFields || String(this.binding.value || '').split('|'));
+      return {
+        st, t, has: re => re.test(t), agg, cat,
+        fields: cat ? null : (this._partsFields || String(this.binding.value || '').split('|')),
+        stats: agg ? this._partsStats(zoom) : null,
+        unit: objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1)
+      };
+    }
+    // a parts chart item's tooltip properties: an AGGREGATE / CATEGORICAL item a row per part (counts),
+    // its value the parts' sum, its records (theme.item.data, the page's own {{field}}s from the first,
+    // as flat's data[0]); a record a row per field (parts), with one field its class (cat) like a
+    // range-classed bubble
+    _partsProperties(f, values, agg, sum) {
+      if (agg) {
+        const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
+        return { counts: values, total: sum, recordCounts: [f.properties.agg.n], raws, firstRaw: raws[0] || null,
+          titleRaw: f.properties.titleRaw || f.properties.raw || null,
+          ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}) };
+      }
+      const raw = f.properties || {};
+      return values.length > 1 ? { value: values[0], parts: values, raw }
+        : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
+    }
+    // bar and waffle shapes (BarShapeLayer): rectangles, pointers and arrows as one shader shape each
+    _barShapeLayer(id, shapes) {
+      return new BarShapeLayer({
+        id, data: shapes, pickable: true,
+        getPosition: d => d.position,
+        getRadius: d => d.r,
+        getPixelOffset: d => d.off,
+        getFillColor: d => d.fill,
+        getLineColor: d => d.line,
+        getBarShape: d => d.shape,
+        getBarShape2: d => d.shape2,
+        radiusUnits: 'pixels', billboard: true, stroked: false, filled: true, antialiasing: true,
+        parameters: ICON_LAYER_GLOBE_PARAMETERS
+      });
+    }
+
+    _buildPieLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
+      const { st, t, has, agg, cat, fields, stats, unit } = this._partsChartSetup(zoom, liveZoom);
       const multi = !cat && fields.length > 1;
-      // AGGREGATE / CATEGORICAL: the statistics of the items (sets
-      // _valueMin / _valueMax), their biggest size flat's nMaxSize
-      const stats = agg ? this._partsStats(zoom) : null;
-      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
       const sizePow = resolveSizePow(st, this.flags);
       // flat tests /SIZE/: also NOSIZE and GRIDSIZE
       const sizeFlag = has(/SIZE/) && !has(/NORMSIZE/);
@@ -19612,13 +19635,8 @@ self.onmessage = e => {
           // flat's draw-order key (maptheme.js 16812-16860): with a size
           // field or AGGREGATE|SUM the item's size, else its first part
           const key = this.binding.size || (has(/AGGREGATE/) && has(/SUM/)) ? size : values[0];
-          // the tooltip: a row per part (counts), its value the parts' sum
-          // (flat: the sum of nValuesA), its records (theme.item.data, the
-          // page's own {{field}}s from the first, as flat's data[0])
-          const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
-          const properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
-            titleRaw: f.properties.titleRaw || f.properties.raw || null,
-            ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}) };
+          // the tooltip: its value the parts' sum (flat: the sum of nValuesA)
+          const properties = this._partsProperties(f, values, true, sum);
           charts.push({ c, r, layout, size, count: pie.n, partCounts: pie.counts, nParts: values.length, key, properties });
         }
       }
@@ -19639,10 +19657,8 @@ self.onmessage = e => {
         // flat's draw-order key (maptheme.js 16812-16860): the size value,
         // else with SIZE the sum, else the first value
         const key = this.binding.size ? size : has(/SIZE/) ? sum : values[0];
-        // the tooltip's {{theme.item.chart}}: a row per field (parts), a
-        // 1-field pie its class (cat) like a range-classed bubble
-        const properties = multi ? { value: values[0], parts: values, raw }
-          : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
+        // the tooltip's {{theme.item.chart}}
+        const properties = this._partsProperties(f, values, false);
         charts.push({ c, r, layout, size, nParts: values.length, key, properties });
       }
       // flat sorts the charts before drawing (maptheme.js 16774-16870),
@@ -20060,14 +20076,7 @@ self.onmessage = e => {
     // them in the chart's own group); the leader lines are drawn in map
     // coordinates (approximate on the globe).
     _buildBarLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
-      const st = this.style;
-      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
-      const has = re => re.test(t);
-      const agg = this._hasAggregatedParts();
-      const cat = !!this._partsCategorical;
-      const fields = cat ? null : (this._partsFields || String(this.binding.value || '').split('|'));
-      const stats = agg ? this._partsStats(zoom) : null;
-      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
+      const { st, t, has, agg, fields, stats, unit } = this._partsChartSetup(zoom, liveZoom);
       const sizeField = !!(this.binding.size && this.binding.size !== '$item$');
       const nsv = styleNum(st.normalsizevalue);
       const colors = this.categoryColorsRgb || [];
@@ -20122,18 +20131,7 @@ self.onmessage = e => {
         const layout = flatBarLayout(values, t, Object.assign({ itemSize: size }, lo));
         if (!layout || (!layout.bars.length && !layout.texts.length)) continue;
         const sum = values.reduce((a, v) => a + (isFinite(v) ? v : 0), 0);
-        let properties;
-        if (agg) {
-          const pie = f.properties.agg;
-          const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
-          properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
-            titleRaw: f.properties.titleRaw || f.properties.raw || null,
-            ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}) };
-        } else {
-          const raw = f.properties || {};
-          properties = values.length > 1 ? { value: values[0], parts: values, raw }
-            : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
-        }
+        const properties = this._partsProperties(f, values, agg, sum);
         // flat's draw-order key (as for pies, maptheme.js 16812-16860)
         const key = agg ? (this.binding.size || (has(/AGGREGATE/) && has(/SUM/)) ? size : values[0])
           : (this.binding.size ? size : has(/SIZE/) ? sum : values[0]);
@@ -20238,19 +20236,7 @@ self.onmessage = e => {
         for (const l of L.lines) lines.push({ c: ch.c, o: ch.off, sg: [l.x0 * unit, l.y0 * unit, l.x1 * unit, l.y1 * unit] });
       }
 
-      const layers = [new BarShapeLayer({
-        id: `ix-bar-${this.name}`,
-        data: shapes, pickable: true,
-        getPosition: d => d.position,
-        getRadius: d => d.r,
-        getPixelOffset: d => d.off,
-        getFillColor: d => d.fill,
-        getLineColor: d => d.line,
-        getBarShape: d => d.shape,
-        getBarShape2: d => d.shape2,
-        radiusUnits: 'pixels', billboard: true, stroked: false, filled: true, antialiasing: true,
-        parameters: ICON_LAYER_GLOBE_PARAMETERS
-      })];
+      const layers = [this._barShapeLayer(`ix-bar-${this.name}`, shapes)];
       if (lines.length) {
         const feature = d => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [
           pixelOffsetLngLat(d.c, [d.o[0] + d.sg[0], d.o[1] + d.sg[1]], liveZoom),
@@ -20307,13 +20293,7 @@ self.onmessage = e => {
     // Known divergence: flat's draw order by the item's value is not kept
     // (every waffle is the same size, so they overlap only on a shared position).
     _buildWaffleLayers(zoom, bbox, liveZoom = zoom, globeCenter = null) {
-      const st = this.style;
-      const t = this.flags.typeString != null ? this.flags.typeString : [...this.flags].join('|');
-      const agg = this._hasAggregatedParts();
-      const cat = !!this._partsCategorical;
-      const fields = cat ? null : (this._partsFields || String(this.binding.value || '').split('|'));
-      const stats = agg ? this._partsStats(zoom) : null;
-      const unit = objectZoomFactor(liveZoom, this.mapOptions) * (styleNum(st.scale) || 1);
+      const { st, t, agg, fields, unit } = this._partsChartSetup(zoom, liveZoom);
       const num = v => { const x = styleNum(v); return isNaN(x) ? undefined : x; };
       const itemValues = f => {
         if (agg) return this._partsOf(f.properties.agg).parts;
@@ -20360,19 +20340,7 @@ self.onmessage = e => {
         const values = itemValues(f);
         const layout = flatWaffleLayout(values, t, lo);
         if (!layout) continue;
-        let properties;
-        if (agg) {
-          const pie = f.properties.agg;
-          const raws = f.properties.raws || (f.properties.raw ? [f.properties.raw] : []);
-          const sum = values.reduce((a, v) => a + (isFinite(v) ? v : 0), 0);
-          properties = { counts: values, total: sum, recordCounts: [pie.n], raws, firstRaw: raws[0] || null,
-            titleRaw: f.properties.titleRaw || f.properties.raw || null,
-            ...(typeof f.properties.commonTitle === 'string' ? { commonTitle: f.properties.commonTitle } : {}) };
-        } else {
-          const raw = f.properties || {};
-          properties = values.length > 1 ? { value: values[0], parts: values, raw }
-            : { value: values[0], cat: this.partsA ? this._resolvePartsClass(values[0]) : 0, raw };
-        }
+        const properties = this._partsProperties(f, values, agg, agg ? values.reduce((a, v) => a + (isFinite(v) ? v : 0), 0) : undefined);
         charts.push({ c, layout, properties, off: [0, 0] });
         rect(c, layout.back, [...backRgb, Math.round(255 * backOpacity)], backLine, borderWidth, properties, true);
         for (const cell of layout.cells) {
@@ -20398,19 +20366,7 @@ self.onmessage = e => {
         ids: { circle: `ix-waffle-box-${this.name}`, icon: `ix-waffle-box-${this.name}`,
           polygons: `ix-waffle-box-polygons-${this.name}`, titles: `ix-waffle-titles-${this.name}` }
       }) : { box: [], titles: [] };
-      return [...boxL.box, new BarShapeLayer({
-        id: `ix-waffle-${this.name}`,
-        data: shapes, pickable: true,
-        getPosition: d => d.position,
-        getRadius: d => d.r,
-        getPixelOffset: d => d.off,
-        getFillColor: d => d.fill,
-        getLineColor: d => d.line,
-        getBarShape: d => d.shape,
-        getBarShape2: d => d.shape2,
-        radiusUnits: 'pixels', billboard: true, stroked: false, filled: true, antialiasing: true,
-        parameters: ICON_LAYER_GLOBE_PARAMETERS
-      }), ...boxL.titles];
+      return [...boxL.box, this._barShapeLayer(`ix-waffle-${this.name}`, shapes), ...boxL.titles];
     }
 
     // CHART|VECTOR / CHART|BEZIER — the theme's classes as flat has them:
