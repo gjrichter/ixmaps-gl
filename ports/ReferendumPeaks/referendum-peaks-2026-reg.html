@@ -203,10 +203,29 @@
 <script>
 const TOPO_URL      = "https://raw.githubusercontent.com/gjrichter/geo/main/italy/boundaries/italy_istat_municipalities_4326_500m.topojson";
 const DATA_URL      = "https://raw.githubusercontent.com/ondata/referendum-download/main/data/20260322/scrutini_flat.csv";
+// a legend peak, drawn like the map's pinnacles: a small triangle, light at the base, dark at the tip
+function legendPeak(id, base, tip) {
+    return "<svg width='12' height='14' viewBox='0 0 12 14' style='vertical-align:-2px;margin-right:4px'>"
+        + "<defs><linearGradient id='" + id + "' x1='0' y1='1' x2='0' y2='0'>"
+        + "<stop offset='0' stop-color='" + base + "'/><stop offset='1' stop-color='" + tip + "'/></linearGradient></defs>"
+        + "<path d='M0.5,13.5 L6,0.5 L11.5,13.5 Z' fill='url(#" + id + ")' stroke='" + tip + "' stroke-width='0.8'/></svg>";
+}
+function legendKey(peak, head, color) {
+    return "<span style='white-space:nowrap;margin:0 7px'>" + peak
+        + "<span style='font-weight:700;color:" + color + "'>" + head + "</span></span>";
+}
 const LEGEND_TEXT   = [
-    "<div style='text-align:center;padding-top:20px'>",
+    "<div style='text-align:center;padding-top:20px;max-width:270px;margin:0 auto'>",
     "<span style='font-size:1.2em'>Referendum 22 marzo 2026</span><br>",
-    "<b>Voti in più</b> del <b>Si</b> o del <b>No</b> per comune<br><br>",
+    "<span>Chi ha vinto in ogni comune, e con quanti <span style='font-weight:700'>voti in più</span></span>",
+    "<div style='margin:7px 0 6px'>",
+    legendKey(legendPeak("leg-si", "#c0eaea", "#005f5f"), "Vince il Sì", "#008888"),
+    legendKey(legendPeak("leg-no", "#ff8888", "#880000"), "Vince il No", "#b02020"),
+    "</div>",
+    "<div style='font-size:0.85em;color:#555;line-height:1.35;margin-bottom:8px'>",
+    "Un picco per comune, alto quanto i voti del vincitore meno quelli dell'altro. ",
+    "Il numero sul picco è lo scarto in voti — non in percentuale, perciò le grandi città svettano.",
+    "</div>",
     "Dati: <a href='https://github.com/ondata/referendum-download' target='_blank'>ondata</a> (CC BY) · Geometrie: ISTAT",
     "</div>"
 ].join("");
