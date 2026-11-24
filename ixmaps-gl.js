@@ -2936,16 +2936,13 @@ self.onmessage = e => {
 
   // colorscheme.js _circ_getHexaColor, to RGB: '#rrggbb', 'rgb(r,g,b)'
   // (any case), CSS color names — else the caller's fallback, like flat's
-  function flatColorRgb(c, fallback) {
-    return parseCssColor(c) || fallback;
-  }
 
   function flatColorSweep(cc1, cc2, nSteps, nParam1, nParam2) {
     if (typeof cc1 === 'string' && FLAT_PALETTE_NAMES[cc1]) return flatPaletteScheme(cc1, nSteps, cc2);
     if (typeof cc1 === 'string' && FLAT_PALETTE_SCHEMES.test(cc1)) return null;
     nSteps = Number(nSteps);
-    const [r1, g1, b1] = flatColorRgb(cc1, [255, 255, 255]);
-    const [r2, g2, b2] = flatColorRgb(cc2, [0, 0, 0]);
+    const [r1, g1, b1] = hexOrNamedToRgb(cc1, [255, 255, 255]);
+    const [r2, g2, b2] = hexOrNamedToRgb(cc2, [0, 0, 0]);
     if (nSteps < 2) return [[r2, g2, b2]];
     if (nSteps < 3) return [[r1, g1, b1], [r2, g2, b2]];
     const bright = (r1 + g1 + b1) / 3 > 127 || (r2 + g2 + b2) / 3 > 127;
@@ -2955,13 +2952,13 @@ self.onmessage = e => {
       c3 = [Math.min(255, (r1 + r2) * 1.5), Math.min(255, (g1 + g2) * 1.5), Math.min(255, (b1 + b2) * 1.5)].map(Math.floor);
       nParam1 = nParam2 = 'auto';
     }
-    if (nParam1 && !FLAT_SWEEP_MODES.includes(nParam1)) { c3 = flatColorRgb(nParam1, [255, 253, 224]); nParam1 = 'auto'; }
+    if (nParam1 && !FLAT_SWEEP_MODES.includes(nParam1)) { c3 = hexOrNamedToRgb(nParam1, [255, 253, 224]); nParam1 = 'auto'; }
     if (!nParam1) nParam1 = 'auto';
     if (nParam2 && nParam2 !== 'shift') {
       if (FLAT_SWEEP_MODES.includes(nParam2)) nParam1 = nParam2;
       else if (nParam2 === 'warm') c3 = [255, 253, 216];
       else if (nParam2 === 'cold') c3 = [255, 255, 255];
-      else c3 = flatColorRgb(nParam2, [255, 253, 224]);
+      else c3 = hexOrNamedToRgb(nParam2, [255, 253, 224]);
     }
     const [r3, g3, b3] = c3;
     const ch = v => Math.max(0, Math.min(255, Math.floor(v)));
@@ -19346,6 +19343,18 @@ self.onmessage = e => {
             }
           });
           if (labels.length) {
+            // the value texts' common TextLayer props (the halo copies override color and offset)
+            const valueText = (id, data, more) => new TextLayer(Object.assign({
+              id, data, pickable: false,
+              getPosition: d => d.geometry.coordinates,
+              getText: d => d.text,
+              getSize: d => d.fontSize,
+              getColor: d => [...d.color.slice(0, 3), d.alpha],
+              getPixelOffset: d => d.pixelOffset,
+              sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
+              characterSet: 'auto',
+              getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+            }, more));
             // VALUEBACKGROUND on URL-symbol parts: a fading white border
             // around the value's own CHARACTER SHAPES — the glyphs
             // re-drawn in white on rings of pixel offsets (a stroke of
@@ -19377,56 +19386,15 @@ self.onmessage = e => {
                     }
                   }
                 }
-                layers.push(new TextLayer({
-                  id: `ix-cluster-values-halo-${this.name}${bs}`,
-                  data: haloCopies, pickable: false,
-                  getPosition: d => d.geometry.coordinates,
-                  getText: d => d.text,
-                  getSize: d => d.fontSize,
+                layers.push(valueText(`ix-cluster-values-halo-${this.name}${bs}`, haloCopies, {
                   getColor: d => [255, 255, 255, d.haloAlpha],
-                  getPixelOffset: d => [d.pixelOffset[0] + d.dx * d.radius, d.pixelOffset[1] + d.dy * d.radius],
-                  sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
-                  characterSet: 'auto',
-                  getTextAnchor: 'middle', getAlignmentBaseline: 'center'
+                  getPixelOffset: d => [d.pixelOffset[0] + d.dx * d.radius, d.pixelOffset[1] + d.dy * d.radius]
                 }));
-                layers.push(new TextLayer({
-                  id: `ix-cluster-values-${this.name}${bs}`,
-                  data: haloLabels, pickable: false,
-                  getPosition: d => d.geometry.coordinates,
-                  getText: d => d.text,
-                  getSize: d => d.fontSize,
-                  getColor: d => [...d.color.slice(0, 3), d.alpha],
-                  getPixelOffset: d => d.pixelOffset,
-                  sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
-                  characterSet: 'auto',
-                  getTextAnchor: 'middle', getAlignmentBaseline: 'center'
-                }));
+                layers.push(valueText(`ix-cluster-values-${this.name}${bs}`, haloLabels));
               }
-              if (plainLabels.length) layers.push(new TextLayer({
-                id: `ix-cluster-values-plain-${this.name}${bs}`,
-                data: plainLabels, pickable: false,
-                getPosition: d => d.geometry.coordinates,
-                getText: d => d.text,
-                getSize: d => d.fontSize,
-                getColor: d => [...d.color.slice(0, 3), d.alpha],
-                getPixelOffset: d => d.pixelOffset,
-                sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
-                characterSet: 'auto',
-                getTextAnchor: 'middle', getAlignmentBaseline: 'center'
-              }));
+              if (plainLabels.length) layers.push(valueText(`ix-cluster-values-plain-${this.name}${bs}`, plainLabels));
             } else {
-            layers.push(new TextLayer({
-              id: `ix-cluster-values-${this.name}${bs}`,
-              data: labels, pickable: false,
-              getPosition: d => d.geometry.coordinates,
-              getText: d => d.text,
-              getSize: d => d.fontSize,
-              getColor: d => [...d.color.slice(0, 3), d.alpha],
-              getPixelOffset: d => d.pixelOffset,
-              sizeUnits: 'pixels', fontFamily: 'arial', fontWeight: 'normal',
-              characterSet: 'auto',
-              getTextAnchor: 'middle', getAlignmentBaseline: 'center'
-            }));
+              layers.push(valueText(`ix-cluster-values-${this.name}${bs}`, labels));
             }
           }
         }
@@ -21279,9 +21247,11 @@ self.onmessage = e => {
   function isNoneColor(v) {
     return typeof v === 'string' && v.trim().toLowerCase() === 'none';
   }
-  function hexOrNamedToRgb(v) {
+  // any CSS color → [r, g, b] (parseCssColor), else `fallback` (a mid gray). The few names are for a
+  // document without a canvas (Node, the unit tests), where parseCssColor reads no color names.
+  function hexOrNamedToRgb(v, fallback = [130, 130, 130]) {
     const NAMED = { gray: [128, 128, 128], grey: [128, 128, 128], black: [0, 0, 0], white: [255, 255, 255] };
-    return parseCssColor(v) || NAMED[v] || [130, 130, 130];
+    return parseCssColor(v) || NAMED[v] || fallback;
   }
   // style.linecolor may be a list (the dialog's ["#dd8800"]); flat strokes
   // with its LAST entry (maptheme.js 1597-1599)
@@ -22185,7 +22155,7 @@ self.onmessage = e => {
     resolveComposedColor, computeRangeClasses, colorSchemeClassCount, resolveDopacityAlpha,
     flatColorSweep, applyClassesToColorScheme, resolveClassColors, flatOutlierStats, parseCssColor, flatLegendLook,
     flatToMapLibreZoom, mapLibreToFlatZoom, flatViewToMapLibreZoom, mapLibreToFlatViewZoom, flatSvgProjectionOf, flatSvgProjectionByOptions, normalSizeScaleOf, scaleDenominatorAt, resolveZoomReference, resolveAggregationPx, valuesHiddenByScale,
-    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, resolvePartsClass, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, plotRasterPx, svgPlotTipMarkup, SVG_PLOT_TIP_WIDTH, atlasHeightOf, ATLAS_SWAP_HEIGHT_PX, SvgContext2D, svgPlotFits, svgStyleSig, SVG_PLOT_MAX_CHARTS, SVG_PLOT_UNIT, donorFillRgba, itemAnchor, objectZoomFactor, resolveZoomReference, defaultNormalSizeValue,
+    fetchLayerData, QUERY_HANDOFF, parseCsvText, dataTableRows, geometryRowsToFeatureCollection, filterFlatValues, applyField100, field100Binding, rangeClassLegendTotals, resolveAggregateValue, classValueSeparate, cellAggregatedValues, cellFieldSeriesValue, oneHot, groupCoLocated, aggregateOnGrid, GridAggregateIndex, flatRangeParts, explicitRangeBreaks, explicitRangeParts, isNoneColor, aggregateField100, valueRadius, itemPlotGeometry, plotRasterPx, svgPlotTipMarkup, SVG_PLOT_TIP_WIDTH, atlasHeightOf, ATLAS_SWAP_HEIGHT_PX, SvgContext2D, svgPlotFits, svgStyleSig, SVG_PLOT_MAX_CHARTS, SVG_PLOT_UNIT, donorFillRgba, itemAnchor, objectZoomFactor, defaultNormalSizeValue,
     applyWhereFilter, joinChartPositions, joinChoroplethFeatures, flatLookupKey, flatShapeCenter, chartHiddenByScale, glowHiddenByScale, isSymbolChart, flatChartAlignOffset, flatChartBranch, flatValueText, categoryValueRecord, flatDerivateRgb, flatBubbleLook, bubbleIconLook, flatChartTextRgb, flatGroupedValue, flatNoBreaks, featuresHiddenByScale, boxHiddenByScale, flatShadowOn, snapToAggregationGrid,
     drawSymbolPath, normalizeSymbolShape, bubbleStrokeRgb, heatmapColorRange, heatmapWeight,
     mlHeatmapPoints, mlHeatmapWeightMax, mlHeatmapRadius, mlHeatmapPaint, syncNativeHeatmaps, mlHeatLayerId,
