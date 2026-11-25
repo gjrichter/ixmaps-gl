@@ -682,7 +682,7 @@ configurable yet.
 Load the engine from jsDelivr, pinned to a release tag (or `@main` for the latest commit):
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.58/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.59/ixmaps-gl.js"></script>
 ```
 
 or from unpkg, the npm package [`ixmaps-gl`](https://www.npmjs.com/package/ixmaps-gl)
@@ -690,13 +690,13 @@ or from unpkg, the npm package [`ixmaps-gl`](https://www.npmjs.com/package/ixmap
 browser script, which defines the global `ixmaps`):
 
 ```html
-<script src="https://unpkg.com/ixmaps-gl@0.2.58/ixmaps-gl.js"></script>
+<script src="https://unpkg.com/ixmaps-gl@0.2.59/ixmaps-gl.js"></script>
 ```
 
 or use a local copy (`<script src="ixmaps-gl.js"></script>`). A minimal page:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.58/ixmaps-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gjrichter/ixmaps-gl@v0.2.59/ixmaps-gl.js"></script>
 <div id="map_div" style="position:absolute;inset:0;"></div>
 
 <script>
