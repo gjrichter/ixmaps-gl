@@ -18980,18 +18980,18 @@ self.onmessage = e => {
       // rendering step will actually classify (post-NORMALIZE values, if
       // set), same as the real engine's own order of operations.
       let breaks = null;
-      // flat takes the class RANGE (nMin/nMax) from the raw sizes when a
-      // size field is bound (maptheme.js:11186-11203) and classifies by the
-      // value sums anyway; after NORMALIZE the range is 0..1 either way.
-      // (Not ported: flat's NORMALIZE of a size-field theme then scales
-      // the value sums by that SIZE range.)
+      // The classes span the class values (the value field or its sums),
+      // never a bound size field: size is a size source only. flat takes the
+      // class RANGE from the raw sizes on AGGREGATE themes (maptheme.js:
+      // 11186-11203) — deliberately not ported: depth-colored, magnitude-sized
+      // quakes deeper than the largest magnitude fell outside every class and
+      // were painted as the shallowest. After NORMALIZE the range is 0..1.
       if (this._rangeClassed && totals.length) {
         // _nRangeParts, not categoryLabels.length: that follows partsA,
         // which is a single class at a zoom where all totals are equal
         const nParts = this._nRangeParts || this.categoryLabels.length;
-        const rangeSource = this._classSeparate && this.binding.size && !normalize ? rawSizeTotals : totals;
         let nMin = Infinity, nMax = -Infinity;
-        for (const v of rangeSource) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
+        for (const v of totals) { if (v < nMin) nMin = v; if (v > nMax) nMax = v; }
         const explicit = explicitRangeBreaks(this.style, this.flags);
         breaks = explicit ? explicitRangeParts(explicit)
           : flatRangeParts(totals, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
@@ -20584,7 +20584,11 @@ self.onmessage = e => {
         this._valueMax = nMax;
         if (!this._partsCategorical && pooled.length) {
           const nParts = Math.trunc(styleNum(this.style.classes)) || colorSchemeClassCount(this.style.colorscheme) || DEFAULT_RANGE_CLASSES;
-          this.partsA = flatRangeParts(pooled, nMin, nMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
+          // the classes over the part VALUES, never the sizes (nMin/nMax above
+          // follow a bound size field): size is a size source only
+          let pMin = Infinity, pMax = -Infinity;
+          for (const v of pooled) { if (v < pMin) pMin = v; if (v > pMax) pMax = v; }
+          this.partsA = flatRangeParts(pooled, pMin, pMax, nParts, this.flags, styleNum(this.style.rangecentervalue));
           // a 1-field pie's legend rows are these classes (in place, as
           // _ensureAggregateStats: the legend holds the array)
           if (!this._multiFields && Array.isArray(this.categoryLabels)) {
