@@ -10212,6 +10212,13 @@ self.onmessage = e => {
   // objectscaling:"dynamic" (the default, matching this engine's prior
   // always-on behavior) means symbols DO scale with zoom; anything else
   // (e.g. "fixed") means they don't — same pixel size at every zoom.
+  // A deliberate divergence: flat's default is FIXED — its objects scale
+  // only when the map sets objectscaling "dynamic" (mapscript2.js
+  // doDynamicObjectScaling, 2844; measured 2026-11-25: nDynamicObjectScale
+  // stays 1 at every zoom). gl keeps "dynamic" as its default; a flat page
+  // relying on flat's default sets objectscaling:"fixed" (any value but
+  // "dynamic", e.g. "true", is fixed in both engines; boolean false is not
+  // a value here, it falls back to the default).
   // the zoom at which flat's object scale equals normalSizeScale (symbols
   // at their normal size) — see FLAT_OBJECT_SCALE_CONSTANT
   // (under a flat SVG projection, flat's scale at that zoom is

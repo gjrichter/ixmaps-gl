@@ -501,7 +501,7 @@ center), unless a matching `aggregation` pair sets a width or another field for 
 switch the aggregation off outside that scale range: each record is its own item.
 
 With `CATEGORICAL|COUNT` and no size field the size of a symbol follows the number of records in its cell:
-radius = `15 px × scale × (count / normalsizevalue)^(1/sizepow)`, scaled with the zoom (`objectscaling`) and
+radius = `15 px × scale × (count / normalsizevalue)^(1/sizepow)`, scaled with the zoom (`objectscaling`, `"dynamic"` by default in gl, fixed by default in flat) and
 clamped to a minimum and maximum radius.
 `normalsizevalue` is the count drawn at normal size, the dataset's maximum when unset. A `normalsizevalue` of
 `30` therefore draws a single-record cell at 1/30 of the normal radius: pick it near the biggest cell you expect.
@@ -657,6 +657,7 @@ How the calls of a flat page map to gl; "tested" means `test/runtime.mjs` runs i
 | `map.on(event, fn)` | `map.on` / `map.off`, see Map events |
 | `ixmaps.hideTheme(id)` / `ixmaps.showTheme(id)` | not provided: `ixmaps.map().theme(id).hide()` / `.show()` or `ixmaps.map().setThemeVisible(id, bool)` |
 | `ixmaps.flyTo(…)` | not provided: `ixmaps.map().view([lat, lng], zoom)` |
+| no `objectscaling` option: symbols keep their size at every zoom | gl's default is `"dynamic"`: symbols grow with the zoom from `normalSizeScale`. `.options({objectscaling: "fixed"})` draws them as flat does (any value but `"dynamic"` is fixed in both) |
 
 ### `CHART|USER` draw function
 
