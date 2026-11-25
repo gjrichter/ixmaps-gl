@@ -101,3 +101,13 @@ test('resolveAggregationPx / valuesHiddenByScale compare thresholds with the dis
   assert.equal(G.valuesHiddenByScale({ valueupper: '1:500000' }, G.flatToMapLibreZoom(9.7)), true);
   assert.equal(G.valuesHiddenByScale({ valueupper: '1:500000' }, G.flatToMapLibreZoom(9.9)), false);
 });
+
+test('valuesHiddenByScale: bare denominators, the lower bound, and valuesupper over valueupper (flat maptheme.js 1706-1723, 16998)', () => {
+  // flat zoom 9.7 = 1:532 555, 9.9 = 1:463 612
+  assert.equal(G.valuesHiddenByScale({ valueupper: '500000' }, G.flatToMapLibreZoom(9.7)), true);
+  assert.equal(G.valuesHiddenByScale({ valueupper: 500000 }, G.flatToMapLibreZoom(9.9)), false);
+  assert.equal(G.valuesHiddenByScale({ valuelower: '1:500000' }, G.flatToMapLibreZoom(9.9)), true);
+  assert.equal(G.valuesHiddenByScale({ valueslower: '1:500000' }, G.flatToMapLibreZoom(9.7)), false);
+  assert.equal(G.valuesHiddenByScale({ valueupper: '1:1000000', valuesupper: '1:500000' }, G.flatToMapLibreZoom(9.7)), true);
+  assert.equal(G.valuesHiddenByScale({}, G.flatToMapLibreZoom(9.7)), false);
+});

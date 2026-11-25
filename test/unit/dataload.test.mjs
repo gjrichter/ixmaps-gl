@@ -102,3 +102,11 @@ test('.data({query}): parallel queries get their own data, by options object, na
   set(table('l'), {});
   assert.deepEqual(rowsOf(await late), ['l'], 'the timed-out query left no stale entry');
 });
+
+test('.obj with a mixed-case type ("GeoJSON", "TopoJSON") loads like the lower-case one', async () => {
+  const fc = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: { v: 1 }, geometry: { type: 'Point', coordinates: [9, 45] } }] };
+  const t = G.normalizeTheme({ layer: 'x', data: { obj: fc, type: 'GeoJSON' }, binding: { geo: 'geometry' }, style: { type: 'FEATURE' } });
+  assert.equal((await G.fetchLayerData(t.data, t.binding)).features.length, 1);
+  const topo = { type: 'Topology', objects: { o: { type: 'GeometryCollection', geometries: [{ type: 'Point', coordinates: [9, 45], properties: { v: 1 } }] } }, arcs: [] };
+  assert.equal((await G.fetchLayerData({ obj: topo, type: 'TopoJSON' }, {})).features.length, 1);
+});

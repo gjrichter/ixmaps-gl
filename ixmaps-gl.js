@@ -986,8 +986,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       process: d.process && String(d.process), ext: d.ext, name: d.ext ? d.name : undefined,
       // .data({object}) selects a topojson object — two themes on the same
       // URL with different objects must NOT share one cache entry (the
-      // DISS page's 5 layers of one file)
-      object: d.object });
+      // DISS page's 5 layers of one file); remap rewrites the cached rows
+      object: d.object, remap: d.remap });
   }
   // a theme's rt._dataSourceKey, for the Map() build and for themes added
   // later alike: named data and WMS (no records) and in-memory .obj data are
@@ -1219,7 +1219,8 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     const query = pendingQueryOf(opt);
     if (query) {
       if (dataObj == null) settleQuery(query, new Error('[ixmaps-gl] .data({query}): the query handed over no data (ixmaps.setExternalData(null, …))'));
-      else settleQuery(query, null, dataObj);
+      // raw jsondb / json / csv handed over: data.js-import it as the named path does (externalDataToTable)
+      else externalDataToTable(dataObj, opt).then(t => settleQuery(query, null, t), err => settleQuery(query, err));
       return;
     }
     const name = opt && opt.name;
@@ -1309,8 +1310,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
       console.warn(`[ixmaps-gl] .data({process}) changed the row count of ${dataConfig.type} features (${fc.features.length} → ${rows.length}); process result ignored`);
       return fc;
     }
-    fc.features.forEach((f, i) => { f.properties = rows[i]; });
-    return fc;
+    // new feature objects: an .obj FeatureCollection is the page's own (and is
+    // re-read on every refreshTheme), so processing it in place would compound
+    return Object.assign({}, fc, { features: fc.features.map((f, i) => Object.assign({}, f, { properties: rows[i] })) });
   }
   // parse CSV text with data.js (as flat) → a Table
   function dataJsCsvTable(text) {
@@ -1640,8 +1642,9 @@ float barSegDist(vec2 p, vec2 a, vec2 b) {
     // genuinely CSV-shaped .obj with a missing binding.position would
     // throw, even though this .obj was never row data in the first place.
     if (dataConfig.obj) {
-      if (dataConfig.type === 'topojson') return processFeatureCollection(topojsonToFeatureCollection(dataConfig.obj, dataConfig.object), dataConfig);
-      if (dataConfig.type === 'geojson') return processFeatureCollection(sanitizeGeoJSON(dataConfig.obj), dataConfig);
+      // the type case-insensitively, as normalizeTheme's geometry binding reads it ("GeoJSON")
+      if (/^topojson$/i.test(dataConfig.type)) return processFeatureCollection(topojsonToFeatureCollection(dataConfig.obj, dataConfig.object), dataConfig);
+      if (/^geojson$/i.test(dataConfig.type)) return processFeatureCollection(sanitizeGeoJSON(dataConfig.obj), dataConfig);
       let obj = dataConfig.obj;
       if (dataConfig.process) {
         requireDataJs('process');
@@ -3304,7 +3307,8 @@ self.onmessage = e => {
     if (!url || !api || !api.map) return;
     const box = api.map.getContainer();
     let down = null;
-    box.addEventListener('mousedown', e => { if (e.button === 2) down = { x: e.clientX, y: e.clientY }; }, true);
+    const onDown = e => { if (e.button === 2) down = { x: e.clientX, y: e.clientY }; };
+    box.addEventListener('mousedown', onDown, true);
     const onMenu = e => {
       const tools = global.ixmaps.themeTools;
       if (api.__ixgtAttached) { box.removeEventListener('contextmenu', onMenu); return; } // the add-on has it
@@ -3329,6 +3333,9 @@ self.onmessage = e => {
       _themeToolsScripts.get(url).then(open, () => {});
     };
     box.addEventListener('contextmenu', onMenu);
+    // the div is the page's own and outlives this map (ixmaps.Map() again in it, map.destroy()):
+    // MapLibre fires 'remove' from map.remove(), which destroy() calls
+    api.map.once('remove', () => { box.removeEventListener('mousedown', onDown, true); box.removeEventListener('contextmenu', onMenu); });
   }
 
   // ---- USER charts: a page's own chart function (style.userdraw) ----
@@ -4865,8 +4872,8 @@ self.onmessage = e => {
       try {
         // a plane map's sea is its outline polygon (the background stays the page's): a {type:"Sphere"}
         // layer is what asks for that outline - the plane draws none by itself
+        map.__ixSphereStyle = style;   // re-applied after a basemap switch (setMapType)
         if (isPlaneMap(map)) {
-          map.__ixSphereStyle = style;
           if (!map.getLayer(EE_SEA_LAYER_ID)) addEqualEarthOutline(map, engineOptionsByMap.get(map), style);
           if (map.getLayer(EE_SEA_LAYER_ID)) {
             map.setPaintProperty(EE_SEA_LAYER_ID, 'fill-color', color);
@@ -5403,7 +5410,9 @@ self.onmessage = e => {
       anchorInside(el);
       el.appendChild(pinnedTooltipEl);
     }
-    return { getTooltip, onClick, mount };
+    // a removed theme (map.remove, replace, loadProject) takes its pinned tooltip along
+    const unpinRuntimes = rts => { if (pinned && rts.includes(pinned.runtime)) { pinned = null; pinnedTooltipEl.style.display = 'none'; } };
+    return { getTooltip, onClick, mount, unpinRuntimes };
   }
 
   // ---------------------------------------------------------------
@@ -5468,7 +5477,8 @@ self.onmessage = e => {
       // 340: narrower cards read better, each line stays a phrase). A
       // string like "260" parses too (the engine's styleNum passes only
       // true numbers — see the opacity coercion above)
-      const bw = Number((rt.style && rt.style.bubblewidth) != null && rt.style.bubblewidth);
+      const bwRaw = rt.style && rt.style.bubblewidth;
+      const bw = bwRaw == null || bwRaw === '' ? NaN : Number(bwRaw);
       // pointer-events NONE: a permanent label must not stand between
       // the cursor and the map — dragging over a card pans the map and
       // hovering reaches the bubble underneath. Only the opt-in close
@@ -7590,10 +7600,12 @@ self.onmessage = e => {
           const projection = typeof map.getProjection === 'function' ? map.getProjection() : null;
           map.once('style.load', () => {
             if (isPlaneMap(map)) addEqualEarthOutline(map, builder._engineOptions);
+            else if (map.__ixSphereStyle) applySphereBackdrop(map, map.__ixSphereStyle);
             if (projection && projection.type && typeof map.setProjection === 'function') {
               try { map.setProjection({ type: projection.type }); } catch (e) { /* projection unsupported by this build */ }
             }
-            applyBasemapOpacity();
+            // basemap opacity: the persistent 'style.load' applyAsked listener
+            // re-applies it, only when one was asked for
           });
           map.setStyle(style);
           return engineApi;
@@ -7955,6 +7967,7 @@ self.onmessage = e => {
 
       // removes the given runtimes (all sharing `name`) from this map
       function removeRuntimes(name, removedRuntimes) {
+        tooltips.unpinRuntimes(removedRuntimes);
         removedRuntimes.forEach(rt => {
           const i = runtimes.indexOf(rt); if (i >= 0) runtimes.splice(i, 1);
           if (rt._unlisten) rt._unlisten();
@@ -9001,6 +9014,10 @@ self.onmessage = e => {
         destroyed = true;
         if (_flowRepaintRAF != null) { global.cancelAnimationFrame(_flowRepaintRAF); _flowRepaintRAF = null; }
         if (loadingTimer) { clearInterval(loadingTimer); loadingTimer = null; }
+        // pending debounces would still run refreshLayers/notifyRedraw on the removed map and
+        // call the page's htmlgui_onDrawTheme with this map's theme ids
+        [refreshTimer, notifyRedrawTimer, reaggTimer, stepTimer].forEach(t => clearTimeout(t));
+        runtimes.forEach(rt => clearTimeout(rt._dependentTimer));
         disposers.splice(0).forEach(d => { try { d(); } catch (e) { /* already gone */ } });
         for (const [k, v] of [..._globalThemeRegistry]) if (runtimes.includes(v)) _globalThemeRegistry.delete(k);
         if (ownName && _mapApis[ownName] === engineApi) delete _mapApis[ownName];
@@ -9947,7 +9964,8 @@ self.onmessage = e => {
       elapsed += (now - lastTick) * speed;
       lastTick = now;
       if (elapsed >= path.total) {
-        if (!loop) { fireKeyframes(); finish(); return; }
+        // a loop with no duration (one keyframe) has nothing to repeat: it ends like a non-loop
+        if (!loop || !(path.total > 0)) { fireKeyframes(); finish(); return; }
         elapsed -= path.total;
         nextKf = 0;
         lastTarget = null;
@@ -11226,12 +11244,14 @@ self.onmessage = e => {
 
   function valuesHiddenByScale(style, zoom) {
     // flat accepts both 'valueupper' and 'valuesupper' (maptheme.js 1710,
-    // "GR 15.03.2017 accept also 'valuesupper'"), same for the lower pair
-    const m = /^1:(\d+(?:\.\d+)?)$/.exec(style.valueupper || style.valuesupper || '');
-    if (!m) return false;
-    const upperRatio = parseFloat(m[1]);
-    const scaleDenominator = scaleDenominatorAt(zoom);
-    return scaleDenominator > upperRatio;
+    // "GR 15.03.2017 accept also 'valuesupper'"), same for the lower pair;
+    // the 'values…' spelling wins when both are set (flat assigns it last).
+    // "1:N" or a bare N; hidden above upper or below lower (maptheme.js 16998)
+    const upper = scaleDenom(style.valuesupper != null ? style.valuesupper : style.valueupper);
+    const lower = scaleDenom(style.valueslower != null ? style.valueslower : style.valuelower);
+    if (!upper && !lower) return false;
+    const scale = scaleDenominatorAt(zoom);
+    return !!((upper && scale > upper) || (lower && scale < lower));
   }
   // flat's chart LABEL scale gate (maptheme.js 24536-24537): the label is
   // visible while the scale passes <= against BOTH bounds — flat's own
@@ -14960,7 +14980,11 @@ self.onmessage = e => {
     _resolveClassIndex(rawValue) {
       if (this.categoryIndexByLabel) {
         const i = this.categoryIndexByLabel.get(rawValue);
-        return i === undefined && typeof rawValue === 'string' ? this.categoryIndexByLabel.get(rawValue.trim()) : i;
+        if (i !== undefined || rawValue == null) return i;
+        // explicit style.values keys are strings (explicit.map(String)); a
+        // GeoJSON/JSON number must match them too, as _gridCategoryIndex does
+        const s = String(rawValue);
+        return this.categoryIndexByLabel.get(s) ?? this.categoryIndexByLabel.get(s.trim());
       }
       if (this.partsA) return this._resolvePartsClass(scanValue(rawValue));
       return 0;
@@ -18757,6 +18781,13 @@ self.onmessage = e => {
     // categoryLabels at all) — one plain color from style.colorscheme.
     _dotFallbackColor() {
       const cs = this.style.colorscheme;
+      // a count-first scheme ["5", from, to]: the first color of its sweep,
+      // built at its declared count (resolveColorScheme sizes the sweep by the
+      // label count and returns RGB) — the color a ranged DOT's lowest class gets
+      if (Array.isArray(cs) && /^\d+$/.test(String(cs[0]))) {
+        const sweep = resolveColorScheme(cs, new Array(Number(cs[0]) || 1).fill('_'));
+        if (sweep && Array.isArray(sweep[0])) return sweep[0];
+      }
       const raw = Array.isArray(cs) ? cs[0] : cs;
       if (!raw || raw === 'none') return [90, 90, 90];
       return hexOrNamedToRgb(raw);
@@ -20730,7 +20761,7 @@ self.onmessage = e => {
         if (cache && cache.all === all && (!agg || cache.zoom === zoom)) ({ means, medians, devs } = cache);
         else {
           const cols = [];
-          for (const f of all) itemValues(f).values.forEach((v, k) => { (cols[k] ||= []).push(v); });
+          for (const f of all) itemValues(f).values.forEach((v, k) => { (cols[k] ||= []); if (Number.isFinite(v)) cols[k].push(v); }); // ZEROISNOTVALUE / UNDEFINEDISNOTVALUE → NaN: not a value
           means = cols.map(c => c.reduce((a, v) => a + v, 0) / c.length);
           medians = cols.map(c => c.slice().sort((a, b) => a - b)[Math.round(c.length / 2)]);
           devs = cols.map((c, k) => Math.sqrt(c.reduce((a, v) => a + (v - means[k]) * (v - means[k]), 0) / c.length));

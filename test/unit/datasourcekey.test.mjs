@@ -40,3 +40,9 @@ test('named data, WMS and in-memory (.obj) themes keep keys of their own', () =>
 test('a loaded theme uses the data cache\'s source key', () => {
   assert.equal(G.themeDataSourceKey(spec('charts', csv), { sourceKey: 'k' }), 'k');
 });
+
+test('remap is part of the data source key: two themes on one URL with different remaps don\'t share rows', () => {
+  const remapped = Object.assign({}, csv, { remap: { stato: { 1: 'aperto' } } });
+  assert.notEqual(G.dataSourceKey(remapped), G.dataSourceKey(csv));
+  assert.equal(G.dataSourceKey(remapped), G.dataSourceKey(Object.assign({}, csv, { remap: { stato: { 1: 'aperto' } } })));
+});

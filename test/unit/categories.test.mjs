@@ -51,3 +51,17 @@ test('categories: an explicit style.values list is unchanged by new data', () =>
   rt.replaceFeatures(fc(['b']));
   assert.deepEqual(labels(rt), ['a', 'b', 'c']);
 });
+
+test('categories: numeric data values match an explicit style.values list (keys are strings)', () => {
+  const rt = new G.LayerRuntime(theme({ values: [1, 2, 3] }), fc([3, 1, 2]), {});
+  assert.deepEqual([3, 1, 2].map(v => rt._resolveClassIndex(v)), [2, 0, 1]);
+  assert.equal(rt._resolveClassIndex(' 2 '), 1);
+  assert.equal(rt._resolveClassIndex(9), undefined);
+});
+
+test('DOT fallback color: a count-first colorscheme ["5", from, to] starts its sweep, not gray', () => {
+  const rt = new G.LayerRuntime(G.normalizeTheme({ layer: 'x', binding: {}, style: { type: 'CHART|DOT', colorscheme: ['5', '#ffffff', '#ff0000'] } }), fc([]), {});
+  assert.deepEqual([...rt._dotFallbackColor()], [255, 255, 255]);
+  const plainRt = new G.LayerRuntime(G.normalizeTheme({ layer: 'y', binding: {}, style: { type: 'CHART|DOT', colorscheme: ['#00ff00'] } }), fc([]), {});
+  assert.deepEqual([...plainRt._dotFallbackColor()], [0, 255, 0]);
+});
